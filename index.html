@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cascade Connect - Construction Warranty Management</title>
+    
+    <!-- Material Symbols & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Roboto', 'sans-serif'],
+            },
+            colors: {
+              // Material 3 Palette based on #3c6b80
+              primary: {
+                DEFAULT: '#3c6b80', // Base Color
+                container: '#bde9ff',
+                on: '#ffffff',
+                'on-container': '#001f2a',
+              },
+              secondary: {
+                DEFAULT: '#4c616b',
+                container: '#cfe6f1',
+                on: '#ffffff',
+                'on-container': '#071e26',
+              },
+              tertiary: {
+                DEFAULT: '#5d5b7d',
+                container: '#e3dfff',
+                on: '#ffffff',
+                'on-container': '#1a1836',
+              },
+              error: {
+                DEFAULT: '#ba1a1a',
+                container: '#ffdad6',
+                on: '#ffffff',
+                'on-container': '#410002',
+              },
+              surface: {
+                DEFAULT: '#f5faff', // Surface (Light blue tint)
+                dim: '#d5dbdc',
+                container: '#f0f4f6', // Surface Container
+                'container-high': '#eceff1',
+                'on': '#171c1f',
+                'on-variant': '#40484c',
+                outline: '#70787d',
+                'outline-variant': '#c0c8cc'
+              }
+            },
+            borderRadius: {
+              'xl': '12px',
+              '2xl': '16px',
+              '3xl': '24px',
+            },
+            boxShadow: {
+              'elevation-1': '0px 1px 2px 0px rgba(0,0,0,0.3), 0px 1px 3px 1px rgba(0,0,0,0.15)',
+              'elevation-2': '0px 1px 2px 0px rgba(0,0,0,0.3), 0px 2px 6px 2px rgba(0,0,0,0.15)',
+              'elevation-3': '0px 4px 8px 3px rgba(0,0,0,0.15), 0px 1px 3px 0px rgba(0,0,0,0.3)',
+            }
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.1/",
+    "react": "https://esm.sh/react@^19.2.1",
+    "lucide-react": "https://esm.sh/lucide-react@^0.559.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.32.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.1/",
+    "recharts": "https://esm.sh/recharts@^3.5.1",
+    "jspdf": "https://esm.sh/jspdf@^3.0.4",
+    "papaparse": "https://esm.sh/papaparse@5.4.1"
+  }
+}
+</script>
+</head>
+  <body class="bg-surface text-surface-on antialiased">
+    <div id="root"></div>
+  </body>
+</html>
