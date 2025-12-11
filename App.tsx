@@ -344,7 +344,7 @@ function App() {
     // DB Insert
     if (isDbConnected) {
       try {
-        await db.insert(claimsTable).values({
+        const claimInsertData: typeof claimsTable.$inferInsert = {
           homeownerId: subjectHomeowner.id !== 'placeholder' ? subjectHomeowner.id : null,
           title: newClaim.title,
           description: newClaim.description,
@@ -358,14 +358,17 @@ function App() {
           classification: newClaim.classification,
           dateSubmitted: newClaim.dateSubmitted,
           attachments: newClaim.attachments,
-          // Add optional fields
+          // Add optional fields explicitly
           dateEvaluated: newClaim.dateEvaluated || null,
           nonWarrantyExplanation: newClaim.nonWarrantyExplanation || null,
           internalNotes: newClaim.internalNotes || null,
           contractorId: newClaim.contractorId || null,
           contractorName: newClaim.contractorName || null,
-          contractorEmail: newClaim.contractorEmail || null
-        });
+          contractorEmail: newClaim.contractorEmail || null,
+          proposedDates: [],
+          summary: null
+        };
+        await db.insert(claimsTable).values(claimInsertData);
       } catch (e) {
         console.error("Failed to save claim to DB:", e);
       }
@@ -415,7 +418,7 @@ function App() {
     // DB Insert
     if (isDbConnected) {
       try {
-        await db.insert(homeownersTable).values({
+        const homeownerInsertData: typeof homeownersTable.$inferInsert = {
           name: newHomeowner.name,
           email: newHomeowner.email,
           phone: newHomeowner.phone || null,
@@ -437,7 +440,8 @@ function App() {
           agentPhone: newHomeowner.agentPhone || null,
           enrollmentComments: newHomeowner.enrollmentComments || null,
           password: newHomeowner.password || null
-        });
+        };
+        await db.insert(homeownersTable).values(homeownerInsertData);
       } catch (e) {
         console.error("Failed to save homeowner to DB:", e);
       }
