@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task } from '../types';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Sparkles, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Sparkles, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon } from 'lucide-react';
 import Button from './Button';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
@@ -581,7 +581,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                  {/* Builders Read-Only: Cannot Reply */}
                  {isBuilder ? (
                    <div className="text-center text-sm text-surface-on-variant bg-surface-container p-4 rounded-xl border border-surface-outline-variant border-dashed">
-                     <Lock className="h-4 w-4 mx-auto mb-2 opacity-50"/>
+                     <LockIcon className="h-4 w-4 mx-auto mb-2 opacity-50"/>
                      Read-only access. You cannot reply to threads.
                    </div>
                  ) : (
