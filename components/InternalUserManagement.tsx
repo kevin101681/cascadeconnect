@@ -1,20 +1,22 @@
 import React, { useState } from 'react';
 import { InternalEmployee } from '../types';
 import Button from './Button';
-import { Plus, Edit2, Mail, Trash2, UserCheck, Shield } from 'lucide-react';
+import { Plus, Edit2, Mail, Trash2, UserCheck, Shield, X } from 'lucide-react';
 
 interface InternalUserManagementProps {
   employees: InternalEmployee[];
   onAddEmployee: (emp: InternalEmployee) => void;
   onUpdateEmployee: (emp: InternalEmployee) => void;
   onDeleteEmployee: (id: string) => void;
+  onClose: () => void;
 }
 
 const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
   employees,
   onAddEmployee,
   onUpdateEmployee,
-  onDeleteEmployee
+  onDeleteEmployee,
+  onClose
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -60,9 +62,18 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
            </h3>
            <p className="text-sm text-surface-on-variant">Manage employee access and roles.</p>
         </div>
-        <Button onClick={handleOpenCreate} icon={<Plus className="h-4 w-4" />}>
-          Add Member
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button onClick={handleOpenCreate} icon={<Plus className="h-4 w-4" />}>
+            Add Member
+          </Button>
+          <button 
+            onClick={onClose} 
+            className="p-2.5 rounded-full hover:bg-surface-container text-surface-on-variant hover:text-surface-on transition-colors"
+            title="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       <div className="bg-surface rounded-3xl border border-surface-outline-variant overflow-hidden shadow-sm">

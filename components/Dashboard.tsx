@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Claim, ClaimStatus, UserRole, Homeowner, Task, InternalEmployee, HomeownerDocument } from '../types';
+import { Claim, ClaimStatus, UserRole, Homeowner, Task, InternalEmployee, HomeownerDocument, MessageThread, Message } from '../types';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, CheckSquare, ClipboardList, Database, Mail, X, Send, Sparkles, Building2, MapPin, Phone, Hash, Clock, FileText, Download, Upload, Users, UserPlus } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, CheckSquare, ClipboardList, Mail, X, Send, Sparkles, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Reply } from 'lucide-react';
 import Button from './Button';
 import TaskList from './TaskList';
-import DataImport from './DataImport';
-import InternalUserManagement from './InternalUserManagement';
 import { draftInviteEmail } from '../services/geminiService';
+import { sendEmail, generateNotificationBody } from '../services/emailService';
 
 interface DashboardProps {
   claims: Claim[];
@@ -21,7 +20,6 @@ interface DashboardProps {
   onAddTask: (task: Partial<Task>) => void;
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
-  onImportClaims: (claims: Claim[]) => void;
   
   // Passed from App based on Search
   targetHomeowner: Homeowner | null;
@@ -31,13 +29,10 @@ interface DashboardProps {
   documents: HomeownerDocument[];
   onUploadDocument: (doc: Partial<HomeownerDocument>) => void;
 
-  // Employee Management
-  onAddEmployee: (emp: InternalEmployee) => void;
-  onUpdateEmployee: (emp: InternalEmployee) => void;
-  onDeleteEmployee: (id: string) => void;
-
-  // Enrollment
-  onOpenEnrollment: () => void;
+  // Messaging
+  messages: MessageThread[];
+  onSendMessage: (threadId: string, content: string) => void;
+  onCreateThread: (homeownerId: string, subject: string, content: string) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -53,18 +48,18 @@ const Dashboard: React.FC<DashboardProps> = ({
   onAddTask,
   onToggleTask,
   onDeleteTask,
-  onImportClaims,
   targetHomeowner,
   onClearHomeownerSelection,
   documents,
   onUploadDocument,
-  onAddEmployee,
-  onUpdateEmployee,
-  onDeleteEmployee,
-  onOpenEnrollment
+  messages,
+  onSendMessage,
+  onCreateThread
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
-  const [activeTab, setActiveTab] = useState<'CLAIMS' | 'TASKS' | 'TEAM' | 'DATA'>('CLAIMS');
+  
+  // View State for Dashboard (Claims vs Tasks)
+  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'TASKS' | 'MESSAGES'>('CLAIMS');
   
   // Invite Modal State
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -73,8 +68,16 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [inviteBody, setInviteBody] = useState('');
   const [isDrafting, setIsDrafting] = useState(false);
 
-  // Document Upload State
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
+  // Documents Modal State
+  const [showDocsModal, setShowDocsModal] = useState(false);
+
+  // Messaging State
+  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState('');
+  const [showNewMessageModal, setShowNewMessageModal] = useState(false);
+  const [newMessageSubject, setNewMessageSubject] = useState('');
+  const [newMessageContent, setNewMessageContent] = useState('');
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
 
   // --- Filtering Logic ---
   const effectiveHomeowner = isAdmin ? targetHomeowner : activeHomeowner;
@@ -105,8 +108,15 @@ const Dashboard: React.FC<DashboardProps> = ({
     return false; // Don't show documents if no homeowner is selected in Admin view
   });
 
+  // Filter Messages
+  const displayThreads = messages.filter(t => {
+    if (effectiveHomeowner) {
+      return t.homeownerId === effectiveHomeowner.id;
+    }
+    return false;
+  });
 
-  // --- Handlers ---
+  const selectedThread = displayThreads.find(t => t.id === selectedThreadId);
 
   const handleDraftInvite = async () => {
     if (!inviteName) return;
@@ -116,9 +126,17 @@ const Dashboard: React.FC<DashboardProps> = ({
     setIsDrafting(false);
   };
 
-  const handleSendInvite = () => {
-    // Simulation
+  const handleSendInvite = async () => {
+    setIsDrafting(true);
+    await sendEmail({
+      to: inviteEmail,
+      subject: 'Welcome to Cascade Builder Services',
+      body: inviteBody,
+      fromName: 'Cascade Admin',
+      fromRole: UserRole.ADMIN
+    });
     alert(`Invite sent to ${inviteEmail} via Internal Mail System!`);
+    setIsDrafting(false);
     setShowInviteModal(false);
     setInviteName('');
     setInviteEmail('');
@@ -140,408 +158,646 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
-  const stats = [
-    { name: 'Total Claims', value: displayClaims.length },
-    { name: 'Open Claims', value: displayClaims.filter(c => c.status !== ClaimStatus.COMPLETED).length },
-    { name: 'Scheduling', value: displayClaims.filter(c => c.status === ClaimStatus.SCHEDULING).length },
-    { name: 'Tasks', value: displayTasks.filter(t => !t.isCompleted).length }, 
-  ];
-
-  return (
-    <div className="space-y-6 relative">
+  const handleSendReply = async () => {
+    if (selectedThreadId && replyContent.trim()) {
+      onSendMessage(selectedThreadId, replyContent);
       
-      {/* Admin Specific: Selected Homeowner Detailed Profile View */}
-      {isAdmin && targetHomeowner && (
-        <div className="animate-in fade-in slide-in-from-top-4">
-          <div className="flex justify-between items-start mb-6">
-              <div>
-                <h2 className="text-2xl font-normal text-surface-on flex items-center gap-3">
-                  {targetHomeowner.name}
-                  <span className="bg-tertiary-container text-tertiary-on-container text-xs font-bold px-2 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
-                    <Building2 className="h-3 w-3" />
-                    {targetHomeowner.builder}
-                  </span>
-                </h2>
-                <p className="text-surface-on-variant mt-1">Account Details & Warranty Profile</p>
-              </div>
-              <div className="flex gap-2">
+      // Simulate sending email notification to the other party
+      const thread = messages.find(m => m.id === selectedThreadId);
+      if (thread && effectiveHomeowner) {
+        const recipientEmail = isAdmin ? effectiveHomeowner.email : 'info@cascadebuilderservices.com';
+        const senderName = isAdmin ? currentUser.name : activeHomeowner.name;
+        
+        await sendEmail({
+          to: recipientEmail,
+          subject: `Re: ${thread.subject}`,
+          body: generateNotificationBody(senderName, replyContent, 'MESSAGE', thread.id, 'https://cascadebuilderservices.com/messages'),
+          fromName: senderName,
+          fromRole: userRole,
+          replyToId: thread.id
+        });
+      }
+      
+      setReplyContent('');
+    }
+  };
+
+  const handleCreateNewThread = async () => {
+    if (!effectiveHomeowner || !newMessageSubject || !newMessageContent) return;
+    
+    setIsSendingMessage(true);
+    
+    // 1. Create Internal Thread
+    onCreateThread(effectiveHomeowner.id, newMessageSubject, newMessageContent);
+    
+    // 2. Send Email Notification
+    const recipientEmail = isAdmin ? effectiveHomeowner.email : 'info@cascadebuilderservices.com';
+    const senderName = isAdmin ? currentUser.name : activeHomeowner.name;
+
+    await sendEmail({
+      to: recipientEmail,
+      subject: newMessageSubject,
+      body: generateNotificationBody(senderName, newMessageContent, 'MESSAGE', 'new', 'https://cascadebuilderservices.com/messages'),
+      fromName: senderName,
+      fromRole: userRole
+    });
+
+    setIsSendingMessage(false);
+    setShowNewMessageModal(false);
+    setNewMessageSubject('');
+    setNewMessageContent('');
+    // Optionally switch to the thread, but for now we just close modal
+  };
+
+  // --- Render Helpers ---
+
+  const renderClaimsList = (claimsList: Claim[]) => (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Main List */}
+      <div className="lg:col-span-2 bg-surface rounded-3xl border border-surface-outline-variant overflow-hidden">
+        <div className="px-6 py-6 border-b border-surface-outline-variant flex justify-between items-center">
+          <h3 className="text-xl font-normal text-surface-on">
+            {effectiveHomeowner ? `Warranty for ${effectiveHomeowner.name}` : 'Recent Claims'}
+          </h3>
+          {effectiveHomeowner && (
+            <span className="text-xs text-surface-on-variant bg-surface-container px-2 py-1 rounded">
+              {claimsList.length} records
+            </span>
+          )}
+        </div>
+        <ul className="divide-y divide-surface-outline-variant">
+          {claimsList.length === 0 ? (
+            <li className="p-12 text-center text-surface-on-variant flex flex-col items-center">
+              {isAdmin && effectiveHomeowner ? 'No claims found for this homeowner.' : 'No claims found.'}
+              {!effectiveHomeowner && isAdmin && 'Search for a homeowner to view their claims.'}
+            </li>
+          ) : (
+            claimsList.map((claim) => (
+              <li key={claim.id} className="hover:bg-surface-container-high transition-colors">
+                <button 
+                  onClick={() => onSelectClaim(claim)}
+                  className="w-full text-left px-6 py-4 flex items-center justify-between group"
+                >
+                  <div>
+                    <div className="flex items-center space-x-3 mb-1">
+                      <span className="text-xs font-bold text-primary tracking-wide">#{claim.id}</span>
+                      <StatusBadge status={claim.status} />
+                    </div>
+                    <h4 className="text-lg font-normal text-surface-on group-hover:text-primary transition-colors">
+                      {claim.title}
+                    </h4>
+                    <div className="mt-1 flex items-center text-sm text-surface-on-variant space-x-3">
+                      <span>{new Date(claim.dateSubmitted).toLocaleDateString()}</span>
+                      <span className="w-1 h-1 bg-surface-outline rounded-full"></span>
+                      <span>{claim.category}</span>
+                      {/* Only show homeowner name if viewing all (admin view without filter) */}
+                      {isAdmin && !effectiveHomeowner && (
+                        <>
+                          <span className="w-1 h-1 bg-surface-outline rounded-full"></span>
+                          <span className="flex items-center gap-1">
+                            <Building2 className="h-3 w-3" />
+                            {claim.homeownerName}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <ArrowRight className="h-6 w-6 text-surface-outline-variant group-hover:text-primary" />
+                </button>
+              </li>
+            ))
+          )}
+        </ul>
+      </div>
+
+      {/* Sidebar */}
+      <div className="space-y-6">
+        {/* Upcoming Schedule Card */}
+        <div className="bg-secondary-container p-6 rounded-3xl text-secondary-on-container">
+          <h3 className="font-medium text-lg mb-4 flex items-center">
+            <Calendar className="h-5 w-5 mr-3" />
+            Upcoming Schedule
+          </h3>
+          <div className="space-y-3">
+            {claimsList
+              .filter(c => c.status === ClaimStatus.SCHEDULED)
+              .slice(0, 3)
+              .map(c => {
+                const acceptedDate = c.proposedDates.find(d => d.status === 'ACCEPTED');
+                return (
+                  <div key={c.id} className="bg-surface/50 p-4 rounded-xl text-sm backdrop-blur-sm border border-white/20">
+                    <p className="font-medium">{c.title}</p>
+                    <p className="opacity-80 mt-1">
+                      {acceptedDate ? new Date(acceptedDate.date).toLocaleDateString() : 'N/A'} - {acceptedDate?.timeSlot}
+                    </p>
+                  </div>
+                )
+              })}
+            {claimsList.filter(c => c.status === ClaimStatus.SCHEDULED).length === 0 && (
+              <p className="text-sm opacity-70">No confirmed appointments.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // --- Main Render Logic ---
+
+  // 1. HOMEOWNER CONTEXT VIEW (When Admin selects a homeowner)
+  if (isAdmin && targetHomeowner) {
+    return (
+      <div className="space-y-8 animate-in fade-in slide-in-from-top-4">
+        {/* COMPACT HOMEOWNER HEADER CARD */}
+        <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant shadow-elevation-1">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+             {/* Identity & Info Block */}
+             <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2">
+                   <h2 className="text-2xl font-normal text-surface-on truncate">{targetHomeowner.name}</h2>
+                   <span className="bg-primary-container text-primary-on-container text-xs font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                     <Building2 className="h-3 w-3" />
+                     {targetHomeowner.builder}
+                   </span>
+                </div>
+                
+                {/* Compact Info Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-y-1 gap-x-6 text-sm text-surface-on-variant mt-3">
+                   <div className="flex items-center gap-2 min-w-0">
+                      <Home className="h-4 w-4 text-surface-outline flex-shrink-0" />
+                      <span className="truncate">{targetHomeowner.projectOrLlc || 'N/A'} (Lot {targetHomeowner.lotNumber})</span>
+                   </div>
+                   <div className="flex items-center gap-2 min-w-0" title={targetHomeowner.address}>
+                      <MapPin className="h-4 w-4 text-surface-outline flex-shrink-0" />
+                      <span className="truncate">{targetHomeowner.address}</span>
+                   </div>
+                   <div className="flex items-center gap-2 min-w-0">
+                      <Phone className="h-4 w-4 text-surface-outline flex-shrink-0" />
+                      <span className="truncate">{targetHomeowner.phone}</span>
+                   </div>
+                   <div className="flex items-center gap-2 min-w-0">
+                      <Mail className="h-4 w-4 text-surface-outline flex-shrink-0" />
+                      <span className="truncate">{targetHomeowner.email}</span>
+                   </div>
+                   <div className="flex items-center gap-2 min-w-0">
+                      <Clock className="h-4 w-4 text-surface-outline flex-shrink-0" />
+                      <span className="truncate">Closing: {targetHomeowner.closingDate ? new Date(targetHomeowner.closingDate).toLocaleDateString() : 'N/A'}</span>
+                   </div>
+                </div>
+             </div>
+
+             {/* Actions */}
+             <div className="flex items-center gap-2 flex-wrap justify-end flex-shrink-0">
                 <Button 
-                  onClick={() => {
+                  onClick={() => setShowDocsModal(true)} 
+                  variant="outlined" 
+                  icon={<FileText className="h-4 w-4" />}
+                  className="!h-9 !px-4"
+                >
+                  Documents
+                </Button>
+                <Button 
+                  onClick={async () => {
                     setInviteName(targetHomeowner.name);
                     setInviteEmail(targetHomeowner.email);
+                    const defaultBody = await draftInviteEmail(targetHomeowner.name);
+                    setInviteBody(defaultBody);
                     setShowInviteModal(true);
                   }} 
                   variant="tonal" 
                   icon={<Mail className="h-4 w-4" />}
+                  className="!h-9 !px-4"
                 >
-                  Invite / Reset
+                  Invite
                 </Button>
                 <Button 
                   variant="filled" 
                   onClick={() => onNewClaim(targetHomeowner.id)} 
                   icon={<Plus className="h-4 w-4" />}
+                  className="!h-9 !px-4"
                 >
                   New Claim
                 </Button>
-                <Button variant="outlined" onClick={onClearHomeownerSelection} icon={<X className="h-4 w-4" />}>
-                  Close
-                </Button>
               </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            {/* Contact Info Card */}
-            <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 bg-surface p-6 rounded-3xl border border-surface-outline-variant shadow-elevation-1">
-                <div className="flex items-start gap-3">
-                  <div className="bg-surface-container p-2 rounded-lg text-primary"><MapPin className="h-5 w-5" /></div>
-                  <div>
-                    <p className="text-xs text-surface-on-variant font-medium uppercase">Address</p>
-                    <p className="text-sm text-surface-on font-medium">{targetHomeowner.address}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="bg-surface-container p-2 rounded-lg text-primary"><Phone className="h-5 w-5" /></div>
-                  <div>
-                    <p className="text-xs text-surface-on-variant font-medium uppercase">Phone</p>
-                    <p className="text-sm text-surface-on font-medium">{targetHomeowner.phone}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="bg-surface-container p-2 rounded-lg text-primary"><Mail className="h-5 w-5" /></div>
-                  <div>
-                    <p className="text-xs text-surface-on-variant font-medium uppercase">Email</p>
-                    <p className="text-sm text-surface-on font-medium">{targetHomeowner.email}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="bg-surface-container p-2 rounded-lg text-primary"><Hash className="h-5 w-5" /></div>
-                  <div>
-                    <p className="text-xs text-surface-on-variant font-medium uppercase">Lot / Unit</p>
-                    <p className="text-sm text-surface-on font-medium">{targetHomeowner.lotNumber}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="bg-surface-container p-2 rounded-lg text-primary"><Clock className="h-5 w-5" /></div>
-                  <div>
-                    <p className="text-xs text-surface-on-variant font-medium uppercase">Closing Date</p>
-                    <p className="text-sm text-surface-on font-medium">
-                      {targetHomeowner.closingDate ? new Date(targetHomeowner.closingDate).toLocaleDateString() : 'N/A'}
-                    </p>
-                  </div>
-                </div>
-
-                {targetHomeowner.agentName && (
-                  <div className="flex items-start gap-3 md:col-span-2 bg-surface-container-high/30 p-2 rounded-lg">
-                    <div className="bg-surface-container p-2 rounded-lg text-secondary"><UserPlus className="h-5 w-5" /></div>
-                    <div>
-                      <p className="text-xs text-surface-on-variant font-medium uppercase">Buyer's Agent</p>
-                      <p className="text-sm text-surface-on font-medium">{targetHomeowner.agentName} <span className="text-xs opacity-70 font-normal">({targetHomeowner.agentPhone})</span></p>
-                    </div>
-                  </div>
-                )}
-            </div>
-
-            {/* Documents Card */}
-            <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant shadow-elevation-1 flex flex-col">
-              <div className="flex justify-between items-center mb-4">
-                 <h3 className="font-medium text-surface-on flex items-center gap-2">
-                   <FileText className="h-5 w-5 text-primary" />
-                   Documents
-                 </h3>
-                 <label className="cursor-pointer text-xs font-medium text-primary hover:bg-primary/5 px-2 py-1 rounded transition-colors flex items-center gap-1">
-                    <Upload className="h-3 w-3" />
-                    Upload
-                    <input type="file" className="hidden" onChange={handleFileUpload} />
-                 </label>
-              </div>
-              
-              <div className="flex-1 overflow-y-auto max-h-40 space-y-2 pr-1">
-                {displayDocuments.length === 0 ? (
-                  <div className="text-center text-xs text-surface-on-variant py-4 italic">No documents uploaded.</div>
-                ) : (
-                  displayDocuments.map(doc => (
-                    <div key={doc.id} className="flex items-center justify-between p-2 rounded-lg hover:bg-surface-container group">
-                      <div className="flex items-center gap-2 min-w-0">
-                         <div className="p-1.5 bg-red-50 text-red-600 rounded">
-                           <FileText className="h-4 w-4" />
-                         </div>
-                         <div className="min-w-0">
-                           <p className="text-sm font-medium text-surface-on truncate">{doc.name}</p>
-                           <p className="text-[10px] text-surface-on-variant">{new Date(doc.uploadDate).toLocaleDateString()}</p>
-                         </div>
-                      </div>
-                      <button className="text-surface-outline-variant hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Download className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
           </div>
         </div>
-      )}
 
-      {/* Admin Tabs */}
-      {isAdmin && (
-        <div className="flex justify-between items-end border-b border-surface-outline-variant">
-          <div className="flex gap-6 px-2 overflow-x-auto">
-            <button 
-              onClick={() => setActiveTab('CLAIMS')}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'CLAIMS' ? 'border-primary text-primary' : 'border-transparent text-surface-on-variant hover:text-surface-on'}`}
+        {/* Navigation Tabs (Context Specific) */}
+        <div className="flex gap-6 border-b border-surface-outline-variant px-4">
+           <button 
+              onClick={() => setCurrentTab('CLAIMS')}
+              className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 px-2 ${currentTab === 'CLAIMS' ? 'border-primary text-primary' : 'border-transparent text-surface-on-variant hover:text-surface-on'}`}
             >
               <ClipboardList className="h-4 w-4" />
-              Warranty Claims
+              Warranty
             </button>
             <button 
-              onClick={() => setActiveTab('TASKS')}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'TASKS' ? 'border-primary text-primary' : 'border-transparent text-surface-on-variant hover:text-surface-on'}`}
+              onClick={() => setCurrentTab('TASKS')}
+              className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 px-2 ${currentTab === 'TASKS' ? 'border-primary text-primary' : 'border-transparent text-surface-on-variant hover:text-surface-on'}`}
             >
               <CheckSquare className="h-4 w-4" />
-              Internal Tasks
-              {tasks.filter(t => !t.isCompleted && t.assignedToId === currentUser.id).length > 0 && (
-                <span className="bg-error text-white text-[10px] px-1.5 rounded-full">
-                  {tasks.filter(t => !t.isCompleted && t.assignedToId === currentUser.id).length}
+              Tasks
+              {displayTasks.filter(t => !t.isCompleted).length > 0 && (
+                <span className="bg-secondary text-white text-[10px] px-1.5 rounded-full">
+                  {displayTasks.filter(t => !t.isCompleted).length}
                 </span>
               )}
             </button>
-            <button 
-              onClick={() => setActiveTab('TEAM')}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'TEAM' ? 'border-primary text-primary' : 'border-transparent text-surface-on-variant hover:text-surface-on'}`}
+             <button 
+              onClick={() => setCurrentTab('MESSAGES')}
+              className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 px-2 ${currentTab === 'MESSAGES' ? 'border-primary text-primary' : 'border-transparent text-surface-on-variant hover:text-surface-on'}`}
             >
-              <Users className="h-4 w-4" />
-              Team
+              <Mail className="h-4 w-4" />
+              Messages
+              {displayThreads.some(t => !t.isRead) && (
+                <span className="w-2 h-2 rounded-full bg-error"></span>
+              )}
             </button>
-            <button 
-              onClick={() => setActiveTab('DATA')}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${activeTab === 'DATA' ? 'border-primary text-primary' : 'border-transparent text-surface-on-variant hover:text-surface-on'}`}
-            >
-              <Database className="h-4 w-4" />
-              Data
-            </button>
-          </div>
-
-          {!targetHomeowner && activeTab === 'CLAIMS' && (
-            <div className="pb-2">
-               <Button onClick={onOpenEnrollment} variant="tonal" className="!h-8 text-xs px-3" icon={<UserPlus className="h-3 w-3" />}>
-                 Enroll Homeowner
-               </Button>
-            </div>
-          )}
         </div>
-      )}
 
-      {/* ADMIN DATA VIEW */}
-      {isAdmin && activeTab === 'DATA' && (
-        <DataImport onImportClaims={onImportClaims} />
-      )}
+        {/* Content Area */}
+        {currentTab === 'CLAIMS' && (
+          <>
+            {renderClaimsList(displayClaims)}
+          </>
+        )}
 
-      {/* ADMIN TEAM VIEW */}
-      {isAdmin && activeTab === 'TEAM' && (
-        <InternalUserManagement 
-          employees={employees}
-          onAddEmployee={onAddEmployee}
-          onUpdateEmployee={onUpdateEmployee}
-          onDeleteEmployee={onDeleteEmployee}
-        />
-      )}
-
-      {/* ADMIN TASK VIEW */}
-      {isAdmin && activeTab === 'TASKS' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-3 bg-surface rounded-3xl border border-surface-outline-variant p-6">
-             <TaskList 
-                tasks={displayTasks}
-                employees={employees}
-                currentUser={currentUser}
-                claims={claims} 
-                homeowners={homeowners}
-                onAddTask={onAddTask}
-                onToggleTask={onToggleTask}
-                onDeleteTask={onDeleteTask}
-                preSelectedHomeowner={effectiveHomeowner}
-             />
-          </div>
-        </div>
-      )}
-
-      {/* CLAIMS VIEW (Common for Admin & Homeowner) */}
-      {((isAdmin && activeTab === 'CLAIMS') || !isAdmin) && (
-        <>
-          {/* Stats Row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {stats.map((stat) => (
-              <div key={stat.name} className="bg-surface-container p-5 rounded-2xl">
-                <dt className="text-sm font-medium text-surface-on-variant">{stat.name}</dt>
-                <dd className="mt-1 text-4xl font-normal text-primary">{stat.value}</dd>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main List */}
-            <div className="lg:col-span-2 bg-surface rounded-3xl border border-surface-outline-variant overflow-hidden">
-              <div className="px-6 py-6 border-b border-surface-outline-variant flex justify-between items-center">
-                <h3 className="text-xl font-normal text-surface-on">
-                  {effectiveHomeowner ? `Claims for ${effectiveHomeowner.name}` : 'Recent Claims'}
-                </h3>
-                {effectiveHomeowner && (
-                  <span className="text-xs text-surface-on-variant bg-surface-container px-2 py-1 rounded">
-                    {displayClaims.length} records
-                  </span>
-                )}
-              </div>
-              <ul className="divide-y divide-surface-outline-variant">
-                {displayClaims.length === 0 ? (
-                  <li className="p-12 text-center text-surface-on-variant flex flex-col items-center">
-                    {isAdmin && effectiveHomeowner ? 'No claims found for this homeowner.' : 'No claims found.'}
-                    {!effectiveHomeowner && isAdmin && 'Search for a homeowner to view their claims.'}
-                  </li>
-                ) : (
-                  displayClaims.map((claim) => (
-                    <li key={claim.id} className="hover:bg-surface-container-high transition-colors">
-                      <button 
-                        onClick={() => onSelectClaim(claim)}
-                        className="w-full text-left px-6 py-4 flex items-center justify-between group"
-                      >
-                        <div>
-                          <div className="flex items-center space-x-3 mb-1">
-                            <span className="text-xs font-bold text-primary tracking-wide">#{claim.id}</span>
-                            <StatusBadge status={claim.status} />
-                          </div>
-                          <h4 className="text-lg font-normal text-surface-on group-hover:text-primary transition-colors">
-                            {claim.title}
-                          </h4>
-                          <div className="mt-1 flex items-center text-sm text-surface-on-variant space-x-3">
-                            <span>{new Date(claim.dateSubmitted).toLocaleDateString()}</span>
-                            <span className="w-1 h-1 bg-surface-outline rounded-full"></span>
-                            <span>{claim.category}</span>
-                            {/* Only show homeowner name if viewing all (admin view without filter) */}
-                            {isAdmin && !effectiveHomeowner && (
-                              <>
-                                <span className="w-1 h-1 bg-surface-outline rounded-full"></span>
-                                <span className="flex items-center gap-1">
-                                  <Building2 className="h-3 w-3" />
-                                  {claim.homeownerName}
-                                </span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <ArrowRight className="h-6 w-6 text-surface-outline-variant group-hover:text-primary" />
-                      </button>
-                    </li>
-                  ))
-                )}
-              </ul>
+        {currentTab === 'TASKS' && (
+          <div className="bg-surface rounded-3xl border border-surface-outline-variant p-6">
+            <div className="mb-4">
+               <h3 className="text-lg font-normal text-surface-on">Tasks</h3>
+               <p className="text-sm text-surface-on-variant">Tasks linked to {targetHomeowner.name}'s claims.</p>
             </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Upcoming Schedule Card */}
-              <div className="bg-secondary-container p-6 rounded-3xl text-secondary-on-container">
-                <h3 className="font-medium text-lg mb-4 flex items-center">
-                  <Calendar className="h-5 w-5 mr-3" />
-                  Upcoming Schedule
-                </h3>
-                <div className="space-y-3">
-                  {displayClaims
-                    .filter(c => c.status === ClaimStatus.SCHEDULED)
-                    .slice(0, 3)
-                    .map(c => {
-                      const acceptedDate = c.proposedDates.find(d => d.status === 'ACCEPTED');
-                      return (
-                        <div key={c.id} className="bg-surface/50 p-4 rounded-xl text-sm backdrop-blur-sm border border-white/20">
-                          <p className="font-medium">{c.title}</p>
-                          <p className="opacity-80 mt-1">
-                            {acceptedDate ? new Date(acceptedDate.date).toLocaleDateString() : 'N/A'} - {acceptedDate?.timeSlot}
-                          </p>
-                        </div>
-                      )
-                    })}
-                  {displayClaims.filter(c => c.status === ClaimStatus.SCHEDULED).length === 0 && (
-                    <p className="text-sm opacity-70">No confirmed appointments.</p>
-                  )}
-                </div>
-              </div>
-            </div>
+            <TaskList 
+              tasks={displayTasks}
+              employees={employees}
+              currentUser={currentUser}
+              claims={claims} 
+              homeowners={homeowners}
+              onAddTask={onAddTask}
+              onToggleTask={onToggleTask}
+              onDeleteTask={onDeleteTask}
+              preSelectedHomeowner={effectiveHomeowner}
+            />
           </div>
-        </>
-      )}
+        )}
 
-      {/* INVITE MODAL */}
-      {showInviteModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-surface w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-surface-outline-variant flex justify-between items-center bg-surface-container">
-              <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
-                <Mail className="h-5 w-5 text-primary" />
-                Invite Homeowner
-              </h2>
-              <button onClick={() => setShowInviteModal(false)} className="text-surface-on-variant hover:text-surface-on">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-surface-on-variant mb-1">Full Name</label>
-                <input 
-                  type="text" 
-                  className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                  value={inviteName}
-                  onChange={(e) => setInviteName(e.target.value)}
-                  placeholder="e.g. Jane Doe"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-surface-on-variant mb-1">Email Address</label>
-                <input 
-                  type="email" 
-                  className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="jane@example.com"
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-surface-on-variant">Invitation Message</label>
+        {currentTab === 'MESSAGES' && (
+          <div className="bg-surface rounded-3xl border border-surface-outline-variant overflow-hidden flex flex-col md:flex-row h-[600px] shadow-elevation-1">
+             {/* Left Column: Thread List */}
+             <div className={`w-full md:w-80 border-b md:border-b-0 md:border-r border-surface-outline-variant flex flex-col ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
+                <div className="p-4 border-b border-surface-outline-variant bg-surface-container/30 flex justify-between items-center">
+                  <h3 className="font-bold text-surface-on">Inbox</h3>
                   <Button 
                     variant="text" 
-                    onClick={handleDraftInvite} 
-                    disabled={isDrafting || !inviteName} 
-                    className="!h-6 !text-xs !px-2"
-                    icon={isDrafting ? <div className="animate-spin h-3 w-3 border-2 border-primary border-t-transparent rounded-full"/> : <Sparkles className="h-3 w-3" />}
+                    icon={<Plus className="h-4 w-4"/>} 
+                    className="!px-2"
+                    onClick={() => setShowNewMessageModal(true)}
                   >
-                    {isDrafting ? 'Drafting...' : 'Auto-Draft'}
+                    New
                   </Button>
                 </div>
-                <textarea 
-                  rows={6}
-                  className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
-                  value={inviteBody}
-                  onChange={(e) => setInviteBody(e.target.value)}
-                  placeholder="Enter message or auto-draft..."
-                />
-              </div>
-            </div>
+                <div className="p-2">
+                   <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant" />
+                      <input 
+                        type="text" 
+                        placeholder="Search messages..." 
+                        className="w-full bg-surface-container rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                      />
+                   </div>
+                </div>
+                <div className="flex-1 overflow-y-auto">
+                   {displayThreads.length === 0 ? (
+                      <div className="p-6 text-center text-sm text-surface-on-variant">No messages found.</div>
+                   ) : (
+                      displayThreads.map(thread => (
+                        <button
+                          key={thread.id}
+                          onClick={() => setSelectedThreadId(thread.id)}
+                          className={`w-full text-left p-4 border-b border-surface-outline-variant/50 hover:bg-surface-container transition-colors flex flex-col gap-1 ${
+                            selectedThreadId === thread.id ? 'bg-primary-container/20 border-l-4 border-l-primary' : ''
+                          } ${!thread.isRead ? 'bg-surface-container/10' : ''}`}
+                        >
+                           <div className="flex justify-between items-start w-full">
+                              <span className={`text-sm truncate pr-2 ${!thread.isRead ? 'font-bold text-surface-on' : 'font-medium text-surface-on/90'}`}>
+                                {thread.subject}
+                              </span>
+                              <span className="text-[10px] text-surface-on-variant whitespace-nowrap">
+                                {new Date(thread.lastMessageAt).toLocaleDateString()}
+                              </span>
+                           </div>
+                           <p className="text-xs text-surface-on-variant line-clamp-2">
+                             {thread.messages[thread.messages.length - 1].content}
+                           </p>
+                        </button>
+                      ))
+                   )}
+                </div>
+             </div>
 
-            <div className="p-4 bg-surface-container flex justify-end gap-3">
-              <Button variant="text" onClick={() => setShowInviteModal(false)}>Cancel</Button>
-              <Button variant="filled" onClick={handleSendInvite} disabled={!inviteEmail || !inviteBody} icon={<Send className="h-4 w-4" />}>
-                Send Invitation
-              </Button>
+             {/* Right Column: Conversation View */}
+             <div className={`flex-1 flex flex-col bg-surface-container-high/10 ${!selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
+                {selectedThread ? (
+                  <>
+                     {/* Thread Header */}
+                     <div className="p-4 border-b border-surface-outline-variant bg-surface flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                           <button onClick={() => setSelectedThreadId(null)} className="md:hidden text-surface-on-variant">
+                              <ArrowRight className="h-5 w-5 rotate-180" />
+                           </button>
+                           <div>
+                              <h3 className="font-bold text-surface-on text-lg">{selectedThread.subject}</h3>
+                              <p className="text-xs text-surface-on-variant">
+                                Participants: {selectedThread.participants.join(', ')}
+                              </p>
+                           </div>
+                        </div>
+                        <div className="flex gap-2">
+                           <button className="p-2 text-surface-on-variant hover:bg-surface-container rounded-full"><MoreVertical className="h-5 w-5"/></button>
+                        </div>
+                     </div>
+
+                     {/* Messages Area */}
+                     <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                        {selectedThread.messages.map(msg => {
+                          const isMe = isAdmin ? msg.senderRole === UserRole.ADMIN : msg.senderRole === UserRole.HOMEOWNER;
+                          return (
+                            <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
+                               <div className="flex items-end gap-2 max-w-[80%]">
+                                  {!isMe && (
+                                    <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-xs font-bold text-secondary-on-container mb-1">
+                                      {msg.senderName.charAt(0)}
+                                    </div>
+                                  )}
+                                  <div className={`rounded-2xl px-4 py-3 shadow-sm ${
+                                    isMe 
+                                      ? 'bg-primary text-primary-on rounded-br-none' 
+                                      : 'bg-surface text-surface-on border border-surface-outline-variant rounded-bl-none'
+                                  }`}>
+                                     <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                                  </div>
+                               </div>
+                               <span className="text-[10px] text-surface-on-variant mt-1 px-12">
+                                 {msg.senderName} • {new Date(msg.timestamp).toLocaleString()}
+                               </span>
+                            </div>
+                          );
+                        })}
+                     </div>
+
+                     {/* Reply Box */}
+                     <div className="p-4 bg-surface border-t border-surface-outline-variant">
+                        <div className="flex flex-col gap-2 bg-surface-container rounded-xl p-2 border border-surface-outline-variant focus-within:ring-1 focus-within:ring-primary">
+                           <textarea
+                             rows={3}
+                             placeholder="Write a reply..."
+                             className="w-full bg-transparent outline-none text-sm px-2 py-1 resize-none"
+                             value={replyContent}
+                             onChange={(e) => setReplyContent(e.target.value)}
+                           />
+                           <div className="flex justify-between items-center px-2 pb-1">
+                              <div className="flex gap-2">
+                                <button className="text-surface-outline-variant hover:text-primary"><Paperclip className="h-4 w-4"/></button>
+                              </div>
+                              <Button 
+                                onClick={handleSendReply} 
+                                disabled={!replyContent.trim()} 
+                                variant="filled" 
+                                className="!h-8 !px-4 text-xs"
+                                icon={<Send className="h-3 w-3" />}
+                              >
+                                Send
+                              </Button>
+                           </div>
+                        </div>
+                     </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-surface-on-variant gap-4">
+                     <div className="w-16 h-16 bg-surface-container rounded-full flex items-center justify-center">
+                       <Mail className="h-8 w-8 text-surface-outline" />
+                     </div>
+                     <p>Select a conversation to start messaging.</p>
+                  </div>
+                )}
+             </div>
+          </div>
+        )}
+
+        {/* DOCUMENTS MODAL */}
+        {showDocsModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-surface w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+               <div className="p-6 border-b border-surface-outline-variant bg-surface-container flex justify-between items-center">
+                  <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    Account Documents
+                  </h2>
+                  <button onClick={() => setShowDocsModal(false)} className="text-surface-on-variant hover:text-surface-on">
+                    <X className="h-5 w-5" />
+                  </button>
+               </div>
+               
+               <div className="p-6">
+                 {/* List */}
+                 <div className="mb-6 space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {displayDocuments.length === 0 ? (
+                      <div className="text-center text-sm text-surface-on-variant py-8 border border-dashed border-surface-outline-variant rounded-xl bg-surface-container/30">
+                        No documents uploaded for this account.
+                      </div>
+                    ) : (
+                      displayDocuments.map(doc => (
+                        <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container border border-surface-outline-variant group transition-all">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="p-2 bg-red-50 text-red-600 rounded">
+                              <FileText className="h-5 w-5" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-surface-on truncate">{doc.name}</p>
+                              <p className="text-xs text-surface-on-variant">
+                                Uploaded by {doc.uploadedBy} • {new Date(doc.uploadDate).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <button className="p-2 text-surface-outline-variant hover:text-primary rounded-full hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-all">
+                            <Download className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                 </div>
+                 
+                 {/* Footer Upload Action */}
+                 <div className="pt-4 border-t border-surface-outline-variant flex justify-center">
+                    <label className="cursor-pointer flex items-center gap-2 px-6 py-3 bg-surface-container hover:bg-surface-container-high text-primary font-medium rounded-full transition-colors border border-surface-outline-variant">
+                        <Upload className="h-4 w-4" />
+                        Upload New Document
+                        <input type="file" className="hidden" onChange={handleFileUpload} />
+                    </label>
+                 </div>
+               </div>
             </div>
           </div>
+        )}
+
+        {/* INVITE MODAL */}
+        {showInviteModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+             <div className="bg-surface w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-6 border-b border-surface-outline-variant flex justify-between items-center bg-surface-container">
+                  <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
+                    <Mail className="h-5 w-5 text-primary" />
+                    Invite Homeowner
+                  </h2>
+                  <button onClick={() => setShowInviteModal(false)} className="text-surface-on-variant hover:text-surface-on">
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                
+                <div className="p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-surface-on-variant mb-1">Full Name</label>
+                    <input 
+                      type="text" 
+                      className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                      value={inviteName}
+                      onChange={(e) => setInviteName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-surface-on-variant mb-1">Email Address</label>
+                    <input 
+                      type="email" 
+                      className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <label className="block text-sm font-medium text-surface-on-variant">Invitation Message</label>
+                      <Button 
+                        variant="text" 
+                        onClick={handleDraftInvite} 
+                        disabled={isDrafting || !inviteName} 
+                        className="!h-6 !text-xs !px-2"
+                        icon={isDrafting ? <div className="animate-spin h-3 w-3 border-2 border-primary border-t-transparent rounded-full"/> : <Sparkles className="h-3 w-3" />}
+                      >
+                        {isDrafting ? 'Drafting...' : 'Reset Template'}
+                      </Button>
+                    </div>
+                    <textarea 
+                      rows={12}
+                      className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none text-xs leading-relaxed"
+                      value={inviteBody}
+                      onChange={(e) => setInviteBody(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 bg-surface-container flex justify-end gap-3">
+                  <Button variant="text" onClick={() => setShowInviteModal(false)}>Cancel</Button>
+                  <Button variant="filled" onClick={handleSendInvite} disabled={!inviteEmail || !inviteBody || isDrafting} icon={<Send className="h-4 w-4" />}>
+                    Send Invitation
+                  </Button>
+                </div>
+             </div>
+          </div>
+        )}
+
+        {/* NEW MESSAGE MODAL */}
+        {showNewMessageModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+             <div className="bg-surface w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-6 border-b border-surface-outline-variant flex justify-between items-center bg-surface-container">
+                  <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
+                    <Mail className="h-5 w-5 text-primary" />
+                    New Message
+                  </h2>
+                  <button onClick={() => setShowNewMessageModal(false)} className="text-surface-on-variant hover:text-surface-on">
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                
+                <div className="p-6 space-y-4">
+                  {/* Recipient Display */}
+                  <div className="bg-surface-container p-3 rounded-xl flex items-center justify-between">
+                     <div>
+                       <span className="text-xs font-bold text-surface-on-variant uppercase">To</span>
+                       <p className="font-medium text-surface-on">
+                         {isAdmin 
+                           ? (effectiveHomeowner ? effectiveHomeowner.name : 'Select a Homeowner') 
+                           : 'Cascade Support Team'
+                         }
+                       </p>
+                     </div>
+                     <div className="bg-surface p-2 rounded-full border border-surface-outline-variant">
+                        {isAdmin ? <Home className="h-4 w-4 text-surface-outline"/> : <Building2 className="h-4 w-4 text-surface-outline"/>}
+                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-surface-on-variant mb-1">Subject</label>
+                    <input 
+                      type="text" 
+                      className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                      value={newMessageSubject}
+                      onChange={(e) => setNewMessageSubject(e.target.value)}
+                      placeholder="e.g. Question about warranty"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-surface-on-variant mb-1">Message</label>
+                    <textarea 
+                      rows={6}
+                      className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
+                      value={newMessageContent}
+                      onChange={(e) => setNewMessageContent(e.target.value)}
+                      placeholder="Type your message here..."
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 bg-surface-container flex justify-end gap-3">
+                  <Button variant="text" onClick={() => setShowNewMessageModal(false)}>Cancel</Button>
+                  <Button 
+                    variant="filled" 
+                    onClick={handleCreateNewThread} 
+                    disabled={!newMessageSubject || !newMessageContent || isSendingMessage} 
+                    icon={isSendingMessage ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"/> : <Send className="h-4 w-4" />}
+                  >
+                    Send Message
+                  </Button>
+                </div>
+             </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // 2. ADMIN PLACEHOLDER VIEW (When no homeowner is selected)
+  if (isAdmin && !targetHomeowner) {
+    return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 animate-in fade-in slide-in-from-bottom-4">
+            <div className="bg-surface-container-high p-6 rounded-full">
+                <Search className="h-12 w-12 text-surface-outline" />
+            </div>
+            <div>
+                <h2 className="text-xl font-normal text-surface-on">Select a Homeowner</h2>
+                <p className="text-surface-on-variant mt-2 max-w-sm mx-auto">
+                    Search for a homeowner in the top bar to view their warranty claims, tasks, and account details.
+                </p>
+            </div>
         </div>
-      )}
+    );
+  }
+
+  // 3. HOMEOWNER PORTAL VIEW (Not Admin)
+  return (
+    <div className="space-y-6">
+      {renderClaimsList(displayClaims)}
     </div>
   );
 };

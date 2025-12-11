@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { CATEGORIES, CLAIM_CLASSIFICATIONS } from '../constants';
+import { CLAIM_CLASSIFICATIONS } from '../constants';
 import { Contractor, ClaimClassification, Attachment, Homeowner, ClaimStatus } from '../types';
 import Button from './Button';
-import { X, Upload, Image as ImageIcon, Video, FileText, Search, User } from 'lucide-react';
+import { X, Upload, Video, FileText, Search, Building2 } from 'lucide-react';
 
 interface NewClaimFormProps {
   onSubmit: (data: any) => void;
@@ -15,7 +15,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
   // Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState(CATEGORIES[0]);
   
   // Classification & Status
   const [classification, setClassification] = useState<ClaimClassification>('60 Day');
@@ -32,21 +31,20 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
   // Attachments
   const [attachments, setAttachments] = useState<Attachment[]>([]);
 
-  const filteredContractors = contractorSearch 
+  // Only show contractors if user has typed something
+  const filteredContractors = contractorSearch.trim() 
     ? contractors.filter(c => c.companyName.toLowerCase().includes(contractorSearch.toLowerCase()) || c.specialty.toLowerCase().includes(contractorSearch.toLowerCase()))
-    : contractors;
+    : [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Logic: If Non-Warranty, status is likely COMPLETED or REVIEWING, but let's default to logic in App.tsx or pass data.
-    // For now, we construct the payload.
     const contractor = contractors.find(c => c.id === selectedContractorId);
 
     const payload = {
       title,
       description,
-      category,
+      category: 'General',
       classification,
       dateEvaluated: dateEvaluated ? new Date(dateEvaluated) : undefined,
       nonWarrantyExplanation: classification === 'Non-Warranty' ? nonWarrantyExplanation : undefined,
@@ -96,26 +94,12 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       
-      {/* Homeowner Context Info (Read Only) */}
-      <div className="bg-secondary-container/30 p-4 rounded-xl border border-secondary-container/50">
-        <h3 className="text-xs font-bold text-secondary-on-container mb-3 uppercase tracking-wider flex items-center gap-2">
-          <User className="h-4 w-4" />
-          Homeowner Context
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <span className="text-xs text-surface-on-variant block">Builder</span>
-            <span className="text-sm font-medium text-surface-on">{activeHomeowner.builder}</span>
-          </div>
-          <div>
-            <span className="text-xs text-surface-on-variant block">Project / Lot</span>
-            <span className="text-sm font-medium text-surface-on">{activeHomeowner.lotNumber}</span>
-          </div>
-          <div>
-            <span className="text-xs text-surface-on-variant block">Closing Date</span>
-            <span className="text-sm font-medium text-surface-on">{activeHomeowner.closingDate.toLocaleDateString()}</span>
-          </div>
-        </div>
+      {/* Project Name Pill */}
+      <div className="flex justify-end">
+         <span className="bg-primary-container text-primary-on-container text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+            <Building2 className="h-3 w-3" />
+            {activeHomeowner.projectOrLlc || `Lot ${activeHomeowner.lotNumber}`}
+         </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -132,18 +116,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
               placeholder="Title"
             />
             <label htmlFor="title" className={labelClass}>Claim Title</label>
-          </div>
-
-          <div className="relative">
-            <select
-              id="category"
-              className={selectClass}
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-            >
-              {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-            <label htmlFor="category" className="absolute left-2 -top-2 z-[1] bg-white px-1 text-xs text-surface-outline-variant">Category</label>
           </div>
 
           <div className="relative">
@@ -205,36 +177,43 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
         <div className="space-y-6">
            {/* Assignment */}
            <div className="bg-surface-container/20 p-4 rounded-xl border border-surface-outline-variant">
-              <h4 className="text-sm font-bold text-surface-on mb-3">Contractor Assignment</h4>
+              <h4 className="text-sm font-bold text-surface-on mb-3">Sub Assignment</h4>
               
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-surface-outline-variant" />
                 <input 
                   type="text"
-                  placeholder="Search contractors..."
+                  placeholder="Type to search subs..."
                   className="w-full rounded-md border border-surface-outline bg-surface pl-10 pr-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                   value={contractorSearch}
                   onChange={(e) => setContractorSearch(e.target.value)}
                 />
               </div>
 
-              <div className="mt-2 max-h-40 overflow-y-auto border border-surface-outline-variant rounded-md bg-surface">
-                {filteredContractors.map(c => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => { setSelectedContractorId(c.id); setContractorSearch(''); }}
-                    className={`w-full text-left px-3 py-2 text-sm flex justify-between hover:bg-surface-container ${selectedContractorId === c.id ? 'bg-primary-container text-primary-on-container' : 'text-surface-on'}`}
-                  >
-                    <span>{c.companyName}</span>
-                    <span className="text-xs opacity-70">{c.specialty}</span>
-                  </button>
-                ))}
-              </div>
+              {contractorSearch.trim().length > 0 && (
+                <div className="mt-2 max-h-40 overflow-y-auto border border-surface-outline-variant rounded-md bg-surface shadow-elevation-1">
+                  {filteredContractors.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-surface-on-variant">No subs found.</div>
+                  ) : (
+                    filteredContractors.map(c => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => { setSelectedContractorId(c.id); setContractorSearch(c.companyName); }}
+                        className={`w-full text-left px-3 py-2 text-sm flex justify-between hover:bg-surface-container ${selectedContractorId === c.id ? 'bg-primary-container text-primary-on-container' : 'text-surface-on'}`}
+                      >
+                        <span>{c.companyName}</span>
+                        <span className="text-xs opacity-70">{c.specialty}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
               
-              {selectedContractorId && (
-                <div className="mt-2 text-xs text-primary font-medium">
-                  Selected: {contractors.find(c => c.id === selectedContractorId)?.companyName}
+              {selectedContractorId && !contractorSearch.trim() && (
+                <div className="mt-2 text-xs text-primary font-medium flex items-center justify-between">
+                  <span>Selected: {contractors.find(c => c.id === selectedContractorId)?.companyName}</span>
+                  <button type="button" onClick={() => { setSelectedContractorId(''); setContractorSearch(''); }} className="text-surface-on-variant hover:text-error"><X className="h-3 w-3" /></button>
                 </div>
               )}
            </div>
@@ -244,7 +223,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
             <textarea
               id="internalNotes"
               rows={4}
-              className={`${inputClass} bg-yellow-50 border-yellow-200`}
+              className={`${inputClass} bg-secondary-container/20 border-secondary-container text-secondary-on-container`}
               value={internalNotes}
               onChange={(e) => setInternalNotes(e.target.value)}
               placeholder="Internal Notes"

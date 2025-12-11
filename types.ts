@@ -89,6 +89,26 @@ export interface Comment {
   timestamp: Date;
 }
 
+export interface Message {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderRole: UserRole;
+  content: string;
+  timestamp: Date;
+  attachments?: Attachment[];
+}
+
+export interface MessageThread {
+  id: string;
+  subject: string;
+  homeownerId: string;
+  participants: string[]; // Names
+  lastMessageAt: Date;
+  isRead: boolean;
+  messages: Message[];
+}
+
 export interface ProposedDate {
   date: string; // ISO string
   timeSlot: 'AM' | 'PM' | 'All Day';

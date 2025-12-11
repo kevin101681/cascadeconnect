@@ -4,24 +4,30 @@ import Dashboard from './components/Dashboard';
 import ClaimDetail from './components/ClaimDetail';
 import NewClaimForm from './components/NewClaimForm';
 import HomeownerEnrollment from './components/HomeownerEnrollment';
-import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee } from './types';
-import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS } from './constants';
+import AuthScreen from './components/AuthScreen';
+import InternalUserManagement from './components/InternalUserManagement';
+import DataImport from './components/DataImport';
+import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message } from './types';
+import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS } from './constants';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [userRole, setUserRole] = useState<UserRole>(UserRole.ADMIN);
+  
+  // Mock logged in user management
+  const [activeHomeowner, setActiveHomeowner] = useState<Homeowner>(MOCK_HOMEOWNERS[0]);
+  const [activeEmployee, setActiveEmployee] = useState<InternalEmployee>(MOCK_INTERNAL_EMPLOYEES[0]); 
+
   const [claims, setClaims] = useState<Claim[]>(MOCK_CLAIMS);
   const [tasks, setTasks] = useState<Task[]>(MOCK_TASKS);
   const [documents, setDocuments] = useState<HomeownerDocument[]>(MOCK_DOCUMENTS);
   const [homeowners, setHomeowners] = useState<Homeowner[]>(MOCK_HOMEOWNERS);
   const [employees, setEmployees] = useState<InternalEmployee[]>(MOCK_INTERNAL_EMPLOYEES);
+  const [messages, setMessages] = useState<MessageThread[]>(MOCK_THREADS);
   
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW'>('DASHBOARD');
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA'>('DASHBOARD');
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
   
-  // Mock logged in user management
-  const [activeHomeowner, setActiveHomeowner] = useState<Homeowner>(MOCK_HOMEOWNERS[0]);
-  const [activeEmployee, setActiveEmployee] = useState(MOCK_INTERNAL_EMPLOYEES[0]); // Default admin
-
   // --- Search State (Lifted from Dashboard) ---
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAdminHomeownerId, setSelectedAdminHomeownerId] = useState<string | null>(null);
@@ -41,9 +47,21 @@ function App() {
       )
     : [];
 
+  const handleLoginSuccess = (user: Homeowner | InternalEmployee, role: UserRole) => {
+    setUserRole(role);
+    if (role === UserRole.ADMIN) {
+      setActiveEmployee(user as InternalEmployee);
+    } else {
+      setActiveHomeowner(user as Homeowner);
+    }
+    setIsAuthenticated(true);
+  };
+
   const handleSelectHomeowner = (homeowner: Homeowner) => {
     setSelectedAdminHomeownerId(homeowner.id);
     setSearchQuery('');
+    // Ensure we are on the dashboard view when selecting a homeowner to see their profile
+    setCurrentView('DASHBOARD');
   };
 
   const handleClearHomeownerSelection = () => {
@@ -74,17 +92,10 @@ function App() {
   };
 
   const handleNewClaimStart = (homeownerId?: string) => {
-    if (homeownerId) {
-      const target = homeowners.find(h => h.id === homeownerId);
-      if (target) {
-        // If Admin is starting claim for a specific user, logic is handled in CreateClaim
-      }
-    }
     setCurrentView('NEW');
   };
 
   const handleCreateClaim = (data: Partial<Claim>) => {
-    // If admin has selected a homeowner, use that one. Otherwise use activeHomeowner (which is the user themselves if logged in as user)
     const subjectHomeowner = (userRole === UserRole.ADMIN && targetHomeowner) ? targetHomeowner : activeHomeowner;
     if (!subjectHomeowner) return;
 
@@ -206,10 +217,62 @@ function App() {
     setDocuments(prev => [newDoc, ...prev]);
   };
 
+  // Message Handling
+  const handleSendMessage = (threadId: string, content: string) => {
+    const newMessage: Message = {
+      id: `m-${Date.now()}`,
+      senderId: userRole === UserRole.ADMIN ? activeEmployee.id : activeHomeowner.id,
+      senderName: userRole === UserRole.ADMIN ? activeEmployee.name : activeHomeowner.name,
+      senderRole: userRole,
+      content,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => prev.map(t => {
+      if (t.id === threadId) {
+        return {
+          ...t,
+          lastMessageAt: newMessage.timestamp,
+          messages: [...t.messages, newMessage]
+        };
+      }
+      return t;
+    }));
+  };
+
+  const handleCreateThread = (homeownerId: string, subject: string, content: string) => {
+    const sender = userRole === UserRole.ADMIN ? activeEmployee : activeHomeowner;
+    
+    const newThread: MessageThread = {
+      id: `th-${Date.now()}`,
+      subject,
+      homeownerId,
+      participants: [sender.name], // In a real app we'd fetch the recipient name
+      isRead: true, // Read by sender
+      lastMessageAt: new Date(),
+      messages: [
+        {
+          id: `m-init-${Date.now()}`,
+          senderId: sender.id,
+          senderName: sender.name,
+          senderRole: userRole,
+          content,
+          timestamp: new Date()
+        }
+      ]
+    };
+
+    setMessages(prev => [newThread, ...prev]);
+  };
+
   // Scroll to top on view change
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentView]);
+
+  if (!isAuthenticated) {
+    return <AuthScreen onLoginSuccess={handleLoginSuccess} />;
+  }
 
   return (
     <Layout 
@@ -226,6 +289,10 @@ function App() {
       onSelectHomeowner={handleSelectHomeowner}
       selectedHomeownerId={selectedAdminHomeownerId}
       onClearSelection={handleClearHomeownerSelection}
+
+      // Nav
+      onNavigate={setCurrentView}
+      onOpenEnrollment={() => setIsEnrollmentOpen(true)}
     >
       {currentView === 'DASHBOARD' && (
         <Dashboard 
@@ -241,20 +308,31 @@ function App() {
           onAddTask={handleAddTask}
           onToggleTask={handleToggleTask}
           onDeleteTask={handleDeleteTask}
-          onImportClaims={handleImportClaims}
           
           targetHomeowner={targetHomeowner}
           onClearHomeownerSelection={handleClearHomeownerSelection}
 
           documents={documents}
           onUploadDocument={handleUploadDocument}
+          
+          messages={messages}
+          onSendMessage={handleSendMessage}
+          onCreateThread={handleCreateThread}
+        />
+      )}
 
+      {currentView === 'TEAM' && (
+        <InternalUserManagement 
+          employees={employees}
           onAddEmployee={handleAddEmployee}
           onUpdateEmployee={handleUpdateEmployee}
           onDeleteEmployee={handleDeleteEmployee}
-
-          onOpenEnrollment={() => setIsEnrollmentOpen(true)}
+          onClose={() => setCurrentView('DASHBOARD')}
         />
+      )}
+
+      {currentView === 'DATA' && (
+        <DataImport onImportClaims={handleImportClaims} />
       )}
 
       {currentView === 'NEW' && (

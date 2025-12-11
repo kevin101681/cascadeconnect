@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Task, InternalEmployee, Claim, Homeowner, ClaimStatus } from '../types';
 import Button from './Button';
-import { Check, Plus, User, Calendar, Trash2, Home, CheckCircle, Square, CheckSquare } from 'lucide-react';
+import { Check, Plus, User, Calendar, Trash2, Home, CheckCircle, Square, CheckSquare, HardHat } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 
 interface TaskListProps {
@@ -86,7 +86,7 @@ const TaskList: React.FC<TaskListProps> = ({
 
       {showForm && (
         <div className="bg-surface rounded-2xl border border-surface-outline-variant p-5 animate-in slide-in-from-top-2">
-          <h3 className="font-medium text-surface-on mb-4">New Internal Task</h3>
+          <h3 className="font-medium text-surface-on mb-4">New Task</h3>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -212,7 +212,7 @@ const TaskList: React.FC<TaskListProps> = ({
                 }`}
               >
                 <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3">
+                    <div className="flex items-start gap-3 flex-1">
                         <button 
                             onClick={() => onToggleTask(task.id)}
                             className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors mt-0.5 ${
@@ -224,18 +224,23 @@ const TaskList: React.FC<TaskListProps> = ({
                             {task.isCompleted && <Check className="h-3.5 w-3.5" />}
                         </button>
 
-                        <div>
-                            <p className={`font-bold text-lg ${task.isCompleted ? 'text-surface-on-variant line-through' : 'text-surface-on'}`}>
+                        <div className="flex-1">
+                            {/* Title Pill */}
+                            <span className={`inline-block px-3 py-1 rounded-full font-bold text-sm mb-2 ${
+                                task.isCompleted 
+                                ? 'bg-surface-container text-surface-on-variant line-through' 
+                                : 'bg-primary-container text-primary-on-container'
+                            }`}>
                                 {task.title}
-                            </p>
+                            </span>
                             
                             {/* Meta Data Row */}
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-surface-on-variant mt-2">
-                                <span className="flex items-center gap-1.5 bg-surface-container px-2 py-1 rounded">
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-surface-on-variant ml-1">
+                                <span className="flex items-center gap-1.5">
                                     <User className="h-3 w-3" />
                                     Assigned to: <span className="font-medium text-surface-on">{assignee?.name || 'Unknown'}</span>
                                 </span>
-                                <span className="flex items-center gap-1.5 bg-surface-container px-2 py-1 rounded">
+                                <span className="flex items-center gap-1.5">
                                     <Calendar className="h-3 w-3" />
                                     Assigned: {task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString() : 'N/A'}
                                 </span>
@@ -252,32 +257,45 @@ const TaskList: React.FC<TaskListProps> = ({
                     </button>
                 </div>
 
-                {/* Notes Section */}
+                {/* Notes Section - Pill Style */}
                 {task.description && (
-                    <div className="ml-9 text-sm text-surface-on bg-surface-container/30 p-3 rounded-lg border border-surface-outline-variant/50">
-                        <p className="whitespace-pre-wrap">{task.description}</p>
+                    <div className="ml-9 mt-1">
+                        <div className="inline-block bg-surface-container-high/60 px-4 py-2 rounded-2xl text-sm text-surface-on">
+                            <p className="whitespace-pre-wrap">{task.description}</p>
+                        </div>
                     </div>
                 )}
 
                 {/* Checklist of Claims */}
                 {taskClaims.length > 0 && (
-                     <div className="ml-9 mt-1">
+                     <div className="ml-9 mt-2">
                         <p className="text-xs font-bold text-surface-on-variant mb-2 uppercase tracking-wider flex items-center gap-1">
                             <CheckSquare className="h-3 w-3" />
-                            Target Warranty Claims (Checklist)
+                            Subs to Schedule
                         </p>
                         <div className="space-y-2">
                             {taskClaims.map(claim => (
                                 <div key={claim.id} className="flex items-center justify-between p-2.5 rounded-lg border border-surface-outline-variant bg-surface text-sm">
                                     <div className="flex items-center gap-3">
-                                        {/* Display Square to act as visual checklist item for the user */}
-                                        <Square className="h-4 w-4 text-primary" />
+                                        <Square className="h-4 w-4 text-primary flex-shrink-0" />
                                         <div>
                                             <span className="font-medium text-surface-on block">{claim.title}</span>
-                                            <span className="text-xs text-surface-on-variant">{claim.id} • {claim.classification}</span>
+                                            <div className="flex items-center flex-wrap gap-1 text-xs text-surface-on-variant">
+                                                <span>{claim.id}</span>
+                                                <span>•</span>
+                                                <span>{claim.classification}</span>
+                                                {claim.contractorName && (
+                                                    <>
+                                                         <span className="mx-1 text-surface-outline-variant">|</span>
+                                                         <span className="font-medium text-surface-on-variant flex items-center gap-1 bg-surface-container px-1.5 py-0.5 rounded">
+                                                            <HardHat className="h-3 w-3" />
+                                                            {claim.contractorName}
+                                                         </span>
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                    <StatusBadge status={claim.status} />
                                 </div>
                             ))}
                         </div>

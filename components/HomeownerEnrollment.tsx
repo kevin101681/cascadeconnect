@@ -232,7 +232,7 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
                  </h3>
                  <div className="space-y-4">
                    <div>
-                     <label className={labelClass}>Trade Contractor List (Upload)</label>
+                     <label className={labelClass}>Contractor List (Upload)</label>
                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-surface-outline-variant border-dashed rounded-xl hover:bg-surface-container transition-colors">
                        <div className="space-y-1 text-center">
                          <Upload className="mx-auto h-8 w-8 text-surface-outline-variant" />

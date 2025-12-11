@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Claim, UserRole, ClaimStatus, ProposedDate, Contractor } from '../types';
 import Button from './Button';
 import StatusBadge from './StatusBadge';
-import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Send, Sparkles, ArrowLeft, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, Image as ImageIcon } from 'lucide-react';
+import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Send, Sparkles, ArrowLeft, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, Image as ImageIcon, X } from 'lucide-react';
 import { summarizeClaim, draftSchedulingEmail } from '../services/geminiService';
 import { generateServiceOrderPDF } from '../services/pdfService';
+import { sendEmail, generateNotificationBody } from '../services/emailService';
 
 interface ClaimDetailProps {
   claim: Claim;
@@ -22,13 +23,22 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
   const [proposeDate, setProposeDate] = useState('');
   const [proposeTime, setProposeTime] = useState<'AM' | 'PM'>('AM');
 
+  // Service Order Email Modal State
+  const [showSOModal, setShowSOModal] = useState(false);
+  const [soPdfUrl, setSoPdfUrl] = useState<string | null>(null);
+  const [soSubject, setSoSubject] = useState('');
+  const [soBody, setSoBody] = useState('');
+  const [isSendingSO, setIsSendingSO] = useState(false);
+
   const isAdmin = currentUserRole === UserRole.ADMIN;
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!newComment.trim()) return;
+    const authorName = isAdmin ? 'Admin' : claim.homeownerName;
+    
     const comment = {
       id: Date.now().toString(),
-      author: isAdmin ? 'Admin' : claim.homeownerName,
+      author: authorName,
       role: currentUserRole,
       text: newComment,
       timestamp: new Date()
@@ -37,25 +47,75 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
       ...claim,
       comments: [...claim.comments, comment]
     });
+    
+    // Notify via email service
+    const isHomeownerSender = currentUserRole === UserRole.HOMEOWNER;
+    const recipientEmail = isHomeownerSender ? 'info@cascadebuilderservices.com' : claim.homeownerEmail;
+    
+    await sendEmail({
+      to: recipientEmail,
+      subject: `Update on Warranty Claim #${claim.id}: ${claim.title}`,
+      body: generateNotificationBody(authorName, newComment, 'CLAIM', claim.id, `https://cascadebuilderservices.com/claims/${claim.id}`),
+      fromName: authorName,
+      fromRole: currentUserRole,
+      replyToId: claim.id
+    });
+
+    // If Admin sends, and Contractor is assigned, copy the contractor (Sub)
+    if (isAdmin && claim.contractorEmail) {
+       await sendEmail({
+        to: claim.contractorEmail,
+        subject: `Update on Warranty Claim #${claim.id} (Sub Notification)`,
+        body: generateNotificationBody(authorName, newComment, 'CLAIM', claim.id, `https://cascadebuilderservices.com/claims/${claim.id}`),
+        fromName: authorName,
+        fromRole: currentUserRole
+      });
+    }
+
     setNewComment('');
   };
 
-  const handleGenerateSummary = async () => {
-    setIsAiLoading(true);
-    const summary = await summarizeClaim(claim);
-    onUpdateClaim({ ...claim, summary });
-    setIsAiLoading(false);
-  };
+  const handlePrepareServiceOrder = async () => {
+    if (!claim.contractorId) return;
 
-  const handleGeneratePDF = async () => {
+    setIsAiLoading(true);
+    
+    // 1. Generate Summary if needed
     let summary = claim.summary;
     if (!summary) {
-      setIsAiLoading(true);
       summary = await summarizeClaim(claim);
       onUpdateClaim({...claim, summary});
-      setIsAiLoading(false);
     }
-    generateServiceOrderPDF(claim, summary || claim.description);
+
+    // 2. Generate PDF Blob URL
+    const url = generateServiceOrderPDF(claim, summary || claim.description, true);
+    if (typeof url === 'string') {
+        setSoPdfUrl(url);
+    }
+
+    // 3. Pre-fill Email Details
+    setSoSubject(`Service Order: ${claim.builderName} - Lot ${claim.projectName} - ${claim.title}`);
+    setSoBody(`Hi ${claim.contractorName},\n\nPlease find attached the service order for the warranty claim referenced above.\n\nAddress: ${claim.address}\nIssue: ${claim.description}\n\nPlease let us know when you can schedule this.\n\nThanks,\nCascade Builder Services`);
+    
+    setIsAiLoading(false);
+    setShowSOModal(true);
+  };
+
+  const handleSendServiceOrder = async () => {
+    setIsSendingSO(true);
+    if (claim.contractorEmail) {
+        await sendEmail({
+            to: claim.contractorEmail,
+            subject: soSubject,
+            body: soBody,
+            fromName: 'Cascade Admin',
+            fromRole: UserRole.ADMIN
+        });
+        alert('Service Order sent to Sub successfully!');
+    }
+    setIsSendingSO(false);
+    setShowSOModal(false);
+    setSoPdfUrl(null);
   };
 
   const handleDraftEmail = async () => {
@@ -105,7 +165,7 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
+    <div className="flex flex-col h-full relative">
       {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -128,118 +188,14 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
             </div>
           </div>
         </div>
-        
-        {isAdmin && (
-           <Button variant="outlined" onClick={handleGeneratePDF} isLoading={isAiLoading} icon={<FileText className="h-4 w-4" />}>
-             Service Order
-           </Button>
-        )}
       </div>
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-hidden min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Left Column: Details & Schedule - Scrollable */}
-        <div className="lg:col-span-2 space-y-6 overflow-y-auto pr-2 pb-4">
+        {/* Left Column: Details & Schedule */}
+        <div className="lg:col-span-2 space-y-6">
           
-          {/* Warranty Assessment Card (New) */}
-          <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant">
-            <h3 className="text-lg font-normal text-surface-on mb-4 flex items-center gap-2">
-              <Info className="h-5 w-5 text-primary" />
-              Warranty Assessment
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <p className="text-xs text-surface-on-variant mb-1">Classification</p>
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                  claim.classification === 'Non-Warranty' ? 'bg-error-container text-error-on-container' : 'bg-surface-container text-surface-on'
-                }`}>
-                  {claim.classification}
-                </span>
-              </div>
-              <div>
-                <p className="text-xs text-surface-on-variant mb-1">Date Evaluated</p>
-                <p className="text-sm text-surface-on">
-                  {claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString() : 'Pending Evaluation'}
-                </p>
-              </div>
-              {claim.classification === 'Non-Warranty' && (
-                <div className="md:col-span-2 bg-error/5 border border-error/20 p-3 rounded-xl">
-                  <p className="text-xs text-error font-bold mb-1">Non-Warranty Explanation</p>
-                  <p className="text-sm text-surface-on">{claim.nonWarrantyExplanation || 'No explanation provided.'}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Internal Notes (Admin Only) */}
-          {isAdmin && (
-             <div className="bg-yellow-50 p-6 rounded-3xl border border-yellow-200">
-               <h3 className="text-lg font-normal text-yellow-900 mb-2 flex items-center gap-2">
-                 <Lock className="h-4 w-4" />
-                 Internal Notes <span className="text-xs font-normal opacity-70">(Not visible to Homeowner)</span>
-               </h3>
-               <p className="text-sm text-yellow-800 whitespace-pre-wrap leading-relaxed">
-                 {claim.internalNotes || "No internal notes."}
-               </p>
-             </div>
-          )}
-
-          {/* Contractor Assignment (Admin Only) */}
-          {isAdmin && (
-            <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant">
-              <h3 className="text-lg font-normal text-surface-on mb-4 flex items-center gap-2">
-                <HardHat className="h-5 w-5 text-primary" />
-                Contractor Assignment
-              </h3>
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                <div className="w-full sm:flex-1">
-                  <select 
-                    className="w-full bg-surface-container rounded-lg px-4 py-3 border-r-8 border-transparent outline outline-1 outline-surface-outline-variant"
-                    value={claim.contractorId || ""}
-                    onChange={(e) => handleAssignContractor(e.target.value)}
-                  >
-                    <option value="" disabled>Select a contractor...</option>
-                    {contractors.map(c => (
-                      <option key={c.id} value={c.id}>
-                        {c.companyName} ({c.specialty})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {claim.contractorId && (
-                  <div className="flex items-center gap-3 bg-secondary-container px-4 py-3 rounded-xl text-secondary-on-container w-full sm:w-auto">
-                    <Briefcase className="h-5 w-5" />
-                    <div className="text-sm">
-                      <p className="font-bold">{claim.contractorName}</p>
-                      <p className="opacity-80 text-xs">{claim.contractorEmail}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* AI Summary Card */}
-          {isAdmin && (
-            <div className="bg-primary-container/30 border border-primary-container p-5 rounded-2xl relative overflow-hidden">
-               <div className="flex justify-between items-start mb-3 relative z-10">
-                <h3 className="text-sm font-bold text-primary flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  AI Summary
-                </h3>
-                {!claim.summary && (
-                  <Button variant="text" onClick={handleGenerateSummary} disabled={isAiLoading} className="!h-8 text-xs">
-                    Generate
-                  </Button>
-                )}
-              </div>
-              <p className="text-surface-on relative z-10">
-                {claim.summary || "No summary generated. Use AI to create a technical summary for the contractor."}
-              </p>
-            </div>
-          )}
-
-          {/* Details Card */}
+          {/* 1. Description Card */}
           <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant">
             <h3 className="text-lg font-normal text-surface-on mb-4">Description</h3>
             <p className="text-surface-on-variant whitespace-pre-wrap leading-relaxed">
@@ -275,7 +231,98 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
             )}
           </div>
 
-          {/* Scheduling Card */}
+          {/* 2. Warranty Assessment Card */}
+          <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant">
+            <h3 className="text-lg font-normal text-surface-on mb-4 flex items-center gap-2">
+              <Info className="h-5 w-5 text-primary" />
+              Warranty Assessment
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <p className="text-xs text-surface-on-variant mb-1">Classification</p>
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  claim.classification === 'Non-Warranty' ? 'bg-error-container text-error-on-container' : 'bg-surface-container text-surface-on'
+                }`}>
+                  {claim.classification}
+                </span>
+              </div>
+              <div>
+                <p className="text-xs text-surface-on-variant mb-1">Date Evaluated</p>
+                <p className="text-sm text-surface-on">
+                  {claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString() : 'Pending Evaluation'}
+                </p>
+              </div>
+              {claim.classification === 'Non-Warranty' && (
+                <div className="md:col-span-2 bg-error/5 border border-error/20 p-3 rounded-xl">
+                  <p className="text-xs text-error font-bold mb-1">Non-Warranty Explanation</p>
+                  <p className="text-sm text-surface-on">{claim.nonWarrantyExplanation || 'No explanation provided.'}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 3. Internal Notes (Admin Only) */}
+          {isAdmin && (
+             <div className="bg-secondary-container p-6 rounded-3xl border border-secondary-container">
+               <h3 className="text-lg font-normal text-secondary-on-container mb-2 flex items-center gap-2">
+                 <Lock className="h-4 w-4" />
+                 Internal Notes <span className="text-xs font-normal opacity-70">(Not visible to Homeowner)</span>
+               </h3>
+               <p className="text-sm text-secondary-on-container whitespace-pre-wrap leading-relaxed">
+                 {claim.internalNotes || "No internal notes."}
+               </p>
+             </div>
+          )}
+
+          {/* 4. Sub Assignment (Admin Only) */}
+          {isAdmin && (
+            <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant">
+              <h3 className="text-lg font-normal text-surface-on mb-4 flex items-center gap-2">
+                <HardHat className="h-5 w-5 text-primary" />
+                Sub Assignment
+              </h3>
+              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                <div className="w-full sm:flex-1">
+                  <select 
+                    className="w-full bg-surface-container rounded-lg px-4 py-3 border-r-8 border-transparent outline outline-1 outline-surface-outline-variant"
+                    value={claim.contractorId || ""}
+                    onChange={(e) => handleAssignContractor(e.target.value)}
+                  >
+                    <option value="" disabled>Select a sub...</option>
+                    {contractors.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.companyName} ({c.specialty})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {claim.contractorId && (
+                  <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                      <div className="flex items-center gap-3 bg-secondary-container px-4 py-3 rounded-xl text-secondary-on-container flex-1 w-full sm:w-auto">
+                        <Briefcase className="h-5 w-5 flex-shrink-0" />
+                        <div className="text-sm overflow-hidden">
+                          <p className="font-bold truncate">{claim.contractorName}</p>
+                          <p className="opacity-80 text-xs truncate">{claim.contractorEmail}</p>
+                        </div>
+                      </div>
+                      
+                      {/* Send Service Order Button */}
+                      <Button 
+                         variant="outlined" 
+                         onClick={handlePrepareServiceOrder} 
+                         isLoading={isAiLoading}
+                         icon={<FileText className="h-4 w-4" />}
+                         className="!h-12 w-full sm:w-auto whitespace-nowrap"
+                      >
+                         Service Order
+                      </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 5. Scheduling Card */}
           <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant">
             <div className="flex justify-between items-start mb-6">
                <h3 className="text-lg font-normal text-surface-on flex items-center gap-2">
@@ -376,8 +423,8 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
           </div>
         </div>
 
-        {/* Right Column: Chat - Fixed Height Container */}
-        <div className="bg-surface rounded-3xl border border-surface-outline-variant flex flex-col h-full overflow-hidden shadow-elevation-1">
+        {/* Right Column: Chat - Sticky & Fixed Height */}
+        <div className="lg:sticky lg:top-24 bg-surface rounded-3xl border border-surface-outline-variant flex flex-col h-[600px] shadow-elevation-1">
           <div className="p-4 border-b border-surface-outline-variant bg-surface-container-high/30">
             <h3 className="font-medium text-surface-on flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-primary" />
@@ -430,9 +477,83 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                 <Send className="h-5 w-5" />
               </button>
             </div>
+            <div className="text-[10px] text-center text-surface-outline-variant mt-2">
+               Replies will be sent to the registered email address.
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Service Order Email Modal */}
+      {showSOModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+           <div className="bg-surface w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+              <div className="p-6 border-b border-surface-outline-variant flex justify-between items-center bg-surface-container">
+                <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
+                  <Mail className="h-5 w-5 text-primary" />
+                  Send Service Order
+                </h2>
+                <button onClick={() => { setShowSOModal(false); setSoPdfUrl(null); }} className="text-surface-on-variant hover:text-surface-on">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-4">
+                {/* Recipient Display */}
+                <div className="bg-surface-container p-3 rounded-xl flex items-center justify-between">
+                   <div>
+                     <span className="text-xs font-bold text-surface-on-variant uppercase">To Sub</span>
+                     <p className="font-medium text-surface-on">{claim.contractorName}</p>
+                     <p className="text-xs text-surface-on-variant">{claim.contractorEmail}</p>
+                   </div>
+                   <div className="bg-surface p-2 rounded-full border border-surface-outline-variant">
+                      <HardHat className="h-4 w-4 text-surface-outline"/>
+                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-surface-on-variant mb-1">Subject</label>
+                  <input 
+                    type="text" 
+                    className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                    value={soSubject}
+                    onChange={(e) => setSoSubject(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-surface-on-variant mb-1">Message</label>
+                  <textarea 
+                    rows={6}
+                    className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
+                    value={soBody}
+                    onChange={(e) => setSoBody(e.target.value)}
+                  />
+                </div>
+
+                {/* Simulated Attachment Display */}
+                {soPdfUrl && (
+                  <div className="flex items-center gap-2 p-2 bg-primary/5 border border-primary/20 rounded-lg text-sm text-primary">
+                      <FileText className="h-4 w-4" />
+                      <span className="font-medium truncate flex-1">ServiceOrder_{claim.id}.pdf</span>
+                      <a href={soPdfUrl} target="_blank" rel="noreferrer" className="text-xs underline hover:text-primary-on-container">Preview</a>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 bg-surface-container flex justify-end gap-3">
+                <Button variant="text" onClick={() => { setShowSOModal(false); setSoPdfUrl(null); }}>Cancel</Button>
+                <Button 
+                  variant="filled" 
+                  onClick={handleSendServiceOrder} 
+                  disabled={isSendingSO} 
+                  icon={isSendingSO ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"/> : <Send className="h-4 w-4" />}
+                >
+                  Send Order
+                </Button>
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import { Claim } from '../types';
 
-export const generateServiceOrderPDF = (claim: Claim, summary: string) => {
+export const generateServiceOrderPDF = (claim: Claim, summary: string, returnUrl: boolean = false): string | void => {
   const doc = new jsPDF();
   const margin = 20;
   let cursorY = 20;
@@ -27,7 +27,7 @@ export const generateServiceOrderPDF = (claim: Claim, summary: string) => {
   // Contractor Info
   doc.setFillColor(240, 240, 240);
   doc.rect(margin, cursorY - 5, 170, 25, 'F');
-  doc.text('Contractor Assignment:', margin + 5, cursorY + 2);
+  doc.text('Sub Assignment:', margin + 5, cursorY + 2);
   doc.setFont('helvetica', 'normal');
   doc.text(claim.contractorName || 'Pending Assignment', margin + 5, cursorY + 10);
   cursorY += 30;
@@ -71,6 +71,10 @@ export const generateServiceOrderPDF = (claim: Claim, summary: string) => {
   
   doc.line(120, 270, 190, 270);
   doc.text('Technician Signature', 120, 275);
+
+  if (returnUrl) {
+    return doc.output('bloburl').toString();
+  }
 
   doc.save(`ServiceOrder_${claim.id}.pdf`);
 };

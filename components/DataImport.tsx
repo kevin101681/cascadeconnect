@@ -160,7 +160,7 @@ const DataImport: React.FC<DataImportProps> = ({ onImportClaims }) => {
                       : 'bg-surface-container text-surface-on-variant hover:bg-surface-container-high'
                   }`}
                 >
-                  {type.charAt(0) + type.slice(1).toLowerCase()}
+                  {type === 'CONTRACTORS' ? 'Subs' : type.charAt(0) + type.slice(1).toLowerCase()}
                 </button>
               ))}
             </div>

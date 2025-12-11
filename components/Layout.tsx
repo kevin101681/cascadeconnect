@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, Homeowner } from '../types';
-import { ShieldCheck, UserCircle, Users, ChevronDown, Search, ArrowRight, X } from 'lucide-react';
+import { ShieldCheck, UserCircle, Users, ChevronDown, Search, ArrowRight, X, Menu, LogOut, Database, UserPlus, LayoutDashboard } from 'lucide-react';
 import Button from './Button';
 
 interface LayoutProps {
@@ -18,6 +18,10 @@ interface LayoutProps {
   onSelectHomeowner: (homeowner: Homeowner) => void;
   selectedHomeownerId: string | null;
   onClearSelection: () => void;
+
+  // Navigation & Actions
+  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'DATA') => void;
+  onOpenEnrollment: () => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({ 
@@ -32,9 +36,31 @@ const Layout: React.FC<LayoutProps> = ({
   searchResults,
   onSelectHomeowner,
   selectedHomeownerId,
-  onClearSelection
+  onClearSelection,
+  onNavigate,
+  onOpenEnrollment
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuRef]);
+
+  const handleMenuAction = (action: () => void) => {
+    action();
+    setIsMenuOpen(false);
+  };
 
   return (
     <div className="min-h-screen bg-surface flex flex-col font-sans">
@@ -44,10 +70,10 @@ const Layout: React.FC<LayoutProps> = ({
           <div className="flex justify-between items-center h-16 gap-4">
             
             {/* Logo */}
-            <div className="flex items-center gap-3 flex-shrink-0">
+            <button onClick={() => onNavigate('DASHBOARD')} className="flex items-center gap-3 flex-shrink-0 focus:outline-none">
               <ShieldCheck className="h-8 w-8 text-primary" />
               <span className="text-xl font-normal text-surface-on tracking-tight hidden md:block">Cascade Connect</span>
-            </div>
+            </button>
             
             {/* Centered Search Bar (Admin Only) */}
             {isAdmin && (
@@ -101,14 +127,14 @@ const Layout: React.FC<LayoutProps> = ({
               
               {/* Homeowner Switcher (Visible only in Homeowner View for testing) */}
               {!isAdmin && (
-                <div className="relative group">
+                <div className="relative group hidden sm:block">
                   <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-surface-on-variant hover:bg-surface-container transition-colors">
                     <img 
                       src={`https://ui-avatars.com/api/?name=${encodeURIComponent(activeHomeowner.name)}&background=random`} 
                       alt="" 
                       className="w-6 h-6 rounded-full"
                     />
-                    <span className="hidden sm:inline">{activeHomeowner.name}</span>
+                    <span className="hidden md:inline">{activeHomeowner.name}</span>
                     <ChevronDown className="h-4 w-4" />
                   </button>
                   
@@ -135,23 +161,93 @@ const Layout: React.FC<LayoutProps> = ({
                 </div>
               )}
 
-              <div className="h-6 w-px bg-surface-outline-variant mx-1 hidden md:block"></div>
+              {/* Main Menu Dropdown */}
+              <div className="relative" ref={menuRef}>
+                <button 
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="flex items-center justify-center h-10 w-10 rounded-full hover:bg-surface-container transition-colors text-surface-on"
+                >
+                  <Menu className="h-6 w-6" />
+                </button>
 
-              <span className="text-xs text-surface-on-variant hidden md:inline">Role:</span>
-              <button
-                onClick={onSwitchRole}
-                className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  userRole === UserRole.ADMIN 
-                    ? 'bg-secondary-container text-secondary-on-container hover:shadow-elevation-1' 
-                    : 'border border-surface-outline text-primary hover:bg-primary/5'
-                }`}
-              >
-                {userRole === UserRole.ADMIN ? (
-                  <><Users className="h-3 w-3 mr-1.5" /> Admin Portal</>
-                ) : (
-                  <><UserCircle className="h-3 w-3 mr-1.5" /> Homeowner Portal</>
+                {isMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-surface rounded-xl shadow-elevation-2 border border-surface-outline-variant overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+                    {/* User Info Header */}
+                    <div className="px-4 py-3 bg-surface-container-high/30 border-b border-surface-outline-variant">
+                      <p className="text-sm font-bold text-surface-on">
+                        {isAdmin ? 'Administrator' : activeHomeowner.name}
+                      </p>
+                      <p className="text-xs text-surface-on-variant">
+                        {isAdmin ? 'Internal Portal' : 'Homeowner Portal'}
+                      </p>
+                    </div>
+
+                    <div className="py-2">
+                       {/* Dashboard Link */}
+                       <button 
+                        onClick={() => handleMenuAction(() => onNavigate('DASHBOARD'))}
+                        className="w-full text-left px-4 py-2.5 text-sm text-surface-on hover:bg-surface-container flex items-center gap-3"
+                      >
+                        <LayoutDashboard className="h-4 w-4 text-surface-outline" />
+                        Dashboard
+                      </button>
+
+                      {/* Admin Only Links */}
+                      {isAdmin && (
+                        <>
+                          <button 
+                            onClick={() => handleMenuAction(() => onNavigate('TEAM'))}
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on hover:bg-surface-container flex items-center gap-3"
+                          >
+                            <Users className="h-4 w-4 text-surface-outline" />
+                            Team Management
+                          </button>
+                          <button 
+                            onClick={() => handleMenuAction(() => onNavigate('DATA'))}
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on hover:bg-surface-container flex items-center gap-3"
+                          >
+                            <Database className="h-4 w-4 text-surface-outline" />
+                            Data Import
+                          </button>
+                          
+                          <div className="my-1 border-t border-surface-outline-variant/50"></div>
+                          
+                          <button 
+                            onClick={() => handleMenuAction(onOpenEnrollment)}
+                            className="w-full text-left px-4 py-2.5 text-sm text-primary font-medium hover:bg-surface-container flex items-center gap-3"
+                          >
+                            <UserPlus className="h-4 w-4 text-primary" />
+                            Enroll Homeowner
+                          </button>
+                        </>
+                      )}
+
+                      <div className="my-1 border-t border-surface-outline-variant"></div>
+
+                      {/* Switch Role / Logout */}
+                      <button 
+                        onClick={() => handleMenuAction(onSwitchRole)}
+                        className="w-full text-left px-4 py-2.5 text-sm text-surface-on hover:bg-surface-container flex items-center gap-3"
+                      >
+                        {userRole === UserRole.ADMIN ? (
+                          <><UserCircle className="h-4 w-4 text-surface-outline" /> Switch to Homeowner View</>
+                        ) : (
+                          <><Users className="h-4 w-4 text-surface-outline" /> Switch to Admin View</>
+                        )}
+                      </button>
+                      
+                       <button 
+                        onClick={() => window.location.reload()}
+                        className="w-full text-left px-4 py-2.5 text-sm text-error hover:bg-error/5 flex items-center gap-3"
+                      >
+                        <LogOut className="h-4 w-4" />
+                        Log Out
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </button>
+              </div>
+
             </div>
           </div>
         </div>
@@ -160,14 +256,6 @@ const Layout: React.FC<LayoutProps> = ({
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
-
-      <footer className="bg-surface-container mt-auto">
-        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-sm text-surface-on-variant">
-            &copy; 2024 Cascade Connect Inc. Construction Warranty Management System.
-          </p>
-        </div>
-      </footer>
     </div>
   );
 };
