@@ -63,7 +63,7 @@ const BuilderManagement: React.FC<BuilderManagementProps> = ({
     if (editingGroupId) {
       onUpdateGroup({ id: editingGroupId, name: groupName, email: groupEmail });
     } else {
-      onAddGroup({ id: `bg-${Date.now()}`, name: groupName, email: groupEmail });
+      onAddGroup({ id: crypto.randomUUID(), name: groupName, email: groupEmail });
     }
     setShowGroupModal(false);
   };
@@ -99,7 +99,7 @@ const BuilderManagement: React.FC<BuilderManagementProps> = ({
       }, userPassword);
     } else {
       onAddUser({ 
-        id: `bu-${Date.now()}`, 
+        id: crypto.randomUUID(), 
         name: userName, 
         email: userEmail, 
         builderGroupId: userGroupId, 

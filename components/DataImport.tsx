@@ -121,7 +121,7 @@ const DataImport: React.FC<DataImportProps> = ({
 
             uniqueBuilders.forEach((bName) => {
                 if (!builderMap.has(bName.toLowerCase())) {
-                    const newId = `bg-imp-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                    const newId = crypto.randomUUID();
                     const newGroup: BuilderGroup = {
                         id: newId,
                         name: bName,
@@ -151,7 +151,7 @@ const DataImport: React.FC<DataImportProps> = ({
           // Transform chunk to internal format (Mocking backend transformation)
           if (importType === 'CLAIMS') {
             const transformed: Claim[] = chunk.map((row: any, idx: number) => ({
-              id: `IMP-${Date.now()}-${i}-${idx}`,
+              id: crypto.randomUUID(),
               title: row.title || 'Untitled Claim',
               description: row.description || 'No description provided.',
               category: row.category || 'General',
@@ -172,7 +172,7 @@ const DataImport: React.FC<DataImportProps> = ({
               const builderId = builderMap.get(builderName.toLowerCase()) || '';
               
               return {
-                id: `imp-h-${Date.now()}-${i}-${idx}`,
+                id: crypto.randomUUID(),
                 name: row.name,
                 email: row.email,
                 phone: row.phone || '',

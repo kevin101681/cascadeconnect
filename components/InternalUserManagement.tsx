@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { InternalEmployee, Contractor } from '../types';
 import Button from './Button';
@@ -71,7 +72,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     if (editingEmpId) {
       onUpdateEmployee({ id: editingEmpId, name: empName, email: empEmail, role: empRole });
     } else {
-      onAddEmployee({ id: `emp-${Date.now()}`, name: empName, email: empEmail, role: empRole });
+      onAddEmployee({ id: crypto.randomUUID(), name: empName, email: empEmail, role: empRole });
     }
     setShowEmpModal(false);
   };
@@ -100,7 +101,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     if (editingSubId) {
       onUpdateContractor({ id: editingSubId, companyName: subCompany, contactName: subContact, email: subEmail, specialty: subSpecialty });
     } else {
-      onAddContractor({ id: `sub-${Date.now()}`, companyName: subCompany, contactName: subContact, email: subEmail, specialty: subSpecialty });
+      onAddContractor({ id: crypto.randomUUID(), companyName: subCompany, contactName: subContact, email: subEmail, specialty: subSpecialty });
     }
     setShowSubModal(false);
   };

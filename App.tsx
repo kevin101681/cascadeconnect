@@ -39,6 +39,7 @@ const loadState = <T,>(key: string, fallback: T): T => {
     const saved = localStorage.getItem(key);
     if (!saved) return fallback;
     return JSON.parse(saved, (k, v) => {
+      // Simple ISO date regex
       if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
         return new Date(v);
       }
@@ -59,8 +60,6 @@ const saveState = (key: string, data: any) => {
 
 function App() {
   // --- LAZY INITIALIZATION FOR PERSISTENCE ---
-  // Initialize state directly from LocalStorage to prevent flash of empty state/logout
-  
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     const session = loadState('cascade_session', null);
     return !!session;
@@ -88,7 +87,7 @@ function App() {
 
   const [isDbConnected, setIsDbConnected] = useState(false);
   
-  // Data State - Lazy Load from LS first, then sync with DB
+  // Data State - Lazy Load from LS first
   const [homeowners, setHomeowners] = useState<Homeowner[]>(() => loadState('cascade_homeowners', MOCK_HOMEOWNERS));
   const [claims, setClaims] = useState<Claim[]>(() => loadState('cascade_claims', MOCK_CLAIMS));
   const [tasks, setTasks] = useState<Task[]>(() => loadState('cascade_tasks', MOCK_TASKS));
@@ -99,136 +98,142 @@ function App() {
   const [builderGroups, setBuilderGroups] = useState<BuilderGroup[]>(() => loadState('cascade_builder_groups', MOCK_BUILDER_GROUPS));
   const [builderUsers, setBuilderUsers] = useState<BuilderUser[]>(() => loadState('cascade_builder_users', MOCK_BUILDER_USERS));
 
+  // --- PERSISTENCE EFFECTS ---
+  // Automatically save state to LocalStorage whenever it changes
+  useEffect(() => { saveState('cascade_homeowners', homeowners); }, [homeowners]);
+  useEffect(() => { saveState('cascade_claims', claims); }, [claims]);
+  useEffect(() => { saveState('cascade_tasks', tasks); }, [tasks]);
+  useEffect(() => { saveState('cascade_documents', documents); }, [documents]);
+  useEffect(() => { saveState('cascade_employees', employees); }, [employees]);
+  useEffect(() => { saveState('cascade_contractors', contractors); }, [contractors]);
+  useEffect(() => { saveState('cascade_messages', messages); }, [messages]);
+  useEffect(() => { saveState('cascade_builder_groups', builderGroups); }, [builderGroups]);
+  useEffect(() => { saveState('cascade_builder_users', builderUsers); }, [builderUsers]);
+
   // --- DATABASE SYNC ---
   useEffect(() => {
     const syncWithDb = async () => {
       try {
-        console.log("Initializing App Data from DB...");
+        console.log("Attempting DB connection...");
         
-        // 1. Fetch Homeowners
-        const dbHomeowners = await db.select().from(homeownersTable);
-        if (dbHomeowners.length > 0) {
-           const mappedHomeowners: Homeowner[] = dbHomeowners.map(h => ({
-             id: h.id,
-             name: h.name,
-             firstName: h.firstName || '',
-             lastName: h.lastName || '',
-             email: h.email,
-             phone: h.phone || '',
-             buyer2Email: h.buyer2Email || '',
-             buyer2Phone: h.buyer2Phone || '',
-             street: h.street || '',
-             city: h.city || '',
-             state: h.state || '',
-             zip: h.zip || '',
-             address: h.address,
-             builder: h.builder || '',
-             builderId: h.builderGroupId || undefined,
-             jobName: h.jobName || '',
-             closingDate: h.closingDate ? new Date(h.closingDate) : new Date(),
-             agentName: h.agentName || '',
-             agentEmail: h.agentEmail || '',
-             agentPhone: h.agentPhone || '',
-             enrollmentComments: h.enrollmentComments || '',
-             password: h.password || undefined
-           }));
-           setHomeowners(mappedHomeowners);
-           // Also update LocalStorage to keep it fresh with DB truth
-           saveState('cascade_homeowners', mappedHomeowners);
-        }
-
-        // 2. Fetch Users (Employees & Builders)
-        try {
-          const dbUsers = await db.select().from(usersTable);
-          if (dbUsers.length > 0) {
-             const fetchedEmployees: InternalEmployee[] = dbUsers
-                .filter(u => u.role === 'ADMIN')
-                .map(u => ({
-                   id: u.id,
-                   name: u.name,
-                   email: u.email,
-                   role: 'Administrator', // Simplified role mapping
-                   password: u.password || undefined
-                }));
-             
-             const fetchedBuilders: BuilderUser[] = dbUsers
-                .filter(u => u.role === 'BUILDER')
-                .map(u => ({
-                   id: u.id,
-                   name: u.name,
-                   email: u.email,
-                   role: UserRole.BUILDER,
-                   builderGroupId: u.builderGroupId || '',
-                   password: u.password || undefined
-                }));
-
-             if (fetchedEmployees.length > 0) {
-               setEmployees(fetchedEmployees);
-               saveState('cascade_employees', fetchedEmployees);
-             }
-             if (fetchedBuilders.length > 0) {
-               setBuilderUsers(fetchedBuilders);
-               saveState('cascade_builder_users', fetchedBuilders);
-             }
-          }
-        } catch (e) {
-          console.error("Failed to fetch users", e);
-        }
-
-        // 3. Fetch Claims
-        const dbClaims = await db.select().from(claimsTable).orderBy(desc(claimsTable.dateSubmitted));
-        if (dbClaims.length > 0) {
-          const mappedClaims: Claim[] = dbClaims.map(c => ({
-             id: c.id,
-             title: c.title,
-             description: c.description,
-             category: c.category || 'General',
-             address: c.address || '',
-             homeownerName: c.homeownerName || '',
-             homeownerEmail: c.homeownerEmail || '',
-             builderName: c.builderName || '',
-             jobName: c.jobName || '',
-             status: c.status as ClaimStatus,
-             classification: (c.classification as any) || 'Unclassified',
-             dateSubmitted: c.dateSubmitted ? new Date(c.dateSubmitted) : new Date(),
-             dateEvaluated: c.dateEvaluated ? new Date(c.dateEvaluated) : undefined,
-             internalNotes: c.internalNotes || '',
-             nonWarrantyExplanation: c.nonWarrantyExplanation || '',
-             contractorId: c.contractorId || undefined,
-             contractorName: c.contractorName || '',
-             contractorEmail: c.contractorEmail || '',
-             proposedDates: c.proposedDates as any[] || [],
-             attachments: c.attachments as any[] || [],
-             comments: []
-          }));
-          setClaims(mappedClaims);
-          saveState('cascade_claims', mappedClaims);
-        }
+        // Check for placeholder env to avoid connection errors in mock mode
+        const isMockEnv = !(import.meta as any).env?.VITE_DATABASE_URL && !process.env.DATABASE_URL;
         
-        // 4. Fetch Builder Groups
-        const dbBuilderGroups = await db.select().from(builderGroupsTable);
-        if (dbBuilderGroups.length > 0) {
-           const mappedGroups = dbBuilderGroups.map(bg => ({
-             id: bg.id,
-             name: bg.name,
-             email: bg.email || ''
-           }));
-           setBuilderGroups(mappedGroups);
-           saveState('cascade_builder_groups', mappedGroups);
+        if (!isMockEnv) {
+             // 1. Fetch Homeowners
+            const dbHomeowners = await db.select().from(homeownersTable);
+            if (dbHomeowners.length > 0) {
+              const mappedHomeowners: Homeowner[] = dbHomeowners.map(h => ({
+                id: h.id,
+                name: h.name,
+                firstName: h.firstName || '',
+                lastName: h.lastName || '',
+                email: h.email,
+                phone: h.phone || '',
+                buyer2Email: h.buyer2Email || '',
+                buyer2Phone: h.buyer2Phone || '',
+                street: h.street || '',
+                city: h.city || '',
+                state: h.state || '',
+                zip: h.zip || '',
+                address: h.address,
+                builder: h.builder || '',
+                builderId: h.builderGroupId || undefined,
+                jobName: h.jobName || '',
+                closingDate: h.closingDate ? new Date(h.closingDate) : new Date(),
+                agentName: h.agentName || '',
+                agentEmail: h.agentEmail || '',
+                agentPhone: h.agentPhone || '',
+                enrollmentComments: h.enrollmentComments || '',
+                password: h.password || undefined
+              }));
+              setHomeowners(mappedHomeowners);
+            }
+
+            // 2. Fetch Users (Employees & Builders)
+            const dbUsers = await db.select().from(usersTable);
+            if (dbUsers.length > 0) {
+                const fetchedEmployees: InternalEmployee[] = dbUsers
+                  .filter(u => u.role === 'ADMIN')
+                  .map(u => ({
+                      id: u.id,
+                      name: u.name,
+                      email: u.email,
+                      role: 'Administrator',
+                      password: u.password || undefined
+                  }));
+                
+                const fetchedBuilders: BuilderUser[] = dbUsers
+                  .filter(u => u.role === 'BUILDER')
+                  .map(u => ({
+                      id: u.id,
+                      name: u.name,
+                      email: u.email,
+                      role: UserRole.BUILDER,
+                      builderGroupId: u.builderGroupId || '',
+                      password: u.password || undefined
+                  }));
+
+                if (fetchedEmployees.length > 0) setEmployees(fetchedEmployees);
+                if (fetchedBuilders.length > 0) setBuilderUsers(fetchedBuilders);
+            }
+
+            // 3. Fetch Claims
+            const dbClaims = await db.select().from(claimsTable).orderBy(desc(claimsTable.dateSubmitted));
+            if (dbClaims.length > 0) {
+              const mappedClaims: Claim[] = dbClaims.map(c => ({
+                id: c.id,
+                title: c.title,
+                description: c.description,
+                category: c.category || 'General',
+                address: c.address || '',
+                homeownerName: c.homeownerName || '',
+                homeownerEmail: c.homeownerEmail || '',
+                builderName: c.builderName || '',
+                jobName: c.jobName || '',
+                status: c.status as ClaimStatus,
+                classification: (c.classification as any) || 'Unclassified',
+                dateSubmitted: c.dateSubmitted ? new Date(c.dateSubmitted) : new Date(),
+                dateEvaluated: c.dateEvaluated ? new Date(c.dateEvaluated) : undefined,
+                internalNotes: c.internalNotes || '',
+                nonWarrantyExplanation: c.nonWarrantyExplanation || '',
+                contractorId: c.contractorId || undefined,
+                contractorName: c.contractorName || '',
+                contractorEmail: c.contractorEmail || '',
+                proposedDates: c.proposedDates as any[] || [],
+                attachments: c.attachments as any[] || [],
+                comments: []
+              }));
+              setClaims(mappedClaims);
+            }
+            
+            // 4. Fetch Builder Groups
+            const dbBuilderGroups = await db.select().from(builderGroupsTable);
+            if (dbBuilderGroups.length > 0) {
+              const mappedGroups = dbBuilderGroups.map(bg => ({
+                id: bg.id,
+                name: bg.name,
+                email: bg.email || ''
+              }));
+              setBuilderGroups(mappedGroups);
+            }
+
+            console.log("Successfully connected to Neon DB.");
+            setIsDbConnected(true);
+        } else {
+             console.log("Running in Mock/Offline Mode (No DB Connection String)");
+             setIsDbConnected(false);
         }
 
-        console.log("Successfully connected to Neon DB.");
-        setIsDbConnected(true);
       } catch (e) {
         console.warn("Neon DB Connection Failed (Using Local Persistence):", e);
-        // Do NOT overwrite state with defaults here.
-        // We trust the lazy initialization from LocalStorage.
+        // Do not reset state; keep what was loaded from LocalStorage
         setIsDbConnected(false);
       }
     };
 
     syncWithDb();
-  }, []); // Run once on mount
+  }, []);
 
   // UI State
   const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS'>('DASHBOARD');
@@ -319,13 +324,7 @@ function App() {
   };
 
   const handleUpdateClaim = (updatedClaim: Claim) => {
-    // Optimistic UI Update
-    setClaims(prev => {
-        const updated = prev.map(c => c.id === updatedClaim.id ? updatedClaim : c);
-        saveState('cascade_claims', updated);
-        return updated;
-    });
-    // TODO: DB Update (omitted for brevity)
+    setClaims(prev => prev.map(c => c.id === updatedClaim.id ? updatedClaim : c));
   };
 
   const handleNewClaimStart = (homeownerId?: string) => {
@@ -338,7 +337,7 @@ function App() {
     if (!subjectHomeowner) return;
 
     const newClaim: Claim = {
-      id: crypto.randomUUID(), // Optimistic ID
+      id: crypto.randomUUID(),
       title: data.title || '',
       description: data.description || '',
       category: data.category || 'Other',
@@ -362,12 +361,8 @@ function App() {
       attachments: data.attachments || []
     };
     
-    // Optimistic Update & Persistence
-    setClaims(prev => {
-        const updated = [newClaim, ...prev];
-        saveState('cascade_claims', updated);
-        return updated;
-    });
+    // Update State (useEffect handles persistence)
+    setClaims(prev => [newClaim, ...prev]);
     setCurrentView('DASHBOARD');
 
     // DB Insert
@@ -387,7 +382,6 @@ function App() {
           classification: newClaim.classification,
           dateSubmitted: newClaim.dateSubmitted,
           attachments: newClaim.attachments,
-          // Add optional fields explicitly
           dateEvaluated: newClaim.dateEvaluated || null,
           nonWarrantyExplanation: newClaim.nonWarrantyExplanation || null,
           internalNotes: newClaim.internalNotes || null,
@@ -396,7 +390,7 @@ function App() {
           contractorEmail: newClaim.contractorEmail || null,
           proposedDates: [],
           summary: null
-        } as any); // Cast to any to bypass TS schema inference lag
+        } as any);
       } catch (e) {
         console.error("Failed to save claim to DB:", e);
       }
@@ -404,7 +398,7 @@ function App() {
   };
 
   const handleEnrollHomeowner = async (data: Partial<Homeowner>, tradeListFile: File | null) => {
-    const newId = crypto.randomUUID(); // Optimistic ID
+    const newId = crypto.randomUUID();
     const newHomeowner: Homeowner = {
       id: newId,
       name: data.name || 'Unknown',
@@ -430,12 +424,8 @@ function App() {
       password: data.password
     } as Homeowner;
 
-    // Optimistic Update & Persistence
-    setHomeowners(prev => {
-        const updated = [...prev, newHomeowner];
-        saveState('cascade_homeowners', updated);
-        return updated;
-    });
+    // Update State (useEffect handles persistence)
+    setHomeowners(prev => [...prev, newHomeowner]);
     
     if (tradeListFile) {
       handleUploadDocument({
@@ -472,7 +462,7 @@ function App() {
           agentPhone: newHomeowner.agentPhone || null,
           enrollmentComments: newHomeowner.enrollmentComments || null,
           password: newHomeowner.password || null
-        } as any); // Cast to any to bypass TS schema inference lag
+        } as any);
       } catch (e) {
         console.error("Failed to save homeowner to DB:", e);
       }
@@ -481,17 +471,12 @@ function App() {
     alert(`Successfully enrolled ${newHomeowner.name}!`);
   };
 
-  // Import Handlers with DB Sync and LS persistence
+  // Import Handlers with DB Sync and LS persistence via Effects
   const handleImportClaims = async (newClaims: Claim[]) => { 
-      setClaims(prev => {
-          const updated = [...newClaims, ...prev];
-          saveState('cascade_claims', updated);
-          return updated;
-      });
+      setClaims(prev => [...newClaims, ...prev]);
       
       if (isDbConnected) {
           try {
-             // Basic batch insert attempt - simplified for prototype
              await db.insert(claimsTable).values(newClaims.map(c => ({
                  title: c.title,
                  description: c.description,
@@ -500,18 +485,13 @@ function App() {
                  address: c.address,
                  homeownerEmail: c.homeownerEmail,
                  dateSubmitted: c.dateSubmitted,
-                 // other required fields or defaults
              } as any)));
           } catch(e) { console.error("Batch import claims to DB failed", e); }
       }
   };
   
   const handleImportHomeowners = async (newHomeowners: Homeowner[]) => { 
-      setHomeowners(prev => {
-          const updated = [...prev, ...newHomeowners];
-          saveState('cascade_homeowners', updated);
-          return updated;
-      });
+      setHomeowners(prev => [...prev, ...newHomeowners]);
       
       if (isDbConnected) {
           try {
@@ -534,11 +514,7 @@ function App() {
   };
   
   const handleImportBuilderGroups = async (newGroups: BuilderGroup[]) => { 
-      setBuilderGroups(prev => {
-          const updated = [...prev, ...newGroups];
-          saveState('cascade_builder_groups', updated);
-          return updated;
-      });
+      setBuilderGroups(prev => [...prev, ...newGroups]);
       
       if (isDbConnected) {
           try {
@@ -553,14 +529,12 @@ function App() {
   const handleClearHomeowners = () => { 
       setHomeowners([]); 
       setSelectedAdminHomeownerId(null); 
-      saveState('cascade_homeowners', []);
-      // Warning: DB clear not implemented for safety in this snippet
   };
   
-  // Handlers for Tasks/Employees/Contractors (LS only for prototype simplicity)
+  // Handlers for Tasks/Employees/Contractors
   const handleAddTask = (taskData: Partial<Task>) => {
     const newTask: Task = {
-      id: `t${Date.now()}`,
+      id: crypto.randomUUID(),
       title: taskData.title || 'New Task',
       description: taskData.description || '',
       assignedToId: taskData.assignedToId || activeEmployee.id,
@@ -570,125 +544,37 @@ function App() {
       dueDate: taskData.dueDate || new Date(Date.now() + 86400000),
       relatedClaimIds: taskData.relatedClaimIds || []
     };
-    setTasks(prev => {
-        const updated = [newTask, ...prev];
-        saveState('cascade_tasks', updated);
-        return updated;
-    });
+    setTasks(prev => [newTask, ...prev]);
   };
   const handleToggleTask = (taskId: string) => { 
-      setTasks(prev => {
-          const updated = prev.map(t => t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t);
-          saveState('cascade_tasks', updated);
-          return updated;
-      });
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t));
   };
   const handleDeleteTask = (taskId: string) => { 
-      setTasks(prev => {
-          const updated = prev.filter(t => t.id !== taskId);
-          saveState('cascade_tasks', updated);
-          return updated;
-      });
+      setTasks(prev => prev.filter(t => t.id !== taskId));
   };
   
-  const handleAddEmployee = (emp: InternalEmployee) => { 
-      setEmployees(prev => {
-          const updated = [...prev, emp];
-          saveState('cascade_employees', updated);
-          return updated;
-      });
-  };
-  const handleUpdateEmployee = (emp: InternalEmployee) => { 
-      setEmployees(prev => {
-          const updated = prev.map(e => e.id === emp.id ? emp : e);
-          saveState('cascade_employees', updated);
-          return updated;
-      });
-  };
-  const handleDeleteEmployee = (id: string) => { 
-      setEmployees(prev => {
-          const updated = prev.filter(e => e.id !== id);
-          saveState('cascade_employees', updated);
-          return updated;
-      });
-  };
+  const handleAddEmployee = (emp: InternalEmployee) => { setEmployees(prev => [...prev, emp]); };
+  const handleUpdateEmployee = (emp: InternalEmployee) => { setEmployees(prev => prev.map(e => e.id === emp.id ? emp : e)); };
+  const handleDeleteEmployee = (id: string) => { setEmployees(prev => prev.filter(e => e.id !== id)); };
   
-  const handleAddContractor = (sub: Contractor) => { 
-      setContractors(prev => {
-          const updated = [...prev, sub];
-          saveState('cascade_contractors', updated);
-          return updated;
-      });
-  };
-  const handleUpdateContractor = (sub: Contractor) => { 
-      setContractors(prev => {
-          const updated = prev.map(c => c.id === sub.id ? sub : c);
-          saveState('cascade_contractors', updated);
-          return updated;
-      });
-  };
-  const handleDeleteContractor = (id: string) => { 
-      setContractors(prev => {
-          const updated = prev.filter(c => c.id !== id);
-          saveState('cascade_contractors', updated);
-          return updated;
-      });
-  };
+  const handleAddContractor = (sub: Contractor) => { setContractors(prev => [...prev, sub]); };
+  const handleUpdateContractor = (sub: Contractor) => { setContractors(prev => prev.map(c => c.id === sub.id ? sub : c)); };
+  const handleDeleteContractor = (id: string) => { setContractors(prev => prev.filter(c => c.id !== id)); };
   
-  const handleAddBuilderGroup = (group: BuilderGroup) => { 
-      setBuilderGroups(prev => {
-          const updated = [...prev, group];
-          saveState('cascade_builder_groups', updated);
-          return updated;
-      });
-  };
-  const handleUpdateBuilderGroup = (group: BuilderGroup) => { 
-      setBuilderGroups(prev => {
-          const updated = prev.map(g => g.id === group.id ? group : g);
-          saveState('cascade_builder_groups', updated);
-          return updated;
-      });
-  };
-  const handleDeleteBuilderGroup = (id: string) => { 
-      setBuilderGroups(prev => {
-          const updated = prev.filter(g => g.id !== id);
-          saveState('cascade_builder_groups', updated);
-          return updated;
-      });
-  };
+  const handleAddBuilderGroup = (group: BuilderGroup) => { setBuilderGroups(prev => [...prev, group]); };
+  const handleUpdateBuilderGroup = (group: BuilderGroup) => { setBuilderGroups(prev => prev.map(g => g.id === group.id ? group : g)); };
+  const handleDeleteBuilderGroup = (id: string) => { setBuilderGroups(prev => prev.filter(g => g.id !== id)); };
   
-  const handleAddBuilderUser = (user: BuilderUser, password?: string) => { 
-      setBuilderUsers(prev => {
-          const updated = [...prev, user];
-          saveState('cascade_builder_users', updated);
-          return updated;
-      });
-  };
-  const handleUpdateBuilderUser = (user: BuilderUser, password?: string) => { 
-      setBuilderUsers(prev => {
-          const updated = prev.map(u => u.id === user.id ? user : u);
-          saveState('cascade_builder_users', updated);
-          return updated;
-      });
-  };
-  const handleDeleteBuilderUser = (id: string) => { 
-      setBuilderUsers(prev => {
-          const updated = prev.filter(u => u.id !== id);
-          saveState('cascade_builder_users', updated);
-          return updated;
-      });
-  };
+  const handleAddBuilderUser = (user: BuilderUser, password?: string) => { setBuilderUsers(prev => [...prev, user]); };
+  const handleUpdateBuilderUser = (user: BuilderUser, password?: string) => { setBuilderUsers(prev => prev.map(u => u.id === user.id ? user : u)); };
+  const handleDeleteBuilderUser = (id: string) => { setBuilderUsers(prev => prev.filter(u => u.id !== id)); };
   
   const handleUpdateHomeowner = (updatedHomeowner: Homeowner) => {
-    setHomeowners(prev => {
-        const updated = prev.map(h => h.id === updatedHomeowner.id ? updatedHomeowner : h);
-        saveState('cascade_homeowners', updated);
-        return updated;
-    });
+    setHomeowners(prev => prev.map(h => h.id === updatedHomeowner.id ? updatedHomeowner : h));
   };
   const handleUploadDocument = (doc: Partial<HomeownerDocument>) => {
     const newDoc: HomeownerDocument = {
-      id: `doc-${Date.now()}`,
+      id: crypto.randomUUID(),
       homeownerId: doc.homeownerId || '',
       name: doc.name || 'Untitled Document',
       uploadedBy: doc.uploadedBy || 'System',
@@ -696,44 +582,32 @@ function App() {
       url: doc.url || '#',
       type: doc.type || 'FILE'
     };
-    setDocuments(prev => {
-        const updated = [newDoc, ...prev];
-        saveState('cascade_documents', updated);
-        return updated;
-    });
+    setDocuments(prev => [newDoc, ...prev]);
   };
   
   const handleSendMessage = (threadId: string, content: string) => {
     const newMessage: Message = {
-      id: `m-${Date.now()}`,
+      id: crypto.randomUUID(),
       senderId: userRole === UserRole.ADMIN ? activeEmployee.id : activeHomeowner.id,
       senderName: userRole === UserRole.ADMIN ? activeEmployee.name : activeHomeowner.name,
       senderRole: userRole,
       content,
       timestamp: new Date()
     };
-    setMessages(prev => {
-        const updated = prev.map(t => t.id === threadId ? { ...t, lastMessageAt: newMessage.timestamp, messages: [...t.messages, newMessage] } : t);
-        saveState('cascade_messages', updated);
-        return updated;
-    });
+    setMessages(prev => prev.map(t => t.id === threadId ? { ...t, lastMessageAt: newMessage.timestamp, messages: [...t.messages, newMessage] } : t));
   };
   const handleCreateThread = (homeownerId: string, subject: string, content: string) => {
     const sender = userRole === UserRole.ADMIN ? activeEmployee : activeHomeowner;
     const newThread: MessageThread = {
-      id: `th-${Date.now()}`,
+      id: crypto.randomUUID(),
       subject,
       homeownerId,
       participants: [sender.name],
       isRead: true,
       lastMessageAt: new Date(),
-      messages: [{ id: `m-init-${Date.now()}`, senderId: sender.id, senderName: sender.name, senderRole: userRole, content, timestamp: new Date() }]
+      messages: [{ id: crypto.randomUUID(), senderId: sender.id, senderName: sender.name, senderRole: userRole, content, timestamp: new Date() }]
     };
-    setMessages(prev => {
-        const updated = [newThread, ...prev];
-        saveState('cascade_messages', updated);
-        return updated;
-    });
+    setMessages(prev => [newThread, ...prev]);
   };
 
   const handleContactAboutClaim = (claim: Claim) => {
@@ -752,22 +626,19 @@ function App() {
     if (existingThread) {
         threadIdToOpen = existingThread.id;
     } else {
-        threadIdToOpen = `th-${Date.now()}`;
+        const newId = crypto.randomUUID();
+        threadIdToOpen = newId;
         const sender = userRole === UserRole.ADMIN ? activeEmployee : activeHomeowner;
         const newThread: MessageThread = {
-          id: threadIdToOpen,
+          id: newId,
           subject: claim.title,
           homeownerId: associatedHomeownerId,
           participants: [sender.name],
           isRead: true,
           lastMessageAt: new Date(),
-          messages: [{ id: `m-sys-${Date.now()}`, senderId: sender.id, senderName: sender.name, senderRole: userRole, content: `Started a new conversation regarding claim #${claim.id}: ${claim.title}`, timestamp: new Date() }]
+          messages: [{ id: crypto.randomUUID(), senderId: sender.id, senderName: sender.name, senderRole: userRole, content: `Started a new conversation regarding claim #${claim.id}: ${claim.title}`, timestamp: new Date() }]
         };
-        setMessages(prev => {
-            const updated = [newThread, ...prev];
-            saveState('cascade_messages', updated);
-            return updated;
-        });
+        setMessages(prev => [newThread, ...prev]);
     }
     setDashboardConfig({ initialTab: 'MESSAGES', initialThreadId: threadIdToOpen });
     setCurrentView('DASHBOARD');
