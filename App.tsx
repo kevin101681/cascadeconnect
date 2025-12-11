@@ -85,7 +85,7 @@ function App() {
     return (session?.role === UserRole.BUILDER) ? session.builderId : null;
   });
 
-  const [isDbConnected, setIsDbConnected] = useState(false);
+  const isMockEnv = !(import.meta as any).env?.VITE_DATABASE_URL && !process.env.DATABASE_URL;
   
   // Data State - Lazy Load from LS first
   const [homeowners, setHomeowners] = useState<Homeowner[]>(() => loadState('cascade_homeowners', MOCK_HOMEOWNERS));
@@ -115,9 +115,6 @@ function App() {
     const syncWithDb = async () => {
       try {
         console.log("Attempting DB connection...");
-        
-        // Check for placeholder env to avoid connection errors in mock mode
-        const isMockEnv = !(import.meta as any).env?.VITE_DATABASE_URL && !process.env.DATABASE_URL;
         
         if (!isMockEnv) {
              // 1. Fetch Homeowners
@@ -218,17 +215,14 @@ function App() {
               setBuilderGroups(mappedGroups);
             }
 
-            console.log("Successfully connected to Neon DB.");
-            setIsDbConnected(true);
+            console.log("Successfully synced with Neon DB.");
         } else {
              console.log("Running in Mock/Offline Mode (No DB Connection String)");
-             setIsDbConnected(false);
         }
 
       } catch (e) {
         console.warn("Neon DB Connection Failed (Using Local Persistence):", e);
         // Do not reset state; keep what was loaded from LocalStorage
-        setIsDbConnected(false);
       }
     };
 
@@ -366,7 +360,7 @@ function App() {
     setCurrentView('DASHBOARD');
 
     // DB Insert
-    if (isDbConnected) {
+    if (!isMockEnv) {
       try {
         await db.insert(claimsTable).values({
           id: newClaim.id, // Explicit ID
@@ -439,7 +433,7 @@ function App() {
     }
 
     // DB Insert
-    if (isDbConnected) {
+    if (!isMockEnv) {
       try {
         await db.insert(homeownersTable).values({
           id: newId, // Explicit ID
@@ -477,7 +471,7 @@ function App() {
   const handleImportClaims = async (newClaims: Claim[]) => { 
       setClaims(prev => [...newClaims, ...prev]);
       
-      if (isDbConnected) {
+      if (!isMockEnv) {
           try {
              await db.insert(claimsTable).values(newClaims.map(c => ({
                  id: c.id, // Explicit ID
@@ -489,14 +483,14 @@ function App() {
                  homeownerEmail: c.homeownerEmail,
                  dateSubmitted: c.dateSubmitted,
              } as any)));
-          } catch(e) { console.error("Batch import claims to DB failed", e); }
+          } catch(e) { console.error("Batch import claims to DB failed", e); throw e; }
       }
   };
   
   const handleImportHomeowners = async (newHomeowners: Homeowner[]) => { 
       setHomeowners(prev => [...prev, ...newHomeowners]);
       
-      if (isDbConnected) {
+      if (!isMockEnv) {
           try {
              await db.insert(homeownersTable).values(newHomeowners.map(h => ({
                  id: h.id, // Explicit ID
@@ -513,14 +507,14 @@ function App() {
                  jobName: h.jobName,
                  closingDate: h.closingDate
              } as any)));
-          } catch(e) { console.error("Batch import homeowners to DB failed", e); }
+          } catch(e) { console.error("Batch import homeowners to DB failed", e); throw e; }
       }
   };
   
   const handleImportBuilderGroups = async (newGroups: BuilderGroup[]) => { 
       setBuilderGroups(prev => [...prev, ...newGroups]);
       
-      if (isDbConnected) {
+      if (!isMockEnv) {
           try {
               await db.insert(builderGroupsTable).values(newGroups.map(g => ({
                   id: g.id, // Explicit ID
