@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import Papa from 'papaparse';
 import Button from './Button';
-import { CloudUpload, FileText, AlertCircle, CheckCircle, Database, Terminal, Loader2 } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle, Database, Terminal, Loader2 } from 'lucide-react';
 import { Claim, ClaimStatus, UserRole } from '../types';
 
 interface DataImportProps {
@@ -200,7 +200,7 @@ const DataImport: React.FC<DataImportProps> = ({ onImportClaims }) => {
               </div>
             ) : (
               <div className="flex flex-col items-center cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                <CloudUpload className="h-12 w-12 text-surface-outline-variant mb-2" />
+                <Upload className="h-12 w-12 text-surface-outline-variant mb-2" />
                 <p className="text-surface-on font-medium">Click to upload or drag and drop</p>
                 <p className="text-sm text-surface-on-variant mt-1">CSV or JSON files up to 50MB</p>
               </div>
