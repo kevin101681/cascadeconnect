@@ -36,6 +36,7 @@ export interface BuilderUser {
   email: string;
   builderGroupId: string; // Links user to a specific builder company
   role: UserRole.BUILDER;
+  password?: string;
 }
 
 export interface Homeowner {
@@ -72,6 +73,7 @@ export interface Homeowner {
   preferredWalkThroughDate?: Date;
   
   enrollmentComments?: string;
+  password?: string;
 }
 
 export interface InternalEmployee {
@@ -79,6 +81,7 @@ export interface InternalEmployee {
   name: string;
   role: string;
   email: string;
+  password?: string;
 }
 
 export interface Contractor {

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Button from './Button';
 import { ShieldCheck, Mail, Lock, User, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
@@ -6,9 +7,12 @@ import { Homeowner, InternalEmployee, BuilderUser, UserRole } from '../types';
 
 interface AuthScreenProps {
   onLoginSuccess: (user: Homeowner | InternalEmployee | BuilderUser, role: UserRole) => void;
+  homeowners: Homeowner[];
+  employees: InternalEmployee[];
+  builderUsers: BuilderUser[];
 }
 
-const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
+const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess, homeowners, employees, builderUsers }) => {
   const [mode, setMode] = useState<'LOGIN' | 'SIGNUP'>('LOGIN');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +30,8 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     try {
       let response;
       if (mode === 'LOGIN') {
-        response = await login(email, password);
+        // Pass the loaded users to the login service
+        response = await login(email, password, homeowners, employees, builderUsers);
       } else {
         response = await register(email, password, name);
       }
@@ -51,7 +56,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
       if (response.success && response.user && response.role) {
         onLoginSuccess(response.user, response.role);
       } else {
-        setError('Social login failed.');
+        setError(response.error || 'Social login failed.');
       }
     } catch (err) {
       setError('Connection timeout.');
@@ -68,7 +73,11 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
       {/* Brand Header */}
       <div className="flex flex-col items-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <div className="h-16 w-16 bg-primary-container rounded-2xl flex items-center justify-center mb-4 shadow-elevation-1">
-          <ShieldCheck className="h-10 w-10 text-primary" />
+          <img src="/logo.png" alt="Logo" className="h-12 w-12 object-contain" onError={(e) => {
+            // Fallback if logo not found
+            e.currentTarget.style.display = 'none';
+            e.currentTarget.parentElement!.innerHTML = '<svg class="h-10 w-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>';
+          }} />
         </div>
         <h1 className="text-3xl font-normal text-surface-on tracking-tight text-center">Cascade Connect</h1>
         <p className="text-surface-on-variant mt-2 text-center max-w-sm">

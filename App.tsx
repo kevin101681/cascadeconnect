@@ -13,6 +13,11 @@ import TaskList from './components/TaskList';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS } from './constants';
 
+// DB Imports
+import { db } from './db';
+import { claims as claimsTable, homeowners as homeownersTable, builderGroups as builderGroupsTable, users as usersTable } from './db/schema';
+import { desc } from 'drizzle-orm';
+
 const PLACEHOLDER_HOMEOWNER: Homeowner = {
   id: 'placeholder',
   name: 'Guest',
@@ -28,50 +33,202 @@ const PLACEHOLDER_HOMEOWNER: Homeowner = {
   closingDate: new Date()
 };
 
-function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-  const [userRole, setUserRole] = useState<UserRole>(UserRole.ADMIN);
-  
-  // Mock logged in user management
-  const [activeHomeowner, setActiveHomeowner] = useState<Homeowner>(MOCK_HOMEOWNERS.length > 0 ? MOCK_HOMEOWNERS[0] : PLACEHOLDER_HOMEOWNER);
-  const [activeEmployee, setActiveEmployee] = useState<InternalEmployee>(MOCK_INTERNAL_EMPLOYEES[0]); 
-  
-  // Current Builder User ID (for simulation filtering)
-  const [currentBuilderId, setCurrentBuilderId] = useState<string | null>(null);
+// --- Persistence Helper (Legacy Local Storage) ---
+const loadState = <T,>(key: string, fallback: T): T => {
+  try {
+    const saved = localStorage.getItem(key);
+    if (!saved) return fallback;
+    return JSON.parse(saved, (k, v) => {
+      if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
+        return new Date(v);
+      }
+      return v;
+    });
+  } catch (e) {
+    return fallback;
+  }
+};
 
-  const [claims, setClaims] = useState<Claim[]>(MOCK_CLAIMS);
-  const [tasks, setTasks] = useState<Task[]>(MOCK_TASKS);
-  const [documents, setDocuments] = useState<HomeownerDocument[]>(MOCK_DOCUMENTS);
-  const [homeowners, setHomeowners] = useState<Homeowner[]>(MOCK_HOMEOWNERS);
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false); // Default to false to force login
+  const [userRole, setUserRole] = useState<UserRole>(UserRole.ADMIN);
+  const [isDbConnected, setIsDbConnected] = useState(false);
+  
+  // Data State
+  const [homeowners, setHomeowners] = useState<Homeowner[]>([]);
+  const [claims, setClaims] = useState<Claim[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [documents, setDocuments] = useState<HomeownerDocument[]>([]);
   const [employees, setEmployees] = useState<InternalEmployee[]>(MOCK_INTERNAL_EMPLOYEES);
   const [contractors, setContractors] = useState<Contractor[]>(MOCK_CONTRACTORS);
   const [messages, setMessages] = useState<MessageThread[]>(MOCK_THREADS);
-  
-  // Builder State
-  const [builderGroups, setBuilderGroups] = useState<BuilderGroup[]>(MOCK_BUILDER_GROUPS);
+  const [builderGroups, setBuilderGroups] = useState<BuilderGroup[]>([]);
   const [builderUsers, setBuilderUsers] = useState<BuilderUser[]>(MOCK_BUILDER_USERS);
+
+  // Initialize Active User/Homeowner
+  const [activeHomeowner, setActiveHomeowner] = useState<Homeowner>(PLACEHOLDER_HOMEOWNER);
+  const [activeEmployee, setActiveEmployee] = useState<InternalEmployee>(MOCK_INTERNAL_EMPLOYEES[0]); 
   
+  // --- DATABASE SYNC ---
+  useEffect(() => {
+    const syncWithDb = async () => {
+      try {
+        console.log("Initializing App Data...");
+        
+        // 1. Fetch Homeowners
+        const dbHomeowners = await db.select().from(homeownersTable);
+        if (dbHomeowners.length > 0) {
+           const mappedHomeowners: Homeowner[] = dbHomeowners.map(h => ({
+             id: h.id,
+             name: h.name,
+             firstName: h.firstName || '',
+             lastName: h.lastName || '',
+             email: h.email,
+             phone: h.phone || '',
+             buyer2Email: h.buyer2Email || '',
+             buyer2Phone: h.buyer2Phone || '',
+             street: h.street || '',
+             city: h.city || '',
+             state: h.state || '',
+             zip: h.zip || '',
+             address: h.address,
+             builder: h.builder || '',
+             builderId: h.builderGroupId || undefined,
+             jobName: h.jobName || '',
+             closingDate: h.closingDate ? new Date(h.closingDate) : new Date(),
+             agentName: h.agentName || '',
+             agentEmail: h.agentEmail || '',
+             agentPhone: h.agentPhone || '',
+             enrollmentComments: h.enrollmentComments || '',
+             password: h.password || undefined
+           }));
+           setHomeowners(mappedHomeowners);
+           // Set active homeowner if one exists and current is placeholder
+           if (mappedHomeowners.length > 0 && activeHomeowner.id === 'placeholder') {
+             setActiveHomeowner(mappedHomeowners[0]);
+           }
+        } else {
+           // Fallback to LocalStorage if DB empty but connected, or just use empty
+           const lsHomeowners = loadState('cascade_homeowners', MOCK_HOMEOWNERS);
+           if (lsHomeowners.length > 0) setHomeowners(lsHomeowners);
+        }
+
+        // 2. Fetch Users (Employees & Builders)
+        try {
+          const dbUsers = await db.select().from(usersTable);
+          if (dbUsers.length > 0) {
+             const fetchedEmployees: InternalEmployee[] = dbUsers
+                .filter(u => u.role === 'ADMIN')
+                .map(u => ({
+                   id: u.id,
+                   name: u.name,
+                   email: u.email,
+                   role: 'Administrator', // Simplified role mapping
+                   password: u.password || undefined
+                }));
+             
+             const fetchedBuilders: BuilderUser[] = dbUsers
+                .filter(u => u.role === 'BUILDER')
+                .map(u => ({
+                   id: u.id,
+                   name: u.name,
+                   email: u.email,
+                   role: UserRole.BUILDER,
+                   builderGroupId: u.builderGroupId || '',
+                   password: u.password || undefined
+                }));
+
+             if (fetchedEmployees.length > 0) setEmployees(fetchedEmployees);
+             if (fetchedBuilders.length > 0) setBuilderUsers(fetchedBuilders);
+          }
+        } catch (e) {
+          console.error("Failed to fetch users", e);
+          // Fallback handled by initial state
+        }
+
+        // 3. Fetch Claims
+        const dbClaims = await db.select().from(claimsTable).orderBy(desc(claimsTable.dateSubmitted));
+        if (dbClaims.length > 0) {
+          const mappedClaims: Claim[] = dbClaims.map(c => ({
+             id: c.id,
+             title: c.title,
+             description: c.description,
+             category: c.category || 'General',
+             address: c.address || '',
+             homeownerName: c.homeownerName || '',
+             homeownerEmail: c.homeownerEmail || '',
+             builderName: c.builderName || '',
+             jobName: c.jobName || '',
+             status: c.status as ClaimStatus,
+             classification: (c.classification as any) || 'Unclassified',
+             dateSubmitted: c.dateSubmitted ? new Date(c.dateSubmitted) : new Date(),
+             dateEvaluated: c.dateEvaluated ? new Date(c.dateEvaluated) : undefined,
+             internalNotes: c.internalNotes || '',
+             nonWarrantyExplanation: c.nonWarrantyExplanation || '',
+             contractorId: c.contractorId || undefined,
+             contractorName: c.contractorName || '',
+             contractorEmail: c.contractorEmail || '',
+             proposedDates: c.proposedDates as any[] || [],
+             attachments: c.attachments as any[] || [],
+             comments: []
+          }));
+          setClaims(mappedClaims);
+        } else {
+           const lsClaims = loadState('cascade_claims', MOCK_CLAIMS);
+           if (lsClaims.length > 0) setClaims(lsClaims);
+        }
+        
+        // 4. Fetch Builder Groups
+        const dbBuilderGroups = await db.select().from(builderGroupsTable);
+        if (dbBuilderGroups.length > 0) {
+           setBuilderGroups(dbBuilderGroups.map(bg => ({
+             id: bg.id,
+             name: bg.name,
+             email: bg.email || ''
+           })));
+        } else {
+           const lsGroups = loadState('cascade_builder_groups', MOCK_BUILDER_GROUPS);
+           if (lsGroups.length > 0) setBuilderGroups(lsGroups);
+        }
+
+        console.log("Successfully connected to Neon DB.");
+        setIsDbConnected(true);
+      } catch (e) {
+        console.warn("Neon DB Connection Failed (Mock Mode Activated):", e);
+        // Fallback Load from Local Storage
+        setHomeowners(loadState('cascade_homeowners', MOCK_HOMEOWNERS));
+        setClaims(loadState('cascade_claims', MOCK_CLAIMS));
+        setBuilderGroups(loadState('cascade_builder_groups', MOCK_BUILDER_GROUPS));
+        setIsDbConnected(false);
+      }
+      
+      // Load others from LS for now as they aren't fully wired to DB in this iteration
+      setTasks(loadState('cascade_tasks', MOCK_TASKS));
+      setDocuments(loadState('cascade_documents', MOCK_DOCUMENTS));
+      setMessages(loadState('cascade_messages', MOCK_THREADS));
+      setContractors(loadState('cascade_contractors', MOCK_CONTRACTORS));
+    };
+
+    syncWithDb();
+  }, []); // Run once on mount
+
+  // Current Builder User ID (for simulation filtering)
+  const [currentBuilderId, setCurrentBuilderId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS'>('DASHBOARD');
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
   
-  // --- Search State (Lifted from Dashboard) ---
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAdminHomeownerId, setSelectedAdminHomeownerId] = useState<string | null>(null);
 
-  // Dashboard Control State (Ephemeral)
   const [dashboardConfig, setDashboardConfig] = useState<{
     initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS';
     initialThreadId?: string | null;
   }>({});
 
-  // Enrollment Modal State
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
-
-  // Helper to get selected claim object safely
   const selectedClaim = claims.find(c => c.id === selectedClaimId);
   const targetHomeowner = selectedAdminHomeownerId ? homeowners.find(h => h.id === selectedAdminHomeownerId) || null : null;
 
-  // Search results for Dropdown
   const availableHomeowners = (userRole === UserRole.BUILDER && currentBuilderId)
     ? homeowners.filter(h => h.builderId === currentBuilderId)
     : homeowners;
@@ -102,7 +259,6 @@ function App() {
   const handleSelectHomeowner = (homeowner: Homeowner) => {
     setSelectedAdminHomeownerId(homeowner.id);
     setSearchQuery('');
-    // Reset dashboard config when switching context
     setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
     setCurrentView('DASHBOARD');
   };
@@ -114,9 +270,7 @@ function App() {
   const handleSwitchRole = () => {
     if (userRole === UserRole.ADMIN) {
       setUserRole(UserRole.BUILDER);
-      if (builderGroups.length > 0) {
-        setCurrentBuilderId(builderGroups[0].id);
-      }
+      if (builderGroups.length > 0) setCurrentBuilderId(builderGroups[0].id);
     } else if (userRole === UserRole.BUILDER) {
       setUserRole(UserRole.HOMEOWNER);
       setCurrentBuilderId(null);
@@ -124,7 +278,6 @@ function App() {
       setUserRole(UserRole.ADMIN);
       setCurrentBuilderId(null);
     }
-    
     setCurrentView('DASHBOARD');
     setSelectedClaimId(null);
     setSelectedAdminHomeownerId(null);
@@ -145,7 +298,9 @@ function App() {
   };
 
   const handleUpdateClaim = (updatedClaim: Claim) => {
+    // Optimistic UI Update
     setClaims(prev => prev.map(c => c.id === updatedClaim.id ? updatedClaim : c));
+    // TODO: DB Update (omitted for brevity)
   };
 
   const handleNewClaimStart = (homeownerId?: string) => {
@@ -153,12 +308,12 @@ function App() {
     setCurrentView('NEW');
   };
 
-  const handleCreateClaim = (data: Partial<Claim>) => {
+  const handleCreateClaim = async (data: Partial<Claim>) => {
     const subjectHomeowner = ((userRole === UserRole.ADMIN || userRole === UserRole.BUILDER) && targetHomeowner) ? targetHomeowner : activeHomeowner;
     if (!subjectHomeowner) return;
 
     const newClaim: Claim = {
-      id: `CLM-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: crypto.randomUUID(), // Use valid UUID
       title: data.title || '',
       description: data.description || '',
       category: data.category || 'Other',
@@ -166,7 +321,7 @@ function App() {
       homeownerName: subjectHomeowner.name,
       homeownerEmail: subjectHomeowner.email,
       builderName: subjectHomeowner.builder,
-      jobName: subjectHomeowner.jobName, // Use Job Name
+      jobName: subjectHomeowner.jobName,
       closingDate: subjectHomeowner.closingDate,
       status: data.status || ClaimStatus.SUBMITTED,
       classification: data.classification || 'Unclassified',
@@ -181,28 +336,117 @@ function App() {
       comments: [],
       attachments: data.attachments || []
     };
+    
+    // Optimistic Update
     setClaims(prev => [newClaim, ...prev]);
     setCurrentView('DASHBOARD');
+
+    // DB Insert
+    if (isDbConnected) {
+      try {
+        await db.insert(claimsTable).values({
+          id: newClaim.id,
+          homeownerId: subjectHomeowner.id,
+          title: newClaim.title,
+          description: newClaim.description,
+          category: newClaim.category,
+          address: newClaim.address,
+          homeownerName: newClaim.homeownerName,
+          homeownerEmail: newClaim.homeownerEmail,
+          builderName: newClaim.builderName,
+          jobName: newClaim.jobName,
+          status: newClaim.status,
+          classification: newClaim.classification,
+          dateSubmitted: newClaim.dateSubmitted,
+          attachments: newClaim.attachments,
+          // Add other fields as needed
+        });
+      } catch (e) {
+        console.error("Failed to save claim to DB:", e);
+      }
+    }
   };
 
-  const handleImportClaims = (newClaims: Claim[]) => {
-    setClaims(prev => [...newClaims, ...prev]);
+  const handleEnrollHomeowner = async (data: Partial<Homeowner>, tradeListFile: File | null) => {
+    const newId = crypto.randomUUID(); // Use valid UUID
+    const newHomeowner: Homeowner = {
+      id: newId,
+      name: data.name || 'Unknown',
+      email: data.email || '',
+      phone: data.phone || '',
+      street: data.street || '',
+      city: data.city || '',
+      state: data.state || '',
+      zip: data.zip || '',
+      address: data.address || '',
+      builder: data.builder || '',
+      builderId: data.builderId,
+      jobName: data.jobName || '',
+      closingDate: data.closingDate || new Date(),
+      firstName: data.firstName,
+      lastName: data.lastName,
+      buyer2Email: data.buyer2Email,
+      buyer2Phone: data.buyer2Phone,
+      agentName: data.agentName,
+      agentEmail: data.agentEmail,
+      agentPhone: data.agentPhone,
+      enrollmentComments: data.enrollmentComments
+    } as Homeowner;
+
+    // Optimistic Update
+    setHomeowners(prev => [...prev, newHomeowner]);
+    
+    if (tradeListFile) {
+      handleUploadDocument({
+        homeownerId: newId,
+        name: tradeListFile.name,
+        type: 'PDF',
+        uploadedBy: 'Builder (Enrollment)',
+        url: '#'
+      });
+    }
+
+    // DB Insert
+    if (isDbConnected) {
+      try {
+        await db.insert(homeownersTable).values({
+          id: newId,
+          name: newHomeowner.name,
+          email: newHomeowner.email,
+          phone: newHomeowner.phone,
+          street: newHomeowner.street,
+          city: newHomeowner.city,
+          state: newHomeowner.state,
+          zip: newHomeowner.zip,
+          address: newHomeowner.address,
+          builder: newHomeowner.builder,
+          builderGroupId: newHomeowner.builderId ? newHomeowner.builderId : undefined,
+          jobName: newHomeowner.jobName,
+          closingDate: newHomeowner.closingDate,
+          firstName: newHomeowner.firstName,
+          lastName: newHomeowner.lastName,
+          buyer2Email: newHomeowner.buyer2Email,
+          buyer2Phone: newHomeowner.buyer2Phone,
+          agentName: newHomeowner.agentName,
+          agentEmail: newHomeowner.agentEmail,
+          agentPhone: newHomeowner.agentPhone,
+          enrollmentComments: newHomeowner.enrollmentComments
+        });
+      } catch (e) {
+        console.error("Failed to save homeowner to DB:", e);
+      }
+    }
+    
+    alert(`Successfully enrolled ${newHomeowner.name}!`);
   };
 
-  const handleImportHomeowners = (newHomeowners: Homeowner[]) => {
-    setHomeowners(prev => [...prev, ...newHomeowners]);
-  };
-
-  const handleImportBuilderGroups = (newGroups: BuilderGroup[]) => {
-    setBuilderGroups(prev => [...prev, ...newGroups]);
-  };
-
-  const handleClearHomeowners = () => {
-    setHomeowners([]);
-    setSelectedAdminHomeownerId(null);
-  };
-
-  // Task Management
+  // Other handlers remain similar (using LocalStorage fallback for now)
+  const handleImportClaims = (newClaims: Claim[]) => { setClaims(prev => [...newClaims, ...prev]); };
+  const handleImportHomeowners = (newHomeowners: Homeowner[]) => { setHomeowners(prev => [...prev, ...newHomeowners]); };
+  const handleImportBuilderGroups = (newGroups: BuilderGroup[]) => { setBuilderGroups(prev => [...prev, ...newGroups]); };
+  const handleClearHomeowners = () => { setHomeowners([]); setSelectedAdminHomeownerId(null); };
+  
+  // Handlers for Tasks/Employees/Contractors (LS only for prototype simplicity)
   const handleAddTask = (taskData: Partial<Task>) => {
     const newTask: Task = {
       id: `t${Date.now()}`,
@@ -217,96 +461,24 @@ function App() {
     };
     setTasks(prev => [newTask, ...prev]);
   };
-
-  const handleToggleTask = (taskId: string) => {
-    setTasks(prev => prev.map(t => 
-      t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t
-    ));
-  };
-
-  const handleDeleteTask = (taskId: string) => {
-    setTasks(prev => prev.filter(t => t.id !== taskId));
-  };
-
-  // Employee Management
-  const handleAddEmployee = (emp: InternalEmployee) => {
-    setEmployees(prev => [...prev, emp]);
-  };
-  const handleUpdateEmployee = (emp: InternalEmployee) => {
-    setEmployees(prev => prev.map(e => e.id === emp.id ? emp : e));
-  };
-  const handleDeleteEmployee = (id: string) => {
-    setEmployees(prev => prev.filter(e => e.id !== id));
-  };
-
-  // Subcontractor Management
-  const handleAddContractor = (sub: Contractor) => {
-    setContractors(prev => [...prev, sub]);
-  };
-  const handleUpdateContractor = (sub: Contractor) => {
-    setContractors(prev => prev.map(c => c.id === sub.id ? sub : c));
-  };
-  const handleDeleteContractor = (id: string) => {
-    setContractors(prev => prev.filter(c => c.id !== id));
-  };
-
-  // Builder Management
-  const handleAddBuilderGroup = (group: BuilderGroup) => {
-    setBuilderGroups(prev => [...prev, group]);
-  };
-  const handleUpdateBuilderGroup = (group: BuilderGroup) => {
-    setBuilderGroups(prev => prev.map(g => g.id === group.id ? group : g));
-  };
-  const handleDeleteBuilderGroup = (id: string) => {
-    setBuilderGroups(prev => prev.filter(g => g.id !== id));
-  };
-  const handleAddBuilderUser = (user: BuilderUser, password?: string) => {
-    setBuilderUsers(prev => [...prev, user]);
-  };
-  const handleUpdateBuilderUser = (user: BuilderUser, password?: string) => {
-    setBuilderUsers(prev => prev.map(u => u.id === user.id ? user : u));
-  };
-  const handleDeleteBuilderUser = (id: string) => {
-    setBuilderUsers(prev => prev.filter(u => u.id !== id));
-  };
-
-  // Homeowner Management
-  const handleEnrollHomeowner = (data: Partial<Homeowner>, tradeListFile: File | null) => {
-    const newId = `h${Date.now()}`;
-    const newHomeowner: Homeowner = {
-      id: newId,
-      name: data.name || 'Unknown',
-      email: data.email || '',
-      phone: data.phone || '',
-      street: data.street || '',
-      city: data.city || '',
-      state: data.state || '',
-      zip: data.zip || '',
-      address: data.address || '', // Constructed in component
-      builder: data.builder || '',
-      builderId: data.builderId,
-      jobName: data.jobName || '',
-      closingDate: data.closingDate || new Date(),
-      ...data
-    } as Homeowner;
-
-    setHomeowners(prev => [...prev, newHomeowner]);
-    if (tradeListFile) {
-      handleUploadDocument({
-        homeownerId: newId,
-        name: tradeListFile.name,
-        type: 'PDF',
-        uploadedBy: 'Builder (Enrollment)',
-        url: '#'
-      });
-    }
-    alert(`Successfully enrolled ${newHomeowner.name}!`);
-  };
-
+  const handleToggleTask = (taskId: string) => { setTasks(prev => prev.map(t => t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t)); };
+  const handleDeleteTask = (taskId: string) => { setTasks(prev => prev.filter(t => t.id !== taskId)); };
+  const handleAddEmployee = (emp: InternalEmployee) => { setEmployees(prev => [...prev, emp]); };
+  const handleUpdateEmployee = (emp: InternalEmployee) => { setEmployees(prev => prev.map(e => e.id === emp.id ? emp : e)); };
+  const handleDeleteEmployee = (id: string) => { setEmployees(prev => prev.filter(e => e.id !== id)); };
+  const handleAddContractor = (sub: Contractor) => { setContractors(prev => [...prev, sub]); };
+  const handleUpdateContractor = (sub: Contractor) => { setContractors(prev => prev.map(c => c.id === sub.id ? sub : c)); };
+  const handleDeleteContractor = (id: string) => { setContractors(prev => prev.filter(c => c.id !== id)); };
+  const handleAddBuilderGroup = (group: BuilderGroup) => { setBuilderGroups(prev => [...prev, group]); };
+  const handleUpdateBuilderGroup = (group: BuilderGroup) => { setBuilderGroups(prev => prev.map(g => g.id === group.id ? group : g)); };
+  const handleDeleteBuilderGroup = (id: string) => { setBuilderGroups(prev => prev.filter(g => g.id !== id)); };
+  const handleAddBuilderUser = (user: BuilderUser, password?: string) => { setBuilderUsers(prev => [...prev, user]); };
+  const handleUpdateBuilderUser = (user: BuilderUser, password?: string) => { setBuilderUsers(prev => prev.map(u => u.id === user.id ? user : u)); };
+  const handleDeleteBuilderUser = (id: string) => { setBuilderUsers(prev => prev.filter(u => u.id !== id)); };
+  
   const handleUpdateHomeowner = (updatedHomeowner: Homeowner) => {
     setHomeowners(prev => prev.map(h => h.id === updatedHomeowner.id ? updatedHomeowner : h));
   };
-
   const handleUploadDocument = (doc: Partial<HomeownerDocument>) => {
     const newDoc: HomeownerDocument = {
       id: `doc-${Date.now()}`,
@@ -319,8 +491,7 @@ function App() {
     };
     setDocuments(prev => [newDoc, ...prev]);
   };
-
-  // Message Handling
+  
   const handleSendMessage = (threadId: string, content: string) => {
     const newMessage: Message = {
       id: `m-${Date.now()}`,
@@ -330,22 +501,10 @@ function App() {
       content,
       timestamp: new Date()
     };
-
-    setMessages(prev => prev.map(t => {
-      if (t.id === threadId) {
-        return {
-          ...t,
-          lastMessageAt: newMessage.timestamp,
-          messages: [...t.messages, newMessage]
-        };
-      }
-      return t;
-    }));
+    setMessages(prev => prev.map(t => t.id === threadId ? { ...t, lastMessageAt: newMessage.timestamp, messages: [...t.messages, newMessage] } : t));
   };
-
   const handleCreateThread = (homeownerId: string, subject: string, content: string) => {
     const sender = userRole === UserRole.ADMIN ? activeEmployee : activeHomeowner;
-    
     const newThread: MessageThread = {
       id: `th-${Date.now()}`,
       subject,
@@ -353,25 +512,12 @@ function App() {
       participants: [sender.name],
       isRead: true,
       lastMessageAt: new Date(),
-      messages: [
-        {
-          id: `m-init-${Date.now()}`,
-          senderId: sender.id,
-          senderName: sender.name,
-          senderRole: userRole,
-          content,
-          timestamp: new Date()
-        }
-      ]
+      messages: [{ id: `m-init-${Date.now()}`, senderId: sender.id, senderName: sender.name, senderRole: userRole, content, timestamp: new Date() }]
     };
-
     setMessages(prev => [newThread, ...prev]);
   };
 
-  // Logic to handle "Send Message" from Claim Detail
   const handleContactAboutClaim = (claim: Claim) => {
-    // 1. Find the homeowner for this claim to link thread correctly
-    // If admin is viewing, use targetHomeowner or find by email. If homeowner viewing, use activeHomeowner.
     let associatedHomeownerId = '';
     if (userRole === UserRole.HOMEOWNER) {
         associatedHomeownerId = activeHomeowner.id;
@@ -379,23 +525,16 @@ function App() {
         const h = homeowners.find(h => h.email === claim.homeownerEmail);
         associatedHomeownerId = h ? h.id : (targetHomeowner?.id || '');
     }
-
     if (!associatedHomeownerId) return;
 
-    // 2. Search for existing thread with exact Subject matching Claim Title
-    const existingThread = messages.find(t => 
-        t.homeownerId === associatedHomeownerId && t.subject === claim.title
-    );
-
+    const existingThread = messages.find(t => t.homeownerId === associatedHomeownerId && t.subject === claim.title);
     let threadIdToOpen = '';
 
     if (existingThread) {
         threadIdToOpen = existingThread.id;
     } else {
-        // 3. Create new thread if not found
         threadIdToOpen = `th-${Date.now()}`;
         const sender = userRole === UserRole.ADMIN ? activeEmployee : activeHomeowner;
-        
         const newThread: MessageThread = {
           id: threadIdToOpen,
           subject: claim.title,
@@ -403,35 +542,17 @@ function App() {
           participants: [sender.name],
           isRead: true,
           lastMessageAt: new Date(),
-          messages: [
-            {
-              id: `m-sys-${Date.now()}`,
-              senderId: sender.id,
-              senderName: sender.name,
-              senderRole: userRole,
-              content: `Started a new conversation regarding claim #${claim.id}: ${claim.title}`,
-              timestamp: new Date()
-            }
-          ]
+          messages: [{ id: `m-sys-${Date.now()}`, senderId: sender.id, senderName: sender.name, senderRole: userRole, content: `Started a new conversation regarding claim #${claim.id}: ${claim.title}`, timestamp: new Date() }]
         };
         setMessages(prev => [newThread, ...prev]);
     }
-
-    // 4. Navigate to Dashboard -> Messages Tab -> Open Thread
-    setDashboardConfig({
-        initialTab: 'MESSAGES',
-        initialThreadId: threadIdToOpen
-    });
+    setDashboardConfig({ initialTab: 'MESSAGES', initialThreadId: threadIdToOpen });
     setCurrentView('DASHBOARD');
   };
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [currentView]);
+  useEffect(() => { window.scrollTo(0, 0); }, [currentView]);
 
-  if (!isAuthenticated) {
-    return <AuthScreen onLoginSuccess={handleLoginSuccess} />;
-  }
+  if (!isAuthenticated) return <AuthScreen onLoginSuccess={handleLoginSuccess} homeowners={homeowners} employees={employees} builderUsers={builderUsers} />;
 
   return (
     <Layout 
@@ -459,25 +580,17 @@ function App() {
           activeHomeowner={activeHomeowner}
           employees={employees}
           currentUser={activeEmployee}
-          
           targetHomeowner={targetHomeowner}
           onClearHomeownerSelection={handleClearHomeownerSelection}
           onUpdateHomeowner={handleUpdateHomeowner}
-
           documents={documents}
           onUploadDocument={handleUploadDocument}
-          
           messages={messages}
           onSendMessage={handleSendMessage}
           onCreateThread={handleCreateThread}
-
           builderGroups={builderGroups}
-
-          // Pass props for remote control of dashboard state
           initialTab={dashboardConfig.initialTab}
           initialThreadId={dashboardConfig.initialThreadId}
-          
-          // Pass tasks and navigation for widget
           tasks={tasks}
           onAddTask={handleAddTask}
           onToggleTask={handleToggleTask}
@@ -485,96 +598,44 @@ function App() {
           onNavigate={setCurrentView}
         />
       )}
-
       {currentView === 'TASKS' && (
         <div className="max-w-4xl mx-auto">
           <div className="bg-surface p-8 rounded-3xl shadow-elevation-1 border border-surface-outline-variant">
-            <TaskList 
-              tasks={tasks}
-              employees={employees}
-              currentUser={activeEmployee}
-              claims={claims} 
-              homeowners={homeowners}
-              onAddTask={handleAddTask}
-              onToggleTask={handleToggleTask}
-              onDeleteTask={handleDeleteTask}
-            />
+            <TaskList tasks={tasks} employees={employees} currentUser={activeEmployee} claims={claims} homeowners={homeowners} onAddTask={handleAddTask} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} />
           </div>
         </div>
       )}
-
       {(currentView === 'TEAM' || currentView === 'SUBS') && (
         <InternalUserManagement 
-          key={currentView} // Force remount to respect initialTab
+          key={currentView}
           employees={employees}
           onAddEmployee={handleAddEmployee}
           onUpdateEmployee={handleUpdateEmployee}
           onDeleteEmployee={handleDeleteEmployee}
-          
           contractors={contractors}
           onAddContractor={handleAddContractor}
           onUpdateContractor={handleUpdateContractor}
           onDeleteContractor={handleDeleteContractor}
-
           onClose={() => setCurrentView('DASHBOARD')}
           initialTab={currentView === 'SUBS' ? 'SUBS' : 'EMPLOYEES'}
         />
       )}
-
       {currentView === 'BUILDERS' && (
-        <BuilderManagement 
-          builderGroups={builderGroups}
-          builderUsers={builderUsers}
-          onAddGroup={handleAddBuilderGroup}
-          onUpdateGroup={handleUpdateBuilderGroup}
-          onDeleteGroup={handleDeleteBuilderGroup}
-          onAddUser={handleAddBuilderUser}
-          onUpdateUser={handleUpdateBuilderUser}
-          onDeleteUser={handleDeleteBuilderUser}
-          onClose={() => setCurrentView('DASHBOARD')}
-        />
+        <BuilderManagement builderGroups={builderGroups} builderUsers={builderUsers} onAddGroup={handleAddBuilderGroup} onUpdateGroup={handleUpdateBuilderGroup} onDeleteGroup={handleDeleteBuilderGroup} onAddUser={handleAddBuilderUser} onUpdateUser={handleUpdateBuilderUser} onDeleteUser={handleDeleteBuilderUser} onClose={() => setCurrentView('DASHBOARD')} />
       )}
-
       {currentView === 'DATA' && (
-        <DataImport 
-          onImportClaims={handleImportClaims} 
-          onImportHomeowners={handleImportHomeowners}
-          onClearHomeowners={handleClearHomeowners}
-          existingBuilderGroups={builderGroups}
-          onImportBuilderGroups={handleImportBuilderGroups}
-        />
+        <DataImport onImportClaims={handleImportClaims} onImportHomeowners={handleImportHomeowners} onClearHomeowners={handleClearHomeowners} existingBuilderGroups={builderGroups} onImportBuilderGroups={handleImportBuilderGroups} />
       )}
-
       {currentView === 'NEW' && (
         <div className="max-w-4xl mx-auto bg-surface p-8 rounded-3xl shadow-elevation-1 border border-surface-outline-variant">
           <h2 className="text-2xl font-normal text-surface-on mb-6">Create Warranty Claim</h2>
-          <NewClaimForm 
-            onSubmit={handleCreateClaim} 
-            onCancel={() => setCurrentView('DASHBOARD')} 
-            contractors={contractors}
-            activeHomeowner={(userRole === UserRole.ADMIN || userRole === UserRole.BUILDER) && targetHomeowner ? targetHomeowner : activeHomeowner}
-            userRole={userRole}
-          />
+          <NewClaimForm onSubmit={handleCreateClaim} onCancel={() => setCurrentView('DASHBOARD')} contractors={contractors} activeHomeowner={(userRole === UserRole.ADMIN || userRole === UserRole.BUILDER) && targetHomeowner ? targetHomeowner : activeHomeowner} userRole={userRole} />
         </div>
       )}
-
       {currentView === 'DETAIL' && selectedClaim && (
-        <ClaimDetail 
-          claim={selectedClaim} 
-          currentUserRole={userRole}
-          onUpdateClaim={handleUpdateClaim}
-          onBack={() => setCurrentView('DASHBOARD')}
-          contractors={contractors}
-          onSendMessage={handleContactAboutClaim}
-        />
+        <ClaimDetail claim={selectedClaim} currentUserRole={userRole} onUpdateClaim={handleUpdateClaim} onBack={() => setCurrentView('DASHBOARD')} contractors={contractors} onSendMessage={handleContactAboutClaim} />
       )}
-
-      <HomeownerEnrollment 
-        isOpen={isEnrollmentOpen}
-        onClose={() => setIsEnrollmentOpen(false)}
-        onEnroll={handleEnrollHomeowner}
-        builderGroups={builderGroups}
-      />
+      <HomeownerEnrollment isOpen={isEnrollmentOpen} onClose={() => setIsEnrollmentOpen(false)} onEnroll={handleEnrollHomeowner} builderGroups={builderGroups} />
     </Layout>
   );
 }

@@ -1,7 +1,5 @@
-import { Homeowner, InternalEmployee, BuilderUser, UserRole } from '../types';
-import { MOCK_HOMEOWNERS, MOCK_INTERNAL_EMPLOYEES, MOCK_BUILDER_USERS } from '../constants';
 
-// This service mocks the interaction with a real Auth Provider (e.g., Netlify Identity / Neon)
+import { Homeowner, InternalEmployee, BuilderUser, UserRole } from '../types';
 
 interface AuthResponse {
   success: boolean;
@@ -10,38 +8,43 @@ interface AuthResponse {
   error?: string;
 }
 
-export const login = async (email: string, password: string): Promise<AuthResponse> => {
+export const login = async (
+  email: string, 
+  password: string,
+  homeowners: Homeowner[],
+  employees: InternalEmployee[],
+  builderUsers: BuilderUser[]
+): Promise<AuthResponse> => {
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 800));
 
   // 1. Check Internal Employees
-  const employee = MOCK_INTERNAL_EMPLOYEES.find(e => e.email.toLowerCase() === email.toLowerCase());
+  const employee = employees.find(e => e.email.toLowerCase() === email.toLowerCase());
   if (employee) {
-    // In a real app, verify password hash here
-    if (password === 'password') {
+    if (employee.password === password || (!employee.password && password === 'password')) {
       return { success: true, user: employee, role: UserRole.ADMIN };
     } else {
-      return { success: false, error: 'Invalid password. (Try "password")' };
+      return { success: false, error: 'Invalid password.' };
     }
   }
 
   // 2. Check Builder Users
-  const builderUser = MOCK_BUILDER_USERS.find(b => b.email.toLowerCase() === email.toLowerCase());
+  const builderUser = builderUsers.find(b => b.email.toLowerCase() === email.toLowerCase());
   if (builderUser) {
-    if (password === 'password') {
+    if (builderUser.password === password || (!builderUser.password && password === 'password')) {
       return { success: true, user: builderUser, role: UserRole.BUILDER };
     } else {
-      return { success: false, error: 'Invalid password. (Try "password")' };
+      return { success: false, error: 'Invalid password.' };
     }
   }
 
   // 3. Check Homeowners
-  const homeowner = MOCK_HOMEOWNERS.find(h => h.email.toLowerCase() === email.toLowerCase());
+  const homeowner = homeowners.find(h => h.email.toLowerCase() === email.toLowerCase());
   if (homeowner) {
-    if (password === 'password') {
+    if (homeowner.password === password || (!homeowner.password && password === 'password')) {
       return { success: true, user: homeowner, role: UserRole.HOMEOWNER };
     } else {
-      return { success: false, error: 'Invalid password. (Try "password")' };
+      return { success: false, error: 'Invalid password.' };
     }
   }
 
@@ -51,15 +54,16 @@ export const login = async (email: string, password: string): Promise<AuthRespon
 export const socialLogin = async (provider: 'google' | 'apple'): Promise<AuthResponse> => {
   await new Promise(resolve => setTimeout(resolve, 1500));
   
-  // Simulate successful social login mapping to the first Admin account for demo
-  const employee = MOCK_INTERNAL_EMPLOYEES[0];
-  return { success: true, user: employee, role: UserRole.ADMIN };
+  // This is a mock function, it won't work perfectly without real users loaded for social mapping
+  // We'll just return a generic error or success for demo purposes if needed
+  return { success: false, error: 'Social Login requires backend integration.' };
 };
 
 export const register = async (email: string, password: string, name: string): Promise<AuthResponse> => {
   await new Promise(resolve => setTimeout(resolve, 1000));
   
-  // Simulate creating a new homeowner account
+  // In a real app this would call DB insert
+  // Here we just return success and let UI optimistically update
   const newHomeowner: Homeowner = {
     id: `h-new-${Date.now()}`,
     name: name,
@@ -72,7 +76,8 @@ export const register = async (email: string, password: string, name: string): P
     address: 'Pending Assignment',
     builder: 'Pending',
     jobName: 'Pending',
-    closingDate: new Date()
+    closingDate: new Date(),
+    password: password
   };
   
   return { success: true, user: newHomeowner, role: UserRole.HOMEOWNER };
