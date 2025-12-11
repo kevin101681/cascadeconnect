@@ -23,9 +23,6 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
   const [buyer2Email, setBuyer2Email] = useState('');
 
   // Property
-  const [builderId, setBuilderId] = useState('');
-  const [jobName, setJobName] = useState(''); // Replaces Project & Lot
-  
   const [street, setStreet] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
@@ -44,9 +41,12 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Find name from selected ID
-    const selectedBuilder = builderGroups.find(g => g.id === builderId);
+
+    // Validate File Upload
+    if (!tradeFile) {
+      alert("Please upload the Contractor List before submitting.");
+      return;
+    }
     
     const newHomeowner: Partial<Homeowner> = {
       firstName,
@@ -56,9 +56,10 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
       phone,
       buyer2Email,
       buyer2Phone,
-      builder: selectedBuilder ? selectedBuilder.name : 'Unknown',
-      builderId,
-      jobName,
+      // Defaults for fields removed from form
+      builder: 'Pending Assignment',
+      builderId: '',
+      jobName: 'Pending Assignment',
       street,
       city,
       state,
@@ -91,9 +92,8 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
           <div>
             <h2 className="text-xl font-normal text-surface-on flex items-center gap-2">
               <UserPlus className="h-6 w-6 text-primary" />
-              Enroll New Homeowner
+              New Homebuyer Enrollment Form
             </h2>
-            <p className="text-sm text-surface-on-variant mt-1">Builder Client Submission Form</p>
           </div>
           <button onClick={onClose} className="text-surface-on-variant hover:text-surface-on p-2 rounded-full hover:bg-white/10">
             <X className="h-6 w-6" />
@@ -181,31 +181,6 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
                  </h3>
                  <div className="space-y-3">
                     <div>
-                      <label className={labelClass}>Builder Group *</label>
-                      <select 
-                        required 
-                        className={inputClass} 
-                        value={builderId} 
-                        onChange={e => setBuilderId(e.target.value)}
-                      >
-                        <option value="">Select Builder...</option>
-                        {builderGroups.map(bg => (
-                          <option key={bg.id} value={bg.id}>{bg.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className={labelClass}>Job Name *</label>
-                      <input 
-                        type="text" 
-                        required
-                        placeholder="e.g. Maple Ridge - Lot 42" 
-                        className={inputClass} 
-                        value={jobName} 
-                        onChange={e => setJobName(e.target.value)} 
-                      />
-                    </div>
-                    <div>
                       <label className={labelClass}>Street Address *</label>
                       <input type="text" required className={inputClass} value={street} onChange={e => setStreet(e.target.value)} />
                     </div>
@@ -250,16 +225,16 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
                  </h3>
                  <div className="space-y-4">
                    <div>
-                     <label className={labelClass}>Contractor List (Upload)</label>
-                     <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-surface-outline-variant border-dashed rounded-xl hover:bg-surface-container transition-colors">
+                     <label className={labelClass}>Contractor List (Upload) *</label>
+                     <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl hover:bg-surface-container transition-colors ${!tradeFile ? 'border-primary/50 bg-primary/5' : 'border-surface-outline-variant'}`}>
                        <div className="space-y-1 text-center">
                          <Upload className="mx-auto h-8 w-8 text-surface-outline-variant" />
-                         <div className="flex text-sm text-surface-on-variant">
+                         <div className="flex text-sm text-surface-on-variant justify-center">
                            <label className="relative cursor-pointer rounded-md font-medium text-primary hover:text-primary/80 focus-within:outline-none">
-                             <span>Upload a file</span>
+                             <span>{tradeFile ? 'Change file' : 'Upload a file'}</span>
                              <input type="file" className="sr-only" onChange={(e) => setTradeFile(e.target.files?.[0] || null)} />
                            </label>
-                           <p className="pl-1">or drag and drop</p>
+                           {!tradeFile && <p className="pl-1">or drag and drop</p>}
                          </div>
                          <p className="text-xs text-surface-outline-variant">
                             {tradeFile ? tradeFile.name : 'PDF, DOC, XLS up to 10MB'}

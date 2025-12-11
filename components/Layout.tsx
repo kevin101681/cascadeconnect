@@ -72,7 +72,7 @@ const Layout: React.FC<LayoutProps> = ({
             
             {/* Logo */}
             <button onClick={() => onNavigate('DASHBOARD')} className="flex items-center gap-3 flex-shrink-0 focus:outline-none">
-              <div className="bg-white p-1 rounded-xl border border-surface-outline-variant shadow-sm h-10 w-10 flex items-center justify-center overflow-hidden">
+              <div className="bg-gray-100 p-1 rounded-xl border border-surface-outline-variant shadow-sm h-10 w-10 flex items-center justify-center overflow-hidden">
                 <img src="/logo.png" alt="Cascade Connect" className="h-full w-full object-contain" />
               </div>
               <span className="text-xl font-normal text-surface-on tracking-tight hidden md:block">Cascade Connect</span>
@@ -112,7 +112,10 @@ const Layout: React.FC<LayoutProps> = ({
                         >
                           <div>
                             <p className="font-medium text-surface-on text-sm">{h.name}</p>
-                            <p className="text-xs text-surface-on-variant">{h.address}</p>
+                            <p className="text-xs text-surface-on-variant">
+                              {h.jobName && <span className="font-medium text-primary mr-1">{h.jobName} •</span>}
+                              {h.address}
+                            </p>
                           </div>
                           <ArrowRight className="h-3 w-3 text-surface-outline-variant group-hover:text-primary" />
                         </button>
