@@ -6,11 +6,11 @@ import { Upload, FileText, AlertCircle, CheckCircle, Database, Terminal, Loader2
 import { Claim, ClaimStatus, UserRole, ClaimClassification, Homeowner, BuilderGroup } from '../types';
 
 interface DataImportProps {
-  onImportClaims: (claims: Claim[]) => void;
-  onImportHomeowners: (homeowners: Homeowner[]) => void;
+  onImportClaims: (claims: Claim[]) => Promise<void>;
+  onImportHomeowners: (homeowners: Homeowner[]) => Promise<void>;
   onClearHomeowners: () => void;
   existingBuilderGroups: BuilderGroup[];
-  onImportBuilderGroups: (groups: BuilderGroup[]) => void;
+  onImportBuilderGroups: (groups: BuilderGroup[]) => Promise<void>;
 }
 
 type ImportType = 'CLAIMS' | 'HOMEOWNERS' | 'CONTRACTORS';
@@ -133,8 +133,13 @@ const DataImport: React.FC<DataImportProps> = ({
             });
 
             if (newGroups.length > 0) {
-                 onImportBuilderGroups(newGroups);
-                 addLog(`Registered ${newGroups.length} new Builder Groups.`);
+                 addLog(`Found ${newGroups.length} new Builder Groups. Uploading first...`);
+                 try {
+                    await onImportBuilderGroups(newGroups);
+                    addLog(`Successfully registered new Builder Groups.`);
+                 } catch (e) {
+                    addLog(`Error registering builder groups: ${e}`);
+                 }
             }
         }
         
@@ -146,7 +151,7 @@ const DataImport: React.FC<DataImportProps> = ({
           const chunk = results.data.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
           
           // Simulate network latency for backend upload
-          await new Promise(resolve => setTimeout(resolve, 500)); 
+          await new Promise(resolve => setTimeout(resolve, 100)); 
           
           // Transform chunk to internal format (Mocking backend transformation)
           if (importType === 'CLAIMS') {
@@ -195,16 +200,22 @@ const DataImport: React.FC<DataImportProps> = ({
           addLog(`Processed batch ${i + 1}/${totalChunks} (${chunk.length} records)`);
         }
 
-        addLog('Upload complete. Syncing state...');
-        if (importType === 'CLAIMS') {
-          onImportClaims(importedClaims);
-        } else if (importType === 'HOMEOWNERS') {
-          onImportHomeowners(importedHomeowners);
+        addLog('Processing complete. Syncing to database...');
+        try {
+            if (importType === 'CLAIMS') {
+              await onImportClaims(importedClaims);
+            } else if (importType === 'HOMEOWNERS') {
+              await onImportHomeowners(importedHomeowners);
+            }
+            
+            setIsProcessing(false);
+            setUploadStatus('COMPLETE');
+            addLog('Success: Data successfully imported into Cascade Connect.');
+        } catch (e) {
+            setUploadStatus('ERROR');
+            addLog(`CRITICAL ERROR: Upload to DB failed. ${e}`);
+            setIsProcessing(false);
         }
-        
-        setIsProcessing(false);
-        setUploadStatus('COMPLETE');
-        addLog('Success: Data successfully imported into Cascade Connect.');
       }
     });
   };

@@ -369,6 +369,7 @@ function App() {
     if (isDbConnected) {
       try {
         await db.insert(claimsTable).values({
+          id: newClaim.id, // Explicit ID
           homeownerId: subjectHomeowner.id !== 'placeholder' ? subjectHomeowner.id : null,
           title: newClaim.title,
           description: newClaim.description,
@@ -441,6 +442,7 @@ function App() {
     if (isDbConnected) {
       try {
         await db.insert(homeownersTable).values({
+          id: newId, // Explicit ID
           name: newHomeowner.name,
           email: newHomeowner.email,
           phone: newHomeowner.phone || null,
@@ -478,6 +480,7 @@ function App() {
       if (isDbConnected) {
           try {
              await db.insert(claimsTable).values(newClaims.map(c => ({
+                 id: c.id, // Explicit ID
                  title: c.title,
                  description: c.description,
                  category: c.category,
@@ -496,6 +499,7 @@ function App() {
       if (isDbConnected) {
           try {
              await db.insert(homeownersTable).values(newHomeowners.map(h => ({
+                 id: h.id, // Explicit ID
                  name: h.name,
                  email: h.email,
                  phone: h.phone,
@@ -519,10 +523,11 @@ function App() {
       if (isDbConnected) {
           try {
               await db.insert(builderGroupsTable).values(newGroups.map(g => ({
+                  id: g.id, // Explicit ID
                   name: g.name,
                   email: g.email
               } as any)));
-          } catch(e) { console.error("Batch import groups to DB failed", e); }
+          } catch(e) { console.error("Batch import groups to DB failed", e); throw e; }
       }
   };
   
