@@ -313,7 +313,7 @@ function App() {
     if (!subjectHomeowner) return;
 
     const newClaim: Claim = {
-      id: crypto.randomUUID(), // Use valid UUID
+      id: crypto.randomUUID(), // Optimistic ID
       title: data.title || '',
       description: data.description || '',
       category: data.category || 'Other',
@@ -373,7 +373,7 @@ function App() {
   };
 
   const handleEnrollHomeowner = async (data: Partial<Homeowner>, tradeListFile: File | null) => {
-    const newId = crypto.randomUUID(); // Use valid UUID
+    const newId = crypto.randomUUID(); // Optimistic ID
     const newHomeowner: Homeowner = {
       id: newId,
       name: data.name || 'Unknown',
