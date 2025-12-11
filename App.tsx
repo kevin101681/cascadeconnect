@@ -344,7 +344,7 @@ function App() {
     // DB Insert
     if (isDbConnected) {
       try {
-        const claimInsertData: typeof claimsTable.$inferInsert = {
+        await db.insert(claimsTable).values({
           homeownerId: subjectHomeowner.id !== 'placeholder' ? subjectHomeowner.id : null,
           title: newClaim.title,
           description: newClaim.description,
@@ -367,8 +367,7 @@ function App() {
           contractorEmail: newClaim.contractorEmail || null,
           proposedDates: [],
           summary: null
-        };
-        await db.insert(claimsTable).values(claimInsertData);
+        });
       } catch (e) {
         console.error("Failed to save claim to DB:", e);
       }
@@ -418,7 +417,7 @@ function App() {
     // DB Insert
     if (isDbConnected) {
       try {
-        const homeownerInsertData: typeof homeownersTable.$inferInsert = {
+        await db.insert(homeownersTable).values({
           name: newHomeowner.name,
           email: newHomeowner.email,
           phone: newHomeowner.phone || null,
@@ -440,8 +439,7 @@ function App() {
           agentPhone: newHomeowner.agentPhone || null,
           enrollmentComments: newHomeowner.enrollmentComments || null,
           password: newHomeowner.password || null
-        };
-        await db.insert(homeownersTable).values(homeownerInsertData);
+        });
       } catch (e) {
         console.error("Failed to save homeowner to DB:", e);
       }

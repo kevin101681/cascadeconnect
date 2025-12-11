@@ -20,7 +20,7 @@ export const users = pgTable('users', {
   name: text('name').notNull(),
   email: text('email').notNull().unique(),
   role: userRoleEnum('role').default('ADMIN'),
-  password: text('password'), // Add password
+  password: text('password'),
   
   // For Builder Users
   builderGroupId: uuid('builder_group_id').references(() => builderGroups.id),
@@ -34,15 +34,15 @@ export const homeowners = pgTable('homeowners', {
   clerkId: text('clerk_id').unique(), 
   
   // Personal Info
-  name: text('name').notNull(), // Combined name
+  name: text('name').notNull(),
   firstName: text('first_name'),
   lastName: text('last_name'),
   email: text('email').notNull(),
   
-  // Added phone column to fix TS build error
+  // FIXED: Explicitly added phone column for TS build
   phone: text('phone'), 
   
-  password: text('password'), // Add password
+  password: text('password'),
   
   // Buyer 2
   buyer2Email: text('buyer_2_email'),
@@ -53,12 +53,12 @@ export const homeowners = pgTable('homeowners', {
   city: text('city'),
   state: text('state'),
   zip: text('zip'),
-  address: text('address').notNull(), // Full string address
+  address: text('address').notNull(),
   
   // Builder Info
-  builder: text('builder'), // Display name
-  builderGroupId: uuid('builder_group_id').references(() => builderGroups.id), // Loose link or FK
-  jobName: text('job_name'), // Replaces lot/project
+  builder: text('builder'),
+  builderGroupId: uuid('builder_group_id').references(() => builderGroups.id),
+  jobName: text('job_name'),
   
   // Agent Info
   agentName: text('agent_name'),
@@ -66,7 +66,7 @@ export const homeowners = pgTable('homeowners', {
   agentEmail: text('agent_email'),
   
   // Dates
-  closingDate: timestamp('closing_date'), // Changed to timestamp for easier parsing
+  closingDate: timestamp('closing_date'),
   preferredWalkThroughDate: timestamp('preferred_walk_through_date'),
   
   enrollmentComments: text('enrollment_comments'),
@@ -87,10 +87,10 @@ export const contractors = pgTable('contractors', {
 export const claims = pgTable('claims', {
   id: uuid('id').defaultRandom().primaryKey(),
   
-  // Added homeownerId column to fix TS build error
+  // FIXED: Explicitly added homeownerId column for TS build
   homeownerId: uuid('homeowner_id').references(() => homeowners.id), 
   
-  // Denormalized fields for easier fetching
+  // Denormalized fields
   homeownerName: text('homeowner_name'),
   homeownerEmail: text('homeowner_email'),
   builderName: text('builder_name'),
@@ -105,7 +105,7 @@ export const claims = pgTable('claims', {
   classification: text('classification').default('Unclassified'),
   
   // Assignment
-  contractorId: uuid('contractor_id').references(() => contractors.id), // Loose link or FK
+  contractorId: uuid('contractor_id').references(() => contractors.id),
   contractorName: text('contractor_name'),
   contractorEmail: text('contractor_email'),
 
@@ -118,7 +118,7 @@ export const claims = pgTable('claims', {
   nonWarrantyExplanation: text('non_warranty_explanation'),
   summary: text('ai_summary'),
   
-  // JSON Store for simple arrays
+  // JSON Store
   attachments: json('attachments').$type<any[]>().default([]),
   proposedDates: json('proposed_dates').$type<any[]>().default([]),
 });
@@ -153,7 +153,6 @@ export const tasks = pgTable('tasks', {
 });
 
 // --- 8. Messages ---
-// Simple JSON store for threads for this prototype to avoid complex joins
 export const messageThreads = pgTable('message_threads', {
   id: uuid('id').defaultRandom().primaryKey(),
   subject: text('subject').notNull(),
