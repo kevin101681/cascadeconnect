@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
 import { Contractor, ClaimClassification, Attachment, Homeowner, ClaimStatus, UserRole } from '../types';
@@ -98,11 +99,11 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       
-      {/* Project Name Pill */}
+      {/* Job Name Pill */}
       <div className="flex justify-end">
          <span className="bg-primary-container text-primary-on-container text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
             <Building2 className="h-3 w-3" />
-            {activeHomeowner.projectOrLlc || `Lot ${activeHomeowner.lotNumber}`}
+            {activeHomeowner.jobName}
          </span>
       </div>
 

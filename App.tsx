@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
@@ -12,12 +13,27 @@ import TaskList from './components/TaskList';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS } from './constants';
 
+const PLACEHOLDER_HOMEOWNER: Homeowner = {
+  id: 'placeholder',
+  name: 'Guest',
+  email: '',
+  phone: '',
+  street: '',
+  city: '',
+  state: '',
+  zip: '',
+  address: '',
+  builder: '',
+  jobName: '',
+  closingDate: new Date()
+};
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [userRole, setUserRole] = useState<UserRole>(UserRole.ADMIN);
   
   // Mock logged in user management
-  const [activeHomeowner, setActiveHomeowner] = useState<Homeowner>(MOCK_HOMEOWNERS[0]);
+  const [activeHomeowner, setActiveHomeowner] = useState<Homeowner>(MOCK_HOMEOWNERS.length > 0 ? MOCK_HOMEOWNERS[0] : PLACEHOLDER_HOMEOWNER);
   const [activeEmployee, setActiveEmployee] = useState<InternalEmployee>(MOCK_INTERNAL_EMPLOYEES[0]); 
   
   // Current Builder User ID (for simulation filtering)
@@ -44,7 +60,7 @@ function App() {
 
   // Dashboard Control State (Ephemeral)
   const [dashboardConfig, setDashboardConfig] = useState<{
-    initialTab?: 'CLAIMS' | 'MESSAGES';
+    initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS';
     initialThreadId?: string | null;
   }>({});
 
@@ -67,7 +83,7 @@ function App() {
       )
     : [];
 
-  const handleLoginSuccess = (user: Homeowner | InternalEmployee, role: UserRole) => {
+  const handleLoginSuccess = (user: Homeowner | InternalEmployee | BuilderUser, role: UserRole) => {
     setUserRole(role);
     if (role === UserRole.ADMIN) {
       setActiveEmployee(user as InternalEmployee);
@@ -75,6 +91,9 @@ function App() {
     } else if (role === UserRole.HOMEOWNER) {
       setActiveHomeowner(user as Homeowner);
       setCurrentBuilderId(null);
+    } else if (role === UserRole.BUILDER) {
+      const builderUser = user as BuilderUser;
+      setCurrentBuilderId(builderUser.builderGroupId);
     }
     setIsAuthenticated(true);
   };
@@ -146,7 +165,7 @@ function App() {
       homeownerName: subjectHomeowner.name,
       homeownerEmail: subjectHomeowner.email,
       builderName: subjectHomeowner.builder,
-      projectName: subjectHomeowner.lotNumber,
+      jobName: subjectHomeowner.jobName, // Use Job Name
       closingDate: subjectHomeowner.closingDate,
       status: data.status || ClaimStatus.SUBMITTED,
       classification: data.classification || 'Unclassified',
@@ -167,6 +186,19 @@ function App() {
 
   const handleImportClaims = (newClaims: Claim[]) => {
     setClaims(prev => [...newClaims, ...prev]);
+  };
+
+  const handleImportHomeowners = (newHomeowners: Homeowner[]) => {
+    setHomeowners(prev => [...prev, ...newHomeowners]);
+  };
+
+  const handleImportBuilderGroups = (newGroups: BuilderGroup[]) => {
+    setBuilderGroups(prev => [...prev, ...newGroups]);
+  };
+
+  const handleClearHomeowners = () => {
+    setHomeowners([]);
+    setSelectedAdminHomeownerId(null);
   };
 
   // Task Management
@@ -244,11 +276,15 @@ function App() {
       id: newId,
       name: data.name || 'Unknown',
       email: data.email || '',
-      address: data.address || '',
       phone: data.phone || '',
+      street: data.street || '',
+      city: data.city || '',
+      state: data.state || '',
+      zip: data.zip || '',
+      address: data.address || '', // Constructed in component
       builder: data.builder || '',
       builderId: data.builderId,
-      lotNumber: data.lotNumber || '',
+      jobName: data.jobName || '',
       closingDate: data.closingDate || new Date(),
       ...data
     } as Homeowner;
@@ -499,7 +535,13 @@ function App() {
       )}
 
       {currentView === 'DATA' && (
-        <DataImport onImportClaims={handleImportClaims} />
+        <DataImport 
+          onImportClaims={handleImportClaims} 
+          onImportHomeowners={handleImportHomeowners}
+          onClearHomeowners={handleClearHomeowners}
+          existingBuilderGroups={builderGroups}
+          onImportBuilderGroups={handleImportBuilderGroups}
+        />
       )}
 
       {currentView === 'NEW' && (

@@ -1,6 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, Homeowner } from '../types';
-import { ShieldCheck, UserCircle, Users, ChevronDown, Search, ArrowRight, X, Menu, LogOut, Database, UserPlus, Building2, HardHat } from 'lucide-react';
+import { UserCircle, Users, ChevronDown, Search, ArrowRight, X, Menu, LogOut, Database, UserPlus, Building2, HardHat } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -71,7 +72,9 @@ const Layout: React.FC<LayoutProps> = ({
             
             {/* Logo */}
             <button onClick={() => onNavigate('DASHBOARD')} className="flex items-center gap-3 flex-shrink-0 focus:outline-none">
-              <ShieldCheck className="h-8 w-8 text-primary" />
+              <div className="bg-white p-1 rounded-xl border border-surface-outline-variant shadow-sm h-10 w-10 flex items-center justify-center overflow-hidden">
+                <img src="/logo.png" alt="Cascade Connect" className="h-full w-full object-contain" />
+              </div>
               <span className="text-xl font-normal text-surface-on tracking-tight hidden md:block">Cascade Connect</span>
             </button>
             

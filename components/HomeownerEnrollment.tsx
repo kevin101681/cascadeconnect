@@ -24,9 +24,9 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
 
   // Property
   const [builderId, setBuilderId] = useState('');
-  const [projectName, setProjectName] = useState('');
-  const [lotNumber, setLotNumber] = useState('');
-  const [address, setAddress] = useState('');
+  const [jobName, setJobName] = useState(''); // Replaces Project & Lot
+  
+  const [street, setStreet] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
   const [zip, setZip] = useState('');
@@ -58,12 +58,12 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
       buyer2Phone,
       builder: selectedBuilder ? selectedBuilder.name : 'Unknown',
       builderId,
-      projectOrLlc: projectName,
-      lotNumber,
-      address: `${address}, ${city}, ${state} ${zip}`,
+      jobName,
+      street,
       city,
       state,
       zip,
+      address: `${street}, ${city}, ${state} ${zip}`, // Construct full address
       agentName,
       agentEmail,
       agentPhone,
@@ -181,7 +181,7 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
                  </h3>
                  <div className="space-y-3">
                     <div>
-                      <label className={labelClass}>Builder's Name *</label>
+                      <label className={labelClass}>Builder Group *</label>
                       <select 
                         required 
                         className={inputClass} 
@@ -194,19 +194,20 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
                         ))}
                       </select>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                       <div>
-                         <label className={labelClass}>Project Name / LLC</label>
-                         <input type="text" className={inputClass} value={projectName} onChange={e => setProjectName(e.target.value)} />
-                       </div>
-                       <div>
-                         <label className={labelClass}>Lot / Unit # *</label>
-                         <input type="text" required className={inputClass} value={lotNumber} onChange={e => setLotNumber(e.target.value)} />
-                       </div>
+                    <div>
+                      <label className={labelClass}>Job Name *</label>
+                      <input 
+                        type="text" 
+                        required
+                        placeholder="e.g. Maple Ridge - Lot 42" 
+                        className={inputClass} 
+                        value={jobName} 
+                        onChange={e => setJobName(e.target.value)} 
+                      />
                     </div>
                     <div>
                       <label className={labelClass}>Street Address *</label>
-                      <input type="text" required className={inputClass} value={address} onChange={e => setAddress(e.target.value)} />
+                      <input type="text" required className={inputClass} value={street} onChange={e => setStreet(e.target.value)} />
                     </div>
                     <div className="grid grid-cols-6 gap-3">
                        <div className="col-span-3">

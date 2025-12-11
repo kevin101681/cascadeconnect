@@ -51,15 +51,16 @@ export interface Homeowner {
   buyer2Phone?: string;
 
   // Property
-  address: string; // Combined or specific street
-  city?: string;
-  state?: string;
-  zip?: string;
+  street: string; 
+  city: string;
+  state: string;
+  zip: string;
+  address: string; // Combined Full Address for display/search
   
   builder: string; // Display Name
   builderId?: string; // Link to BuilderGroup
-  lotNumber: string;
-  projectOrLlc?: string;
+  
+  jobName: string; // Replaces Lot/Project/LLC
   
   // Agent
   agentName?: string;
@@ -162,7 +163,7 @@ export interface Claim {
   homeownerName: string;
   homeownerEmail: string;
   builderName?: string;
-  projectName?: string; // Lot/Unit
+  jobName?: string; // Replaces projectName/Lot
   closingDate?: Date;
 
   // Assignment

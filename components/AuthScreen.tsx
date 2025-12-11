@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import Button from './Button';
 import { ShieldCheck, Mail, Lock, User, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 import { login, socialLogin, register } from '../services/authService';
-import { Homeowner, InternalEmployee, UserRole } from '../types';
+import { Homeowner, InternalEmployee, BuilderUser, UserRole } from '../types';
 
 interface AuthScreenProps {
-  onLoginSuccess: (user: Homeowner | InternalEmployee, role: UserRole) => void;
+  onLoginSuccess: (user: Homeowner | InternalEmployee | BuilderUser, role: UserRole) => void;
 }
 
 const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {

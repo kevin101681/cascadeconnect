@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task } from '../types';
 import StatusBadge from './StatusBadge';
@@ -94,10 +95,15 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editPhone, setEditPhone] = useState('');
-  const [editAddress, setEditAddress] = useState('');
+  
+  // Split Address
+  const [editStreet, setEditStreet] = useState('');
+  const [editCity, setEditCity] = useState('');
+  const [editState, setEditState] = useState('');
+  const [editZip, setEditZip] = useState('');
+
   const [editBuilderId, setEditBuilderId] = useState('');
-  const [editLot, setEditLot] = useState('');
-  const [editProject, setEditProject] = useState('');
+  const [editJobName, setEditJobName] = useState(''); // Replaces Lot/Project
   const [editClosingDate, setEditClosingDate] = useState('');
 
   // Messaging State
@@ -126,10 +132,15 @@ const Dashboard: React.FC<DashboardProps> = ({
     setEditName(targetHomeowner.name);
     setEditEmail(targetHomeowner.email);
     setEditPhone(targetHomeowner.phone);
-    setEditAddress(targetHomeowner.address);
+    
+    // Address Split
+    setEditStreet(targetHomeowner.street || '');
+    setEditCity(targetHomeowner.city || '');
+    setEditState(targetHomeowner.state || '');
+    setEditZip(targetHomeowner.zip || '');
+
     setEditBuilderId(targetHomeowner.builderId || '');
-    setEditLot(targetHomeowner.lotNumber);
-    setEditProject(targetHomeowner.projectOrLlc || '');
+    setEditJobName(targetHomeowner.jobName || '');
     setEditClosingDate(targetHomeowner.closingDate ? new Date(targetHomeowner.closingDate).toISOString().split('T')[0] : '');
     setShowEditHomeownerModal(true);
   };
@@ -145,11 +156,14 @@ const Dashboard: React.FC<DashboardProps> = ({
             name: editName,
             email: editEmail,
             phone: editPhone,
-            address: editAddress,
+            street: editStreet,
+            city: editCity,
+            state: editState,
+            zip: editZip,
+            address: `${editStreet}, ${editCity}, ${editState} ${editZip}`,
             builder: selectedGroup ? selectedGroup.name : targetHomeowner.builder,
             builderId: editBuilderId,
-            lotNumber: editLot,
-            projectOrLlc: editProject,
+            jobName: editJobName,
             closingDate: editClosingDate ? new Date(editClosingDate) : targetHomeowner.closingDate
         });
         setShowEditHomeownerModal(false);
@@ -349,29 +363,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Sidebar */}
         <div className="space-y-6">
           
-          {/* My Tasks Widget (Admin Only) */}
-          {isAdmin && (
-            <div className="bg-surface rounded-3xl border border-surface-outline-variant p-6">
-              <h3 className="font-medium text-lg mb-4 flex items-center text-surface-on">
-                 <CheckSquare className="h-5 w-5 mr-3 text-primary" />
-                 My Pending Tasks
-              </h3>
-              <div className="space-y-3">
-                 {myTasks.length === 0 ? <p className="text-sm opacity-70 text-surface-on-variant">No pending tasks.</p> :
-                    myTasks.slice(0, 3).map(t => (
-                       <div key={t.id} className="bg-surface-container p-3 rounded-xl text-sm border border-surface-outline-variant/50">
-                          <p className="font-medium text-surface-on">{t.title}</p>
-                          <p className="text-xs text-surface-on-variant mt-1 line-clamp-1">{t.description}</p>
-                       </div>
-                    ))
-                 }
-                 {onNavigate && (
-                    <Button variant="text" onClick={() => onNavigate('TASKS')} className="w-full mt-2 !h-8 !text-xs">View All Tasks</Button>
-                 )}
-              </div>
-            </div>
-          )}
-
           {/* Upcoming Schedule Card */}
           <div className="bg-secondary-container p-6 rounded-3xl text-secondary-on-container">
             <h3 className="font-medium text-lg mb-4 flex items-center">
@@ -564,54 +555,70 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="space-y-8 animate-in fade-in slide-in-from-top-4">
         {/* COMPACT HOMEOWNER HEADER CARD */}
         <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant shadow-elevation-1 group relative">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-6">
-             {/* Identity & Info Block */}
-             <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mb-2">
-                   <h2 className="text-2xl font-normal text-surface-on truncate">{targetHomeowner.name}</h2>
-                   <span className="bg-primary-container text-primary-on-container text-xs font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-                     <Building2 className="h-3 w-3" />
-                     {targetHomeowner.builder}
-                   </span>
-                   {/* Edit Button - Admin Only */}
-                   {isAdmin && (
-                     <button 
-                        onClick={handleOpenEditHomeowner}
-                        className="ml-2 p-1.5 text-surface-outline-variant hover:text-primary bg-transparent hover:bg-primary/10 rounded-full transition-colors"
-                        title="Edit Homeowner Info"
-                     >
-                       <Edit2 className="h-4 w-4" />
-                     </button>
-                   )}
-                </div>
+          <div className="flex-1 min-w-0">
+             
+             {/* Header Row: Name, Builder, Closing, Edit */}
+             <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-4">
+                <h2 className="text-2xl font-normal text-surface-on truncate">{targetHomeowner.name}</h2>
                 
-                {/* Compact Info Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-y-1 gap-x-6 text-sm text-surface-on-variant mt-3">
-                   <div className="flex items-center gap-2 min-w-0">
+                <span className="bg-primary-container text-primary-on-container text-xs font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                  <Building2 className="h-3 w-3" />
+                  {targetHomeowner.builder}
+                </span>
+
+                <span className="flex items-center gap-1.5 text-xs text-surface-on-variant bg-surface-container px-2.5 py-0.5 rounded-full border border-surface-outline-variant">
+                   <Clock className="h-3 w-3 text-surface-outline" />
+                   Closing: {targetHomeowner.closingDate ? new Date(targetHomeowner.closingDate).toLocaleDateString() : 'N/A'}
+                </span>
+
+                {/* Edit Button - Admin Only */}
+                {isAdmin && (
+                  <button 
+                     onClick={handleOpenEditHomeowner}
+                     className="ml-1 p-1.5 text-surface-outline-variant hover:text-primary bg-transparent hover:bg-primary/10 rounded-full transition-colors"
+                     title="Edit Homeowner Info"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </button>
+                )}
+             </div>
+             
+             {/* Info Grid - 2 Columns */}
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 text-sm">
+                
+                {/* Column 1: Location */}
+                <div className="space-y-1.5">
+                   <div className="flex items-center gap-2.5 text-surface-on">
                       <Home className="h-4 w-4 text-surface-outline flex-shrink-0" />
-                      <span className="truncate">{targetHomeowner.projectOrLlc || 'N/A'} (Lot {targetHomeowner.lotNumber})</span>
+                      <span className="font-medium">{targetHomeowner.jobName || 'N/A'}</span>
                    </div>
-                   <div className="col-span-1 sm:col-span-2 lg:col-span-1 flex items-center gap-2" title={targetHomeowner.address}>
-                      <MapPin className="h-4 w-4 text-surface-outline flex-shrink-0" />
-                      <span className="whitespace-normal">{targetHomeowner.address}</span>
-                   </div>
-                   <div className="flex items-center gap-2 min-w-0">
+                   <a 
+                     href={`https://maps.google.com/?q=${encodeURIComponent(targetHomeowner.address)}`}
+                     target="_blank"
+                     rel="noopener noreferrer"
+                     className="flex items-start gap-2.5 text-surface-on-variant pl-0.5 hover:text-primary transition-colors"
+                   >
+                      <MapPin className="h-4 w-4 text-surface-outline flex-shrink-0 mt-0.5" />
+                      <span className="leading-tight">{targetHomeowner.address}</span>
+                   </a>
+                </div>
+
+                {/* Column 2: Contact */}
+                <div className="space-y-1.5">
+                   <a href={`tel:${targetHomeowner.phone}`} className="flex items-center gap-2.5 text-surface-on-variant hover:text-primary transition-colors">
                       <Phone className="h-4 w-4 text-surface-outline flex-shrink-0" />
-                      <span className="truncate">{targetHomeowner.phone}</span>
-                   </div>
-                   <div className="flex items-center gap-2 min-w-0">
+                      <span>{targetHomeowner.phone}</span>
+                   </a>
+                   <div className="flex items-center gap-2.5 text-surface-on-variant">
                       <Mail className="h-4 w-4 text-surface-outline flex-shrink-0" />
-                      <span className="truncate">{targetHomeowner.email}</span>
-                   </div>
-                   <div className="flex items-center gap-2 min-w-0">
-                      <Clock className="h-4 w-4 text-surface-outline flex-shrink-0" />
-                      <span className="truncate">Closing: {targetHomeowner.closingDate ? new Date(targetHomeowner.closingDate).toLocaleDateString() : 'N/A'}</span>
+                      <a href={`mailto:${targetHomeowner.email}`} className="hover:text-primary transition-colors">{targetHomeowner.email}</a>
                    </div>
                 </div>
+
              </div>
 
-             {/* Actions */}
-             <div className="flex items-center gap-2 flex-wrap justify-end flex-shrink-0">
+             {/* Actions Positioned Absolute Top Right or Flex End if narrow */}
+             <div className="mt-6 pt-4 border-t border-surface-outline-variant/50 flex items-center justify-end gap-2 flex-wrap">
                 <Button 
                   onClick={() => setShowDocsModal(true)} 
                   variant="outlined" 
@@ -876,16 +883,30 @@ const Dashboard: React.FC<DashboardProps> = ({
                           onChange={(e) => setEditPhone(e.target.value)}
                         />
                       </div>
+                      
+                      {/* Split Address Fields */}
                       <div className="col-span-1 md:col-span-2">
-                        <label className="block text-xs font-medium text-surface-on-variant mb-1">Address</label>
+                        <label className="block text-xs font-medium text-surface-on-variant mb-1">Street Address</label>
                         <input 
                           type="text" 
                           required
                           className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                          value={editAddress}
-                          onChange={(e) => setEditAddress(e.target.value)}
+                          value={editStreet}
+                          onChange={(e) => setEditStreet(e.target.value)}
                         />
                       </div>
+                      <div className="col-span-1 md:col-span-2 grid grid-cols-6 gap-2">
+                         <div className="col-span-3">
+                           <input type="text" placeholder="City" required className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={editCity} onChange={(e) => setEditCity(e.target.value)} />
+                         </div>
+                         <div className="col-span-1">
+                           <input type="text" placeholder="State" required className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={editState} onChange={(e) => setEditState(e.target.value)} />
+                         </div>
+                         <div className="col-span-2">
+                           <input type="text" placeholder="Zip" required className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={editZip} onChange={(e) => setEditZip(e.target.value)} />
+                         </div>
+                      </div>
+
                       <div>
                         <label className="block text-xs font-medium text-surface-on-variant mb-1">Builder</label>
                         <select 
@@ -911,22 +932,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-surface-on-variant mb-1">Project / LLC</label>
+                        <label className="block text-xs font-medium text-surface-on-variant mb-1">Job Name</label>
                         <input 
                           type="text" 
                           className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                          value={editProject}
-                          onChange={(e) => setEditProject(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-surface-on-variant mb-1">Lot Number</label>
-                        <input 
-                          type="text" 
-                          required
-                          className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                          value={editLot}
-                          onChange={(e) => setEditLot(e.target.value)}
+                          value={editJobName}
+                          onChange={(e) => setEditJobName(e.target.value)}
+                          placeholder="e.g. Maple Ridge - Lot 42"
                         />
                       </div>
                    </div>

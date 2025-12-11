@@ -1,11 +1,11 @@
-import { Homeowner, InternalEmployee, UserRole } from '../types';
-import { MOCK_HOMEOWNERS, MOCK_INTERNAL_EMPLOYEES } from '../constants';
+import { Homeowner, InternalEmployee, BuilderUser, UserRole } from '../types';
+import { MOCK_HOMEOWNERS, MOCK_INTERNAL_EMPLOYEES, MOCK_BUILDER_USERS } from '../constants';
 
 // This service mocks the interaction with a real Auth Provider (e.g., Netlify Identity / Neon)
 
 interface AuthResponse {
   success: boolean;
-  user?: Homeowner | InternalEmployee;
+  user?: Homeowner | InternalEmployee | BuilderUser;
   role?: UserRole;
   error?: string;
 }
@@ -25,7 +25,17 @@ export const login = async (email: string, password: string): Promise<AuthRespon
     }
   }
 
-  // 2. Check Homeowners
+  // 2. Check Builder Users
+  const builderUser = MOCK_BUILDER_USERS.find(b => b.email.toLowerCase() === email.toLowerCase());
+  if (builderUser) {
+    if (password === 'password') {
+      return { success: true, user: builderUser, role: UserRole.BUILDER };
+    } else {
+      return { success: false, error: 'Invalid password. (Try "password")' };
+    }
+  }
+
+  // 3. Check Homeowners
   const homeowner = MOCK_HOMEOWNERS.find(h => h.email.toLowerCase() === email.toLowerCase());
   if (homeowner) {
     if (password === 'password') {
@@ -55,9 +65,13 @@ export const register = async (email: string, password: string, name: string): P
     name: name,
     email: email,
     phone: '',
+    street: '',
+    city: '',
+    state: '',
+    zip: '',
     address: 'Pending Assignment',
     builder: 'Pending',
-    lotNumber: 'Pending',
+    jobName: 'Pending',
     closingDate: new Date()
   };
   

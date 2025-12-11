@@ -63,7 +63,7 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
     }
 
     // 2. Pre-fill Email Details
-    setSoSubject(`Service Order: ${claim.builderName} - Lot ${claim.projectName} - ${claim.title}`);
+    setSoSubject(`Service Order: ${claim.builderName} - ${claim.jobName} - ${claim.title}`);
     setSoBody(`Hi ${claim.contractorName},\n\nPlease find attached the service order for the warranty claim referenced above.\n\nAddress: ${claim.address}\nIssue: ${claim.description}\n\nPlease let us know when you can schedule this.\n\nThanks,\nCascade Builder Services`);
     
     setShowSOModal(true);
@@ -155,7 +155,7 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
               <span className="text-surface-outline">|</span>
               <span className="font-medium text-primary">{claim.builderName}</span>
               <span className="text-surface-outline">•</span>
-              <span>Lot {claim.projectName}</span>
+              <span>{claim.jobName}</span>
             </div>
           </div>
         </div>
@@ -506,4 +506,3 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
 };
 
 export default ClaimDetail;
-    

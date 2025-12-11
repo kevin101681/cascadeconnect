@@ -1,3 +1,4 @@
+
 import { jsPDF } from 'jspdf';
 import { Claim } from '../types';
 
@@ -40,6 +41,9 @@ export const generateServiceOrderPDF = (claim: Claim, summary: string, returnUrl
   doc.text(claim.homeownerName, margin, cursorY);
   cursorY += 6;
   doc.text(claim.address, margin, cursorY);
+  cursorY += 6;
+  // Use Job Name
+  doc.text(`Job: ${claim.jobName || 'N/A'}`, margin, cursorY);
   cursorY += 15;
 
   // Issue Description

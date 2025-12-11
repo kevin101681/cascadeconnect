@@ -1,16 +1,27 @@
+
 import React, { useState, useRef } from 'react';
 import Papa from 'papaparse';
 import Button from './Button';
-import { Upload, FileText, AlertCircle, CheckCircle, Database, Terminal, Loader2 } from 'lucide-react';
-import { Claim, ClaimStatus, UserRole, ClaimClassification } from '../types';
+import { Upload, FileText, AlertCircle, CheckCircle, Database, Terminal, Loader2, Trash2 } from 'lucide-react';
+import { Claim, ClaimStatus, UserRole, ClaimClassification, Homeowner, BuilderGroup } from '../types';
 
 interface DataImportProps {
   onImportClaims: (claims: Claim[]) => void;
+  onImportHomeowners: (homeowners: Homeowner[]) => void;
+  onClearHomeowners: () => void;
+  existingBuilderGroups: BuilderGroup[];
+  onImportBuilderGroups: (groups: BuilderGroup[]) => void;
 }
 
 type ImportType = 'CLAIMS' | 'HOMEOWNERS' | 'CONTRACTORS';
 
-const DataImport: React.FC<DataImportProps> = ({ onImportClaims }) => {
+const DataImport: React.FC<DataImportProps> = ({ 
+  onImportClaims, 
+  onImportHomeowners, 
+  onClearHomeowners,
+  existingBuilderGroups,
+  onImportBuilderGroups
+}) => {
   const [importType, setImportType] = useState<ImportType>('CLAIMS');
   const [file, setFile] = useState<File | null>(null);
   const [previewData, setPreviewData] = useState<any[]>([]);
@@ -24,7 +35,7 @@ const DataImport: React.FC<DataImportProps> = ({ onImportClaims }) => {
 
   const REQUIRED_HEADERS: Record<ImportType, string[]> = {
     'CLAIMS': ['title', 'description', 'category', 'homeownerEmail', 'address'],
-    'HOMEOWNERS': ['name', 'email', 'address'],
+    'HOMEOWNERS': ['name', 'email', 'phone', 'street', 'city', 'state', 'zip', 'jobName', 'builder', 'closingDate'],
     'CONTRACTORS': ['companyName', 'email', 'specialty']
   };
 
@@ -57,7 +68,9 @@ const DataImport: React.FC<DataImportProps> = ({ onImportClaims }) => {
         addLog(`Preview loaded. Detected columns: ${results.meta.fields?.join(', ')}`);
         
         // Validation
-        const missing = REQUIRED_HEADERS[importType].filter(h => !results.meta.fields?.includes(h));
+        const required = REQUIRED_HEADERS[importType];
+        const missing = required.filter(h => !results.meta.fields?.includes(h));
+        
         if (missing.length > 0) {
           setUploadStatus('ERROR');
           addLog(`ERROR: Missing required columns: ${missing.join(', ')}`);
@@ -89,11 +102,46 @@ const DataImport: React.FC<DataImportProps> = ({ onImportClaims }) => {
         const totalRows = results.data.length;
         addLog(`Found ${totalRows} records. Initializing upload to Neon DB...`);
         
+        const importedClaims: Claim[] = [];
+        const importedHomeowners: Homeowner[] = [];
+
+        // Pre-processing for Homeowners: Extract and Create Builder Groups
+        let builderMap = new Map<string, string>(); // Name -> ID
+        
+        if (importType === 'HOMEOWNERS') {
+            // Load existing builders into map
+            existingBuilderGroups.forEach(bg => {
+                builderMap.set(bg.name.toLowerCase(), bg.id);
+            });
+
+            // Extract unique builder names from CSV
+            const allRows = results.data as any[];
+            const uniqueBuilders = Array.from(new Set(allRows.map(r => r.builder).filter(b => !!b))) as string[];
+            const newGroups: BuilderGroup[] = [];
+
+            uniqueBuilders.forEach((bName) => {
+                if (!builderMap.has(bName.toLowerCase())) {
+                    const newId = `bg-imp-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+                    const newGroup: BuilderGroup = {
+                        id: newId,
+                        name: bName,
+                        email: '' // No email in CSV for builder typically
+                    };
+                    newGroups.push(newGroup);
+                    builderMap.set(bName.toLowerCase(), newId);
+                }
+            });
+
+            if (newGroups.length > 0) {
+                 onImportBuilderGroups(newGroups);
+                 addLog(`Registered ${newGroups.length} new Builder Groups.`);
+            }
+        }
+        
         // Simulating Chunked Upload
         const CHUNK_SIZE = 100;
         const totalChunks = Math.ceil(totalRows / CHUNK_SIZE);
-        const importedClaims: Claim[] = [];
-
+        
         for (let i = 0; i < totalChunks; i++) {
           const chunk = results.data.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
           
@@ -118,6 +166,28 @@ const DataImport: React.FC<DataImportProps> = ({ onImportClaims }) => {
               attachments: []
             }));
             importedClaims.push(...transformed);
+          } else if (importType === 'HOMEOWNERS') {
+            const transformed: Homeowner[] = chunk.map((row: any, idx: number) => {
+              const builderName = row.builder || '';
+              const builderId = builderMap.get(builderName.toLowerCase()) || '';
+              
+              return {
+                id: `imp-h-${Date.now()}-${i}-${idx}`,
+                name: row.name,
+                email: row.email,
+                phone: row.phone || '',
+                street: row.street,
+                city: row.city,
+                state: row.state,
+                zip: row.zip,
+                address: `${row.street}, ${row.city}, ${row.state} ${row.zip}`,
+                jobName: row.jobName,
+                builder: builderName,
+                builderId: builderId, // Link to the BuilderGroup ID
+                closingDate: row.closingDate ? new Date(row.closingDate) : new Date(),
+              };
+            });
+            importedHomeowners.push(...transformed);
           }
 
           const currentProgress = Math.round(((i + 1) / totalChunks) * 100);
@@ -128,6 +198,8 @@ const DataImport: React.FC<DataImportProps> = ({ onImportClaims }) => {
         addLog('Upload complete. Syncing state...');
         if (importType === 'CLAIMS') {
           onImportClaims(importedClaims);
+        } else if (importType === 'HOMEOWNERS') {
+          onImportHomeowners(importedHomeowners);
         }
         
         setIsProcessing(false);
@@ -135,6 +207,13 @@ const DataImport: React.FC<DataImportProps> = ({ onImportClaims }) => {
         addLog('Success: Data successfully imported into Cascade Connect.');
       }
     });
+  };
+
+  const handleClearData = () => {
+    if (window.confirm('Are you sure you want to delete ALL homeowners? This action cannot be undone.')) {
+      onClearHomeowners();
+      addLog('System: All homeowners cleared from database.');
+    }
   };
 
   return (
@@ -214,7 +293,7 @@ const DataImport: React.FC<DataImportProps> = ({ onImportClaims }) => {
                <AlertCircle className="h-5 w-5 flex-shrink-0" />
                <div className="text-sm">
                  <p className="font-bold">Validation Failed</p>
-                 <p>The uploaded file is missing required columns or has invalid data formats.</p>
+                 <p>The uploaded file is missing required columns. Please check the logs.</p>
                </div>
              </div>
           )}
@@ -254,6 +333,29 @@ const DataImport: React.FC<DataImportProps> = ({ onImportClaims }) => {
               </div>
             )}
           </div>
+        )}
+
+        {/* Danger Zone - Homeowners Only */}
+        {importType === 'HOMEOWNERS' && (
+           <div className="bg-error/5 p-6 rounded-3xl border border-error/20">
+              <h3 className="text-sm font-bold text-error flex items-center gap-2 mb-2">
+                <AlertCircle className="h-4 w-4" />
+                Danger Zone
+              </h3>
+              <div className="flex items-center justify-between gap-4">
+                 <p className="text-xs text-error/80">
+                    Need to restart? This will permanently delete all homeowner records from the database.
+                 </p>
+                 <Button 
+                    variant="danger" 
+                    onClick={handleClearData} 
+                    icon={<Trash2 className="h-4 w-4" />}
+                    className="!h-8 !text-xs !px-3"
+                 >
+                    Clear All Homeowners
+                 </Button>
+              </div>
+           </div>
         )}
       </div>
 
