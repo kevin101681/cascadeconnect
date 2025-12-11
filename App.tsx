@@ -227,17 +227,30 @@ function App() {
     syncWithDb();
   }, []);
 
-  // UI State
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS'>('DASHBOARD');
-  const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
+  // UI State - Persistent
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS'>(() => 
+    loadState('cascade_ui_view', 'DASHBOARD')
+  );
   
+  const [selectedClaimId, setSelectedClaimId] = useState<string | null>(() => 
+    loadState('cascade_ui_claim_id', null)
+  );
+  
+  const [selectedAdminHomeownerId, setSelectedAdminHomeownerId] = useState<string | null>(() => 
+    loadState('cascade_ui_homeowner_id', null)
+  );
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedAdminHomeownerId, setSelectedAdminHomeownerId] = useState<string | null>(null);
 
   const [dashboardConfig, setDashboardConfig] = useState<{
     initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS';
     initialThreadId?: string | null;
   }>({});
+
+  // --- UI PERSISTENCE EFFECTS ---
+  useEffect(() => { saveState('cascade_ui_view', currentView); }, [currentView]);
+  useEffect(() => { saveState('cascade_ui_claim_id', selectedClaimId); }, [selectedClaimId]);
+  useEffect(() => { saveState('cascade_ui_homeowner_id', selectedAdminHomeownerId); }, [selectedAdminHomeownerId]);
 
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
   const selectedClaim = claims.find(c => c.id === selectedClaimId);
@@ -269,6 +282,17 @@ function App() {
       setCurrentBuilderId(builderUser.builderGroupId);
       builderId = builderUser.builderGroupId;
     }
+    
+    // Clear previous session's specific UI selections when a fresh login occurs
+    // to prevent seeing someone else's work if sharing a device, unless we just refreshed.
+    // However, since we are doing a client-side auth simulation, refreshing the page
+    // triggers this flow only if we weren't already authenticated.
+    // If we were authenticated (rehydrated from LS), this function isn't called on refresh.
+    // So explicit calls to this function imply a new login action.
+    setSelectedAdminHomeownerId(null);
+    setSelectedClaimId(null);
+    setCurrentView('DASHBOARD');
+
     setIsAuthenticated(true);
     // Persist Session
     saveState('cascade_session', { user, role, builderId });
