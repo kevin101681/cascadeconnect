@@ -1,3 +1,4 @@
+
 # Logs
 logs
 *.log
@@ -89,8 +90,6 @@ dist
 
 # Gatsby files
 .cache/
-# Comment in the public line in if your build creates a public directory
-# public
 
 # vuepress build output
 .vuepress/dist

@@ -345,7 +345,7 @@ function App() {
     if (isDbConnected) {
       try {
         await db.insert(claimsTable).values({
-          homeownerId: subjectHomeowner.id === 'placeholder' ? undefined : subjectHomeowner.id,
+          homeownerId: subjectHomeowner.id === 'placeholder' ? null : subjectHomeowner.id,
           title: newClaim.title,
           description: newClaim.description,
           category: newClaim.category,
@@ -358,7 +358,13 @@ function App() {
           classification: newClaim.classification,
           dateSubmitted: newClaim.dateSubmitted,
           attachments: newClaim.attachments,
-          // Add other fields as needed
+          // Add optional fields
+          dateEvaluated: newClaim.dateEvaluated || null,
+          nonWarrantyExplanation: newClaim.nonWarrantyExplanation || null,
+          internalNotes: newClaim.internalNotes || null,
+          contractorId: newClaim.contractorId || null,
+          contractorName: newClaim.contractorName || null,
+          contractorEmail: newClaim.contractorEmail || null
         });
       } catch (e) {
         console.error("Failed to save claim to DB:", e);
@@ -389,7 +395,8 @@ function App() {
       agentName: data.agentName,
       agentEmail: data.agentEmail,
       agentPhone: data.agentPhone,
-      enrollmentComments: data.enrollmentComments
+      enrollmentComments: data.enrollmentComments,
+      password: data.password
     } as Homeowner;
 
     // Optimistic Update
@@ -418,7 +425,7 @@ function App() {
           zip: newHomeowner.zip,
           address: newHomeowner.address,
           builder: newHomeowner.builder,
-          builderGroupId: newHomeowner.builderId ? newHomeowner.builderId : undefined,
+          builderGroupId: newHomeowner.builderId || null,
           jobName: newHomeowner.jobName,
           closingDate: newHomeowner.closingDate,
           firstName: newHomeowner.firstName || null,
@@ -428,7 +435,8 @@ function App() {
           agentName: newHomeowner.agentName || null,
           agentEmail: newHomeowner.agentEmail || null,
           agentPhone: newHomeowner.agentPhone || null,
-          enrollmentComments: newHomeowner.enrollmentComments || null
+          enrollmentComments: newHomeowner.enrollmentComments || null,
+          password: newHomeowner.password || null
         });
       } catch (e) {
         console.error("Failed to save homeowner to DB:", e);
