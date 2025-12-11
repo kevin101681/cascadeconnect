@@ -39,7 +39,7 @@ export const homeowners = pgTable('homeowners', {
   lastName: text('last_name'),
   email: text('email').notNull(),
   
-  // --- FIX: Add phone column explicitly for TS build ---
+  // Added phone column to fix TS build error
   phone: text('phone'), 
   
   password: text('password'), // Add password
@@ -87,7 +87,7 @@ export const contractors = pgTable('contractors', {
 export const claims = pgTable('claims', {
   id: uuid('id').defaultRandom().primaryKey(),
   
-  // --- FIX: Add homeownerId column explicitly for TS build ---
+  // Added homeownerId column to fix TS build error
   homeownerId: uuid('homeowner_id').references(() => homeowners.id), 
   
   // Denormalized fields for easier fetching
