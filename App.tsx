@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
@@ -6,9 +7,10 @@ import NewClaimForm from './components/NewClaimForm';
 import HomeownerEnrollment from './components/HomeownerEnrollment';
 import AuthScreen from './components/AuthScreen';
 import InternalUserManagement from './components/InternalUserManagement';
+import BuilderManagement from './components/BuilderManagement';
 import DataImport from './components/DataImport';
-import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message } from './types';
-import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS } from './constants';
+import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
+import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS } from './constants';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(true);
@@ -17,15 +19,27 @@ function App() {
   // Mock logged in user management
   const [activeHomeowner, setActiveHomeowner] = useState<Homeowner>(MOCK_HOMEOWNERS[0]);
   const [activeEmployee, setActiveEmployee] = useState<InternalEmployee>(MOCK_INTERNAL_EMPLOYEES[0]); 
+  // Add active builder user if needed for simulation
+  // const [activeBuilderUser, setActiveBuilderUser] = useState<BuilderUser>(MOCK_BUILDER_USERS[0]);
+  // Use a generic placeholder for now as we don't have a full auth context object in this simple demo
+  // In a real app, `currentUser` would be a union type.
+
+  // Current Builder User ID (for simulation filtering)
+  const [currentBuilderId, setCurrentBuilderId] = useState<string | null>(null);
 
   const [claims, setClaims] = useState<Claim[]>(MOCK_CLAIMS);
   const [tasks, setTasks] = useState<Task[]>(MOCK_TASKS);
   const [documents, setDocuments] = useState<HomeownerDocument[]>(MOCK_DOCUMENTS);
   const [homeowners, setHomeowners] = useState<Homeowner[]>(MOCK_HOMEOWNERS);
   const [employees, setEmployees] = useState<InternalEmployee[]>(MOCK_INTERNAL_EMPLOYEES);
+  const [contractors, setContractors] = useState<Contractor[]>(MOCK_CONTRACTORS);
   const [messages, setMessages] = useState<MessageThread[]>(MOCK_THREADS);
   
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA'>('DASHBOARD');
+  // Builder State
+  const [builderGroups, setBuilderGroups] = useState<BuilderGroup[]>(MOCK_BUILDER_GROUPS);
+  const [builderUsers, setBuilderUsers] = useState<BuilderUser[]>(MOCK_BUILDER_USERS);
+  
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA'>('DASHBOARD');
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
   
   // --- Search State (Lifted from Dashboard) ---
@@ -40,8 +54,13 @@ function App() {
   const targetHomeowner = selectedAdminHomeownerId ? homeowners.find(h => h.id === selectedAdminHomeownerId) || null : null;
 
   // Search results for Dropdown
+  // Filter search results based on role permissions
+  const availableHomeowners = (userRole === UserRole.BUILDER && currentBuilderId)
+    ? homeowners.filter(h => h.builderId === currentBuilderId)
+    : homeowners;
+
   const searchResults = searchQuery 
-    ? homeowners.filter(h => 
+    ? availableHomeowners.filter(h => 
         h.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
         h.email.toLowerCase().includes(searchQuery.toLowerCase())
       )
@@ -51,9 +70,13 @@ function App() {
     setUserRole(role);
     if (role === UserRole.ADMIN) {
       setActiveEmployee(user as InternalEmployee);
-    } else {
+      setCurrentBuilderId(null);
+    } else if (role === UserRole.HOMEOWNER) {
       setActiveHomeowner(user as Homeowner);
+      setCurrentBuilderId(null);
     }
+    // Note: Builder login simulation isn't fully built out in AuthScreen yet, 
+    // but structure is ready.
     setIsAuthenticated(true);
   };
 
@@ -69,9 +92,24 @@ function App() {
   };
 
   const handleSwitchRole = () => {
-    setUserRole(prev => prev === UserRole.HOMEOWNER ? UserRole.ADMIN : UserRole.HOMEOWNER);
+    // Cycle through roles for demo purposes
+    if (userRole === UserRole.ADMIN) {
+      setUserRole(UserRole.BUILDER);
+      // Simulate logging in as the first builder group
+      if (builderGroups.length > 0) {
+        setCurrentBuilderId(builderGroups[0].id);
+      }
+    } else if (userRole === UserRole.BUILDER) {
+      setUserRole(UserRole.HOMEOWNER);
+      setCurrentBuilderId(null);
+    } else {
+      setUserRole(UserRole.ADMIN);
+      setCurrentBuilderId(null);
+    }
+    
     setCurrentView('DASHBOARD');
     setSelectedClaimId(null);
+    setSelectedAdminHomeownerId(null);
   };
   
   const handleSwitchHomeowner = (id: string) => {
@@ -92,11 +130,13 @@ function App() {
   };
 
   const handleNewClaimStart = (homeownerId?: string) => {
+    // Builders cannot create claims
+    if (userRole === UserRole.BUILDER) return;
     setCurrentView('NEW');
   };
 
   const handleCreateClaim = (data: Partial<Claim>) => {
-    const subjectHomeowner = (userRole === UserRole.ADMIN && targetHomeowner) ? targetHomeowner : activeHomeowner;
+    const subjectHomeowner = ((userRole === UserRole.ADMIN || userRole === UserRole.BUILDER) && targetHomeowner) ? targetHomeowner : activeHomeowner;
     if (!subjectHomeowner) return;
 
     const newClaim: Claim = {
@@ -173,7 +213,43 @@ function App() {
     setEmployees(prev => prev.filter(e => e.id !== id));
   };
 
-  // Enrollment
+  // Subcontractor Management
+  const handleAddContractor = (sub: Contractor) => {
+    setContractors(prev => [...prev, sub]);
+  };
+
+  const handleUpdateContractor = (sub: Contractor) => {
+    setContractors(prev => prev.map(c => c.id === sub.id ? sub : c));
+  };
+
+  const handleDeleteContractor = (id: string) => {
+    setContractors(prev => prev.filter(c => c.id !== id));
+  };
+
+  // Builder Management
+  const handleAddBuilderGroup = (group: BuilderGroup) => {
+    setBuilderGroups(prev => [...prev, group]);
+  };
+  const handleUpdateBuilderGroup = (group: BuilderGroup) => {
+    setBuilderGroups(prev => prev.map(g => g.id === group.id ? group : g));
+  };
+  const handleDeleteBuilderGroup = (id: string) => {
+    setBuilderGroups(prev => prev.filter(g => g.id !== id));
+  };
+
+  const handleAddBuilderUser = (user: BuilderUser, password?: string) => {
+    console.log(`Creating builder user with password: ${password}`); // Mock password handling
+    setBuilderUsers(prev => [...prev, user]);
+  };
+  const handleUpdateBuilderUser = (user: BuilderUser, password?: string) => {
+    if (password) console.log(`Updating builder user password to: ${password}`);
+    setBuilderUsers(prev => prev.map(u => u.id === user.id ? user : u));
+  };
+  const handleDeleteBuilderUser = (id: string) => {
+    setBuilderUsers(prev => prev.filter(u => u.id !== id));
+  };
+
+  // Homeowner Management
   const handleEnrollHomeowner = (data: Partial<Homeowner>, tradeListFile: File | null) => {
     const newId = `h${Date.now()}`;
     const newHomeowner: Homeowner = {
@@ -183,6 +259,7 @@ function App() {
       address: data.address || '',
       phone: data.phone || '',
       builder: data.builder || '',
+      builderId: data.builderId,
       lotNumber: data.lotNumber || '',
       closingDate: data.closingDate || new Date(),
       ...data // Spread remaining fields
@@ -202,6 +279,10 @@ function App() {
     }
 
     alert(`Successfully enrolled ${newHomeowner.name}!`);
+  };
+
+  const handleUpdateHomeowner = (updatedHomeowner: Homeowner) => {
+    setHomeowners(prev => prev.map(h => h.id === updatedHomeowner.id ? updatedHomeowner : h));
   };
 
   const handleUploadDocument = (doc: Partial<HomeownerDocument>) => {
@@ -278,7 +359,7 @@ function App() {
     <Layout 
       userRole={userRole} 
       onSwitchRole={handleSwitchRole}
-      homeowners={homeowners}
+      homeowners={availableHomeowners} // Pass filtered list to layout for switcher/search context
       activeHomeowner={activeHomeowner}
       onSwitchHomeowner={handleSwitchHomeowner}
       
@@ -301,7 +382,7 @@ function App() {
           userRole={userRole} 
           onSelectClaim={handleSelectClaim}
           onNewClaim={handleNewClaimStart}
-          homeowners={homeowners}
+          homeowners={availableHomeowners}
           activeHomeowner={activeHomeowner}
           employees={employees}
           currentUser={activeEmployee}
@@ -311,6 +392,7 @@ function App() {
           
           targetHomeowner={targetHomeowner}
           onClearHomeownerSelection={handleClearHomeownerSelection}
+          onUpdateHomeowner={handleUpdateHomeowner}
 
           documents={documents}
           onUploadDocument={handleUploadDocument}
@@ -318,6 +400,8 @@ function App() {
           messages={messages}
           onSendMessage={handleSendMessage}
           onCreateThread={handleCreateThread}
+
+          builderGroups={builderGroups}
         />
       )}
 
@@ -327,6 +411,26 @@ function App() {
           onAddEmployee={handleAddEmployee}
           onUpdateEmployee={handleUpdateEmployee}
           onDeleteEmployee={handleDeleteEmployee}
+          
+          contractors={contractors}
+          onAddContractor={handleAddContractor}
+          onUpdateContractor={handleUpdateContractor}
+          onDeleteContractor={handleDeleteContractor}
+
+          onClose={() => setCurrentView('DASHBOARD')}
+        />
+      )}
+
+      {currentView === 'BUILDERS' && (
+        <BuilderManagement 
+          builderGroups={builderGroups}
+          builderUsers={builderUsers}
+          onAddGroup={handleAddBuilderGroup}
+          onUpdateGroup={handleUpdateBuilderGroup}
+          onDeleteGroup={handleDeleteBuilderGroup}
+          onAddUser={handleAddBuilderUser}
+          onUpdateUser={handleUpdateBuilderUser}
+          onDeleteUser={handleDeleteBuilderUser}
           onClose={() => setCurrentView('DASHBOARD')}
         />
       )}
@@ -341,8 +445,9 @@ function App() {
           <NewClaimForm 
             onSubmit={handleCreateClaim} 
             onCancel={() => setCurrentView('DASHBOARD')} 
-            contractors={MOCK_CONTRACTORS}
-            activeHomeowner={userRole === UserRole.ADMIN && targetHomeowner ? targetHomeowner : activeHomeowner}
+            contractors={contractors}
+            activeHomeowner={(userRole === UserRole.ADMIN || userRole === UserRole.BUILDER) && targetHomeowner ? targetHomeowner : activeHomeowner}
+            userRole={userRole}
           />
         </div>
       )}
@@ -353,7 +458,7 @@ function App() {
           currentUserRole={userRole}
           onUpdateClaim={handleUpdateClaim}
           onBack={() => setCurrentView('DASHBOARD')}
-          contractors={MOCK_CONTRACTORS}
+          contractors={contractors}
         />
       )}
 
@@ -361,6 +466,7 @@ function App() {
         isOpen={isEnrollmentOpen}
         onClose={() => setIsEnrollmentOpen(false)}
         onEnroll={handleEnrollHomeowner}
+        builderGroups={builderGroups}
       />
     </Layout>
   );

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
-import { Contractor, ClaimClassification, Attachment, Homeowner, ClaimStatus } from '../types';
+import { Contractor, ClaimClassification, Attachment, Homeowner, ClaimStatus, UserRole } from '../types';
 import Button from './Button';
 import { X, Upload, Video, FileText, Search, Building2 } from 'lucide-react';
 
@@ -9,23 +9,26 @@ interface NewClaimFormProps {
   onCancel: () => void;
   contractors: Contractor[];
   activeHomeowner: Homeowner;
+  userRole: UserRole;
 }
 
-const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contractors, activeHomeowner }) => {
+const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contractors, activeHomeowner, userRole }) => {
+  const isAdmin = userRole === UserRole.ADMIN;
+
   // Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   
-  // Classification & Status
+  // Classification & Status (Admin Only)
   const [classification, setClassification] = useState<ClaimClassification>('60 Day');
   const [dateEvaluated, setDateEvaluated] = useState(new Date().toISOString().split('T')[0]);
   const [nonWarrantyExplanation, setNonWarrantyExplanation] = useState('');
   
-  // Assignment
+  // Assignment (Admin Only)
   const [contractorSearch, setContractorSearch] = useState('');
   const [selectedContractorId, setSelectedContractorId] = useState<string>('');
   
-  // Internal
+  // Internal (Admin Only)
   const [internalNotes, setInternalNotes] = useState('');
 
   // Attachments
@@ -45,14 +48,15 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
       title,
       description,
       category: 'General',
-      classification,
-      dateEvaluated: dateEvaluated ? new Date(dateEvaluated) : undefined,
-      nonWarrantyExplanation: classification === 'Non-Warranty' ? nonWarrantyExplanation : undefined,
-      internalNotes,
-      contractorId: contractor?.id,
-      contractorName: contractor?.companyName,
-      contractorEmail: contractor?.email,
-      status: classification === 'Non-Warranty' ? ClaimStatus.COMPLETED : ClaimStatus.SUBMITTED,
+      // Admin specific fields default if not admin
+      classification: isAdmin ? classification : 'Unclassified',
+      dateEvaluated: isAdmin && dateEvaluated ? new Date(dateEvaluated) : undefined,
+      nonWarrantyExplanation: isAdmin && classification === 'Non-Warranty' ? nonWarrantyExplanation : undefined,
+      internalNotes: isAdmin ? internalNotes : undefined,
+      contractorId: isAdmin ? contractor?.id : undefined,
+      contractorName: isAdmin ? contractor?.companyName : undefined,
+      contractorEmail: isAdmin ? contractor?.email : undefined,
+      status: (isAdmin && classification === 'Non-Warranty') ? ClaimStatus.COMPLETED : ClaimStatus.SUBMITTED,
       attachments
     };
     
@@ -131,105 +135,111 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
             <label htmlFor="description" className={labelClass}>Problem Description</label>
           </div>
 
-           {/* Classification Section */}
-           <div className="bg-surface-container/20 p-4 rounded-xl border border-surface-outline-variant">
-            <h4 className="text-sm font-bold text-surface-on mb-3">Classification & Evaluation</h4>
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs text-surface-on-variant mb-1 block">Classification</label>
-                <select
-                  className={selectClass}
-                  value={classification}
-                  onChange={(e) => setClassification(e.target.value as ClaimClassification)}
-                >
-                  {CLAIM_CLASSIFICATIONS.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
+           {/* Classification Section (Admin Only) */}
+           {isAdmin && (
+             <div className="bg-surface-container/20 p-4 rounded-xl border border-surface-outline-variant">
+              <h4 className="text-sm font-bold text-surface-on mb-3">Classification & Evaluation</h4>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs text-surface-on-variant mb-1 block">Classification</label>
+                  <select
+                    className={selectClass}
+                    value={classification}
+                    onChange={(e) => setClassification(e.target.value as ClaimClassification)}
+                  >
+                    {CLAIM_CLASSIFICATIONS.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
 
-              <div>
-                <label className="text-xs text-surface-on-variant mb-1 block">Date Evaluated</label>
-                <input 
-                  type="date"
-                  className={selectClass}
-                  value={dateEvaluated}
-                  onChange={(e) => setDateEvaluated(e.target.value)}
-                />
-              </div>
+                <div>
+                  <label className="text-xs text-surface-on-variant mb-1 block">Date Evaluated</label>
+                  <input 
+                    type="date"
+                    className={selectClass}
+                    value={dateEvaluated}
+                    onChange={(e) => setDateEvaluated(e.target.value)}
+                  />
+                </div>
 
-              {classification === 'Non-Warranty' && (
-                 <div className="animate-in fade-in slide-in-from-top-2">
-                   <label className="text-xs text-surface-on-variant mb-1 block text-error">Non-Warranty Explanation (Required)</label>
-                   <textarea
-                     required
-                     className="w-full rounded-md border border-error bg-error/5 px-3 py-2 text-surface-on focus:outline-none text-sm"
-                     rows={3}
-                     value={nonWarrantyExplanation}
-                     onChange={(e) => setNonWarrantyExplanation(e.target.value)}
-                     placeholder="Why is this not covered?"
-                   />
-                 </div>
-              )}
+                {classification === 'Non-Warranty' && (
+                   <div className="animate-in fade-in slide-in-from-top-2">
+                     <label className="text-xs text-surface-on-variant mb-1 block text-error">Non-Warranty Explanation (Required)</label>
+                     <textarea
+                       required
+                       className="w-full rounded-md border border-error bg-error/5 px-3 py-2 text-surface-on focus:outline-none text-sm"
+                       rows={3}
+                       value={nonWarrantyExplanation}
+                       onChange={(e) => setNonWarrantyExplanation(e.target.value)}
+                       placeholder="Why is this not covered?"
+                     />
+                   </div>
+                )}
+              </div>
             </div>
-          </div>
+           )}
         </div>
 
         {/* Right Column: Assignment & Admin */}
         <div className="space-y-6">
-           {/* Assignment */}
-           <div className="bg-surface-container/20 p-4 rounded-xl border border-surface-outline-variant">
-              <h4 className="text-sm font-bold text-surface-on mb-3">Sub Assignment</h4>
-              
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-surface-outline-variant" />
-                <input 
-                  type="text"
-                  placeholder="Type to search subs..."
-                  className="w-full rounded-md border border-surface-outline bg-surface pl-10 pr-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                  value={contractorSearch}
-                  onChange={(e) => setContractorSearch(e.target.value)}
-                />
-              </div>
-
-              {contractorSearch.trim().length > 0 && (
-                <div className="mt-2 max-h-40 overflow-y-auto border border-surface-outline-variant rounded-md bg-surface shadow-elevation-1">
-                  {filteredContractors.length === 0 ? (
-                    <div className="px-3 py-2 text-xs text-surface-on-variant">No subs found.</div>
-                  ) : (
-                    filteredContractors.map(c => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => { setSelectedContractorId(c.id); setContractorSearch(c.companyName); }}
-                        className={`w-full text-left px-3 py-2 text-sm flex justify-between hover:bg-surface-container ${selectedContractorId === c.id ? 'bg-primary-container text-primary-on-container' : 'text-surface-on'}`}
-                      >
-                        <span>{c.companyName}</span>
-                        <span className="text-xs opacity-70">{c.specialty}</span>
-                      </button>
-                    ))
-                  )}
+           {/* Assignment (Admin Only) */}
+           {isAdmin && (
+             <div className="bg-surface-container/20 p-4 rounded-xl border border-surface-outline-variant">
+                <h4 className="text-sm font-bold text-surface-on mb-3">Sub Assignment</h4>
+                
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-surface-outline-variant" />
+                  <input 
+                    type="text"
+                    placeholder="Type to search subs..."
+                    className="w-full rounded-md border border-surface-outline bg-surface pl-10 pr-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                    value={contractorSearch}
+                    onChange={(e) => setContractorSearch(e.target.value)}
+                  />
                 </div>
-              )}
-              
-              {selectedContractorId && !contractorSearch.trim() && (
-                <div className="mt-2 text-xs text-primary font-medium flex items-center justify-between">
-                  <span>Selected: {contractors.find(c => c.id === selectedContractorId)?.companyName}</span>
-                  <button type="button" onClick={() => { setSelectedContractorId(''); setContractorSearch(''); }} className="text-surface-on-variant hover:text-error"><X className="h-3 w-3" /></button>
-                </div>
-              )}
-           </div>
 
-           {/* Internal Notes */}
-           <div className="relative">
-            <textarea
-              id="internalNotes"
-              rows={4}
-              className={`${inputClass} bg-secondary-container/20 border-secondary-container text-secondary-on-container`}
-              value={internalNotes}
-              onChange={(e) => setInternalNotes(e.target.value)}
-              placeholder="Internal Notes"
-            />
-            <label htmlFor="internalNotes" className={labelClass}>Internal Notes (Admin Only)</label>
-          </div>
+                {contractorSearch.trim().length > 0 && (
+                  <div className="mt-2 max-h-40 overflow-y-auto border border-surface-outline-variant rounded-md bg-surface shadow-elevation-1">
+                    {filteredContractors.length === 0 ? (
+                      <div className="px-3 py-2 text-xs text-surface-on-variant">No subs found.</div>
+                    ) : (
+                      filteredContractors.map(c => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => { setSelectedContractorId(c.id); setContractorSearch(c.companyName); }}
+                          className={`w-full text-left px-3 py-2 text-sm flex justify-between hover:bg-surface-container ${selectedContractorId === c.id ? 'bg-primary-container text-primary-on-container' : 'text-surface-on'}`}
+                        >
+                          <span>{c.companyName}</span>
+                          <span className="text-xs opacity-70">{c.specialty}</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+                
+                {selectedContractorId && !contractorSearch.trim() && (
+                  <div className="mt-2 text-xs text-primary font-medium flex items-center justify-between">
+                    <span>Selected: {contractors.find(c => c.id === selectedContractorId)?.companyName}</span>
+                    <button type="button" onClick={() => { setSelectedContractorId(''); setContractorSearch(''); }} className="text-surface-on-variant hover:text-error"><X className="h-3 w-3" /></button>
+                  </div>
+                )}
+             </div>
+           )}
+
+           {/* Internal Notes (Admin Only) */}
+           {isAdmin && (
+             <div className="relative">
+              <textarea
+                id="internalNotes"
+                rows={4}
+                className={`${inputClass} bg-secondary-container/20 border-secondary-container text-secondary-on-container`}
+                value={internalNotes}
+                onChange={(e) => setInternalNotes(e.target.value)}
+                placeholder="Internal Notes"
+              />
+              <label htmlFor="internalNotes" className={labelClass}>Internal Notes (Admin Only)</label>
+            </div>
+           )}
 
            {/* Attachments */}
            <div>

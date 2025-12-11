@@ -1,6 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, Homeowner } from '../types';
-import { ShieldCheck, UserCircle, Users, ChevronDown, Search, ArrowRight, X, Menu, LogOut, Database, UserPlus, LayoutDashboard } from 'lucide-react';
+import { ShieldCheck, UserCircle, Users, ChevronDown, Search, ArrowRight, X, Menu, LogOut, Database, UserPlus, LayoutDashboard, Building2 } from 'lucide-react';
 import Button from './Button';
 
 interface LayoutProps {
@@ -20,7 +21,7 @@ interface LayoutProps {
   onClearSelection: () => void;
 
   // Navigation & Actions
-  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'DATA') => void;
+  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA') => void;
   onOpenEnrollment: () => void;
 }
 
@@ -41,6 +42,7 @@ const Layout: React.FC<LayoutProps> = ({
   onOpenEnrollment
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
+  const isBuilder = userRole === UserRole.BUILDER;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -75,8 +77,8 @@ const Layout: React.FC<LayoutProps> = ({
               <span className="text-xl font-normal text-surface-on tracking-tight hidden md:block">Cascade Connect</span>
             </button>
             
-            {/* Centered Search Bar (Admin Only) */}
-            {isAdmin && (
+            {/* Centered Search Bar (Admin & Builder Only) */}
+            {(isAdmin || isBuilder) && (
               <div className="flex-1 max-w-sm relative">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant" />
@@ -126,7 +128,7 @@ const Layout: React.FC<LayoutProps> = ({
             <div className="flex items-center gap-4 flex-shrink-0">
               
               {/* Homeowner Switcher (Visible only in Homeowner View for testing) */}
-              {!isAdmin && (
+              {!isAdmin && !isBuilder && (
                 <div className="relative group hidden sm:block">
                   <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-surface-on-variant hover:bg-surface-container transition-colors">
                     <img 
@@ -175,10 +177,10 @@ const Layout: React.FC<LayoutProps> = ({
                     {/* User Info Header */}
                     <div className="px-4 py-3 bg-surface-container-high/30 border-b border-surface-outline-variant">
                       <p className="text-sm font-bold text-surface-on">
-                        {isAdmin ? 'Administrator' : activeHomeowner.name}
+                        {isAdmin ? 'Administrator' : isBuilder ? 'Builder Account' : activeHomeowner.name}
                       </p>
                       <p className="text-xs text-surface-on-variant">
-                        {isAdmin ? 'Internal Portal' : 'Homeowner Portal'}
+                        {isAdmin ? 'Internal Portal' : isBuilder ? 'Access: Read Only' : 'Homeowner Portal'}
                       </p>
                     </div>
 
@@ -200,7 +202,14 @@ const Layout: React.FC<LayoutProps> = ({
                             className="w-full text-left px-4 py-2.5 text-sm text-surface-on hover:bg-surface-container flex items-center gap-3"
                           >
                             <Users className="h-4 w-4 text-surface-outline" />
-                            Team Management
+                            Internal Users
+                          </button>
+                           <button 
+                            onClick={() => handleMenuAction(() => onNavigate('BUILDERS'))}
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on hover:bg-surface-container flex items-center gap-3"
+                          >
+                            <Building2 className="h-4 w-4 text-surface-outline" />
+                            Builders
                           </button>
                           <button 
                             onClick={() => handleMenuAction(() => onNavigate('DATA'))}

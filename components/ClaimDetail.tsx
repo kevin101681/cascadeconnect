@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+
+import React, { useState, useRef } from 'react';
 import { Claim, UserRole, ClaimStatus, ProposedDate, Contractor } from '../types';
 import Button from './Button';
 import StatusBadge from './StatusBadge';
-import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Send, Sparkles, ArrowLeft, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, Image as ImageIcon, X } from 'lucide-react';
-import { summarizeClaim, draftSchedulingEmail } from '../services/geminiService';
+import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Send, ArrowLeft, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown } from 'lucide-react';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
 
@@ -17,11 +17,14 @@ interface ClaimDetailProps {
 
 const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpdateClaim, onBack, contractors }) => {
   const [newComment, setNewComment] = useState('');
-  const [isAiLoading, setIsAiLoading] = useState(false);
-  const [draftEmail, setDraftEmail] = useState<string | null>(null);
   
   const [proposeDate, setProposeDate] = useState('');
-  const [proposeTime, setProposeTime] = useState<'AM' | 'PM'>('AM');
+  const [proposeTime, setProposeTime] = useState<'AM' | 'PM' | 'All Day'>('AM');
+
+  // Edit Mode State (Admin Only)
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(claim.title);
+  const [editDescription, setEditDescription] = useState(claim.description);
 
   // Service Order Email Modal State
   const [showSOModal, setShowSOModal] = useState(false);
@@ -30,7 +33,26 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
   const [soBody, setSoBody] = useState('');
   const [isSendingSO, setIsSendingSO] = useState(false);
 
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
   const isAdmin = currentUserRole === UserRole.ADMIN;
+  const isScheduled = claim.status === ClaimStatus.SCHEDULED && claim.proposedDates.length > 0;
+  const scheduledDate = isScheduled ? claim.proposedDates[0] : null;
+
+  const handleSaveDetails = () => {
+    onUpdateClaim({
+      ...claim,
+      title: editTitle,
+      description: editDescription
+    });
+    setIsEditing(false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditTitle(claim.title);
+    setEditDescription(claim.description);
+    setIsEditing(false);
+  };
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
@@ -78,26 +100,16 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
   const handlePrepareServiceOrder = async () => {
     if (!claim.contractorId) return;
 
-    setIsAiLoading(true);
-    
-    // 1. Generate Summary if needed
-    let summary = claim.summary;
-    if (!summary) {
-      summary = await summarizeClaim(claim);
-      onUpdateClaim({...claim, summary});
-    }
-
-    // 2. Generate PDF Blob URL
-    const url = generateServiceOrderPDF(claim, summary || claim.description, true);
+    // 1. Generate PDF Blob URL directly using description as summary
+    const url = generateServiceOrderPDF(claim, claim.description, true);
     if (typeof url === 'string') {
         setSoPdfUrl(url);
     }
 
-    // 3. Pre-fill Email Details
+    // 2. Pre-fill Email Details
     setSoSubject(`Service Order: ${claim.builderName} - Lot ${claim.projectName} - ${claim.title}`);
     setSoBody(`Hi ${claim.contractorName},\n\nPlease find attached the service order for the warranty claim referenced above.\n\nAddress: ${claim.address}\nIssue: ${claim.description}\n\nPlease let us know when you can schedule this.\n\nThanks,\nCascade Builder Services`);
     
-    setIsAiLoading(false);
     setShowSOModal(true);
   };
 
@@ -118,38 +130,30 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
     setSoPdfUrl(null);
   };
 
-  const handleDraftEmail = async () => {
-    if (claim.proposedDates.length === 0) {
-      alert("Please add proposed dates first.");
-      return;
-    }
-    setIsAiLoading(true);
-    const dates = claim.proposedDates.map(d => `${new Date(d.date).toLocaleDateString()} (${d.timeSlot})`);
-    const draft = await draftSchedulingEmail(claim, dates);
-    setDraftEmail(draft);
-    setIsAiLoading(false);
-  };
-
-  const handleAddDate = () => {
+  const handleConfirmSchedule = () => {
     if (!proposeDate) return;
+    
     const newDate: ProposedDate = {
       date: new Date(proposeDate).toISOString(),
       timeSlot: proposeTime,
-      status: 'PROPOSED'
+      status: 'ACCEPTED'
     };
+
     onUpdateClaim({
       ...claim,
-      status: ClaimStatus.SCHEDULING,
-      proposedDates: [...claim.proposedDates, newDate]
+      status: ClaimStatus.SCHEDULED,
+      proposedDates: [newDate] // Overwrite with the single confirmed date
     });
+    
     setProposeDate('');
   };
 
-  const handleDateAction = (dateIndex: number, action: 'ACCEPTED' | 'REJECTED') => {
-    const updatedDates = [...claim.proposedDates];
-    updatedDates[dateIndex].status = action;
-    const newStatus = action === 'ACCEPTED' ? ClaimStatus.SCHEDULED : claim.status;
-    onUpdateClaim({ ...claim, status: newStatus, proposedDates: updatedDates });
+  const handleReschedule = () => {
+    onUpdateClaim({
+      ...claim,
+      status: ClaimStatus.SCHEDULING,
+      proposedDates: []
+    });
   };
 
   const handleAssignContractor = (contractorId: string) => {
@@ -170,10 +174,21 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
       <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Button variant="text" onClick={onBack} icon={<ArrowLeft className="h-5 w-5" />} className="!px-2" />
-          <div>
+          <div className="flex-1">
             <div className="flex items-center gap-3">
               <span className="text-sm font-bold text-surface-outline-variant bg-surface-container px-2 py-0.5 rounded">{claim.id}</span>
-              <h2 className="text-2xl font-normal text-surface-on">{claim.title}</h2>
+              
+              {isEditing ? (
+                 <input 
+                   type="text" 
+                   value={editTitle}
+                   onChange={e => setEditTitle(e.target.value)}
+                   className="text-xl font-normal bg-surface-container border border-primary rounded px-2 py-1 focus:outline-none"
+                 />
+              ) : (
+                 <h2 className="text-2xl font-normal text-surface-on">{claim.title}</h2>
+              )}
+              
               <StatusBadge status={claim.status} />
             </div>
             <div className="text-sm text-surface-on-variant mt-1 flex items-center gap-2 flex-wrap">
@@ -188,6 +203,20 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
             </div>
           </div>
         </div>
+
+        {/* Admin Actions */}
+        {isAdmin && (
+           <div className="flex items-center gap-2">
+              {isEditing ? (
+                 <>
+                   <Button variant="text" onClick={handleCancelEdit} className="!text-error">Cancel</Button>
+                   <Button variant="filled" onClick={handleSaveDetails} icon={<Save className="h-4 w-4" />}>Save</Button>
+                 </>
+              ) : (
+                 <Button variant="outlined" onClick={() => setIsEditing(true)} icon={<Edit2 className="h-4 w-4" />}>Edit Claim</Button>
+              )}
+           </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -198,9 +227,18 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
           {/* 1. Description Card */}
           <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant">
             <h3 className="text-lg font-normal text-surface-on mb-4">Description</h3>
-            <p className="text-surface-on-variant whitespace-pre-wrap leading-relaxed">
-              {claim.description}
-            </p>
+            {isEditing ? (
+               <textarea
+                 value={editDescription}
+                 onChange={e => setEditDescription(e.target.value)}
+                 rows={6}
+                 className="w-full bg-surface-container border border-primary rounded-lg p-3 text-surface-on focus:outline-none"
+               />
+            ) : (
+               <p className="text-surface-on-variant whitespace-pre-wrap leading-relaxed">
+                 {claim.description}
+               </p>
+            )}
             
             {/* Rich Attachments */}
             {claim.attachments && claim.attachments.length > 0 && (
@@ -209,15 +247,15 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                   <Paperclip className="h-4 w-4" />
                   Attachments
                 </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                <div className="flex flex-wrap gap-3">
                   {claim.attachments.map((att, i) => (
-                    <div key={i} className="group relative aspect-square bg-surface-container rounded-xl overflow-hidden border border-surface-outline-variant hover:shadow-elevation-1 transition-all">
+                    <div key={i} className="group relative w-24 h-24 bg-surface-container rounded-lg overflow-hidden border border-surface-outline-variant hover:shadow-elevation-1 transition-all">
                       {att.type === 'IMAGE' ? (
                         <img src={att.url} alt={att.name} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
                           {att.type === 'VIDEO' ? <Video className="h-8 w-8 text-primary mb-2" /> : <FileText className="h-8 w-8 text-blue-600 mb-2" />}
-                          <span className="text-xs text-surface-on-variant truncate w-full">{att.name}</span>
+                          <span className="text-[10px] text-surface-on-variant truncate w-full">{att.name}</span>
                         </div>
                       )}
                       {/* Hover Overlay */}
@@ -282,19 +320,23 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                 Sub Assignment
               </h3>
               <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                <div className="w-full sm:flex-1">
-                  <select 
-                    className="w-full bg-surface-container rounded-lg px-4 py-3 border-r-8 border-transparent outline outline-1 outline-surface-outline-variant"
-                    value={claim.contractorId || ""}
-                    onChange={(e) => handleAssignContractor(e.target.value)}
-                  >
-                    <option value="" disabled>Select a sub...</option>
-                    {contractors.map(c => (
-                      <option key={c.id} value={c.id}>
-                        {c.companyName} ({c.specialty})
-                      </option>
-                    ))}
-                  </select>
+                <div className="w-full sm:flex-1 relative">
+                  {/* M3 Style Select */}
+                  <div className="relative">
+                    <select 
+                      className="w-full bg-surface-container rounded-lg pl-4 pr-10 py-3 appearance-none border-r-8 border-transparent outline outline-1 outline-surface-outline-variant focus:outline-primary cursor-pointer text-sm"
+                      value={claim.contractorId || ""}
+                      onChange={(e) => handleAssignContractor(e.target.value)}
+                    >
+                      <option value="" disabled>Select a sub...</option>
+                      {contractors.map(c => (
+                        <option key={c.id} value={c.id}>
+                          {c.companyName} ({c.specialty})
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant pointer-events-none" />
+                  </div>
                 </div>
                 {claim.contractorId && (
                   <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
@@ -310,7 +352,6 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                       <Button 
                          variant="outlined" 
                          onClick={handlePrepareServiceOrder} 
-                         isLoading={isAiLoading}
                          icon={<FileText className="h-4 w-4" />}
                          className="!h-12 w-full sm:w-auto whitespace-nowrap"
                       >
@@ -322,103 +363,109 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
             </div>
           )}
 
-          {/* 5. Scheduling Card */}
+          {/* 5. Scheduling Card (Final Confirmation) */}
           <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant">
             <div className="flex justify-between items-start mb-6">
                <h3 className="text-lg font-normal text-surface-on flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
                 Scheduling
               </h3>
-              {claim.contractorName && (
-                <span className="text-xs bg-primary-container text-primary-on-container px-3 py-1 rounded-full">
-                  with {claim.contractorName}
-                </span>
-              )}
             </div>
 
-            <div className="space-y-3 mb-8">
-              {claim.proposedDates.length === 0 ? (
-                <div className="bg-surface-container-high rounded-xl p-8 text-center text-surface-on-variant">
-                   No appointments proposed yet.
-                </div>
-              ) : (
-                claim.proposedDates.map((d, idx) => (
-                  <div key={idx} className={`flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border ${d.status === 'ACCEPTED' ? 'bg-green-50 border-green-200' : 'bg-surface border-surface-outline-variant'}`}>
-                    <div className="flex items-center gap-4 mb-3 sm:mb-0">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${d.status === 'ACCEPTED' ? 'bg-green-100 text-green-700' : 'bg-secondary-container text-secondary-on-container'}`}>
-                        <Calendar className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <p className="text-base font-medium text-surface-on">
-                          {new Date(d.date).toLocaleDateString()}
-                        </p>
-                        <div className="flex gap-2 text-sm text-surface-on-variant">
-                          <span>{d.timeSlot}</span>
-                          <span className="text-surface-outline">•</span>
-                          <span className={`${d.status === 'ACCEPTED' ? 'text-green-700 font-medium' : ''}`}>{d.status}</span>
-                        </div>
-                      </div>
+            {isScheduled && scheduledDate ? (
+              // Active Schedule View
+              <div className="bg-green-50 border border-green-200 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6">
+                 <div className="flex items-center gap-5">
+                    <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center text-green-700">
+                      <CheckCircle className="h-8 w-8" />
                     </div>
-
-                    {!isAdmin && d.status === 'PROPOSED' && (
-                      <div className="flex gap-2">
-                        <Button variant="filled" onClick={() => handleDateAction(idx, 'ACCEPTED')} className="!h-8 !px-4 text-xs">Accept</Button>
-                        <Button variant="outlined" onClick={() => handleDateAction(idx, 'REJECTED')} className="!h-8 !px-4 text-xs">Reject</Button>
+                    <div>
+                      <p className="text-sm font-bold text-green-800 uppercase tracking-wide mb-1">Appointment Confirmed</p>
+                      <div className="text-xl font-medium text-surface-on">
+                        {new Date(scheduledDate.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                       </div>
-                    )}
-                    {d.status === 'ACCEPTED' && <CheckCircle className="h-6 w-6 text-green-600 hidden sm:block" />}
-                  </div>
-                ))
-              )}
-            </div>
-
-            {isAdmin && claim.status !== ClaimStatus.COMPLETED && claim.status !== ClaimStatus.SCHEDULED && (
-              <div className="bg-surface-container p-5 rounded-2xl">
-                <h4 className="text-sm font-bold text-surface-on mb-4">Propose New Date</h4>
-                <div className="flex flex-col sm:flex-row gap-4 items-end">
-                  <div className="w-full">
-                    <label className="block text-xs text-surface-on-variant mb-1 ml-1">Date</label>
-                    <input type="date" className="block w-full rounded-lg border-surface-outline bg-surface p-2.5 text-sm" 
-                      value={proposeDate} onChange={e => setProposeDate(e.target.value)}
-                    />
-                  </div>
-                  <div className="w-full sm:w-48">
-                    <label className="block text-xs text-surface-on-variant mb-1 ml-1">Slot</label>
-                    <select className="block w-full rounded-lg border-surface-outline bg-surface p-2.5 text-sm"
-                      value={proposeTime} onChange={(e: any) => setProposeTime(e.target.value)}
-                    >
-                      <option value="AM">AM (8-12)</option>
-                      <option value="PM">PM (12-4)</option>
-                    </select>
-                  </div>
-                  <Button variant="tonal" onClick={handleAddDate} disabled={!proposeDate} className="w-full sm:w-auto">Add</Button>
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-surface-outline-variant/50">
-                   <div className="flex justify-between items-center mb-3">
-                     <h4 className="text-sm font-bold text-surface-on flex items-center gap-2">
-                       <Mail className="h-4 w-4" />
-                       Email Coordination
-                     </h4>
-                     <Button variant="text" onClick={handleDraftEmail} disabled={isAiLoading || claim.proposedDates.length === 0} className="!h-8 text-xs !px-2">
-                        {isAiLoading ? 'Drafting...' : 'Draft with Gemini'}
-                     </Button>
+                      <p className="text-surface-on-variant mt-1 font-medium">
+                        Time Slot: {scheduledDate.timeSlot}
+                      </p>
+                      {claim.contractorName && (
+                        <p className="text-xs text-surface-on-variant mt-2 flex items-center gap-1">
+                          <HardHat className="h-3 w-3" />
+                          Sub: {claim.contractorName}
+                        </p>
+                      )}
+                    </div>
+                 </div>
+                 
+                 {isAdmin && (
+                   <Button variant="outlined" onClick={handleReschedule} className="!border-green-300 text-green-800 hover:bg-green-100">
+                     Reschedule / Edit
+                   </Button>
+                 )}
+              </div>
+            ) : (
+              // Scheduling Input View
+              isAdmin ? (
+                <div className="bg-surface-container/30 p-6 rounded-2xl border border-surface-outline-variant/50">
+                  <div className="mb-4">
+                    <h4 className="text-sm font-bold text-surface-on">Confirm Appointment Details</h4>
+                    <p className="text-xs text-surface-on-variant mt-1">
+                      Enter the final date and time agreed upon with the homeowner via messaging.
+                    </p>
                   </div>
                   
-                  {draftEmail && (
-                    <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                      <textarea 
-                        readOnly 
-                        className="w-full h-32 text-sm p-3 border border-surface-outline-variant rounded-xl bg-surface text-surface-on resize-none focus:outline-none" 
-                        value={draftEmail}
-                      />
-                      <Button variant="filled" onClick={() => { alert('Email sent! (Simulation)'); setDraftEmail(null); }} className="w-full">
-                        Send Email
-                      </Button>
+                  <div className="flex flex-col md:flex-row gap-4 items-end">
+                    {/* Date Input */}
+                    <div className="w-full flex-1">
+                      <label className="block text-xs text-surface-on-variant mb-1 ml-1 font-medium">Scheduled Date</label>
+                      <div 
+                        className="relative w-full rounded-lg border border-surface-outline bg-surface hover:border-surface-on-variant focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all cursor-pointer"
+                        onClick={() => dateInputRef.current?.showPicker()}
+                      >
+                        <input 
+                          ref={dateInputRef}
+                          type="date" 
+                          className="w-full bg-transparent p-3 pl-10 text-sm outline-none cursor-pointer text-surface-on" 
+                          value={proposeDate} 
+                          onChange={e => setProposeDate(e.target.value)}
+                        />
+                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant pointer-events-none" />
+                      </div>
                     </div>
-                  )}
+
+                    {/* Time Slot Select */}
+                    <div className="w-full md:w-auto md:min-w-[200px]">
+                      <label className="block text-xs text-surface-on-variant mb-1 ml-1 font-medium">Time Slot</label>
+                      <div className="relative">
+                        <select 
+                          className="block w-full rounded-lg border border-surface-outline bg-surface p-3 pr-10 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none appearance-none cursor-pointer text-surface-on"
+                          value={proposeTime} 
+                          onChange={(e: any) => setProposeTime(e.target.value)}
+                        >
+                          <option value="AM">AM (8am - 12pm)</option>
+                          <option value="PM">PM (12pm - 4pm)</option>
+                          <option value="All Day">All Day</option>
+                        </select>
+                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <Button 
+                      variant="filled" 
+                      onClick={handleConfirmSchedule} 
+                      disabled={!proposeDate} 
+                      className="w-full md:w-auto h-[46px]"
+                      icon={<CheckCircle className="h-4 w-4" />}
+                    >
+                      Confirm
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="text-center py-8 text-surface-on-variant bg-surface-container/20 rounded-2xl border border-dashed border-surface-outline-variant">
+                  <Calendar className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                  <p>Scheduling is currently pending coordination.</p>
+                </div>
+              )
             )}
           </div>
         </div>

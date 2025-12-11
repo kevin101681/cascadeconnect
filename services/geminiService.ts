@@ -1,61 +1,29 @@
-import { GoogleGenAI, Type } from "@google/genai";
 import { Claim } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
-const MODEL_NAME = 'gemini-2.5-flash';
+// AI features disabled. Returning static content or pass-through data.
 
 export const summarizeClaim = async (claim: Claim): Promise<string> => {
-  try {
-    const prompt = `
-      You are an expert warranty manager assistant. Summarize the following warranty claim into a concise, professional technical summary suitable for a contractor Service Order.
-      
-      Claim Title: ${claim.title}
-      Description: ${claim.description}
-      Category: ${claim.category}
-      
-      Keep it under 30 words. Focus on the defect and location.
-    `;
-
-    const response = await ai.models.generateContent({
-      model: MODEL_NAME,
-      contents: prompt,
-    });
-
-    return response.text || "Summary unavailable.";
-  } catch (error) {
-    console.error("Error summarizing claim:", error);
-    return "Error generating summary.";
-  }
+  // Since AI summary is disabled, return the full description or a truncated version.
+  return claim.description;
 };
 
 export const draftSchedulingEmail = async (claim: Claim, proposedDates: string[]): Promise<string> => {
-  try {
-    const prompt = `
-      Draft a professional email to the homeowner, ${claim.homeownerName}, regarding their warranty claim "${claim.title}".
-      
-      We have scheduled/proposed the following dates for repair:
-      ${proposedDates.join(', ')}
-      
-      Ask them to login to the portal to confirm one of these times. 
-      Keep the tone helpful and empathetic but professional. 
-      Output ONLY the email body text.
-    `;
+  // Return a static template instead of AI generation
+  return `Dear ${claim.homeownerName},
 
-    const response = await ai.models.generateContent({
-      model: MODEL_NAME,
-      contents: prompt,
-    });
+Regarding your warranty claim "${claim.title}":
 
-    return response.text || "Draft unavailable.";
-  } catch (error) {
-    console.error("Error drafting email:", error);
-    return "Error generating draft.";
-  }
+We have proposed the following dates for repair:
+${proposedDates.join(', ')}
+
+Please log in to your portal at cascadebuilderservices.com to confirm one of these times.
+
+Sincerely,
+Cascade Builder Services`;
 };
 
 export const draftInviteEmail = async (homeownerName: string): Promise<string> => {
-  // Use specific template as requested
+  // Static template
   return `Dear Homeowner,
 
 Welcome home! Congratulations on your purchase.

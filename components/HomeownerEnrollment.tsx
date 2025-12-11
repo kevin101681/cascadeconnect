@@ -1,15 +1,17 @@
+
 import React, { useState } from 'react';
 import Button from './Button';
-import { Homeowner, HomeownerDocument } from '../types';
+import { Homeowner, HomeownerDocument, BuilderGroup } from '../types';
 import { UserPlus, Home, User, Calendar, FileText, Upload, X, Building2, MapPin } from 'lucide-react';
 
 interface HomeownerEnrollmentProps {
   isOpen: boolean;
   onClose: () => void;
   onEnroll: (data: Partial<Homeowner>, tradeListFile: File | null) => void;
+  builderGroups: BuilderGroup[];
 }
 
-const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClose, onEnroll }) => {
+const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClose, onEnroll, builderGroups }) => {
   // Buyer 1
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -21,7 +23,7 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
   const [buyer2Email, setBuyer2Email] = useState('');
 
   // Property
-  const [builderName, setBuilderName] = useState('');
+  const [builderId, setBuilderId] = useState('');
   const [projectName, setProjectName] = useState('');
   const [lotNumber, setLotNumber] = useState('');
   const [address, setAddress] = useState('');
@@ -42,6 +44,10 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Find name from selected ID
+    const selectedBuilder = builderGroups.find(g => g.id === builderId);
+    
     const newHomeowner: Partial<Homeowner> = {
       firstName,
       lastName,
@@ -50,7 +56,8 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
       phone,
       buyer2Email,
       buyer2Phone,
-      builder: builderName,
+      builder: selectedBuilder ? selectedBuilder.name : 'Unknown',
+      builderId,
       projectOrLlc: projectName,
       lotNumber,
       address: `${address}, ${city}, ${state} ${zip}`,
@@ -175,7 +182,17 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
                  <div className="space-y-3">
                     <div>
                       <label className={labelClass}>Builder's Name *</label>
-                      <input type="text" required className={inputClass} value={builderName} onChange={e => setBuilderName(e.target.value)} />
+                      <select 
+                        required 
+                        className={inputClass} 
+                        value={builderId} 
+                        onChange={e => setBuilderId(e.target.value)}
+                      >
+                        <option value="">Select Builder...</option>
+                        {builderGroups.map(bg => (
+                          <option key={bg.id} value={bg.id}>{bg.name}</option>
+                        ))}
+                      </select>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                        <div>

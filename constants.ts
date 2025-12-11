@@ -1,4 +1,5 @@
-import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, Contractor, Task, ClaimClassification, HomeownerDocument, MessageThread } from './types';
+
+import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, Contractor, Task, ClaimClassification, HomeownerDocument, MessageThread, BuilderGroup, BuilderUser } from './types';
 
 export const CLAIM_CLASSIFICATIONS: ClaimClassification[] = [
   '60 Day',
@@ -7,6 +8,16 @@ export const CLAIM_CLASSIFICATIONS: ClaimClassification[] = [
   'Hold for 11 Month',
   'Service Complete',
   'Other'
+];
+
+export const MOCK_BUILDER_GROUPS: BuilderGroup[] = [
+  { id: 'bg1', name: 'Legacy Homes', email: 'contact@legacyhomes.com' },
+  { id: 'bg2', name: 'Apex Builders', email: 'info@apexbuilders.com' }
+];
+
+export const MOCK_BUILDER_USERS: BuilderUser[] = [
+  { id: 'bu1', name: 'Bill Builder', email: 'bill@legacyhomes.com', builderGroupId: 'bg1', role: UserRole.BUILDER },
+  { id: 'bu2', name: 'Alice Apex', email: 'alice@apexbuilders.com', builderGroupId: 'bg2', role: UserRole.BUILDER }
 ];
 
 export const MOCK_HOMEOWNERS: Homeowner[] = [
@@ -22,6 +33,7 @@ export const MOCK_HOMEOWNERS: Homeowner[] = [
     zip: '62704',
     phone: '(555) 123-4567',
     builder: 'Legacy Homes',
+    builderId: 'bg1',
     lotNumber: 'L-42',
     projectOrLlc: 'Maple Ridge LLC',
     closingDate: new Date('2023-05-15'),
@@ -41,6 +53,7 @@ export const MOCK_HOMEOWNERS: Homeowner[] = [
     zip: '62704',
     phone: '(555) 987-6543',
     builder: 'Apex Builders',
+    builderId: 'bg2',
     lotNumber: 'A-12',
     projectOrLlc: 'Oak Grove Project',
     closingDate: new Date('2023-08-20')
@@ -54,6 +67,7 @@ export const MOCK_HOMEOWNERS: Homeowner[] = [
     address: '789 Pine Way, Springfield, IL 62704',
     phone: '(555) 456-7890',
     builder: 'Legacy Homes',
+    builderId: 'bg1',
     lotNumber: 'L-45',
     closingDate: new Date('2023-06-01')
   },
@@ -66,6 +80,7 @@ export const MOCK_HOMEOWNERS: Homeowner[] = [
     address: '101 Wonder Blvd, Springfield, IL 62704',
     phone: '(555) 222-3333',
     builder: 'Apex Builders',
+    builderId: 'bg2',
     lotNumber: 'A-05',
     closingDate: new Date('2023-11-10')
   }

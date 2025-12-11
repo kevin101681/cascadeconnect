@@ -1,6 +1,8 @@
+
 export enum UserRole {
   HOMEOWNER = 'HOMEOWNER',
-  ADMIN = 'ADMIN'
+  ADMIN = 'ADMIN',
+  BUILDER = 'BUILDER'
 }
 
 export enum ClaimStatus {
@@ -20,6 +22,22 @@ export type ClaimClassification =
   | 'Service Complete'
   | 'Unclassified';
 
+export interface BuilderGroup {
+  id: string;
+  name: string;
+  address?: string;
+  primaryContact?: string;
+  email?: string;
+}
+
+export interface BuilderUser {
+  id: string;
+  name: string;
+  email: string;
+  builderGroupId: string; // Links user to a specific builder company
+  role: UserRole.BUILDER;
+}
+
 export interface Homeowner {
   id: string;
   name: string; // Combined First + Last for display
@@ -38,7 +56,8 @@ export interface Homeowner {
   state?: string;
   zip?: string;
   
-  builder: string;
+  builder: string; // Display Name
+  builderId?: string; // Link to BuilderGroup
   lotNumber: string;
   projectOrLlc?: string;
   
