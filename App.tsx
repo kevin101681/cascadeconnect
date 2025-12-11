@@ -473,16 +473,21 @@ function App() {
       
       if (!isMockEnv) {
           try {
-             await db.insert(claimsTable).values(newClaims.map(c => ({
-                 id: c.id, // Explicit ID
-                 title: c.title,
-                 description: c.description,
-                 category: c.category,
-                 status: c.status,
-                 address: c.address,
-                 homeownerEmail: c.homeownerEmail,
-                 dateSubmitted: c.dateSubmitted,
-             } as any)));
+             // Batch Insert to prevent "value too large" DB errors
+             const BATCH_SIZE = 50;
+             for (let i = 0; i < newClaims.length; i += BATCH_SIZE) {
+               const batch = newClaims.slice(i, i + BATCH_SIZE);
+               await db.insert(claimsTable).values(batch.map(c => ({
+                   id: c.id, // Explicit ID
+                   title: c.title,
+                   description: c.description,
+                   category: c.category,
+                   status: c.status,
+                   address: c.address,
+                   homeownerEmail: c.homeownerEmail,
+                   dateSubmitted: c.dateSubmitted,
+               } as any)));
+             }
           } catch(e) { console.error("Batch import claims to DB failed", e); throw e; }
       }
   };
@@ -492,21 +497,25 @@ function App() {
       
       if (!isMockEnv) {
           try {
-             await db.insert(homeownersTable).values(newHomeowners.map(h => ({
-                 id: h.id, // Explicit ID
-                 name: h.name,
-                 email: h.email,
-                 phone: h.phone,
-                 address: h.address,
-                 street: h.street,
-                 city: h.city,
-                 state: h.state,
-                 zip: h.zip,
-                 builder: h.builder,
-                 builderGroupId: h.builderId || null,
-                 jobName: h.jobName,
-                 closingDate: h.closingDate
-             } as any)));
+             const BATCH_SIZE = 50;
+             for (let i = 0; i < newHomeowners.length; i += BATCH_SIZE) {
+                const batch = newHomeowners.slice(i, i + BATCH_SIZE);
+                await db.insert(homeownersTable).values(batch.map(h => ({
+                    id: h.id, // Explicit ID
+                    name: h.name,
+                    email: h.email,
+                    phone: h.phone,
+                    address: h.address,
+                    street: h.street,
+                    city: h.city,
+                    state: h.state,
+                    zip: h.zip,
+                    builder: h.builder,
+                    builderGroupId: h.builderId || null,
+                    jobName: h.jobName,
+                    closingDate: h.closingDate
+                } as any)));
+             }
           } catch(e) { console.error("Batch import homeowners to DB failed", e); throw e; }
       }
   };
@@ -516,11 +525,15 @@ function App() {
       
       if (!isMockEnv) {
           try {
-              await db.insert(builderGroupsTable).values(newGroups.map(g => ({
-                  id: g.id, // Explicit ID
-                  name: g.name,
-                  email: g.email
-              } as any)));
+              const BATCH_SIZE = 50;
+              for (let i = 0; i < newGroups.length; i += BATCH_SIZE) {
+                  const batch = newGroups.slice(i, i + BATCH_SIZE);
+                  await db.insert(builderGroupsTable).values(batch.map(g => ({
+                      id: g.id, // Explicit ID
+                      name: g.name,
+                      email: g.email
+                  } as any)));
+              }
           } catch(e) { console.error("Batch import groups to DB failed", e); throw e; }
       }
   };
