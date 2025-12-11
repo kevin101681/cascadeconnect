@@ -38,7 +38,7 @@ export const homeowners = pgTable('homeowners', {
   firstName: text('first_name'),
   lastName: text('last_name'),
   email: text('email').notNull(),
-  phone: text('phone'), // Explicitly defined
+  phone: text('phone'), // Explicitly defined to fix TS error
   password: text('password'), // Add password
   
   // Buyer 2
@@ -84,7 +84,7 @@ export const contractors = pgTable('contractors', {
 export const claims = pgTable('claims', {
   id: uuid('id').defaultRandom().primaryKey(),
   
-  // Explicitly defined with reference
+  // Explicitly defined with reference to fix TS error
   homeownerId: uuid('homeowner_id').references(() => homeowners.id), 
   
   // Denormalized fields for easier fetching
