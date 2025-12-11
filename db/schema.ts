@@ -1,0 +1,164 @@
+
+import { pgTable, text, timestamp, boolean, uuid, pgEnum, json } from 'drizzle-orm/pg-core';
+
+// Enums
+export const userRoleEnum = pgEnum('user_role', ['ADMIN', 'HOMEOWNER', 'BUILDER']);
+export const claimStatusEnum = pgEnum('claim_status', ['SUBMITTED', 'REVIEWING', 'SCHEDULING', 'SCHEDULED', 'COMPLETED']);
+
+// --- 1. Builder Groups (Companies) ---
+export const builderGroups = pgTable('builder_groups', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  email: text('email'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// --- 2. Users (Employees & Builders) ---
+export const users = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  clerkId: text('clerk_id').unique(), // Link to Auth provider
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  role: userRoleEnum('role').default('ADMIN'),
+  password: text('password'),
+  
+  // For Builder Users
+  builderGroupId: uuid('builder_group_id').references(() => builderGroups.id),
+  
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// --- 3. Homeowners ---
+export const homeowners = pgTable('homeowners', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  clerkId: text('clerk_id').unique(), 
+  
+  // Personal Info
+  name: text('name').notNull(),
+  firstName: text('first_name'),
+  lastName: text('last_name'),
+  email: text('email').notNull(),
+  
+  // FIXED: Explicitly added phone column for TS build
+  phone: text('phone'), 
+  
+  password: text('password'),
+  
+  // Buyer 2
+  buyer2Email: text('buyer_2_email'),
+  buyer2Phone: text('buyer_2_phone'),
+  
+  // Property Info
+  street: text('street'),
+  city: text('city'),
+  state: text('state'),
+  zip: text('zip'),
+  address: text('address').notNull(),
+  
+  // Builder Info
+  builder: text('builder'),
+  builderGroupId: uuid('builder_group_id').references(() => builderGroups.id),
+  jobName: text('job_name'),
+  
+  // Agent Info
+  agentName: text('agent_name'),
+  agentPhone: text('agent_phone'),
+  agentEmail: text('agent_email'),
+  
+  // Dates
+  closingDate: timestamp('closing_date'),
+  preferredWalkThroughDate: timestamp('preferred_walk_through_date'),
+  
+  enrollmentComments: text('enrollment_comments'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// --- 4. Contractors ---
+export const contractors = pgTable('contractors', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  companyName: text('company_name').notNull(),
+  contactName: text('contact_name'),
+  email: text('email').notNull(),
+  specialty: text('specialty').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// --- 5. Claims ---
+export const claims = pgTable('claims', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  
+  // FIXED: Explicitly added homeownerId column for TS build
+  homeownerId: uuid('homeowner_id').references(() => homeowners.id), 
+  
+  // Denormalized fields
+  homeownerName: text('homeowner_name'),
+  homeownerEmail: text('homeowner_email'),
+  builderName: text('builder_name'),
+  jobName: text('job_name'),
+  address: text('address'),
+
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  category: text('category').default('General'),
+  
+  status: claimStatusEnum('status').default('SUBMITTED'),
+  classification: text('classification').default('Unclassified'),
+  
+  // Assignment
+  contractorId: uuid('contractor_id').references(() => contractors.id),
+  contractorName: text('contractor_name'),
+  contractorEmail: text('contractor_email'),
+
+  // Dates
+  dateSubmitted: timestamp('date_submitted').defaultNow(),
+  dateEvaluated: timestamp('date_evaluated'),
+  
+  // Admin Data
+  internalNotes: text('internal_notes'),
+  nonWarrantyExplanation: text('non_warranty_explanation'),
+  summary: text('ai_summary'),
+  
+  // JSON Store
+  attachments: json('attachments').$type<any[]>().default([]),
+  proposedDates: json('proposed_dates').$type<any[]>().default([]),
+});
+
+// --- 6. Documents ---
+export const documents = pgTable('documents', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  homeownerId: uuid('homeowner_id').references(() => homeowners.id),
+  
+  name: text('name').notNull(),
+  url: text('url').notNull(),
+  type: text('type').default('FILE'),
+  
+  uploadedBy: text('uploaded_by'),
+  uploadedAt: timestamp('uploaded_at').defaultNow(),
+});
+
+// --- 7. Tasks ---
+export const tasks = pgTable('tasks', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  title: text('title').notNull(),
+  description: text('description'),
+  
+  assignedToId: text('assigned_to_id'),
+  assignedById: text('assigned_by_id'),
+  
+  isCompleted: boolean('is_completed').default(false),
+  dateAssigned: timestamp('date_assigned').defaultNow(),
+  dueDate: timestamp('due_date'),
+  
+  relatedClaimIds: json('related_claim_ids').$type<string[]>().default([]),
+});
+
+// --- 8. Messages ---
+export const messageThreads = pgTable('message_threads', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  subject: text('subject').notNull(),
+  homeownerId: uuid('homeowner_id').references(() => homeowners.id),
+  participants: json('participants').$type<string[]>().default([]),
+  isRead: boolean('is_read').default(false),
+  lastMessageAt: timestamp('last_message_at').defaultNow(),
+  messages: json('messages').$type<any[]>().default([]),
+});
