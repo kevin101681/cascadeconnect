@@ -14,7 +14,7 @@ import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, Inter
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS } from './constants';
 
 // DB Imports
-import { db } from './db';
+import { db, isDbConfigured } from './db';
 import { claims as claimsTable, homeowners as homeownersTable, builderGroups as builderGroupsTable, users as usersTable } from './db/schema';
 import { desc } from 'drizzle-orm';
 
@@ -84,8 +84,6 @@ function App() {
     const session = loadState<any>('cascade_session', null);
     return (session?.role === UserRole.BUILDER) ? session.builderId : null;
   });
-
-  const isMockEnv = !(import.meta as any).env?.VITE_DATABASE_URL && !process.env.DATABASE_URL;
   
   // Data State - Lazy Load from LS first
   const [homeowners, setHomeowners] = useState<Homeowner[]>(() => loadState('cascade_homeowners', MOCK_HOMEOWNERS));
@@ -116,7 +114,7 @@ function App() {
       try {
         console.log("Attempting DB connection...");
         
-        if (!isMockEnv) {
+        if (isDbConfigured) {
              // 1. Fetch Homeowners
             const dbHomeowners = await db.select().from(homeownersTable);
             if (dbHomeowners.length > 0) {
@@ -360,7 +358,7 @@ function App() {
     setCurrentView('DASHBOARD');
 
     // DB Insert
-    if (!isMockEnv) {
+    if (isDbConfigured) {
       try {
         await db.insert(claimsTable).values({
           id: newClaim.id, // Explicit ID
@@ -433,7 +431,7 @@ function App() {
     }
 
     // DB Insert
-    if (!isMockEnv) {
+    if (isDbConfigured) {
       try {
         await db.insert(homeownersTable).values({
           id: newId, // Explicit ID
@@ -471,61 +469,108 @@ function App() {
   const handleImportClaims = async (newClaims: Claim[]) => { 
       setClaims(prev => [...newClaims, ...prev]);
       
-      if (!isMockEnv) {
+      if (isDbConfigured) {
           try {
-             // Batch Insert to prevent "value too large" DB errors
-             const BATCH_SIZE = 50;
+             // Reduced Batch Insert to prevent "value too large" DB errors
+             // Also added a fallback to single insert
+             const BATCH_SIZE = 10;
              for (let i = 0; i < newClaims.length; i += BATCH_SIZE) {
                const batch = newClaims.slice(i, i + BATCH_SIZE);
-               await db.insert(claimsTable).values(batch.map(c => ({
-                   id: c.id, // Explicit ID
-                   title: c.title,
-                   description: c.description,
-                   category: c.category,
-                   status: c.status,
-                   address: c.address,
-                   homeownerEmail: c.homeownerEmail,
-                   dateSubmitted: c.dateSubmitted,
-               } as any)));
+               try {
+                  await db.insert(claimsTable).values(batch.map(c => ({
+                      id: c.id, // Explicit ID
+                      title: c.title,
+                      description: c.description,
+                      category: c.category,
+                      status: c.status,
+                      address: c.address,
+                      homeownerEmail: c.homeownerEmail,
+                      dateSubmitted: c.dateSubmitted,
+                  } as any)));
+               } catch (batchErr) {
+                   console.warn("Batch failed, trying sequential insert...", batchErr);
+                   // Fallback: One by one
+                   for (const c of batch) {
+                       await db.insert(claimsTable).values({
+                           id: c.id,
+                           title: c.title,
+                           description: c.description,
+                           category: c.category,
+                           status: c.status,
+                           address: c.address,
+                           homeownerEmail: c.homeownerEmail,
+                           dateSubmitted: c.dateSubmitted,
+                       } as any);
+                   }
+               }
              }
-          } catch(e) { console.error("Batch import claims to DB failed", e); throw e; }
+          } catch(e) { 
+              console.error("Critical: Claims DB Import Failed", e);
+              alert("Database Error: Could not save claims to the backend. Please check your network connection or database schema.");
+              throw e; 
+          }
       }
   };
   
   const handleImportHomeowners = async (newHomeowners: Homeowner[]) => { 
       setHomeowners(prev => [...prev, ...newHomeowners]);
       
-      if (!isMockEnv) {
+      if (isDbConfigured) {
           try {
-             const BATCH_SIZE = 50;
+             const BATCH_SIZE = 10;
              for (let i = 0; i < newHomeowners.length; i += BATCH_SIZE) {
                 const batch = newHomeowners.slice(i, i + BATCH_SIZE);
-                await db.insert(homeownersTable).values(batch.map(h => ({
-                    id: h.id, // Explicit ID
-                    name: h.name,
-                    email: h.email,
-                    phone: h.phone,
-                    address: h.address,
-                    street: h.street,
-                    city: h.city,
-                    state: h.state,
-                    zip: h.zip,
-                    builder: h.builder,
-                    builderGroupId: h.builderId || null,
-                    jobName: h.jobName,
-                    closingDate: h.closingDate
-                } as any)));
+                try {
+                    await db.insert(homeownersTable).values(batch.map(h => ({
+                        id: h.id, // Explicit ID
+                        name: h.name,
+                        email: h.email,
+                        phone: h.phone,
+                        address: h.address,
+                        street: h.street,
+                        city: h.city,
+                        state: h.state,
+                        zip: h.zip,
+                        builder: h.builder,
+                        builderGroupId: h.builderId || null,
+                        jobName: h.jobName,
+                        closingDate: h.closingDate
+                    } as any)));
+                } catch (batchErr) {
+                    console.warn("Batch failed, trying sequential insert...", batchErr);
+                    for (const h of batch) {
+                         await db.insert(homeownersTable).values({
+                            id: h.id, 
+                            name: h.name,
+                            email: h.email,
+                            phone: h.phone,
+                            address: h.address,
+                            street: h.street,
+                            city: h.city,
+                            state: h.state,
+                            zip: h.zip,
+                            builder: h.builder,
+                            builderGroupId: h.builderId || null,
+                            jobName: h.jobName,
+                            closingDate: h.closingDate
+                        } as any);
+                    }
+                }
              }
-          } catch(e) { console.error("Batch import homeowners to DB failed", e); throw e; }
+          } catch(e) { 
+              console.error("Critical: Homeowners DB Import Failed", e);
+              alert("Database Error: Could not save homeowners to the backend. Please ensure the 'homeowners' table exists in Neon.");
+              throw e; 
+          }
       }
   };
   
   const handleImportBuilderGroups = async (newGroups: BuilderGroup[]) => { 
       setBuilderGroups(prev => [...prev, ...newGroups]);
       
-      if (!isMockEnv) {
+      if (isDbConfigured) {
           try {
-              const BATCH_SIZE = 50;
+              const BATCH_SIZE = 10;
               for (let i = 0; i < newGroups.length; i += BATCH_SIZE) {
                   const batch = newGroups.slice(i, i + BATCH_SIZE);
                   await db.insert(builderGroupsTable).values(batch.map(g => ({
@@ -534,7 +579,10 @@ function App() {
                       email: g.email
                   } as any)));
               }
-          } catch(e) { console.error("Batch import groups to DB failed", e); throw e; }
+          } catch(e) { 
+              console.error("Batch import groups to DB failed", e); 
+              throw e; 
+          }
       }
   };
   
