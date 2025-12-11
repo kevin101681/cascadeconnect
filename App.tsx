@@ -424,7 +424,7 @@ function App() {
           state: newHomeowner.state,
           zip: newHomeowner.zip,
           address: newHomeowner.address,
-          builder: newHomeowner.builder,
+          builder: newHomeowner.builder || null,
           builderGroupId: newHomeowner.builderId || null,
           jobName: newHomeowner.jobName,
           closingDate: newHomeowner.closingDate,

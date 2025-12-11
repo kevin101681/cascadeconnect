@@ -4,7 +4,6 @@ import { pgTable, text, timestamp, boolean, uuid, date, pgEnum, json } from 'dri
 // Enums
 export const userRoleEnum = pgEnum('user_role', ['ADMIN', 'HOMEOWNER', 'BUILDER']);
 export const claimStatusEnum = pgEnum('claim_status', ['SUBMITTED', 'REVIEWING', 'SCHEDULING', 'SCHEDULED', 'COMPLETED']);
-export const messageTypeEnum = pgEnum('attachment_type', ['IMAGE', 'VIDEO', 'DOCUMENT']);
 
 // --- 1. Builder Groups (Companies) ---
 export const builderGroups = pgTable('builder_groups', {
@@ -39,7 +38,7 @@ export const homeowners = pgTable('homeowners', {
   firstName: text('first_name'),
   lastName: text('last_name'),
   email: text('email').notNull(),
-  phone: text('phone'), // Explicitly defined
+  phone: text('phone'), // Explicitly defined for build safety
   password: text('password'), // Add password
   
   // Buyer 2
@@ -85,7 +84,7 @@ export const contractors = pgTable('contractors', {
 export const claims = pgTable('claims', {
   id: uuid('id').defaultRandom().primaryKey(),
   
-  homeownerId: uuid('homeowner_id'), // Explicitly defined
+  homeownerId: uuid('homeowner_id'), // Explicitly defined for build safety
   
   // Denormalized fields for easier fetching
   homeownerName: text('homeowner_name'),
