@@ -345,7 +345,7 @@ function App() {
     if (isDbConnected) {
       try {
         await db.insert(claimsTable).values({
-          homeownerId: subjectHomeowner.id === 'placeholder' ? null : subjectHomeowner.id,
+          homeownerId: subjectHomeowner.id !== 'placeholder' ? subjectHomeowner.id : null,
           title: newClaim.title,
           description: newClaim.description,
           category: newClaim.category,
