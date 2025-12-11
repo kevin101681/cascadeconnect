@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task } from '../types';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Sparkles, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Sparkles, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft } from 'lucide-react';
 import Button from './Button';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
@@ -113,6 +113,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [newMessageSubject, setNewMessageSubject] = useState('');
   const [newMessageContent, setNewMessageContent] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
+  const [replyExpanded, setReplyExpanded] = useState(false);
 
   // Sync state when props change
   useEffect(() => {
@@ -191,6 +192,8 @@ const Dashboard: React.FC<DashboardProps> = ({
     if (effectiveHomeowner) {
       return t.homeownerId === effectiveHomeowner.id;
     }
+    // If Admin/Builder and NO homeowner selected, show ALL threads
+    if (isAdmin) return true;
     return false;
   });
 
@@ -260,23 +263,39 @@ const Dashboard: React.FC<DashboardProps> = ({
       }
       
       setReplyContent('');
+      setReplyExpanded(false);
     }
   };
 
   const handleCreateNewThread = async () => {
-    if (!effectiveHomeowner || !newMessageSubject || !newMessageContent) return;
+    if (!effectiveHomeowner && !isAdmin) return;
+    // If admin is creating a thread but no homeowner selected, block or prompt?
+    // For now, assuming effectiveHomeowner is set or we handle it.
+    // If admin and no homeowner selected, we can't create a thread easily without a picker. 
+    // This function assumes effectiveHomeowner exists for now.
+    
+    if (!effectiveHomeowner && isAdmin) {
+        // Fallback for demo if no specific homeowner selected
+        alert("Please select a homeowner to start a message thread.");
+        return;
+    }
+    
+    // Safe-guard for TS
+    const targetId = effectiveHomeowner ? effectiveHomeowner.id : activeHomeowner.id;
+    const targetEmail = effectiveHomeowner ? effectiveHomeowner.email : 'info@cascadebuilderservices.com';
+
+    if (!newMessageSubject || !newMessageContent) return;
     
     setIsSendingMessage(true);
     
     // 1. Create Internal Thread
-    onCreateThread(effectiveHomeowner.id, newMessageSubject, newMessageContent);
+    onCreateThread(targetId, newMessageSubject, newMessageContent);
     
     // 2. Send Email Notification
-    const recipientEmail = isAdmin ? effectiveHomeowner.email : 'info@cascadebuilderservices.com';
     const senderName = isAdmin ? currentUser.name : activeHomeowner.name;
 
     await sendEmail({
-      to: recipientEmail,
+      to: targetEmail,
       subject: newMessageSubject,
       body: generateNotificationBody(senderName, newMessageContent, 'MESSAGE', 'new', 'https://cascadebuilderservices.com/messages'),
       fromName: senderName,
@@ -395,152 +414,235 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const renderMessagesTab = () => (
-    <div className="bg-surface rounded-3xl border border-surface-outline-variant overflow-hidden flex flex-col md:flex-row h-[600px] shadow-elevation-1">
-       {/* Left Column: Thread List */}
-       <div className={`w-full md:w-80 border-b md:border-b-0 md:border-r border-surface-outline-variant flex flex-col ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
-          <div className="p-4 border-b border-surface-outline-variant bg-surface-container/30 flex justify-between items-center">
-            <h3 className="font-bold text-surface-on">Inbox</h3>
-            {/* Builders cannot create new threads for now, only Admin/Homeowner */}
+    <div className="bg-surface rounded-3xl border border-surface-outline-variant overflow-hidden flex flex-col md:flex-row h-[700px] shadow-elevation-1">
+       {/* Left Column: Inbox List (Gmail Style) */}
+       <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant flex flex-col bg-surface ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
+          <div className="p-4 border-b border-surface-outline-variant bg-surface flex justify-between items-center h-16 shrink-0">
+            <h3 className="text-lg font-bold text-surface-on flex items-center gap-2">
+              Inbox
+              <span className="text-xs font-normal text-surface-on-variant bg-surface-container px-2 py-0.5 rounded-full">{displayThreads.filter(t => !t.isRead).length} new</span>
+            </h3>
+            {/* Builders Read Only */}
             {!isBuilder && (
               <Button 
-                variant="text" 
+                variant="tonal" 
                 icon={<Plus className="h-4 w-4"/>} 
-                className="!px-2"
+                className="!h-8 !px-3 text-xs"
                 onClick={() => setShowNewMessageModal(true)}
               >
-                New
+                Compose
               </Button>
             )}
           </div>
-          <div className="p-2">
+          
+          <div className="p-2 border-b border-surface-outline-variant/50">
              <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant" />
                 <input 
                   type="text" 
-                  placeholder="Search messages..." 
-                  className="w-full bg-surface-container rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="Search mail..." 
+                  className="w-full bg-surface-container rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant"
                 />
              </div>
           </div>
+
           <div className="flex-1 overflow-y-auto">
              {displayThreads.length === 0 ? (
-                <div className="p-6 text-center text-sm text-surface-on-variant">No messages found.</div>
+                <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant gap-2">
+                  <Mail className="h-8 w-8 opacity-20" />
+                  <span className="text-sm">No messages found.</span>
+                </div>
              ) : (
-                displayThreads.map(thread => (
-                  <button
-                    key={thread.id}
-                    onClick={() => setSelectedThreadId(thread.id)}
-                    className={`w-full text-left p-4 border-b border-surface-outline-variant/50 hover:bg-surface-container transition-colors flex flex-col gap-1 ${
-                      selectedThreadId === thread.id ? 'bg-primary-container/20 border-l-4 border-l-primary' : ''
-                    } ${!thread.isRead ? 'bg-surface-container/10' : ''}`}
-                  >
-                     <div className="flex justify-between items-start w-full">
-                        <span className={`text-sm truncate pr-2 ${!thread.isRead ? 'font-bold text-surface-on' : 'font-medium text-surface-on/90'}`}>
-                          {thread.subject}
-                        </span>
-                        <span className="text-[10px] text-surface-on-variant whitespace-nowrap">
-                          {new Date(thread.lastMessageAt).toLocaleDateString()}
-                        </span>
-                     </div>
-                     <p className="text-xs text-surface-on-variant line-clamp-2">
-                       {thread.messages[thread.messages.length - 1].content}
-                     </p>
-                  </button>
-                ))
+                displayThreads.map(thread => {
+                  const lastMsg = thread.messages[thread.messages.length - 1];
+                  const isUnread = !thread.isRead;
+                  const isSelected = selectedThreadId === thread.id;
+
+                  return (
+                    <button
+                      key={thread.id}
+                      onClick={() => setSelectedThreadId(thread.id)}
+                      className={`w-full text-left p-4 border-b border-surface-outline-variant/30 hover:bg-surface-container transition-colors group relative ${
+                        isSelected ? 'bg-primary-container/20' : isUnread ? 'bg-surface' : 'bg-surface-container/5'
+                      }`}
+                    >
+                       {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>}
+                       
+                       <div className="flex justify-between items-baseline mb-1">
+                          <span className={`text-sm truncate pr-2 ${isUnread ? 'font-bold text-surface-on' : 'font-medium text-surface-on'}`}>
+                            {/* In a real email client, this shows the other party. Simulating roughly here. */}
+                            {isAdmin ? thread.participants.filter(p => p !== currentUser.name).join(', ') || 'Me' : thread.participants.filter(p => p !== activeHomeowner.name).join(', ') || 'Me'}
+                          </span>
+                          <span className={`text-xs whitespace-nowrap ${isUnread ? 'text-primary font-bold' : 'text-surface-on-variant'}`}>
+                            {new Date(thread.lastMessageAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          </span>
+                       </div>
+                       
+                       <div className={`text-sm mb-1 truncate ${isUnread ? 'font-bold text-surface-on' : 'text-surface-on-variant'}`}>
+                         {thread.subject}
+                       </div>
+                       
+                       <div className="text-xs text-surface-on-variant/80 truncate font-normal">
+                         <span className="text-surface-outline-variant mr-1">
+                           {lastMsg.senderName === (isAdmin ? currentUser.name : activeHomeowner.name) ? 'You:' : ''}
+                         </span>
+                         {lastMsg.content}
+                       </div>
+                    </button>
+                  );
+                })
              )}
           </div>
        </div>
 
-       {/* Right Column: Conversation View */}
-       <div className={`flex-1 flex flex-col bg-surface-container-high/10 ${!selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
+       {/* Right Column: Email Thread View */}
+       <div className={`flex-1 flex flex-col bg-white ${!selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           {selectedThread ? (
             <>
-               {/* Thread Header */}
-               <div className="p-4 border-b border-surface-outline-variant bg-surface flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                     <button onClick={() => setSelectedThreadId(null)} className="md:hidden text-surface-on-variant">
-                        <ArrowRight className="h-5 w-5 rotate-180" />
+               {/* Thread Header Toolbar */}
+               <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant flex items-center justify-between bg-surface sticky top-0 z-10">
+                  <div className="flex items-center gap-4">
+                     <button onClick={() => setSelectedThreadId(null)} className="md:hidden p-2 -ml-2 text-surface-on-variant hover:bg-surface-container rounded-full">
+                        <ChevronLeft className="h-5 w-5" />
                      </button>
-                     <div>
-                        <h3 className="font-bold text-surface-on text-lg">{selectedThread.subject}</h3>
-                        <p className="text-xs text-surface-on-variant">
-                          Participants: {selectedThread.participants.join(', ')}
-                        </p>
+                     <div className="flex gap-2">
+                        <button className="p-2 text-surface-on-variant hover:bg-surface-container rounded-full" title="Archive"><Archive className="h-4 w-4"/></button>
+                        <button className="p-2 text-surface-on-variant hover:bg-surface-container rounded-full" title="Delete"><Trash2 className="h-4 w-4"/></button>
+                        <div className="w-px h-6 bg-surface-outline-variant/50 mx-1 self-center"></div>
+                        <button className="p-2 text-surface-on-variant hover:bg-surface-container rounded-full" title="Mark as unread"><Mail className="h-4 w-4"/></button>
                      </div>
                   </div>
-                  <div className="flex gap-2">
-                     <button className="p-2 text-surface-on-variant hover:bg-surface-container rounded-full"><MoreVertical className="h-5 w-5"/></button>
+                  <div className="flex gap-2 text-surface-on-variant">
+                     <button className="p-2 hover:bg-surface-container rounded-full"><ChevronLeft className="h-4 w-4"/></button>
+                     <button className="p-2 hover:bg-surface-container rounded-full"><ChevronRight className="h-4 w-4"/></button>
                   </div>
                </div>
 
-               {/* Messages Area */}
-               <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                  {selectedThread.messages.map(msg => {
-                    const isMe = isAdmin ? msg.senderRole === UserRole.ADMIN : msg.senderRole === UserRole.HOMEOWNER;
-                    return (
-                      <div key={msg.id} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
-                         <div className="flex items-end gap-2 max-w-[80%]">
-                            {!isMe && (
-                              <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-xs font-bold text-secondary-on-container mb-1">
-                                {msg.senderName.charAt(0)}
-                              </div>
-                            )}
-                            <div className={`rounded-2xl px-4 py-3 shadow-sm ${
-                              isMe 
-                                ? 'bg-primary text-primary-on rounded-br-none' 
-                                : 'bg-surface text-surface-on border border-surface-outline-variant rounded-bl-none'
-                            }`}>
-                               <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                            </div>
-                         </div>
-                         <span className="text-[10px] text-surface-on-variant mt-1 px-12">
-                           {msg.senderName} • {new Date(msg.timestamp).toLocaleString()}
-                         </span>
-                      </div>
-                    );
-                  })}
+               {/* Scrollable Thread Content */}
+               <div className="flex-1 overflow-y-auto">
+                 <div className="px-8 py-6">
+                    {/* Subject Line */}
+                    <div className="flex items-start justify-between mb-8">
+                       <h2 className="text-2xl font-normal text-surface-on leading-tight">{selectedThread.subject}</h2>
+                       <button className="p-2 -mr-2 text-surface-outline-variant hover:text-yellow-500 rounded-full">
+                         <Star className="h-5 w-5" />
+                       </button>
+                    </div>
+
+                    {/* Messages Loop */}
+                    <div className="space-y-8">
+                      {selectedThread.messages.map((msg, idx) => {
+                        const isMe = isAdmin ? msg.senderRole === UserRole.ADMIN : msg.senderRole === UserRole.HOMEOWNER;
+                        return (
+                          <div key={msg.id} className="group">
+                             <div className="flex items-start gap-4 mb-3">
+                                {/* Avatar */}
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm shrink-0 ${
+                                   isMe ? 'bg-primary text-primary-on' : 'bg-tertiary-container text-tertiary-on-container'
+                                }`}>
+                                   {msg.senderName.charAt(0)}
+                                </div>
+
+                                <div className="flex-1 min-w-0">
+                                   <div className="flex items-baseline justify-between">
+                                      <div className="flex items-baseline gap-2">
+                                        <span className="font-bold text-surface-on text-sm">{msg.senderName}</span>
+                                        <span className="text-xs text-surface-on-variant">&lt;{isMe ? 'me' : msg.senderRole.toLowerCase()}&gt;</span>
+                                      </div>
+                                      <div className="text-xs text-surface-on-variant group-hover:text-surface-on transition-colors">
+                                         {new Date(msg.timestamp).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                                      </div>
+                                   </div>
+                                   <div className="text-xs text-surface-on-variant">to {isMe ? (effectiveHomeowner?.name || 'Homeowner') : 'Me'}</div>
+                                </div>
+                             </div>
+                             
+                             {/* Message Body - Full Width Email Style */}
+                             <div className="pl-14 text-sm text-surface-on/90 whitespace-pre-wrap leading-relaxed">
+                                {msg.content}
+                             </div>
+                             
+                             {/* Divider if not last */}
+                             {idx < selectedThread.messages.length - 1 && (
+                               <div className="mt-8 border-b border-surface-outline-variant/30 ml-14"></div>
+                             )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Bottom Padding for Reply Box visibility */}
+                    <div className="h-32"></div>
+                 </div>
                </div>
 
-               {/* Reply Box */}
-               <div className="p-4 bg-surface border-t border-surface-outline-variant">
+               {/* Reply Box (Sticky Bottom or Inline at end) */}
+               <div className="p-6 border-t border-surface-outline-variant bg-surface sticky bottom-0 z-10">
                  {/* Builders Read-Only: Cannot Reply */}
                  {isBuilder ? (
-                   <div className="text-center text-sm text-surface-on-variant bg-surface-container p-3 rounded-xl">
+                   <div className="text-center text-sm text-surface-on-variant bg-surface-container p-4 rounded-xl border border-surface-outline-variant border-dashed">
+                     <Lock className="h-4 w-4 mx-auto mb-2 opacity-50"/>
                      Read-only access. You cannot reply to threads.
                    </div>
                  ) : (
-                    <div className="flex flex-col gap-2 bg-surface-container rounded-xl p-2 border border-surface-outline-variant focus-within:ring-1 focus-within:ring-primary">
-                      <textarea
-                        rows={3}
-                        placeholder="Write a reply..."
-                        className="w-full bg-transparent outline-none text-sm px-2 py-1 resize-none"
-                        value={replyContent}
-                        onChange={(e) => setReplyContent(e.target.value)}
-                      />
-                      <div className="flex justify-between items-center px-2 pb-1">
-                          <div className="flex gap-2">
-                            <button className="text-surface-outline-variant hover:text-primary"><Paperclip className="h-4 w-4"/></button>
+                    !replyExpanded ? (
+                       <button 
+                         onClick={() => setReplyExpanded(true)}
+                         className="w-full flex items-center gap-3 p-4 rounded-full border border-surface-outline-variant text-surface-on-variant hover:shadow-elevation-1 hover:bg-surface transition-all group"
+                       >
+                          <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center">
+                            <Reply className="h-4 w-4 text-surface-outline" />
                           </div>
-                          <Button 
-                            onClick={handleSendReply} 
-                            disabled={!replyContent.trim()} 
-                            variant="filled" 
-                            className="!h-8 !px-4 text-xs"
-                            icon={<Send className="h-3 w-3" />}
-                          >
-                            Send
-                          </Button>
+                          <span className="text-sm font-medium group-hover:text-surface-on">Reply to this conversation...</span>
+                       </button>
+                    ) : (
+                      <div className="bg-surface rounded-xl shadow-elevation-2 border border-surface-outline-variant overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200">
+                         <div className="flex items-center gap-2 p-3 border-b border-surface-outline-variant/50 bg-surface-container/20">
+                            <CornerUpLeft className="h-4 w-4 text-surface-outline-variant"/>
+                            <span className="text-xs font-medium text-surface-on-variant">Replying to {selectedThread.participants.filter(p => p !== (isAdmin ? currentUser.name : activeHomeowner.name)).join(', ')}</span>
+                         </div>
+                         <textarea
+                            rows={6}
+                            autoFocus
+                            placeholder=""
+                            className="w-full bg-transparent outline-none text-sm p-4 resize-none leading-relaxed"
+                            value={replyContent}
+                            onChange={(e) => setReplyContent(e.target.value)}
+                         />
+                         <div className="flex justify-between items-center p-3 bg-surface-container/10">
+                            <div className="flex gap-2">
+                               <button className="p-2 text-surface-outline-variant hover:text-primary hover:bg-primary/5 rounded-full"><Paperclip className="h-4 w-4"/></button>
+                               <button className="p-2 text-surface-outline-variant hover:text-primary hover:bg-primary/5 rounded-full"><Building2 className="h-4 w-4"/></button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                               <button 
+                                 onClick={() => setReplyExpanded(false)}
+                                 className="p-2 text-surface-on-variant hover:text-surface-on text-sm font-medium"
+                               >
+                                 Discard
+                               </button>
+                               <Button 
+                                 onClick={handleSendReply} 
+                                 disabled={!replyContent.trim()} 
+                                 variant="filled" 
+                                 className="!h-9 !px-6"
+                                 icon={<Send className="h-3 w-3" />}
+                               >
+                                 Send
+                               </Button>
+                            </div>
+                         </div>
                       </div>
-                    </div>
+                    )
                  )}
                </div>
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-surface-on-variant gap-4">
-               <div className="w-16 h-16 bg-surface-container rounded-full flex items-center justify-center">
-                 <Mail className="h-8 w-8 text-surface-outline" />
+            <div className="flex flex-col items-center justify-center h-full text-surface-on-variant gap-4 bg-surface-container/10">
+               <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center">
+                 <Mail className="h-10 w-10 text-surface-outline/50" />
                </div>
-               <p>Select a conversation to start messaging.</p>
+               <p className="text-sm font-medium">Select a conversation to read</p>
             </div>
           )}
        </div>
@@ -686,7 +788,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <Mail className="h-4 w-4" />
               Messages
               {displayThreads.some(t => !t.isRead) && (
-                <span className="w-2 h-2 rounded-full bg-error"></span>
+                <span className="w-2 h-2 rounded-full bg-error ml-1"></span>
               )}
             </button>
         </div>
@@ -1094,7 +1196,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <Mail className="h-4 w-4" />
               Messages
               {displayThreads.some(t => !t.isRead) && (
-                <span className="w-2 h-2 rounded-full bg-error"></span>
+                <span className="w-2 h-2 rounded-full bg-error ml-1"></span>
               )}
             </button>
         </div>
