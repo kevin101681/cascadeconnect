@@ -39,7 +39,7 @@ export const homeowners = pgTable('homeowners', {
   firstName: text('first_name'),
   lastName: text('last_name'),
   email: text('email').notNull(),
-  phone: text('phone'),
+  phone: text('phone'), // Explicitly defined
   password: text('password'), // Add password
   
   // Buyer 2
@@ -85,7 +85,7 @@ export const contractors = pgTable('contractors', {
 export const claims = pgTable('claims', {
   id: uuid('id').defaultRandom().primaryKey(),
   
-  homeownerId: uuid('homeowner_id'),
+  homeownerId: uuid('homeowner_id'), // Explicitly defined
   
   // Denormalized fields for easier fetching
   homeownerName: text('homeowner_name'),
