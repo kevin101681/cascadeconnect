@@ -345,8 +345,7 @@ function App() {
     if (isDbConnected) {
       try {
         await db.insert(claimsTable).values({
-          // id is omitted to let DB generate it if needed, or if types forbid explicit ID insert
-          homeownerId: subjectHomeowner.id,
+          homeownerId: subjectHomeowner.id === 'placeholder' ? undefined : subjectHomeowner.id,
           title: newClaim.title,
           description: newClaim.description,
           category: newClaim.category,
@@ -410,10 +409,9 @@ function App() {
     if (isDbConnected) {
       try {
         await db.insert(homeownersTable).values({
-          // id is omitted to let DB generate it
           name: newHomeowner.name,
           email: newHomeowner.email,
-          phone: newHomeowner.phone,
+          phone: newHomeowner.phone || null,
           street: newHomeowner.street,
           city: newHomeowner.city,
           state: newHomeowner.state,
@@ -423,14 +421,14 @@ function App() {
           builderGroupId: newHomeowner.builderId ? newHomeowner.builderId : undefined,
           jobName: newHomeowner.jobName,
           closingDate: newHomeowner.closingDate,
-          firstName: newHomeowner.firstName,
-          lastName: newHomeowner.lastName,
-          buyer2Email: newHomeowner.buyer2Email,
-          buyer2Phone: newHomeowner.buyer2Phone,
-          agentName: newHomeowner.agentName,
-          agentEmail: newHomeowner.agentEmail,
-          agentPhone: newHomeowner.agentPhone,
-          enrollmentComments: newHomeowner.enrollmentComments
+          firstName: newHomeowner.firstName || null,
+          lastName: newHomeowner.lastName || null,
+          buyer2Email: newHomeowner.buyer2Email || null,
+          buyer2Phone: newHomeowner.buyer2Phone || null,
+          agentName: newHomeowner.agentName || null,
+          agentEmail: newHomeowner.agentEmail || null,
+          agentPhone: newHomeowner.agentPhone || null,
+          enrollmentComments: newHomeowner.enrollmentComments || null
         });
       } catch (e) {
         console.error("Failed to save homeowner to DB:", e);

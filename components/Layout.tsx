@@ -73,7 +73,15 @@ const Layout: React.FC<LayoutProps> = ({
             {/* Logo */}
             <button onClick={() => onNavigate('DASHBOARD')} className="flex items-center gap-3 flex-shrink-0 focus:outline-none">
               <div className="bg-gray-100 p-1 rounded-xl border border-surface-outline-variant shadow-sm h-10 w-10 flex items-center justify-center overflow-hidden">
-                <img src="/logo.png" alt="Cascade Connect" className="h-full w-full object-contain" />
+                <img 
+                  src="/logo.png" 
+                  alt="Cascade Connect" 
+                  className="h-full w-full object-contain" 
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary"><path d="M3 21h18M5 21V7l8-4 8 4v14M8 21v-2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2z"/></svg>';
+                  }}
+                />
               </div>
               <span className="text-xl font-normal text-surface-on tracking-tight hidden md:block">Cascade Connect</span>
             </button>
