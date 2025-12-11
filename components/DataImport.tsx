@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import Papa from 'papaparse';
 import Button from './Button';
 import { Upload, FileText, AlertCircle, CheckCircle, Database, Terminal, Loader2 } from 'lucide-react';
-import { Claim, ClaimStatus, UserRole } from '../types';
+import { Claim, ClaimStatus, UserRole, ClaimClassification } from '../types';
 
 interface DataImportProps {
   onImportClaims: (claims: Claim[]) => void;
@@ -102,7 +102,7 @@ const DataImport: React.FC<DataImportProps> = ({ onImportClaims }) => {
           
           // Transform chunk to internal format (Mocking backend transformation)
           if (importType === 'CLAIMS') {
-            const transformed = chunk.map((row: any, idx: number) => ({
+            const transformed: Claim[] = chunk.map((row: any, idx: number) => ({
               id: `IMP-${Date.now()}-${i}-${idx}`,
               title: row.title || 'Untitled Claim',
               description: row.description || 'No description provided.',
@@ -111,10 +111,11 @@ const DataImport: React.FC<DataImportProps> = ({ onImportClaims }) => {
               homeownerName: row.homeownerName || 'Unknown Homeowner', // Assuming name might not be in CSV, ideally join with Homeowner DB
               homeownerEmail: row.homeownerEmail,
               status: row.status as ClaimStatus || ClaimStatus.SUBMITTED,
+              classification: 'Unclassified' as ClaimClassification,
               dateSubmitted: row.dateSubmitted ? new Date(row.dateSubmitted) : new Date(),
               proposedDates: [],
               comments: [],
-              images: []
+              attachments: []
             }));
             importedClaims.push(...transformed);
           }

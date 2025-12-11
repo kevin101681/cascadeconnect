@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
@@ -9,6 +8,7 @@ import AuthScreen from './components/AuthScreen';
 import InternalUserManagement from './components/InternalUserManagement';
 import BuilderManagement from './components/BuilderManagement';
 import DataImport from './components/DataImport';
+import TaskList from './components/TaskList';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS } from './constants';
 
@@ -19,11 +19,7 @@ function App() {
   // Mock logged in user management
   const [activeHomeowner, setActiveHomeowner] = useState<Homeowner>(MOCK_HOMEOWNERS[0]);
   const [activeEmployee, setActiveEmployee] = useState<InternalEmployee>(MOCK_INTERNAL_EMPLOYEES[0]); 
-  // Add active builder user if needed for simulation
-  // const [activeBuilderUser, setActiveBuilderUser] = useState<BuilderUser>(MOCK_BUILDER_USERS[0]);
-  // Use a generic placeholder for now as we don't have a full auth context object in this simple demo
-  // In a real app, `currentUser` would be a union type.
-
+  
   // Current Builder User ID (for simulation filtering)
   const [currentBuilderId, setCurrentBuilderId] = useState<string | null>(null);
 
@@ -39,12 +35,18 @@ function App() {
   const [builderGroups, setBuilderGroups] = useState<BuilderGroup[]>(MOCK_BUILDER_GROUPS);
   const [builderUsers, setBuilderUsers] = useState<BuilderUser[]>(MOCK_BUILDER_USERS);
   
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA'>('DASHBOARD');
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS'>('DASHBOARD');
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
   
   // --- Search State (Lifted from Dashboard) ---
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedAdminHomeownerId, setSelectedAdminHomeownerId] = useState<string | null>(null);
+
+  // Dashboard Control State (Ephemeral)
+  const [dashboardConfig, setDashboardConfig] = useState<{
+    initialTab?: 'CLAIMS' | 'MESSAGES';
+    initialThreadId?: string | null;
+  }>({});
 
   // Enrollment Modal State
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
@@ -54,7 +56,6 @@ function App() {
   const targetHomeowner = selectedAdminHomeownerId ? homeowners.find(h => h.id === selectedAdminHomeownerId) || null : null;
 
   // Search results for Dropdown
-  // Filter search results based on role permissions
   const availableHomeowners = (userRole === UserRole.BUILDER && currentBuilderId)
     ? homeowners.filter(h => h.builderId === currentBuilderId)
     : homeowners;
@@ -75,15 +76,14 @@ function App() {
       setActiveHomeowner(user as Homeowner);
       setCurrentBuilderId(null);
     }
-    // Note: Builder login simulation isn't fully built out in AuthScreen yet, 
-    // but structure is ready.
     setIsAuthenticated(true);
   };
 
   const handleSelectHomeowner = (homeowner: Homeowner) => {
     setSelectedAdminHomeownerId(homeowner.id);
     setSearchQuery('');
-    // Ensure we are on the dashboard view when selecting a homeowner to see their profile
+    // Reset dashboard config when switching context
+    setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
     setCurrentView('DASHBOARD');
   };
 
@@ -92,10 +92,8 @@ function App() {
   };
 
   const handleSwitchRole = () => {
-    // Cycle through roles for demo purposes
     if (userRole === UserRole.ADMIN) {
       setUserRole(UserRole.BUILDER);
-      // Simulate logging in as the first builder group
       if (builderGroups.length > 0) {
         setCurrentBuilderId(builderGroups[0].id);
       }
@@ -110,6 +108,7 @@ function App() {
     setCurrentView('DASHBOARD');
     setSelectedClaimId(null);
     setSelectedAdminHomeownerId(null);
+    setDashboardConfig({});
   };
   
   const handleSwitchHomeowner = (id: string) => {
@@ -130,7 +129,6 @@ function App() {
   };
 
   const handleNewClaimStart = (homeownerId?: string) => {
-    // Builders cannot create claims
     if (userRole === UserRole.BUILDER) return;
     setCurrentView('NEW');
   };
@@ -150,17 +148,14 @@ function App() {
       builderName: subjectHomeowner.builder,
       projectName: subjectHomeowner.lotNumber,
       closingDate: subjectHomeowner.closingDate,
-      
       status: data.status || ClaimStatus.SUBMITTED,
       classification: data.classification || 'Unclassified',
       dateEvaluated: data.dateEvaluated,
       nonWarrantyExplanation: data.nonWarrantyExplanation,
       internalNotes: data.internalNotes,
-      
       contractorId: data.contractorId,
       contractorName: data.contractorName,
       contractorEmail: data.contractorEmail,
-
       dateSubmitted: new Date(),
       proposedDates: [],
       comments: [],
@@ -184,7 +179,7 @@ function App() {
       assignedById: activeEmployee.id,
       isCompleted: false,
       dateAssigned: new Date(),
-      dueDate: taskData.dueDate || new Date(Date.now() + 86400000), // Default to next day
+      dueDate: taskData.dueDate || new Date(Date.now() + 86400000),
       relatedClaimIds: taskData.relatedClaimIds || []
     };
     setTasks(prev => [newTask, ...prev]);
@@ -204,11 +199,9 @@ function App() {
   const handleAddEmployee = (emp: InternalEmployee) => {
     setEmployees(prev => [...prev, emp]);
   };
-
   const handleUpdateEmployee = (emp: InternalEmployee) => {
     setEmployees(prev => prev.map(e => e.id === emp.id ? emp : e));
   };
-
   const handleDeleteEmployee = (id: string) => {
     setEmployees(prev => prev.filter(e => e.id !== id));
   };
@@ -217,11 +210,9 @@ function App() {
   const handleAddContractor = (sub: Contractor) => {
     setContractors(prev => [...prev, sub]);
   };
-
   const handleUpdateContractor = (sub: Contractor) => {
     setContractors(prev => prev.map(c => c.id === sub.id ? sub : c));
   };
-
   const handleDeleteContractor = (id: string) => {
     setContractors(prev => prev.filter(c => c.id !== id));
   };
@@ -236,13 +227,10 @@ function App() {
   const handleDeleteBuilderGroup = (id: string) => {
     setBuilderGroups(prev => prev.filter(g => g.id !== id));
   };
-
   const handleAddBuilderUser = (user: BuilderUser, password?: string) => {
-    console.log(`Creating builder user with password: ${password}`); // Mock password handling
     setBuilderUsers(prev => [...prev, user]);
   };
   const handleUpdateBuilderUser = (user: BuilderUser, password?: string) => {
-    if (password) console.log(`Updating builder user password to: ${password}`);
     setBuilderUsers(prev => prev.map(u => u.id === user.id ? user : u));
   };
   const handleDeleteBuilderUser = (id: string) => {
@@ -262,22 +250,19 @@ function App() {
       builderId: data.builderId,
       lotNumber: data.lotNumber || '',
       closingDate: data.closingDate || new Date(),
-      ...data // Spread remaining fields
+      ...data
     } as Homeowner;
 
     setHomeowners(prev => [...prev, newHomeowner]);
-
-    // Handle File Upload
     if (tradeListFile) {
       handleUploadDocument({
         homeownerId: newId,
         name: tradeListFile.name,
-        type: 'PDF', // Assuming
+        type: 'PDF',
         uploadedBy: 'Builder (Enrollment)',
         url: '#'
       });
     }
-
     alert(`Successfully enrolled ${newHomeowner.name}!`);
   };
 
@@ -328,8 +313,8 @@ function App() {
       id: `th-${Date.now()}`,
       subject,
       homeownerId,
-      participants: [sender.name], // In a real app we'd fetch the recipient name
-      isRead: true, // Read by sender
+      participants: [sender.name],
+      isRead: true,
       lastMessageAt: new Date(),
       messages: [
         {
@@ -346,7 +331,63 @@ function App() {
     setMessages(prev => [newThread, ...prev]);
   };
 
-  // Scroll to top on view change
+  // Logic to handle "Send Message" from Claim Detail
+  const handleContactAboutClaim = (claim: Claim) => {
+    // 1. Find the homeowner for this claim to link thread correctly
+    // If admin is viewing, use targetHomeowner or find by email. If homeowner viewing, use activeHomeowner.
+    let associatedHomeownerId = '';
+    if (userRole === UserRole.HOMEOWNER) {
+        associatedHomeownerId = activeHomeowner.id;
+    } else {
+        const h = homeowners.find(h => h.email === claim.homeownerEmail);
+        associatedHomeownerId = h ? h.id : (targetHomeowner?.id || '');
+    }
+
+    if (!associatedHomeownerId) return;
+
+    // 2. Search for existing thread with exact Subject matching Claim Title
+    const existingThread = messages.find(t => 
+        t.homeownerId === associatedHomeownerId && t.subject === claim.title
+    );
+
+    let threadIdToOpen = '';
+
+    if (existingThread) {
+        threadIdToOpen = existingThread.id;
+    } else {
+        // 3. Create new thread if not found
+        threadIdToOpen = `th-${Date.now()}`;
+        const sender = userRole === UserRole.ADMIN ? activeEmployee : activeHomeowner;
+        
+        const newThread: MessageThread = {
+          id: threadIdToOpen,
+          subject: claim.title,
+          homeownerId: associatedHomeownerId,
+          participants: [sender.name],
+          isRead: true,
+          lastMessageAt: new Date(),
+          messages: [
+            {
+              id: `m-sys-${Date.now()}`,
+              senderId: sender.id,
+              senderName: sender.name,
+              senderRole: userRole,
+              content: `Started a new conversation regarding claim #${claim.id}: ${claim.title}`,
+              timestamp: new Date()
+            }
+          ]
+        };
+        setMessages(prev => [newThread, ...prev]);
+    }
+
+    // 4. Navigate to Dashboard -> Messages Tab -> Open Thread
+    setDashboardConfig({
+        initialTab: 'MESSAGES',
+        initialThreadId: threadIdToOpen
+    });
+    setCurrentView('DASHBOARD');
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentView]);
@@ -359,26 +400,21 @@ function App() {
     <Layout 
       userRole={userRole} 
       onSwitchRole={handleSwitchRole}
-      homeowners={availableHomeowners} // Pass filtered list to layout for switcher/search context
+      homeowners={availableHomeowners}
       activeHomeowner={activeHomeowner}
       onSwitchHomeowner={handleSwitchHomeowner}
-      
-      // Search Props
       searchQuery={searchQuery}
       onSearchChange={setSearchQuery}
       searchResults={searchResults}
       onSelectHomeowner={handleSelectHomeowner}
       selectedHomeownerId={selectedAdminHomeownerId}
       onClearSelection={handleClearHomeownerSelection}
-
-      // Nav
       onNavigate={setCurrentView}
       onOpenEnrollment={() => setIsEnrollmentOpen(true)}
     >
       {currentView === 'DASHBOARD' && (
         <Dashboard 
           claims={claims} 
-          tasks={tasks}
           userRole={userRole} 
           onSelectClaim={handleSelectClaim}
           onNewClaim={handleNewClaimStart}
@@ -386,9 +422,6 @@ function App() {
           activeHomeowner={activeHomeowner}
           employees={employees}
           currentUser={activeEmployee}
-          onAddTask={handleAddTask}
-          onToggleTask={handleToggleTask}
-          onDeleteTask={handleDeleteTask}
           
           targetHomeowner={targetHomeowner}
           onClearHomeownerSelection={handleClearHomeownerSelection}
@@ -402,11 +435,40 @@ function App() {
           onCreateThread={handleCreateThread}
 
           builderGroups={builderGroups}
+
+          // Pass props for remote control of dashboard state
+          initialTab={dashboardConfig.initialTab}
+          initialThreadId={dashboardConfig.initialThreadId}
+          
+          // Pass tasks and navigation for widget
+          tasks={tasks}
+          onAddTask={handleAddTask}
+          onToggleTask={handleToggleTask}
+          onDeleteTask={handleDeleteTask}
+          onNavigate={setCurrentView}
         />
       )}
 
-      {currentView === 'TEAM' && (
+      {currentView === 'TASKS' && (
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-surface p-8 rounded-3xl shadow-elevation-1 border border-surface-outline-variant">
+            <TaskList 
+              tasks={tasks}
+              employees={employees}
+              currentUser={activeEmployee}
+              claims={claims} 
+              homeowners={homeowners}
+              onAddTask={handleAddTask}
+              onToggleTask={handleToggleTask}
+              onDeleteTask={handleDeleteTask}
+            />
+          </div>
+        </div>
+      )}
+
+      {(currentView === 'TEAM' || currentView === 'SUBS') && (
         <InternalUserManagement 
+          key={currentView} // Force remount to respect initialTab
           employees={employees}
           onAddEmployee={handleAddEmployee}
           onUpdateEmployee={handleUpdateEmployee}
@@ -418,6 +480,7 @@ function App() {
           onDeleteContractor={handleDeleteContractor}
 
           onClose={() => setCurrentView('DASHBOARD')}
+          initialTab={currentView === 'SUBS' ? 'SUBS' : 'EMPLOYEES'}
         />
       )}
 
@@ -459,6 +522,7 @@ function App() {
           onUpdateClaim={handleUpdateClaim}
           onBack={() => setCurrentView('DASHBOARD')}
           contractors={contractors}
+          onSendMessage={handleContactAboutClaim}
         />
       )}
 

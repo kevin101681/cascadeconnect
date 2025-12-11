@@ -1,8 +1,6 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, Homeowner } from '../types';
-import { ShieldCheck, UserCircle, Users, ChevronDown, Search, ArrowRight, X, Menu, LogOut, Database, UserPlus, LayoutDashboard, Building2 } from 'lucide-react';
-import Button from './Button';
+import { ShieldCheck, UserCircle, Users, ChevronDown, Search, ArrowRight, X, Menu, LogOut, Database, UserPlus, Building2, HardHat } from 'lucide-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,7 +19,7 @@ interface LayoutProps {
   onClearSelection: () => void;
 
   // Navigation & Actions
-  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA') => void;
+  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS') => void;
   onOpenEnrollment: () => void;
 }
 
@@ -65,7 +63,7 @@ const Layout: React.FC<LayoutProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-100 flex flex-col font-sans">
       {/* M3 Small Top App Bar */}
       <header className="bg-surface text-surface-on sticky top-0 z-50 transition-shadow duration-200 border-b border-surface-container">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -185,15 +183,6 @@ const Layout: React.FC<LayoutProps> = ({
                     </div>
 
                     <div className="py-2">
-                       {/* Dashboard Link */}
-                       <button 
-                        onClick={() => handleMenuAction(() => onNavigate('DASHBOARD'))}
-                        className="w-full text-left px-4 py-2.5 text-sm text-surface-on hover:bg-surface-container flex items-center gap-3"
-                      >
-                        <LayoutDashboard className="h-4 w-4 text-surface-outline" />
-                        Dashboard
-                      </button>
-
                       {/* Admin Only Links */}
                       {isAdmin && (
                         <>
@@ -203,6 +192,13 @@ const Layout: React.FC<LayoutProps> = ({
                           >
                             <Users className="h-4 w-4 text-surface-outline" />
                             Internal Users
+                          </button>
+                          <button 
+                            onClick={() => handleMenuAction(() => onNavigate('SUBS'))}
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on hover:bg-surface-container flex items-center gap-3"
+                          >
+                            <HardHat className="h-4 w-4 text-surface-outline" />
+                            Subs (Contractors)
                           </button>
                            <button 
                             onClick={() => handleMenuAction(() => onNavigate('BUILDERS'))}

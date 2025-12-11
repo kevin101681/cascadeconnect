@@ -1,16 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
-import { Claim, ClaimStatus, UserRole, Homeowner, Task, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup } from '../types';
+import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task } from '../types';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, CheckSquare, ClipboardList, Mail, X, Send, Sparkles, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Reply, Archive, Edit2 } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Sparkles, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare } from 'lucide-react';
 import Button from './Button';
-import TaskList from './TaskList';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
+import TaskList from './TaskList';
 
 interface DashboardProps {
   claims: Claim[];
-  tasks: Task[];
   userRole: UserRole;
   onSelectClaim: (claim: Claim) => void;
   onNewClaim: (homeownerId?: string) => void;
@@ -18,9 +16,6 @@ interface DashboardProps {
   activeHomeowner: Homeowner;
   employees: InternalEmployee[];
   currentUser: InternalEmployee;
-  onAddTask: (task: Partial<Task>) => void;
-  onToggleTask: (id: string) => void;
-  onDeleteTask: (id: string) => void;
   
   // Passed from App based on Search
   targetHomeowner: Homeowner | null;
@@ -38,11 +33,21 @@ interface DashboardProps {
 
   // Builder Groups for Dropdown
   builderGroups?: BuilderGroup[];
+
+  // Initial State Control (Optional)
+  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS';
+  initialThreadId?: string | null;
+
+  // Tasks Widget Support
+  tasks?: Task[];
+  onAddTask: (task: Partial<Task>) => void;
+  onToggleTask: (taskId: string) => void;
+  onDeleteTask: (taskId: string) => void;
+  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS') => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
   claims, 
-  tasks,
   userRole, 
   onSelectClaim, 
   onNewClaim,
@@ -50,9 +55,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   activeHomeowner,
   employees,
   currentUser,
-  onAddTask,
-  onToggleTask,
-  onDeleteTask,
   targetHomeowner,
   onClearHomeownerSelection,
   onUpdateHomeowner,
@@ -61,13 +63,20 @@ const Dashboard: React.FC<DashboardProps> = ({
   messages,
   onSendMessage,
   onCreateThread,
-  builderGroups = []
+  builderGroups = [],
+  initialTab = 'CLAIMS',
+  initialThreadId = null,
+  tasks = [],
+  onAddTask,
+  onToggleTask,
+  onDeleteTask,
+  onNavigate
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
   
-  // View State for Dashboard (Claims vs Tasks)
-  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'TASKS' | 'MESSAGES'>('CLAIMS');
+  // View State for Dashboard (Claims vs Messages vs Tasks)
+  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS'>(initialTab);
   
   // Invite Modal State
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -92,12 +101,21 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [editClosingDate, setEditClosingDate] = useState('');
 
   // Messaging State
-  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
+  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(initialThreadId);
   const [replyContent, setReplyContent] = useState('');
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
   const [newMessageSubject, setNewMessageSubject] = useState('');
   const [newMessageContent, setNewMessageContent] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
+
+  // Sync state when props change
+  useEffect(() => {
+    if (initialTab) setCurrentTab(initialTab);
+  }, [initialTab]);
+
+  useEffect(() => {
+    if (initialThreadId) setSelectedThreadId(initialThreadId);
+  }, [initialThreadId]);
 
   // --- Filtering Logic ---
   const effectiveHomeowner = (isAdmin || isBuilder) ? targetHomeowner : activeHomeowner;
@@ -146,16 +164,6 @@ const Dashboard: React.FC<DashboardProps> = ({
     return true; // Admin viewing all if no specific homeowner selected
   });
 
-  // Filter Tasks
-  const displayTasks = tasks.filter(t => {
-    if (effectiveHomeowner) {
-      if (!t.relatedClaimIds || t.relatedClaimIds.length === 0) return false;
-      const linkedClaims = claims.filter(c => t.relatedClaimIds?.includes(c.id));
-      return linkedClaims.some(lc => lc.homeownerEmail === effectiveHomeowner.email);
-    }
-    return true; 
-  });
-
   // Filter Documents
   const displayDocuments = documents.filter(d => {
     if (effectiveHomeowner) {
@@ -171,6 +179,9 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
     return false;
   });
+
+  // Tasks Logic
+  const myTasks = tasks.filter(t => t.assignedToId === currentUser.id && !t.isCompleted);
 
   const selectedThread = displayThreads.find(t => t.id === selectedThreadId);
 
@@ -337,6 +348,30 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Sidebar */}
         <div className="space-y-6">
+          
+          {/* My Tasks Widget (Admin Only) */}
+          {isAdmin && (
+            <div className="bg-surface rounded-3xl border border-surface-outline-variant p-6">
+              <h3 className="font-medium text-lg mb-4 flex items-center text-surface-on">
+                 <CheckSquare className="h-5 w-5 mr-3 text-primary" />
+                 My Pending Tasks
+              </h3>
+              <div className="space-y-3">
+                 {myTasks.length === 0 ? <p className="text-sm opacity-70 text-surface-on-variant">No pending tasks.</p> :
+                    myTasks.slice(0, 3).map(t => (
+                       <div key={t.id} className="bg-surface-container p-3 rounded-xl text-sm border border-surface-outline-variant/50">
+                          <p className="font-medium text-surface-on">{t.title}</p>
+                          <p className="text-xs text-surface-on-variant mt-1 line-clamp-1">{t.description}</p>
+                       </div>
+                    ))
+                 }
+                 {onNavigate && (
+                    <Button variant="text" onClick={() => onNavigate('TASKS')} className="w-full mt-2 !h-8 !text-xs">View All Tasks</Button>
+                 )}
+              </div>
+            </div>
+          )}
+
           {/* Upcoming Schedule Card */}
           <div className="bg-secondary-container p-6 rounded-3xl text-secondary-on-container">
             <h3 className="font-medium text-lg mb-4 flex items-center">
@@ -556,9 +591,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <Home className="h-4 w-4 text-surface-outline flex-shrink-0" />
                       <span className="truncate">{targetHomeowner.projectOrLlc || 'N/A'} (Lot {targetHomeowner.lotNumber})</span>
                    </div>
-                   <div className="flex items-center gap-2 min-w-0" title={targetHomeowner.address}>
+                   <div className="col-span-1 sm:col-span-2 lg:col-span-1 flex items-center gap-2" title={targetHomeowner.address}>
                       <MapPin className="h-4 w-4 text-surface-outline flex-shrink-0" />
-                      <span className="truncate">{targetHomeowner.address}</span>
+                      <span className="whitespace-normal">{targetHomeowner.address}</span>
                    </div>
                    <div className="flex items-center gap-2 min-w-0">
                       <Phone className="h-4 w-4 text-surface-outline flex-shrink-0" />
@@ -625,19 +660,19 @@ const Dashboard: React.FC<DashboardProps> = ({
               <ClipboardList className="h-4 w-4" />
               Warranty
             </button>
+            
+            {/* TASKS TAB - Admin Only */}
+            {isAdmin && (
+              <button 
+                onClick={() => setCurrentTab('TASKS')}
+                className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 px-2 ${currentTab === 'TASKS' ? 'border-primary text-primary' : 'border-transparent text-surface-on-variant hover:text-surface-on'}`}
+              >
+                <CheckSquare className="h-4 w-4" />
+                Tasks
+              </button>
+            )}
+
             <button 
-              onClick={() => setCurrentTab('TASKS')}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 px-2 ${currentTab === 'TASKS' ? 'border-primary text-primary' : 'border-transparent text-surface-on-variant hover:text-surface-on'}`}
-            >
-              <CheckSquare className="h-4 w-4" />
-              Tasks
-              {displayTasks.filter(t => !t.isCompleted).length > 0 && (
-                <span className="bg-secondary text-white text-[10px] px-1.5 rounded-full">
-                  {displayTasks.filter(t => !t.isCompleted).length}
-                </span>
-              )}
-            </button>
-             <button 
               onClick={() => setCurrentTab('MESSAGES')}
               className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 px-2 ${currentTab === 'MESSAGES' ? 'border-primary text-primary' : 'border-transparent text-surface-on-variant hover:text-surface-on'}`}
             >
@@ -656,23 +691,18 @@ const Dashboard: React.FC<DashboardProps> = ({
           </>
         )}
 
-        {currentTab === 'TASKS' && (
-          <div className="bg-surface rounded-3xl border border-surface-outline-variant p-6">
-            <div className="mb-4">
-               <h3 className="text-lg font-normal text-surface-on">Tasks</h3>
-               <p className="text-sm text-surface-on-variant">Tasks linked to {targetHomeowner.name}'s claims.</p>
-            </div>
-            {/* Builders: Read Only View of Tasks (optional implementation, for now standard list but add/edit controlled by user) */}
+        {currentTab === 'TASKS' && isAdmin && (
+          <div className="bg-surface rounded-3xl border border-surface-outline-variant p-6 shadow-elevation-1">
             <TaskList 
-              tasks={displayTasks}
+              tasks={tasks}
               employees={employees}
               currentUser={currentUser}
-              claims={claims} 
+              claims={claims}
               homeowners={homeowners}
               onAddTask={onAddTask}
               onToggleTask={onToggleTask}
               onDeleteTask={onDeleteTask}
-              preSelectedHomeowner={effectiveHomeowner}
+              preSelectedHomeowner={targetHomeowner}
             />
           </div>
         )}
@@ -1018,13 +1048,22 @@ const Dashboard: React.FC<DashboardProps> = ({
           <h1 className="text-2xl font-normal text-surface-on">My Home</h1>
           <p className="text-surface-on-variant text-sm mt-1">{activeHomeowner.address}</p>
         </div>
-        <Button 
-          variant="filled" 
-          onClick={() => onNewClaim()}
-          icon={<Plus className="h-4 w-4" />}
-        >
-          New Claim
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outlined" 
+            onClick={() => setShowDocsModal(true)}
+            icon={<FileText className="h-4 w-4" />}
+          >
+            Documents
+          </Button>
+          <Button 
+            variant="filled" 
+            onClick={() => onNewClaim()}
+            icon={<Plus className="h-4 w-4" />}
+          >
+            New Claim
+          </Button>
+        </div>
       </div>
 
        {/* Navigation Tabs (Homeowner) */}
@@ -1111,6 +1150,62 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </Button>
                 </div>
              </div>
+          </div>
+        )}
+      
+      {/* DOCUMENTS MODAL (Reuse for Homeowner View) */}
+      {showDocsModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-surface w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+               <div className="p-6 border-b border-surface-outline-variant bg-surface-container flex justify-between items-center">
+                  <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    Account Documents
+                  </h2>
+                  <button onClick={() => setShowDocsModal(false)} className="text-surface-on-variant hover:text-surface-on">
+                    <X className="h-5 w-5" />
+                  </button>
+               </div>
+               
+               <div className="p-6">
+                 {/* List */}
+                 <div className="mb-6 space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {displayDocuments.length === 0 ? (
+                      <div className="text-center text-sm text-surface-on-variant py-8 border border-dashed border-surface-outline-variant rounded-xl bg-surface-container/30">
+                        No documents uploaded for this account.
+                      </div>
+                    ) : (
+                      displayDocuments.map(doc => (
+                        <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container border border-surface-outline-variant group transition-all">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="p-2 bg-red-50 text-red-600 rounded">
+                              <FileText className="h-5 w-5" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-surface-on truncate">{doc.name}</p>
+                              <p className="text-xs text-surface-on-variant">
+                                Uploaded by {doc.uploadedBy} • {new Date(doc.uploadDate).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <button className="p-2 text-surface-outline-variant hover:text-primary rounded-full hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-all">
+                            <Download className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                 </div>
+                 
+                 {/* Footer Upload Action */}
+                 <div className="pt-4 border-t border-surface-outline-variant flex justify-center">
+                    <label className="cursor-pointer flex items-center gap-2 px-6 py-3 bg-surface-container hover:bg-surface-container-high text-primary font-medium rounded-full transition-colors border border-surface-outline-variant">
+                        <Upload className="h-4 w-4" />
+                        Upload New Document
+                        <input type="file" className="hidden" onChange={handleFileUpload} />
+                    </label>
+                 </div>
+               </div>
+            </div>
           </div>
         )}
     </div>

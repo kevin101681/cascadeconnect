@@ -15,6 +15,7 @@ interface InternalUserManagementProps {
   onDeleteContractor: (id: string) => void;
 
   onClose: () => void;
+  initialTab?: 'EMPLOYEES' | 'SUBS';
 }
 
 const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
@@ -26,9 +27,10 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
   onAddContractor,
   onUpdateContractor,
   onDeleteContractor,
-  onClose
+  onClose,
+  initialTab = 'EMPLOYEES'
 }) => {
-  const [activeTab, setActiveTab] = useState<'EMPLOYEES' | 'SUBS'>('EMPLOYEES');
+  const [activeTab, setActiveTab] = useState<'EMPLOYEES' | 'SUBS'>(initialTab);
   
   const [showEmpModal, setShowEmpModal] = useState(false);
   const [editingEmpId, setEditingEmpId] = useState<string | null>(null);
