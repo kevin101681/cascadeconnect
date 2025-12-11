@@ -23,7 +23,7 @@ export const users = pgTable('users', {
   password: text('password'), // Add password
   
   // For Builder Users
-  builderGroupId: uuid('builder_group_id'),
+  builderGroupId: uuid('builder_group_id').references(() => builderGroups.id),
   
   createdAt: timestamp('created_at').defaultNow(),
 });
@@ -38,7 +38,10 @@ export const homeowners = pgTable('homeowners', {
   firstName: text('first_name'),
   lastName: text('last_name'),
   email: text('email').notNull(),
-  phone: text('phone'), // Explicitly defined for build safety
+  
+  // Explicitly defined to fix TS build errors
+  phone: text('phone'), 
+  
   password: text('password'), // Add password
   
   // Buyer 2
@@ -54,7 +57,7 @@ export const homeowners = pgTable('homeowners', {
   
   // Builder Info
   builder: text('builder'), // Display name
-  builderGroupId: uuid('builder_group_id'), // Loose link or FK
+  builderGroupId: uuid('builder_group_id').references(() => builderGroups.id), // Loose link or FK
   jobName: text('job_name'), // Replaces lot/project
   
   // Agent Info
@@ -84,7 +87,8 @@ export const contractors = pgTable('contractors', {
 export const claims = pgTable('claims', {
   id: uuid('id').defaultRandom().primaryKey(),
   
-  homeownerId: uuid('homeowner_id'), // Explicitly defined for build safety
+  // Explicitly defined with reference to fix TS build errors
+  homeownerId: uuid('homeowner_id').references(() => homeowners.id), 
   
   // Denormalized fields for easier fetching
   homeownerName: text('homeowner_name'),
@@ -101,7 +105,7 @@ export const claims = pgTable('claims', {
   classification: text('classification').default('Unclassified'),
   
   // Assignment
-  contractorId: uuid('contractor_id'), // Loose link or FK
+  contractorId: uuid('contractor_id').references(() => contractors.id), // Loose link or FK
   contractorName: text('contractor_name'),
   contractorEmail: text('contractor_email'),
 
@@ -122,7 +126,7 @@ export const claims = pgTable('claims', {
 // --- 6. Documents ---
 export const documents = pgTable('documents', {
   id: uuid('id').defaultRandom().primaryKey(),
-  homeownerId: uuid('homeowner_id'),
+  homeownerId: uuid('homeowner_id').references(() => homeowners.id),
   
   name: text('name').notNull(),
   url: text('url').notNull(),
@@ -153,7 +157,7 @@ export const tasks = pgTable('tasks', {
 export const messageThreads = pgTable('message_threads', {
   id: uuid('id').defaultRandom().primaryKey(),
   subject: text('subject').notNull(),
-  homeownerId: uuid('homeowner_id'),
+  homeownerId: uuid('homeowner_id').references(() => homeowners.id),
   participants: json('participants').$type<string[]>().default([]),
   isRead: boolean('is_read').default(false),
   lastMessageAt: timestamp('last_message_at').defaultNow(),
