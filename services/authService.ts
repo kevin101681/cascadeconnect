@@ -53,17 +53,12 @@ export const login = async (
 
 export const socialLogin = async (provider: 'google' | 'apple'): Promise<AuthResponse> => {
   await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  // This is a mock function, it won't work perfectly without real users loaded for social mapping
-  // We'll just return a generic error or success for demo purposes if needed
   return { success: false, error: 'Social Login requires backend integration.' };
 };
 
 export const register = async (email: string, password: string, name: string): Promise<AuthResponse> => {
   await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // In a real app this would call DB insert
-  // Here we just return success and let UI optimistically update
+  // Registration logic (omitted for brevity, assume success in demo)
   const newHomeowner: Homeowner = {
     id: `h-new-${Date.now()}`,
     name: name,
@@ -79,6 +74,5 @@ export const register = async (email: string, password: string, name: string): P
     closingDate: new Date(),
     password: password
   };
-  
   return { success: true, user: newHomeowner, role: UserRole.HOMEOWNER };
 };

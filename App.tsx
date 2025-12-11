@@ -345,7 +345,7 @@ function App() {
     if (isDbConnected) {
       try {
         await db.insert(claimsTable).values({
-          id: newClaim.id,
+          // id is omitted to let DB generate it if needed, or if types forbid explicit ID insert
           homeownerId: subjectHomeowner.id,
           title: newClaim.title,
           description: newClaim.description,
@@ -410,7 +410,7 @@ function App() {
     if (isDbConnected) {
       try {
         await db.insert(homeownersTable).values({
-          id: newId,
+          // id is omitted to let DB generate it
           name: newHomeowner.name,
           email: newHomeowner.email,
           phone: newHomeowner.phone,

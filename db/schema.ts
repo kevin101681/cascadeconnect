@@ -24,7 +24,7 @@ export const users = pgTable('users', {
   password: text('password'), // Add password
   
   // For Builder Users
-  builderGroupId: uuid('builder_group_id').references(() => builderGroups.id),
+  builderGroupId: uuid('builder_group_id'),
   
   createdAt: timestamp('created_at').defaultNow(),
 });
@@ -85,7 +85,7 @@ export const contractors = pgTable('contractors', {
 export const claims = pgTable('claims', {
   id: uuid('id').defaultRandom().primaryKey(),
   
-  homeownerId: uuid('homeowner_id').references(() => homeowners.id),
+  homeownerId: uuid('homeowner_id'),
   
   // Denormalized fields for easier fetching
   homeownerName: text('homeowner_name'),
