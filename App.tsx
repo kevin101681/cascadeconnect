@@ -1107,7 +1107,11 @@ function App() {
   if (!isLoaded) return <div className="flex h-screen items-center justify-center bg-gray-100"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div></div>;
 
   // Use Clerk's isSignedIn to determine if we show AuthScreen
-  if (!isSignedIn) return <AuthScreen />;
+  // TEMPORARILY DISABLED FOR TESTING - Remove this comment and uncomment the line below to re-enable authentication
+  // if (!isSignedIn) return <AuthScreen />;
+  
+  // TEMPORARY: Bypass auth for testing - allow access without login
+  // The app will work with default/mock data when not signed in
 
   return (
     <Layout 
