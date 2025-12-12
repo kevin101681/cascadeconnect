@@ -65,7 +65,7 @@
 
 **Issues Found:**
 - ⚠️ **CRITICAL**: UploadThing middleware doesn't verify Clerk authentication (line 17 in `server/uploadthing.js` - uses placeholder userId)
-- ⚠️ UploadThing environment variables may not be set: `UPLOADTHING_APP_ID` and `UPLOADTHING_SECRET`
+- ⚠️ UploadThing environment variables may not be set (configure in Netlify dashboard)
 - ⚠️ Documents in Dashboard use base64 encoding instead of UploadThing (lines 231-263 in `Dashboard.tsx`)
 - ⚠️ No integration with database to save file URLs after upload
 
@@ -144,9 +144,9 @@ if (isDbConfigured) {
 ```
 
 ### Priority 3: UploadThing Environment Variables
-Ensure these are set in your deployment:
-- `UPLOADTHING_APP_ID`
-- `UPLOADTHING_SECRET`
+Ensure these are set in your Netlify deployment environment variables (not in code):
+- UploadThing App ID
+- UploadThing Secret Key
 
 ### Priority 4: Database Save Verification
 Add logging to verify data is actually being saved:

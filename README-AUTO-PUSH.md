@@ -49,11 +49,11 @@ The repository includes a GitHub Actions workflow (`.github/workflows/auto-deplo
 
 To set this up:
 1. Go to your GitHub repository → Settings → Secrets and variables → Actions
-2. Add these secrets:
-   - `NETLIFY_AUTH_TOKEN` - Your Netlify auth token
-   - `NETLIFY_SITE_ID` - Your Netlify site ID
-   - `VITE_CLERK_PUBLISHABLE_KEY` - Your Clerk key
-   - `VITE_DATABASE_URL` - Your database URL
+2. Add these secrets (use Netlify dashboard, not in code):
+   - Netlify auth token
+   - Netlify site ID
+   - Clerk publishable key
+   - Database connection string (server-side only)
 
 ## Option 5: Git Hook (Advanced)
 

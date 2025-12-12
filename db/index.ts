@@ -4,9 +4,13 @@ import { drizzle } from 'drizzle-orm/neon-http';
 import * as schema from './schema';
 
 // Support both Vite (browser) and Node (migration) environments
+// NOTE: Database URL should be server-side only. For browser usage, consider proxying through API.
 // If the variable is missing (e.g. local dev without .env), use a placeholder.
 const envUrl = (import.meta as any).env?.VITE_DATABASE_URL;
 const processUrl = typeof process !== 'undefined' ? process.env?.DATABASE_URL : undefined;
+
+// SECURITY: Database connection strings should NOT be exposed to the client
+// In production, consider moving database operations to server-side API endpoints
 
 const connectionString = envUrl || processUrl || "postgresql://placeholder:placeholder@placeholder.neondb.org/placeholder";
 
