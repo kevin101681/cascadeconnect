@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ClerkProvider } from '@clerk/clerk-react';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Robust environment variable access for Vite/Production
 // Cast import.meta to any to avoid TS errors in some environments
@@ -53,9 +54,11 @@ if (!PUBLISHABLE_KEY) {
 } else {
   root.render(
     <React.StrictMode>
-      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-        <App />
-      </ClerkProvider>
+      <ErrorBoundary>
+        <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+          <App />
+        </ClerkProvider>
+      </ErrorBoundary>
     </React.StrictMode>
   );
 }

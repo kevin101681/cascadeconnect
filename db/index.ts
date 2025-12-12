@@ -12,9 +12,26 @@ const connectionString = envUrl || processUrl || "postgresql://placeholder:place
 
 export const isDbConfigured = !!(connectionString && !connectionString.includes('placeholder'));
 
-if (!isDbConfigured) {
+// Only initialize database connection if properly configured
+// This prevents errors when the connection string is invalid
+let sql: any = null;
+let dbInstance: any = null;
+
+if (isDbConfigured) {
+  try {
+    sql = neon(connectionString);
+    dbInstance = drizzle(sql, { schema });
+  } catch (e) {
+    console.error("Failed to initialize database connection:", e);
+  }
+} else {
   console.warn("No valid VITE_DATABASE_URL found. App will default to Local Storage/Mock mode.");
 }
 
-const sql = neon(connectionString);
-export const db = drizzle(sql, { schema });
+// Export a safe database instance that won't throw errors
+export const db = dbInstance || {
+  select: () => ({ from: () => Promise.resolve([]) }),
+  insert: () => ({ values: () => Promise.resolve({}) }),
+  update: () => ({ set: () => ({ where: () => Promise.resolve({}) }) }),
+  delete: () => ({ where: () => Promise.resolve({}) }),
+};

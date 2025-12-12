@@ -648,7 +648,7 @@ function App() {
           } catch(e) { 
               console.error("Critical: Claims DB Import Failed", e);
               alert("Database Error: Could not save claims to the backend. Please check your network connection or database schema.");
-              throw e; 
+              // Don't throw - allow app to continue with local storage
           }
       }
   };
@@ -701,7 +701,7 @@ function App() {
           } catch(e) { 
               console.error("Critical: Homeowners DB Import Failed", e);
               alert("Database Error: Could not save homeowners to the backend. Please ensure the 'homeowners' table exists in Neon.");
-              throw e; 
+              // Don't throw - allow app to continue with local storage
           }
       }
   };
@@ -722,7 +722,7 @@ function App() {
               }
           } catch(e) { 
               console.error("Batch import groups to DB failed", e); 
-              throw e; 
+              // Don't throw - allow app to continue with local storage
           }
       }
   };
