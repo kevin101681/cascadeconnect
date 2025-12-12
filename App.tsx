@@ -429,7 +429,7 @@ function App() {
         await db.update(claimsTable).set({
           title: updatedClaim.title,
           description: updatedClaim.description,
-          status: updatedClaim.status,
+          status: updatedClaim.status as any,
           classification: updatedClaim.classification,
           dateEvaluated: updatedClaim.dateEvaluated || null,
           internalNotes: updatedClaim.internalNotes || null,
@@ -438,7 +438,7 @@ function App() {
           contractorName: updatedClaim.contractorName || null,
           contractorEmail: updatedClaim.contractorEmail || null,
           proposedDates: updatedClaim.proposedDates,
-        }).where(eq(claimsTable.id, updatedClaim.id));
+        } as any).where(eq(claimsTable.id, updatedClaim.id));
       } catch (e) {
         console.error("Failed to update claim in DB:", e);
       }
@@ -780,7 +780,7 @@ function App() {
 
       if (isDbConfigured) {
          try {
-           await db.update(tasksTable).set({ isCompleted: newStatus }).where(eq(tasksTable.id, taskId));
+           await db.update(tasksTable).set({ isCompleted: newStatus } as any).where(eq(tasksTable.id, taskId));
          } catch(e) { console.error(e); }
       }
   };
@@ -836,12 +836,11 @@ function App() {
       if (isDbConfigured) {
         try {
           await db.insert(contractorsTable).values({
-             id: sub.id,
              companyName: sub.companyName,
              contactName: sub.contactName,
              email: sub.email,
              specialty: sub.specialty
-          });
+          } as any);
         } catch(e) { console.error(e); }
       }
   };
@@ -855,7 +854,7 @@ function App() {
              contactName: sub.contactName,
              email: sub.email,
              specialty: sub.specialty
-          }).where(eq(contractorsTable.id, sub.id));
+          } as any).where(eq(contractorsTable.id, sub.id));
         } catch(e) { console.error(e); }
       }
   };
@@ -874,10 +873,9 @@ function App() {
       if (isDbConfigured) {
         try {
            await db.insert(builderGroupsTable).values({
-              id: group.id,
               name: group.name,
               email: group.email
-           });
+           } as any);
         } catch(e) { console.error(e); }
       }
   };
@@ -889,7 +887,7 @@ function App() {
            await db.update(builderGroupsTable).set({
               name: group.name,
               email: group.email
-           }).where(eq(builderGroupsTable.id, group.id));
+           } as any).where(eq(builderGroupsTable.id, group.id));
          } catch(e) { console.error(e); }
       }
   };
@@ -929,7 +927,7 @@ function App() {
               builderGroupId: user.builderGroupId,
               // Password update if provided
               ...(password ? { password } : {})
-           }).where(eq(usersTable.id, user.id));
+           } as any).where(eq(usersTable.id, user.id));
          } catch(e) { console.error(e); }
       }
   };
@@ -961,7 +959,7 @@ function App() {
           builderGroupId: updatedHomeowner.builderId || null,
           jobName: updatedHomeowner.jobName,
           closingDate: updatedHomeowner.closingDate,
-        }).where(eq(homeownersTable.id, updatedHomeowner.id));
+        } as any).where(eq(homeownersTable.id, updatedHomeowner.id));
       } catch (e) {
         console.error("Failed to update homeowner in DB:", e);
       }
@@ -1020,7 +1018,7 @@ function App() {
          await db.update(messageThreadsTable).set({
             messages: updatedThread.messages,
             lastMessageAt: updatedThread.lastMessageAt
-         }).where(eq(messageThreadsTable.id, threadId));
+         } as any).where(eq(messageThreadsTable.id, threadId));
        } catch(e) { console.error("Failed to update thread in DB", e); }
     }
   };
