@@ -58,7 +58,14 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
       }
     },
     onUploadError: (error: Error) => {
-      setUploadError(`Upload failed: ${error.message}`);
+      console.error("UploadThing error details:", error);
+      const errorMessage = error.message || "Unknown error occurred";
+      setUploadError(`Upload failed: ${errorMessage}`);
+      
+      // Log additional details for debugging
+      if (error.stack) {
+        console.error("Error stack:", error.stack);
+      }
     },
   });
 

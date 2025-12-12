@@ -22,6 +22,8 @@ export const uploadRouter = {
         const userId = req.headers['x-user-id'] || 
                       (authHeader ? "authenticated_user" : "test_user");
         
+        console.log("UploadThing middleware called, userId:", userId);
+        
         // For testing: allow uploads without auth
         // In production, uncomment the check below:
         // if (!authHeader) {
