@@ -1,9 +1,37 @@
 import { GoogleGenAI } from "@google/genai";
 import { Claim } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Lazy initialization - only create AI instance when needed and API key is available
+let aiInstance: GoogleGenAI | null = null;
+
+const getAI = (): GoogleGenAI | null => {
+  if (aiInstance) return aiInstance;
+  
+  // Get API key from Vite environment variables
+  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || 
+                 (typeof process !== 'undefined' ? process.env.VITE_GEMINI_API_KEY : undefined);
+  
+  if (!apiKey) {
+    console.warn("⚠️ Gemini API key not found. AI features will use fallback templates.");
+    return null;
+  }
+  
+  try {
+    aiInstance = new GoogleGenAI({ apiKey });
+    return aiInstance;
+  } catch (error) {
+    console.error("Failed to initialize Gemini AI:", error);
+    return null;
+  }
+};
 
 export const summarizeClaim = async (claim: Claim): Promise<string> => {
+  const ai = getAI();
+  if (!ai) {
+    // Fallback: return first sentence of description
+    return claim.description.split('.')[0] + '.';
+  }
+  
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
@@ -21,6 +49,22 @@ export const summarizeClaim = async (claim: Claim): Promise<string> => {
 };
 
 export const draftSchedulingEmail = async (claim: Claim, proposedDates: string[]): Promise<string> => {
+  const ai = getAI();
+  if (!ai) {
+    // Fallback template
+    return `Dear ${claim.homeownerName},
+
+Regarding your warranty claim "${claim.title}":
+
+We have proposed the following dates for repair:
+${proposedDates.join(', ')}
+
+Please log in to your portal at cascadebuilderservices.com to confirm one of these times.
+
+Sincerely,
+Cascade Builder Services`;
+  }
+  
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
@@ -55,6 +99,25 @@ Cascade Builder Services`;
 };
 
 export const draftInviteEmail = async (homeownerName: string): Promise<string> => {
+  const ai = getAI();
+  if (!ai) {
+    // Fallback template
+    return `Dear ${homeownerName},
+
+Welcome home! Congratulations on your purchase.
+Your builder has partnered with Cascade Builder Services to ensure you receive exceptional support during your one-year warranty term.
+
+We've set up an online customer service portal for you at cascadebuilderservices.com.
+
+Action Required: Please click the link below to activate your account.
+
+[ ACCEPT ]
+https://cascadebuilderservices.com/register?account_id=new
+
+Sincerely,
+Cascade Builder Services`;
+  }
+  
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
@@ -71,12 +134,12 @@ export const draftInviteEmail = async (homeownerName: string): Promise<string> =
   } catch (error) {
     console.error("Gemini API Error (draftInviteEmail):", error);
     // Fallback template
-    return `Dear Homeowner,
+    return `Dear ${homeownerName},
 
 Welcome home! Congratulations on your purchase.
 Your builder has partnered with Cascade Builder Services to ensure you receive exceptional support during your one-year warranty term.
 
-We’ve set up an online customer service portal for you at cascadebuilderservices.com.
+We've set up an online customer service portal for you at cascadebuilderservices.com.
 
 Action Required: Please click the link below to activate your account.
 
