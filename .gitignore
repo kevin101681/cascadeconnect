@@ -12,6 +12,16 @@ dist
 dist-ssr
 *.local
 
+# Environment files (never commit these)
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+
+# Netlify
+.netlify
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
