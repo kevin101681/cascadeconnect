@@ -33,4 +33,21 @@ if (isDbConfigured) {
 
 // Export database instance - will be null if not configured or failed to initialize
 // This allows callers to check isDbConfigured before using db
-export const db = dbInstance;
+// Provide a safe fallback that won't crash the app
+export const db = dbInstance || {
+  select: () => ({ 
+    from: () => Promise.resolve([]),
+    orderBy: () => ({ from: () => Promise.resolve([]) })
+  }),
+  insert: () => ({ 
+    values: () => Promise.resolve({}) 
+  }),
+  update: () => ({ 
+    set: () => ({ 
+      where: () => Promise.resolve({}) 
+    }) 
+  }),
+  delete: () => ({ 
+    where: () => Promise.resolve({}) 
+  }),
+};

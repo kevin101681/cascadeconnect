@@ -116,7 +116,7 @@ function App() {
         let loadedEmployees = employees;
         let loadedBuilders = builderUsers;
 
-        if (isDbConfigured && db) {
+        if (isDbConfigured) {
              // 1. Fetch Homeowners
             const dbHomeowners = await db.select().from(homeownersTable);
             if (dbHomeowners.length > 0) {
@@ -424,7 +424,7 @@ function App() {
   const handleUpdateClaim = async (updatedClaim: Claim) => {
     setClaims(prev => prev.map(c => c.id === updatedClaim.id ? updatedClaim : c));
 
-    if (isDbConfigured && db) {
+    if (isDbConfigured) {
       try {
         await db.update(claimsTable).set({
           title: updatedClaim.title,
@@ -484,7 +484,7 @@ function App() {
     setCurrentView('DASHBOARD');
 
     // DB Insert
-    if (isDbConfigured && db) {
+    if (isDbConfigured) {
       try {
         const result = await db.insert(claimsTable).values({
           id: newClaim.id, // Explicit ID
