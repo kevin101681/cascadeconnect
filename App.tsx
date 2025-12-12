@@ -116,7 +116,7 @@ function App() {
         let loadedEmployees = employees;
         let loadedBuilders = builderUsers;
 
-        if (isDbConfigured) {
+        if (isDbConfigured && db) {
              // 1. Fetch Homeowners
             const dbHomeowners = await db.select().from(homeownersTable);
             if (dbHomeowners.length > 0) {
@@ -424,7 +424,7 @@ function App() {
   const handleUpdateClaim = async (updatedClaim: Claim) => {
     setClaims(prev => prev.map(c => c.id === updatedClaim.id ? updatedClaim : c));
 
-    if (isDbConfigured) {
+    if (isDbConfigured && db) {
       try {
         await db.update(claimsTable).set({
           title: updatedClaim.title,
@@ -484,9 +484,9 @@ function App() {
     setCurrentView('DASHBOARD');
 
     // DB Insert
-    if (isDbConfigured) {
+    if (isDbConfigured && db) {
       try {
-        await db.insert(claimsTable).values({
+        const result = await db.insert(claimsTable).values({
           id: newClaim.id, // Explicit ID
           homeownerId: subjectHomeowner.id !== 'placeholder' ? subjectHomeowner.id : null,
           title: newClaim.title,
@@ -510,9 +510,14 @@ function App() {
           proposedDates: [],
           summary: null
         } as any);
+        console.log("✅ Claim saved to Neon database:", newClaim.id);
       } catch (e) {
-        console.error("Failed to save claim to DB:", e);
+        console.error("❌ Failed to save claim to DB:", e);
+        // Show user-friendly error
+        alert("Warning: Claim saved locally but failed to sync to database. Please check your connection.");
       }
+    } else if (isDbConfigured && !db) {
+      console.warn("⚠️ Database configured but connection failed. Data saved to localStorage only.");
     }
   };
 

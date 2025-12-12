@@ -12,9 +12,24 @@ export const uploadRouter = {
     text: { maxFileSize: "2MB", maxFileCount: 5 },
   })
     .middleware(async ({ req, res }) => {
-      // In a real production app, verify Clerk session here using @clerk/clerk-sdk-node
-      // For now, we trust the request as it comes from our authenticated frontend
-      return { userId: "user_id_placeholder" };
+      // Verify Clerk session for authenticated uploads
+      try {
+        // Get Clerk auth from request headers
+        const authHeader = req.headers.authorization;
+        if (!authHeader) {
+          throw new Error("No authorization header");
+        }
+        
+        // In production, verify Clerk session token here
+        // For now, extract userId from header if available
+        // TODO: Implement full Clerk session verification with @clerk/clerk-sdk-node
+        const userId = req.headers['x-user-id'] || "authenticated_user";
+        
+        return { userId };
+      } catch (error) {
+        console.error("UploadThing auth error:", error);
+        throw new Error("Unauthorized: Please sign in to upload files");
+      }
     })
     .onUploadComplete(async ({ metadata, file }) => {
       console.log("Upload completed for userId:", metadata.userId);

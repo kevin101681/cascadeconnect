@@ -21,17 +21,16 @@ if (isDbConfigured) {
   try {
     sql = neon(connectionString);
     dbInstance = drizzle(sql, { schema });
+    console.log("✅ Database connection initialized");
   } catch (e) {
-    console.error("Failed to initialize database connection:", e);
+    console.error("❌ Failed to initialize database connection:", e);
+    // Don't export a fake db - let errors propagate so we know when DB is down
+    dbInstance = null;
   }
 } else {
-  console.warn("No valid VITE_DATABASE_URL found. App will default to Local Storage/Mock mode.");
+  console.warn("⚠️ No valid VITE_DATABASE_URL found. App will default to Local Storage/Mock mode.");
 }
 
-// Export a safe database instance that won't throw errors
-export const db = dbInstance || {
-  select: () => ({ from: () => Promise.resolve([]) }),
-  insert: () => ({ values: () => Promise.resolve({}) }),
-  update: () => ({ set: () => ({ where: () => Promise.resolve({}) }) }),
-  delete: () => ({ where: () => Promise.resolve({}) }),
-};
+// Export database instance - will be null if not configured or failed to initialize
+// This allows callers to check isDbConfigured before using db
+export const db = dbInstance;
