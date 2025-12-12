@@ -25,9 +25,8 @@ jobs:
       
       - name: Build
         run: npm run build
-        env:
-          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-          VITE_DATABASE_URL: ${{ secrets.VITE_DATABASE_URL }}
+        # Environment variables should be set in Netlify dashboard, not here
+        # This workflow is for reference only - actual deployment uses Netlify's build system
       
       - name: Deploy to Netlify
         uses: netlify/actions/cli@master

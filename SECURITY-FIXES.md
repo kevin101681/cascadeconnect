@@ -46,10 +46,12 @@ Set these in **Netlify Dashboard → Site Settings → Environment Variables**:
 - `VITE_CLERK_PUBLISHABLE_KEY` - Clerk publishable key (safe for client)
 
 **Server-Side Only (no VITE_ prefix):**
-- `DATABASE_URL` - Neon database connection string
-- `UPLOADTHING_APP_ID` - UploadThing app ID
-- `UPLOADTHING_SECRET` - UploadThing secret key
-- `VITE_GEMINI_API_KEY` - Gemini API key (optional)
+- Database connection string
+- UploadThing App ID
+- UploadThing Secret Key
+- Gemini API key (optional)
+
+See `env.example` for exact variable names.
 
 **Note**: If you need database access from the browser (Neon Serverless), you may need to use `VITE_DATABASE_URL`, but be aware Netlify's scanner may flag it. Consider the server-side API approach for better security.
 

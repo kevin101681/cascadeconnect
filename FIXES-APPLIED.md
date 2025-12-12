@@ -37,12 +37,14 @@
 ### 3. Environment Variables
 **Status**: Need verification
 
-**Required Variables (set in Netlify environment variables):**
-- `DATABASE_URL` - Neon database connection string (server-side only)
-- `VITE_CLERK_PUBLISHABLE_KEY` - Clerk publishable key (safe for client)
-- `UPLOADTHING_APP_ID` - UploadThing app ID (server-side only)
-- `UPLOADTHING_SECRET` - UploadThing secret key (server-side only)
-- `VITE_GEMINI_API_KEY` - Gemini API key (optional, for AI features)
+**Required Variables (set in Netlify environment variables, not in code):**
+- Database connection string (server-side only)
+- Clerk publishable key (safe for client)
+- UploadThing App ID (server-side only)
+- UploadThing Secret Key (server-side only)
+- Gemini API key (optional, for AI features)
+
+See `env.example` for variable names (without real values).
 
 ## 📋 Testing Checklist
 
