@@ -12,9 +12,10 @@ const processUrl = typeof process !== 'undefined' ? process.env?.DATABASE_URL : 
 // SECURITY: Database connection strings should NOT be exposed to the client
 // In production, consider moving database operations to server-side API endpoints
 
-const connectionString = envUrl || processUrl || "postgresql://placeholder:placeholder@placeholder.neondb.org/placeholder";
+// Use a clearly fake, non-secret-like placeholder that won't trigger security scanners
+const connectionString = envUrl || processUrl || null;
 
-export const isDbConfigured = !!(connectionString && !connectionString.includes('placeholder'));
+export const isDbConfigured = !!(connectionString && connectionString.length > 0);
 
 // Only initialize database connection if properly configured
 // This prevents errors when the connection string is invalid
