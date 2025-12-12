@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Claim, UserRole, ClaimStatus, ProposedDate, Contractor } from '../types';
 import Button from './Button';
 import StatusBadge from './StatusBadge';
@@ -20,10 +20,17 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
   const [proposeDate, setProposeDate] = useState('');
   const [proposeTime, setProposeTime] = useState<'AM' | 'PM' | 'All Day'>('AM');
 
-  // Edit Mode State (Admin Only)
+  // Edit Mode State (Admin Only) - Always start in view mode
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(claim.title);
   const [editDescription, setEditDescription] = useState(claim.description);
+  
+  // Reset edit state when claim changes - ensure we always start in view mode
+  useEffect(() => {
+    setIsEditing(false);
+    setEditTitle(claim.title);
+    setEditDescription(claim.description);
+  }, [claim.id]);
 
   // Service Order Email Modal State
   const [showSOModal, setShowSOModal] = useState(false);
@@ -211,22 +218,67 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                 Attachments
               </p>
               <div className="flex flex-wrap gap-3">
-                {claim.attachments.map((att, i) => (
-                  <div key={i} className="group relative w-24 h-24 bg-surface-container rounded-lg overflow-hidden border border-surface-outline-variant hover:shadow-elevation-1 transition-all">
-                    {att.type === 'IMAGE' ? (
-                      <img src={att.url} alt={att.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
-                        {att.type === 'VIDEO' ? <Video className="h-8 w-8 text-primary mb-2" /> : <FileText className="h-8 w-8 text-blue-600 mb-2" />}
-                        <span className="text-[10px] text-surface-on-variant truncate w-full">{att.name}</span>
-                      </div>
-                    )}
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <a href={att.url} target="_blank" rel="noreferrer" className="text-white text-xs font-medium hover:underline">View</a>
+                {claim.attachments.map((att, i) => {
+                  const attachmentKey = att.id || `att-${i}`;
+                  const attachmentUrl = att.url || '';
+                  const attachmentName = att.name || 'Attachment';
+                  const attachmentType = att.type || 'DOCUMENT';
+                  
+                  return (
+                    <div key={attachmentKey} className="group relative w-24 h-24 bg-surface-container rounded-lg overflow-hidden border border-surface-outline-variant hover:shadow-elevation-1 transition-all">
+                      {attachmentType === 'IMAGE' && attachmentUrl ? (
+                        <>
+                          <img 
+                            src={attachmentUrl} 
+                            alt={attachmentName} 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              // Fallback if image fails to load
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const fallback = target.parentElement?.querySelector('.image-fallback');
+                              if (fallback) {
+                                (fallback as HTMLElement).style.display = 'flex';
+                              }
+                            }}
+                          />
+                          <div className="image-fallback hidden absolute inset-0 w-full h-full flex flex-col items-center justify-center p-2 text-center bg-surface-container">
+                            <FileText className="h-8 w-8 text-primary mb-1" />
+                            <span className="text-[10px] text-surface-on-variant truncate w-full px-1">{attachmentName}</span>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
+                          {attachmentType === 'VIDEO' ? (
+                            <Video className="h-8 w-8 text-primary mb-2" />
+                          ) : (
+                            <FileText className="h-8 w-8 text-blue-600 mb-2" />
+                          )}
+                          <span className="text-[10px] text-surface-on-variant truncate w-full">{attachmentName}</span>
+                        </div>
+                      )}
+                      {/* Hover Overlay */}
+                      {attachmentUrl && (
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <a 
+                            href={attachmentUrl} 
+                            target="_blank" 
+                            rel="noreferrer" 
+                            className="text-white text-xs font-medium hover:underline"
+                            onClick={(e) => {
+                              if (!attachmentUrl) {
+                                e.preventDefault();
+                                alert('Attachment URL is missing');
+                              }
+                            }}
+                          >
+                            View
+                          </a>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
