@@ -107,34 +107,34 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-           <h3 className="text-lg font-normal text-surface-on flex items-center gap-2">
-             <Shield className="h-5 w-5 text-primary" />
-             Team & Sub Management
-           </h3>
-           <p className="text-sm text-surface-on-variant">Manage internal access and trade partners.</p>
-        </div>
-        <div className="flex items-center gap-2">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]">
+      <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
+        <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center">
+          <div>
+            <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              Team & Sub Management
+            </h3>
+            <p className="text-sm text-surface-on-variant dark:text-gray-400">Manage internal access and trade partners.</p>
+          </div>
           <button 
             onClick={onClose} 
-            className="p-2.5 rounded-full hover:bg-surface-container text-surface-on-variant hover:text-surface-on transition-colors"
+            className="p-2.5 rounded-full hover:bg-surface-container dark:hover:bg-gray-600 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
             title="Close"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-      </div>
 
+        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
       {/* Tabs */}
-      <div className="flex border-b border-surface-outline-variant">
+      <div className="flex border-b border-surface-outline-variant dark:border-gray-700">
         <button
           onClick={() => setActiveTab('EMPLOYEES')}
           className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${
             activeTab === 'EMPLOYEES' 
               ? 'border-b-2 border-primary text-primary' 
-              : 'text-surface-on-variant hover:text-surface-on hover:bg-surface-container/50'
+              : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'
           }`}
         >
           <UserCheck className="h-4 w-4" />
@@ -153,10 +153,10 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
         </button>
       </div>
 
-      <div className="bg-surface rounded-3xl border border-surface-outline-variant overflow-hidden shadow-sm">
+      <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-sm">
         
         {/* ACTION BAR */}
-        <div className="p-4 border-b border-surface-outline-variant bg-surface-container/30 flex justify-end">
+        <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-end">
           {activeTab === 'EMPLOYEES' ? (
             <Button onClick={handleOpenCreateEmp} icon={<Plus className="h-4 w-4" />}>
               Add Team Member
@@ -171,7 +171,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-surface-container text-surface-on-variant text-xs uppercase tracking-wider">
+              <tr className="bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 text-xs uppercase tracking-wider">
                 {activeTab === 'EMPLOYEES' ? (
                   <>
                     <th className="px-6 py-4 font-medium">Employee</th>
@@ -189,60 +189,60 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                 <th className="px-6 py-4 font-medium text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-surface-outline-variant">
+            <tbody className="divide-y divide-surface-outline-variant dark:divide-gray-700">
               {activeTab === 'EMPLOYEES' ? (
                 employees.map(emp => (
-                  <tr key={emp.id} className="hover:bg-surface-container-high transition-colors group">
+                  <tr key={emp.id} className="hover:bg-surface-container-high dark:hover:bg-gray-700 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-secondary-on-container font-bold text-xs">
                           {emp.name.charAt(0)}
                         </div>
-                        <span className="font-medium text-surface-on text-sm">{emp.name}</span>
+                        <span className="font-medium text-surface-on dark:text-gray-100 text-sm">{emp.name}</span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-container-high text-surface-on">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-container-high dark:bg-gray-700 text-surface-on dark:text-gray-100">
                         {emp.role}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-surface-on-variant">
+                    <td className="px-6 py-4 text-sm text-surface-on-variant dark:text-gray-400">
                       {emp.email}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => handleOpenEditEmp(emp)} className="p-1.5 text-surface-outline-variant hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
-                        <button onClick={() => onDeleteEmployee(emp.id)} className="p-1.5 text-surface-outline-variant hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
+                        <button onClick={() => handleOpenEditEmp(emp)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
+                        <button onClick={() => onDeleteEmployee(emp.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </td>
                   </tr>
                 ))
               ) : (
                 contractors.map(sub => (
-                  <tr key={sub.id} className="hover:bg-surface-container-high transition-colors group">
+                  <tr key={sub.id} className="hover:bg-surface-container-high dark:hover:bg-gray-700 transition-colors group">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-primary-on-container font-bold text-xs">
                           <HardHat className="h-4 w-4" />
                         </div>
-                        <span className="font-medium text-surface-on text-sm">{sub.companyName}</span>
+                        <span className="font-medium text-surface-on dark:text-gray-100 text-sm">{sub.companyName}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-surface-on">
+                    <td className="px-6 py-4 text-sm text-surface-on dark:text-gray-100">
                       {sub.contactName}
                     </td>
                     <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-container-high text-surface-on">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-container-high dark:bg-gray-700 text-surface-on dark:text-gray-100">
                         {sub.specialty}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-sm text-surface-on-variant">
+                    <td className="px-6 py-4 text-sm text-surface-on-variant dark:text-gray-400">
                       {sub.email}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => handleOpenEditSub(sub)} className="p-1.5 text-surface-outline-variant hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
-                        <button onClick={() => onDeleteContractor(sub.id)} className="p-1.5 text-surface-outline-variant hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
+                        <button onClick={() => handleOpenEditSub(sub)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
+                        <button onClick={() => onDeleteContractor(sub.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </td>
                   </tr>
@@ -255,27 +255,27 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
 
       {/* EMPLOYEE MODAL */}
       {showEmpModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-surface w-full max-w-md rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-surface-outline-variant bg-surface-container">
-              <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]">
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-md rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
+            <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700">
+              <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                 <UserCheck className="h-5 w-5 text-primary" />
                 {editingEmpId ? 'Edit Team Member' : 'New Team Member'}
               </h2>
             </div>
             
-            <form onSubmit={handleSubmitEmp} className="p-6 space-y-4">
+            <form onSubmit={handleSubmitEmp} className="p-6 space-y-4 bg-surface dark:bg-gray-800">
               <div>
-                <label className="block text-sm font-medium text-surface-on-variant mb-1">Full Name</label>
-                <input type="text" required className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={empName} onChange={(e) => setEmpName(e.target.value)} />
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Full Name</label>
+                <input type="text" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={empName} onChange={(e) => setEmpName(e.target.value)} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-surface-on-variant mb-1">Email Address</label>
-                <input type="email" required className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={empEmail} onChange={(e) => setEmpEmail(e.target.value)} />
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Email Address</label>
+                <input type="email" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={empEmail} onChange={(e) => setEmpEmail(e.target.value)} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-surface-on-variant mb-1">Role</label>
-                <select className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={empRole} onChange={(e) => setEmpRole(e.target.value)}>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Role</label>
+                <select className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={empRole} onChange={(e) => setEmpRole(e.target.value)}>
                   <option>Warranty Manager</option>
                   <option>Field Specialist</option>
                   <option>Admin Coordinator</option>
@@ -294,27 +294,27 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
 
       {/* SUB MODAL */}
       {showSubModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-surface w-full max-w-md rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-surface-outline-variant bg-surface-container">
-              <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]">
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-md rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
+            <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700">
+              <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                 <HardHat className="h-5 w-5 text-primary" />
                 {editingSubId ? 'Edit Sub' : 'New Sub'}
               </h2>
             </div>
             
-            <form onSubmit={handleSubmitSub} className="p-6 space-y-4">
+            <form onSubmit={handleSubmitSub} className="p-6 space-y-4 bg-surface dark:bg-gray-800">
               <div>
-                <label className="block text-sm font-medium text-surface-on-variant mb-1">Company Name</label>
-                <input type="text" required className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={subCompany} onChange={(e) => setSubCompany(e.target.value)} />
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Company Name</label>
+                <input type="text" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={subCompany} onChange={(e) => setSubCompany(e.target.value)} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-surface-on-variant mb-1">Contact Person</label>
-                <input type="text" required className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={subContact} onChange={(e) => setSubContact(e.target.value)} />
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Contact Person</label>
+                <input type="text" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={subContact} onChange={(e) => setSubContact(e.target.value)} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-surface-on-variant mb-1">Specialty</label>
-                <select className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={subSpecialty} onChange={(e) => setSubSpecialty(e.target.value)}>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Specialty</label>
+                <select className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={subSpecialty} onChange={(e) => setSubSpecialty(e.target.value)}>
                   <option>General</option>
                   <option>Plumbing</option>
                   <option>HVAC</option>
@@ -331,8 +331,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-surface-on-variant mb-1">Email Address</label>
-                <input type="email" required className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={subEmail} onChange={(e) => setSubEmail(e.target.value)} />
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Email Address</label>
+                <input type="email" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={subEmail} onChange={(e) => setSubEmail(e.target.value)} />
               </div>
               <div className="flex justify-end gap-3 pt-4">
                 <Button type="button" variant="text" onClick={() => setShowSubModal(false)}>Cancel</Button>
@@ -342,6 +342,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
           </div>
         </div>
       )}
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,0 +1,47 @@
+# Netlify redirects for Single Page Application (SPA)
+# This ensures all routes are handled by index.html for client-side routing
+# BUT exclude static assets and API routes from the redirect
+#
+# Note: Redirects in this file are processed BEFORE netlify.toml redirects
+# So we must handle API routes here directly, or they'll be caught by the catch-all
+#
+# Order matters: more specific patterns must come before the catch-all
+
+# Exclude static assets from SPA redirect
+/assets/*    /assets/:splat   200
+
+# Handle API routes - redirect directly to Netlify Functions
+# This prevents the catch-all from matching these routes
+# Note: Netlify Functions are accessed via /.netlify/functions/function-name
+# Using wildcard pattern to match all /api/cbsbooks/* routes
+/api/cbsbooks/invoices     /.netlify/functions/cbsbooks-invoices    200!
+/api/cbsbooks/invoices/*   /.netlify/functions/cbsbooks-invoices/:splat    200!
+/api/cbsbooks/expenses     /.netlify/functions/cbsbooks-expenses    200!
+/api/cbsbooks/expenses/*   /.netlify/functions/cbsbooks-expenses/:splat    200!
+/api/cbsbooks/clients      /.netlify/functions/cbsbooks-clients     200!
+/api/cbsbooks/clients/*    /.netlify/functions/cbsbooks-clients/:splat     200!
+/api/cbsbooks/test         /.netlify/functions/cbsbooks-test        200!
+
+# Handle UploadThing API - redirect to Netlify Function
+/api/uploadthing/*    /.netlify/functions/uploadthing/:splat    200!
+
+# Handle Email API - redirect to Netlify Function
+/api/email/send       /.netlify/functions/email-send    200!
+/api/email/inbound    /.netlify/functions/email-inbound    200!
+/api/email/analytics   /.netlify/functions/email-analytics    200!
+
+# Handle Netlify Info API
+/api/netlify/info     /.netlify/functions/netlify-info    200!
+/api/netlify/deploys  /.netlify/functions/netlify-deploys    200!
+
+# Handle Neon Stats API
+/api/neon/stats       /.netlify/functions/neon-stats    200!
+
+# All other routes go to index.html for SPA routing
+/*    /index.html   200
+
+
+
+
+
+

@@ -112,9 +112,9 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
   };
 
   // M3 Input Styles
-  const inputClass = "peer block w-full rounded-md border border-surface-outline bg-transparent px-3 py-3 text-surface-on focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors placeholder-transparent";
-  const labelClass = "absolute left-2 -top-2 z-[1] bg-white px-1 text-xs text-surface-outline-variant transition-all peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-focus:-top-2 peer-focus:text-xs peer-focus:text-primary";
-  const selectClass = "block w-full rounded-md border border-surface-outline bg-transparent px-3 py-3 text-surface-on focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors";
+  const inputClass = "peer block w-full rounded-md border border-surface-outline dark:border-gray-600 bg-transparent dark:bg-gray-700 px-3 py-3 text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors placeholder-transparent";
+  const labelClass = "absolute left-2 -top-2 z-[1] bg-surface dark:bg-gray-800 px-1 text-xs text-surface-outline-variant dark:text-gray-400 transition-all peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-focus:-top-2 peer-focus:text-xs peer-focus:text-primary";
+  const selectClass = "block w-full rounded-md border border-surface-outline dark:border-gray-600 bg-transparent dark:bg-gray-700 px-3 py-3 text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -138,7 +138,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
               className={inputClass}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Title"
             />
             <label htmlFor="title" className={labelClass}>Claim Title</label>
           </div>
@@ -158,13 +157,13 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
 
            {/* Classification Section (Admin Only) */}
            {isAdmin && (
-             <div className="bg-surface-container/20 p-4 rounded-xl border border-surface-outline-variant">
-              <h4 className="text-sm font-bold text-surface-on mb-3">Classification & Evaluation</h4>
+             <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Classification & Evaluation</h4>
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs text-surface-on-variant mb-1 block">Classification</label>
+                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Classification</label>
                   <select
-                    className={selectClass}
+                    className={selectClass + " dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"}
                     value={classification}
                     onChange={(e) => setClassification(e.target.value as ClaimClassification)}
                   >
@@ -173,10 +172,10 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
                 </div>
 
                 <div>
-                  <label className="text-xs text-surface-on-variant mb-1 block">Date Evaluated</label>
+                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Date Evaluated</label>
                   <input 
                     type="date"
-                    className={selectClass}
+                    className={selectClass + " dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"}
                     value={dateEvaluated}
                     onChange={(e) => setDateEvaluated(e.target.value)}
                   />
@@ -184,14 +183,13 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
 
                 {classification === 'Non-Warranty' && (
                    <div className="animate-in fade-in slide-in-from-top-2">
-                     <label className="text-xs text-surface-on-variant mb-1 block text-error">Non-Warranty Explanation (Required)</label>
+                     <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block text-error">Non-Warranty Explanation (Required)</label>
                      <textarea
                        required
-                       className="w-full rounded-md border border-error bg-error/5 px-3 py-2 text-surface-on focus:outline-none text-sm"
+                       className="w-full rounded-md border border-error bg-error/5 dark:bg-error/10 dark:border-error/50 px-3 py-2 text-surface-on dark:text-gray-100 focus:outline-none text-sm"
                        rows={3}
                        value={nonWarrantyExplanation}
                        onChange={(e) => setNonWarrantyExplanation(e.target.value)}
-                       placeholder="Why is this not covered?"
                      />
                    </div>
                 )}
@@ -204,31 +202,31 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
         <div className="space-y-6">
            {/* Assignment (Admin Only) */}
            {isAdmin && (
-             <div className="bg-surface-container/20 p-4 rounded-xl border border-surface-outline-variant">
-                <h4 className="text-sm font-bold text-surface-on mb-3">Sub Assignment</h4>
+             <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+                <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Sub Assignment</h4>
                 
                 <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-surface-outline-variant" />
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-surface-outline-variant dark:text-gray-400" />
                   <input 
                     type="text"
                     placeholder="Type to search subs..."
-                    className="w-full rounded-md border border-surface-outline bg-surface pl-10 pr-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                    className="w-full rounded-md border border-surface-outline dark:border-gray-600 bg-surface dark:bg-gray-700 pl-10 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                     value={contractorSearch}
                     onChange={(e) => setContractorSearch(e.target.value)}
                   />
                 </div>
 
                 {contractorSearch.trim().length > 0 && (
-                  <div className="mt-2 max-h-40 overflow-y-auto border border-surface-outline-variant rounded-md bg-surface shadow-elevation-1">
+                  <div className="mt-2 max-h-40 overflow-y-auto border border-surface-outline-variant dark:border-gray-600 rounded-md bg-surface dark:bg-gray-700 shadow-elevation-1">
                     {filteredContractors.length === 0 ? (
-                      <div className="px-3 py-2 text-xs text-surface-on-variant">No subs found.</div>
+                      <div className="px-3 py-2 text-xs text-surface-on-variant dark:text-gray-400">No subs found.</div>
                     ) : (
                       filteredContractors.map(c => (
                         <button
                           key={c.id}
                           type="button"
                           onClick={() => { setSelectedContractorId(c.id); setContractorSearch(c.companyName); }}
-                          className={`w-full text-left px-3 py-2 text-sm flex justify-between hover:bg-surface-container ${selectedContractorId === c.id ? 'bg-primary-container text-primary-on-container' : 'text-surface-on'}`}
+                          className={`w-full text-left px-3 py-2 text-sm flex justify-between hover:bg-surface-container dark:hover:bg-gray-600 ${selectedContractorId === c.id ? 'bg-primary-container text-primary-on-container' : 'text-surface-on dark:text-gray-100'}`}
                         >
                           <span>{c.companyName}</span>
                           <span className="text-xs opacity-70">{c.specialty}</span>
@@ -240,8 +238,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
                 
                 {selectedContractorId && !contractorSearch.trim() && (
                   <div className="mt-2 text-xs text-primary font-medium flex items-center justify-between">
-                    <span>Selected: {contractors.find(c => c.id === selectedContractorId)?.companyName}</span>
-                    <button type="button" onClick={() => { setSelectedContractorId(''); setContractorSearch(''); }} className="text-surface-on-variant hover:text-error"><X className="h-3 w-3" /></button>
+                    <span className="dark:text-gray-100">Selected: {contractors.find(c => c.id === selectedContractorId)?.companyName}</span>
+                    <button type="button" onClick={() => { setSelectedContractorId(''); setContractorSearch(''); }} className="text-surface-on-variant dark:text-gray-400 hover:text-error"><X className="h-3 w-3" /></button>
                   </div>
                 )}
              </div>
@@ -253,10 +251,9 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
               <textarea
                 id="internalNotes"
                 rows={4}
-                className={`${inputClass} bg-secondary-container/20 border-secondary-container text-secondary-on-container`}
+                className={`${inputClass} bg-secondary-container/20 dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
                 value={internalNotes}
                 onChange={(e) => setInternalNotes(e.target.value)}
-                placeholder="Internal Notes"
               />
               <label htmlFor="internalNotes" className={labelClass}>Internal Notes (Admin Only)</label>
             </div>
@@ -264,31 +261,31 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
 
            {/* Attachments */}
            <div>
-            <label className="block text-sm font-medium text-surface-on mb-2">Attachments (Photos, Video, Docs)</label>
+            <label className="block text-sm font-medium text-surface-on dark:text-gray-100 mb-2">Attachments (Photos, Video, Docs)</label>
             
             {uploadError && (
-              <div className="mb-2 p-2 bg-error/10 text-error text-xs rounded-lg flex items-center gap-2">
+              <div className="mb-2 p-2 bg-error/10 dark:bg-error/20 text-error text-xs rounded-lg flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4" />
                 {uploadError}
               </div>
             )}
 
-            <div className={`mt-1 flex flex-col items-center justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl transition-colors ${isUploading ? 'bg-surface-container border-primary/50' : 'border-surface-outline-variant hover:bg-surface-container'}`}>
+            <div className={`mt-1 flex flex-col items-center justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl transition-colors ${isUploading ? 'bg-surface-container dark:bg-gray-700 border-primary/50' : 'border-surface-outline-variant dark:border-gray-600 hover:bg-surface-container dark:hover:bg-gray-700'}`}>
                 {isUploading ? (
                   <div className="flex flex-col items-center">
                     <Loader2 className="h-8 w-8 text-primary animate-spin mb-2" />
-                    <span className="text-xs text-surface-on-variant">Uploading to secure storage...</span>
+                    <span className="text-xs text-surface-on-variant dark:text-gray-400">Uploading to secure storage...</span>
                   </div>
                 ) : (
                   <>
-                    <Upload className="mx-auto h-12 w-12 text-surface-outline-variant" />
-                    <div className="flex text-sm text-surface-on-variant justify-center mt-2">
+                    <Upload className="mx-auto h-12 w-12 text-surface-outline-variant dark:text-gray-400" />
+                    <div className="flex text-sm text-surface-on-variant dark:text-gray-400 justify-center mt-2">
                       <label className="relative cursor-pointer rounded-md font-medium text-primary hover:text-primary/80 focus-within:outline-none">
                         <span>Upload files</span>
                         <input type="file" className="sr-only" multiple onChange={handleFileSelect} accept="image/*,video/*,application/pdf" />
                       </label>
                     </div>
-                    <p className="text-xs text-surface-outline-variant mt-1">Images, Videos (up to 64MB), Docs</p>
+                    <p className="text-xs text-surface-outline-variant dark:text-gray-500 mt-1">Images, Videos (up to 64MB), Docs</p>
                   </>
                 )}
             </div>
@@ -296,17 +293,17 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
             {attachments.length > 0 && (
               <div className="mt-4 grid grid-cols-2 gap-3">
                 {attachments.map(att => (
-                  <div key={att.id} className="relative group bg-surface-container border border-surface-outline-variant rounded-lg p-2 flex items-center gap-3">
+                  <div key={att.id} className="relative group bg-surface-container dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 rounded-lg p-2 flex items-center gap-3">
                     {att.type === 'IMAGE' && <img src={att.url} alt="" className="h-10 w-10 object-cover rounded" />}
-                    {att.type === 'VIDEO' && <div className="h-10 w-10 bg-black/10 rounded flex items-center justify-center"><Video className="h-5 w-5 text-surface-on" /></div>}
-                    {att.type === 'DOCUMENT' && <div className="h-10 w-10 bg-blue-50 rounded flex items-center justify-center"><FileText className="h-5 w-5 text-blue-600" /></div>}
+                    {att.type === 'VIDEO' && <div className="h-10 w-10 bg-black/10 dark:bg-gray-600 rounded flex items-center justify-center"><Video className="h-5 w-5 text-surface-on dark:text-gray-100" /></div>}
+                    {att.type === 'DOCUMENT' && <div className="h-10 w-10 bg-blue-50 dark:bg-blue-900/30 rounded flex items-center justify-center"><FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" /></div>}
                     
                     <div className="flex-1 min-w-0">
-                        <span className="text-xs truncate block font-medium text-surface-on">{att.name}</span>
-                        <span className="text-[10px] text-green-600 flex items-center gap-1"><CheckCircle className="h-3 w-3"/> Uploaded</span>
+                        <span className="text-xs truncate block font-medium text-surface-on dark:text-gray-100">{att.name}</span>
+                        <span className="text-[10px] text-green-600 dark:text-green-400 flex items-center gap-1"><CheckCircle className="h-3 w-3"/> Uploaded</span>
                     </div>
                     
-                    <button type="button" onClick={() => removeAttachment(att.id)} className="text-surface-outline-variant hover:text-error">
+                    <button type="button" onClick={() => removeAttachment(att.id)} className="text-surface-outline-variant dark:text-gray-400 hover:text-error">
                       <X className="h-4 w-4" />
                     </button>
                   </div>
@@ -317,8 +314,15 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
         </div>
       </div>
 
-      <div className="flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant">
-        <Button type="button" variant="text" onClick={onCancel}>Cancel</Button>
+      <div className="flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700">
+        <Button 
+          type="button" 
+          variant="text" 
+          onClick={onCancel}
+          className="bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600"
+        >
+          Cancel
+        </Button>
         <Button type="submit" variant="filled" disabled={isUploading}>
           {isUploading ? 'Uploading...' : 'Create Claim'}
         </Button>

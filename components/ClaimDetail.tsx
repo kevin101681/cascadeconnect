@@ -1,9 +1,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Claim, UserRole, ClaimStatus, ProposedDate, Contractor } from '../types';
+import { Claim, UserRole, ClaimStatus, ProposedDate, Contractor, InternalEmployee } from '../types';
 import Button from './Button';
 import StatusBadge from './StatusBadge';
-import { Calendar, CheckCircle, FileText, Mail, MessageSquare, ArrowLeft, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, Send } from 'lucide-react';
+import CalendarPicker from './CalendarPicker';
+import MaterialSelect from './MaterialSelect';
+import { ClaimMessage } from './MessageSummaryModal';
+import { Calendar, CheckCircle, FileText, Mail, MessageSquare, ArrowLeft, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink } from 'lucide-react';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
 
@@ -14,23 +17,47 @@ interface ClaimDetailProps {
   onBack: () => void;
   contractors: Contractor[]; // Pass list of contractors
   onSendMessage: (claim: Claim) => void;
+  startInEditMode?: boolean; // Optional prop to start in edit mode
+  currentUser?: InternalEmployee; // Current admin user for note attribution
+  onAddInternalNote?: (claimId: string, noteText: string, userName?: string) => Promise<void>; // Function to add internal notes
+  claimMessages?: ClaimMessage[]; // Messages related to this claim
+  onTrackClaimMessage?: (claimId: string, messageData: {
+    type: 'HOMEOWNER' | 'SUBCONTRACTOR';
+    threadId?: string;
+    subject: string;
+    recipient: string;
+    recipientEmail: string;
+    content: string;
+    senderName: string;
+  }) => void; // Function to track claim-related messages
+  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS', config?: { initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS'; initialThreadId?: string | null }) => void; // Navigation function
 }
 
-const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpdateClaim, onBack, contractors, onSendMessage }) => {
+const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpdateClaim, onBack, contractors, onSendMessage, startInEditMode = false, currentUser, onAddInternalNote, claimMessages = [], onTrackClaimMessage, onNavigate }) => {
+  // Ensure claimMessages is always an array
+  const safeClaimMessages = claimMessages || [];
   const [proposeDate, setProposeDate] = useState('');
   const [proposeTime, setProposeTime] = useState<'AM' | 'PM' | 'All Day'>('AM');
+  
+  // Collapsible state - default to collapsed for inline editor
+  const [isInternalNotesExpanded, setIsInternalNotesExpanded] = useState(false);
+  const [isMessageSummaryExpanded, setIsMessageSummaryExpanded] = useState(false);
 
-  // Edit Mode State (Admin Only) - Always start in view mode
-  const [isEditing, setIsEditing] = useState(false);
+  // Edit Mode State (Admin Only) - Start in edit mode if prop is true
+  const [isEditing, setIsEditing] = useState(startInEditMode);
   const [editTitle, setEditTitle] = useState(claim.title);
   const [editDescription, setEditDescription] = useState(claim.description);
+  const [editInternalNotes, setEditInternalNotes] = useState(claim.internalNotes || '');
+  const [newNote, setNewNote] = useState('');
   
-  // Reset edit state when claim changes - ensure we always start in view mode
+  // Reset edit state when claim changes - respect startInEditMode prop
   useEffect(() => {
-    setIsEditing(false);
+    setIsEditing(startInEditMode);
     setEditTitle(claim.title);
     setEditDescription(claim.description);
-  }, [claim.id]);
+    setEditInternalNotes(claim.internalNotes || '');
+    setNewNote('');
+  }, [claim.id, startInEditMode]);
 
   // Service Order Email Modal State
   const [showSOModal, setShowSOModal] = useState(false);
@@ -38,8 +65,7 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
   const [soSubject, setSoSubject] = useState('');
   const [soBody, setSoBody] = useState('');
   const [isSendingSO, setIsSendingSO] = useState(false);
-
-  const dateInputRef = useRef<HTMLInputElement>(null);
+  const [showCalendarPicker, setShowCalendarPicker] = useState(false);
 
   const isAdmin = currentUserRole === UserRole.ADMIN;
   const isScheduled = claim.status === ClaimStatus.SCHEDULED && claim.proposedDates.length > 0;
@@ -49,10 +75,54 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
     onUpdateClaim({
       ...claim,
       title: editTitle,
-      description: editDescription
+      description: editDescription,
+      internalNotes: editInternalNotes
     });
     setIsEditing(false);
   };
+
+  const handleAddNote = () => {
+    if (!newNote.trim()) return;
+    
+    const now = new Date();
+    // Format: [MM/DD/YYYY at HH:MM AM/PM by User Name]
+    const dateStr = now.toLocaleDateString('en-US', { 
+      month: '2-digit', 
+      day: '2-digit', 
+      year: 'numeric' 
+    });
+    const timeStr = now.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+    const userName = currentUser?.name || 'Admin';
+    const timestamp = `${dateStr} at ${timeStr} by ${userName}`;
+    const noteWithTimestamp = `[${timestamp}] ${newNote.trim()}`;
+    
+    // Get current notes (from edit state if editing, otherwise from claim)
+    const currentNotes = isEditing ? editInternalNotes : (claim.internalNotes || '');
+    const updatedNotes = currentNotes 
+      ? `${currentNotes}\n\n${noteWithTimestamp}`
+      : noteWithTimestamp;
+    
+    // Update edit state to keep it in sync
+    setEditInternalNotes(updatedNotes);
+    setNewNote('');
+    
+    // Auto-save the note immediately
+    onUpdateClaim({
+      ...claim,
+      internalNotes: updatedNotes
+    });
+  };
+  
+  // Sync editInternalNotes with claim when claim changes (but not when we're actively editing)
+  useEffect(() => {
+    if (!isEditing) {
+      setEditInternalNotes(claim.internalNotes || '');
+    }
+  }, [claim.internalNotes, isEditing]);
 
   const handleCancelEdit = () => {
     setEditTitle(claim.title);
@@ -86,6 +156,19 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
             fromName: 'Cascade Admin',
             fromRole: UserRole.ADMIN
         });
+        
+        // Track service order message to subcontractor
+        if (onTrackClaimMessage && claim.contractorName && claim.contractorEmail) {
+          onTrackClaimMessage(claim.id, {
+            type: 'SUBCONTRACTOR',
+            subject: soSubject,
+            recipient: claim.contractorName,
+            recipientEmail: claim.contractorEmail,
+            content: soBody,
+            senderName: currentUser?.name || 'Admin'
+          });
+        }
+        
         alert('Service Order sent to Sub successfully!');
     }
     setIsSendingSO(false);
@@ -139,29 +222,25 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
           <Button variant="text" onClick={onBack} icon={<ArrowLeft className="h-5 w-5" />} className="!px-2" />
           <div className="flex-1">
             <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-sm font-bold text-surface-outline-variant bg-surface-container px-2 py-0.5 rounded">{claim.id}</span>
-              
               {isEditing ? (
                  <input 
                    type="text" 
                    value={editTitle}
                    onChange={e => setEditTitle(e.target.value)}
-                   className="text-xl font-normal bg-surface-container border border-primary rounded px-2 py-1 focus:outline-none"
+                   className="text-xl font-normal bg-surface-container dark:bg-gray-700 border border-primary rounded px-2 py-1 text-surface-on dark:text-gray-100 focus:outline-none"
                  />
               ) : (
-                 <h2 className="text-2xl font-normal text-surface-on">{claim.title}</h2>
+                 <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100">{claim.title}</h2>
               )}
-              
-              <StatusBadge status={claim.status} />
             </div>
-            <div className="text-sm text-surface-on-variant mt-1 flex items-center gap-2 flex-wrap">
+            <div className="text-sm text-surface-on-variant dark:text-gray-400 mt-1 flex items-center gap-2 flex-wrap">
               <Clock className="h-4 w-4" />
               <span>{new Date(claim.dateSubmitted).toLocaleDateString()}</span>
-              <span className="text-surface-outline">|</span>
+              <span className="text-surface-outline dark:text-gray-600">|</span>
               <span>{claim.category}</span>
-              <span className="text-surface-outline">|</span>
+              <span className="text-surface-outline dark:text-gray-600">|</span>
               <span className="font-medium text-primary">{claim.builderName}</span>
-              <span className="text-surface-outline">•</span>
+              <span className="text-surface-outline dark:text-gray-600">•</span>
               <span>{claim.jobName}</span>
             </div>
           </div>
@@ -192,20 +271,20 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className={`grid gap-6 ${isEditing ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
         
         {/* Description Card */}
-        <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant shadow-sm">
-          <h3 className="text-lg font-normal text-surface-on mb-4">Description</h3>
+        <div className={`bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm ${isEditing ? 'lg:col-span-2' : ''}`}>
+          <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4">Description</h3>
           {isEditing ? (
               <textarea
                 value={editDescription}
                 onChange={e => setEditDescription(e.target.value)}
                 rows={6}
-                className="w-full bg-surface-container border border-primary rounded-lg p-3 text-surface-on focus:outline-none"
+                className="w-full bg-surface-container dark:bg-gray-700 border border-primary rounded-lg p-3 text-surface-on dark:text-gray-100 focus:outline-none"
               />
           ) : (
-              <p className="text-surface-on-variant whitespace-pre-wrap leading-relaxed">
+              <p className="text-surface-on-variant dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
                 {claim.description}
               </p>
           )}
@@ -225,7 +304,7 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                   const attachmentType = att.type || 'DOCUMENT';
                   
                   return (
-                    <div key={attachmentKey} className="group relative w-24 h-24 bg-surface-container rounded-lg overflow-hidden border border-surface-outline-variant hover:shadow-elevation-1 transition-all">
+                    <div key={attachmentKey} className="group relative w-24 h-24 bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-elevation-1 transition-all">
                       {attachmentType === 'IMAGE' && attachmentUrl ? (
                         <>
                           <img 
@@ -242,7 +321,7 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                               }
                             }}
                           />
-                          <div className="image-fallback hidden absolute inset-0 w-full h-full flex flex-col items-center justify-center p-2 text-center bg-surface-container">
+                          <div className="image-fallback hidden absolute inset-0 w-full h-full flex flex-col items-center justify-center p-2 text-center bg-surface-container dark:bg-gray-700">
                             <FileText className="h-8 w-8 text-primary mb-1" />
                             <span className="text-[10px] text-surface-on-variant truncate w-full px-1">{attachmentName}</span>
                           </div>
@@ -285,7 +364,7 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
         </div>
 
         {/* Warranty Assessment Card */}
-        <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant shadow-sm">
+        <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
           <h3 className="text-lg font-normal text-surface-on mb-4 flex items-center gap-2">
             <Info className="h-5 w-5 text-primary" />
             Warranty Assessment
@@ -294,7 +373,7 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
             <div>
               <p className="text-xs text-surface-on-variant mb-1">Classification</p>
               <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                claim.classification === 'Non-Warranty' ? 'bg-error-container text-error-on-container' : 'bg-surface-container text-surface-on'
+                claim.classification === 'Non-Warranty' ? 'bg-error-container text-error-on-container' : 'bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100'
               }`}>
                 {claim.classification}
               </span>
@@ -317,19 +396,161 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
         {/* Internal Notes (Admin Only) */}
         {isAdmin && (
             <div className="bg-secondary-container p-6 rounded-3xl border border-secondary-container">
-              <h3 className="text-lg font-normal text-secondary-on-container mb-2 flex items-center gap-2">
-                <Lock className="h-4 w-4" />
-                Internal Notes <span className="text-xs font-normal opacity-70">(Not visible to Homeowner)</span>
-              </h3>
-              <p className="text-sm text-secondary-on-container whitespace-pre-wrap leading-relaxed">
-                {claim.internalNotes || "No internal notes."}
-              </p>
+              <button
+                onClick={() => setIsInternalNotesExpanded(!isInternalNotesExpanded)}
+                className="w-full flex items-center justify-between mb-4 text-left"
+              >
+                <h3 className="text-lg font-normal text-secondary-on-container flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  Internal Notes <span className="text-xs font-normal opacity-70">(Not visible to Homeowner)</span>
+                </h3>
+                {isInternalNotesExpanded ? (
+                  <ChevronUp className="h-5 w-5 text-secondary-on-container" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-secondary-on-container" />
+                )}
+              </button>
+              
+              {/* Display existing notes */}
+              {isInternalNotesExpanded && (
+              <div className="mb-4">
+                {isEditing ? (
+                  <textarea
+                    value={editInternalNotes}
+                    onChange={e => setEditInternalNotes(e.target.value)}
+                    rows={6}
+                    className="w-full bg-surface dark:bg-gray-700 border border-primary rounded-lg p-3 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary mb-4"
+                  />
+                ) : (
+                  <div className="mb-4">
+                    <p className="text-sm text-secondary-on-container dark:text-gray-300 whitespace-pre-wrap leading-relaxed bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600">
+                      {claim.internalNotes || "No internal notes."}
+                    </p>
+                  </div>
+                )}
+                
+                {/* Add new note section - Always visible for admins */}
+                <div className="border-t border-secondary-container-high pt-4">
+                  <label className="block text-xs font-medium text-secondary-on-container mb-2">
+                    Add New Note
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newNote}
+                      onChange={e => setNewNote(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleAddNote();
+                        }
+                      }}
+                      className="flex-1 bg-surface dark:bg-gray-700 border border-secondary-container-high dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                    />
+                    <Button
+                      variant="filled"
+                      onClick={handleAddNote}
+                      disabled={!newNote.trim()}
+                      icon={<Plus className="h-4 w-4" />}
+                      className="!h-9 !px-4"
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              )}
+            </div>
+        )}
+
+        {/* Message Summary (Admin Only) */}
+        {isAdmin && (
+            <div className="bg-secondary-container p-6 rounded-3xl border border-secondary-container">
+              <button
+                onClick={() => setIsMessageSummaryExpanded(!isMessageSummaryExpanded)}
+                className="w-full flex items-center justify-between mb-4 text-left"
+              >
+                <h3 className="text-lg font-normal text-secondary-on-container flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Message Summary <span className="text-xs font-normal opacity-70">(Not visible to Homeowner)</span>
+                </h3>
+                {isMessageSummaryExpanded ? (
+                  <ChevronUp className="h-5 w-5 text-secondary-on-container" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-secondary-on-container" />
+                )}
+              </button>
+              
+              {/* Display message summaries */}
+              {isMessageSummaryExpanded && (
+              <div className="mb-4">
+                {safeClaimMessages.length === 0 ? (
+                  <p className="text-sm text-secondary-on-container whitespace-pre-wrap leading-relaxed bg-surface/30 rounded-lg p-4 border border-secondary-container-high">
+                    No messages sent for this claim yet. Messages sent via the "Send Message" button or to assigned subcontractors will appear here.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {[...safeClaimMessages].sort((a, b) => 
+                      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+                    ).map((msg) => (
+                      <div
+                        key={msg.id}
+                        className="bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600"
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            {msg.type === 'HOMEOWNER' ? (
+                              <User className="h-4 w-4 text-primary" />
+                            ) : (
+                              <HardHat className="h-4 w-4 text-primary" />
+                            )}
+                            <span className="text-xs font-medium text-secondary-on-container">
+                              {msg.type === 'HOMEOWNER' ? 'To Homeowner' : 'To Subcontractor'}
+                            </span>
+                            <span className="text-xs text-secondary-on-container opacity-70">•</span>
+                            <span className="text-xs text-secondary-on-container opacity-70">{msg.recipient}</span>
+                          </div>
+                          <span className="text-xs text-secondary-on-container opacity-70">
+                            {new Date(msg.timestamp).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="mb-2">
+                          <p className="text-xs font-medium text-secondary-on-container opacity-70 mb-1">Subject:</p>
+                          <p className="text-sm text-secondary-on-container">{msg.subject}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-secondary-on-container opacity-70 mb-1">Message:</p>
+                          <p className="text-sm text-secondary-on-container whitespace-pre-wrap">{msg.content}</p>
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-secondary-container-high flex items-center justify-between">
+                          <p className="text-xs text-secondary-on-container opacity-70">
+                            Sent by: {msg.senderName} • To: {msg.recipientEmail}
+                          </p>
+                          {msg.threadId && onNavigate && (
+                            <button
+                              onClick={() => {
+                                onNavigate('DASHBOARD', { initialTab: 'MESSAGES', initialThreadId: msg.threadId });
+                              }}
+                              className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                              title="View in Message Center"
+                            >
+                              <ExternalLink className="h-3 w-3" />
+                              View Message
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              )}
             </div>
         )}
 
         {/* Sub Assignment (Admin Only) */}
         {isAdmin && (
-          <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant shadow-sm">
+          <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
             <h3 className="text-lg font-normal text-surface-on mb-4 flex items-center gap-2">
               <HardHat className="h-5 w-5 text-primary" />
               Sub Assignment
@@ -338,7 +559,7 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
               <div className="w-full sm:flex-1 relative">
                 <div className="relative">
                   <select 
-                    className="w-full bg-surface-container rounded-lg pl-4 pr-10 py-3 appearance-none border-r-8 border-transparent outline outline-1 outline-surface-outline-variant focus:outline-primary cursor-pointer text-sm"
+                    className="w-full bg-surface-container dark:bg-gray-700 rounded-lg pl-4 pr-10 py-3 appearance-none border-r-8 border-transparent outline outline-1 outline-surface-outline-variant dark:outline-gray-600 focus:outline-primary cursor-pointer text-sm text-surface-on dark:text-gray-100"
                     value={claim.contractorId || ""}
                     onChange={(e) => handleAssignContractor(e.target.value)}
                   >
@@ -370,14 +591,14 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                     >
                         Service Order
                     </Button>
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
         )}
 
         {/* Scheduling Card */}
-        <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant shadow-sm">
+        <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
           <div className="flex justify-between items-start mb-6">
               <h3 className="text-lg font-normal text-surface-on flex items-center gap-2">
               <Calendar className="h-5 w-5 text-primary" />
@@ -427,39 +648,41 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                 </div>
                 
                 <div className="flex flex-col md:flex-row gap-4 items-end">
-                  {/* Date Input */}
+                  {/* Date Picker Button */}
                   <div className="w-full flex-1">
                     <label className="block text-xs text-surface-on-variant mb-1 ml-1 font-medium">Scheduled Date</label>
-                    <div 
-                      className="relative w-full rounded-lg border border-surface-outline bg-surface hover:border-surface-on-variant focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all cursor-pointer"
-                      onClick={() => dateInputRef.current?.showPicker()}
+                    <button
+                      type="button"
+                      onClick={() => setShowCalendarPicker(true)}
+                      className="w-full rounded-lg border border-surface-outline bg-surface hover:border-primary hover:bg-surface-container transition-all cursor-pointer p-3 text-left flex items-center gap-3 text-sm text-surface-on"
                     >
-                      <input 
-                        ref={dateInputRef}
-                        type="date" 
-                        className="w-full bg-transparent p-3 pl-10 text-sm outline-none cursor-pointer text-surface-on" 
-                        value={proposeDate} 
-                        onChange={e => setProposeDate(e.target.value)}
-                      />
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant pointer-events-none" />
-                    </div>
+                      <Calendar className="h-4 w-4 text-surface-on-variant flex-shrink-0" />
+                      <span className={proposeDate ? 'text-surface-on' : 'text-surface-on-variant'}>
+                        {proposeDate 
+                          ? new Date(proposeDate).toLocaleDateString(undefined, { 
+                              weekday: 'short', 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric' 
+                            })
+                          : 'Pick a date'
+                        }
+                      </span>
+                    </button>
                   </div>
 
                   {/* Time Slot Select */}
                   <div className="w-full md:w-auto md:min-w-[200px]">
-                    <label className="block text-xs text-surface-on-variant mb-1 ml-1 font-medium">Time Slot</label>
-                    <div className="relative">
-                      <select 
-                        className="block w-full rounded-lg border border-surface-outline bg-surface p-3 pr-10 text-sm focus:ring-1 focus:ring-primary focus:border-primary outline-none appearance-none cursor-pointer text-surface-on"
-                        value={proposeTime} 
-                        onChange={(e: any) => setProposeTime(e.target.value)}
-                      >
-                        <option value="AM">AM (8am - 12pm)</option>
-                        <option value="PM">PM (12pm - 4pm)</option>
-                        <option value="All Day">All Day</option>
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant pointer-events-none" />
-                    </div>
+                    <MaterialSelect
+                      label="Time Slot"
+                      value={proposeTime}
+                      onChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
+                      options={[
+                        { value: 'AM', label: 'AM (8am - 12pm)' },
+                        { value: 'PM', label: 'PM (12pm - 4pm)' },
+                        { value: 'All Day', label: 'All Day' }
+                      ]}
+                    />
                   </div>
 
                   <Button 
@@ -485,8 +708,8 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
 
       {/* Service Order Email Modal */}
       {showSOModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-           <div className="bg-surface w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]">
+           <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
               <div className="p-6 border-b border-surface-outline-variant flex justify-between items-center bg-surface-container">
                 <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
                   <Mail className="h-5 w-5 text-primary" />
@@ -533,7 +756,7 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                 {soPdfUrl && (
                   <div className="flex items-center gap-2 p-2 bg-primary/5 border border-primary/20 rounded-lg text-sm text-primary">
                       <FileText className="h-4 w-4" />
-                      <span className="font-medium truncate flex-1">ServiceOrder_{claim.id}.pdf</span>
+                      <span className="font-medium truncate flex-1">ServiceOrder_{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}.pdf</span>
                       <a href={soPdfUrl} target="_blank" rel="noreferrer" className="text-xs underline hover:text-primary-on-container">Preview</a>
                   </div>
                 )}
@@ -553,6 +776,19 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
            </div>
         </div>
       )}
+
+      {/* Calendar Picker Modal */}
+      <CalendarPicker
+        isOpen={showCalendarPicker}
+        selectedDate={proposeDate ? new Date(proposeDate) : null}
+        onSelectDate={(date) => {
+          setProposeDate(date.toISOString().split('T')[0]);
+          setShowCalendarPicker(false);
+        }}
+        onClose={() => setShowCalendarPicker(false)}
+        minDate={new Date()}
+      />
+
     </div>
   );
 };

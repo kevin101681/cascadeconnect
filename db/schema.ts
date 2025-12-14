@@ -70,6 +70,12 @@ export const homeowners = pgTable('homeowners', {
   preferredWalkThroughDate: timestamp('preferred_walk_through_date'),
   
   enrollmentComments: text('enrollment_comments'),
+  
+  // PDF Reports App Integration
+  reportAppUserId: text('report_app_user_id'), // ID of user in the PDF Reports App
+  reportAppLinked: boolean('report_app_linked').default(false), // Whether this homeowner is linked to PDF Reports App
+  reportAppLinkedAt: timestamp('report_app_linked_at'), // When the link was created
+  
   createdAt: timestamp('created_at').defaultNow(),
 });
 

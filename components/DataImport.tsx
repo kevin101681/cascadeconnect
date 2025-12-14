@@ -2,7 +2,7 @@
 import React, { useState, useRef } from 'react';
 import Papa from 'papaparse';
 import Button from './Button';
-import { Upload, FileText, AlertCircle, CheckCircle, Database, Terminal, Loader2, Trash2 } from 'lucide-react';
+import { Upload, FileText, AlertCircle, CheckCircle, Database, Terminal, Loader2, Trash2, X } from 'lucide-react';
 import { Claim, ClaimStatus, UserRole, ClaimClassification, Homeowner, BuilderGroup } from '../types';
 
 interface DataImportProps {
@@ -11,6 +11,7 @@ interface DataImportProps {
   onClearHomeowners: () => void;
   existingBuilderGroups: BuilderGroup[];
   onImportBuilderGroups: (groups: BuilderGroup[]) => Promise<void>;
+  onClose?: () => void;
 }
 
 type ImportType = 'CLAIMS' | 'HOMEOWNERS' | 'CONTRACTORS';
@@ -20,7 +21,8 @@ const DataImport: React.FC<DataImportProps> = ({
   onImportHomeowners, 
   onClearHomeowners,
   existingBuilderGroups,
-  onImportBuilderGroups
+  onImportBuilderGroups,
+  onClose
 }) => {
   const [importType, setImportType] = useState<ImportType>('CLAIMS');
   const [file, setFile] = useState<File | null>(null);
@@ -228,17 +230,37 @@ const DataImport: React.FC<DataImportProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-6">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]">
+      <div className="bg-surface dark:bg-gray-800 w-full max-w-7xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
+        <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center">
+          <div>
+            <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 mb-2 flex items-center gap-2">
+              <Database className="h-5 w-5 text-primary" />
+              Bulk Data Import
+            </h2>
+            <p className="text-sm text-surface-on-variant dark:text-gray-400">Import claims, homeowners, or contractors from CSV files</p>
+          </div>
+          <button 
+            onClick={onClose || (() => window.history.back())} 
+            className="p-2.5 rounded-full hover:bg-surface-container dark:hover:bg-gray-600 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
+            title="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="p-6 max-h-[80vh] overflow-y-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
         {/* Configuration Card */}
-        <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant">
-          <h2 className="text-xl font-normal text-surface-on mb-4 flex items-center gap-2">
+        <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700">
+          <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 mb-4 flex items-center gap-2">
             <Database className="h-5 w-5 text-primary" />
             Bulk Data Import
           </h2>
           
           <div className="mb-6">
-            <label className="block text-sm font-medium text-surface-on-variant mb-2">Data Type</label>
+            <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-2">Data Type</label>
             <div className="flex gap-2">
               {(['CLAIMS', 'HOMEOWNERS', 'CONTRACTORS'] as ImportType[]).map((type) => (
                 <button
@@ -248,7 +270,7 @@ const DataImport: React.FC<DataImportProps> = ({
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                     importType === type 
                       ? 'bg-secondary-container text-secondary-on-container ring-1 ring-secondary-on-container' 
-                      : 'bg-surface-container text-surface-on-variant hover:bg-surface-container-high'
+                      : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                   }`}
                 >
                   {type === 'CONTRACTORS' ? 'Subs' : type.charAt(0) + type.slice(1).toLowerCase()}
@@ -259,8 +281,8 @@ const DataImport: React.FC<DataImportProps> = ({
 
           <div 
             className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-              uploadStatus === 'ERROR' ? 'border-error bg-error/5' : 
-              'border-surface-outline-variant hover:bg-surface-container hover:border-primary/50'
+              uploadStatus === 'ERROR' ? 'border-error bg-error/5 dark:bg-error/10' : 
+              'border-surface-outline-variant dark:border-gray-600 hover:bg-surface-container dark:hover:bg-gray-700 hover:border-primary/50'
             }`}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
@@ -283,24 +305,24 @@ const DataImport: React.FC<DataImportProps> = ({
             {file ? (
               <div className="flex flex-col items-center">
                 <FileText className="h-12 w-12 text-primary mb-2" />
-                <p className="text-surface-on font-medium">{file.name}</p>
-                <p className="text-sm text-surface-on-variant">{(file.size / 1024).toFixed(2)} KB</p>
+                <p className="text-surface-on dark:text-gray-100 font-medium">{file.name}</p>
+                <p className="text-sm text-surface-on-variant dark:text-gray-400">{(file.size / 1024).toFixed(2)} KB</p>
                 <button onClick={() => fileInputRef.current?.click()} className="text-primary text-sm mt-2 hover:underline">
                   Change file
                 </button>
               </div>
             ) : (
               <div className="flex flex-col items-center cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                <Upload className="h-12 w-12 text-surface-outline-variant mb-2" />
-                <p className="text-surface-on font-medium">Click to upload or drag and drop</p>
-                <p className="text-sm text-surface-on-variant mt-1">CSV or JSON files up to 50MB</p>
+                <Upload className="h-12 w-12 text-surface-outline-variant dark:text-gray-500 mb-2" />
+                <p className="text-surface-on dark:text-gray-100 font-medium">Click to upload or drag and drop</p>
+                <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">CSV or JSON files up to 50MB</p>
               </div>
             )}
           </div>
 
           {/* Validation Feedback */}
           {uploadStatus === 'ERROR' && (
-             <div className="mt-4 p-4 bg-error/10 text-error rounded-xl flex items-start gap-3">
+             <div className="mt-4 p-4 bg-error/10 dark:bg-error/20 text-error rounded-xl flex items-start gap-3">
                <AlertCircle className="h-5 w-5 flex-shrink-0" />
                <div className="text-sm">
                  <p className="font-bold">Validation Failed</p>
@@ -311,8 +333,8 @@ const DataImport: React.FC<DataImportProps> = ({
 
           {/* Action Bar */}
           <div className="mt-6 flex justify-between items-center">
-            <div className="text-xs text-surface-on-variant">
-              Target: <span className="font-mono bg-surface-container px-1 rounded">production-db (Neon)</span>
+            <div className="text-xs text-surface-on-variant dark:text-gray-400">
+              Target: <span className="font-mono bg-surface-container dark:bg-gray-700 px-1 rounded text-surface-on dark:text-gray-100">production-db (Neon)</span>
             </div>
             <Button 
               onClick={handleStartImport} 
@@ -326,19 +348,19 @@ const DataImport: React.FC<DataImportProps> = ({
 
         {/* Progress Card */}
         {(isProcessing || uploadStatus === 'COMPLETE') && (
-          <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant">
+          <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-surface-on">Import Progress</span>
+              <span className="text-sm font-medium text-surface-on dark:text-gray-100">Import Progress</span>
               <span className="text-sm font-bold text-primary">{progress}%</span>
             </div>
-            <div className="w-full bg-surface-container-high rounded-full h-2.5 overflow-hidden">
+            <div className="w-full bg-surface-container-high dark:bg-gray-700 rounded-full h-2.5 overflow-hidden">
               <div 
                 className="bg-primary h-2.5 rounded-full transition-all duration-300 ease-out" 
                 style={{ width: `${progress}%` }}
               ></div>
             </div>
             {uploadStatus === 'COMPLETE' && (
-              <div className="mt-4 flex items-center gap-2 text-green-700 bg-green-50 p-3 rounded-xl">
+              <div className="mt-4 flex items-center gap-2 text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-3 rounded-xl">
                 <CheckCircle className="h-5 w-5" />
                 <span className="text-sm font-medium">Import completed successfully! Records added to system.</span>
               </div>
@@ -348,13 +370,13 @@ const DataImport: React.FC<DataImportProps> = ({
 
         {/* Danger Zone - Homeowners Only */}
         {importType === 'HOMEOWNERS' && (
-           <div className="bg-error/5 p-6 rounded-3xl border border-error/20">
+           <div className="bg-error/5 dark:bg-error/10 p-6 rounded-3xl border border-error/20 dark:border-error/30">
               <h3 className="text-sm font-bold text-error flex items-center gap-2 mb-2">
                 <AlertCircle className="h-4 w-4" />
                 Danger Zone
               </h3>
               <div className="flex items-center justify-between gap-4">
-                 <p className="text-xs text-error/80">
+                 <p className="text-xs text-error/80 dark:text-error/70">
                     Need to restart? This will permanently delete all homeowner records from the database.
                  </p>
                  <Button 
@@ -374,13 +396,13 @@ const DataImport: React.FC<DataImportProps> = ({
       <div className="lg:col-span-1 space-y-6">
         
         {/* Logs Console */}
-        <div className="bg-surface-on text-surface rounded-3xl overflow-hidden flex flex-col h-64 md:h-auto md:min-h-[300px]">
-          <div className="bg-surface-on-variant/50 p-3 flex items-center gap-2 border-b border-surface-outline/20">
-            <Terminal className="h-4 w-4 text-surface" />
-            <span className="text-xs font-mono tracking-wide text-surface/80">SYSTEM LOGS</span>
+        <div className="bg-surface-on dark:bg-gray-900 text-surface dark:text-gray-100 rounded-3xl overflow-hidden flex flex-col h-64 md:h-auto md:min-h-[300px]">
+          <div className="bg-surface-on-variant/50 dark:bg-gray-800/50 p-3 flex items-center gap-2 border-b border-surface-outline/20 dark:border-gray-700/20">
+            <Terminal className="h-4 w-4 text-surface dark:text-gray-300" />
+            <span className="text-xs font-mono tracking-wide text-surface/80 dark:text-gray-300">SYSTEM LOGS</span>
           </div>
-          <div className="flex-1 p-4 font-mono text-xs space-y-1 overflow-y-auto max-h-[300px]">
-             {logs.length === 0 && <span className="text-surface/30">Waiting for events...</span>}
+          <div className="flex-1 p-4 font-mono text-xs space-y-1 overflow-y-auto max-h-[300px] text-surface dark:text-gray-300">
+             {logs.length === 0 && <span className="text-surface/30 dark:text-gray-600">Waiting for events...</span>}
              {logs.map((log, i) => (
                <div key={i} className="break-all">{log}</div>
              ))}
@@ -391,32 +413,35 @@ const DataImport: React.FC<DataImportProps> = ({
 
         {/* Mini Preview */}
         {previewData.length > 0 && (
-          <div className="bg-surface rounded-3xl border border-surface-outline-variant overflow-hidden">
-            <div className="px-4 py-3 border-b border-surface-outline-variant bg-surface-container">
-              <h3 className="text-sm font-bold text-surface-on">Data Preview</h3>
+          <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden">
+            <div className="px-4 py-3 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700">
+              <h3 className="text-sm font-bold text-surface-on dark:text-gray-100">Data Preview</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs text-left">
-                <thead className="bg-surface-container-high text-surface-on-variant">
+                <thead className="bg-surface-container-high dark:bg-gray-700 text-surface-on-variant dark:text-gray-400">
                   <tr>
                     {headers.slice(0,3).map(h => <th key={h} className="px-3 py-2 font-medium">{h}</th>)}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-surface-outline-variant">
+                <tbody className="divide-y divide-surface-outline-variant dark:divide-gray-700">
                   {previewData.slice(0, 5).map((row, i) => (
                     <tr key={i}>
-                      {headers.slice(0,3).map(h => <td key={h} className="px-3 py-2 text-surface-on truncate max-w-[100px]">{row[h]}</td>)}
+                      {headers.slice(0,3).map(h => <td key={h} className="px-3 py-2 text-surface-on dark:text-gray-100 truncate max-w-[100px]">{row[h]}</td>)}
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <div className="px-3 py-2 text-xs text-center text-surface-outline-variant border-t border-surface-outline-variant">
+              <div className="px-3 py-2 text-xs text-center text-surface-outline-variant dark:text-gray-500 border-t border-surface-outline-variant dark:border-gray-700">
                 Showing 5 of {previewData.length} (preview)
               </div>
             </div>
           </div>
         )}
 
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

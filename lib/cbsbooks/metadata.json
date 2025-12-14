@@ -1,0 +1,7 @@
+{
+  "name": "CBS Books",
+  "description": "A Material 3 Expressive invoicing and expense tracking application for CBS Books featuring PDF generation, CSV imports, and AI-powered financial insights.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

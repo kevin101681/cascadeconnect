@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CBS Books</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Roboto', 'sans-serif'],
+            },
+            colors: {
+              primary: '#4f7882',
+              onPrimary: '#FFFFFF',
+              primaryContainer: '#cbf6ff',
+              onPrimaryContainer: '#001f26',
+              secondary: '#4b6267',
+              onSecondary: '#FFFFFF',
+              secondaryContainer: '#cde7ec',
+              onSecondaryContainer: '#051f23',
+              tertiary: '#555d7d',
+              onTertiary: '#FFFFFF',
+              tertiaryContainer: '#dce1ff',
+              onTertiaryContainer: '#121a37',
+              surface: '#fbfcfd',
+              onSurface: '#191c1d',
+              surfaceContainer: '#eeeff1',
+              surfaceContainerHigh: '#e2e3e5',
+              outline: '#70787c',
+            },
+            borderRadius: {
+              'xl': '1rem',
+              '2xl': '1.5rem',
+              '3xl': '2rem',
+            }
+          },
+        },
+      }
+    </script>
+    <style>
+      body {
+        background-color: #fbfcfd;
+        color: #191c1d;
+        /* Hide scrollbars */
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+      }
+      /* Hide scrollbar for webkit */
+      ::-webkit-scrollbar {
+        display: none;
+      }
+
+      /* Hide number input arrows */
+      input::-webkit-outer-spin-button,
+      input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      input[type=number] {
+        -moz-appearance: textfield;
+      }
+      /* Hide datalist dropdown arrow */
+      input::-webkit-calendar-picker-indicator {
+        display: none !important;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
+    "jspdf": "https://aistudiocdn.com/jspdf@^3.0.4",
+    "pg": "https://aistudiocdn.com/pg@^8.16.3",
+    "@netlify/functions": "https://aistudiocdn.com/@netlify/functions@^5.1.0",
+    "vite": "https://aistudiocdn.com/vite@^7.2.7",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.2",
+    "nodemailer": "https://aistudiocdn.com/nodemailer@^7.0.11"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

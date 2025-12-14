@@ -10,12 +10,43 @@
 }
 
 body {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Google Sans Flex', 'Outfit', 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
   min-height: 100vh;
+}
+
+/* BlueTag CSS Variables - matching original BlueTag config */
+:root {
+  --bg-color: #fdfcff;
+  /* Default Blue Fallback */
+  --color-primary: 96 165 250; 
+  --color-primary-container: 219 234 254; 
+  --color-on-primary-container: 30 58 138; 
+}
+
+:root.dark {
+  --bg-color: #020617;
+}
+
+body { 
+  background-color: var(--bg-color); 
+}
+
+/* Hide scrollbar globally (BlueTag style) */
+* {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+*::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+}
+
+/* Fix for CBS Books FAB positioning - ensure fixed elements position relative to viewport */
+[data-cbs-books] [class*="fixed"] {
+    position: fixed !important;
 }
 

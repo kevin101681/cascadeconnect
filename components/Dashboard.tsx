@@ -1,18 +1,27 @@
 
-import React, { useState, useEffect } from 'react';
-import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task } from '../types';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import Papa from 'papaparse';
+import * as XLSX from 'xlsx';
+import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor } from '../types';
+import { ClaimMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Sparkles, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2 } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Sparkles, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info } from 'lucide-react';
 import Button from './Button';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
+import PDFViewer from './PDFViewer';
+import ClaimInlineEditor from './ClaimInlineEditor';
+import NewClaimForm from './NewClaimForm';
+import PunchListApp from './PunchListApp';
 
 interface DashboardProps {
   claims: Claim[];
   userRole: UserRole;
-  onSelectClaim: (claim: Claim) => void;
+  onSelectClaim: (claim: Claim, startInEditMode?: boolean) => void;
   onNewClaim: (homeownerId?: string) => void;
+  onCreateClaim?: (data: Partial<Claim>) => void;
   homeowners: Homeowner[];
   activeHomeowner: Homeowner;
   employees: InternalEmployee[];
@@ -31,6 +40,20 @@ interface DashboardProps {
   messages: MessageThread[];
   onSendMessage: (threadId: string, content: string) => void;
   onCreateThread: (homeownerId: string, subject: string, content: string) => void;
+  onUpdateThread?: (threadId: string, updates: Partial<MessageThread>) => void;
+  onAddInternalNote?: (claimId: string, noteText: string, userName?: string) => Promise<void>;
+  onTrackClaimMessage?: (claimId: string, messageData: {
+    type: 'HOMEOWNER' | 'SUBCONTRACTOR';
+    threadId?: string;
+    subject: string;
+    recipient: string;
+    recipientEmail: string;
+    content: string;
+    senderName: string;
+  }) => void;
+  onUpdateClaim?: (claim: Claim) => void;
+  contractors?: Contractor[];
+  claimMessages?: ClaimMessage[];
 
   // Builder Groups for Dropdown
   builderGroups?: BuilderGroup[];
@@ -44,7 +67,7 @@ interface DashboardProps {
   onAddTask: (task: Partial<Task>) => void;
   onToggleTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
-  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS') => void;
+  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS' | 'ANALYTICS') => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -52,6 +75,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   userRole, 
   onSelectClaim, 
   onNewClaim,
+  onCreateClaim,
   homeowners,
   activeHomeowner,
   employees,
@@ -64,6 +88,12 @@ const Dashboard: React.FC<DashboardProps> = ({
   messages,
   onSendMessage,
   onCreateThread,
+  onUpdateThread,
+  onAddInternalNote,
+  onTrackClaimMessage,
+  onUpdateClaim,
+  contractors = [],
+  claimMessages = [],
   builderGroups = [],
   initialTab = 'CLAIMS',
   initialThreadId = null,
@@ -75,6 +105,19 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
+  
+  // PDF Viewer state
+  const [selectedDocument, setSelectedDocument] = useState<HomeownerDocument | null>(null);
+  const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false);
+  
+  // Description expand popup state
+  const [expandedDescription, setExpandedDescription] = useState<Claim | null>(null);
+  
+  // Expanded claim editor state
+  const [expandedClaimId, setExpandedClaimId] = useState<string | null>(null);
+  
+  // Schedule expansion state
+  const [isScheduleExpanded, setIsScheduleExpanded] = useState(false);
   
   // View State for Dashboard (Claims vs Messages vs Tasks)
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS'>(initialTab);
@@ -106,15 +149,81 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [editBuilderId, setEditBuilderId] = useState('');
   const [editJobName, setEditJobName] = useState(''); // Replaces Lot/Project
   const [editClosingDate, setEditClosingDate] = useState('');
+  
+  // Sub sheet uploader state
+  const [editSubFile, setEditSubFile] = useState<File | null>(null);
+  const [editParsedSubs, setEditParsedSubs] = useState<any[]>([]);
+  const [isParsingSubs, setIsParsingSubs] = useState(false);
 
   // Messaging State
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(initialThreadId);
   const [replyContent, setReplyContent] = useState('');
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
+  const [showSubListModal, setShowSubListModal] = useState(false);
   const [newMessageSubject, setNewMessageSubject] = useState('');
   const [newMessageContent, setNewMessageContent] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [replyExpanded, setReplyExpanded] = useState(false);
+
+  // Mark thread as read when selected
+  useEffect(() => {
+    if (selectedThreadId && onUpdateThread) {
+      const thread = messages.find(t => t.id === selectedThreadId);
+      if (thread && !thread.isRead) {
+        // Mark thread as read
+        onUpdateThread(selectedThreadId, { isRead: true });
+      }
+    }
+  }, [selectedThreadId, messages, onUpdateThread]);
+
+  // New Claim Modal State
+  const [showNewClaimModal, setShowNewClaimModal] = useState(false);
+
+  // New Task Modal State
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskAssignee, setNewTaskAssignee] = useState(currentUser.id);
+  const [newTaskNotes, setNewTaskNotes] = useState('');
+  const [selectedClaimIds, setSelectedClaimIds] = useState<string[]>([]);
+
+  // Punch List App State
+  const [showPunchListApp, setShowPunchListApp] = useState(false);
+
+  // Debug: Log modal state changes
+  useEffect(() => {
+    console.log('showNewClaimModal changed to:', showNewClaimModal);
+  }, [showNewClaimModal]);
+
+  useEffect(() => {
+    console.log('showNewTaskModal changed to:', showNewTaskModal);
+  }, [showNewTaskModal]);
+
+  // Lock body scroll when any modal is open
+  useEffect(() => {
+    const isAnyModalOpen = showNewTaskModal || showNewMessageModal || showNewClaimModal || 
+                          showDocsModal || showInviteModal || showEditHomeownerModal || 
+                          showSubListModal || showPunchListApp || isPDFViewerOpen;
+    
+    if (isAnyModalOpen) {
+      // Save current scroll position
+      const scrollY = window.scrollY;
+      // Lock body scroll
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+      
+      return () => {
+        // Restore scroll position when modal closes
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        document.body.style.overflow = '';
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [showNewTaskModal, showNewMessageModal, showNewClaimModal, showDocsModal, 
+      showInviteModal, showEditHomeownerModal, showSubListModal, showPunchListApp, isPDFViewerOpen]);
 
   // Sync state when props change
   useEffect(() => {
@@ -129,6 +238,163 @@ const Dashboard: React.FC<DashboardProps> = ({
   const effectiveHomeowner = (isAdmin || isBuilder) ? targetHomeowner : activeHomeowner;
 
   // Sync state when editing starts
+  const parseEditSubcontractorFile = (file: File) => {
+    setIsParsingSubs(true);
+    setEditParsedSubs([]);
+
+    // Check if it's a CSV file
+    const isCSV = file.type === 'text/csv' || 
+                  file.type === 'application/vnd.ms-excel' ||
+                  file.name.toLowerCase().endsWith('.csv');
+    
+    // Check if it's an Excel file
+    const isExcel = file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+                    file.type === 'application/vnd.ms-excel' ||
+                    file.name.toLowerCase().endsWith('.xlsx') ||
+                    file.name.toLowerCase().endsWith('.xls');
+
+    if (isCSV) {
+      // Parse CSV file directly
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        dynamicTyping: false,
+        complete: (results) => {
+          if (results.errors.length > 0) {
+            console.error('CSV parsing errors:', results.errors);
+            const criticalErrors = results.errors.filter(e => e.type !== 'Quotes' && e.type !== 'Delimiter');
+            if (criticalErrors.length > 0) {
+              alert(`Error parsing CSV file: ${criticalErrors[0].message || 'Please check the file format.'}`);
+              setIsParsingSubs(false);
+              return;
+            }
+          }
+          if (results.data && results.data.length > 0) {
+            setEditParsedSubs(results.data);
+            setIsParsingSubs(false);
+          } else {
+            alert('No data found in CSV file. Please ensure the file contains rows of data.');
+            setIsParsingSubs(false);
+          }
+        },
+        error: (error) => {
+          console.error('CSV parsing error:', error);
+          alert(`Error reading CSV file: ${error.message || 'Please try again.'}`);
+          setIsParsingSubs(false);
+        }
+      });
+    } else if (isExcel) {
+      // Parse Excel file using xlsx library
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = e.target?.result;
+          if (!data) {
+            alert('Error reading Excel file. Please try again.');
+            setIsParsingSubs(false);
+            return;
+          }
+
+          // Read the workbook
+          const workbook = XLSX.read(data, { type: 'binary' });
+          
+          // Get the first sheet
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          
+          // Convert to JSON with header row
+          const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
+            header: 1,
+            defval: '',
+            raw: false
+          });
+
+          if (jsonData.length === 0) {
+            alert('No data found in Excel file. Please ensure the file contains rows of data.');
+            setIsParsingSubs(false);
+            return;
+          }
+
+          // First row is headers
+          const headers = jsonData[0] as string[];
+          if (!headers || headers.length === 0) {
+            alert('No headers found in Excel file. Please ensure the first row contains column names.');
+            setIsParsingSubs(false);
+            return;
+          }
+
+          // Convert to array of objects
+          const rows = jsonData.slice(1) as any[][];
+          const parsedData = rows
+            .filter(row => row.some(cell => cell !== '' && cell !== null && cell !== undefined))
+            .map(row => {
+              const obj: any = {};
+              headers.forEach((header, index) => {
+                obj[header] = row[index] || '';
+              });
+              return obj;
+            });
+
+          if (parsedData.length === 0) {
+            alert('No data rows found in Excel file. Please ensure the file contains data rows.');
+            setIsParsingSubs(false);
+            return;
+          }
+
+          setEditParsedSubs(parsedData);
+          setIsParsingSubs(false);
+        } catch (error) {
+          console.error('Error parsing Excel file:', error);
+          alert(`Error parsing Excel file: ${error instanceof Error ? error.message : 'Please ensure the file is a valid Excel file.'}`);
+          setIsParsingSubs(false);
+        }
+      };
+      reader.onerror = () => {
+        alert('Error reading Excel file. Please try again.');
+        setIsParsingSubs(false);
+      };
+      reader.readAsBinaryString(file);
+    } else {
+      // Try to parse as CSV anyway
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        dynamicTyping: false,
+        complete: (results) => {
+          if (results.errors.length > 0) {
+            console.error('File parsing errors:', results.errors);
+            const criticalErrors = results.errors.filter(e => e.type !== 'Quotes' && e.type !== 'Delimiter');
+            if (criticalErrors.length > 0) {
+              alert(`Error parsing file: ${criticalErrors[0].message || 'Please ensure the file is a valid CSV or Excel file.'}`);
+              setIsParsingSubs(false);
+              return;
+            }
+          }
+          if (results.data && results.data.length > 0) {
+            setEditParsedSubs(results.data);
+            setIsParsingSubs(false);
+          } else {
+            alert('No data found in file. Please ensure the file contains rows of data.');
+            setIsParsingSubs(false);
+          }
+        },
+        error: (error) => {
+          console.error('File parsing error:', error);
+          alert(`Error reading file: ${error.message || 'Please ensure the file is a valid CSV or Excel file.'}`);
+          setIsParsingSubs(false);
+        }
+      });
+    }
+  };
+
+  const handleEditSubFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setEditSubFile(selectedFile);
+      parseEditSubcontractorFile(selectedFile);
+    }
+  };
+
   const handleOpenEditHomeowner = () => {
     if (!targetHomeowner) return;
     setEditName(targetHomeowner.name);
@@ -144,6 +410,12 @@ const Dashboard: React.FC<DashboardProps> = ({
     setEditBuilderId(targetHomeowner.builderId || '');
     setEditJobName(targetHomeowner.jobName || '');
     setEditClosingDate(targetHomeowner.closingDate ? new Date(targetHomeowner.closingDate).toISOString().split('T')[0] : '');
+    
+    // Reset sub file state
+    setEditSubFile(null);
+    setEditParsedSubs(targetHomeowner.subcontractorList || []);
+    setIsParsingSubs(false);
+    
     setShowEditHomeownerModal(true);
   };
 
@@ -166,7 +438,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             builder: selectedGroup ? selectedGroup.name : targetHomeowner.builder,
             builderId: editBuilderId,
             jobName: editJobName,
-            closingDate: editClosingDate ? new Date(editClosingDate) : targetHomeowner.closingDate
+            closingDate: editClosingDate ? new Date(editClosingDate) : targetHomeowner.closingDate,
+            subcontractorList: editParsedSubs.length > 0 ? editParsedSubs : targetHomeowner.subcontractorList
         });
         setShowEditHomeownerModal(false);
     }
@@ -202,6 +475,14 @@ const Dashboard: React.FC<DashboardProps> = ({
   const myTasks = tasks.filter(t => t.assignedToId === currentUser.id && !t.isCompleted);
 
   const selectedThread = displayThreads.find(t => t.id === selectedThreadId);
+
+  // Animation state for homeowner card
+  const [homeownerCardKey, setHomeownerCardKey] = useState(0);
+  useEffect(() => {
+    if (effectiveHomeowner) {
+      setHomeownerCardKey(prev => prev + 1);
+    }
+  }, [effectiveHomeowner?.id]);
 
   const handleDraftInvite = async () => {
     if (!inviteName) return;
@@ -282,6 +563,22 @@ const Dashboard: React.FC<DashboardProps> = ({
           replyToId: thread.id
         });
       }
+
+      // Track claim-related message if message is from admin and thread is claim-related
+      if (isAdmin && thread && onTrackClaimMessage) {
+        const associatedClaim = claims.find(c => c.title === thread.subject);
+        if (associatedClaim && effectiveHomeowner) {
+          onTrackClaimMessage(associatedClaim.id, {
+            type: 'HOMEOWNER',
+            threadId: thread.id,
+            subject: thread.subject,
+            recipient: effectiveHomeowner.name,
+            recipientEmail: effectiveHomeowner.email,
+            content: replyContent,
+            senderName: currentUser.name
+          });
+        }
+      }
       
       setReplyContent('');
       setReplyExpanded(false);
@@ -318,6 +615,21 @@ const Dashboard: React.FC<DashboardProps> = ({
       fromRole: userRole
     });
 
+    // Track claim-related message if thread is from admin and claim-related
+    if (isAdmin && onTrackClaimMessage && effectiveHomeowner) {
+      const associatedClaim = claims.find(c => c.title === newMessageSubject);
+      if (associatedClaim) {
+        onTrackClaimMessage(associatedClaim.id, {
+          type: 'HOMEOWNER',
+          subject: newMessageSubject,
+          recipient: effectiveHomeowner.name,
+          recipientEmail: effectiveHomeowner.email,
+          content: newMessageContent,
+          senderName: currentUser.name
+        });
+      }
+    }
+
     setIsSendingMessage(false);
     setShowNewMessageModal(false);
     setNewMessageSubject('');
@@ -327,56 +639,138 @@ const Dashboard: React.FC<DashboardProps> = ({
   // --- Render Helpers ---
 
   const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false) => (
-    <div className="bg-surface rounded-3xl border border-surface-outline-variant overflow-hidden mb-6 last:mb-0">
-      <div className="px-6 py-6 border-b border-surface-outline-variant flex justify-between items-center bg-surface-container/30">
-        <h3 className={`text-lg font-bold flex items-center gap-2 ${isClosed ? 'text-surface-on-variant' : 'text-surface-on'}`}>
+    <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0">
+      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center bg-surface-container/30 dark:bg-gray-700/30">
+        <h3 className={`text-lg font-bold flex items-center gap-2 ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
           {isClosed ? <Archive className="h-5 w-5 opacity-70"/> : <ClipboardList className="h-5 w-5 text-primary"/>}
           {title}
+          <span className="text-xs text-surface-on-variant bg-surface-container px-2 py-1 rounded border border-surface-outline-variant/50">
+            {groupClaims.length}
+          </span>
         </h3>
-        <span className="text-xs text-surface-on-variant bg-surface-container px-2 py-1 rounded border border-surface-outline-variant/50">
-          {groupClaims.length}
-        </span>
       </div>
-      <ul className="divide-y divide-surface-outline-variant">
+      <ul className="divide-y divide-surface-outline-variant dark:divide-gray-700">
         {groupClaims.length === 0 ? (
-          <li className="p-8 text-center text-surface-on-variant text-sm italic">
+          <li className="p-8 text-center text-surface-on-variant dark:text-gray-400 text-sm italic">
             {emptyMsg}
           </li>
         ) : (
-          groupClaims.map((claim) => (
-            <li key={claim.id} className="hover:bg-surface-container-high transition-colors">
-              <button 
-                onClick={() => onSelectClaim(claim)}
-                className="w-full text-left px-6 py-4 flex items-center justify-between group"
+          groupClaims.map((claim) => {
+            const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
+            
+            return (
+              <li 
+                key={claim.id} 
+                className="hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors"
               >
-                <div className={isClosed ? 'opacity-70' : ''}>
-                  <div className="flex items-center space-x-3 mb-1">
-                    <span className="text-xs font-bold text-primary tracking-wide">#{claim.id}</span>
-                    <StatusBadge status={claim.status} />
-                  </div>
-                  <h4 className="text-lg font-normal text-surface-on group-hover:text-primary transition-colors">
-                    {claim.title}
-                  </h4>
-                  <div className="mt-1 flex items-center text-sm text-surface-on-variant space-x-3">
-                    <span>{new Date(claim.dateSubmitted).toLocaleDateString()}</span>
-                    <span className="w-1 h-1 bg-surface-outline rounded-full"></span>
-                    <span>{claim.category}</span>
-                    {/* Only show homeowner name if viewing all (admin view without filter) */}
+                <div 
+                  className="w-full px-6 py-3 group relative cursor-pointer"
+                  onClick={(e) => {
+                    setExpandedClaimId(expandedClaimId === claim.id ? null : claim.id);
+                  }}
+                >
+                  <div 
+                    className={`flex flex-wrap items-center gap-2 ${isClosed ? 'opacity-70' : ''}`}
+                  >
+                    {/* Claim # */}
+                    <div className="flex justify-start items-center">
+                      <span className="text-xs font-bold text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap text-left">
+                        #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
+                      </span>
+                    </div>
+                    {/* Status */}
+                    <div>
+                      <StatusBadge status={claim.status} />
+                    </div>
+                    {/* Title */}
+                    <div className="min-w-0 flex items-center justify-start max-w-[200px]">
+                      <h4 className="text-xs font-medium text-surface-on dark:text-gray-100 truncate bg-surface-container-high dark:bg-gray-700 px-3 py-1 rounded-full text-left w-full border border-surface-outline-variant/50 dark:border-gray-600">
+                        {claim.title}
+                      </h4>
+                    </div>
+                    {/* Classification */}
+                    <div className="flex justify-start items-center w-fit min-w-0">
+                      <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                        {claim.classification}
+                      </span>
+                    </div>
+                    {/* Homeowner Name */}
                     {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                      <>
-                        <span className="w-1 h-1 bg-surface-outline rounded-full"></span>
-                        <span className="flex items-center gap-1">
-                          <Building2 className="h-3 w-3" />
-                          {claim.homeownerName}
+                      <div className="flex justify-start items-center">
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                          <Building2 className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{claim.homeownerName}</span>
                         </span>
-                      </>
+                      </div>
                     )}
+                    {/* Contractor */}
+                    <div className="flex justify-start items-center">
+                      {claim.contractorName ? (
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                          <HardHat className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{claim.contractorName}</span>
+                        </span>
+                      ) : null}
+                    </div>
+                    {/* Scheduled Date */}
+                    <div className="flex justify-start items-center min-w-0">
+                      {scheduledDate ? (
+                        <span className="text-xs text-green-600 dark:text-green-400 inline-flex items-center gap-1 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full border border-green-200 dark:border-green-800 whitespace-nowrap text-left">
+                          <Calendar className="h-3 w-3 flex-shrink-0" />
+                          <span>{new Date(scheduledDate.date).toLocaleDateString()}</span>
+                        </span>
+                      ) : null}
+                    </div>
+                    {/* Date Submitted */}
+                    <div className="flex justify-start items-center">
+                      <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                        {new Date(claim.dateSubmitted).toLocaleDateString()}
+                      </span>
+                    </div>
+                    {/* Date Evaluated */}
+                    <div className="flex justify-start items-center">
+                      {claim.dateEvaluated ? (
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                          Eval: {new Date(claim.dateEvaluated).toLocaleDateString()}
+                        </span>
+                      ) : null}
+                    </div>
+                    {/* Attachments count */}
+                    <div className="flex justify-start items-center">
+                      {claim.attachments && claim.attachments.length > 0 ? (
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                          <Paperclip className="h-3 w-3 flex-shrink-0" />
+                          {claim.attachments.length}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
-                <ArrowRight className="h-5 w-5 text-surface-outline-variant group-hover:text-primary" />
-              </button>
-            </li>
-          ))
+                
+                {/* Inline Expandable Editor */}
+                {expandedClaimId === claim.id && onUpdateClaim && (
+                  <div className="border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
+                    <ClaimInlineEditor
+                      claim={claim}
+                      onUpdateClaim={onUpdateClaim}
+                      contractors={contractors}
+                      currentUser={currentUser}
+                      userRole={userRole}
+                      onAddInternalNote={onAddInternalNote}
+                      claimMessages={claimMessages.filter(m => m.claimId === claim.id)}
+                      onTrackClaimMessage={onTrackClaimMessage}
+                      onSendMessage={() => {
+                        if (onSelectClaim) {
+                          onSelectClaim(claim, false);
+                        }
+                      }}
+                      onNavigate={onNavigate}
+                    />
+                  </div>
+                )}
+              </li>
+            );
+          })
         )}
       </ul>
     </div>
@@ -387,84 +781,42 @@ const Dashboard: React.FC<DashboardProps> = ({
     const closedClaims = claimsList.filter(c => c.status === ClaimStatus.COMPLETED);
 
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div>
         {/* Main List */}
-        <div className="lg:col-span-2">
+        <div>
           {renderClaimGroup('Active Claims', openClaims, 'No active claims.')}
           {renderClaimGroup('Closed Claims', closedClaims, 'No closed claims history.', true)}
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          
-          {/* Upcoming Schedule Card */}
-          <div className="bg-secondary-container p-6 rounded-3xl text-secondary-on-container">
-            <h3 className="font-medium text-lg mb-4 flex items-center">
-              <Calendar className="h-5 w-5 mr-3" />
-              Upcoming Schedule
-            </h3>
-            <div className="space-y-3">
-              {claimsList
-                .filter(c => c.status === ClaimStatus.SCHEDULED)
-                .slice(0, 3)
-                .map(c => {
-                  const acceptedDate = c.proposedDates.find(d => d.status === 'ACCEPTED');
-                  return (
-                    <div key={c.id} className="bg-surface/50 p-4 rounded-xl text-sm backdrop-blur-sm border border-white/20">
-                      <p className="font-medium">{c.title}</p>
-                      <p className="opacity-80 mt-1">
-                        {acceptedDate ? new Date(acceptedDate.date).toLocaleDateString() : 'N/A'} - {acceptedDate?.timeSlot}
-                      </p>
-                    </div>
-                  )
-                })}
-              {claimsList.filter(c => c.status === ClaimStatus.SCHEDULED).length === 0 && (
-                <p className="text-sm opacity-70">No confirmed appointments.</p>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     );
   };
 
   const renderMessagesTab = () => (
-    <div className="bg-surface rounded-3xl border border-surface-outline-variant overflow-hidden flex flex-col md:flex-row h-[700px] shadow-elevation-1">
+    <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden flex flex-col md:flex-row h-[700px] shadow-elevation-1">
        {/* Left Column: Inbox List (Gmail Style) */}
-       <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant flex flex-col bg-surface ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
-          <div className="p-4 border-b border-surface-outline-variant bg-surface flex justify-between items-center h-16 shrink-0">
-            <h3 className="text-lg font-bold text-surface-on flex items-center gap-2">
+       <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
+          <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-between items-center h-16 shrink-0">
+            <h3 className="text-lg font-bold text-surface-on dark:text-gray-100 flex items-center gap-2">
               Inbox
-              <span className="text-xs font-normal text-surface-on-variant bg-surface-container px-2 py-0.5 rounded-full">{displayThreads.filter(t => !t.isRead).length} new</span>
+              <span className="text-xs font-normal text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700 px-2 py-0.5 rounded-full">{displayThreads.filter(t => !t.isRead).length} new</span>
             </h3>
-            {/* Builders Read Only */}
-            {!isBuilder && (
-              <Button 
-                variant="tonal" 
-                icon={<Plus className="h-4 w-4"/>} 
-                className="!h-8 !px-3 text-xs"
-                onClick={() => setShowNewMessageModal(true)}
-              >
-                Compose
-              </Button>
-            )}
           </div>
           
-          <div className="p-2 border-b border-surface-outline-variant/50">
+          <div className="p-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-500" />
                 <input 
                   type="text" 
                   placeholder="Search mail..." 
-                  className="w-full bg-surface-container rounded-lg pl-9 pr-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant"
+                  className="w-full bg-surface-container dark:bg-gray-700 rounded-lg pl-9 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant dark:placeholder-gray-500"
                 />
              </div>
           </div>
 
           <div className="flex-1 overflow-y-auto">
              {displayThreads.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant gap-2">
-                  <Mail className="h-8 w-8 opacity-20" />
+                <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
+                  <Mail className="h-8 w-8 opacity-20 dark:opacity-40 text-surface-on dark:text-gray-400" />
                   <span className="text-sm">No messages found.</span>
                 </div>
              ) : (
@@ -477,28 +829,28 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <button
                       key={thread.id}
                       onClick={() => setSelectedThreadId(thread.id)}
-                      className={`w-full text-left p-4 border-b border-surface-outline-variant/30 hover:bg-surface-container transition-colors group relative ${
-                        isSelected ? 'bg-primary-container/20' : isUnread ? 'bg-surface' : 'bg-surface-container/5'
+                      className={`w-full text-left p-4 border-b border-surface-outline-variant/30 dark:border-gray-700/30 hover:bg-surface-container dark:hover:bg-gray-700 transition-colors group relative ${
+                        isSelected ? 'bg-primary-container/20 dark:bg-primary/20' : isUnread ? 'bg-surface dark:bg-gray-800' : 'bg-surface-container/5 dark:bg-gray-700/5'
                       }`}
                     >
                        {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>}
                        
                        <div className="flex justify-between items-baseline mb-1">
-                          <span className={`text-sm truncate pr-2 ${isUnread ? 'font-bold text-surface-on' : 'font-medium text-surface-on'}`}>
+                          <span className={`text-sm truncate pr-2 ${isUnread ? 'font-bold text-surface-on dark:text-gray-100' : 'font-medium text-surface-on dark:text-gray-200'}`}>
                             {/* In a real email client, this shows the other party. Simulating roughly here. */}
                             {isAdmin ? thread.participants.filter(p => p !== currentUser.name).join(', ') || 'Me' : thread.participants.filter(p => p !== activeHomeowner.name).join(', ') || 'Me'}
                           </span>
-                          <span className={`text-xs whitespace-nowrap ${isUnread ? 'text-primary font-bold' : 'text-surface-on-variant'}`}>
+                          <span className={`text-xs whitespace-nowrap ${isUnread ? 'text-primary font-bold' : 'text-surface-on-variant dark:text-gray-400'}`}>
                             {new Date(thread.lastMessageAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                           </span>
                        </div>
                        
-                       <div className={`text-sm mb-1 truncate ${isUnread ? 'font-bold text-surface-on' : 'text-surface-on-variant'}`}>
+                       <div className={`text-sm mb-1 truncate ${isUnread ? 'font-bold text-surface-on dark:text-gray-100' : 'text-surface-on-variant dark:text-gray-400'}`}>
                          {thread.subject}
                        </div>
                        
-                       <div className="text-xs text-surface-on-variant/80 truncate font-normal">
-                         <span className="text-surface-outline-variant mr-1">
+                       <div className="text-xs text-surface-on-variant/80 dark:text-gray-500 truncate font-normal">
+                         <span className="text-surface-outline-variant dark:text-gray-600 mr-1">
                            {lastMsg.senderName === (isAdmin ? currentUser.name : activeHomeowner.name) ? 'You:' : ''}
                          </span>
                          {lastMsg.content}
@@ -511,25 +863,25 @@ const Dashboard: React.FC<DashboardProps> = ({
        </div>
 
        {/* Right Column: Email Thread View */}
-       <div className={`flex-1 flex flex-col bg-white ${!selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
+       <div className={`flex-1 flex flex-col bg-white dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           {selectedThread ? (
             <>
                {/* Thread Header Toolbar */}
-               <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant flex items-center justify-between bg-surface sticky top-0 z-10">
+               <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface dark:bg-gray-800 sticky top-0 z-10">
                   <div className="flex items-center gap-4">
-                     <button onClick={() => setSelectedThreadId(null)} className="md:hidden p-2 -ml-2 text-surface-on-variant hover:bg-surface-container rounded-full">
+                     <button onClick={() => setSelectedThreadId(null)} className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full">
                         <ChevronLeft className="h-5 w-5" />
                      </button>
                      <div className="flex gap-2">
-                        <button className="p-2 text-surface-on-variant hover:bg-surface-container rounded-full" title="Archive"><Archive className="h-4 w-4"/></button>
-                        <button className="p-2 text-surface-on-variant hover:bg-surface-container rounded-full" title="Delete"><Trash2 className="h-4 w-4"/></button>
-                        <div className="w-px h-6 bg-surface-outline-variant/50 mx-1 self-center"></div>
-                        <button className="p-2 text-surface-on-variant hover:bg-surface-container rounded-full" title="Mark as unread"><Mail className="h-4 w-4"/></button>
+                        <button className="p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full" title="Archive"><Archive className="h-4 w-4"/></button>
+                        <button className="p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full" title="Delete"><Trash2 className="h-4 w-4"/></button>
+                        <div className="w-px h-6 bg-surface-outline-variant/50 dark:bg-gray-600/50 mx-1 self-center"></div>
+                        <button className="p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full" title="Mark as unread"><Mail className="h-4 w-4"/></button>
                      </div>
                   </div>
-                  <div className="flex gap-2 text-surface-on-variant">
-                     <button className="p-2 hover:bg-surface-container rounded-full"><ChevronLeft className="h-4 w-4"/></button>
-                     <button className="p-2 hover:bg-surface-container rounded-full"><ChevronRight className="h-4 w-4"/></button>
+                  <div className="flex gap-2 text-surface-on-variant dark:text-gray-400">
+                     <button className="p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"><ChevronLeft className="h-4 w-4"/></button>
+                     <button className="p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"><ChevronRight className="h-4 w-4"/></button>
                   </div>
                </div>
 
@@ -538,8 +890,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                  <div className="px-8 py-6">
                     {/* Subject Line */}
                     <div className="flex items-start justify-between mb-8">
-                       <h2 className="text-2xl font-normal text-surface-on leading-tight">{selectedThread.subject}</h2>
-                       <button className="p-2 -mr-2 text-surface-outline-variant hover:text-yellow-500 rounded-full">
+                       <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 leading-tight">{selectedThread.subject}</h2>
+                       <button className="p-2 -mr-2 text-surface-outline-variant dark:text-gray-500 hover:text-yellow-500 rounded-full">
                          <Star className="h-5 w-5" />
                        </button>
                     </div>
@@ -561,25 +913,25 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 <div className="flex-1 min-w-0">
                                    <div className="flex items-baseline justify-between">
                                       <div className="flex items-baseline gap-2">
-                                        <span className="font-bold text-surface-on text-sm">{msg.senderName}</span>
-                                        <span className="text-xs text-surface-on-variant">&lt;{isMe ? 'me' : msg.senderRole.toLowerCase()}&gt;</span>
+                                        <span className="font-bold text-surface-on dark:text-gray-100 text-sm">{msg.senderName}</span>
+                                        <span className="text-xs text-surface-on-variant dark:text-gray-400">&lt;{isMe ? 'me' : msg.senderRole.toLowerCase()}&gt;</span>
                                       </div>
-                                      <div className="text-xs text-surface-on-variant group-hover:text-surface-on transition-colors">
+                                      <div className="text-xs text-surface-on-variant dark:text-gray-400 group-hover:text-surface-on dark:group-hover:text-gray-100 transition-colors">
                                          {new Date(msg.timestamp).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                                       </div>
                                    </div>
-                                   <div className="text-xs text-surface-on-variant">to {isMe ? (effectiveHomeowner?.name || 'Homeowner') : 'Me'}</div>
+                                   <div className="text-xs text-surface-on-variant dark:text-gray-400">to {isMe ? (effectiveHomeowner?.name || 'Homeowner') : 'Me'}</div>
                                 </div>
                              </div>
                              
                              {/* Message Body - Full Width Email Style */}
-                             <div className="pl-14 text-sm text-surface-on/90 whitespace-pre-wrap leading-relaxed">
+                             <div className="pl-14 text-sm text-surface-on/90 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
                                 {msg.content}
                              </div>
                              
                              {/* Divider if not last */}
                              {idx < selectedThread.messages.length - 1 && (
-                               <div className="mt-8 border-b border-surface-outline-variant/30 ml-14"></div>
+                               <div className="mt-8 border-b border-surface-outline-variant/30 dark:border-gray-700/30 ml-14"></div>
                              )}
                           </div>
                         );
@@ -592,10 +944,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                </div>
 
                {/* Reply Box (Sticky Bottom or Inline at end) */}
-               <div className="p-6 border-t border-surface-outline-variant bg-surface sticky bottom-0 z-10">
+               <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 sticky bottom-0 z-10">
                  {/* Builders Read-Only: Cannot Reply */}
                  {isBuilder ? (
-                   <div className="text-center text-sm text-surface-on-variant bg-surface-container p-4 rounded-xl border border-surface-outline-variant border-dashed">
+                   <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600 border-dashed">
                      <LockIcon className="h-4 w-4 mx-auto mb-2 opacity-50"/>
                      Read-only access. You cannot reply to threads.
                    </div>
@@ -603,36 +955,35 @@ const Dashboard: React.FC<DashboardProps> = ({
                     !replyExpanded ? (
                        <button 
                          onClick={() => setReplyExpanded(true)}
-                         className="w-full flex items-center gap-3 p-4 rounded-full border border-surface-outline-variant text-surface-on-variant hover:shadow-elevation-1 hover:bg-surface transition-all group"
+                         className="w-full flex items-center gap-3 p-4 rounded-full border border-surface-outline-variant dark:border-gray-600 text-surface-on-variant dark:text-gray-400 hover:shadow-elevation-1 hover:bg-surface dark:hover:bg-gray-700 transition-all group"
                        >
-                          <div className="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center">
-                            <Reply className="h-4 w-4 text-surface-outline" />
+                          <div className="w-8 h-8 rounded-full bg-surface-container dark:bg-gray-700 flex items-center justify-center">
+                            <Reply className="h-4 w-4 text-surface-outline dark:text-gray-500" />
                           </div>
-                          <span className="text-sm font-medium group-hover:text-surface-on">Reply to this conversation...</span>
+                          <span className="text-sm font-medium group-hover:text-surface-on dark:group-hover:text-gray-100">Reply to this conversation...</span>
                        </button>
                     ) : (
-                      <div className="bg-surface rounded-xl shadow-elevation-2 border border-surface-outline-variant overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200">
-                         <div className="flex items-center gap-2 p-3 border-b border-surface-outline-variant/50 bg-surface-container/20">
-                            <CornerUpLeft className="h-4 w-4 text-surface-outline-variant"/>
-                            <span className="text-xs font-medium text-surface-on-variant">Replying to {selectedThread.participants.filter(p => p !== (isAdmin ? currentUser.name : activeHomeowner.name)).join(', ')}</span>
+                      <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200">
+                         <div className="flex items-center gap-2 p-3 border-b border-surface-outline-variant/50 dark:border-gray-700/50 bg-surface-container/20 dark:bg-gray-700/20">
+                            <CornerUpLeft className="h-4 w-4 text-surface-outline-variant dark:text-gray-500"/>
+                            <span className="text-xs font-medium text-surface-on-variant dark:text-gray-400">Replying to {selectedThread.participants.filter(p => p !== (isAdmin ? currentUser.name : activeHomeowner.name)).join(', ')}</span>
                          </div>
                          <textarea
                             rows={6}
                             autoFocus
-                            placeholder=""
-                            className="w-full bg-transparent outline-none text-sm p-4 resize-none leading-relaxed"
+                            className="w-full bg-transparent dark:bg-transparent outline-none text-sm p-4 resize-none leading-relaxed text-surface-on dark:text-gray-100"
                             value={replyContent}
                             onChange={(e) => setReplyContent(e.target.value)}
                          />
-                         <div className="flex justify-between items-center p-3 bg-surface-container/10">
+                         <div className="flex justify-between items-center p-3 bg-surface-container/10 dark:bg-gray-700/10">
                             <div className="flex gap-2">
-                               <button className="p-2 text-surface-outline-variant hover:text-primary hover:bg-primary/5 rounded-full"><Paperclip className="h-4 w-4"/></button>
-                               <button className="p-2 text-surface-outline-variant hover:text-primary hover:bg-primary/5 rounded-full"><Building2 className="h-4 w-4"/></button>
+                               <button className="p-2 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Paperclip className="h-4 w-4"/></button>
+                               <button className="p-2 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Building2 className="h-4 w-4"/></button>
                             </div>
                             <div className="flex items-center gap-2">
                                <button 
                                  onClick={() => setReplyExpanded(false)}
-                                 className="p-2 text-surface-on-variant hover:text-surface-on text-sm font-medium"
+                                 className="p-2 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 text-sm font-medium"
                                >
                                  Discard
                                </button>
@@ -653,9 +1004,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                </div>
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-surface-on-variant gap-4 bg-surface-container/10">
-               <div className="w-20 h-20 bg-surface-container rounded-full flex items-center justify-center">
-                 <Mail className="h-10 w-10 text-surface-outline/50" />
+            <div className="flex flex-col items-center justify-center h-full text-surface-on-variant dark:text-gray-400 gap-4 bg-surface-container/10 dark:bg-gray-700/10">
+               <div className="w-20 h-20 bg-surface-container dark:bg-gray-700 rounded-full flex items-center justify-center">
+                 <Mail className="h-10 w-10 text-surface-outline/50 dark:text-gray-500/50" />
                </div>
                <p className="text-sm font-medium">Select a conversation to read</p>
             </div>
@@ -666,120 +1017,478 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // --- Main Render Logic ---
 
+  // Helper function to render modals using Portal
+  const renderModals = () => (
+    <>
+      {/* PDF VIEWER MODAL */}
+      {selectedDocument && isPDFViewerOpen && createPortal(
+        <PDFViewer
+          document={selectedDocument}
+          isOpen={isPDFViewerOpen}
+          onClose={() => {
+            console.log('Closing PDF viewer');
+            setIsPDFViewerOpen(false);
+            setSelectedDocument(null);
+          }}
+        />,
+        document.body
+      )}
+
+      {/* NEW CLAIM MODAL */}
+      {showNewClaimModal && createPortal(
+        <div 
+          data-new-claim-modal
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
+          style={{ zIndex: 1000 }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowNewClaimModal(false);
+          }}
+        >
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-4xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
+            <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
+              <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                <Plus className="h-5 w-5 text-primary" />
+                New Claim
+              </h2>
+              <button onClick={() => setShowNewClaimModal(false)} className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-6 bg-surface dark:bg-gray-800">
+              {onCreateClaim ? (
+                <NewClaimForm 
+                  onSubmit={(data) => {
+                    onCreateClaim(data);
+                    setShowNewClaimModal(false);
+                  }} 
+                  onCancel={() => setShowNewClaimModal(false)} 
+                  contractors={contractors} 
+                  activeHomeowner={targetHomeowner || activeHomeowner} 
+                  userRole={userRole} 
+                />
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-surface-on-variant dark:text-gray-400 mb-4">Claim creation handler not available.</p>
+                  <Button variant="text" onClick={() => setShowNewClaimModal(false)}>Close</Button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* NEW TASK MODAL */}
+      {showNewTaskModal && createPortal(
+        <div 
+          data-new-task-modal
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+          style={{ zIndex: 1000 }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowNewTaskModal(false);
+          }}
+        >
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
+            <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
+              <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                <CheckSquare className="h-5 w-5 text-primary" />
+                New Task
+              </h2>
+              <button onClick={() => setShowNewTaskModal(false)} className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              onAddTask({
+                title: newTaskTitle,
+                description: newTaskNotes,
+                assignedToId: newTaskAssignee,
+                assignedById: currentUser.id,
+                isCompleted: false,
+                dateAssigned: new Date(),
+                dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+                relatedClaimIds: selectedClaimIds
+              });
+              setNewTaskTitle('');
+              setNewTaskNotes('');
+              setNewTaskAssignee(currentUser.id);
+              setSelectedClaimIds([]);
+              setShowNewTaskModal(false);
+              setCurrentTab('TASKS');
+            }} className="p-6 space-y-4 bg-surface dark:bg-gray-800">
+              <div>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Task Title</label>
+                <input 
+                  type="text" 
+                  required
+                  className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  placeholder="e.g. Follow up on warranty claim"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Assign To</label>
+                <select 
+                  className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                  value={newTaskAssignee}
+                  onChange={(e) => setNewTaskAssignee(e.target.value)}
+                >
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>{emp.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Notes</label>
+                <textarea 
+                  rows={4}
+                  className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
+                  value={newTaskNotes}
+                  onChange={(e) => setNewTaskNotes(e.target.value)}
+                />
+              </div>
+              {effectiveHomeowner && (
+                <div>
+                  <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-2">Link to Claims (Optional)</label>
+                  <div className="space-y-2 max-h-32 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] border border-surface-outline-variant dark:border-gray-600 rounded-lg p-2">
+                    {claims.filter(c => c.homeownerEmail === effectiveHomeowner.email && c.status !== ClaimStatus.COMPLETED).map(claim => (
+                      <label key={claim.id} className="flex items-center gap-2 p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          checked={selectedClaimIds.includes(claim.id)}
+                          onChange={() => {
+                            setSelectedClaimIds(prev => 
+                              prev.includes(claim.id) 
+                                ? prev.filter(id => id !== claim.id) 
+                                : [...prev, claim.id]
+                            );
+                          }}
+                          className="rounded"
+                        />
+                        <span className="text-sm text-surface-on dark:text-gray-100">{claim.title}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="p-4 bg-surface-container dark:bg-gray-700 flex justify-end gap-3 -mx-6 -mb-6 mt-6">
+                <Button 
+                  variant="text" 
+                  type="button" 
+                  onClick={() => setShowNewTaskModal(false)}
+                  className="bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  variant="filled" 
+                  type="submit"
+                  icon={<CheckSquare className="h-4 w-4" />}
+                >
+                  Create Task
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  );
+
   // 1. HOMEOWNER CONTEXT VIEW (When Admin selects a homeowner)
   if ((isAdmin || isBuilder) && targetHomeowner) {
+    // Get scheduled claims for this homeowner
+    const scheduledClaims = claims
+      .filter(c => c.status === ClaimStatus.SCHEDULED && c.homeownerEmail === targetHomeowner.email)
+      .slice(0, 3);
+    
     return (
-      <div className="space-y-8 animate-in fade-in slide-in-from-top-4">
-        {/* COMPACT HOMEOWNER HEADER CARD */}
-        <div className="bg-surface p-6 rounded-3xl border border-surface-outline-variant shadow-elevation-1 group relative">
-          <div className="flex-1 min-w-0">
+      <>
+        {renderModals()}
+      <div className="space-y-8 animate-in fade-in slide-in-from-top-4 max-w-7xl mx-auto">
+        {/* HOMEOWNER INFO AND SCHEDULE ROW */}
+        <div className="flex flex-col lg:flex-row gap-6 items-stretch relative w-full">
+          {/* COMPACT HOMEOWNER HEADER CARD */}
+          <div 
+            key={homeownerCardKey}
+            className="w-full lg:flex-1 lg:min-w-0 lg:flex-shrink lg:self-start bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 group relative flex flex-col animate-[slide-up_0.4s_ease-out,fade-in_0.4s_ease-out]"
+          >
+          <div className="flex flex-col p-6">
              
-             {/* Header Row: Name, Builder, Closing, Edit */}
-             <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-4">
-                <h2 className="text-2xl font-normal text-surface-on truncate">{targetHomeowner.name}</h2>
-                
-                <span className="bg-primary-container text-primary-on-container text-xs font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-                  <Building2 className="h-3 w-3" />
-                  {targetHomeowner.builder}
-                </span>
-
-                <span className="flex items-center gap-1.5 text-xs text-surface-on-variant bg-surface-container px-2.5 py-0.5 rounded-full border border-surface-outline-variant">
-                   <Clock className="h-3 w-3 text-surface-outline" />
-                   Closing: {targetHomeowner.closingDate ? new Date(targetHomeowner.closingDate).toLocaleDateString() : 'N/A'}
-                </span>
-
-                {/* Edit Button - Admin Only */}
-                {isAdmin && (
-                  <button 
-                     onClick={handleOpenEditHomeowner}
-                     className="ml-1 p-1.5 text-surface-outline-variant hover:text-primary bg-transparent hover:bg-primary/10 rounded-full transition-colors"
-                     title="Edit Homeowner Info"
+             {/* Two-Line Layout with Even Spacing - Center Aligned */}
+             <div className="flex flex-col gap-3 mb-4 w-full">
+                {/* Line 1: Name, Project, Address - Even Spacing */}
+                <div className="flex items-center justify-center gap-4 flex-wrap">
+                  {/* Name */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 truncate">{targetHomeowner.name}</h2>
+                    {/* Edit Button - Admin Only */}
+                    {isAdmin && (
+                      <button 
+                         onClick={handleOpenEditHomeowner}
+                         className="p-1.5 text-surface-outline-variant dark:text-gray-400 hover:text-primary bg-transparent hover:bg-primary/10 rounded-full transition-colors flex-shrink-0"
+                         title="Edit Homeowner Info"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Project */}
+                  <div className="flex items-center gap-1.5 text-sm flex-shrink-0">
+                     <Home className="h-4 w-4 text-surface-outline dark:text-gray-500 flex-shrink-0" />
+                     <span className="font-medium text-surface-on dark:text-gray-100 truncate">{targetHomeowner.jobName || 'N/A'}</span>
+                  </div>
+                  
+                  {/* Address */}
+                  <a 
+                    href={`https://maps.google.com/?q=${encodeURIComponent(targetHomeowner.address)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-surface-on-variant dark:text-gray-400 hover:text-primary transition-colors truncate flex-shrink-0"
                   >
-                    <Edit2 className="h-4 w-4" />
-                  </button>
-                )}
-             </div>
-             
-             {/* Info Grid - 2 Columns */}
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4 text-sm">
-                
-                {/* Column 1: Location */}
-                <div className="space-y-1.5">
-                   <div className="flex items-center gap-2.5 text-surface-on">
-                      <Home className="h-4 w-4 text-surface-outline flex-shrink-0" />
-                      <span className="font-medium">{targetHomeowner.jobName || 'N/A'}</span>
-                   </div>
-                   <a 
-                     href={`https://maps.google.com/?q=${encodeURIComponent(targetHomeowner.address)}`}
-                     target="_blank"
-                     rel="noopener noreferrer"
-                     className="flex items-start gap-2.5 text-surface-on-variant pl-0.5 hover:text-primary transition-colors"
-                   >
-                      <MapPin className="h-4 w-4 text-surface-outline flex-shrink-0 mt-0.5" />
-                      <span className="leading-tight">{targetHomeowner.address}</span>
-                   </a>
+                    <MapPin className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
+                    <span className="truncate">{targetHomeowner.address}</span>
+                  </a>
                 </div>
 
-                {/* Column 2: Contact */}
-                <div className="space-y-1.5">
-                   <a href={`tel:${targetHomeowner.phone}`} className="flex items-center gap-2.5 text-surface-on-variant hover:text-primary transition-colors">
-                      <Phone className="h-4 w-4 text-surface-outline flex-shrink-0" />
-                      <span>{targetHomeowner.phone}</span>
-                   </a>
-                   <div className="flex items-center gap-2.5 text-surface-on-variant">
-                      <Mail className="h-4 w-4 text-surface-outline flex-shrink-0" />
-                      <a href={`mailto:${targetHomeowner.email}`} className="hover:text-primary transition-colors">{targetHomeowner.email}</a>
-                   </div>
+                {/* Line 2: Builder, Closing Date, Phone, Email - Even Spacing */}
+                <div className="flex items-center justify-center gap-4 flex-wrap">
+                  {/* Builder */}
+                  <span className="flex items-center gap-1.5 text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-2.5 py-0.5 rounded-full border border-surface-outline-variant dark:border-gray-600 flex-shrink-0">
+                    <Building2 className="h-3 w-3" />
+                    {targetHomeowner.builder}
+                  </span>
+                  
+                  {/* Closing Date */}
+                  <span className="flex items-center gap-1.5 text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-2.5 py-0.5 rounded-full border border-surface-outline-variant dark:border-gray-600 flex-shrink-0">
+                     <Clock className="h-3 w-3 text-surface-outline dark:text-gray-500" />
+                     Closing: {targetHomeowner.closingDate ? new Date(targetHomeowner.closingDate).toLocaleDateString() : 'N/A'}
+                  </span>
+                  
+                  {/* Phone */}
+                  <a href={`tel:${targetHomeowner.phone}`} className="flex items-center gap-1.5 hover:text-primary transition-colors flex-shrink-0 text-sm text-surface-on-variant dark:text-gray-400">
+                    <Phone className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
+                    <span className="whitespace-nowrap">{targetHomeowner.phone}</span>
+                  </a>
+                  
+                  {/* Email */}
+                  <div className="flex items-center gap-1.5 min-w-0 flex-shrink-0 text-sm text-surface-on-variant dark:text-gray-400">
+                    <Mail className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
+                    <a href={`mailto:${targetHomeowner.email}`} className="hover:text-primary transition-colors truncate min-w-0">{targetHomeowner.email}</a>
+                  </div>
                 </div>
-
              </div>
 
-             {/* Actions Positioned Absolute Top Right or Flex End if narrow */}
-             <div className="mt-6 pt-4 border-t border-surface-outline-variant/50 flex items-center justify-end gap-2 flex-wrap">
-                <Button 
-                  onClick={() => setShowDocsModal(true)} 
-                  variant="outlined" 
+             {/* Actions Positioned Centered */}
+             <div className="mt-4 pt-4 border-t border-surface-outline-variant/50 dark:border-gray-700/50 flex items-center justify-center gap-2 flex-wrap">
+                <Button
+                  onClick={() => setShowDocsModal(true)}
+                  variant="outlined"
                   icon={<FileText className="h-4 w-4" />}
                   className="!h-9 !px-4"
                 >
-                  Documents
+                  Documents {displayDocuments.length > 0 && (
+                    <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-on text-xs font-medium">
+                      {displayDocuments.length}
+                    </span>
+                  )}
                 </Button>
+                {/* Sub List Button - Show if subcontractor list exists */}
+                {targetHomeowner.subcontractorList && targetHomeowner.subcontractorList.length > 0 && (
+                  <Button 
+                    onClick={() => setShowSubListModal(true)} 
+                    variant="outlined" 
+                    icon={<HardHat className="h-4 w-4" />}
+                    className="!h-9 !px-4"
+                  >
+                    Sub List
+                  </Button>
+                )}
+                {/* Punch List Button - Shows "View Punch List" if report exists, otherwise "Create Punch List" */}
+                {(() => {
+                  const reportKey = `bluetag_report_${targetHomeowner.id}`;
+                  const hasReport = localStorage.getItem(reportKey) !== null;
+                  
+                  return (
+                    <Button
+                      onClick={() => setShowPunchListApp(true)}
+                      variant="outlined"
+                      icon={<ClipboardList className="h-4 w-4" />}
+                      className="!h-9 !px-4"
+                    >
+                      {hasReport ? 'View Punch List' : '+ Punch List'}
+                    </Button>
+                  );
+                })()}
                 {/* Admin Only Actions */}
                 {isAdmin && (
                   <>
-                    <Button 
+                    <Button
                       onClick={async () => {
+                        // Open modal immediately
                         setInviteName(targetHomeowner.name);
                         setInviteEmail(targetHomeowner.email);
-                        const defaultBody = await draftInviteEmail(targetHomeowner.name);
-                        setInviteBody(defaultBody);
                         setShowInviteModal(true);
-                      }} 
-                      variant="tonal" 
+                        // Draft email asynchronously after modal is open
+                        setIsDrafting(true);
+                        try {
+                          const defaultBody = await draftInviteEmail(targetHomeowner.name);
+                          setInviteBody(defaultBody);
+                        } catch (error) {
+                          console.error('Failed to draft email:', error);
+                          // Set a default body if drafting fails
+                          setInviteBody(`Dear ${targetHomeowner.name},\n\nWelcome to Cascade Builder Services!`);
+                        } finally {
+                          setIsDrafting(false);
+                        }
+                      }}
+                      variant="outlined"
                       icon={<Mail className="h-4 w-4" />}
                       className="!h-9 !px-4"
                     >
                       Invite
                     </Button>
-                    <Button 
-                      variant="filled" 
-                      onClick={() => onNewClaim(targetHomeowner.id)} 
+                    <Button
+                      onClick={() => {
+                        console.log('New Claim button clicked, setting showNewClaimModal to true');
+                        setShowNewClaimModal(true);
+                        console.log('showNewClaimModal should now be true');
+                      }}
+                      variant="outlined"
                       icon={<Plus className="h-4 w-4" />}
                       className="!h-9 !px-4"
                     >
                       New Claim
                     </Button>
+                    <Button
+                      onClick={() => {
+                        console.log('New Task button clicked');
+                        setNewTaskTitle(`Task for ${targetHomeowner.name}`);
+                        setNewTaskAssignee(currentUser.id);
+                        setNewTaskNotes('');
+                        setSelectedClaimIds([]);
+                        setShowNewTaskModal(true);
+                        console.log('showNewTaskModal should now be true');
+                      }}
+                      variant="outlined"
+                      icon={<CheckSquare className="h-4 w-4" />}
+                      className="!h-9 !px-4"
+                    >
+                      New Task
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        // Open new message modal and switch to messages tab
+                        setShowNewMessageModal(true);
+                        setCurrentTab('MESSAGES');
+                      }}
+                      variant="outlined" 
+                      icon={<Mail className="h-4 w-4" />}
+                      className="!h-9 !px-4"
+                    >
+                      New Message
+                    </Button>
                   </>
                 )}
               </div>
           </div>
+          </div>
+
+          {/* Upcoming Schedule Card - Right of Homeowner Info */}
+          <div className="w-full lg:w-[300px] lg:flex-shrink-0 bg-secondary-container dark:bg-gray-800 rounded-3xl text-secondary-on-container dark:text-gray-100 flex flex-col relative border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden">
+            <button
+              onClick={() => setIsScheduleExpanded(!isScheduleExpanded)}
+              className="p-6 w-full text-left flex-shrink-0 z-10 relative"
+            >
+              <h3 className="font-medium text-lg mb-0 flex items-center justify-between text-secondary-on-container dark:text-gray-100">
+                <span className="flex items-center">
+                  <Calendar className="h-5 w-5 mr-3" />
+                  Upcoming Schedule
+                </span>
+                <div className="w-8 h-8 rounded-full bg-black/20 dark:bg-white/20 flex items-center justify-center ml-4 flex-shrink-0">
+                  {isScheduleExpanded ? (
+                    <ChevronUp className="h-5 w-5 text-secondary-on-container dark:text-gray-200" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-secondary-on-container dark:text-gray-200" />
+                  )}
+                </div>
+              </h3>
+            </button>
+            
+            {/* Collapsed State - Show First Appointment */}
+            {!isScheduleExpanded && scheduledClaims.length > 0 && (
+              <div className="px-6 pb-6 pt-0">
+                {(() => {
+                  const firstClaim = scheduledClaims[0];
+                  const acceptedDate = firstClaim.proposedDates.find(d => d.status === 'ACCEPTED');
+                  return (
+                    <div 
+                      className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-xl text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors"
+                      onClick={() => onSelectClaim(firstClaim, true)}
+                    >
+                      <p className="font-medium text-secondary-on-container dark:text-gray-200 text-center">{firstClaim.title}</p>
+                      <p className="opacity-80 dark:opacity-70 mt-1 text-secondary-on-container dark:text-gray-300 text-center">
+                        {acceptedDate ? new Date(acceptedDate.date).toLocaleDateString() : 'N/A'} - {acceptedDate?.timeSlot}
+                      </p>
+                      {firstClaim.contractorName && (
+                        <p className="opacity-70 dark:opacity-60 mt-1 text-secondary-on-container dark:text-gray-400 text-center text-xs">
+                          {firstClaim.contractorName}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+            
+            {!isScheduleExpanded && scheduledClaims.length === 0 && (
+              <div className="px-6 pb-6 pt-0">
+                <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No confirmed appointments.</p>
+              </div>
+            )}
+            
+            {/* Expanded State - Show all appointments */}
+            {isScheduleExpanded && (
+              <div className="px-6 pb-6 pt-0 space-y-3 max-h-96 overflow-y-auto">
+                {scheduledClaims.length > 0 ? (
+                  scheduledClaims.map(c => {
+                    const acceptedDate = c.proposedDates.find(d => d.status === 'ACCEPTED');
+                    return (
+                      <div 
+                        key={c.id} 
+                        className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-xl text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors"
+                        onClick={() => onSelectClaim(c, true)}
+                      >
+                        <p className="font-medium text-secondary-on-container dark:text-gray-200 text-center">{c.title}</p>
+                        <p className="opacity-80 dark:opacity-70 mt-1 text-secondary-on-container dark:text-gray-300 text-center">
+                          {acceptedDate ? new Date(acceptedDate.date).toLocaleDateString() : 'N/A'} - {acceptedDate?.timeSlot}
+                        </p>
+                        {c.contractorName && (
+                          <p className="opacity-70 dark:opacity-60 mt-1 text-secondary-on-container dark:text-gray-400 text-center text-xs">
+                            {c.contractorName}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No confirmed appointments.</p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Navigation Tabs (Context Specific) */}
-        <div className="flex gap-6 border-b border-surface-outline-variant px-4">
+        <div className="flex gap-2 max-w-7xl mx-auto">
            <button 
               onClick={() => setCurrentTab('CLAIMS')}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 px-2 ${currentTab === 'CLAIMS' ? 'border-primary text-primary' : 'border-transparent text-surface-on-variant hover:text-surface-on'}`}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'CLAIMS' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
             >
               <ClipboardList className="h-4 w-4" />
               Warranty
@@ -789,7 +1498,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && (
               <button 
                 onClick={() => setCurrentTab('TASKS')}
-                className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 px-2 ${currentTab === 'TASKS' ? 'border-primary text-primary' : 'border-transparent text-surface-on-variant hover:text-surface-on'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'TASKS' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
               >
                 <CheckSquare className="h-4 w-4" />
                 Tasks
@@ -798,7 +1507,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             <button 
               onClick={() => setCurrentTab('MESSAGES')}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 px-2 ${currentTab === 'MESSAGES' ? 'border-primary text-primary' : 'border-transparent text-surface-on-variant hover:text-surface-on'}`}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'MESSAGES' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
             >
               <Mail className="h-4 w-4" />
               Messages
@@ -810,13 +1519,13 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Content Area */}
         {currentTab === 'CLAIMS' && (
-          <>
+          <div className="max-w-7xl mx-auto">
             {renderClaimsList(displayClaims)}
-          </>
+          </div>
         )}
 
         {currentTab === 'TASKS' && isAdmin && (
-          <div className="bg-surface rounded-3xl border border-surface-outline-variant p-6 shadow-elevation-1">
+          <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 p-6 shadow-elevation-1">
             <TaskList 
               tasks={tasks}
               employees={employees}
@@ -835,56 +1544,105 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* DOCUMENTS MODAL */}
         {showDocsModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-surface w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-               <div className="p-6 border-b border-surface-outline-variant bg-surface-container flex justify-between items-center">
-                  <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowDocsModal(false);
+            }}
+          >
+            <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
+               <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center">
+                  <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                     <FileText className="h-5 w-5 text-primary" />
                     Account Documents
                   </h2>
-                  <button onClick={() => setShowDocsModal(false)} className="text-surface-on-variant hover:text-surface-on">
+                  <button onClick={() => setShowDocsModal(false)} className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
                     <X className="h-5 w-5" />
                   </button>
                </div>
                
-               <div className="p-6">
+               <div className="p-6 bg-surface dark:bg-gray-800">
                  {/* List */}
                  <div className="mb-6 space-y-2 max-h-60 overflow-y-auto pr-1">
                     {displayDocuments.length === 0 ? (
-                      <div className="text-center text-sm text-surface-on-variant py-8 border border-dashed border-surface-outline-variant rounded-xl bg-surface-container/30">
+                      <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-8 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
                         No documents uploaded for this account.
                       </div>
                     ) : (
-                      displayDocuments.map(doc => (
-                        <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container border border-surface-outline-variant group transition-all">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="p-2 bg-red-50 text-red-600 rounded">
-                              <FileText className="h-5 w-5" />
+                      displayDocuments.map(doc => {
+                        const isPDF = doc.type === 'PDF' || doc.name.toLowerCase().endsWith('.pdf') || 
+                                     doc.url.startsWith('data:application/pdf') || 
+                                     doc.url.includes('pdf');
+                        
+                        return (
+                          <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 group transition-all">
+                            <div 
+                              className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                              onClick={() => {
+                                if (isPDF) {
+                                  setSelectedDocument(doc);
+                                  setIsPDFViewerOpen(true);
+                                }
+                              }}
+                            >
+                              <div className="p-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded">
+                                <FileText className="h-5 w-5" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{doc.name}</p>
+                                <p className="text-xs text-surface-on-variant dark:text-gray-400">
+                                  Uploaded by {doc.uploadedBy} • {new Date(doc.uploadDate).toLocaleDateString()}
+                                </p>
+                              </div>
                             </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-surface-on truncate">{doc.name}</p>
-                              <p className="text-xs text-surface-on-variant">
-                                Uploaded by {doc.uploadedBy} • {new Date(doc.uploadDate).toLocaleDateString()}
-                              </p>
+                            <div className="flex items-center gap-1">
+                              {isPDF && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log('PDF View button clicked:', doc.name);
+                                    console.log('Document URL:', doc.url.substring(0, 100));
+                                    setSelectedDocument(doc);
+                                    setIsPDFViewerOpen(true);
+                                    console.log('State updated - selectedDocument:', doc.id, 'isPDFViewerOpen: true');
+                                  }}
+                                  className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all z-10 relative"
+                                  title="View PDF"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </button>
+                              )}
+                              {doc.url.startsWith('data:') ? (
+                                <a 
+                                  href={doc.url} 
+                                  download={doc.name} 
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all"
+                                  title="Download"
+                                >
+                                  <Download className="h-4 w-4" />
+                                </a>
+                              ) : (
+                                <button 
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all"
+                                  title="Download"
+                                >
+                                  <Download className="h-4 w-4" />
+                                </button>
+                              )}
                             </div>
                           </div>
-                          {doc.url.startsWith('data:') ? (
-                            <a href={doc.url} download={doc.name} className="p-2 text-surface-outline-variant hover:text-primary rounded-full hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-all">
-                                <Download className="h-4 w-4" />
-                            </a>
-                          ) : (
-                             <button className="p-2 text-surface-outline-variant hover:text-primary rounded-full hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-all">
-                                <Download className="h-4 w-4" />
-                             </button>
-                          )}
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                  </div>
                  
                  {/* Footer Upload Action */}
-                 <div className="pt-4 border-t border-surface-outline-variant flex justify-center">
-                    <label className={`cursor-pointer flex items-center gap-2 px-6 py-3 rounded-full transition-colors border ${isDocUploading ? 'bg-surface-container border-primary/30 cursor-wait' : 'bg-surface-container hover:bg-surface-container-high border-surface-outline-variant text-primary font-medium'}`}>
+                 <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 flex justify-center">
+                    <label className={`cursor-pointer flex items-center gap-2 px-6 py-3 rounded-full transition-colors border ${isDocUploading ? 'bg-surface-container dark:bg-gray-700 border-primary/30 cursor-wait' : 'bg-surface-container dark:bg-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-600 border-surface-outline-variant dark:border-gray-600 text-primary font-medium'}`}>
                         {isDocUploading ? (
                           <Loader2 className="h-4 w-4 animate-spin text-primary" />
                         ) : (
@@ -900,41 +1658,173 @@ const Dashboard: React.FC<DashboardProps> = ({
         )}
 
         {/* INVITE MODAL */}
+        {/* Sub List Modal */}
+        {showSubListModal && targetHomeowner.subcontractorList && targetHomeowner.subcontractorList.length > 0 && createPortal(
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowSubListModal(false);
+              }
+            }}
+          >
+            <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
+              {/* Header */}
+              <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center sticky top-0 z-10">
+                <div>
+                  <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                    <HardHat className="h-6 w-6 text-primary" />
+                    Subcontractor List - {targetHomeowner.name}
+                  </h2>
+                  <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
+                    {targetHomeowner.subcontractorList.length} subcontractor{targetHomeowner.subcontractorList.length !== 1 ? 's' : ''} found
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setShowSubListModal(false)} 
+                  className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 p-2 rounded-full hover:bg-white/10 dark:hover:bg-gray-600/50"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              {/* Content */}
+              <div className="p-6 max-h-[80vh] overflow-y-auto">
+                <div className="bg-surface-container dark:bg-gray-700 rounded-xl border border-surface-outline-variant dark:border-gray-600 overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-surface-container-high dark:bg-gray-800 sticky top-0">
+                        <tr>
+                          {Object.keys(targetHomeowner.subcontractorList[0] || {}).map((header, idx) => (
+                            <th 
+                              key={idx}
+                              className="px-4 py-3 text-left text-xs font-semibold text-surface-on-variant dark:text-gray-400 uppercase tracking-wider border-b border-surface-outline-variant dark:border-gray-600"
+                            >
+                              {header}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-surface-outline-variant dark:divide-gray-700">
+                        {targetHomeowner.subcontractorList.map((row, rowIdx) => (
+                          <tr 
+                            key={rowIdx}
+                            className="hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors"
+                          >
+                            {Object.values(row).map((cell: any, cellIdx) => (
+                              <td 
+                                key={cellIdx}
+                                className="px-4 py-3 text-surface-on dark:text-gray-200 text-xs"
+                              >
+                                {cell || '-'}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Footer */}
+              <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end">
+                <Button onClick={() => setShowSubListModal(false)} variant="filled">
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {/* PUNCH LIST APP MODAL */}
+        {showPunchListApp && effectiveHomeowner && createPortal(
+          <div 
+            className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowPunchListApp(false);
+              }
+            }}
+          >
+            <div className="bg-surface dark:bg-gray-800 w-full h-full rounded-none shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] flex flex-col relative">
+              {/* Content - BlueTag Punch List App embedded here */}
+              <div className="flex-1 overflow-hidden relative" style={{ isolation: 'isolate', pointerEvents: 'auto' }}>
+                <PunchListApp
+                  homeowner={effectiveHomeowner}
+                  onClose={() => setShowPunchListApp(false)}
+                  onSavePDF={async (pdfBlob: Blob, filename: string) => {
+                    // Convert blob to base64 for storage
+                    const reader = new FileReader();
+                    reader.onloadend = () => {
+                      const base64 = reader.result as string;
+                      onUploadDocument({
+                        homeownerId: effectiveHomeowner.id,
+                        name: filename,
+                        type: 'PDF',
+                        uploadedBy: 'System (Punch List)',
+                        url: base64
+                      });
+                    };
+                    reader.readAsDataURL(pdfBlob);
+                  }}
+                />
+              </div>
+              
+              {/* Close button at bottom right */}
+              <button 
+                onClick={() => setShowPunchListApp(false)} 
+                className="absolute bottom-4 right-4 z-[200] bg-primary text-white p-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors"
+                title="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          </div>,
+          document.body
+        )}
+
         {showInviteModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-             <div className="bg-surface w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                <div className="p-6 border-b border-surface-outline-variant flex justify-between items-center bg-surface-container">
-                  <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowInviteModal(false);
+            }}
+          >
+             <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
+                <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
+                  <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                     <Mail className="h-5 w-5 text-primary" />
                     Invite Homeowner
                   </h2>
-                  <button onClick={() => setShowInviteModal(false)} className="text-surface-on-variant hover:text-surface-on">
+                  <button onClick={() => setShowInviteModal(false)} className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
                     <X className="h-5 w-5" />
                   </button>
                 </div>
                 
-                <div className="p-6 space-y-4">
+                <div className="p-6 space-y-4 bg-surface dark:bg-gray-800">
                   <div>
-                    <label className="block text-sm font-medium text-surface-on-variant mb-1">Full Name</label>
+                    <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-300 mb-1">Full Name</label>
                     <input 
                       type="text" 
-                      className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                      className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                       value={inviteName}
                       onChange={(e) => setInviteName(e.target.value)}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-surface-on-variant mb-1">Email Address</label>
+                    <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-300 mb-1">Email Address</label>
                     <input 
                       type="email" 
-                      className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                      className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                       value={inviteEmail}
                       onChange={(e) => setInviteEmail(e.target.value)}
                     />
                   </div>
                   <div>
                     <div className="flex justify-between items-center mb-1">
-                      <label className="block text-sm font-medium text-surface-on-variant">Invitation Message</label>
+                      <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-300">Invitation Message</label>
                       <Button 
                         variant="text" 
                         onClick={handleDraftInvite} 
@@ -945,16 +1835,25 @@ const Dashboard: React.FC<DashboardProps> = ({
                         {isDrafting ? 'Drafting...' : 'Reset Template'}
                       </Button>
                     </div>
-                    <textarea 
-                      rows={12}
-                      className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none text-xs leading-relaxed"
-                      value={inviteBody}
-                      onChange={(e) => setInviteBody(e.target.value)}
-                    />
+                    {isDrafting ? (
+                      <div className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 flex items-center justify-center min-h-[200px]">
+                        <div className="flex items-center gap-2 text-surface-on-variant dark:text-gray-400">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-sm">Drafting email...</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <textarea
+                        rows={12}
+                        className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none text-xs leading-relaxed"
+                        value={inviteBody}
+                        onChange={(e) => setInviteBody(e.target.value)}
+                      />
+                    )}
                   </div>
                 </div>
 
-                <div className="p-4 bg-surface-container flex justify-end gap-3">
+                <div className="p-4 bg-surface-container dark:bg-gray-700 flex justify-end gap-3">
                   <Button variant="text" onClick={() => setShowInviteModal(false)}>Cancel</Button>
                   <Button variant="filled" onClick={handleSendInvite} disabled={!inviteEmail || !inviteBody || isDrafting} icon={<Send className="h-4 w-4" />}>
                     Send Invitation
@@ -966,46 +1865,51 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* EDIT HOMEOWNER MODAL */}
         {showEditHomeownerModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-             <div className="bg-surface w-full max-w-2xl rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                <div className="p-6 border-b border-surface-outline-variant flex justify-between items-center bg-surface-container">
-                  <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowEditHomeownerModal(false);
+            }}
+          >
+             <div className="bg-surface dark:bg-gray-800 w-full max-w-2xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
+                <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
+                  <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                     <Edit2 className="h-5 w-5 text-primary" />
                     Edit Homeowner Information
                   </h2>
-                  <button onClick={() => setShowEditHomeownerModal(false)} className="text-surface-on-variant hover:text-surface-on">
+                  <button onClick={() => setShowEditHomeownerModal(false)} className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
                     <X className="h-5 w-5" />
                   </button>
                 </div>
                 
-                <form onSubmit={handleSaveHomeowner} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+                <form onSubmit={handleSaveHomeowner} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto bg-surface dark:bg-gray-800">
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="col-span-1 md:col-span-2">
-                        <label className="block text-xs font-medium text-surface-on-variant mb-1">Full Name</label>
+                        <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Full Name</label>
                         <input 
                           type="text" 
                           required
-                          className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                          className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-surface-on-variant mb-1">Email</label>
+                        <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Email</label>
                         <input 
                           type="email" 
                           required
-                          className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                          className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                           value={editEmail}
                           onChange={(e) => setEditEmail(e.target.value)}
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-surface-on-variant mb-1">Phone</label>
+                        <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Phone</label>
                         <input 
                           type="tel" 
                           required
-                          className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                          className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                           value={editPhone}
                           onChange={(e) => setEditPhone(e.target.value)}
                         />
@@ -1013,64 +1917,149 @@ const Dashboard: React.FC<DashboardProps> = ({
                       
                       {/* Split Address Fields */}
                       <div className="col-span-1 md:col-span-2">
-                        <label className="block text-xs font-medium text-surface-on-variant mb-1">Street Address</label>
+                        <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Street Address</label>
                         <input 
                           type="text" 
                           required
-                          className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                          className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                           value={editStreet}
                           onChange={(e) => setEditStreet(e.target.value)}
                         />
                       </div>
                       <div className="col-span-1 md:col-span-2 grid grid-cols-6 gap-2">
                          <div className="col-span-3">
-                           <input type="text" placeholder="City" required className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={editCity} onChange={(e) => setEditCity(e.target.value)} />
+                           <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">City</label>
+                           <input type="text" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={editCity} onChange={(e) => setEditCity(e.target.value)} />
                          </div>
                          <div className="col-span-1">
-                           <input type="text" placeholder="State" required className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={editState} onChange={(e) => setEditState(e.target.value)} />
+                           <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">State</label>
+                           <input type="text" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={editState} onChange={(e) => setEditState(e.target.value)} />
                          </div>
                          <div className="col-span-2">
-                           <input type="text" placeholder="Zip" required className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={editZip} onChange={(e) => setEditZip(e.target.value)} />
+                           <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Zip</label>
+                           <input type="text" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={editZip} onChange={(e) => setEditZip(e.target.value)} />
                          </div>
                       </div>
 
                       <div>
-                        <label className="block text-xs font-medium text-surface-on-variant mb-1">Builder</label>
-                        <select 
-                          required
-                          className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                          value={editBuilderId}
-                          onChange={(e) => setEditBuilderId(e.target.value)}
-                        >
-                          <option value="">Select Builder...</option>
-                          {builderGroups.map(bg => (
-                            <option key={bg.id} value={bg.id}>{bg.name}</option>
-                          ))}
-                        </select>
+                        <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Builder</label>
+                        <div className="relative">
+                          <select 
+                            required
+                            className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 pr-10 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none"
+                            value={editBuilderId}
+                            onChange={(e) => setEditBuilderId(e.target.value)}
+                          >
+                            <option value="">Select Builder...</option>
+                            {builderGroups.map(bg => (
+                              <option key={bg.id} value={bg.id}>{bg.name}</option>
+                            ))}
+                          </select>
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                            <div className="w-6 h-6 rounded-full bg-surface-container dark:bg-gray-600 flex items-center justify-center">
+                              <ChevronDown className="h-3.5 w-3.5 text-surface-on-variant dark:text-gray-400" />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                        <div>
-                        <label className="block text-xs font-medium text-surface-on-variant mb-1">Closing Date</label>
+                        <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Closing Date</label>
                         <input 
                           type="date" 
                           required
-                          className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                          className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                           value={editClosingDate}
                           onChange={(e) => setEditClosingDate(e.target.value)}
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-surface-on-variant mb-1">Job Name</label>
+                        <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Job Name</label>
                         <input 
                           type="text" 
-                          className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                          className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                           value={editJobName}
                           onChange={(e) => setEditJobName(e.target.value)}
-                          placeholder="e.g. Maple Ridge - Lot 42"
                         />
                       </div>
                    </div>
 
-                   <div className="p-4 bg-surface-container flex justify-end gap-3 -mx-6 -mb-6 mt-6">
+                   {/* Sub Sheet Uploader */}
+                   <div className="col-span-1 md:col-span-2 mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-700">
+                     <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Subcontractor List (Upload)</label>
+                     <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl hover:bg-surface-container dark:hover:bg-gray-700 transition-colors ${!editSubFile ? 'border-primary/50 dark:border-primary/30 bg-primary/5 dark:bg-primary/10' : 'border-surface-outline-variant dark:border-gray-600'}`}>
+                       <div className="space-y-1 text-center">
+                         <Upload className="mx-auto h-8 w-8 text-surface-outline-variant dark:text-gray-500" />
+                         <div className="flex text-sm text-surface-on-variant dark:text-gray-400 justify-center">
+                           <label className="relative cursor-pointer rounded-md font-medium text-primary hover:text-primary/80 focus-within:outline-none">
+                             <span>{editSubFile ? 'Change file' : 'Upload a file'}</span>
+                             <input 
+                               type="file" 
+                               className="sr-only" 
+                               accept=".csv,.xlsx,.xls,.txt"
+                               onChange={handleEditSubFileChange} 
+                             />
+                           </label>
+                           {!editSubFile && <p className="pl-1">or drag and drop</p>}
+                         </div>
+                         <p className="text-xs text-surface-outline-variant dark:text-gray-500">
+                            {editSubFile ? editSubFile.name : 'CSV, XLS, XLSX up to 10MB'}
+                         </p>
+                       </div>
+                     </div>
+                     
+                     {/* Parsed Subcontractors Table */}
+                     {isParsingSubs && (
+                       <div className="mt-4 p-4 bg-surface-container dark:bg-gray-700 rounded-lg text-center">
+                         <p className="text-sm text-surface-on-variant dark:text-gray-400">Parsing spreadsheet...</p>
+                       </div>
+                     )}
+                     
+                     {!isParsingSubs && editParsedSubs.length > 0 && (
+                       <div className="mt-4 bg-surface-container dark:bg-gray-700 rounded-xl border border-surface-outline-variant dark:border-gray-600 overflow-hidden">
+                         <div className="p-3 border-b border-surface-outline-variant dark:border-gray-600 bg-surface-container-high dark:bg-gray-800">
+                           <h4 className="text-sm font-semibold text-surface-on dark:text-gray-100 flex items-center gap-2">
+                             <HardHat className="h-4 w-4 text-primary" />
+                             Subcontractors ({editParsedSubs.length})
+                           </h4>
+                         </div>
+                         <div className="overflow-x-auto max-h-64 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                           <table className="w-full text-sm">
+                             <thead className="bg-surface-container-high dark:bg-gray-800 sticky top-0">
+                               <tr>
+                                 {Object.keys(editParsedSubs[0] || {}).map((header, idx) => (
+                                   <th 
+                                     key={idx}
+                                     className="px-3 py-2 text-left text-xs font-semibold text-surface-on-variant dark:text-gray-400 uppercase tracking-wider border-b border-surface-outline-variant dark:border-gray-600"
+                                   >
+                                     {header}
+                                   </th>
+                                 ))}
+                               </tr>
+                             </thead>
+                             <tbody className="divide-y divide-surface-outline-variant dark:divide-gray-700">
+                               {editParsedSubs.map((row, rowIdx) => (
+                                 <tr 
+                                   key={rowIdx}
+                                   className="hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors"
+                                 >
+                                   {Object.values(row).map((cell: any, cellIdx) => (
+                                     <td 
+                                       key={cellIdx}
+                                       className="px-3 py-2 text-surface-on dark:text-gray-200 text-xs"
+                                     >
+                                       {cell || '-'}
+                                     </td>
+                                   ))}
+                                 </tr>
+                               ))}
+                             </tbody>
+                           </table>
+                         </div>
+                       </div>
+                     )}
+                   </div>
+
+                   <div className="p-4 bg-surface-container dark:bg-gray-700 flex justify-end gap-3 -mx-6 -mb-6 mt-6">
                       <Button variant="text" onClick={() => setShowEditHomeownerModal(false)}>Cancel</Button>
                       <Button 
                         variant="filled" 
@@ -1087,59 +2076,69 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* NEW MESSAGE MODAL */}
         {showNewMessageModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-             <div className="bg-surface w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-                <div className="p-6 border-b border-surface-outline-variant flex justify-between items-center bg-surface-container">
-                  <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowNewMessageModal(false);
+            }}
+          >
+             <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
+                <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
+                  <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                     <Mail className="h-5 w-5 text-primary" />
                     New Message
                   </h2>
-                  <button onClick={() => setShowNewMessageModal(false)} className="text-surface-on-variant hover:text-surface-on">
+                  <button onClick={() => setShowNewMessageModal(false)} className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
                     <X className="h-5 w-5" />
                   </button>
                 </div>
                 
                 <div className="p-6 space-y-4">
                   {/* Recipient Display */}
-                  <div className="bg-surface-container p-3 rounded-xl flex items-center justify-between">
+                  <div className="bg-surface-container dark:bg-gray-700 p-3 rounded-xl flex items-center justify-between">
                      <div>
-                       <span className="text-xs font-bold text-surface-on-variant uppercase">To</span>
-                       <p className="font-medium text-surface-on">
+                       <span className="text-xs font-bold text-surface-on-variant dark:text-gray-400 uppercase">To</span>
+                       <p className="font-medium text-surface-on dark:text-gray-100">
                          {isAdmin 
                            ? (effectiveHomeowner ? effectiveHomeowner.name : 'Select a Homeowner') 
                            : 'Cascade Support Team'
                          }
                        </p>
                      </div>
-                     <div className="bg-surface p-2 rounded-full border border-surface-outline-variant">
-                        {isAdmin ? <Home className="h-4 w-4 text-surface-outline"/> : <Building2 className="h-4 w-4 text-surface-outline"/>}
+                     <div className="bg-surface dark:bg-gray-800 p-2 rounded-full border border-surface-outline-variant dark:border-gray-600">
+                        {isAdmin ? <Home className="h-4 w-4 text-surface-outline dark:text-gray-500"/> : <Building2 className="h-4 w-4 text-surface-outline dark:text-gray-500"/>}
                      </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-surface-on-variant mb-1">Subject</label>
+                    <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Subject</label>
                     <input 
                       type="text" 
-                      className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                      className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                       value={newMessageSubject}
                       onChange={(e) => setNewMessageSubject(e.target.value)}
                       placeholder="e.g. Question about warranty"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-surface-on-variant mb-1">Message</label>
+                    <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Message</label>
                     <textarea 
                       rows={6}
-                      className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
+                      className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
                       value={newMessageContent}
                       onChange={(e) => setNewMessageContent(e.target.value)}
-                      placeholder="Type your message here..."
                     />
                   </div>
                 </div>
 
-                <div className="p-4 bg-surface-container flex justify-end gap-3">
-                  <Button variant="text" onClick={() => setShowNewMessageModal(false)}>Cancel</Button>
+                <div className="p-4 bg-surface-container dark:bg-gray-700 flex justify-end gap-3">
+                  <Button 
+                    variant="text" 
+                    onClick={() => setShowNewMessageModal(false)}
+                    className="bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600"
+                  >
+                    Cancel
+                  </Button>
                   <Button 
                     variant="filled" 
                     onClick={handleCreateNewThread} 
@@ -1153,12 +2152,15 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         )}
       </div>
+      </>
     );
   }
 
   // 2. ADMIN/BUILDER PLACEHOLDER VIEW (When no homeowner is selected)
   if ((isAdmin || isBuilder) && !targetHomeowner) {
     return (
+      <>
+        {renderModals()}
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 animate-in fade-in slide-in-from-bottom-4">
             <div className="bg-surface-container-high p-6 rounded-full">
                 <Search className="h-12 w-12 text-surface-outline" />
@@ -1175,12 +2177,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                 )}
             </div>
         </div>
+      </>
     );
   }
 
   // 3. HOMEOWNER PORTAL VIEW (Not Admin/Builder)
   return (
-    <div className="space-y-6">
+    <>
+      {renderModals()}
+      <div className="space-y-6">
       {/* Homeowner Header & Actions */}
       <div className="flex justify-between items-center bg-surface p-6 rounded-3xl border border-surface-outline-variant shadow-elevation-1">
         <div>
@@ -1188,12 +2193,16 @@ const Dashboard: React.FC<DashboardProps> = ({
           <p className="text-surface-on-variant text-sm mt-1">{activeHomeowner.address}</p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            variant="outlined" 
+          <Button
+            variant="outlined"
             onClick={() => setShowDocsModal(true)}
             icon={<FileText className="h-4 w-4" />}
           >
-            Documents
+            Documents {displayDocuments.length > 0 && (
+              <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-on text-xs font-medium">
+                {displayDocuments.length}
+              </span>
+            )}
           </Button>
           <Button 
             variant="filled" 
@@ -1202,21 +2211,31 @@ const Dashboard: React.FC<DashboardProps> = ({
           >
             New Claim
           </Button>
+          <Button 
+            variant="outlined" 
+            onClick={() => {
+              setShowNewMessageModal(true);
+              setCurrentTab('MESSAGES');
+            }}
+            icon={<Mail className="h-4 w-4" />}
+          >
+            New Message
+          </Button>
         </div>
       </div>
 
        {/* Navigation Tabs (Homeowner) */}
-       <div className="flex gap-6 border-b border-surface-outline-variant px-4">
+       <div className="flex gap-2 max-w-7xl mx-auto">
            <button 
               onClick={() => setCurrentTab('CLAIMS')}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 px-2 ${currentTab === 'CLAIMS' ? 'border-primary text-primary' : 'border-transparent text-surface-on-variant hover:text-surface-on'}`}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'CLAIMS' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
             >
               <ClipboardList className="h-4 w-4" />
               My Claims
             </button>
              <button 
               onClick={() => setCurrentTab('MESSAGES')}
-              className={`pb-3 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 px-2 ${currentTab === 'MESSAGES' ? 'border-primary text-primary' : 'border-transparent text-surface-on-variant hover:text-surface-on'}`}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'MESSAGES' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
             >
               <Mail className="h-4 w-4" />
               Messages
@@ -1226,14 +2245,23 @@ const Dashboard: React.FC<DashboardProps> = ({
             </button>
         </div>
 
-      {currentTab === 'CLAIMS' && renderClaimsList(displayClaims)}
+      {currentTab === 'CLAIMS' && (
+        <div className="max-w-7xl mx-auto">
+          {renderClaimsList(displayClaims)}
+        </div>
+      )}
 
       {currentTab === 'MESSAGES' && renderMessagesTab()}
 
       {/* NEW MESSAGE MODAL (Shared logic) */}
       {showNewMessageModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-             <div className="bg-surface w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowNewMessageModal(false);
+            }}
+          >
+             <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
                 <div className="p-6 border-b border-surface-outline-variant flex justify-between items-center bg-surface-container">
                   <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
                     <Mail className="h-5 w-5 text-primary" />
@@ -1272,13 +2300,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                       className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
                       value={newMessageContent}
                       onChange={(e) => setNewMessageContent(e.target.value)}
-                      placeholder="Type your message here..."
                     />
                   </div>
                 </div>
 
                 <div className="p-4 bg-surface-container flex justify-end gap-3">
-                  <Button variant="text" onClick={() => setShowNewMessageModal(false)}>Cancel</Button>
+                  <Button 
+                    variant="text" 
+                    onClick={() => setShowNewMessageModal(false)}
+                    className="bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600"
+                  >
+                    Cancel
+                  </Button>
                   <Button 
                     variant="filled" 
                     onClick={handleCreateNewThread} 
@@ -1295,55 +2328,99 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* DOCUMENTS MODAL (Reuse for Homeowner View) */}
       {showDocsModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-surface w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-               <div className="p-6 border-b border-surface-outline-variant bg-surface-container flex justify-between items-center">
-                  <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
+            <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+               <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center">
+                  <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                     <FileText className="h-5 w-5 text-primary" />
                     Account Documents
                   </h2>
-                  <button onClick={() => setShowDocsModal(false)} className="text-surface-on-variant hover:text-surface-on">
+                  <button onClick={() => setShowDocsModal(false)} className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
                     <X className="h-5 w-5" />
                   </button>
                </div>
                
-               <div className="p-6">
+               <div className="p-6 bg-surface dark:bg-gray-800">
                  {/* List */}
                  <div className="mb-6 space-y-2 max-h-60 overflow-y-auto pr-1">
                     {displayDocuments.length === 0 ? (
-                      <div className="text-center text-sm text-surface-on-variant py-8 border border-dashed border-surface-outline-variant rounded-xl bg-surface-container/30">
+                      <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-8 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
                         No documents uploaded for this account.
                       </div>
                     ) : (
-                      displayDocuments.map(doc => (
-                        <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container border border-surface-outline-variant group transition-all">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="p-2 bg-red-50 text-red-600 rounded">
-                              <FileText className="h-5 w-5" />
+                      displayDocuments.map(doc => {
+                        const isPDF = doc.type === 'PDF' || doc.name.toLowerCase().endsWith('.pdf') || 
+                                     doc.url.startsWith('data:application/pdf') || 
+                                     doc.url.includes('pdf');
+                        
+                        return (
+                          <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 group transition-all">
+                            <div 
+                              className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                              onClick={() => {
+                                if (isPDF) {
+                                  setSelectedDocument(doc);
+                                  setIsPDFViewerOpen(true);
+                                }
+                              }}
+                            >
+                              <div className="p-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded">
+                                <FileText className="h-5 w-5" />
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{doc.name}</p>
+                                <p className="text-xs text-surface-on-variant dark:text-gray-400">
+                                  Uploaded by {doc.uploadedBy} • {new Date(doc.uploadDate).toLocaleDateString()}
+                                </p>
+                              </div>
                             </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium text-surface-on truncate">{doc.name}</p>
-                              <p className="text-xs text-surface-on-variant">
-                                Uploaded by {doc.uploadedBy} • {new Date(doc.uploadDate).toLocaleDateString()}
-                              </p>
+                            <div className="flex items-center gap-1">
+                              {isPDF && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    console.log('PDF View button clicked:', doc.name);
+                                    console.log('Document URL:', doc.url.substring(0, 100));
+                                    setSelectedDocument(doc);
+                                    setIsPDFViewerOpen(true);
+                                    console.log('State updated - selectedDocument:', doc.id, 'isPDFViewerOpen: true');
+                                  }}
+                                  className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all z-10 relative"
+                                  title="View PDF"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </button>
+                              )}
+                              {doc.url.startsWith('data:') ? (
+                                <a 
+                                  href={doc.url} 
+                                  download={doc.name} 
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all"
+                                  title="Download"
+                                >
+                                  <Download className="h-4 w-4" />
+                                </a>
+                              ) : (
+                                <button 
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all"
+                                  title="Download"
+                                >
+                                  <Download className="h-4 w-4" />
+                                </button>
+                              )}
                             </div>
                           </div>
-                           {doc.url.startsWith('data:') ? (
-                            <a href={doc.url} download={doc.name} className="p-2 text-surface-outline-variant hover:text-primary rounded-full hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-all">
-                                <Download className="h-4 w-4" />
-                            </a>
-                          ) : (
-                             <button className="p-2 text-surface-outline-variant hover:text-primary rounded-full hover:bg-primary/10 opacity-0 group-hover:opacity-100 transition-all">
-                                <Download className="h-4 w-4" />
-                             </button>
-                          )}
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                  </div>
                  
                  {/* Footer Upload Action */}
-                 <div className="pt-4 border-t border-surface-outline-variant flex justify-center">
-                    <label className={`cursor-pointer flex items-center gap-2 px-6 py-3 rounded-full transition-colors border ${isDocUploading ? 'bg-surface-container border-primary/30 cursor-wait' : 'bg-surface-container hover:bg-surface-container-high border-surface-outline-variant text-primary font-medium'}`}>
+                 <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 flex justify-center">
+                    <label className={`cursor-pointer flex items-center gap-2 px-6 py-3 rounded-full transition-colors border ${isDocUploading ? 'bg-surface-container dark:bg-gray-700 border-primary/30 cursor-wait' : 'bg-surface-container dark:bg-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-600 border-surface-outline-variant dark:border-gray-600 text-primary font-medium'}`}>
                         {isDocUploading ? (
                           <Loader2 className="h-4 w-4 animate-spin text-primary" />
                         ) : (
@@ -1357,7 +2434,53 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
           </div>
         )}
-    </div>
+        
+        {/* PDF Viewer is now rendered via renderModals() using Portal */}
+        
+        {/* Description Expand Popup */}
+        {expandedDescription && (
+          <div 
+            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm" 
+            onClick={() => {
+              console.log('Closing popup');
+              setExpandedDescription(null);
+            }}
+          >
+            <div 
+              className="bg-surface rounded-3xl shadow-elevation-3 w-full max-w-2xl mx-4 overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 border-b border-surface-outline-variant flex justify-between items-center bg-surface-container/30">
+                <h3 className="text-lg font-medium text-surface-on flex items-center gap-2">
+                  <Info className="h-5 w-5 text-primary" />
+                  {expandedDescription.title}
+                </h3>
+                <button
+                  onClick={() => setExpandedDescription(null)}
+                  className="p-1 rounded-full hover:bg-surface-container transition-colors"
+                >
+                  <X className="h-5 w-5 text-surface-on-variant" />
+                </button>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-medium text-surface-on-variant mb-2 block">Description</label>
+                    <p className="text-sm text-surface-on whitespace-pre-wrap">{expandedDescription.description}</p>
+                  </div>
+                  {expandedDescription.internalNotes && (
+                    <div>
+                      <label className="text-xs font-medium text-surface-on-variant mb-2 block">Internal Notes</label>
+                      <p className="text-sm text-surface-on-variant whitespace-pre-wrap">{expandedDescription.internalNotes}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 };
 

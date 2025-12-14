@@ -1,17 +1,16 @@
-
 import React, { useState } from 'react';
 import Button from './Button';
 import { Mail, Lock, User, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
-import { useSignIn, useSignUp } from '@clerk/clerk-react';
-import { OAuthStrategy } from '@clerk/types';
+import { useStackApp } from '@stackframe/react';
 
 interface AuthScreenProps {
-  // Props are kept for compatibility but logic is now handled by Clerk
+  // Props are kept for compatibility but logic is now handled by Stack Auth
 }
 
 const AuthScreen: React.FC<AuthScreenProps> = () => {
-  const { isLoaded: isSignInLoaded, signIn, setActive } = useSignIn();
-  const { isLoaded: isSignUpLoaded, signUp, setActive: setActiveSignUp } = useSignUp();
+  // This component should only be rendered when StackProvider is available
+  // Use AuthScreenWrapper to ensure this
+  const stackApp = useStackApp();
   
   const [mode, setMode] = useState<'LOGIN' | 'SIGNUP'>('LOGIN');
   const [isLoading, setIsLoading] = useState(false);
@@ -26,26 +25,24 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
   // Handle Email/Password Login
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isSignInLoaded) return;
+    
+    if (!stackApp) {
+      setError("Authentication is not configured. Please set VITE_NEON_AUTH_URL in your environment variables.");
+      return;
+    }
     
     setIsLoading(true);
     setError(null);
 
     try {
-      const result = await signIn.create({
-        identifier: email,
+      await stackApp.signInWithCredential({
+        email,
         password,
       });
-
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-      } else {
-        // Handle MFA or other steps if necessary
-        console.log("Login step:", result);
-      }
+      // Stack Auth will automatically update the session
     } catch (err: any) {
       console.error("Login error:", err);
-      setError(err.errors?.[0]?.message || "Invalid email or password.");
+      setError(err.message || "Invalid email or password.");
     } finally {
       setIsLoading(false);
     }
@@ -54,46 +51,45 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
   // Handle Email/Password Signup
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isSignUpLoaded) return;
+
+    if (!stackApp) {
+      setError("Authentication is not configured. Please set VITE_NEON_AUTH_URL in your environment variables.");
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
 
     try {
-      const result = await signUp.create({
-        emailAddress: email,
+      await stackApp.signUpWithCredential({
+        email,
         password,
-        firstName,
-        lastName
       });
-
-      if (result.status === "complete") {
-        await setActiveSignUp({ session: result.createdSessionId });
-      } else {
-        // In a real app, you would redirect to an OTP verification screen here
-        // For this implementation, we'll alert the user
-        setError("Account created! Please check your email for a verification code (Verification UI not implemented in this demo).");
-      }
+      // Stack Auth will automatically update the session
     } catch (err: any) {
       console.error("Signup error:", err);
-      setError(err.errors?.[0]?.message || "Could not create account.");
+      setError(err.message || "Could not create account.");
     } finally {
       setIsLoading(false);
     }
   };
 
   // Handle OAuth (Google/Apple)
-  const handleSocialAuth = async (strategy: OAuthStrategy) => {
-    if (!isSignInLoaded) return;
+  const handleSocialAuth = async (provider: 'google' | 'apple') => {
+    if (!stackApp) {
+      setError("Authentication is not configured. Please set VITE_NEON_AUTH_URL in your environment variables.");
+      return;
+    }
+    
     setIsLoading(true);
     setError(null);
     
     try {
-      await signIn.authenticateWithRedirect({
-        strategy,
-        redirectUrl: '/sso-callback',
-        redirectUrlComplete: '/',
-      });
+      if (provider === 'google') {
+        await stackApp.signInWithOAuth('google');
+      } else if (provider === 'apple') {
+        await stackApp.signInWithOAuth('apple');
+      }
     } catch (err: any) {
       console.error("Social auth error:", err);
       setError("Connection to provider failed.");
@@ -101,39 +97,39 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
     }
   };
 
-  const inputClass = "w-full bg-surface-container-high rounded-lg px-4 py-3 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all";
+  const inputClass = "w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-4 py-3 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all";
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-surface dark:bg-gray-900 flex flex-col items-center justify-center p-4">
       
       {/* Brand Header */}
       <div className="flex flex-col items-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="h-16 w-16 bg-primary-container rounded-2xl flex items-center justify-center mb-4 shadow-elevation-1">
-          <img src="/logo.png" alt="Logo" className="h-12 w-12 object-contain" onError={(e) => {
+        <div className="h-20 w-20 bg-primary-container dark:bg-primary/20 rounded-2xl flex items-center justify-center mb-4 shadow-elevation-1 p-4">
+          <img src="/logo.png" alt="Logo" className="h-full w-full object-contain" onError={(e) => {
             e.currentTarget.style.display = 'none';
-            e.currentTarget.parentElement!.innerHTML = '<svg class="h-10 w-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>';
+            e.currentTarget.parentElement!.innerHTML = '<svg class="h-10 w-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>';
           }} />
         </div>
-        <h1 className="text-3xl font-normal text-surface-on tracking-tight text-center">Cascade Connect</h1>
-        <p className="text-surface-on-variant mt-2 text-center max-w-sm">
+        <h1 className="text-3xl font-normal text-surface-on dark:text-gray-100 tracking-tight text-center">CASCADE CONNECT</h1>
+        <p className="text-surface-on-variant dark:text-gray-400 mt-2 text-center max-w-sm">
           The premier warranty management platform for builders and homeowners.
         </p>
       </div>
 
       {/* Auth Card */}
-      <div className="w-full max-w-md bg-surface rounded-3xl border border-surface-outline-variant shadow-elevation-2 overflow-hidden animate-in zoom-in-95 duration-300">
+      <div className="w-full max-w-md bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-2 overflow-hidden animate-in zoom-in-95 duration-300">
         
         {/* Tabs */}
-        <div className="flex border-b border-surface-outline-variant">
+        <div className="flex border-b border-surface-outline-variant dark:border-gray-700">
           <button 
             onClick={() => { setMode('LOGIN'); setError(null); }}
-            className={`flex-1 py-4 text-sm font-medium transition-colors ${mode === 'LOGIN' ? 'bg-primary/5 text-primary border-b-2 border-primary' : 'text-surface-on-variant hover:bg-surface-container'}`}
+            className={`flex-1 py-4 text-sm font-medium transition-colors ${mode === 'LOGIN' ? 'bg-primary/5 dark:bg-primary/10 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700'}`}
           >
             Log In
           </button>
           <button 
             onClick={() => { setMode('SIGNUP'); setError(null); }}
-            className={`flex-1 py-4 text-sm font-medium transition-colors ${mode === 'SIGNUP' ? 'bg-primary/5 text-primary border-b-2 border-primary' : 'text-surface-on-variant hover:bg-surface-container'}`}
+            className={`flex-1 py-4 text-sm font-medium transition-colors ${mode === 'SIGNUP' ? 'bg-primary/5 dark:bg-primary/10 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700'}`}
           >
             Create Account
           </button>
@@ -152,7 +148,7 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
             {mode === 'SIGNUP' && (
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                    <label className="text-xs font-bold text-surface-on-variant ml-1 uppercase">First Name</label>
+                    <label className="text-xs font-bold text-surface-on-variant dark:text-gray-400 ml-1 uppercase">First Name</label>
                     <input 
                     type="text" 
                     required 
@@ -181,7 +177,6 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
                 <input 
                   type="email" 
                   required 
-                  placeholder="name@example.com"
                   className={`${inputClass} pl-10`}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -196,7 +191,6 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
                 <input 
                   type="password" 
                   required 
-                  placeholder="••••••••"
                   className={`${inputClass} pl-10`}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -226,14 +220,14 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
               <span className="w-full border-t border-surface-outline-variant" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-surface px-2 text-surface-on-variant">Or continue with</span>
+              <span className="bg-surface dark:bg-gray-800 px-2 text-surface-on-variant dark:text-gray-400">Or continue with</span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <button 
               type="button"
-              onClick={() => handleSocialAuth('oauth_google')}
+              onClick={() => handleSocialAuth('google')}
               disabled={isLoading}
               className="flex items-center justify-center gap-2 px-4 py-3 border border-surface-outline-variant rounded-lg hover:bg-surface-container transition-colors disabled:opacity-50"
             >
@@ -243,19 +237,19 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
               </svg>
-              <span className="text-sm font-medium text-surface-on">Google</span>
+              <span className="text-sm font-medium text-surface-on dark:text-gray-100">Google</span>
             </button>
 
             <button 
               type="button"
-              onClick={() => handleSocialAuth('oauth_apple')}
+              onClick={() => handleSocialAuth('apple')}
               disabled={isLoading}
               className="flex items-center justify-center gap-2 px-4 py-3 border border-surface-outline-variant rounded-lg hover:bg-surface-container transition-colors disabled:opacity-50"
             >
-              <svg className="h-5 w-5 text-surface-on" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 text-surface-on dark:text-gray-100" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.128 22 16.991 22 12c0-5.523-4.477-10-10-10z"/>
               </svg>
-              <span className="text-sm font-medium text-surface-on">Apple</span>
+              <span className="text-sm font-medium text-surface-on dark:text-gray-100">Apple</span>
             </button>
           </div>
 
@@ -263,7 +257,7 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
         
         {/* Footer */}
         <div className="px-8 py-4 bg-surface-container text-center border-t border-surface-outline-variant">
-          <p className="text-xs text-surface-on-variant">
+          <p className="text-xs text-surface-on-variant dark:text-gray-400">
             By continuing, you agree to our Terms of Service and Privacy Policy.
           </p>
         </div>

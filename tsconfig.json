@@ -25,5 +25,9 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "lib/cbsbooks/netlify/**/*",
+    "lib/bluetag/netlify/**/*"
+  ]
 }

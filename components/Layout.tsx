@@ -1,7 +1,8 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, Homeowner } from '../types';
-import { UserCircle, Users, ChevronDown, Search, ArrowRight, X, Menu, LogOut, Database, UserPlus, Building2, HardHat } from 'lucide-react';
+import { UserCircle, Users, ChevronDown, Search, ArrowRight, X, Menu, LogOut, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin } from 'lucide-react';
+import { useDarkMode } from './DarkModeProvider';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -20,7 +21,7 @@ interface LayoutProps {
   onClearSelection: () => void;
 
   // Navigation & Actions
-  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS') => void;
+  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS' | 'ANALYTICS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND') => void;
   onOpenEnrollment: () => void;
 }
 
@@ -44,6 +45,7 @@ const Layout: React.FC<LayoutProps> = ({
   const isBuilder = userRole === UserRole.BUILDER;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -58,43 +60,53 @@ const Layout: React.FC<LayoutProps> = ({
     };
   }, [menuRef]);
 
+  // Lock body scroll when menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [isMenuOpen]);
+
   const handleMenuAction = (action: () => void) => {
     action();
     setIsMenuOpen(false);
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col font-sans">
       {/* M3 Small Top App Bar */}
-      <header className="bg-surface text-surface-on sticky top-0 z-50 transition-shadow duration-200 border-b border-surface-container">
+      <header className="bg-surface dark:bg-gray-800 text-surface-on dark:text-gray-100 sticky top-0 z-50 transition-shadow duration-200 border-b border-surface-container dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16 gap-4">
             
             {/* Logo */}
             <button onClick={() => onNavigate('DASHBOARD')} className="flex items-center gap-3 flex-shrink-0 focus:outline-none">
-              <div className="bg-gray-100 p-1 rounded-xl border border-surface-outline-variant shadow-sm h-10 w-10 flex items-center justify-center overflow-hidden">
+              <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded-xl border border-surface-outline-variant dark:border-gray-600 shadow-sm h-10 w-12 flex items-center justify-center overflow-hidden">
                 <img 
-                  src="/logo.png" 
-                  alt="Cascade Connect" 
-                  className="h-full w-full object-contain" 
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement!.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6 text-primary"><path d="M3 21h18M5 21V7l8-4 8 4v14M8 21v-2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2z"/></svg>';
-                  }}
+                  src="/logo.svg" 
+                  alt="CASCADE CONNECT Logo" 
+                  className="h-6 w-6 object-contain" 
                 />
               </div>
-              <span className="text-xl font-normal text-surface-on tracking-tight hidden md:block">Cascade Connect</span>
+              <img 
+                src="/connect.svg" 
+                alt="CASCADE CONNECT" 
+                className="h-7 object-contain hidden md:block" 
+              />
             </button>
             
             {/* Centered Search Bar (Admin & Builder Only) */}
             {(isAdmin || isBuilder) && (
               <div className="flex-1 max-w-sm relative">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" style={{ top: '50%', transform: 'translateY(-50%)' }} />
                   <input 
                     type="text" 
-                    placeholder="Search homeowners..."
-                    className="w-full bg-surface-container rounded-full pl-9 pr-8 py-2 text-sm border-none focus:ring-2 focus:ring-primary focus:outline-none text-surface-on placeholder-surface-outline-variant transition-all"
+                    className="w-full bg-surface-container dark:bg-gray-700 rounded-full pl-9 pr-8 py-2 text-sm border-none focus:ring-2 focus:ring-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all"
                     value={searchQuery}
                     onChange={(e) => onSearchChange(e.target.value)}
                   />
@@ -110,17 +122,17 @@ const Layout: React.FC<LayoutProps> = ({
 
                 {/* Dropdown Results */}
                 {searchQuery && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-surface rounded-xl shadow-elevation-2 border border-surface-outline-variant overflow-hidden max-h-80 overflow-y-auto z-50">
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-surface dark:bg-gray-800 rounded-xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden max-h-80 overflow-y-auto z-50">
                     {searchResults.length > 0 ? (
                       searchResults.map(h => (
                         <button
                           key={h.id}
                           onClick={() => onSelectHomeowner(h)}
-                          className="w-full text-left px-4 py-3 hover:bg-surface-container flex items-center justify-between group border-b border-surface-outline-variant/50 last:border-0"
+                          className="w-full text-left px-4 py-3 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center justify-between group border-b border-surface-outline-variant/50 dark:border-gray-700/50 last:border-0"
                         >
                           <div>
-                            <p className="font-medium text-surface-on text-sm">{h.name}</p>
-                            <p className="text-xs text-surface-on-variant">
+                            <p className="font-medium text-surface-on dark:text-gray-100 text-sm">{h.name}</p>
+                            <p className="text-xs text-surface-on-variant dark:text-gray-300">
                               {h.jobName && <span className="font-medium text-primary mr-1">{h.jobName} •</span>}
                               {h.address}
                             </p>
@@ -129,7 +141,7 @@ const Layout: React.FC<LayoutProps> = ({
                         </button>
                       ))
                     ) : (
-                      <div className="p-4 text-center text-surface-on-variant text-xs">No homeowners found.</div>
+                      <div className="p-4 text-center text-surface-on-variant dark:text-gray-400 text-xs">No homeowners found.</div>
                     )}
                   </div>
                 )}
@@ -138,102 +150,161 @@ const Layout: React.FC<LayoutProps> = ({
 
             {/* Right Actions */}
             <div className="flex items-center gap-4 flex-shrink-0">
+              {/* Dark Mode Toggle */}
+              <button
+                onClick={toggleDarkMode}
+                className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-800 transition-colors"
+                title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDarkMode ? (
+                  <Sun className="h-5 w-5 text-gray-900 dark:text-gray-100" />
+                ) : (
+                  <Moon className="h-5 w-5 text-surface-on-variant dark:text-gray-300" />
+                )}
+              </button>
               
-              {/* Homeowner Switcher (Visible only in Homeowner View for testing) */}
-              {!isAdmin && !isBuilder && (
-                <div className="relative group hidden sm:block">
-                  <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-surface-on-variant hover:bg-surface-container transition-colors">
-                    <img 
-                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(activeHomeowner.name)}&background=random`} 
-                      alt="" 
-                      className="w-6 h-6 rounded-full"
-                    />
-                    <span className="hidden md:inline">{activeHomeowner.name}</span>
-                    <ChevronDown className="h-4 w-4" />
-                  </button>
-                  
-                  {/* Dropdown Menu */}
-                  <div className="absolute right-0 top-full mt-1 w-56 bg-surface rounded-xl shadow-elevation-2 border border-surface-outline-variant overflow-hidden hidden group-hover:block">
-                    <div className="px-4 py-2 bg-surface-container-high/50 border-b border-surface-outline-variant">
-                      <p className="text-xs font-bold text-surface-outline">SWITCH ACCOUNT (TESTING)</p>
+              {/* Homeowner Switcher - Show if homeowner has multiple properties with same email */}
+              {!isAdmin && !isBuilder && (() => {
+                // Find all homeowners with the same email as the active homeowner
+                const sameEmailHomeowners = homeowners.filter(h => 
+                  h.email.toLowerCase() === activeHomeowner.email.toLowerCase()
+                );
+                
+                // Only show switcher if there are multiple properties with same email
+                if (sameEmailHomeowners.length <= 1) return null;
+                
+                return (
+                  <div className="relative group hidden sm:block">
+                    <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-surface-on-variant hover:bg-surface-container transition-colors">
+                      <Home className="h-4 w-4" />
+                      <span className="hidden md:inline">{activeHomeowner.jobName || activeHomeowner.address || activeHomeowner.name}</span>
+                      <ChevronDown className="h-4 w-4" />
+                    </button>
+                    
+                    {/* Dropdown Menu */}
+                    <div className="absolute right-0 top-full mt-1 w-64 bg-surface dark:bg-gray-800 rounded-xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden hidden group-hover:block z-50">
+                      <div className="px-4 py-2 bg-surface-container-high/50 border-b border-surface-outline-variant">
+                        <p className="text-xs font-bold text-surface-outline">SELECT PROPERTY</p>
+                      </div>
+                      {sameEmailHomeowners.map(h => (
+                        <button
+                          key={h.id}
+                          onClick={() => onSwitchHomeowner(h.id)}
+                          className={`w-full text-left px-4 py-3 text-sm hover:bg-surface-container flex flex-col gap-1 ${activeHomeowner.id === h.id ? 'bg-primary-container/30' : ''}`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Home className="h-3.5 w-3.5 text-surface-outline-variant" />
+                            <span className={`font-medium ${activeHomeowner.id === h.id ? 'text-primary' : 'text-surface-on'}`}>
+                              {h.jobName || h.address || h.name}
+                            </span>
+                          </div>
+                          {h.address && h.address !== (h.jobName || h.name) && (
+                            <span className="text-xs text-surface-on-variant dark:text-gray-400 ml-5 truncate">
+                              {h.address}
+                            </span>
+                          )}
+                        </button>
+                      ))}
                     </div>
-                    {homeowners.map(h => (
-                      <button
-                        key={h.id}
-                        onClick={() => onSwitchHomeowner(h.id)}
-                        className={`w-full text-left px-4 py-3 text-sm hover:bg-surface-container flex items-center gap-3 ${activeHomeowner.id === h.id ? 'bg-primary-container/30 text-primary' : 'text-surface-on'}`}
-                      >
-                         <img 
-                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(h.name)}&background=random`} 
-                          alt="" 
-                          className="w-6 h-6 rounded-full"
-                        />
-                        {h.name}
-                      </button>
-                    ))}
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
-              {/* Main Menu Dropdown */}
-              <div className="relative" ref={menuRef}>
-                <button 
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-                  className="flex items-center justify-center h-10 w-10 rounded-full hover:bg-surface-container transition-colors text-surface-on"
-                >
-                  <Menu className="h-6 w-6" />
-                </button>
+              {/* Main Menu Dropdown - Hidden for Homeowners */}
+              {(isAdmin || isBuilder) && (
+                <div className="relative" ref={menuRef}>
+                  <button 
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="flex items-center justify-center h-10 w-10 rounded-full hover:bg-surface-container dark:hover:bg-gray-700 transition-colors text-surface-on dark:text-gray-100"
+                  >
+                    <Menu className="h-6 w-6" />
+                  </button>
 
                 {isMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-surface rounded-xl shadow-elevation-2 border border-surface-outline-variant overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-surface dark:bg-gray-800 rounded-xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100 origin-top-right max-h-[calc(100vh-5rem)] flex flex-col">
                     {/* User Info Header */}
-                    <div className="px-4 py-3 bg-surface-container-high/30 border-b border-surface-outline-variant">
-                      <p className="text-sm font-bold text-surface-on">
+                    <div className="px-4 py-3 bg-surface-container-high/30 dark:bg-gray-700/30 border-b border-surface-outline-variant dark:border-gray-700 flex-shrink-0">
+                      <p className="text-sm font-bold text-surface-on dark:text-gray-100">
                         {isAdmin ? 'Administrator' : isBuilder ? 'Builder Account' : activeHomeowner.name}
                       </p>
-                      <p className="text-xs text-surface-on-variant">
+                      <p className="text-xs text-surface-on-variant dark:text-gray-400">
                         {isAdmin ? 'Internal Portal' : isBuilder ? 'Access: Read Only' : 'Homeowner Portal'}
                       </p>
                     </div>
 
-                    <div className="py-2">
+                    <div className="py-2 overflow-y-auto flex-1 min-h-0">
                       {/* Admin Only Links */}
                       {isAdmin && (
                         <>
                           <button 
                             onClick={() => handleMenuAction(() => onNavigate('TEAM'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on hover:bg-surface-container flex items-center gap-3"
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
                           >
-                            <Users className="h-4 w-4 text-surface-outline" />
+                            <Users className="h-4 w-4 text-surface-outline dark:text-gray-500" />
                             Internal Users
                           </button>
                           <button 
                             onClick={() => handleMenuAction(() => onNavigate('SUBS'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on hover:bg-surface-container flex items-center gap-3"
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
                           >
-                            <HardHat className="h-4 w-4 text-surface-outline" />
+                            <HardHat className="h-4 w-4 text-surface-outline dark:text-gray-500" />
                             Subs (Contractors)
                           </button>
                            <button 
                             onClick={() => handleMenuAction(() => onNavigate('BUILDERS'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on hover:bg-surface-container flex items-center gap-3"
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
                           >
-                            <Building2 className="h-4 w-4 text-surface-outline" />
+                            <Building2 className="h-4 w-4 text-surface-outline dark:text-gray-500" />
                             Builders
                           </button>
                           <button 
-                            onClick={() => handleMenuAction(() => onNavigate('DATA'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on hover:bg-surface-container flex items-center gap-3"
+                            onClick={() => handleMenuAction(() => onNavigate('HOMEOWNERS'))}
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
                           >
-                            <Database className="h-4 w-4 text-surface-outline" />
+                            <Home className="h-4 w-4 text-surface-outline dark:text-gray-500" />
+                            Homeowners
+                          </button>
+                          <button 
+                            onClick={() => handleMenuAction(() => onNavigate('DATA'))}
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                          >
+                            <Database className="h-4 w-4 text-surface-outline dark:text-gray-500" />
                             Data Import
                           </button>
+                          <button 
+                            onClick={() => handleMenuAction(() => onNavigate('ANALYTICS'))}
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                          >
+                            <BarChart3 className="h-4 w-4 text-surface-outline dark:text-gray-500" />
+                            Warranty Analytics
+                          </button>
+                          <button 
+                            onClick={() => handleMenuAction(() => onNavigate('INVOICES'))}
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                          >
+                            <FileText className="h-4 w-4 text-surface-outline dark:text-gray-500" />
+                            Invoices
+                          </button>
+                          <button 
+                            onClick={() => handleMenuAction(() => onNavigate('EMAIL_HISTORY'))}
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                          >
+                            <Mail className="h-4 w-4 text-surface-outline dark:text-gray-500" />
+                            Email History
+                          </button>
+                          <button 
+                            onClick={() => handleMenuAction(() => onNavigate('BACKEND'))}
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                          >
+                            <Server className="h-4 w-4 text-surface-outline dark:text-gray-500" />
+                            Backend
+                          </button>
                           
-                          <div className="my-1 border-t border-surface-outline-variant/50"></div>
+                          <div className="my-1 border-t border-surface-outline-variant/50 dark:border-gray-700/50"></div>
                           
                           <button 
                             onClick={() => handleMenuAction(onOpenEnrollment)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-primary font-medium hover:bg-surface-container flex items-center gap-3"
+                            className="w-full text-left px-4 py-2.5 text-sm text-primary font-medium hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
                           >
                             <UserPlus className="h-4 w-4 text-primary" />
                             Enroll Homeowner
@@ -241,17 +312,17 @@ const Layout: React.FC<LayoutProps> = ({
                         </>
                       )}
 
-                      <div className="my-1 border-t border-surface-outline-variant"></div>
+                      <div className="my-1 border-t border-surface-outline-variant dark:border-gray-700"></div>
 
                       {/* Switch Role / Logout */}
                       <button 
                         onClick={() => handleMenuAction(onSwitchRole)}
-                        className="w-full text-left px-4 py-2.5 text-sm text-surface-on hover:bg-surface-container flex items-center gap-3"
+                        className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
                       >
                         {userRole === UserRole.ADMIN ? (
-                          <><UserCircle className="h-4 w-4 text-surface-outline" /> Switch to Homeowner View</>
+                          <><UserCircle className="h-4 w-4 text-surface-outline dark:text-gray-500" /> Switch to Homeowner View</>
                         ) : (
-                          <><Users className="h-4 w-4 text-surface-outline" /> Switch to Admin View</>
+                          <><Users className="h-4 w-4 text-surface-outline dark:text-gray-500" /> Switch to Admin View</>
                         )}
                       </button>
                       
@@ -260,7 +331,7 @@ const Layout: React.FC<LayoutProps> = ({
                           localStorage.removeItem('cascade_session');
                           window.location.reload();
                         }}
-                        className="w-full text-left px-4 py-2.5 text-sm text-error hover:bg-error/5 flex items-center gap-3"
+                        className="w-full text-left px-4 py-2.5 text-sm text-error hover:bg-error/5 dark:hover:bg-error/10 flex items-center gap-3"
                       >
                         <LogOut className="h-4 w-4" />
                         Log Out
@@ -268,7 +339,8 @@ const Layout: React.FC<LayoutProps> = ({
                     </div>
                   </div>
                 )}
-              </div>
+                </div>
+              )}
 
             </div>
           </div>

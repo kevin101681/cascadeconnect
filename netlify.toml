@@ -19,3 +19,7 @@
 [build.processing.html]
   pretty_urls = true
 
+# Redirects for SPA routing (handled by public/_redirects)
+# All routes redirect to index.html for client-side routing
+# API routes are handled in public/_redirects (processed first)
+

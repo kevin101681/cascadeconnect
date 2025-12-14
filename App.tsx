@@ -5,13 +5,21 @@ import Dashboard from './components/Dashboard';
 import ClaimDetail from './components/ClaimDetail';
 import NewClaimForm from './components/NewClaimForm';
 import HomeownerEnrollment from './components/HomeownerEnrollment';
-import AuthScreen from './components/AuthScreen';
+import AuthScreenWrapper from './components/AuthScreenWrapper';
 import InternalUserManagement from './components/InternalUserManagement';
 import BuilderManagement from './components/BuilderManagement';
 import DataImport from './components/DataImport';
 import TaskList from './components/TaskList';
+import MessageSummaryModal, { ClaimMessage } from './components/MessageSummaryModal';
+import WarrantyAnalytics from './components/WarrantyAnalytics';
+import InvoicesModal from './components/InvoicesModal';
+import HomeownersList from './components/HomeownersList';
+import EmailHistory from './components/EmailHistory';
+import BackendDashboard from './components/BackendDashboard';
+import HomeownerSelector from './components/HomeownerSelector';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
-import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS } from './constants';
+import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS, MOCK_CLAIM_MESSAGES } from './constants';
+import { sendEmail } from './services/emailService';
 
 // DB Imports
 import { db, isDbConfigured } from './db';
@@ -27,8 +35,62 @@ import {
 } from './db/schema';
 import { desc, eq } from 'drizzle-orm';
 
-// Clerk
-import { useUser, useAuth } from '@clerk/clerk-react';
+// Stack Auth - with safe fallbacks for development mode
+import { useStackApp, useUser as useStackUser } from '@stackframe/react';
+import { useNoAuthContext } from './components/NoAuthProvider';
+
+// Safe hooks that work with or without Stack Auth
+// We always call hooks in the same order (React requirement)
+// The noAuthContext check tells us which provider is active
+const useUser = () => {
+  // Always call hooks in same order
+  const noAuthContext = useNoAuthContext();
+  
+  // If NoAuthProvider is present, StackProvider is NOT present
+  // So we can't call useStackUser() - it would throw
+  // Return defaults instead
+  if (noAuthContext !== null) {
+    return { isSignedIn: false, user: null, isLoaded: true };
+  }
+  
+  // StackProvider IS present, safe to call Stack Auth hooks
+  // Note: This violates React's rules if we conditionally call hooks
+  // But since we check noAuthContext first and return early,
+  // useStackUser() is only called when StackProvider exists
+  const stackUser = useStackUser();
+  const stackApp = useStackApp();
+  
+  // Map Stack Auth user to Clerk-like format for compatibility
+  return {
+    isSignedIn: stackUser !== null,
+    user: stackUser ? {
+      id: stackUser.id,
+      primaryEmailAddress: { emailAddress: stackUser.primaryEmail },
+      firstName: stackUser.displayName?.split(' ')[0] || '',
+      lastName: stackUser.displayName?.split(' ').slice(1).join(' ') || '',
+      fullName: stackUser.displayName || '',
+    } : null,
+    isLoaded: true,
+  };
+};
+
+const useAuth = () => {
+  // Always call hooks in same order  
+  const noAuthContext = useNoAuthContext();
+  
+  // If NoAuthProvider is present, return defaults
+  if (noAuthContext !== null) {
+    return { signOut: async () => {} };
+  }
+  
+  // StackProvider IS present, safe to call Stack Auth hooks
+  const stackApp = useStackApp();
+  return { 
+    signOut: async () => {
+      await stackApp.signOut();
+    }
+  };
+};
 
 const PLACEHOLDER_HOMEOWNER: Homeowner = {
   id: 'placeholder',
@@ -72,25 +134,74 @@ const saveState = (key: string, data: any) => {
 
 function App() {
   // --- CLERK AUTH INTEGRATION ---
+  // Use safe hooks that check for NoAuthProvider first
   const { isSignedIn, user: clerkUser, isLoaded } = useUser();
   const { signOut } = useAuth();
   
   // State for mapped user roles
-  const [userRole, setUserRole] = useState<UserRole>(UserRole.HOMEOWNER);
+  const [userRole, setUserRole] = useState<UserRole>(UserRole.ADMIN);
   const [activeEmployee, setActiveEmployee] = useState<InternalEmployee>(MOCK_INTERNAL_EMPLOYEES[0]);
   const [activeHomeowner, setActiveHomeowner] = useState<Homeowner>(PLACEHOLDER_HOMEOWNER);
   const [currentBuilderId, setCurrentBuilderId] = useState<string | null>(null);
 
   // Data State - Lazy Load from LS first
-  const [homeowners, setHomeowners] = useState<Homeowner[]>(() => loadState('cascade_homeowners', MOCK_HOMEOWNERS));
-  const [claims, setClaims] = useState<Claim[]>(() => loadState('cascade_claims', MOCK_CLAIMS));
-  const [tasks, setTasks] = useState<Task[]>(() => loadState('cascade_tasks', MOCK_TASKS));
-  const [documents, setDocuments] = useState<HomeownerDocument[]>(() => loadState('cascade_documents', MOCK_DOCUMENTS));
-  const [employees, setEmployees] = useState<InternalEmployee[]>(() => loadState('cascade_employees', MOCK_INTERNAL_EMPLOYEES));
-  const [contractors, setContractors] = useState<Contractor[]>(() => loadState('cascade_contractors', MOCK_CONTRACTORS));
-  const [messages, setMessages] = useState<MessageThread[]>(() => loadState('cascade_messages', MOCK_THREADS));
-  const [builderGroups, setBuilderGroups] = useState<BuilderGroup[]>(() => loadState('cascade_builder_groups', MOCK_BUILDER_GROUPS));
-  const [builderUsers, setBuilderUsers] = useState<BuilderUser[]>(() => loadState('cascade_builder_users', MOCK_BUILDER_USERS));
+  // CRITICAL: FORCE_MOCK_DATA should be false in production to preserve data
+  // Only set to true temporarily for testing/development
+  const FORCE_MOCK_DATA = false; // Set to true ONLY for testing - will overwrite all data!
+  
+  const [homeowners, setHomeowners] = useState<Homeowner[]>(() => 
+    FORCE_MOCK_DATA ? MOCK_HOMEOWNERS : loadState('cascade_homeowners', MOCK_HOMEOWNERS)
+  );
+  const [claims, setClaims] = useState<Claim[]>(() => 
+    FORCE_MOCK_DATA ? MOCK_CLAIMS : loadState('cascade_claims', MOCK_CLAIMS)
+  );
+  const [tasks, setTasks] = useState<Task[]>(() => 
+    FORCE_MOCK_DATA ? MOCK_TASKS : loadState('cascade_tasks', MOCK_TASKS)
+  );
+  const [documents, setDocuments] = useState<HomeownerDocument[]>(() => 
+    FORCE_MOCK_DATA ? MOCK_DOCUMENTS : loadState('cascade_documents', MOCK_DOCUMENTS)
+  );
+  const [employees, setEmployees] = useState<InternalEmployee[]>(() => 
+    FORCE_MOCK_DATA ? MOCK_INTERNAL_EMPLOYEES : loadState('cascade_employees', MOCK_INTERNAL_EMPLOYEES)
+  );
+  const [contractors, setContractors] = useState<Contractor[]>(() => 
+    FORCE_MOCK_DATA ? MOCK_CONTRACTORS : loadState('cascade_contractors', MOCK_CONTRACTORS)
+  );
+  const [messages, setMessages] = useState<MessageThread[]>(() => 
+    FORCE_MOCK_DATA ? MOCK_THREADS : loadState('cascade_messages', MOCK_THREADS)
+  );
+  const [builderGroups, setBuilderGroups] = useState<BuilderGroup[]>(() => 
+    FORCE_MOCK_DATA ? MOCK_BUILDER_GROUPS : loadState('cascade_builder_groups', MOCK_BUILDER_GROUPS)
+  );
+  const [builderUsers, setBuilderUsers] = useState<BuilderUser[]>(() => 
+    FORCE_MOCK_DATA ? MOCK_BUILDER_USERS : loadState('cascade_builder_users', MOCK_BUILDER_USERS)
+  );
+  const [claimMessages, setClaimMessages] = useState<ClaimMessage[]>(() =>
+    FORCE_MOCK_DATA ? MOCK_CLAIM_MESSAGES : loadState('cascade_claim_messages', MOCK_CLAIM_MESSAGES)
+  );
+
+  // --- LOAD MOCK DATA ON FIRST MOUNT IF LOCALSTORAGE IS EMPTY ---
+  useEffect(() => {
+    // Check if localStorage is empty for key data, if so, load mock data
+    const hasHomeowners = localStorage.getItem('cascade_homeowners');
+    const hasClaims = localStorage.getItem('cascade_claims');
+    const hasBuilders = localStorage.getItem('cascade_builder_groups');
+    const hasContractors = localStorage.getItem('cascade_contractors');
+    
+    if (!hasHomeowners && MOCK_HOMEOWNERS.length > 0) {
+      setHomeowners(MOCK_HOMEOWNERS);
+    }
+    if (!hasClaims && MOCK_CLAIMS.length > 0) {
+      setClaims(MOCK_CLAIMS);
+    }
+    if (!hasBuilders && MOCK_BUILDER_GROUPS.length > 0) {
+      setBuilderGroups(MOCK_BUILDER_GROUPS);
+      setBuilderUsers(MOCK_BUILDER_USERS);
+    }
+    if (!hasContractors && MOCK_CONTRACTORS.length > 0) {
+      setContractors(MOCK_CONTRACTORS);
+    }
+  }, []); // Only run once on mount
 
   // --- PERSISTENCE EFFECTS ---
   // Automatically save state to LocalStorage whenever it changes
@@ -117,8 +228,28 @@ function App() {
         let loadedBuilders = builderUsers;
 
         if (isDbConfigured) {
-             // 1. Fetch Homeowners
-            const dbHomeowners = await db.select().from(homeownersTable);
+             // 1. Fetch Homeowners with retry logic
+            let dbHomeowners: any[] = [];
+            let retryCount = 0;
+            const maxRetries = 3;
+            
+            while (retryCount < maxRetries) {
+              try {
+                dbHomeowners = await db.select().from(homeownersTable);
+                break; // Success, exit retry loop
+              } catch (error) {
+                retryCount++;
+                console.warn(`Database query attempt ${retryCount} failed:`, error);
+                if (retryCount >= maxRetries) {
+                  console.error("❌ Failed to fetch homeowners from database after retries");
+                  // Don't throw - continue with local storage data
+                  break;
+                }
+                // Wait before retry (exponential backoff)
+                await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+              }
+            }
+            
             if (dbHomeowners.length > 0) {
               const mappedHomeowners: Homeowner[] = dbHomeowners.map(h => ({
                 id: h.id,
@@ -144,8 +275,118 @@ function App() {
                 enrollmentComments: h.enrollmentComments || '',
                 password: h.password || undefined
               }));
-              setHomeowners(mappedHomeowners);
+              
+              // CRITICAL: Merge strategy - Database is source of truth, but preserve any local-only homeowners
+              // that might be pending database sync (added in same session before refresh)
+              setHomeowners(prev => {
+                const dbIds = new Set(mappedHomeowners.map(h => h.id));
+                const dbEmails = new Set(mappedHomeowners.map(h => h.email.toLowerCase()));
+                
+                // Find local-only homeowners that aren't in DB yet
+                // Match by both ID and email to catch duplicates
+                const localOnly = prev.filter(h => {
+                  const notInDbById = !dbIds.has(h.id);
+                  const notInDbByEmail = !dbEmails.has(h.email.toLowerCase());
+                  // Include if not in DB by ID OR email (to catch cases where ID differs but email matches)
+                  return notInDbById && notInDbByEmail;
+                });
+                
+                // Combine: DB data (source of truth) + local-only (pending sync)
+                const merged = [...mappedHomeowners, ...localOnly];
+                console.log(`✅ Loaded ${mappedHomeowners.length} homeowners from DB, ${localOnly.length} from local storage`);
+                return merged;
+              });
               loadedHomeowners = mappedHomeowners;
+            } else {
+              console.log("⚠️ No homeowners found in database");
+              
+              // RECOVERY: If database is empty but we have local storage data, 
+              // attempt to sync local storage data to database (backup recovery)
+              const localHomeowners = loadState('cascade_homeowners', []);
+              if (localHomeowners.length > 0 && localHomeowners !== MOCK_HOMEOWNERS) {
+                console.log(`🔄 Attempting to recover ${localHomeowners.length} homeowners from local storage to database...`);
+                
+                // Try to sync local storage homeowners to database (one by one to avoid errors)
+                let syncedCount = 0;
+                for (const localH of localHomeowners) {
+                  // Skip mock data and placeholder homeowners
+                  if (localH.id === 'placeholder' || localH.id.startsWith('homeowner')) {
+                    continue;
+                  }
+                  
+                  try {
+                    // Check if already exists in DB
+                    const existing = await db.select().from(homeownersTable).where(eq(homeownersTable.id, localH.id));
+                    if (existing.length === 0) {
+                      // Not in DB, try to insert
+                      await db.insert(homeownersTable).values({
+                        id: localH.id,
+                        name: localH.name,
+                        email: localH.email,
+                        phone: localH.phone || null,
+                        street: localH.street || '',
+                        city: localH.city || '',
+                        state: localH.state || '',
+                        zip: localH.zip || '',
+                        address: localH.address,
+                        builder: localH.builder || null,
+                        builderGroupId: localH.builderId || null,
+                        jobName: localH.jobName || '',
+                        closingDate: localH.closingDate,
+                        firstName: localH.firstName || null,
+                        lastName: localH.lastName || null,
+                        buyer2Email: localH.buyer2Email || null,
+                        buyer2Phone: localH.buyer2Phone || null,
+                        agentName: localH.agentName || null,
+                        agentEmail: localH.agentEmail || null,
+                        agentPhone: localH.agentPhone || null,
+                        enrollmentComments: localH.enrollmentComments || null,
+                        password: localH.password || null
+                      } as any);
+                      syncedCount++;
+                    }
+                  } catch (syncError) {
+                    console.warn(`Failed to sync homeowner ${localH.id} to database:`, syncError);
+                    // Continue with other homeowners
+                  }
+                }
+                
+                if (syncedCount > 0) {
+                  console.log(`✅ Recovered ${syncedCount} homeowners from local storage to database`);
+                  // Reload from database after sync
+                  const recoveredHomeowners = await db.select().from(homeownersTable);
+                  if (recoveredHomeowners.length > 0) {
+                    const mappedRecovered = recoveredHomeowners.map(h => ({
+                      id: h.id,
+                      name: h.name,
+                      firstName: h.firstName || '',
+                      lastName: h.lastName || '',
+                      email: h.email,
+                      phone: h.phone || '',
+                      buyer2Email: h.buyer2Email || '',
+                      buyer2Phone: h.buyer2Phone || '',
+                      street: h.street || '',
+                      city: h.city || '',
+                      state: h.state || '',
+                      zip: h.zip || '',
+                      address: h.address,
+                      builder: h.builder || '',
+                      builderId: h.builderGroupId || undefined,
+                      jobName: h.jobName || '',
+                      closingDate: h.closingDate ? new Date(h.closingDate) : new Date(),
+                      agentName: h.agentName || '',
+                      agentEmail: h.agentEmail || '',
+                      agentPhone: h.agentPhone || '',
+                      enrollmentComments: h.enrollmentComments || '',
+                      password: h.password || undefined
+                    }));
+                    setHomeowners(mappedRecovered);
+                    loadedHomeowners = mappedRecovered;
+                  }
+                }
+              }
+              
+              // Keep existing homeowners from state/localStorage as fallback
             }
 
             // 2. Fetch Users (Employees & Builders)
@@ -187,6 +428,7 @@ function App() {
             if (dbClaims.length > 0) {
               const mappedClaims: Claim[] = dbClaims.map(c => ({
                 id: c.id,
+                claimNumber: (c as any).claimNumber || undefined, // Optional field, may not exist in DB
                 title: c.title,
                 description: c.description,
                 category: c.category || 'General',
@@ -255,41 +497,52 @@ function App() {
             }
 
             // 7. Fetch Contractors
-            const dbContractors = await db.select().from(contractorsTable);
-            if (dbContractors.length > 0) {
-              const mappedContractors: Contractor[] = dbContractors.map(c => ({
-                id: c.id,
-                companyName: c.companyName,
-                contactName: c.contactName || '',
-                email: c.email,
-                specialty: c.specialty
-              }));
-              setContractors(mappedContractors);
+            try {
+              const dbContractors = await db.select().from(contractorsTable);
+              if (dbContractors.length > 0) {
+                const mappedContractors: Contractor[] = dbContractors.map(c => ({
+                  id: c.id,
+                  companyName: c.companyName,
+                  contactName: c.contactName || '',
+                  email: c.email,
+                  specialty: c.specialty
+                }));
+                setContractors(mappedContractors);
+              }
+            } catch (error: any) {
+              // Contractors table might not exist yet - that's okay, use local storage
+              console.log('Contractors table not found, using local storage:', error.message);
             }
 
              // 8. Fetch Messages
-            const dbThreads = await db.select().from(messageThreadsTable);
-            if (dbThreads.length > 0) {
-              const mappedThreads: MessageThread[] = dbThreads.map(t => ({
-                id: t.id,
-                subject: t.subject,
-                homeownerId: t.homeownerId || '',
-                participants: t.participants || [],
-                isRead: t.isRead || false,
-                lastMessageAt: t.lastMessageAt ? new Date(t.lastMessageAt) : new Date(),
-                messages: (t.messages || []).map((m: any) => ({
-                    ...m,
-                    timestamp: m.timestamp ? new Date(m.timestamp) : new Date()
-                }))
-              }));
-              setMessages(mappedThreads);
+            try {
+              const dbThreads = await db.select().from(messageThreadsTable);
+              if (dbThreads.length > 0) {
+                const mappedThreads: MessageThread[] = dbThreads.map(t => ({
+                  id: t.id,
+                  subject: t.subject,
+                  homeownerId: t.homeownerId || '',
+                  participants: t.participants || [],
+                  isRead: t.isRead || false,
+                  lastMessageAt: t.lastMessageAt ? new Date(t.lastMessageAt) : new Date(),
+                  messages: (t.messages || []).map((m: any) => ({
+                      ...m,
+                      timestamp: m.timestamp ? new Date(m.timestamp) : new Date()
+                  }))
+                }));
+                setMessages(mappedThreads);
+              }
+            } catch (error: any) {
+              // Message threads table might not exist yet - that's okay, use local storage
+              console.log('Message threads table not found, using local storage:', error.message);
             }
 
             console.log("Successfully synced with Neon DB.");
         } 
 
-        // --- MAP CLERK USER TO INTERNAL USER ---
+        // --- MAP STACK AUTH USER TO INTERNAL USER ---
         if (isSignedIn && clerkUser) {
+           // Stack Auth user is mapped to clerkUser format in useUser hook
            const email = clerkUser.primaryEmailAddress?.emailAddress.toLowerCase();
            if (email) {
               // 1. Check Employees
@@ -308,11 +561,43 @@ function App() {
                  return;
               }
 
-              // 3. Check Homeowners
-              const h = loadedHomeowners.find(home => home.email.toLowerCase() === email);
-              if (h) {
+              // 3. Check Homeowners - handle multiple homeowners with same email
+              const matchingHomeowners = loadedHomeowners.filter(home => home.email.toLowerCase() === email);
+              if (matchingHomeowners.length > 0) {
                  setUserRole(UserRole.HOMEOWNER);
-                 setActiveHomeowner(h);
+                 
+                 // If multiple homeowners with same email, show selector
+                 if (matchingHomeowners.length > 1) {
+                   // Check if user has previously selected a homeowner for this email
+                   const storedHomeownerId = typeof window !== 'undefined' 
+                     ? localStorage.getItem(`cascade_selected_homeowner_${email.toLowerCase()}`)
+                     : null;
+                   
+                   const preselected = storedHomeownerId 
+                     ? matchingHomeowners.find(h => h.id === storedHomeownerId)
+                     : null;
+                   
+                   if (preselected) {
+                     // User has a stored selection, use it
+                     setActiveHomeowner(preselected);
+                     setSelectedHomeownerId(preselected.id);
+                   } else {
+                     // Show selector to let user choose
+                     setMatchingHomeowners(matchingHomeowners);
+                     // Set a temporary placeholder until selection is made
+                     setActiveHomeowner(matchingHomeowners[0]);
+                   }
+                 } else {
+                   // Only one homeowner with this email
+                   setActiveHomeowner(matchingHomeowners[0]);
+                   setSelectedHomeownerId(matchingHomeowners[0].id);
+                 }
+                 
+                 // Store user email for later reference
+                 if (typeof window !== 'undefined') {
+                   localStorage.setItem('cascade_user_email', email);
+                 }
+                 
                  return;
               }
 
@@ -339,10 +624,47 @@ function App() {
     syncDataAndUser();
   }, [isLoaded, isSignedIn, clerkUser?.id]); // Re-run when auth state changes
 
-  // UI State - Persistent
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS'>(() => 
-    loadState('cascade_ui_view', 'DASHBOARD')
-  );
+  // UI State - Persistent (but reset INVOICES on page load to prevent auto-opening)
+  // Check URL hash for invoice creation link
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS' | 'ANALYTICS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND'>(() => {
+    // Check if URL has invoice creation parameters
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      const search = window.location.search;
+      
+      // Parse params from hash (e.g., #invoices?createInvoice=true) or from search
+      let urlParams: URLSearchParams;
+      if (hash.includes('?')) {
+        // Hash contains query params: #invoices?createInvoice=true&...
+        const hashParts = hash.split('?');
+        urlParams = new URLSearchParams(hashParts[1] || '');
+      } else {
+        // Use regular search params
+        urlParams = new URLSearchParams(search);
+      }
+      
+      // Check for invoice creation
+      if (hash.includes('#invoices') || urlParams.get('createInvoice') === 'true') {
+        // Store pre-fill data in sessionStorage for CBS Books to pick up
+        const prefillData = {
+          clientName: urlParams.get('clientName') || '',
+          clientEmail: urlParams.get('clientEmail') || '',
+          projectDetails: urlParams.get('projectDetails') || '',
+          homeownerId: urlParams.get('homeownerId') || ''
+        };
+        
+        if (prefillData.clientName) {
+          sessionStorage.setItem('invoicePrefill', JSON.stringify(prefillData));
+          // Clean up URL
+          window.history.replaceState({}, '', window.location.pathname);
+          return 'INVOICES';
+        }
+      }
+    }
+    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS' | 'ANALYTICS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY'>('cascade_ui_view', 'DASHBOARD');
+    // Don't auto-open modals on page load - always start at DASHBOARD
+    return saved === 'INVOICES' ? 'DASHBOARD' : saved;
+  });
   
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(() => 
     loadState('cascade_ui_claim_id', null)
@@ -351,6 +673,20 @@ function App() {
   const [selectedAdminHomeownerId, setSelectedAdminHomeownerId] = useState<string | null>(() => 
     loadState('cascade_ui_homeowner_id', null)
   );
+  
+  // State for handling multiple homeowners with same email
+  const [matchingHomeowners, setMatchingHomeowners] = useState<Homeowner[] | null>(null);
+  const [selectedHomeownerId, setSelectedHomeownerId] = useState<string | null>(() => {
+    // Load the selected homeowner ID for the current user's email from localStorage
+    if (typeof window !== 'undefined') {
+      const userEmail = localStorage.getItem('cascade_user_email');
+      if (userEmail) {
+        const stored = localStorage.getItem(`cascade_selected_homeowner_${userEmail.toLowerCase()}`);
+        return stored || null;
+      }
+    }
+    return null;
+  });
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -413,12 +749,75 @@ function App() {
     if (homeowner) {
       setActiveHomeowner(homeowner);
       setCurrentView('DASHBOARD');
+      
+      // Save selection for users with multiple properties (same email)
+      if (typeof window !== 'undefined' && clerkUser?.primaryEmailAddress?.emailAddress) {
+        const email = clerkUser.primaryEmailAddress.emailAddress.toLowerCase();
+        localStorage.setItem(`cascade_selected_homeowner_${email}`, id);
+      }
     }
   };
 
-  const handleSelectClaim = (claim: Claim) => {
+  const [claimEditMode, setClaimEditMode] = useState(false);
+  
+  const handleSelectClaim = (claim: Claim, startInEditMode: boolean = true) => {
     setSelectedClaimId(claim.id);
+    setClaimEditMode(startInEditMode);
     setCurrentView('DETAIL');
+  };
+
+  // Helper function to track claim-related messages
+  const trackClaimMessage = (claimId: string, messageData: {
+    type: 'HOMEOWNER' | 'SUBCONTRACTOR';
+    threadId?: string;
+    subject: string;
+    recipient: string;
+    recipientEmail: string;
+    content: string;
+    senderName: string;
+  }) => {
+    const newClaimMessage: ClaimMessage = {
+      id: crypto.randomUUID(),
+      claimId,
+      ...messageData,
+      timestamp: new Date()
+    };
+    
+    setClaimMessages(prev => {
+      const updated = [...prev, newClaimMessage];
+      saveState('cascade_claim_messages', updated);
+      return updated;
+    });
+  };
+
+  // Helper function to add an internal note to a claim
+  const addInternalNoteToClaim = async (claimId: string, noteText: string, userName: string = activeEmployee.name) => {
+    const claim = claims.find(c => c.id === claimId);
+    if (!claim) return;
+
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { 
+      month: '2-digit', 
+      day: '2-digit', 
+      year: 'numeric' 
+    });
+    const timeStr = now.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+    const timestamp = `${dateStr} at ${timeStr} by ${userName}`;
+    const noteWithTimestamp = `[${timestamp}] ${noteText}`;
+    
+    const currentNotes = claim.internalNotes || '';
+    const updatedNotes = currentNotes 
+      ? `${currentNotes}\n\n${noteWithTimestamp}`
+      : noteWithTimestamp;
+    
+    await handleUpdateClaim({
+      ...claim,
+      internalNotes: updatedNotes
+    });
   };
 
   const handleUpdateClaim = async (updatedClaim: Claim) => {
@@ -454,8 +853,29 @@ function App() {
     const subjectHomeowner = ((userRole === UserRole.ADMIN || userRole === UserRole.BUILDER) && targetHomeowner) ? targetHomeowner : activeHomeowner;
     if (!subjectHomeowner) return;
 
+    // Generate a readable claim number (CLM-YYYY-NNN format)
+    const year = new Date().getFullYear();
+    const existingClaimsThisYear = claims.filter(c => {
+      if (!c.claimNumber) return false;
+      return c.claimNumber.startsWith(`CLM-${year}-`);
+    });
+    // Find the highest number for this year
+    let maxNumber = 0;
+    existingClaimsThisYear.forEach(c => {
+      if (c.claimNumber) {
+        const match = c.claimNumber.match(/CLM-\d{4}-(\d{3})/);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (num > maxNumber) maxNumber = num;
+        }
+      }
+    });
+    const nextNumber = (maxNumber + 1).toString().padStart(3, '0');
+    const claimNumber = `CLM-${year}-${nextNumber}`;
+
     const newClaim: Claim = {
       id: crypto.randomUUID(),
+      claimNumber: claimNumber,
       title: data.title || '',
       description: data.description || '',
       category: data.category || 'Other',
@@ -486,9 +906,16 @@ function App() {
     // DB Insert
     if (isDbConfigured) {
       try {
+        // Validate homeownerId is a valid UUID
+        const isValidUUID = (str: string) => {
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          return uuidRegex.test(str);
+        };
+        const dbHomeownerId = (subjectHomeowner.id && isValidUUID(subjectHomeowner.id)) ? subjectHomeowner.id : null;
+        
         const result = await db.insert(claimsTable).values({
           id: newClaim.id, // Explicit ID
-          homeownerId: subjectHomeowner.id !== 'placeholder' ? subjectHomeowner.id : null,
+          homeownerId: dbHomeownerId, // Use validated UUID or null
           title: newClaim.title,
           description: newClaim.description,
           category: newClaim.category,
@@ -521,7 +948,7 @@ function App() {
     }
   };
 
-  const handleEnrollHomeowner = async (data: Partial<Homeowner>, tradeListFile: File | null) => {
+  const handleEnrollHomeowner = async (data: Partial<Homeowner>, tradeListFile: File | null, subcontractorList?: any[]) => {
     const newId = crypto.randomUUID();
     const newHomeowner: Homeowner = {
       id: newId,
@@ -545,11 +972,321 @@ function App() {
       agentEmail: data.agentEmail,
       agentPhone: data.agentPhone,
       enrollmentComments: data.enrollmentComments,
-      password: data.password
+      password: data.password,
+      subcontractorList: subcontractorList
     } as Homeowner;
 
-    // Update State (useEffect handles persistence)
-    setHomeowners(prev => [...prev, newHomeowner]);
+    // DUAL-WRITE STRATEGY: Save to both database AND localStorage for redundancy
+    // This ensures data is never lost even if database fails
+    
+    // Step 1: Create punch list report with pre-filled data
+    const createPunchListReport = (homeowner: Homeowner) => {
+      const generateUUID = () => {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+          return crypto.randomUUID();
+        }
+        return Date.now().toString(36) + Math.random().toString(36).substring(2);
+      };
+
+      const PREDEFINED_LOCATIONS = [
+        "General Interior", "Master Bathroom", "Master Bedroom", "Kitchen", "Living Room",
+        "Dining Room", "Garage", "Exterior", "Basement", "Attic", "Rewalk Notes"
+      ];
+
+      const project: any = {
+        fields: [
+          { id: generateUUID(), label: 'Name(s)', value: homeowner.name, icon: 'User' },
+          { id: generateUUID(), label: 'Project Lot/Unit Number', value: homeowner.jobName || '', icon: 'Hash' },
+          { id: generateUUID(), label: 'Address', value: homeowner.address, icon: 'MapPin' },
+          { id: generateUUID(), label: 'Phone Number', value: homeowner.phone || '', icon: 'Phone' },
+          { id: generateUUID(), label: 'Email Address', value: homeowner.email, icon: 'Mail' }
+        ]
+      };
+
+      const locations = PREDEFINED_LOCATIONS.map(name => ({
+        id: generateUUID(),
+        name,
+        issues: []
+      }));
+
+      const reportData = {
+        project,
+        locations,
+        lastModified: Date.now()
+      };
+
+      // Save report to localStorage with homeowner ID as key
+      const reportKey = `bluetag_report_${homeowner.id}`;
+      localStorage.setItem(reportKey, JSON.stringify(reportData));
+      console.log('✅ Punch list report created for homeowner:', homeowner.id);
+    };
+
+    // Create punch list report
+    createPunchListReport(newHomeowner);
+
+    // Step 2: Save to localStorage FIRST (fast, always available)
+    setHomeowners(prev => {
+      const updated = [...prev, newHomeowner];
+      // Force immediate localStorage save
+      saveState('cascade_homeowners', updated);
+      return updated;
+    });
+    
+    // Step 2: Save to database with retry logic
+    let dbInsertSuccess = false;
+    if (isDbConfigured) {
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (retryCount < maxRetries && !dbInsertSuccess) {
+        try {
+          // Build homeowner data object - exclude report_app fields for now
+          // These columns may not exist in the database yet
+          const homeownerData: any = {
+            id: newId, // Explicit ID
+            name: newHomeowner.name,
+            email: newHomeowner.email,
+            phone: newHomeowner.phone || null,
+            street: newHomeowner.street || '',
+            city: newHomeowner.city || '',
+            state: newHomeowner.state || '',
+            zip: newHomeowner.zip || '',
+            address: newHomeowner.address,
+            builder: newHomeowner.builder || null,
+            builderGroupId: newHomeowner.builderId || null,
+            jobName: newHomeowner.jobName || '',
+            closingDate: newHomeowner.closingDate,
+            firstName: newHomeowner.firstName || null,
+            lastName: newHomeowner.lastName || null,
+            buyer2Email: newHomeowner.buyer2Email || null,
+            buyer2Phone: newHomeowner.buyer2Phone || null,
+            agentName: newHomeowner.agentName || null,
+            agentEmail: newHomeowner.agentEmail || null,
+            agentPhone: newHomeowner.agentPhone || null,
+            enrollmentComments: newHomeowner.enrollmentComments || null,
+            password: newHomeowner.password || null
+            // Note: report_app_user_id, report_app_linked, report_app_linked_at
+            // are excluded here to avoid errors if columns don't exist
+            // They can be added via UPDATE after the row is created if needed
+          };
+          
+          await db.insert(homeownersTable).values(homeownerData);
+          
+          // Step 3: VERIFY the insert by querying the database
+          await new Promise(resolve => setTimeout(resolve, 100)); // Small delay for DB consistency
+          const verification = await db.select().from(homeownersTable).where(eq(homeownersTable.id, newId));
+          
+          if (verification.length > 0) {
+            dbInsertSuccess = true;
+            console.log("✅ Homeowner saved and verified in database:", newId);
+          } else {
+            throw new Error("Insert verification failed - homeowner not found in database");
+          }
+        } catch (e) {
+          retryCount++;
+          const errorMessage = e instanceof Error ? e.message : String(e);
+          const errorDetails = e instanceof Error ? e.stack : JSON.stringify(e);
+          console.error(`❌ Failed to save homeowner to DB (attempt ${retryCount}/${maxRetries}):`, errorMessage);
+          console.error("Error details:", errorDetails);
+          
+          if (retryCount >= maxRetries) {
+            console.error("❌ CRITICAL: Failed to save homeowner to database after retries");
+            // Check if we can access the connection string from the environment
+            const envCheck = typeof window !== 'undefined' 
+              ? (import.meta as any).env?.VITE_DATABASE_URL 
+              : undefined;
+            
+            console.error("Database configuration check:", {
+              isDbConfigured,
+              hasViteEnvVar: !!envCheck,
+              envVarLength: envCheck?.length || 0,
+              environment: typeof window !== 'undefined' ? 'browser' : 'server',
+              errorType: e instanceof Error ? e.constructor.name : typeof e
+            });
+            
+            // Show detailed error message
+            const userMessage = `Warning: Homeowner saved locally but database sync failed.\n\n` +
+              `Error: ${errorMessage}\n\n` +
+              `Data is safe in browser storage.\n\n` +
+              `Please check:\n` +
+              `1. VITE_DATABASE_URL is set in Netlify environment variables\n` +
+              `2. Database connection string is correct\n` +
+              `3. Browser console for detailed error logs`;
+            alert(userMessage);
+            // Don't return - allow app to continue with localStorage data
+          } else {
+            // Wait before retry (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+        }
+      }
+    } else {
+      // If DB not configured, localStorage is the only storage
+      dbInsertSuccess = true;
+      console.log("⚠️ Database not configured - homeowner saved to localStorage only");
+    }
+    
+    // Send email notification to administrator
+    try {
+      // Find administrator email - check multiple sources
+      // PRIORITIZE: Database query first (most reliable), then activeEmployee, then employees array
+      let adminEmail: string | undefined;
+      
+      // Mock email addresses to exclude
+      const mockEmails = ['admin@cascade.com', 'admin@example.com', 'test@example.com'];
+      const isMockEmail = (email: string) => mockEmails.some(mock => email.toLowerCase() === mock.toLowerCase());
+      
+      console.log('🔍 Starting admin email lookup...');
+      console.log('   isDbConfigured:', isDbConfigured);
+      console.log('   userRole:', userRole);
+      console.log('   activeEmployee:', activeEmployee ? { name: activeEmployee.name, email: activeEmployee.email, role: activeEmployee.role } : 'none');
+      console.log('   employees count:', employees.length);
+      console.log('   employees:', employees.map(e => ({ name: e.name, email: e.email, role: e.role })));
+      
+      // 1. Query database directly for ADMIN role users FIRST (most reliable source)
+      if (isDbConfigured) {
+        try {
+          console.log('🔍 Querying database for ADMIN users...');
+          const dbAdmins = await db.select().from(usersTable).where(eq(usersTable.role, 'ADMIN'));
+          console.log('   Found', dbAdmins.length, 'admin users in database');
+          console.log('   Database admins:', dbAdmins.map(a => ({ id: a.id, email: a.email, role: a.role })));
+          
+          if (dbAdmins.length > 0) {
+            // Filter out mock emails and use first real admin
+            const realAdmin = dbAdmins.find(admin => !isMockEmail(admin.email));
+            if (realAdmin) {
+              adminEmail = realAdmin.email;
+              console.log('✅ 📧 Found admin email from database:', adminEmail);
+            } else {
+              // If all are mock, DON'T use them - continue to next source
+              console.warn('⚠️ All database admins are mock emails, skipping database result');
+              console.warn('   Mock admins found:', dbAdmins.map(a => a.email));
+            }
+          } else {
+            console.log('   No admin users found in database');
+          }
+        } catch (dbError) {
+          console.warn('❌ Could not query database for admin email:', dbError);
+        }
+      } else {
+        console.log('   Database not configured, skipping database query');
+      }
+      
+      // 2. Use activeEmployee if user is logged in as admin (and not a mock email)
+      if (!adminEmail && userRole === UserRole.ADMIN && activeEmployee?.email) {
+        console.log('🔍 Checking activeEmployee...');
+        console.log('   activeEmployee.email:', activeEmployee.email);
+        console.log('   isMockEmail:', isMockEmail(activeEmployee.email));
+        if (!isMockEmail(activeEmployee.email)) {
+          adminEmail = activeEmployee.email;
+          console.log('✅ 📧 Using active employee email:', adminEmail);
+        } else {
+          console.warn('⚠️ Active employee email is a mock email, skipping');
+        }
+      }
+      
+      // 3. Check employees array for any admin-like role (case-insensitive), excluding mock emails
+      if (!adminEmail && employees.length > 0) {
+        console.log('🔍 Checking employees array for admin...');
+        const adminEmployee = employees.find(e => {
+          if (isMockEmail(e.email || '')) {
+            console.log('   Skipping mock email:', e.email);
+            return false;
+          }
+          const roleLower = (e.role || '').toLowerCase();
+          const isAdmin = roleLower.includes('admin') || roleLower === 'administrator' || e.role === 'ADMIN';
+          if (isAdmin) {
+            console.log('   Found admin employee:', { name: e.name, email: e.email, role: e.role });
+          }
+          return isAdmin;
+        });
+        if (adminEmployee?.email) {
+          adminEmail = adminEmployee.email;
+          console.log('✅ 📧 Found admin email from employees array:', adminEmail);
+        } else {
+          console.log('   No admin found in employees array');
+        }
+      }
+      
+      // 4. Fallback to first employee if available (excluding mock emails)
+      if (!adminEmail && employees.length > 0) {
+        console.log('🔍 Using fallback: checking for any real employee...');
+        const realEmployee = employees.find(e => e.email && !isMockEmail(e.email));
+        if (realEmployee?.email) {
+          adminEmail = realEmployee.email;
+          console.warn('⚠️ No admin found, using first real employee email:', adminEmail);
+        } else {
+          console.warn('⚠️ No real employees found (all are mock emails)');
+        }
+      }
+      
+      if (!adminEmail) {
+        console.error('❌ No valid admin email found after checking all sources!');
+      }
+      
+      if (adminEmail) {
+        // Create invoice link with pre-filled data
+        const baseUrl = typeof window !== 'undefined' 
+          ? window.location.origin 
+          : 'https://cascadeconnect.netlify.app';
+        const invoiceParams = new URLSearchParams({
+          createInvoice: 'true',
+          clientName: newHomeowner.name,
+          clientEmail: newHomeowner.email || '',
+          projectDetails: `${newHomeowner.jobName || ''} - ${newHomeowner.address || ''}`.trim() || newHomeowner.address || '',
+          homeownerId: newHomeowner.id
+        });
+        const createInvoiceLink = `${baseUrl}/#invoices?${invoiceParams.toString()}`;
+
+        const emailBody = `
+New Homeowner Enrollment
+
+A new homeowner has been enrolled in Cascade Connect:
+
+Name: ${newHomeowner.name}
+Email: ${newHomeowner.email}
+Phone: ${newHomeowner.phone || 'Not provided'}
+Address: ${newHomeowner.address}
+Builder: ${newHomeowner.builder || 'Not specified'}
+Job Name: ${newHomeowner.jobName || 'Not specified'}
+Closing Date: ${newHomeowner.closingDate ? new Date(newHomeowner.closingDate).toLocaleDateString() : 'Not provided'}
+
+${newHomeowner.enrollmentComments ? `Comments: ${newHomeowner.enrollmentComments}` : ''}
+
+---
+<div style="margin: 20px 0;">
+  <a href="${createInvoiceLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">Create Invoice</a>
+</div>
+
+You can view and manage this homeowner in the Cascade Connect dashboard.
+        `.trim();
+
+        console.log('📧 Sending enrollment notification email to:', adminEmail);
+        const emailResult = await sendEmail({
+          to: adminEmail,
+          subject: `New Homeowner Enrollment: ${newHomeowner.name}`,
+          body: emailBody,
+          fromName: 'Cascade Connect System',
+          fromRole: UserRole.ADMIN
+        });
+        
+        if (emailResult) {
+          console.log('✅ Enrollment notification email sent successfully to:', adminEmail);
+        } else {
+          console.warn('⚠️ Email service returned false - email may not have been sent');
+        }
+      } else {
+        console.warn('⚠️ No administrator email found - enrollment notification not sent');
+        console.warn('   Available employees:', employees.map(e => ({ name: e.name, email: e.email, role: e.role })));
+        console.warn('   Active employee:', activeEmployee ? { name: activeEmployee.name, email: activeEmployee.email, role: activeEmployee.role } : 'none');
+        console.warn('   User role:', userRole);
+      }
+    } catch (error) {
+      console.error('❌ Failed to send enrollment notification email:', error);
+      console.error('   Error details:', error instanceof Error ? error.message : String(error));
+      console.error('   Stack:', error instanceof Error ? error.stack : 'N/A');
+      // Don't block enrollment if email fails
+    }
     
     let fileUrl = '#';
     if (tradeListFile) {
@@ -574,38 +1311,6 @@ function App() {
             uploadedBy: 'Builder (Enrollment)',
             url: fileUrl
         });
-    }
-
-    // DB Insert
-    if (isDbConfigured) {
-      try {
-        await db.insert(homeownersTable).values({
-          id: newId, // Explicit ID
-          name: newHomeowner.name,
-          email: newHomeowner.email,
-          phone: newHomeowner.phone || null,
-          street: newHomeowner.street,
-          city: newHomeowner.city,
-          state: newHomeowner.state,
-          zip: newHomeowner.zip,
-          address: newHomeowner.address,
-          builder: newHomeowner.builder || null,
-          builderGroupId: newHomeowner.builderId || null,
-          jobName: newHomeowner.jobName,
-          closingDate: newHomeowner.closingDate,
-          firstName: newHomeowner.firstName || null,
-          lastName: newHomeowner.lastName || null,
-          buyer2Email: newHomeowner.buyer2Email || null,
-          buyer2Phone: newHomeowner.buyer2Phone || null,
-          agentName: newHomeowner.agentName || null,
-          agentEmail: newHomeowner.agentEmail || null,
-          agentPhone: newHomeowner.agentPhone || null,
-          enrollmentComments: newHomeowner.enrollmentComments || null,
-          password: newHomeowner.password || null
-        } as any);
-      } catch (e) {
-        console.error("Failed to save homeowner to DB:", e);
-      }
     }
     
     alert(`Successfully enrolled ${newHomeowner.name}!`);
@@ -658,56 +1363,92 @@ function App() {
       }
   };
   
-  const handleImportHomeowners = async (newHomeowners: Homeowner[]) => { 
-      setHomeowners(prev => [...prev, ...newHomeowners]);
+  const handleImportHomeowners = async (newHomeowners: Homeowner[]) => {
+      // DUAL-WRITE STRATEGY: Save to localStorage FIRST, then database
+      // Step 1: Update state and localStorage immediately
+      setHomeowners(prev => {
+        const updated = [...prev, ...newHomeowners];
+        // Force immediate localStorage save
+        saveState('cascade_homeowners', updated);
+        return updated;
+      });
       
+      // Step 2: Save to database with retry logic
       if (isDbConfigured) {
-          try {
-             const BATCH_SIZE = 10;
-             for (let i = 0; i < newHomeowners.length; i += BATCH_SIZE) {
-                const batch = newHomeowners.slice(i, i + BATCH_SIZE);
-                try {
-                    await db.insert(homeownersTable).values(batch.map(h => ({
-                        id: h.id, // Explicit ID
-                        name: h.name,
-                        email: h.email,
-                        phone: h.phone,
-                        address: h.address,
-                        street: h.street,
-                        city: h.city,
-                        state: h.state,
-                        zip: h.zip,
-                        builder: h.builder,
-                        builderGroupId: h.builderId || null,
-                        jobName: h.jobName,
-                        closingDate: h.closingDate
-                    } as any)));
-                } catch (batchErr) {
-                    console.warn("Batch failed, trying sequential insert...", batchErr);
-                    for (const h of batch) {
-                         await db.insert(homeownersTable).values({
-                            id: h.id, 
-                            name: h.name,
-                            email: h.email,
-                            phone: h.phone,
-                            address: h.address,
-                            street: h.street,
-                            city: h.city,
-                            state: h.state,
-                            zip: h.zip,
-                            builder: h.builder,
-                            builderGroupId: h.builderId || null,
-                            jobName: h.jobName,
-                            closingDate: h.closingDate
-                        } as any);
-                    }
-                }
-             }
-          } catch(e) { 
-              console.error("Critical: Homeowners DB Import Failed", e);
-              alert("Database Error: Could not save homeowners to the backend. Please ensure the 'homeowners' table exists in Neon.");
-              // Don't throw - allow app to continue with local storage
+        let successCount = 0;
+        let failCount = 0;
+        
+        // Process one by one with retry logic for maximum reliability
+        for (const h of newHomeowners) {
+          let retryCount = 0;
+          const maxRetries = 3;
+          let inserted = false;
+          
+          while (retryCount < maxRetries && !inserted) {
+            try {
+              // Check if already exists
+              const existing = await db.select().from(homeownersTable).where(eq(homeownersTable.id, h.id));
+              if (existing.length > 0) {
+                // Already exists, skip
+                inserted = true;
+                successCount++;
+                continue;
+              }
+              
+              // Insert new homeowner
+              await db.insert(homeownersTable).values({
+                id: h.id,
+                name: h.name,
+                email: h.email,
+                phone: h.phone || null,
+                street: h.street || '',
+                city: h.city || '',
+                state: h.state || '',
+                zip: h.zip || '',
+                address: h.address,
+                builder: h.builder || null,
+                builderGroupId: h.builderId || null,
+                jobName: h.jobName || '',
+                closingDate: h.closingDate,
+                firstName: h.firstName || null,
+                lastName: h.lastName || null,
+                buyer2Email: h.buyer2Email || null,
+                buyer2Phone: h.buyer2Phone || null,
+                agentName: h.agentName || null,
+                agentEmail: h.agentEmail || null,
+                agentPhone: h.agentPhone || null,
+                enrollmentComments: h.enrollmentComments || null,
+                password: h.password || null
+              } as any);
+              
+              // Verify insert
+              await new Promise(resolve => setTimeout(resolve, 100));
+              const verification = await db.select().from(homeownersTable).where(eq(homeownersTable.id, h.id));
+              if (verification.length > 0) {
+                inserted = true;
+                successCount++;
+              } else {
+                throw new Error("Verification failed");
+              }
+            } catch (e) {
+              retryCount++;
+              if (retryCount >= maxRetries) {
+                console.error(`❌ Failed to import homeowner ${h.id} after ${maxRetries} retries:`, e);
+                failCount++;
+              } else {
+                await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+              }
+            }
           }
+        }
+        
+        if (failCount > 0) {
+          alert(`Import completed: ${successCount} saved to database, ${failCount} failed (saved to local storage).`);
+        } else {
+          console.log(`✅ Successfully imported ${successCount} homeowners to database`);
+        }
+      } else {
+        console.log("⚠️ Database not configured - homeowners saved to localStorage only");
       }
   };
   
@@ -742,6 +1483,64 @@ function App() {
            console.error("Failed to clear homeowners from DB", e);
          }
       }
+  };
+
+  const handleDeleteHomeowner = async (id: string) => {
+    // Get homeowner before deletion for cleanup
+    const homeownerToDelete = homeowners.find(h => h.id === id);
+    
+    // Remove from state
+    setHomeowners(prev => prev.filter(h => h.id !== id));
+    
+    // Also remove related claims, documents, and messages from state
+    if (homeownerToDelete) {
+      setClaims(prev => prev.filter(c => c.homeownerEmail !== homeownerToDelete.email));
+    }
+    setDocuments(prev => prev.filter(d => d.homeownerId !== id));
+    setMessages(prev => prev.filter(m => m.homeownerId !== id));
+    
+    // Clear selection if this homeowner was selected
+    if (selectedAdminHomeownerId === id) {
+      setSelectedAdminHomeownerId(null);
+    }
+    if (activeHomeowner.id === id) {
+      setActiveHomeowner(PLACEHOLDER_HOMEOWNER);
+    }
+    
+    // Delete from database (cascade deletes should handle related records)
+    if (isDbConfigured) {
+      try {
+        // Delete related records first (if foreign keys don't cascade)
+        if (homeownerToDelete) {
+          // Delete related claims
+          try {
+            await db.delete(claimsTable).where(eq(claimsTable.homeownerId, id));
+          } catch (e) {
+            console.warn("Failed to delete related claims:", e);
+          }
+          
+          // Delete related documents
+          try {
+            await db.delete(documentsTable).where(eq(documentsTable.homeownerId, id));
+          } catch (e) {
+            console.warn("Failed to delete related documents:", e);
+          }
+          
+          // Delete related message threads
+          try {
+            await db.delete(messageThreadsTable).where(eq(messageThreadsTable.homeownerId, id));
+          } catch (e) {
+            console.warn("Failed to delete related messages:", e);
+          }
+        }
+        
+        // Delete homeowner
+        await db.delete(homeownersTable).where(eq(homeownersTable.id, id));
+        console.log("✅ Homeowner and related data deleted from database");
+      } catch (e) {
+        console.error("Failed to delete homeowner from DB:", e);
+      }
+    }
   };
   
   // Handlers for Tasks/Employees/Contractors
@@ -836,8 +1635,8 @@ function App() {
       }
   };
   
-  const handleAddContractor = async (sub: Contractor) => { 
-      setContractors(prev => [...prev, sub]); 
+  const handleAddContractor = async (sub: Contractor) => {
+      setContractors(prev => [...prev, sub]);
       if (isDbConfigured) {
         try {
           await db.insert(contractorsTable).values({
@@ -846,12 +1645,16 @@ function App() {
              email: sub.email,
              specialty: sub.specialty
           } as any);
-        } catch(e) { console.error(e); }
+          console.log("✅ Contractor saved to database");
+        } catch(e: any) { 
+          console.log("Contractors table not found, using local storage:", e.message);
+          // Contractor is still saved to local storage, so user can continue
+        }
       }
   };
 
-  const handleUpdateContractor = async (sub: Contractor) => { 
-      setContractors(prev => prev.map(c => c.id === sub.id ? sub : c)); 
+  const handleUpdateContractor = async (sub: Contractor) => {
+      setContractors(prev => prev.map(c => c.id === sub.id ? sub : c));
       if (isDbConfigured) {
         try {
           await db.update(contractorsTable).set({
@@ -860,16 +1663,24 @@ function App() {
              email: sub.email,
              specialty: sub.specialty
           } as any).where(eq(contractorsTable.id, sub.id));
-        } catch(e) { console.error(e); }
+          console.log("✅ Contractor updated in database");
+        } catch(e: any) { 
+          console.log("Contractors table not found, using local storage:", e.message);
+          // Contractor is still saved to local storage, so user can continue
+        }
       }
   };
 
-  const handleDeleteContractor = async (id: string) => { 
-      setContractors(prev => prev.filter(c => c.id !== id)); 
+  const handleDeleteContractor = async (id: string) => {
+      setContractors(prev => prev.filter(c => c.id !== id));
       if (isDbConfigured) {
          try {
            await db.delete(contractorsTable).where(eq(contractorsTable.id, id));
-         } catch(e) { console.error(e); }
+           console.log("✅ Contractor deleted from database");
+         } catch(e: any) { 
+           console.log("Contractors table not found, using local storage:", e.message);
+           // Contractor is still deleted from local storage, so user can continue
+         }
       }
   };
   
@@ -950,6 +1761,17 @@ function App() {
     setHomeowners(prev => prev.map(h => h.id === updatedHomeowner.id ? updatedHomeowner : h));
 
     if (isDbConfigured) {
+      // Validate homeowner ID is a valid UUID
+      const isValidUUID = (str: string) => {
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(str);
+      };
+
+      if (!isValidUUID(updatedHomeowner.id)) {
+        console.log("Homeowner ID is not a valid UUID, skipping database update:", updatedHomeowner.id);
+        return; // Skip database update but keep local storage update
+      }
+
       try {
         await db.update(homeownersTable).set({
           name: updatedHomeowner.name,
@@ -965,6 +1787,7 @@ function App() {
           jobName: updatedHomeowner.jobName,
           closingDate: updatedHomeowner.closingDate,
         } as any).where(eq(homeownersTable.id, updatedHomeowner.id));
+        console.log("✅ Homeowner updated in database");
       } catch (e) {
         console.error("Failed to update homeowner in DB:", e);
       }
@@ -972,9 +1795,21 @@ function App() {
   };
   
   const handleUploadDocument = async (doc: Partial<HomeownerDocument>) => {
+    // Get the actual homeowner ID - use targetHomeowner if admin, otherwise activeHomeowner
+    const subjectHomeowner = ((userRole === UserRole.ADMIN || userRole === UserRole.BUILDER) && targetHomeowner) ? targetHomeowner : activeHomeowner;
+    const homeownerId = doc.homeownerId || subjectHomeowner?.id || '';
+    
+    // Validate UUID format - if not a valid UUID, set to null for DB (but keep for local storage)
+    const isValidUUID = (str: string) => {
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      return uuidRegex.test(str);
+    };
+    
+    const dbHomeownerId = (homeownerId && isValidUUID(homeownerId)) ? homeownerId : null;
+    
     const newDoc: HomeownerDocument = {
       id: crypto.randomUUID(),
-      homeownerId: doc.homeownerId || '',
+      homeownerId: homeownerId, // Keep original for local storage
       name: doc.name || 'Untitled Document',
       uploadedBy: doc.uploadedBy || 'System',
       uploadDate: new Date(),
@@ -987,14 +1822,18 @@ function App() {
       try {
         await db.insert(documentsTable).values({
            id: newDoc.id,
-           homeownerId: newDoc.homeownerId,
+           homeownerId: dbHomeownerId, // Use validated UUID or null
            name: newDoc.name,
            url: newDoc.url,
            type: newDoc.type,
            uploadedBy: newDoc.uploadedBy,
            uploadedAt: newDoc.uploadDate
         } as any);
-      } catch(e) { console.error("Failed to save document to DB", e); }
+        console.log("✅ Document saved to database");
+      } catch(e) { 
+        console.error("Failed to save document to DB:", e);
+        // Document is still saved to local storage, so user can continue
+      }
     }
   };
   
@@ -1012,8 +1851,8 @@ function App() {
     let updatedThread: MessageThread | undefined;
     setMessages(prev => prev.map(t => {
       if (t.id === threadId) {
-         updatedThread = { ...t, lastMessageAt: newMessage.timestamp, messages: [...t.messages, newMessage] };
-         return updatedThread;
+        updatedThread = { ...t, lastMessageAt: newMessage.timestamp, messages: [...t.messages, newMessage] };
+        return updatedThread;
       }
       return t;
     }));
@@ -1024,7 +1863,50 @@ function App() {
             messages: updatedThread.messages,
             lastMessageAt: updatedThread.lastMessageAt
          } as any).where(eq(messageThreadsTable.id, threadId));
-       } catch(e) { console.error("Failed to update thread in DB", e); }
+         console.log("✅ Message thread updated in database");
+       } catch(e) { 
+         console.log("Message threads table not found, using local storage:", e);
+         // Thread is still saved to local storage, so user can continue
+       }
+    }
+
+    // Track claim-related message if message is from admin and thread is claim-related
+    if (userRole === UserRole.ADMIN && updatedThread) {
+      // Try to find a claim with matching title
+      const associatedClaim = claims.find(c => c.title === updatedThread!.subject);
+      if (associatedClaim) {
+        const homeowner = homeowners.find(h => h.id === updatedThread!.homeownerId);
+        trackClaimMessage(associatedClaim.id, {
+          type: 'HOMEOWNER',
+          threadId: updatedThread.id,
+          subject: updatedThread.subject,
+          recipient: homeowner?.name || 'Homeowner',
+          recipientEmail: homeowner?.email || '',
+          content: content,
+          senderName: activeEmployee.name
+        });
+      }
+    }
+  };
+
+  const handleUpdateThread = async (threadId: string, updates: Partial<MessageThread>) => {
+    // Update local state
+    setMessages(prev => prev.map(t => 
+      t.id === threadId ? { ...t, ...updates } : t
+    ));
+
+    // Update database if configured
+    if (isDbConfigured) {
+      try {
+        await db.update(messageThreadsTable).set({
+          ...updates,
+          lastMessageAt: updates.lastMessageAt || undefined
+        } as any).where(eq(messageThreadsTable.id, threadId));
+        console.log("✅ Message thread updated in database");
+      } catch(e: any) { 
+        console.log("Message threads table not found, using local storage:", e.message);
+        // Thread is still updated in local storage, so user can continue
+      }
     }
   };
 
@@ -1052,11 +1934,33 @@ function App() {
             lastMessageAt: newThread.lastMessageAt,
             messages: newThread.messages
          } as any);
-       } catch(e) { console.error("Failed to create thread in DB", e); }
+         console.log("✅ Message thread saved to database");
+       } catch(e) { 
+         console.log("Message threads table not found, using local storage:", e);
+         // Thread is still saved to local storage, so user can continue
+       }
+    }
+
+    // Track claim-related message if thread is from admin and claim-related
+    if (userRole === UserRole.ADMIN) {
+      // Try to find a claim with matching title
+      const associatedClaim = claims.find(c => c.title === subject);
+      if (associatedClaim) {
+        const homeowner = homeowners.find(h => h.id === homeownerId);
+        trackClaimMessage(associatedClaim.id, {
+          type: 'HOMEOWNER',
+          threadId: newThread.id,
+          subject: subject,
+          recipient: homeowner?.name || 'Homeowner',
+          recipientEmail: homeowner?.email || '',
+          content: content,
+          senderName: activeEmployee.name
+        });
+      }
     }
   };
 
-  const handleContactAboutClaim = (claim: Claim) => {
+  const handleContactAboutClaim = async (claim: Claim) => {
     let associatedHomeownerId = '';
     if (userRole === UserRole.HOMEOWNER) {
         associatedHomeownerId = activeHomeowner.id;
@@ -1097,6 +2001,21 @@ function App() {
                 messages: newThread.messages
             } as any).catch(e => console.error(e));
         }
+
+        // Track claim-related message when a new message thread is created for a claim
+        if (userRole === UserRole.ADMIN) {
+          const initialMessage = newThread.messages[0]?.content || '';
+          const homeowner = homeowners.find(h => h.id === associatedHomeownerId);
+          trackClaimMessage(claim.id, {
+            type: 'HOMEOWNER',
+            threadId: newThread.id,
+            subject: newThread.subject,
+            recipient: homeowner?.name || 'Homeowner',
+            recipientEmail: homeowner?.email || '',
+            content: initialMessage,
+            senderName: activeEmployee.name
+          });
+        }
     }
     setDashboardConfig({ initialTab: 'MESSAGES', initialThreadId: threadIdToOpen });
     setCurrentView('DASHBOARD');
@@ -1106,12 +2025,50 @@ function App() {
 
   if (!isLoaded) return <div className="flex h-screen items-center justify-center bg-gray-100"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div></div>;
 
-  // Use Clerk's isSignedIn to determine if we show AuthScreen
-  // TEMPORARILY DISABLED FOR TESTING - Remove this comment and uncomment the line below to re-enable authentication
-  // if (!isSignedIn) return <AuthScreen />;
+  // Use Stack Auth's isSignedIn to determine if we show AuthScreen
+  // Only show AuthScreen if StackProvider is available (Neon Auth is configured)
+  // Check if we're using NoAuthProvider (which means StackProvider is not available)
+  const noAuthContext = useNoAuthContext();
+  const hasStackAuth = noAuthContext === null; // null means StackProvider exists
   
-  // TEMPORARY: Bypass auth for testing - allow access without login
-  // The app will work with default/mock data when not signed in
+  // Log authentication state for debugging
+  if (typeof window !== 'undefined' && hasStackAuth) {
+    console.log('Auth state check:', { hasStackAuth, isSignedIn, isLoaded, user: clerkUser?.id });
+  }
+  
+  // Only require authentication if Stack Auth is configured
+  // If Stack Auth is not configured, allow access without authentication (development mode)
+  // Force check on every render to catch hard refresh scenarios
+  if (hasStackAuth && !isSignedIn && isLoaded) {
+    console.log('Showing AuthScreen - user not signed in');
+    return <AuthScreenWrapper />;
+  }
+  
+  // If Stack Auth is not configured, log a warning but allow access
+  if (!hasStackAuth && typeof window !== 'undefined') {
+    console.warn("Neon Auth not configured. Running in development mode without authentication.");
+    console.warn("To enable authentication, set VITE_NEON_AUTH_URL in your .env.local file.");
+  }
+
+  // Show homeowner selector if multiple homeowners match the user's email
+  if (matchingHomeowners && matchingHomeowners.length > 1) {
+    return (
+      <HomeownerSelector
+        homeowners={matchingHomeowners}
+        onSelect={(homeowner) => {
+          setActiveHomeowner(homeowner);
+          setSelectedHomeownerId(homeowner.id);
+          setMatchingHomeowners(null);
+          
+          // Store selection for this email
+          if (typeof window !== 'undefined' && clerkUser?.primaryEmailAddress?.emailAddress) {
+            const email = clerkUser.primaryEmailAddress.emailAddress.toLowerCase();
+            localStorage.setItem(`cascade_selected_homeowner_${email}`, homeowner.id);
+          }
+        }}
+      />
+    );
+  }
 
   return (
     <Layout 
@@ -1136,6 +2093,7 @@ function App() {
           userRole={userRole} 
           onSelectClaim={handleSelectClaim}
           onNewClaim={handleNewClaimStart}
+          onCreateClaim={handleCreateClaim}
           homeowners={availableHomeowners}
           activeHomeowner={activeHomeowner}
           employees={employees}
@@ -1148,6 +2106,12 @@ function App() {
           messages={messages}
           onSendMessage={handleSendMessage}
           onCreateThread={handleCreateThread}
+          onUpdateThread={handleUpdateThread}
+          onAddInternalNote={addInternalNoteToClaim}
+          onTrackClaimMessage={trackClaimMessage}
+          onUpdateClaim={handleUpdateClaim}
+          contractors={contractors}
+          claimMessages={claimMessages || []}
           builderGroups={builderGroups}
           initialTab={dashboardConfig.initialTab}
           initialThreadId={dashboardConfig.initialThreadId}
@@ -1160,8 +2124,8 @@ function App() {
       )}
       {currentView === 'TASKS' && (
         <div className="max-w-4xl mx-auto">
-          <div className="bg-surface p-8 rounded-3xl shadow-elevation-1 border border-surface-outline-variant">
-            <TaskList tasks={tasks} employees={employees} currentUser={activeEmployee} claims={claims} homeowners={homeowners} onAddTask={handleAddTask} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} />
+          <div className="bg-surface dark:bg-gray-800 p-8 rounded-3xl shadow-elevation-1 border border-surface-outline-variant">
+            <TaskList tasks={tasks} employees={employees} currentUser={activeEmployee} claims={claims} homeowners={homeowners} onAddTask={handleAddTask} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onClose={() => setCurrentView('DASHBOARD')} />
           </div>
         </div>
       )}
@@ -1183,8 +2147,37 @@ function App() {
       {currentView === 'BUILDERS' && (
         <BuilderManagement builderGroups={builderGroups} builderUsers={builderUsers} onAddGroup={handleAddBuilderGroup} onUpdateGroup={handleUpdateBuilderGroup} onDeleteGroup={handleDeleteBuilderGroup} onAddUser={handleAddBuilderUser} onUpdateUser={handleUpdateBuilderUser} onDeleteUser={handleDeleteBuilderUser} onClose={() => setCurrentView('DASHBOARD')} />
       )}
+      {currentView === 'HOMEOWNERS' && (
+        <HomeownersList 
+          homeowners={availableHomeowners}
+          builderGroups={builderGroups}
+          onUpdateHomeowner={handleUpdateHomeowner}
+          onDeleteHomeowner={handleDeleteHomeowner}
+          onClose={() => setCurrentView('DASHBOARD')}
+        />
+      )}
+      {currentView === 'EMAIL_HISTORY' && (
+        <EmailHistory onClose={() => setCurrentView('DASHBOARD')} />
+      )}
+      {currentView === 'BACKEND' && (
+        <BackendDashboard onClose={() => setCurrentView('DASHBOARD')} />
+      )}
       {currentView === 'DATA' && (
-        <DataImport onImportClaims={handleImportClaims} onImportHomeowners={handleImportHomeowners} onClearHomeowners={handleClearHomeowners} existingBuilderGroups={builderGroups} onImportBuilderGroups={handleImportBuilderGroups} />
+        <DataImport onImportClaims={handleImportClaims} onImportHomeowners={handleImportHomeowners} onClearHomeowners={handleClearHomeowners} existingBuilderGroups={builderGroups} onImportBuilderGroups={handleImportBuilderGroups} onClose={() => setCurrentView('DASHBOARD')} />
+      )}
+      {currentView === 'ANALYTICS' && (
+        <WarrantyAnalytics
+          claims={claims}
+          homeowners={homeowners}
+          builderGroups={builderGroups}
+          claimMessages={claimMessages || []}
+          onSelectClaim={(claim) => {
+            setSelectedClaimId(claim.id);
+            setClaimEditMode(false);
+            setCurrentView('DETAIL');
+          }}
+          onClose={() => setCurrentView('DASHBOARD')}
+        />
       )}
       {currentView === 'NEW' && (
         <div className="max-w-4xl mx-auto bg-surface p-8 rounded-3xl shadow-elevation-1 border border-surface-outline-variant">
@@ -1193,7 +2186,50 @@ function App() {
         </div>
       )}
       {currentView === 'DETAIL' && selectedClaim && (
-        <ClaimDetail claim={selectedClaim} currentUserRole={userRole} onUpdateClaim={handleUpdateClaim} onBack={() => setCurrentView('DASHBOARD')} contractors={contractors} onSendMessage={handleContactAboutClaim} />
+        <ClaimDetail 
+          claim={selectedClaim} 
+          currentUserRole={userRole} 
+          onUpdateClaim={handleUpdateClaim} 
+          onBack={() => {
+            setClaimEditMode(false);
+            setCurrentView('DASHBOARD');
+          }} 
+          contractors={contractors} 
+          onSendMessage={handleContactAboutClaim}
+          startInEditMode={claimEditMode}
+          currentUser={activeEmployee}
+          onAddInternalNote={addInternalNoteToClaim}
+          claimMessages={(claimMessages || []).filter(m => m.claimId === selectedClaim.id)}
+          onTrackClaimMessage={trackClaimMessage}
+          onNavigate={(view, config) => {
+            if (config) {
+              setDashboardConfig(config);
+            }
+            setCurrentView(view);
+          }}
+        />
+      )}
+      {currentView === 'INVOICES' && (
+        <InvoicesModal
+          isOpen={currentView === 'INVOICES'}
+          onClose={() => {
+            // Clear prefill data when closing
+            sessionStorage.removeItem('invoicePrefill');
+            setCurrentView('DASHBOARD');
+          }}
+          prefillData={(() => {
+            // Get prefill data from sessionStorage
+            try {
+              const stored = sessionStorage.getItem('invoicePrefill');
+              if (stored) {
+                return JSON.parse(stored);
+              }
+            } catch (e) {
+              console.error('Error parsing invoice prefill data:', e);
+            }
+            return undefined;
+          })()}
+        />
       )}
       <HomeownerEnrollment isOpen={isEnrollmentOpen} onClose={() => setIsEnrollmentOpen(false)} onEnroll={handleEnrollHomeowner} builderGroups={builderGroups} />
     </Layout>

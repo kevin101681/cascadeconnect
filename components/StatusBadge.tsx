@@ -6,15 +6,15 @@ interface StatusBadgeProps {
 }
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
-  // M3 Assist/Filter Chip style
+  // M3 Assist/Filter Chip style with colored status pills
   const baseStyle = "inline-flex items-center px-3 h-8 rounded-lg text-sm font-medium border transition-colors";
 
   const styles = {
-    [ClaimStatus.SUBMITTED]: "bg-surface-container border-surface-outline text-surface-on-variant",
-    [ClaimStatus.REVIEWING]: "bg-secondary-container border-secondary-container text-secondary-on-container",
-    [ClaimStatus.SCHEDULING]: "bg-tertiary-container border-tertiary-container text-tertiary-on-container",
-    [ClaimStatus.SCHEDULED]: "bg-primary-container border-primary-container text-primary-on-container",
-    [ClaimStatus.COMPLETED]: "bg-green-100 border-green-200 text-green-800", // Custom success color outside M3 base palette
+    [ClaimStatus.SUBMITTED]: "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-200",
+    [ClaimStatus.REVIEWING]: "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200",
+    [ClaimStatus.SCHEDULING]: "bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700 text-orange-800 dark:text-orange-200",
+    [ClaimStatus.SCHEDULED]: "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-800 dark:text-green-200",
+    [ClaimStatus.COMPLETED]: "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-800 dark:text-green-200",
   };
 
   return (

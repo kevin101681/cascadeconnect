@@ -17,7 +17,9 @@ export type ClaimClassification =
   | '60 Day' 
   | '11 Month' 
   | 'Non-Warranty' 
+  | 'Courtesy Repair (Non-Warranty)'
   | 'Hold for 11 Month' 
+  | 'Needs Attention'
   | 'Other' 
   | 'Service Complete'
   | 'Unclassified';
@@ -68,12 +70,20 @@ export interface Homeowner {
   agentPhone?: string;
   agentEmail?: string;
 
+  // PDF Reports App Integration
+  reportAppUserId?: string; // ID of user in the PDF Reports App
+  reportAppLinked?: boolean; // Whether this homeowner is linked to PDF Reports App
+  reportAppLinkedAt?: Date; // When the link was created
+
   // Dates
   closingDate: Date;
   preferredWalkThroughDate?: Date;
   
   enrollmentComments?: string;
   password?: string;
+  
+  // Subcontractor list from enrollment spreadsheet
+  subcontractorList?: any[]; // Parsed spreadsheet data
 }
 
 export interface InternalEmployee {
@@ -157,6 +167,7 @@ export interface HomeownerDocument {
 
 export interface Claim {
   id: string;
+  claimNumber?: string; // Human-readable claim number (e.g., "CLM-2024-001")
   title: string;
   description: string;
   category: string;
