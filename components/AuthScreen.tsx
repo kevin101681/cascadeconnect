@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import Button from './Button';
 import { Mail, Lock, User, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
-import { useStackApp } from '@stackframe/react';
+import { authClient } from '../lib/auth-client';
 
 interface AuthScreenProps {
-  // Props are kept for compatibility but logic is now handled by Stack Auth
+  // Props are kept for compatibility but logic is now handled by Better Auth
 }
 
 const AuthScreen: React.FC<AuthScreenProps> = () => {
-  // This component should only be rendered when StackProvider is available
+  // This component should only be rendered when Better Auth is configured
   // Use AuthScreenWrapper to ensure this
-  const stackApp = useStackApp();
   
   const [mode, setMode] = useState<'LOGIN' | 'SIGNUP'>('LOGIN');
   const [isLoading, setIsLoading] = useState(false);
@@ -26,24 +25,30 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!stackApp) {
-      setError("Authentication is not configured. Please set VITE_NEON_AUTH_URL in your environment variables.");
-      return;
-    }
-    
     setIsLoading(true);
     setError(null);
 
     try {
-      await stackApp.signInWithCredential({
+      const result = await authClient.signIn.email({
         email,
         password,
       });
-      // Stack Auth will automatically update the session
+      
+      // Better Auth returns { data, error } structure
+      if (result?.error) {
+        setError(result.error.message || "Invalid email or password.");
+        setIsLoading(false);
+      } else if (result?.data) {
+        // Success - Better Auth will automatically update the session
+        // Reload to reflect auth state change
+        window.location.reload();
+      } else {
+        // No error and no data - might be successful, reload anyway
+        window.location.reload();
+      }
     } catch (err: any) {
       console.error("Login error:", err);
-      setError(err.message || "Invalid email or password.");
-    } finally {
+      setError(err?.message || err?.toString() || "Invalid email or password.");
       setIsLoading(false);
     }
   };
@@ -52,44 +57,53 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!stackApp) {
-      setError("Authentication is not configured. Please set VITE_NEON_AUTH_URL in your environment variables.");
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
-      await stackApp.signUpWithCredential({
+      const result = await authClient.signUp.email({
         email,
         password,
+        name: `${firstName} ${lastName}`.trim() || email.split('@')[0],
       });
-      // Stack Auth will automatically update the session
+      
+      // Better Auth returns { data, error } structure
+      if (result?.error) {
+        setError(result.error.message || "Could not create account.");
+        setIsLoading(false);
+      } else if (result?.data) {
+        // Success - Better Auth will automatically update the session
+        // Reload to reflect auth state change
+        window.location.reload();
+      } else {
+        // No error and no data - might be successful, reload anyway
+        window.location.reload();
+      }
     } catch (err: any) {
       console.error("Signup error:", err);
-      setError(err.message || "Could not create account.");
-    } finally {
+      setError(err?.message || err?.toString() || "Could not create account.");
       setIsLoading(false);
     }
   };
 
   // Handle OAuth (Google/Apple)
   const handleSocialAuth = async (provider: 'google' | 'apple') => {
-    if (!stackApp) {
-      setError("Authentication is not configured. Please set VITE_NEON_AUTH_URL in your environment variables.");
-      return;
-    }
-    
     setIsLoading(true);
     setError(null);
     
     try {
       if (provider === 'google') {
-        await stackApp.signInWithOAuth('google');
+        await authClient.signIn.social({
+          provider: 'google',
+          callbackURL: window.location.origin,
+        });
       } else if (provider === 'apple') {
-        await stackApp.signInWithOAuth('apple');
+        await authClient.signIn.social({
+          provider: 'apple',
+          callbackURL: window.location.origin,
+        });
       }
+      // OAuth redirects to provider, so we don't need to handle the response here
     } catch (err: any) {
       console.error("Social auth error:", err);
       setError("Connection to provider failed.");

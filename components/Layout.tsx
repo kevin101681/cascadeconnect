@@ -23,6 +23,9 @@ interface LayoutProps {
   // Navigation & Actions
   onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS' | 'ANALYTICS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND') => void;
   onOpenEnrollment: () => void;
+
+  // Auth
+  onSignOut: () => Promise<void>;
 }
 
 const Layout: React.FC<LayoutProps> = ({ 
@@ -39,7 +42,8 @@ const Layout: React.FC<LayoutProps> = ({
   selectedHomeownerId,
   onClearSelection,
   onNavigate,
-  onOpenEnrollment
+  onOpenEnrollment,
+  onSignOut
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
@@ -327,9 +331,8 @@ const Layout: React.FC<LayoutProps> = ({
                       </button>
                       
                        <button 
-                        onClick={() => {
-                          localStorage.removeItem('cascade_session');
-                          window.location.reload();
+                        onClick={async () => {
+                          await onSignOut();
                         }}
                         className="w-full text-left px-4 py-2.5 text-sm text-error hover:bg-error/5 dark:hover:bg-error/10 flex items-center gap-3"
                       >
