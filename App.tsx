@@ -2159,11 +2159,20 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
     );
   }
   
+  // TEMPORARY: Disable authentication for testing
+  // TODO: Re-enable authentication after testing - set TEMP_DISABLE_AUTH to false
+  const TEMP_DISABLE_AUTH = true;
+  
   // Show AuthScreen if user is not signed in and session is loaded (or timed out)
   // Allow access without authentication in development if session fails to load
-  if (!effectiveIsSignedIn && effectiveIsLoaded) {
+  if (!TEMP_DISABLE_AUTH && !effectiveIsSignedIn && effectiveIsLoaded) {
     console.log('Showing AuthScreen - user not signed in');
     return <AuthScreenWrapper />;
+  }
+  
+  // If auth is disabled, log a warning and allow access
+  if (TEMP_DISABLE_AUTH) {
+    console.warn('⚠️ Authentication is temporarily disabled for testing');
   }
   
 
