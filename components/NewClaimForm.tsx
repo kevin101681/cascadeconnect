@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
 import { Contractor, ClaimClassification, Attachment, Homeowner, ClaimStatus, UserRole } from '../types';
 import Button from './Button';
-import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
+import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Edit2, Image as ImageIcon } from 'lucide-react';
+import ImageEditor from './ImageEditor';
 
 interface NewClaimFormProps {
   onSubmit: (data: any) => void;
@@ -35,6 +36,9 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
   // Attachments State
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [uploading, setUploading] = useState(false);
+  
+  // Image Editor State
+  const [editingImage, setEditingImage] = useState<{ url: string; name: string; attachmentId: string } | null>(null);
 
   // Only show contractors if user has typed something
   const filteredContractors = contractorSearch.trim() 
@@ -311,39 +315,96 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
         </div>
 
         {attachments.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {attachments.map((att) => (
-              <div key={att.id} className="relative group">
-                <div className="w-full h-24 bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600">
-                  {att.type === 'IMAGE' && att.url ? (
-                    <img 
-                      src={att.url} 
-                      alt={att.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center p-2">
-                      {att.type === 'VIDEO' ? (
-                        <Video className="h-6 w-6 text-primary mb-1" />
-                      ) : (
-                        <FileText className="h-6 w-6 text-primary mb-1" />
-                      )}
-                      <span className="text-[10px] text-surface-on-variant truncate w-full text-center">
-                        {att.name}
-                      </span>
-                    </div>
-                  )}
+          <div className="space-y-4">
+            {/* Image Attachments Section */}
+            {attachments.filter(att => att.type === 'IMAGE').length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <ImageIcon className="h-4 w-4 text-primary" />
+                  Image Attachments
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {attachments
+                    .filter(att => att.type === 'IMAGE' && att.url)
+                    .map((att) => (
+                      <div key={att.id} className="relative group aspect-square">
+                        <div className="w-full h-full bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600">
+                          <img 
+                            src={att.url} 
+                            alt={att.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setEditingImage({ url: att.url, name: att.name, attachmentId: att.id })}
+                            className="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-primary text-primary-on rounded-lg text-sm font-medium hover:bg-primary-variant transition-opacity flex items-center gap-1"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                            Edit
+                          </button>
+                          <a
+                            href={att.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-surface-container text-surface-on rounded-lg text-sm font-medium hover:bg-surface-container-high transition-opacity"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            View
+                          </a>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveAttachment(att.id)}
+                          className="absolute -top-2 -right-2 bg-error text-error-on rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
+                          aria-label="Remove attachment"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveAttachment(att.id)}
-                  className="absolute -top-2 -right-2 bg-error text-error-on rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
-                  aria-label="Remove attachment"
-                >
-                  <X className="h-3 w-3" />
-                </button>
               </div>
-            ))}
+            )}
+            
+            {/* Other Attachments (Videos, Documents) */}
+            {attachments.filter(att => att.type !== 'IMAGE').length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-3 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-primary" />
+                  Other Attachments
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {attachments
+                    .filter(att => att.type !== 'IMAGE')
+                    .map((att) => (
+                      <div key={att.id} className="relative group">
+                        <div className="w-full h-24 bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600">
+                          <div className="w-full h-full flex flex-col items-center justify-center p-2">
+                            {att.type === 'VIDEO' ? (
+                              <Video className="h-6 w-6 text-primary mb-1" />
+                            ) : (
+                              <FileText className="h-6 w-6 text-primary mb-1" />
+                            )}
+                            <span className="text-[10px] text-surface-on-variant truncate w-full text-center">
+                              {att.name}
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveAttachment(att.id)}
+                          className="absolute -top-2 -right-2 bg-error text-error-on rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                          aria-label="Remove attachment"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -361,6 +422,48 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
           Create Claim
         </Button>
       </div>
+
+      {/* Image Editor Modal */}
+      {editingImage && (
+        <ImageEditor
+          imageUrl={editingImage.url}
+          imageName={editingImage.name}
+          onSave={async (editedImageUrl) => {
+            // Upload edited image to Cloudinary
+            try {
+              const formData = new FormData();
+              // Convert data URL to blob
+              const response = await fetch(editedImageUrl);
+              const blob = await response.blob();
+              formData.append('file', blob, `edited-${editingImage.name}`);
+
+              const uploadResponse = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+              });
+
+              if (!uploadResponse.ok) {
+                throw new Error('Failed to upload edited image');
+              }
+
+              const result = await uploadResponse.json();
+              
+              // Update the attachment URL in the local state
+              setAttachments(prev => prev.map(att => 
+                att.id === editingImage.attachmentId
+                  ? { ...att, url: result.url }
+                  : att
+              ));
+
+              setEditingImage(null);
+            } catch (error) {
+              console.error('Failed to save edited image:', error);
+              alert('Failed to save edited image. Please try again.');
+            }
+          }}
+          onClose={() => setEditingImage(null)}
+        />
+      )}
     </form>
   );
 };
