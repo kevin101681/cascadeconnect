@@ -25,6 +25,9 @@
 # Handle UploadThing API - redirect to Netlify Function
 /api/uploadthing/*    /.netlify/functions/uploadthing/:splat    200!
 
+# Handle Cloudinary Upload API - redirect to Netlify Function
+/api/upload           /.netlify/functions/upload                  200!
+
 # Handle Email API - redirect to Netlify Function
 /api/email/send       /.netlify/functions/email-send    200!
 /api/email/inbound    /.netlify/functions/email-inbound    200!
