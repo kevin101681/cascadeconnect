@@ -83,9 +83,36 @@ const useAuth = () => {
   return { 
     signOut: async () => {
       try {
+        // Sign out from Better Auth
         await authClient.signOut();
+        
+        // Clear any cached session data
+        if (typeof window !== 'undefined') {
+          // Clear localStorage items that might cache auth state
+          localStorage.removeItem('cascade_user_email');
+          localStorage.removeItem('cascade_selected_homeowner');
+          
+          // Clear all cascade-related localStorage items
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('cascade_')) {
+              localStorage.removeItem(key);
+            }
+          });
+        }
+        
+        // Reload to reset app state
+        window.location.href = '/';
       } catch (err) {
         console.error("Better Auth signOut error:", err);
+        // Even if signOut fails, clear local storage and redirect
+        if (typeof window !== 'undefined') {
+          Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('cascade_')) {
+              localStorage.removeItem(key);
+            }
+          });
+          window.location.href = '/';
+        }
       }
     }
   };
@@ -2163,10 +2190,19 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
   // TODO: Re-enable authentication after testing - set TEMP_DISABLE_AUTH to false
   const TEMP_DISABLE_AUTH = true;
   
+  // Check if user explicitly logged out (check for logout flag in sessionStorage)
+  const [hasLoggedOut, setHasLoggedOut] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('cascade_logged_out') === 'true';
+    }
+    return false;
+  });
+  
   // Show AuthScreen if user is not signed in and session is loaded (or timed out)
   // Allow access without authentication in development if session fails to load
-  if (!TEMP_DISABLE_AUTH && !effectiveIsSignedIn && effectiveIsLoaded) {
-    console.log('Showing AuthScreen - user not signed in');
+  // Also show login if user explicitly logged out
+  if (!TEMP_DISABLE_AUTH && (!effectiveIsSignedIn && effectiveIsLoaded || hasLoggedOut)) {
+    console.log('Showing AuthScreen - user not signed in or logged out');
     return <AuthScreenWrapper />;
   }
   
@@ -2213,6 +2249,10 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
       onNavigate={setCurrentView}
       onOpenEnrollment={() => setIsEnrollmentOpen(true)}
       onSignOut={async () => {
+        // Mark as logged out in sessionStorage
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('cascade_logged_out', 'true');
+        }
         await signOut();
       }}
     >
