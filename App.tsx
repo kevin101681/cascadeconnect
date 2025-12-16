@@ -11,7 +11,6 @@ import BuilderManagement from './components/BuilderManagement';
 import DataImport from './components/DataImport';
 import TaskList from './components/TaskList';
 import MessageSummaryModal, { ClaimMessage } from './components/MessageSummaryModal';
-import WarrantyAnalytics from './components/WarrantyAnalytics';
 import InvoicesModal from './components/InvoicesModal';
 import HomeownersList from './components/HomeownersList';
 import EmailHistory from './components/EmailHistory';
@@ -60,7 +59,7 @@ const useUser = () => {
   const stackUser = useStackUser();
   const stackApp = useStackApp();
   
-  // Map Stack Auth user to Clerk-like format for compatibility
+  // Map Stack Auth user to standard format for compatibility
   return {
     isSignedIn: stackUser !== null,
     user: stackUser ? {
@@ -133,9 +132,9 @@ const saveState = (key: string, data: any) => {
 };
 
 function App() {
-  // --- CLERK AUTH INTEGRATION ---
+  // --- NEON AUTH / STACK AUTH INTEGRATION ---
   // Use safe hooks that check for NoAuthProvider first
-  const { isSignedIn, user: clerkUser, isLoaded } = useUser();
+  const { isSignedIn, user: authUser, isLoaded } = useUser();
   const { signOut } = useAuth();
   
   // State for mapped user roles
@@ -541,9 +540,9 @@ function App() {
         } 
 
         // --- MAP STACK AUTH USER TO INTERNAL USER ---
-        if (isSignedIn && clerkUser) {
-           // Stack Auth user is mapped to clerkUser format in useUser hook
-           const email = clerkUser.primaryEmailAddress?.emailAddress.toLowerCase();
+        if (isSignedIn && authUser) {
+           // Stack Auth user is mapped to authUser format in useUser hook
+           const email = authUser.primaryEmailAddress?.emailAddress.toLowerCase();
            if (email) {
               // 1. Check Employees
               const emp = loadedEmployees.find(e => e.email.toLowerCase() === email);
@@ -605,11 +604,11 @@ function App() {
               // If user logs in via Google/Apple but isn't in DB yet, create temporary homeowner profile context
               const newHomeowner: Homeowner = {
                  ...PLACEHOLDER_HOMEOWNER,
-                 id: clerkUser.id,
-                 name: clerkUser.fullName || 'Homeowner',
+                 id: authUser.id,
+                 name: authUser.fullName || 'Homeowner',
                  email: email,
-                 firstName: clerkUser.firstName || '',
-                 lastName: clerkUser.lastName || ''
+                 firstName: authUser.firstName || '',
+                 lastName: authUser.lastName || ''
               };
               setUserRole(UserRole.HOMEOWNER);
               setActiveHomeowner(newHomeowner);
@@ -622,11 +621,11 @@ function App() {
     };
 
     syncDataAndUser();
-  }, [isLoaded, isSignedIn, clerkUser?.id]); // Re-run when auth state changes
+  }, [isLoaded, isSignedIn, authUser?.id]); // Re-run when auth state changes
 
   // UI State - Persistent (but reset INVOICES on page load to prevent auto-opening)
   // Check URL hash for invoice creation link
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS' | 'ANALYTICS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND'>(() => {
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND'>(() => {
     // Check if URL has invoice creation parameters
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
@@ -661,7 +660,7 @@ function App() {
         }
       }
     }
-    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS' | 'ANALYTICS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY'>('cascade_ui_view', 'DASHBOARD');
+    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY'>('cascade_ui_view', 'DASHBOARD');
     // Don't auto-open modals on page load - always start at DASHBOARD
     return saved === 'INVOICES' ? 'DASHBOARD' : saved;
   });
@@ -751,8 +750,8 @@ function App() {
       setCurrentView('DASHBOARD');
       
       // Save selection for users with multiple properties (same email)
-      if (typeof window !== 'undefined' && clerkUser?.primaryEmailAddress?.emailAddress) {
-        const email = clerkUser.primaryEmailAddress.emailAddress.toLowerCase();
+      if (typeof window !== 'undefined' && authUser?.primaryEmailAddress?.emailAddress) {
+        const email = authUser.primaryEmailAddress.emailAddress.toLowerCase();
         localStorage.setItem(`cascade_selected_homeowner_${email}`, id);
       }
     }
@@ -2033,7 +2032,7 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
   
   // Log authentication state for debugging
   if (typeof window !== 'undefined' && hasStackAuth) {
-    console.log('Auth state check:', { hasStackAuth, isSignedIn, isLoaded, user: clerkUser?.id });
+    console.log('Auth state check:', { hasStackAuth, isSignedIn, isLoaded, user: authUser?.id });
   }
   
   // Only require authentication if Stack Auth is configured
@@ -2061,8 +2060,8 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
           setMatchingHomeowners(null);
           
           // Store selection for this email
-          if (typeof window !== 'undefined' && clerkUser?.primaryEmailAddress?.emailAddress) {
-            const email = clerkUser.primaryEmailAddress.emailAddress.toLowerCase();
+          if (typeof window !== 'undefined' && authUser?.primaryEmailAddress?.emailAddress) {
+            const email = authUser.primaryEmailAddress.emailAddress.toLowerCase();
             localStorage.setItem(`cascade_selected_homeowner_${email}`, homeowner.id);
           }
         }}
@@ -2073,7 +2072,7 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
   return (
     <Layout 
       userRole={userRole} 
-      // Switch Role now rotates through roles (for demo/admin testing) but respects Clerk session
+      // Switch Role now rotates through roles (for demo/admin testing) but respects Neon Auth session
       onSwitchRole={handleSwitchRole}
       homeowners={availableHomeowners}
       activeHomeowner={activeHomeowner}
@@ -2086,6 +2085,9 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
       onClearSelection={handleClearHomeownerSelection}
       onNavigate={setCurrentView}
       onOpenEnrollment={() => setIsEnrollmentOpen(true)}
+      onSignOut={async () => {
+        await signOut();
+      }}
     >
       {currentView === 'DASHBOARD' && (
         <Dashboard 
@@ -2164,20 +2166,6 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
       )}
       {currentView === 'DATA' && (
         <DataImport onImportClaims={handleImportClaims} onImportHomeowners={handleImportHomeowners} onClearHomeowners={handleClearHomeowners} existingBuilderGroups={builderGroups} onImportBuilderGroups={handleImportBuilderGroups} onClose={() => setCurrentView('DASHBOARD')} />
-      )}
-      {currentView === 'ANALYTICS' && (
-        <WarrantyAnalytics
-          claims={claims}
-          homeowners={homeowners}
-          builderGroups={builderGroups}
-          claimMessages={claimMessages || []}
-          onSelectClaim={(claim) => {
-            setSelectedClaimId(claim.id);
-            setClaimEditMode(false);
-            setCurrentView('DETAIL');
-          }}
-          onClose={() => setCurrentView('DASHBOARD')}
-        />
       )}
       {currentView === 'NEW' && (
         <div className="max-w-4xl mx-auto bg-surface p-8 rounded-3xl shadow-elevation-1 border border-surface-outline-variant">

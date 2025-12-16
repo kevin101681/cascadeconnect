@@ -1,18 +1,27 @@
-import { createAuthClient } from "better-auth/react";
+// NOTE: This file was created for Better Auth integration
+// The app uses Stack Auth (Neon Auth) for authentication, but AuthScreen component
+// uses this client for email/password login. If you want to use Better Auth directly, install:
+// npm install better-auth
 
-// Get the Better Auth base URL from environment variables
-// This should be your Neon Auth URL from the Neon dashboard
-const baseURL = 
-  (import.meta as any).env?.VITE_NEON_AUTH_URL || 
-  (typeof process !== 'undefined' ? process.env.VITE_NEON_AUTH_URL : undefined) ||
-  (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-
-// Create the Better Auth client
-// This client will be used throughout the React app
-export const authClient = createAuthClient({
-  baseURL: baseURL,
-});
-
-// Better Auth client methods are accessed directly from authClient
-// Example: authClient.signIn.email(), authClient.signUp.email(), authClient.signOut()
-// For React hooks, use the client methods directly in components
+// Stub auth client for compatibility
+export const authClient = {
+  signIn: {
+    email: async ({ email, password }: { email: string; password: string }) => {
+      console.warn("Better Auth not installed. Install 'better-auth' package to enable authentication.");
+      return { error: { message: "Better Auth not configured" }, data: null };
+    },
+    social: async ({ provider, callbackURL }: { provider: string; callbackURL: string }) => {
+      console.warn("Better Auth not installed. Install 'better-auth' package to enable authentication.");
+      return { error: { message: "Better Auth not configured" }, data: null };
+    }
+  },
+  signUp: {
+    email: async ({ email, password, name }: { email: string; password: string; name?: string }) => {
+      console.warn("Better Auth not installed. Install 'better-auth' package to enable authentication.");
+      return { error: { message: "Better Auth not configured" }, data: null };
+    }
+  },
+  signOut: async () => {
+    console.warn("Better Auth not installed. Install 'better-auth' package to enable authentication.");
+  }
+};

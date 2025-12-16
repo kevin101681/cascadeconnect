@@ -2,8 +2,6 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { createRouteHandler } from "uploadthing/express";
-import { uploadRouter } from "./uploadthing.js";
 import cbsbooksRouter from "./cbsbooks.js";
 
 dotenv.config();
@@ -13,17 +11,6 @@ const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-
-// UploadThing Route Handler
-const uploadthingHandler = createRouteHandler({
-  router: uploadRouter,
-  config: { 
-      uploadthingId: process.env.UPLOADTHING_APP_ID,
-      uploadthingSecret: process.env.UPLOADTHING_SECRET,
-  },
-});
-
-app.use("/api/uploadthing", uploadthingHandler);
 
 // CBS Books API Routes
 app.use("/api/cbsbooks", cbsbooksRouter);
@@ -216,43 +203,24 @@ app.post("/api/email/inbound", express.urlencoded({ extended: true }), async (re
 });
 
 // Error handling middleware (must be after routes)
-// Note: UploadThing handles its own errors, but this catches any unhandled errors
 app.use((err, req, res, next) => {
   console.error("Server error:", err);
-  if (req.path.startsWith('/api/uploadthing')) {
-    res.status(500).json({ 
-      error: "Upload failed", 
-      message: err.message || "Internal server error",
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
-    });
-  } else {
-    res.status(500).json({ 
-      error: "Server error", 
-      message: err.message || "Internal server error"
-    });
-  }
+  res.status(500).json({ 
+    error: "Server error", 
+    message: err.message || "Internal server error"
+  });
 });
 
 app.get("/api/health", (req, res) => {
   res.json({ 
     status: "ok", 
-    message: "CASCADE CONNECT Backend is running",
-    uploadthingConfigured: !!(process.env.UPLOADTHING_APP_ID && process.env.UPLOADTHING_SECRET)
+    message: "CASCADE CONNECT Backend is running"
   });
 });
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`UploadThing endpoint active at http://localhost:${PORT}/api/uploadthing`);
   console.log(`Email endpoint active at http://localhost:${PORT}/api/email/send`);
-  
-  // Check if UploadThing credentials are set
-  if (!process.env.UPLOADTHING_APP_ID || !process.env.UPLOADTHING_SECRET) {
-    console.warn("⚠️  WARNING: UPLOADTHING_APP_ID or UPLOADTHING_SECRET not set!");
-    console.warn("   Uploads will fail. Set these in your .env.local file.");
-  } else {
-    console.log("✅ UploadThing credentials configured");
-  }
   
   // Check if SMTP credentials are set
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
