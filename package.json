@@ -15,6 +15,7 @@
     "db:studio": "drizzle-kit studio",
     "create-admin": "tsx scripts/create-admin.ts",
     "check-admin-users": "tsx scripts/check-admin-users.ts",
+    "check-cloudinary": "node scripts/check-cloudinary.js",
     "migrate:cbsbooks": "tsx scripts/migrate-cbsbooks.ts",
     "push": "powershell -ExecutionPolicy Bypass -File ./scripts/auto-push.ps1",
     "push:msg": "powershell -ExecutionPolicy Bypass -File ./scripts/auto-push.ps1",

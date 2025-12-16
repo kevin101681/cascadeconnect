@@ -32,13 +32,85 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
   // Internal (Admin Only)
   const [internalNotes, setInternalNotes] = useState('');
 
-  // Attachments State (file uploads disabled)
-  const [attachments] = useState<Attachment[]>([]);
+  // Attachments State
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   // Only show contractors if user has typed something
   const filteredContractors = contractorSearch.trim() 
     ? contractors.filter(c => c.companyName.toLowerCase().includes(contractorSearch.toLowerCase()) || c.specialty.toLowerCase().includes(contractorSearch.toLowerCase()))
     : [];
+
+  // File upload handler
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+
+    for (const file of Array.from(files)) {
+      const fileId = crypto.randomUUID();
+
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        console.log('Uploading file:', file.name, 'Size:', file.size, 'Type:', file.type);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        console.log('Upload response status:', response.status, response.statusText);
+
+        if (!response.ok) {
+          let errorMessage = 'Upload failed';
+          const contentType = response.headers.get('content-type');
+          console.log('Error response content-type:', contentType);
+          
+          try {
+            if (contentType && contentType.includes('application/json')) {
+              const errorData = await response.json();
+              errorMessage = errorData.message || errorData.error || `Upload failed with status ${response.status}`;
+              console.error('Upload error response (JSON):', errorData);
+            } else {
+              // Try to get text response
+              const textResponse = await response.text();
+              console.error('Upload error response (text):', textResponse);
+              errorMessage = textResponse || `Upload failed with status ${response.status}`;
+            }
+          } catch (parseError) {
+            console.error('Failed to parse error response:', parseError);
+            errorMessage = `Upload failed with status ${response.status}. Check server logs for details.`;
+          }
+          throw new Error(errorMessage);
+        }
+
+        const result = await response.json();
+        
+        const newAttachment: Attachment = {
+          id: fileId,
+          type: result.type,
+          url: result.url,
+          name: result.name || file.name,
+        };
+
+        setAttachments(prev => [...prev, newAttachment]);
+      } catch (error) {
+        console.error('Upload error:', error);
+        alert(`Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+
+    setUploading(false);
+    // Reset file input
+    if (e.target) e.target.value = '';
+  };
+
+  const handleRemoveAttachment = (id: string) => {
+    setAttachments(prev => prev.filter(att => att.id !== id));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -214,6 +286,66 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
            )}
 
         </div>
+      </div>
+
+      {/* File Upload Section */}
+      <div className="space-y-4 pt-6 border-t border-surface-outline-variant dark:border-gray-700">
+        <div>
+          <label className="text-sm font-medium text-surface-on dark:text-gray-100 mb-2 block">
+            Attachments (Pictures, Videos, Files)
+          </label>
+          <input
+            type="file"
+            multiple
+            accept="image/*,video/*,.pdf,.doc,.docx"
+            onChange={handleFileUpload}
+            disabled={uploading}
+            className="block w-full text-sm text-surface-on dark:text-gray-100 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-on hover:file:bg-primary-variant disabled:opacity-50"
+          />
+          {uploading && (
+            <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-1 flex items-center gap-1">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Uploading files...
+            </p>
+          )}
+        </div>
+
+        {attachments.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {attachments.map((att) => (
+              <div key={att.id} className="relative group">
+                <div className="w-full h-24 bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600">
+                  {att.type === 'IMAGE' && att.url ? (
+                    <img 
+                      src={att.url} 
+                      alt={att.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center p-2">
+                      {att.type === 'VIDEO' ? (
+                        <Video className="h-6 w-6 text-primary mb-1" />
+                      ) : (
+                        <FileText className="h-6 w-6 text-primary mb-1" />
+                      )}
+                      <span className="text-[10px] text-surface-on-variant truncate w-full text-center">
+                        {att.name}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveAttachment(att.id)}
+                  className="absolute -top-2 -right-2 bg-error text-error-on rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                  aria-label="Remove attachment"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700">

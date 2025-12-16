@@ -28,7 +28,9 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
+console.log('✅ Root element found, creating React root...');
 const root = ReactDOM.createRoot(rootElement);
+console.log('✅ React root created');
 
 // BYPASS NEON AUTH CHECK FOR DEVELOPMENT - App will work without authentication
 // If you want to enable Neon Auth, set VITE_NEON_AUTH_URL (base URL) in .env.local
@@ -99,6 +101,7 @@ try {
     }
   }
   
+  console.log('✅ Starting app render...');
   root.render(
     <React.StrictMode>
       <ErrorBoundary>
@@ -144,8 +147,23 @@ try {
     </React.StrictMode>
   );
 } catch (error) {
-  console.error("Failed to render app:", error);
-  root.render(
+  console.error("❌ Failed to render app:", error);
+  console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+  
+  // Make sure root exists before trying to render error
+  if (!rootElement) {
+    document.body.innerHTML = `
+      <div style="display: flex; height: 100vh; align-items: center; justify-content: center; font-family: sans-serif; padding: 20px; text-align: center;">
+        <div>
+          <h1 style="color: #ba1a1a;">Critical Error</h1>
+          <p>Could not find root element. Check index.html.</p>
+          <pre style="text-align: left; background: #f5f5f5; padding: 10px; border-radius: 4px; margin-top: 10px;">${error instanceof Error ? error.toString() : String(error)}</pre>
+        </div>
+      </div>
+    `;
+  } else {
+    const errorRoot = ReactDOM.createRoot(rootElement);
+    errorRoot.render(
     <div style={{
       display: 'flex',
       height: '100vh',
@@ -185,5 +203,6 @@ try {
         </details>
       </div>
     </div>
-  );
+    );
+  }
 }

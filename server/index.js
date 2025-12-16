@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import cbsbooksRouter from "./cbsbooks.js";
+import { uploadMiddleware, uploadToCloudinary } from "./cloudinary.js";
 
 dotenv.config();
 
@@ -14,6 +15,86 @@ app.use(express.json());
 
 // CBS Books API Routes
 app.use("/api/cbsbooks", cbsbooksRouter);
+
+// Cloudinary upload endpoint
+app.post("/api/upload", (req, res, next) => {
+  uploadMiddleware(req, res, (err) => {
+    if (err) {
+      console.error('Multer error:', err);
+      return res.status(400).json({ 
+        error: 'File upload error', 
+        message: err.message 
+      });
+    }
+    next();
+  });
+}, async (req, res) => {
+  // Add timeout to prevent hanging requests
+  req.setTimeout(60000); // 60 second timeout
+  try {
+    // Check if Cloudinary is configured (support both prefixed and non-prefixed variants)
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME || process.env.VITE_CLOUDINARY_CLOUD_NAME;
+    const apiKey = process.env.CLOUDINARY_API_KEY || process.env.VITE_CLOUDINARY_API_KEY;
+    const apiSecret = process.env.CLOUDINARY_API_SECRET || process.env.VITE_CLOUDINARY_API_SECRET;
+    
+    if (!cloudName || !apiKey || !apiSecret) {
+      console.error('Cloudinary configuration missing!');
+      return res.status(500).json({ 
+        error: 'Upload service not configured', 
+        message: 'Cloudinary credentials are missing. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your .env.local file (or their VITE_ prefixed variants).' 
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file provided' });
+    }
+
+    console.log('Uploading file to Cloudinary:', {
+      name: req.file.originalname,
+      size: req.file.size,
+      mimetype: req.file.mimetype
+    });
+
+    const result = await uploadToCloudinary(req.file, 'warranty-claims');
+    
+    // Determine file type
+    let fileType = 'DOCUMENT';
+    if (result.resourceType === 'image') {
+      fileType = 'IMAGE';
+    } else if (result.resourceType === 'video') {
+      fileType = 'VIDEO';
+    }
+
+    console.log('✅ File uploaded successfully:', result.url);
+
+    res.json({
+      success: true,
+      url: result.url,
+      publicId: result.publicId,
+      type: fileType,
+      name: req.file.originalname,
+      size: result.bytes,
+    });
+  } catch (error) {
+    console.error('❌ Cloudinary upload error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
+    // Make sure we always send a response, even if there's an error
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        error: 'Upload failed', 
+        message: error.message || 'Unknown error occurred during upload',
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
+    } else {
+      console.error('Response already sent, cannot send error response');
+    }
+  }
+});
 
 // Email API Route - Supports both SendGrid and SMTP
 app.post("/api/email/send", async (req, res) => {
