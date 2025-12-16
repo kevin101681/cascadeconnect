@@ -367,12 +367,17 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
           )}
         </div>
 
-        {/* Image Attachments Card (Edit Mode Only) */}
-        {isEditing && claim.attachments && claim.attachments.filter(att => att.type === 'IMAGE').length > 0 && (
+        {/* Image Attachments Card */}
+        {claim.attachments && claim.attachments.filter(att => att.type === 'IMAGE' && att.url).length > 0 && (
           <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
             <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4 flex items-center gap-2">
               <ImageIcon className="h-5 w-5 text-primary" />
               Image Attachments
+              {isAdmin && !isEditing && (
+                <span className="text-xs text-surface-on-variant dark:text-gray-400 ml-auto">
+                  Click "Edit Claim" to annotate images
+                </span>
+              )}
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {claim.attachments
@@ -390,13 +395,15 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                         className="w-full h-full object-cover"
                       />
                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => setEditingImage({ url: attachmentUrl, name: attachmentName, attachmentId: attachmentKey })}
-                          className="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-primary text-primary-on rounded-lg text-sm font-medium hover:bg-primary-variant transition-opacity flex items-center gap-1"
-                        >
-                          <Edit2 className="h-4 w-4" />
-                          Edit
-                        </button>
+                        {isEditing && isAdmin ? (
+                          <button
+                            onClick={() => setEditingImage({ url: attachmentUrl, name: attachmentName, attachmentId: attachmentKey })}
+                            className="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-primary text-primary-on rounded-lg text-sm font-medium hover:bg-primary-variant transition-opacity flex items-center gap-1"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                            Edit
+                          </button>
+                        ) : null}
                         <a
                           href={attachmentUrl}
                           target="_blank"
