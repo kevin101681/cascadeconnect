@@ -6,9 +6,10 @@ import StatusBadge from './StatusBadge';
 import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
 import { ClaimMessage } from './MessageSummaryModal';
-import { Calendar, CheckCircle, FileText, Mail, MessageSquare, ArrowLeft, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink } from 'lucide-react';
+import { Calendar, CheckCircle, FileText, Mail, MessageSquare, ArrowLeft, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
+import ImageEditor from './ImageEditor';
 
 interface ClaimDetailProps {
   claim: Claim;
@@ -66,6 +67,9 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
   const [soBody, setSoBody] = useState('');
   const [isSendingSO, setIsSendingSO] = useState(false);
   const [showCalendarPicker, setShowCalendarPicker] = useState(false);
+  
+  // Image Editor State
+  const [editingImage, setEditingImage] = useState<{ url: string; name: string; attachmentId: string } | null>(null);
 
   const isAdmin = currentUserRole === UserRole.ADMIN;
   const isScheduled = claim.status === ClaimStatus.SCHEDULED && claim.proposedDates.length > 0;
@@ -362,6 +366,53 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
             </div>
           )}
         </div>
+
+        {/* Image Attachments Card (Edit Mode Only) */}
+        {isEditing && claim.attachments && claim.attachments.filter(att => att.type === 'IMAGE').length > 0 && (
+          <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
+            <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4 flex items-center gap-2">
+              <ImageIcon className="h-5 w-5 text-primary" />
+              Image Attachments
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {claim.attachments
+                .filter(att => att.type === 'IMAGE' && att.url)
+                .map((att, i) => {
+                  const attachmentKey = att.id || `img-${i}`;
+                  const attachmentUrl = att.url || '';
+                  const attachmentName = att.name || 'Image';
+                  
+                  return (
+                    <div key={attachmentKey} className="group relative aspect-square bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-elevation-2 transition-all">
+                      <img 
+                        src={attachmentUrl} 
+                        alt={attachmentName}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => setEditingImage({ url: attachmentUrl, name: attachmentName, attachmentId: attachmentKey })}
+                          className="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-primary text-primary-on rounded-lg text-sm font-medium hover:bg-primary-variant transition-opacity flex items-center gap-1"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                          Edit
+                        </button>
+                        <a
+                          href={attachmentUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-surface-container text-surface-on rounded-lg text-sm font-medium hover:bg-surface-container-high transition-opacity"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          View
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
 
         {/* Warranty Assessment Card */}
         <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
@@ -788,6 +839,53 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
         onClose={() => setShowCalendarPicker(false)}
         minDate={new Date()}
       />
+
+      {/* Image Editor Modal */}
+      {editingImage && (
+        <ImageEditor
+          imageUrl={editingImage.url}
+          imageName={editingImage.name}
+          onSave={async (editedImageUrl) => {
+            // Upload edited image to Cloudinary
+            try {
+              const formData = new FormData();
+              // Convert data URL to blob
+              const response = await fetch(editedImageUrl);
+              const blob = await response.blob();
+              formData.append('file', blob, `edited-${editingImage.name}`);
+
+              const uploadResponse = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData,
+              });
+
+              if (!uploadResponse.ok) {
+                throw new Error('Failed to upload edited image');
+              }
+
+              const result = await uploadResponse.json();
+              
+              // Update the attachment URL in the claim
+              const updatedAttachments = claim.attachments.map(att => 
+                att.id === editingImage.attachmentId || (!att.id && att.url === editingImage.url)
+                  ? { ...att, url: result.url }
+                  : att
+              );
+
+              onUpdateClaim({
+                ...claim,
+                attachments: updatedAttachments
+              });
+
+              setEditingImage(null);
+            } catch (error) {
+              console.error('Failed to save edited image:', error);
+              alert('Failed to save edited image. Please try again.');
+            }
+          }}
+          onClose={() => setEditingImage(null)}
+        />
+      )}
 
     </div>
   );
