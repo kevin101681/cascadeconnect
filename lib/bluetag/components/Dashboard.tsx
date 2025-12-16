@@ -687,22 +687,53 @@ export const AllItemsModal = ({ locations, onUpdate, onClose }: { locations: Loc
     };
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0] && uploadTarget) {
+            const file = e.target.files[0];
             try {
-                const compressed = await compressImage(e.target.files[0]);
-                const newPhoto = { id: generateUUID(), url: compressed, description: '' };
+                // Show thumbnail immediately using object URL (instant)
+                const tempUrl = URL.createObjectURL(file);
+                const tempPhoto = { id: generateUUID(), url: tempUrl, description: '' };
+                
+                // Add photo immediately with temp URL
                 setLocalLocations(prev => prev.map(l => {
                     if (l.id !== uploadTarget.locId) return l;
                     return {
                         ...l,
                         issues: l.issues.map(i => {
                             if (i.id !== uploadTarget.issueId) return i;
-                            return { ...i, photos: [...i.photos, newPhoto] };
+                            return { ...i, photos: [...i.photos, tempPhoto] };
                         })
                     };
                 }));
+                
+                // Compress image in background and replace temp URL
+                const compressed = await compressImage(file);
+                setLocalLocations(prev => prev.map(l => {
+                    if (l.id !== uploadTarget.locId) return l;
+                    return {
+                        ...l,
+                        issues: l.issues.map(i => {
+                            if (i.id !== uploadTarget.issueId) return i;
+                            return {
+                                ...i,
+                                photos: i.photos.map(p => 
+                                    p.id === tempPhoto.id ? { ...p, url: compressed } : p
+                                )
+                            };
+                        })
+                    };
+                }));
+                
+                // Clean up temporary object URL
+                URL.revokeObjectURL(tempUrl);
+                
                 if (fileInputRef.current) fileInputRef.current.value = '';
                 setUploadTarget(null);
-            } catch (err) { console.error("Image upload failed", err); }
+            } catch (err) { 
+                console.error("Image upload failed", err);
+                // Clean up on error
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                setUploadTarget(null);
+            }
         }
     };
     const triggerUpload = (locId: string, issueId: string) => {

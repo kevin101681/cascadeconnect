@@ -95,6 +95,7 @@ export default defineConfig(({ mode }) => {
     },
     optimizeDeps: {
       exclude: ['@neondatabase/serverless', 'drizzle-orm'],
+      include: ['better-auth/react'],
     },
     build: {
       target: 'esnext'

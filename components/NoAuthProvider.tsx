@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 
-// Mock Clerk context for development mode without authentication
+// Mock auth context for development mode without Better Auth
 interface MockClerkContext {
   isSignedIn: boolean;
   user: null;

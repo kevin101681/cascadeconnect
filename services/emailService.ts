@@ -119,14 +119,18 @@ export const generateNotificationBody = (
   contextId: string, 
   link: string
 ) => {
+  // Generate HTML with a button for the messages link
   return `
 You have a new message from ${authorName} regarding ${contextType} #${contextId}.
 
 "${content}"
 
 --------------------------------------------------
-To reply, simply reply to this email or log in to your portal:
-${link}
+To reply, simply reply to this email or view your messages in Cascade Connect:
+
+<div style="margin: 20px 0; text-align: center;">
+  <a href="${link}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Messages</a>
+</div>
   `;
 };
 

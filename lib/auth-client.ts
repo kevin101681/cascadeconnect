@@ -1,27 +1,40 @@
-// NOTE: This file was created for Better Auth integration
-// The app uses Stack Auth (Neon Auth) for authentication, but AuthScreen component
-// uses this client for email/password login. If you want to use Better Auth directly, install:
-// npm install better-auth
+import { createAuthClient } from "better-auth/react";
 
-// Stub auth client for compatibility
-export const authClient = {
-  signIn: {
-    email: async ({ email, password }: { email: string; password: string }) => {
-      console.warn("Better Auth not installed. Install 'better-auth' package to enable authentication.");
-      return { error: { message: "Better Auth not configured" }, data: null };
-    },
-    social: async ({ provider, callbackURL }: { provider: string; callbackURL: string }) => {
-      console.warn("Better Auth not installed. Install 'better-auth' package to enable authentication.");
-      return { error: { message: "Better Auth not configured" }, data: null };
-    }
-  },
-  signUp: {
-    email: async ({ email, password, name }: { email: string; password: string; name?: string }) => {
-      console.warn("Better Auth not installed. Install 'better-auth' package to enable authentication.");
-      return { error: { message: "Better Auth not configured" }, data: null };
-    }
-  },
-  signOut: async () => {
-    console.warn("Better Auth not installed. Install 'better-auth' package to enable authentication.");
+// Get the base URL for Better Auth API
+// In development, Vite proxies /api/* to localhost:3000, so we use relative URLs
+// In production, use the full URL
+const getBaseURL = () => {
+  if (typeof window !== 'undefined') {
+    // Client-side: use current origin (Vite proxy handles /api/* in dev)
+    // In production, this will be the actual domain
+    return window.location.origin;
   }
+  // Server-side: check environment
+  const isLocalDev = process.env.NODE_ENV === 'development' || !process.env.VERCEL;
+  return isLocalDev 
+    ? 'http://localhost:3000'
+    : (process.env.VITE_APP_URL || process.env.BETTER_AUTH_URL || 'https://cascadeconnect.app');
 };
+
+// Better Auth client configuration
+// Wrap in try-catch to handle initialization errors
+let authClient: ReturnType<typeof createAuthClient>;
+try {
+  authClient = createAuthClient({
+    baseURL: getBaseURL(),
+    basePath: "/api/auth",
+  });
+  console.log("✅ Better Auth client initialized");
+} catch (error) {
+  console.error("❌ Failed to initialize Better Auth client:", error);
+  // Create a fallback client that won't crash
+  authClient = createAuthClient({
+    baseURL: typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000',
+    basePath: "/api/auth",
+  });
+}
+
+export { authClient };
+
+// Export types for use in components
+export type { User, Session } from "better-auth/types";

@@ -554,10 +554,16 @@ const Dashboard: React.FC<DashboardProps> = ({
         const recipientEmail = isAdmin ? effectiveHomeowner.email : 'info@cascadebuilderservices.com';
         const senderName = isAdmin ? currentUser.name : activeHomeowner.name;
         
+        // Generate Cascade Connect messages link
+        const baseUrl = typeof window !== 'undefined' 
+          ? `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`
+          : 'https://www.cascadeconnect.app';
+        const messagesLink = `${baseUrl}#messages${thread.id ? `?threadId=${thread.id}` : ''}`;
+        
         await sendEmail({
           to: recipientEmail,
           subject: `Re: ${thread.subject}`,
-          body: generateNotificationBody(senderName, replyContent, 'MESSAGE', thread.id, 'https://cascadebuilderservices.com/messages'),
+          body: generateNotificationBody(senderName, replyContent, 'MESSAGE', thread.id, messagesLink),
           fromName: senderName,
           fromRole: userRole,
           replyToId: thread.id
@@ -607,10 +613,16 @@ const Dashboard: React.FC<DashboardProps> = ({
     // 2. Send Email Notification
     const senderName = isAdmin ? currentUser.name : activeHomeowner.name;
 
+    // Generate Cascade Connect messages link
+    const baseUrl = typeof window !== 'undefined' 
+      ? `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`
+      : 'https://www.cascadeconnect.app';
+    const messagesLink = `${baseUrl}#messages`;
+
     await sendEmail({
       to: targetEmail,
       subject: newMessageSubject,
-      body: generateNotificationBody(senderName, newMessageContent, 'MESSAGE', 'new', 'https://cascadebuilderservices.com/messages'),
+      body: generateNotificationBody(senderName, newMessageContent, 'MESSAGE', 'new', messagesLink),
       fromName: senderName,
       fromRole: userRole
     });
@@ -834,6 +846,16 @@ const Dashboard: React.FC<DashboardProps> = ({
               Inbox
               <span className="text-xs font-normal text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700 px-2 py-0.5 rounded-full">{displayThreads.filter(t => !t.isRead).length} new</span>
             </h3>
+            <Button
+              variant="filled"
+              onClick={() => {
+                setShowNewMessageModal(true);
+              }}
+              icon={<Plus className="h-4 w-4" />}
+              className="!h-8 !px-3 text-xs"
+            >
+              Compose
+            </Button>
           </div>
           
           <div className="p-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
@@ -1122,8 +1144,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             if (e.target === e.currentTarget) setShowNewTaskModal(false);
           }}
         >
-          <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
-            <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700 shrink-0">
               <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                 <CheckSquare className="h-5 w-5 text-primary" />
                 New Task
@@ -1151,7 +1173,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               setSelectedClaimIds([]);
               setShowNewTaskModal(false);
               setCurrentTab('TASKS');
-            }} className="p-6 space-y-4 bg-surface dark:bg-gray-800">
+            }} className="p-6 space-y-4 bg-surface dark:bg-gray-800 flex-1 overflow-y-auto">
               <div>
                 <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Task Title</label>
                 <input 
@@ -1208,7 +1230,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                 </div>
               )}
-              <div className="p-4 bg-surface-container dark:bg-gray-700 flex justify-end gap-3 -mx-6 -mb-6 mt-6">
+              <div className="p-4 bg-surface-container dark:bg-gray-700 flex justify-end gap-3 -mx-6 -mb-6 mt-6 shrink-0">
                 <Button 
                   variant="text" 
                   type="button" 

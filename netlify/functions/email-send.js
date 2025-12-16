@@ -67,11 +67,20 @@ exports.handler = async (event, context) => {
       };
     }
     
-    // Format email body as HTML (convert URLs to clickable links)
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const bodyWithLinks = body.replace(urlRegex, '<a href="$1" style="color: #6750A4; text-decoration: underline;">$1</a>');
-    const htmlBody = bodyWithLinks.replace(/\n/g, '<br>');
-    const textBody = body;
+    // Format email body - check if it already contains HTML
+    const containsHTML = /<[a-z][\s\S]*>/i.test(body);
+    let htmlBody;
+    if (containsHTML) {
+      // Body already contains HTML, use as-is
+      htmlBody = body;
+    } else {
+      // Convert plain text to HTML (convert URLs to clickable links)
+      const urlRegex = /(https?:\/\/[^\s]+)/g;
+      const bodyWithLinks = body.replace(urlRegex, '<a href="$1" style="color: #6750A4; text-decoration: underline;">$1</a>');
+      htmlBody = bodyWithLinks.replace(/\n/g, '<br>');
+    }
+    // For text version, strip HTML tags if present
+    const textBody = containsHTML ? body.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim() : body;
 
     // Prefer SendGrid if API key is available
     if (process.env.SENDGRID_API_KEY) {

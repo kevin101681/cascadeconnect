@@ -3,7 +3,7 @@ import React, { useState, useRef } from 'react';
 import Papa from 'papaparse';
 import Button from './Button';
 import { Upload, FileText, AlertCircle, CheckCircle, Database, Terminal, Loader2, Trash2, X } from 'lucide-react';
-import { Claim, ClaimStatus, UserRole, ClaimClassification, Homeowner, BuilderGroup } from '../types';
+import { Claim, ClaimStatus, UserRole, ClaimClassification, Homeowner, BuilderGroup, BuilderUser, Task, MessageThread, Message } from '../types';
 
 interface DataImportProps {
   onImportClaims: (claims: Claim[]) => Promise<void>;
@@ -11,10 +11,15 @@ interface DataImportProps {
   onClearHomeowners: () => void;
   existingBuilderGroups: BuilderGroup[];
   onImportBuilderGroups: (groups: BuilderGroup[]) => Promise<void>;
+  onImportBuilderUsers?: (users: BuilderUser[], passwords: Map<string, string>) => Promise<void>;
+  onImportTasks?: (tasks: Task[]) => Promise<void>;
+  onImportMessages?: (threads: MessageThread[]) => Promise<void>;
+  employees?: { id: string; name: string }[];
+  homeowners?: { id: string; email: string }[];
   onClose?: () => void;
 }
 
-type ImportType = 'CLAIMS' | 'HOMEOWNERS' | 'CONTRACTORS';
+type ImportType = 'CLAIMS' | 'HOMEOWNERS' | 'CONTRACTORS' | 'TASKS' | 'MESSAGES' | 'BUILDER_GROUPS' | 'BUILDER_USERS';
 
 const DataImport: React.FC<DataImportProps> = ({ 
   onImportClaims, 
@@ -22,6 +27,11 @@ const DataImport: React.FC<DataImportProps> = ({
   onClearHomeowners,
   existingBuilderGroups,
   onImportBuilderGroups,
+  onImportBuilderUsers,
+  onImportTasks,
+  onImportMessages,
+  employees = [],
+  homeowners = [],
   onClose
 }) => {
   const [importType, setImportType] = useState<ImportType>('CLAIMS');
@@ -38,7 +48,11 @@ const DataImport: React.FC<DataImportProps> = ({
   const REQUIRED_HEADERS: Record<ImportType, string[]> = {
     'CLAIMS': ['title', 'description', 'category', 'homeownerEmail', 'address'],
     'HOMEOWNERS': ['name', 'email', 'phone', 'street', 'city', 'state', 'zip', 'jobName', 'builder', 'closingDate'],
-    'CONTRACTORS': ['companyName', 'email', 'specialty']
+    'CONTRACTORS': ['companyName', 'email', 'specialty'],
+    'TASKS': ['title', 'assignedToName', 'assignedByName', 'dueDate'],
+    'MESSAGES': ['subject', 'homeownerEmail', 'senderName', 'content'],
+    'BUILDER_GROUPS': ['name'],
+    'BUILDER_USERS': ['name', 'email', 'builderGroupName', 'password']
   };
 
   const addLog = (msg: string) => {
@@ -106,6 +120,11 @@ const DataImport: React.FC<DataImportProps> = ({
         
         const importedClaims: Claim[] = [];
         const importedHomeowners: Homeowner[] = [];
+        const importedTasks: Task[] = [];
+        const importedMessages: MessageThread[] = [];
+        const importedBuilderGroups: BuilderGroup[] = [];
+        const importedBuilderUsers: BuilderUser[] = [];
+        const builderUserPasswords = new Map<string, string>();
 
         // Pre-processing for Homeowners: Extract and Create Builder Groups
         let builderMap = new Map<string, string>(); // Name -> ID
@@ -195,6 +214,75 @@ const DataImport: React.FC<DataImportProps> = ({
               };
             });
             importedHomeowners.push(...transformed);
+          } else if (importType === 'TASKS' && onImportTasks) {
+            const transformed: Task[] = chunk.map((row: any) => {
+              const assignedTo = employees.find(e => e.name === row.assignedToName);
+              const assignedBy = employees.find(e => e.name === row.assignedByName);
+              
+              return {
+                id: crypto.randomUUID(),
+                title: row.title || 'Untitled Task',
+                description: row.description || '',
+                assignedToId: assignedTo?.id || employees[0]?.id || '',
+                assignedById: assignedBy?.id || employees[0]?.id || '',
+                isCompleted: row.isCompleted === 'true' || row.isCompleted === true || false,
+                dateAssigned: row.dateAssigned ? new Date(row.dateAssigned) : new Date(),
+                dueDate: row.dueDate ? new Date(row.dueDate) : new Date(),
+                relatedClaimIds: row.relatedClaimIds ? row.relatedClaimIds.split(',').map((id: string) => id.trim()) : []
+              };
+            });
+            importedTasks.push(...transformed);
+          } else if (importType === 'MESSAGES' && onImportMessages) {
+            const transformed: MessageThread[] = chunk.map((row: any) => {
+              const homeowner = homeowners.find(h => h.email === row.homeownerEmail);
+              
+              const message: Message = {
+                id: crypto.randomUUID(),
+                senderId: row.senderId || '',
+                senderName: row.senderName || 'Unknown',
+                senderRole: (row.senderRole as UserRole) || UserRole.ADMIN,
+                content: row.content || '',
+                timestamp: row.timestamp ? new Date(row.timestamp) : new Date()
+              };
+              
+              return {
+                id: crypto.randomUUID(),
+                subject: row.subject || 'No Subject',
+                homeownerId: homeowner?.id || '',
+                participants: [row.senderName || 'Unknown'],
+                lastMessageAt: message.timestamp,
+                isRead: false,
+                messages: [message]
+              };
+            });
+            importedMessages.push(...transformed);
+          } else if (importType === 'BUILDER_GROUPS') {
+            const transformed: BuilderGroup[] = chunk.map((row: any) => ({
+              id: crypto.randomUUID(),
+              name: row.name,
+              email: row.email || '',
+              address: row.address || '',
+              primaryContact: row.primaryContact || ''
+            }));
+            importedBuilderGroups.push(...transformed);
+          } else if (importType === 'BUILDER_USERS' && onImportBuilderUsers) {
+            const transformed: BuilderUser[] = chunk.map((row: any) => {
+              const builderGroup = existingBuilderGroups.find(bg => bg.name === row.builderGroupName);
+              const userId = crypto.randomUUID();
+              
+              if (row.password) {
+                builderUserPasswords.set(userId, row.password);
+              }
+              
+              return {
+                id: userId,
+                name: row.name,
+                email: row.email,
+                builderGroupId: builderGroup?.id || '',
+                role: UserRole.BUILDER
+              };
+            });
+            importedBuilderUsers.push(...transformed);
           }
 
           const currentProgress = Math.round(((i + 1) / totalChunks) * 100);
@@ -208,6 +296,14 @@ const DataImport: React.FC<DataImportProps> = ({
               await onImportClaims(importedClaims);
             } else if (importType === 'HOMEOWNERS') {
               await onImportHomeowners(importedHomeowners);
+            } else if (importType === 'TASKS' && onImportTasks) {
+              await onImportTasks(importedTasks);
+            } else if (importType === 'MESSAGES' && onImportMessages) {
+              await onImportMessages(importedMessages);
+            } else if (importType === 'BUILDER_GROUPS') {
+              await onImportBuilderGroups(importedBuilderGroups);
+            } else if (importType === 'BUILDER_USERS' && onImportBuilderUsers) {
+              await onImportBuilderUsers(importedBuilderUsers, builderUserPasswords);
             }
             
             setIsProcessing(false);
@@ -238,7 +334,7 @@ const DataImport: React.FC<DataImportProps> = ({
               <Database className="h-5 w-5 text-primary" />
               Bulk Data Import
             </h2>
-            <p className="text-sm text-surface-on-variant dark:text-gray-400">Import claims, homeowners, or contractors from CSV files</p>
+            <p className="text-sm text-surface-on-variant dark:text-gray-400">Import data from CSV files (claims, homeowners, contractors, tasks, messages, builders, builder users)</p>
           </div>
           <button 
             onClick={onClose || (() => window.history.back())} 
@@ -261,8 +357,8 @@ const DataImport: React.FC<DataImportProps> = ({
           
           <div className="mb-6">
             <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-2">Data Type</label>
-            <div className="flex gap-2">
-              {(['CLAIMS', 'HOMEOWNERS', 'CONTRACTORS'] as ImportType[]).map((type) => (
+            <div className="flex flex-wrap gap-2">
+              {(['CLAIMS', 'HOMEOWNERS', 'CONTRACTORS', 'TASKS', 'MESSAGES', 'BUILDER_GROUPS', 'BUILDER_USERS'] as ImportType[]).map((type) => (
                 <button
                   key={type}
                   onClick={() => { setImportType(type); setFile(null); setPreviewData([]); setLogs([]); setUploadStatus('IDLE'); }}
@@ -273,7 +369,10 @@ const DataImport: React.FC<DataImportProps> = ({
                       : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                   }`}
                 >
-                  {type === 'CONTRACTORS' ? 'Subs' : type.charAt(0) + type.slice(1).toLowerCase()}
+                  {type === 'CONTRACTORS' ? 'Subs' : 
+                   type === 'BUILDER_GROUPS' ? 'Builders' :
+                   type === 'BUILDER_USERS' ? 'Builder Users' :
+                   type.charAt(0) + type.slice(1).toLowerCase()}
                 </button>
               ))}
             </div>

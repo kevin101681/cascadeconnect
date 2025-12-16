@@ -4,8 +4,10 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
+import { toNodeHandler } from "better-auth/node";
 import cbsbooksRouter from "./cbsbooks.js";
 import { uploadMiddleware, uploadToCloudinary } from "./cloudinary.js";
+import { auth } from "./auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -18,7 +20,18 @@ dotenv.config(); // Also load default .env as fallback
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(cors({
+  origin: true, // Allow all origins in development
+  credentials: true, // Allow credentials (cookies, etc.)
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+}));
+
+// Better Auth API routes - MUST be before express.json() middleware
+// Using toNodeHandler for proper Express integration
+app.all("/api/auth/*", toNodeHandler(auth));
+
+// Express JSON middleware - mount after Better Auth handler
+// This prevents Better Auth from hanging on pending requests
 app.use(express.json());
 
 // CBS Books API Routes
@@ -126,9 +139,11 @@ app.post("/api/email/send", async (req, res) => {
   }
 
   try {
-    // Format email body
-    const htmlBody = body.replace(/\n/g, '<br>');
-    const textBody = body;
+    // Format email body - check if it already contains HTML
+    const containsHTML = /<[a-z][\s\S]*>/i.test(body);
+    const htmlBody = containsHTML ? body : body.replace(/\n/g, '<br>');
+    // For text version, strip HTML tags if present
+    const textBody = containsHTML ? body.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim() : body;
     const fromEmail = process.env.SENDGRID_REPLY_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER;
 
     // Prefer SendGrid if API key is available
@@ -257,6 +272,247 @@ app.post("/api/email/send", async (req, res) => {
   }
 });
 
+// Email Analytics API - Fetches email statistics from SendGrid
+app.get("/api/email/analytics", async (req, res) => {
+  try {
+    console.log('📊 Email Analytics API called');
+    const apiKey = process.env.SENDGRID_API_KEY;
+    
+    if (!apiKey) {
+      console.error('❌ SendGrid API key not found in environment variables');
+      console.log('Available env vars with SENDGRID:', Object.keys(process.env).filter(k => k.includes('SENDGRID')));
+      return res.status(500).json({ 
+        error: "SendGrid API key not configured",
+        message: "Please set SENDGRID_API_KEY in your .env.local file"
+      });
+    }
+    
+    console.log('✅ SendGrid API key found');
+
+    // Get query parameters for date range
+    const startDate = req.query.start_date || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // Default: 30 days ago
+    const endDate = req.query.end_date || new Date().toISOString().split('T')[0]; // Default: today
+    const aggregatedBy = req.query.aggregated_by || 'day'; // day, week, or month
+
+    // Fetch email statistics using SendGrid REST API
+    const statsUrl = new URL('https://api.sendgrid.com/v3/stats');
+    statsUrl.searchParams.set('start_date', startDate);
+    statsUrl.searchParams.set('end_date', endDate);
+    statsUrl.searchParams.set('aggregated_by', aggregatedBy);
+
+    const statsResponse = await fetch(statsUrl.toString(), {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!statsResponse.ok) {
+      const errorText = await statsResponse.text();
+      throw new Error(`SendGrid stats API error: ${statsResponse.status} - ${errorText}`);
+    }
+
+    const statsData = await statsResponse.json();
+
+    // Fetch recent email activity using SendGrid Messages API
+    let activityData = [];
+    try {
+      const activityUrl = new URL('https://api.sendgrid.com/v3/messages');
+      activityUrl.searchParams.set('limit', '100');
+      activityUrl.searchParams.set('query', `last_event_time BETWEEN "${startDate}T00:00:00Z" AND "${endDate}T23:59:59Z"`);
+
+      const activityResponse = await fetch(activityUrl.toString(), {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (activityResponse.ok) {
+        const activityResult = await activityResponse.json();
+        const messages = activityResult.messages || [];
+        
+        // Process messages and fetch detailed activity for each
+        for (const msg of messages.slice(0, 50)) { // Limit to 50 to avoid too many API calls
+          try {
+            // Get opens for this message
+            let opens = [];
+            try {
+              const opensUrl = new URL(`https://api.sendgrid.com/v3/messages/${msg.msg_id}/opens`);
+              const opensResponse = await fetch(opensUrl.toString(), {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${apiKey}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              if (opensResponse.ok) {
+                const opensData = await opensResponse.json();
+                opens = (opensData.opens || []).map((o) => ({
+                  email: o.email || 'Unknown',
+                  timestamp: o.timestamp,
+                  ip: o.ip || 'N/A',
+                  user_agent: o.user_agent || 'N/A'
+                }));
+              }
+            } catch (e) {
+              console.warn(`Could not fetch opens for message ${msg.msg_id}:`, e.message);
+            }
+
+            // Get clicks for this message
+            let clicks = [];
+            try {
+              const clicksUrl = new URL(`https://api.sendgrid.com/v3/messages/${msg.msg_id}/clicks`);
+              const clicksResponse = await fetch(clicksUrl.toString(), {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${apiKey}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              if (clicksResponse.ok) {
+                const clicksData = await clicksResponse.json();
+                clicks = (clicksData.clicks || []).map((c) => ({
+                  email: c.email || 'Unknown',
+                  timestamp: c.timestamp,
+                  url: c.url || 'N/A',
+                  ip: c.ip || 'N/A',
+                  user_agent: c.user_agent || 'N/A'
+                }));
+              }
+            } catch (e) {
+              console.warn(`Could not fetch clicks for message ${msg.msg_id}:`, e.message);
+            }
+
+            // Extract recipient emails from the 'to' field
+            let recipients = [];
+            if (msg.to) {
+              if (Array.isArray(msg.to)) {
+                recipients = msg.to.map((r) => typeof r === 'string' ? r : r.email || r);
+              } else if (typeof msg.to === 'string') {
+                recipients = [msg.to];
+              }
+            }
+
+            activityData.push({
+              msg_id: msg.msg_id,
+              from: msg.from?.email || 'Unknown',
+              from_name: msg.from?.name || '',
+              subject: msg.subject || 'No subject',
+              to: recipients,
+              status: msg.status || 'unknown',
+              sent_at: msg.last_event_time || msg.sent_at,
+              last_event_time: msg.last_event_time || msg.sent_at,
+              opens_count: opens.length || msg.opens_count || 0,
+              clicks_count: clicks.length || msg.clicks_count || 0,
+              opens: opens,
+              clicks: clicks
+            });
+          } catch (error) {
+            console.warn(`Error processing message ${msg.msg_id}:`, error.message);
+            // Fallback to basic message data
+            activityData.push({
+              msg_id: msg.msg_id,
+              from: msg.from?.email || 'Unknown',
+              from_name: msg.from?.name || '',
+              subject: msg.subject || 'No subject',
+              to: Array.isArray(msg.to) ? msg.to.map((r) => typeof r === 'string' ? r : r.email || r) : (msg.to ? [msg.to] : []),
+              status: msg.status || 'unknown',
+              sent_at: msg.last_event_time || msg.sent_at,
+              last_event_time: msg.last_event_time || msg.sent_at,
+              opens_count: msg.opens_count || 0,
+              clicks_count: msg.clicks_count || 0,
+              opens: [],
+              clicks: []
+            });
+          }
+        }
+      } else {
+        console.warn('Could not fetch email activity:', activityResponse.status, await activityResponse.text());
+      }
+    } catch (activityError) {
+      console.warn('Could not fetch email activity:', activityError.message);
+      // Continue without activity data
+    }
+
+    // Process statistics
+    const processedStats = (statsData || []).map(stat => ({
+      date: stat.date,
+      stats: stat.stats.map(s => ({
+        metrics: {
+          blocks: s.metrics?.blocks || 0,
+          bounce_drops: s.metrics?.bounce_drops || 0,
+          bounces: s.metrics?.bounces || 0,
+          clicks: s.metrics?.clicks || 0,
+          deferred: s.metrics?.deferred || 0,
+          delivered: s.metrics?.delivered || 0,
+          invalid_emails: s.metrics?.invalid_emails || 0,
+          opens: s.metrics?.opens || 0,
+          processed: s.metrics?.processed || 0,
+          requests: s.metrics?.requests || 0,
+          spam_report_drops: s.metrics?.spam_report_drops || 0,
+          spam_reports: s.metrics?.spam_reports || 0,
+          unique_clicks: s.metrics?.unique_clicks || 0,
+          unique_opens: s.metrics?.unique_opens || 0,
+          unsubscribe_drops: s.metrics?.unsubscribe_drops || 0,
+          unsubscribes: s.metrics?.unsubscribes || 0
+        }
+      }))
+    }));
+
+    // Calculate totals
+    const totals = processedStats.reduce((acc, stat) => {
+      stat.stats.forEach(s => {
+        Object.keys(s.metrics).forEach(key => {
+          acc[key] = (acc[key] || 0) + s.metrics[key];
+        });
+      });
+      return acc;
+    }, {});
+
+    // Process activity data (already processed above with detailed info)
+    const processedActivity = activityData.map(msg => ({
+      msg_id: msg.msg_id,
+      from: msg.from || 'Unknown',
+      from_name: msg.from_name || '',
+      subject: msg.subject || 'No subject',
+      to: Array.isArray(msg.to) ? msg.to : (msg.to ? [msg.to] : []),
+      status: msg.status || 'unknown',
+      sent_at: msg.sent_at || msg.last_event_time,
+      opens_count: msg.opens?.length || msg.opens_count || 0,
+      clicks_count: msg.clicks?.length || msg.clicks_count || 0,
+      opens: msg.opens || [],
+      clicks: msg.clicks || [],
+      last_event_time: msg.sent_at || msg.last_event_time
+    }));
+
+    res.json({
+      success: true,
+      dateRange: {
+        start: startDate,
+        end: endDate
+      },
+      aggregatedBy,
+      stats: processedStats,
+      totals,
+      activity: processedActivity,
+      activityCount: processedActivity.length
+    });
+  } catch (error) {
+    console.error("EMAIL ANALYTICS ERROR:", {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+
+    res.status(500).json({ 
+      error: error.message || "Failed to fetch email analytics"
+    });
+  }
+});
+
 // Inbound Email Webhook - Receives emails from SendGrid Inbound Parse
 app.post("/api/email/inbound", express.urlencoded({ extended: true }), async (req, res) => {
   try {
@@ -343,6 +599,17 @@ app.get("/api/health", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Email endpoint active at http://localhost:${PORT}/api/email/send`);
+  console.log(`Email analytics endpoint active at http://localhost:${PORT}/api/email/analytics`);
+  console.log(`Better Auth endpoint active at http://localhost:${PORT}/api/auth`);
+  
+  // Check if database is configured for Better Auth
+  const databaseUrl = process.env.VITE_DATABASE_URL || process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    console.warn("⚠️  WARNING: Database URL not set!");
+    console.warn("   Better Auth requires a database connection. Set VITE_DATABASE_URL or DATABASE_URL in your .env.local file.");
+  } else {
+    console.log("✅ Database configured for Better Auth");
+  }
   
   // Check if SMTP credentials are set
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {

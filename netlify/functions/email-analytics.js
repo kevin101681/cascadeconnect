@@ -90,7 +90,103 @@ exports.handler = async (event, context) => {
 
       if (activityResponse.ok) {
         const activityResult = await activityResponse.json();
-        activityData = activityResult.messages || [];
+        const messages = activityResult.messages || [];
+        
+        // Process messages and fetch detailed activity for each
+        for (const msg of messages.slice(0, 50)) { // Limit to 50 to avoid too many API calls
+          try {
+            // Get opens for this message
+            let opens = [];
+            try {
+              const opensUrl = `https://api.sendgrid.com/v3/messages/${msg.msg_id}/opens`;
+              const opensResponse = await fetch(opensUrl, {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${apiKey}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              if (opensResponse.ok) {
+                const opensData = await opensResponse.json();
+                opens = (opensData.opens || []).map(o => ({
+                  email: o.email || 'Unknown',
+                  timestamp: o.timestamp,
+                  ip: o.ip || 'N/A',
+                  user_agent: o.user_agent || 'N/A'
+                }));
+              }
+            } catch (e) {
+              console.warn(`Could not fetch opens for message ${msg.msg_id}:`, e.message);
+            }
+
+            // Get clicks for this message
+            let clicks = [];
+            try {
+              const clicksUrl = `https://api.sendgrid.com/v3/messages/${msg.msg_id}/clicks`;
+              const clicksResponse = await fetch(clicksUrl, {
+                method: 'GET',
+                headers: {
+                  'Authorization': `Bearer ${apiKey}`,
+                  'Content-Type': 'application/json'
+                }
+              });
+              if (clicksResponse.ok) {
+                const clicksData = await clicksResponse.json();
+                clicks = (clicksData.clicks || []).map(c => ({
+                  email: c.email || 'Unknown',
+                  timestamp: c.timestamp,
+                  url: c.url || 'N/A',
+                  ip: c.ip || 'N/A',
+                  user_agent: c.user_agent || 'N/A'
+                }));
+              }
+            } catch (e) {
+              console.warn(`Could not fetch clicks for message ${msg.msg_id}:`, e.message);
+            }
+
+            // Extract recipient emails from the 'to' field
+            let recipients = [];
+            if (msg.to) {
+              if (Array.isArray(msg.to)) {
+                recipients = msg.to.map(r => typeof r === 'string' ? r : (r.email || r));
+              } else if (typeof msg.to === 'string') {
+                recipients = [msg.to];
+              }
+            }
+
+            activityData.push({
+              msg_id: msg.msg_id,
+              from: msg.from?.email || 'Unknown',
+              from_name: msg.from?.name || '',
+              subject: msg.subject || 'No subject',
+              to: recipients,
+              status: msg.status || 'unknown',
+              sent_at: msg.last_event_time || msg.sent_at,
+              last_event_time: msg.last_event_time || msg.sent_at,
+              opens_count: opens.length || msg.opens_count || 0,
+              clicks_count: clicks.length || msg.clicks_count || 0,
+              opens: opens,
+              clicks: clicks
+            });
+          } catch (error) {
+            console.warn(`Error processing message ${msg.msg_id}:`, error.message);
+            // Fallback to basic message data
+            activityData.push({
+              msg_id: msg.msg_id,
+              from: msg.from?.email || 'Unknown',
+              from_name: msg.from?.name || '',
+              subject: msg.subject || 'No subject',
+              to: Array.isArray(msg.to) ? msg.to.map(r => typeof r === 'string' ? r : (r.email || r)) : (msg.to ? [msg.to] : []),
+              status: msg.status || 'unknown',
+              sent_at: msg.last_event_time || msg.sent_at,
+              last_event_time: msg.last_event_time || msg.sent_at,
+              opens_count: msg.opens_count || 0,
+              clicks_count: msg.clicks_count || 0,
+              opens: [],
+              clicks: []
+            });
+          }
+        }
       } else {
         console.warn('Could not fetch email activity:', activityResponse.status, await activityResponse.text());
       }
@@ -134,17 +230,20 @@ exports.handler = async (event, context) => {
       return acc;
     }, {});
 
-    // Process activity data
+    // Process activity data (already processed above with detailed info)
     const processedActivity = activityData.map(msg => ({
       msg_id: msg.msg_id,
-      from: msg.from?.email || 'Unknown',
+      from: msg.from || 'Unknown',
+      from_name: msg.from_name || '',
       subject: msg.subject || 'No subject',
-      to: msg.to || [],
+      to: Array.isArray(msg.to) ? msg.to : (msg.to ? [msg.to] : []),
       status: msg.status || 'unknown',
-      opens_count: msg.opens_count || 0,
-      clicks_count: msg.clicks_count || 0,
-      last_event_time: msg.last_event_time,
-      asm_group_id: msg.asm_group_id
+      sent_at: msg.sent_at || msg.last_event_time,
+      opens_count: msg.opens?.length || msg.opens_count || 0,
+      clicks_count: msg.clicks?.length || msg.clicks_count || 0,
+      opens: msg.opens || [],
+      clicks: msg.clicks || [],
+      last_event_time: msg.sent_at || msg.last_event_time
     }));
 
     return {

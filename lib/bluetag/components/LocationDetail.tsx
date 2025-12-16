@@ -271,16 +271,33 @@ export const AddIssueForm: React.FC<AddIssueFormProps> = ({
 
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
             try {
-                const compressed = await compressImage(e.target.files[0]);
-                // Add unique ID for the new photo
-                setPhotos(prev => [...prev, { id: generateUUID(), url: compressed, description: '' }]);
+                // Show thumbnail immediately using object URL (instant)
+                const tempUrl = URL.createObjectURL(file);
+                const tempPhoto = { id: generateUUID(), url: tempUrl, description: '' };
+                
+                // Add photo immediately with temp URL
+                setPhotos(prev => [...prev, tempPhoto]);
+                
+                // Compress image in background and replace temp URL
+                const compressed = await compressImage(file);
+                setPhotos(prev => prev.map(p => 
+                    p.id === tempPhoto.id ? { ...p, url: compressed } : p
+                ));
+                
+                // Clean up temporary object URL
+                URL.revokeObjectURL(tempUrl);
+                
                 // Reset input so same file can be selected again if needed
                 if (fileInputRef.current) {
                     fileInputRef.current.value = '';
                 }
             } catch (err) {
                 console.error("Image compression failed", err);
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
             }
         }
     };
@@ -605,26 +622,48 @@ export const LocationDetail: React.FC<LocationDetailProps> = ({
 
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0] && uploadIssueId) {
+            const file = e.target.files[0];
             try {
-                const compressed = await compressImage(e.target.files[0]);
-                const newPhoto: IssuePhoto = {
-                     id: generateUUID(),
-                     url: compressed,
-                     description: ''
+                // Show thumbnail immediately using object URL (instant)
+                const tempUrl = URL.createObjectURL(file);
+                const tempPhoto: IssuePhoto = {
+                    id: generateUUID(),
+                    url: tempUrl,
+                    description: ''
                 };
 
+                // Add photo immediately with temp URL
                 setLocalIssues(prev => prev.map(i => {
                     if (i.id === uploadIssueId) {
-                        return { ...i, photos: [...i.photos, newPhoto] };
+                        return { ...i, photos: [...i.photos, tempPhoto] };
                     }
                     return i;
                 }));
+
+                // Compress image in background and replace temp URL
+                const compressed = await compressImage(file);
+                setLocalIssues(prev => prev.map(i => {
+                    if (i.id === uploadIssueId) {
+                        return {
+                            ...i,
+                            photos: i.photos.map(p => 
+                                p.id === tempPhoto.id ? { ...p, url: compressed } : p
+                            )
+                        };
+                    }
+                    return i;
+                }));
+
+                // Clean up temporary object URL
+                URL.revokeObjectURL(tempUrl);
 
                 // Reset
                 if (fileInputRef.current) fileInputRef.current.value = '';
                 setUploadIssueId(null);
             } catch (err) {
                 console.error("Image upload failed", err);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                setUploadIssueId(null);
             }
         }
     };

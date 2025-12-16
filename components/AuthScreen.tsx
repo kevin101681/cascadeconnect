@@ -95,12 +95,12 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
       if (provider === 'google') {
         await authClient.signIn.social({
           provider: 'google',
-          callbackURL: window.location.origin,
+          callbackURL: `${window.location.origin}/api/auth/callback/google`,
         });
       } else if (provider === 'apple') {
         await authClient.signIn.social({
           provider: 'apple',
-          callbackURL: window.location.origin,
+          callbackURL: `${window.location.origin}/api/auth/callback/apple`,
         });
       }
       // OAuth redirects to provider, so we don't need to handle the response here

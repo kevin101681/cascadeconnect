@@ -47,8 +47,9 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
 
   const fetchStats = async () => {
     if (!isDbConfigured) {
-      setError('Database not configured');
+      // Don't set error - allow modal to show with helpful message
       setLoading(false);
+      setStats(null);
       return;
     }
 
@@ -364,8 +365,18 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
 
   if (loading && !stats) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]">
-        <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
+      <div 
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
+        <div 
+          className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8"
+          onClick={(e) => e.stopPropagation()}
+        >
           {renderHeader()}
           <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-center py-12">
@@ -378,10 +389,20 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
     );
   }
 
-  if (error && !stats) {
+  if (error && !stats && isDbConfigured) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]">
-        <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
+      <div 
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
+        <div 
+          className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8"
+          onClick={(e) => e.stopPropagation()}
+        >
           {renderHeader(
             <Button onClick={fetchStats} variant="outlined" icon={<RefreshCw className="h-4 w-4" />}>
               Retry
@@ -399,8 +420,18 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]">
-      <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
+    <div 
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div 
+        className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8"
+        onClick={(e) => e.stopPropagation()}
+      >
         {renderHeader(
           <Button
             variant="outlined"
@@ -429,7 +460,66 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
           </div>
 
           {/* Overview Tab */}
-          {activeTab === 'OVERVIEW' && stats && (
+          {activeTab === 'OVERVIEW' && (
+            !isDbConfigured ? (
+              <div className="space-y-6">
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-6">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-yellow-900 dark:text-yellow-100 mb-2">Database Not Configured</h3>
+                      <div className="text-sm text-yellow-800 dark:text-yellow-200 space-y-2">
+                        <p>
+                          To use the Backend Dashboard, you need to configure your Neon database connection.
+                        </p>
+                        <div className="mt-4 space-y-2">
+                          <p className="font-medium">To configure:</p>
+                          <ol className="list-decimal list-inside space-y-1 ml-2">
+                            <li>Create a <code className="bg-yellow-100 dark:bg-yellow-900/40 px-1.5 py-0.5 rounded text-xs font-mono">.env.local</code> file in your project root (if it doesn't exist)</li>
+                            <li>Add your Neon database connection string:</li>
+                          </ol>
+                          <div className="bg-yellow-100 dark:bg-yellow-900/40 rounded-lg p-3 mt-2">
+                            <code className="text-xs font-mono text-yellow-900 dark:text-yellow-100">
+                              VITE_DATABASE_URL=postgresql://user:password@host.neon.tech/dbname
+                            </code>
+                          </div>
+                          <p className="text-xs mt-2">
+                            <strong>Note:</strong> For production, set this as an environment variable in your hosting platform (Netlify, Vercel, etc.)
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-6 border border-surface-outline-variant">
+                  <h3 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-4">Available Tabs</h3>
+                  <p className="text-sm text-surface-on-variant dark:text-gray-400 mb-4">
+                    Even without database configuration, you can still view:
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="bg-surface-container-high dark:bg-gray-600 rounded-lg p-3 border border-surface-outline-variant">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Server className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium text-surface-on dark:text-gray-100">NETLIFY Tab</span>
+                      </div>
+                      <p className="text-xs text-surface-on-variant dark:text-gray-400">View deployment information, site details, and system information</p>
+                    </div>
+                    <div className="bg-surface-container-high dark:bg-gray-600 rounded-lg p-3 border border-surface-outline-variant">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Database className="h-4 w-4 text-primary" />
+                        <span className="text-sm font-medium text-surface-on dark:text-gray-100">NEON Tab</span>
+                      </div>
+                      <p className="text-xs text-surface-on-variant dark:text-gray-400">View database configuration and connection status</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : !stats ? (
+              <div className="text-center py-12">
+                <AlertCircle className="h-12 w-12 text-surface-outline-variant dark:text-gray-500 mx-auto mb-4 opacity-50" />
+                <p className="text-surface-on-variant dark:text-gray-400">No data available. Click Refresh to load statistics.</p>
+              </div>
+            ) : (
             <div className="space-y-6">
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -567,6 +657,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
               </div>
             </div>
           </div>
+            )
           )}
 
           {/* Neon Database Tab */}

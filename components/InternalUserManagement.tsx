@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { InternalEmployee, Contractor } from '../types';
+import { InternalEmployee, Contractor, BuilderUser, BuilderGroup, UserRole } from '../types';
 import Button from './Button';
-import { Plus, Edit2, Mail, Trash2, UserCheck, Shield, X, HardHat, Briefcase, Phone } from 'lucide-react';
+import { Plus, Edit2, Mail, Trash2, UserCheck, Shield, X, HardHat, Briefcase, Phone, User, Lock } from 'lucide-react';
 
 interface InternalUserManagementProps {
   employees: InternalEmployee[];
@@ -15,8 +15,14 @@ interface InternalUserManagementProps {
   onUpdateContractor: (sub: Contractor) => void;
   onDeleteContractor: (id: string) => void;
 
+  builderUsers?: BuilderUser[];
+  builderGroups?: BuilderGroup[];
+  onAddBuilderUser?: (user: BuilderUser, password?: string) => void;
+  onUpdateBuilderUser?: (user: BuilderUser, password?: string) => void;
+  onDeleteBuilderUser?: (id: string) => void;
+
   onClose: () => void;
-  initialTab?: 'EMPLOYEES' | 'SUBS';
+  initialTab?: 'EMPLOYEES' | 'SUBS' | 'BUILDER_USERS';
 }
 
 const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
@@ -28,10 +34,15 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
   onAddContractor,
   onUpdateContractor,
   onDeleteContractor,
+  builderUsers = [],
+  builderGroups = [],
+  onAddBuilderUser,
+  onUpdateBuilderUser,
+  onDeleteBuilderUser,
   onClose,
   initialTab = 'EMPLOYEES'
 }) => {
-  const [activeTab, setActiveTab] = useState<'EMPLOYEES' | 'SUBS'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'EMPLOYEES' | 'SUBS' | 'BUILDER_USERS'>(initialTab);
   
   const [showEmpModal, setShowEmpModal] = useState(false);
   const [editingEmpId, setEditingEmpId] = useState<string | null>(null);
@@ -49,6 +60,14 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
   const [subContact, setSubContact] = useState('');
   const [subEmail, setSubEmail] = useState('');
   const [subSpecialty, setSubSpecialty] = useState('');
+
+  // Builder User Form State
+  const [showBuilderUserModal, setShowBuilderUserModal] = useState(false);
+  const [editingBuilderUserId, setEditingBuilderUserId] = useState<string | null>(null);
+  const [builderUserName, setBuilderUserName] = useState('');
+  const [builderUserEmail, setBuilderUserEmail] = useState('');
+  const [builderUserPassword, setBuilderUserPassword] = useState('');
+  const [builderUserGroupId, setBuilderUserGroupId] = useState('');
 
   // --- Employee Handlers ---
   const handleOpenCreateEmp = () => {
@@ -106,6 +125,51 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     setShowSubModal(false);
   };
 
+  // --- Builder User Handlers ---
+  const handleOpenCreateBuilderUser = () => {
+    if (!onAddBuilderUser) return;
+    setEditingBuilderUserId(null);
+    setBuilderUserName('');
+    setBuilderUserEmail('');
+    setBuilderUserPassword('');
+    setBuilderUserGroupId(builderGroups.length > 0 ? builderGroups[0].id : '');
+    setShowBuilderUserModal(true);
+  };
+
+  const handleOpenEditBuilderUser = (user: BuilderUser) => {
+    if (!onUpdateBuilderUser) return;
+    setEditingBuilderUserId(user.id);
+    setBuilderUserName(user.name);
+    setBuilderUserEmail(user.email);
+    setBuilderUserPassword(''); // Clear password (don't show existing)
+    setBuilderUserGroupId(user.builderGroupId);
+    setShowBuilderUserModal(true);
+  };
+
+  const handleSubmitBuilderUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!onAddBuilderUser || !onUpdateBuilderUser) return;
+    
+    if (editingBuilderUserId) {
+      onUpdateBuilderUser({ 
+        id: editingBuilderUserId, 
+        name: builderUserName, 
+        email: builderUserEmail, 
+        builderGroupId: builderUserGroupId, 
+        role: UserRole.BUILDER 
+      }, builderUserPassword);
+    } else {
+      onAddBuilderUser({ 
+        id: crypto.randomUUID(), 
+        name: builderUserName, 
+        email: builderUserEmail, 
+        builderGroupId: builderUserGroupId, 
+        role: UserRole.BUILDER 
+      }, builderUserPassword);
+    }
+    setShowBuilderUserModal(false);
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]">
       <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
@@ -113,9 +177,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
           <div>
             <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               <Shield className="h-5 w-5 text-primary" />
-              Team & Sub Management
+              Internal Users
             </h3>
-            <p className="text-sm text-surface-on-variant dark:text-gray-400">Manage internal access and trade partners.</p>
           </div>
           <button 
             onClick={onClose} 
@@ -134,7 +197,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
           className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${
             activeTab === 'EMPLOYEES' 
               ? 'border-b-2 border-primary text-primary' 
-              : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'
+              : 'text-surface-on dark:text-gray-100 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'
           }`}
         >
           <UserCheck className="h-4 w-4" />
@@ -145,12 +208,25 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
           className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${
             activeTab === 'SUBS' 
               ? 'border-b-2 border-primary text-primary' 
-              : 'text-surface-on-variant hover:text-surface-on hover:bg-surface-container/50'
+              : 'text-surface-on dark:text-gray-100 hover:bg-surface-container/50'
           }`}
         >
           <HardHat className="h-4 w-4" />
-          Subs (Contractors)
+          Subs
         </button>
+        {onAddBuilderUser && onUpdateBuilderUser && onDeleteBuilderUser && (
+          <button
+            onClick={() => setActiveTab('BUILDER_USERS')}
+            className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${
+              activeTab === 'BUILDER_USERS' 
+                ? 'border-b-2 border-primary text-primary' 
+                : 'text-surface-on dark:text-gray-100 hover:bg-surface-container/50'
+            }`}
+          >
+            <User className="h-4 w-4" />
+            Builder Users
+          </button>
+        )}
       </div>
 
       <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-sm">
@@ -161,9 +237,13 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
             <Button onClick={handleOpenCreateEmp} icon={<Plus className="h-4 w-4" />}>
               Add Team Member
             </Button>
-          ) : (
+          ) : activeTab === 'SUBS' ? (
             <Button onClick={handleOpenCreateSub} icon={<Plus className="h-4 w-4" />}>
               Add Sub
+            </Button>
+          ) : (
+            <Button onClick={handleOpenCreateBuilderUser} icon={<Plus className="h-4 w-4" />} disabled={builderGroups.length === 0}>
+              Add Builder User
             </Button>
           )}
         </div>
@@ -178,12 +258,18 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                     <th className="px-6 py-4 font-medium">Role</th>
                     <th className="px-6 py-4 font-medium">Email</th>
                   </>
-                ) : (
+                ) : activeTab === 'SUBS' ? (
                   <>
                     <th className="px-6 py-4 font-medium">Company</th>
                     <th className="px-6 py-4 font-medium">Contact</th>
                     <th className="px-6 py-4 font-medium">Specialty</th>
                     <th className="px-6 py-4 font-medium">Email</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="px-6 py-4 font-medium">User Name</th>
+                    <th className="px-6 py-4 font-medium">Email</th>
+                    <th className="px-6 py-4 font-medium">Assigned Group</th>
                   </>
                 )}
                 <th className="px-6 py-4 font-medium text-right">Actions</th>
@@ -217,7 +303,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                     </td>
                   </tr>
                 ))
-              ) : (
+              ) : activeTab === 'SUBS' ? (
                 contractors.map(sub => (
                   <tr key={sub.id} className="hover:bg-surface-container-high dark:hover:bg-gray-700 transition-colors group">
                     <td className="px-6 py-4">
@@ -247,6 +333,36 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                     </td>
                   </tr>
                 ))
+              ) : (
+                builderUsers.map(user => {
+                  const groupName = builderGroups.find(g => g.id === user.builderGroupId)?.name || 'Unknown';
+                  return (
+                    <tr key={user.id} className="hover:bg-surface-container-high dark:hover:bg-gray-700 transition-colors group">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-secondary-on-container font-bold text-xs">
+                            {user.name.charAt(0)}
+                          </div>
+                          <span className="font-medium text-surface-on dark:text-gray-100 text-sm">{user.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-surface-on-variant dark:text-gray-400">
+                        {user.email}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600">
+                          {groupName}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => handleOpenEditBuilderUser(user)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
+                          <button onClick={() => onDeleteBuilderUser && onDeleteBuilderUser(user.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -337,6 +453,63 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
               <div className="flex justify-end gap-3 pt-4">
                 <Button type="button" variant="text" onClick={() => setShowSubModal(false)}>Cancel</Button>
                 <Button type="submit" variant="filled">{editingSubId ? 'Save Changes' : 'Create Sub'}</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* BUILDER USER MODAL */}
+      {showBuilderUserModal && onAddBuilderUser && onUpdateBuilderUser && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]">
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-md rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
+            <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700">
+              <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                <User className="h-5 w-5 text-primary" />
+                {editingBuilderUserId ? 'Edit Builder User' : 'New Builder User'}
+              </h2>
+            </div>
+            
+            <form onSubmit={handleSubmitBuilderUser} className="p-6 space-y-4 bg-surface dark:bg-gray-800">
+              <div>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Full Name</label>
+                <input type="text" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={builderUserName} onChange={(e) => setBuilderUserName(e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Email Address</label>
+                <input type="email" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={builderUserEmail} onChange={(e) => setBuilderUserEmail(e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Assign to Builder Group</label>
+                <select 
+                  required
+                  className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" 
+                  value={builderUserGroupId} 
+                  onChange={(e) => setBuilderUserGroupId(e.target.value)}
+                >
+                  {builderGroups.map(bg => (
+                    <option key={bg.id} value={bg.id}>{bg.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">
+                   Password {editingBuilderUserId && <span className="text-xs font-normal opacity-75">(Leave blank to keep current)</span>}
+                </label>
+                <div className="relative">
+                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-500" />
+                   <input 
+                     type="text" 
+                     className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg pl-10 pr-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" 
+                     value={builderUserPassword} 
+                     onChange={(e) => setBuilderUserPassword(e.target.value)}
+                     required={!editingBuilderUserId}
+                   />
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <Button type="button" variant="text" onClick={() => setShowBuilderUserModal(false)}>Cancel</Button>
+                <Button type="submit" variant="filled">{editingBuilderUserId ? 'Save Changes' : 'Create User'}</Button>
               </div>
             </form>
           </div>

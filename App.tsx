@@ -34,59 +34,59 @@ import {
 } from './db/schema';
 import { desc, eq } from 'drizzle-orm';
 
-// Stack Auth - with safe fallbacks for development mode
-import { useStackApp, useUser as useStackUser } from '@stackframe/react';
+// Better Auth integration
+import { authClient } from './lib/auth-client';
 import { useNoAuthContext } from './components/NoAuthProvider';
 
-// Safe hooks that work with or without Stack Auth
-// We always call hooks in the same order (React requirement)
-// The noAuthContext check tells us which provider is active
+// Better Auth hooks with error handling
 const useUser = () => {
-  // Always call hooks in same order
-  const noAuthContext = useNoAuthContext();
+  // Try to use Better Auth session, but handle errors gracefully
+  let session = null;
+  let isPending = true; // Start as pending
+  let hasError = false;
   
-  // If NoAuthProvider is present, StackProvider is NOT present
-  // So we can't call useStackUser() - it would throw
-  // Return defaults instead
-  if (noAuthContext !== null) {
-    return { isSignedIn: false, user: null, isLoaded: true };
+  try {
+    const sessionResult = authClient.useSession();
+    if (sessionResult) {
+      session = sessionResult.data || null;
+      isPending = sessionResult.isPending !== undefined ? sessionResult.isPending : false;
+      hasError = !!sessionResult.error;
+      
+      // Log errors for debugging
+      if (sessionResult.error) {
+        console.error("Better Auth session error:", sessionResult.error);
+      }
+    }
+  } catch (err) {
+    console.error("Better Auth useSession hook error:", err);
+    // If hook fails, treat as no session but mark as loaded
+    session = null;
+    isPending = false;
+    hasError = true;
   }
   
-  // StackProvider IS present, safe to call Stack Auth hooks
-  // Note: This violates React's rules if we conditionally call hooks
-  // But since we check noAuthContext first and return early,
-  // useStackUser() is only called when StackProvider exists
-  const stackUser = useStackUser();
-  const stackApp = useStackApp();
-  
-  // Map Stack Auth user to standard format for compatibility
+  // Map Better Auth session to standard format for compatibility
   return {
-    isSignedIn: stackUser !== null,
-    user: stackUser ? {
-      id: stackUser.id,
-      primaryEmailAddress: { emailAddress: stackUser.primaryEmail },
-      firstName: stackUser.displayName?.split(' ')[0] || '',
-      lastName: stackUser.displayName?.split(' ').slice(1).join(' ') || '',
-      fullName: stackUser.displayName || '',
+    isSignedIn: !!session?.user && !hasError,
+    user: session?.user ? {
+      id: session.user.id,
+      primaryEmailAddress: { emailAddress: session.user.email || '' },
+      firstName: session.user.name?.split(' ')[0] || '',
+      lastName: session.user.name?.split(' ').slice(1).join(' ') || '',
+      fullName: session.user.name || session.user.email || '',
     } : null,
-    isLoaded: true,
+    isLoaded: !isPending,
   };
 };
 
 const useAuth = () => {
-  // Always call hooks in same order  
-  const noAuthContext = useNoAuthContext();
-  
-  // If NoAuthProvider is present, return defaults
-  if (noAuthContext !== null) {
-    return { signOut: async () => {} };
-  }
-  
-  // StackProvider IS present, safe to call Stack Auth hooks
-  const stackApp = useStackApp();
   return { 
     signOut: async () => {
-      await stackApp.signOut();
+      try {
+        await authClient.signOut();
+      } catch (err) {
+        console.error("Better Auth signOut error:", err);
+      }
     }
   };
 };
@@ -132,10 +132,22 @@ const saveState = (key: string, data: any) => {
 };
 
 function App() {
-  // --- NEON AUTH / STACK AUTH INTEGRATION ---
-  // Use safe hooks that check for NoAuthProvider first
+  // --- BETTER AUTH INTEGRATION ---
+  // Use Better Auth hooks with timeout protection
+  const [authTimeout, setAuthTimeout] = useState(false);
   const { isSignedIn, user: authUser, isLoaded } = useUser();
   const { signOut } = useAuth();
+  
+  // Timeout protection: if auth doesn't load within 3 seconds, allow app to proceed
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isLoaded) {
+        console.warn("Auth loading timeout - allowing app to proceed");
+        setAuthTimeout(true);
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [isLoaded]);
   
   // State for mapped user roles
   const [userRole, setUserRole] = useState<UserRole>(UserRole.ADMIN);
@@ -1472,6 +1484,79 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
       }
   };
   
+  const handleImportTasks = async (newTasks: Task[]) => {
+    setTasks(prev => [...prev, ...newTasks]);
+    
+    if (isDbConfigured) {
+      try {
+        const BATCH_SIZE = 10;
+        for (let i = 0; i < newTasks.length; i += BATCH_SIZE) {
+          const batch = newTasks.slice(i, i + BATCH_SIZE);
+          await db.insert(tasksTable).values(batch.map(t => ({
+            id: t.id,
+            title: t.title,
+            description: t.description || '',
+            assignedToId: t.assignedToId,
+            assignedById: t.assignedById,
+            isCompleted: t.isCompleted,
+            dateAssigned: t.dateAssigned,
+            dueDate: t.dueDate,
+            relatedClaimIds: t.relatedClaimIds || []
+          } as any)));
+        }
+      } catch(e) {
+        console.error("Batch import tasks to DB failed", e);
+      }
+    }
+  };
+
+  const handleImportMessages = async (newThreads: MessageThread[]) => {
+    setMessages(prev => [...prev, ...newThreads]);
+    
+    if (isDbConfigured) {
+      try {
+        const BATCH_SIZE = 10;
+        for (let i = 0; i < newThreads.length; i += BATCH_SIZE) {
+          const batch = newThreads.slice(i, i + BATCH_SIZE);
+          await db.insert(messageThreadsTable).values(batch.map(t => ({
+            id: t.id,
+            subject: t.subject,
+            homeownerId: t.homeownerId,
+            participants: t.participants,
+            lastMessageAt: t.lastMessageAt,
+            isRead: t.isRead,
+            messages: t.messages
+          } as any)));
+        }
+      } catch(e) {
+        console.error("Batch import messages to DB failed", e);
+      }
+    }
+  };
+
+  const handleImportBuilderUsers = async (newUsers: BuilderUser[], passwords: Map<string, string>) => {
+    setBuilderUsers(prev => [...prev, ...newUsers]);
+    
+    if (isDbConfigured) {
+      try {
+        const BATCH_SIZE = 10;
+        for (let i = 0; i < newUsers.length; i += BATCH_SIZE) {
+          const batch = newUsers.slice(i, i + BATCH_SIZE);
+          await db.insert(usersTable).values(batch.map(u => ({
+            id: u.id,
+            name: u.name,
+            email: u.email,
+            role: 'BUILDER',
+            builderGroupId: u.builderGroupId,
+            password: passwords.get(u.id) || ''
+          } as any)));
+        }
+      } catch(e) {
+        console.error("Batch import builder users to DB failed", e);
+      }
+    }
+  };
+
   const handleClearHomeowners = async () => { 
       setHomeowners([]); 
       setSelectedAdminHomeownerId(null); 
@@ -2022,32 +2107,65 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
 
   useEffect(() => { window.scrollTo(0, 0); }, [currentView]);
 
-  if (!isLoaded) return <div className="flex h-screen items-center justify-center bg-gray-100"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div></div>;
+  // Handle hash routing for messages (#messages?threadId=xxx)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && currentView === 'DASHBOARD') {
+      const hash = window.location.hash;
+      if (hash.startsWith('#messages')) {
+        // Parse threadId from hash query params
+        const hashParts = hash.split('?');
+        let threadId: string | null = null;
+        if (hashParts.length > 1) {
+          const params = new URLSearchParams(hashParts[1]);
+          threadId = params.get('threadId');
+        }
+        
+        // Set dashboard config to open messages tab
+        setDashboardConfig({ initialTab: 'MESSAGES', initialThreadId: threadId });
+        
+        // Clean up URL hash after setting config
+        window.history.replaceState({}, '', window.location.pathname + window.location.search);
+      }
+    }
+  }, [currentView]);
 
-  // Use Stack Auth's isSignedIn to determine if we show AuthScreen
-  // Only show AuthScreen if StackProvider is available (Neon Auth is configured)
-  // Check if we're using NoAuthProvider (which means StackProvider is not available)
-  const noAuthContext = useNoAuthContext();
-  const hasStackAuth = noAuthContext === null; // null means StackProvider exists
-  
+  // If auth timed out, treat as not signed in and allow app to proceed
+  // This prevents the app from being stuck on a loading screen
+  const effectiveIsLoaded = isLoaded || authTimeout;
+  const effectiveIsSignedIn = isSignedIn && !authTimeout;
+
+  // Use Better Auth's session to determine if we show AuthScreen
   // Log authentication state for debugging
-  if (typeof window !== 'undefined' && hasStackAuth) {
-    console.log('Auth state check:', { hasStackAuth, isSignedIn, isLoaded, user: authUser?.id });
+  if (typeof window !== 'undefined') {
+    console.log('Auth state check:', { 
+      isSignedIn, 
+      effectiveIsSignedIn,
+      isLoaded, 
+      effectiveIsLoaded,
+      authTimeout,
+      user: authUser?.id 
+    });
   }
   
-  // Only require authentication if Stack Auth is configured
-  // If Stack Auth is not configured, allow access without authentication (development mode)
-  // Force check on every render to catch hard refresh scenarios
-  if (hasStackAuth && !isSignedIn && isLoaded) {
+  // Show loading screen only if auth is still loading and hasn't timed out
+  if (!isLoaded && !authTimeout) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-surface-on-variant dark:text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show AuthScreen if user is not signed in and session is loaded (or timed out)
+  // Allow access without authentication in development if session fails to load
+  if (!effectiveIsSignedIn && effectiveIsLoaded) {
     console.log('Showing AuthScreen - user not signed in');
     return <AuthScreenWrapper />;
   }
   
-  // If Stack Auth is not configured, log a warning but allow access
-  if (!hasStackAuth && typeof window !== 'undefined') {
-    console.warn("Neon Auth not configured. Running in development mode without authentication.");
-    console.warn("To enable authentication, set VITE_NEON_AUTH_URL in your .env.local file.");
-  }
 
   // Show homeowner selector if multiple homeowners match the user's email
   if (matchingHomeowners && matchingHomeowners.length > 1) {
@@ -2142,12 +2260,17 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
           onAddContractor={handleAddContractor}
           onUpdateContractor={handleUpdateContractor}
           onDeleteContractor={handleDeleteContractor}
+          builderUsers={builderUsers}
+          builderGroups={builderGroups}
+          onAddBuilderUser={handleAddBuilderUser}
+          onUpdateBuilderUser={handleUpdateBuilderUser}
+          onDeleteBuilderUser={handleDeleteBuilderUser}
           onClose={() => setCurrentView('DASHBOARD')}
           initialTab={currentView === 'SUBS' ? 'SUBS' : 'EMPLOYEES'}
         />
       )}
       {currentView === 'BUILDERS' && (
-        <BuilderManagement builderGroups={builderGroups} builderUsers={builderUsers} onAddGroup={handleAddBuilderGroup} onUpdateGroup={handleUpdateBuilderGroup} onDeleteGroup={handleDeleteBuilderGroup} onAddUser={handleAddBuilderUser} onUpdateUser={handleUpdateBuilderUser} onDeleteUser={handleDeleteBuilderUser} onClose={() => setCurrentView('DASHBOARD')} />
+        <BuilderManagement builderGroups={builderGroups} onAddGroup={handleAddBuilderGroup} onUpdateGroup={handleUpdateBuilderGroup} onDeleteGroup={handleDeleteBuilderGroup} onClose={() => setCurrentView('DASHBOARD')} />
       )}
       {currentView === 'HOMEOWNERS' && (
         <HomeownersList 
@@ -2165,7 +2288,19 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
         <BackendDashboard onClose={() => setCurrentView('DASHBOARD')} />
       )}
       {currentView === 'DATA' && (
-        <DataImport onImportClaims={handleImportClaims} onImportHomeowners={handleImportHomeowners} onClearHomeowners={handleClearHomeowners} existingBuilderGroups={builderGroups} onImportBuilderGroups={handleImportBuilderGroups} onClose={() => setCurrentView('DASHBOARD')} />
+        <DataImport 
+          onImportClaims={handleImportClaims} 
+          onImportHomeowners={handleImportHomeowners} 
+          onClearHomeowners={handleClearHomeowners} 
+          existingBuilderGroups={builderGroups} 
+          onImportBuilderGroups={handleImportBuilderGroups}
+          onImportBuilderUsers={handleImportBuilderUsers}
+          onImportTasks={handleImportTasks}
+          onImportMessages={handleImportMessages}
+          employees={employees.map(e => ({ id: e.id, name: e.name }))}
+          homeowners={homeowners.map(h => ({ id: h.id, email: h.email }))}
+          onClose={() => setCurrentView('DASHBOARD')} 
+        />
       )}
       {currentView === 'NEW' && (
         <div className="max-w-4xl mx-auto bg-surface p-8 rounded-3xl shadow-elevation-1 border border-surface-outline-variant">
