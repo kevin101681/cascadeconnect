@@ -2190,21 +2190,9 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
   // TODO: Re-enable authentication after testing - set TEMP_DISABLE_AUTH to false
   const TEMP_DISABLE_AUTH = true;
   
-  // Check if user explicitly logged out (check for logout flag in sessionStorage)
-  const [hasLoggedOut, setHasLoggedOut] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('cascade_logged_out') === 'true';
-    }
-    return false;
-  });
-  
-  // Check if user wants to force show login (for testing)
-  const [forceShowLogin, setForceShowLogin] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return sessionStorage.getItem('cascade_force_login') === 'true';
-    }
-    return false;
-  });
+  // Check if user explicitly logged out (read directly from sessionStorage, don't use state to avoid re-render loops)
+  const hasLoggedOut = typeof window !== 'undefined' && sessionStorage.getItem('cascade_logged_out') === 'true';
+  const forceShowLogin = typeof window !== 'undefined' && sessionStorage.getItem('cascade_force_login') === 'true';
   
   // Show AuthScreen if:
   // 1. Auth is enabled and user is not signed in, OR

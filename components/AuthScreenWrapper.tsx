@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo, useCallback } from 'react';
 import AuthScreen from './AuthScreen';
 import { useNoAuthContext } from './NoAuthProvider';
 import { AlertCircle } from 'lucide-react';
@@ -51,16 +51,18 @@ const AuthScreenWrapper: React.FC = () => {
   // 3. Check browser console for detailed error messages
   
   // Add a button to clear logout flag if user wants to test login again
-  const handleClearLogout = () => {
+  const handleClearLogout = useCallback(() => {
     if (typeof window !== 'undefined') {
       sessionStorage.removeItem('cascade_logged_out');
       sessionStorage.removeItem('cascade_force_login');
       window.location.reload();
     }
-  };
+  }, []);
   
-  // Check if we're showing login due to logout
-  const isForcedLogin = typeof window !== 'undefined' && (sessionStorage.getItem('cascade_logged_out') === 'true' || sessionStorage.getItem('cascade_force_login') === 'true');
+  // Check if we're showing login due to logout (use useMemo to avoid re-reading on every render)
+  const isForcedLogin = useMemo(() => {
+    return typeof window !== 'undefined' && (sessionStorage.getItem('cascade_logged_out') === 'true' || sessionStorage.getItem('cascade_force_login') === 'true');
+  }, []);
   
   return (
     <>
