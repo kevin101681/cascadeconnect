@@ -2198,16 +2198,25 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
     return false;
   });
   
-  // Show AuthScreen if user is not signed in and session is loaded (or timed out)
-  // Allow access without authentication in development if session fails to load
-  // Also show login if user explicitly logged out
-  if (!TEMP_DISABLE_AUTH && (!effectiveIsSignedIn && effectiveIsLoaded || hasLoggedOut)) {
-    console.log('Showing AuthScreen - user not signed in or logged out');
+  // Check if user wants to force show login (for testing)
+  const [forceShowLogin, setForceShowLogin] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('cascade_force_login') === 'true';
+    }
+    return false;
+  });
+  
+  // Show AuthScreen if:
+  // 1. Auth is enabled and user is not signed in, OR
+  // 2. User explicitly logged out, OR
+  // 3. User wants to force show login (for testing when auth is disabled)
+  if ((!TEMP_DISABLE_AUTH && (!effectiveIsSignedIn && effectiveIsLoaded || hasLoggedOut)) || (TEMP_DISABLE_AUTH && (hasLoggedOut || forceShowLogin))) {
+    console.log('Showing AuthScreen - user not signed in, logged out, or login forced');
     return <AuthScreenWrapper />;
   }
   
   // If auth is disabled, log a warning and allow access
-  if (TEMP_DISABLE_AUTH) {
+  if (TEMP_DISABLE_AUTH && !forceShowLogin && !hasLoggedOut) {
     console.warn('⚠️ Authentication is temporarily disabled for testing');
   }
   
@@ -2252,6 +2261,7 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
         // Mark as logged out in sessionStorage
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('cascade_logged_out', 'true');
+          sessionStorage.setItem('cascade_force_login', 'true'); // Force show login screen
         }
         await signOut();
       }}

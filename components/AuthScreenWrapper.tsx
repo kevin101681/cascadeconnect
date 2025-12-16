@@ -49,7 +49,34 @@ const AuthScreenWrapper: React.FC = () => {
   // 1. The server is running (npm run server or npm run dev)
   // 2. The server is accessible at http://localhost:3000
   // 3. Check browser console for detailed error messages
-  return <AuthScreen />;
+  
+  // Add a button to clear logout flag if user wants to test login again
+  const handleClearLogout = () => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('cascade_logged_out');
+      sessionStorage.removeItem('cascade_force_login');
+      window.location.reload();
+    }
+  };
+  
+  // Check if we're showing login due to logout
+  const isForcedLogin = typeof window !== 'undefined' && (sessionStorage.getItem('cascade_logged_out') === 'true' || sessionStorage.getItem('cascade_force_login') === 'true');
+  
+  return (
+    <>
+      <AuthScreen />
+      {isForcedLogin && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <button
+            onClick={handleClearLogout}
+            className="bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 px-4 py-2 rounded-lg shadow-lg text-sm hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
+          >
+            Skip Login (Testing Mode)
+          </button>
+        </div>
+      )}
+    </>
+  );
 };
 
 export default AuthScreenWrapper;
