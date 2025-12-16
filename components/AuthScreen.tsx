@@ -36,7 +36,17 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
       
       // Better Auth returns { data, error } structure
       if (result?.error) {
-        setError(result.error.message || "Invalid email or password.");
+        const errorMsg = result.error.message || "Invalid email or password.";
+        console.error("Better Auth login error:", result.error);
+        
+        // Provide helpful error messages
+        if (errorMsg.toLowerCase().includes('not found') || errorMsg.toLowerCase().includes('invalid')) {
+          setError("Invalid email or password. If you don't have an account, use SIGNUP to create one.");
+        } else if (errorMsg.toLowerCase().includes('database') || errorMsg.toLowerCase().includes('table')) {
+          setError("Database error. Please ensure Better Auth tables are set up. Contact support if this persists.");
+        } else {
+          setError(errorMsg);
+        }
         setIsLoading(false);
       } else if (result?.data) {
         // Success - Better Auth will automatically update the session
@@ -69,7 +79,17 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
       
       // Better Auth returns { data, error } structure
       if (result?.error) {
-        setError(result.error.message || "Could not create account.");
+        const errorMsg = result.error.message || "Could not create account.";
+        console.error("Better Auth signup error:", result.error);
+        
+        // Provide helpful error messages
+        if (errorMsg.toLowerCase().includes('already exists') || errorMsg.toLowerCase().includes('duplicate')) {
+          setError("An account with this email already exists. Please use LOGIN instead of creating a new account.");
+        } else if (errorMsg.toLowerCase().includes('database') || errorMsg.toLowerCase().includes('table')) {
+          setError("Database error. Please ensure Better Auth tables are set up. Contact support if this persists.");
+        } else {
+          setError(errorMsg);
+        }
         setIsLoading(false);
       } else if (result?.data) {
         // Success - Better Auth will automatically update the session
@@ -81,7 +101,16 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
       }
     } catch (err: any) {
       console.error("Signup error:", err);
-      setError(err?.message || err?.toString() || "Could not create account.");
+      const errorMsg = err?.message || err?.toString() || "Could not create account.";
+      
+      // Provide helpful error messages
+      if (errorMsg.toLowerCase().includes('already exists') || errorMsg.toLowerCase().includes('duplicate')) {
+        setError("An account with this email already exists. Please use LOGIN instead of creating a new account.");
+      } else if (errorMsg.toLowerCase().includes('network') || errorMsg.toLowerCase().includes('fetch')) {
+        setError("Connection failed. Please ensure the server is running and accessible.");
+      } else {
+        setError(errorMsg);
+      }
       setIsLoading(false);
     }
   };
