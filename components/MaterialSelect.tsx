@@ -53,19 +53,14 @@ const MaterialSelect: React.FC<MaterialSelectProps> = ({
 
   return (
     <div className={`relative ${className}`} ref={selectRef}>
-      {label && (
-        <label className="block text-xs text-surface-on-variant dark:text-gray-400 mb-1 ml-1 font-medium">
-          {label}
-        </label>
-      )}
       <div
         className={`
-          relative w-full rounded-full border transition-all cursor-pointer
+          relative w-full rounded-md border transition-all cursor-pointer peer
           ${disabled 
-            ? 'bg-surface-container dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 cursor-not-allowed opacity-60' 
+            ? 'bg-transparent dark:bg-transparent border-surface-outline dark:border-gray-600 cursor-not-allowed opacity-60' 
             : focused || isOpen
-            ? 'border-primary ring-1 ring-primary bg-surface-container dark:bg-gray-700'
-            : 'border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-700 hover:border-surface-on-variant dark:hover:border-gray-500'
+            ? 'border-primary ring-1 ring-primary bg-transparent dark:bg-transparent'
+            : 'border-surface-outline dark:border-gray-600 bg-transparent dark:bg-transparent hover:border-surface-on-variant dark:hover:border-gray-500'
           }
         `}
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -73,7 +68,7 @@ const MaterialSelect: React.FC<MaterialSelectProps> = ({
         onBlur={() => setFocused(false)}
         tabIndex={disabled ? -1 : 0}
       >
-        <div className="flex items-center justify-between px-4 py-2 h-[2.5rem]">
+        <div className="flex items-center justify-between px-3 py-2 h-[2.5rem]">
           <span className={`text-sm ${value ? 'text-surface-on dark:text-gray-100' : 'text-surface-on-variant dark:text-gray-400'}`}>
             {selectedOption?.label || 'Select...'}
           </span>
@@ -81,6 +76,15 @@ const MaterialSelect: React.FC<MaterialSelectProps> = ({
             className={`h-4 w-4 text-surface-on-variant dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           />
         </div>
+        {label && (
+          <label className={`absolute left-2 -top-2 z-[1] bg-surface dark:bg-gray-800 px-1 text-xs transition-all ${
+            value || isOpen || focused
+              ? 'text-primary -top-2 text-xs'
+              : 'text-surface-outline-variant dark:text-gray-400 top-3.5 text-sm'
+          }`}>
+            {label}
+          </label>
+        )}
         
         {/* Dropdown Menu */}
         {isOpen && !disabled && (

@@ -642,11 +642,10 @@ const Dashboard: React.FC<DashboardProps> = ({
     <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0">
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center bg-surface-container/30 dark:bg-gray-700/30">
         <h3 className={`text-lg font-bold flex items-center gap-2 ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
-          {isClosed ? <Archive className="h-5 w-5 opacity-70"/> : <ClipboardList className="h-5 w-5 text-primary"/>}
-          {title}
-          <span className="text-xs text-surface-on-variant bg-surface-container px-2 py-1 rounded border border-surface-outline-variant/50">
+          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
             {groupClaims.length}
           </span>
+          {title}
         </h3>
       </div>
       <ul className="divide-y divide-surface-outline-variant dark:divide-gray-700">
@@ -657,6 +656,14 @@ const Dashboard: React.FC<DashboardProps> = ({
         ) : (
           groupClaims.map((claim) => {
             const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
+            
+            // Find the most recent service order message (SUBCONTRACTOR type with "Service Order" in subject)
+            const serviceOrderMessages = claimMessages
+              .filter(m => m.claimId === claim.id && 
+                           m.type === 'SUBCONTRACTOR' && 
+                           m.subject.toLowerCase().includes('service order'))
+              .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            const serviceOrderDate = serviceOrderMessages.length > 0 ? serviceOrderMessages[0].timestamp : null;
             
             return (
               <li 
@@ -688,6 +695,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                         {claim.title}
                       </h4>
                     </div>
+                    {/* Description */}
+                    {claim.description && (
+                      <div className="min-w-0 flex items-center justify-start max-w-[300px]">
+                        <p className="text-xs text-surface-on-variant dark:text-gray-400 truncate bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full text-left w-full">
+                          {claim.description}
+                        </p>
+                      </div>
+                    )}
                     {/* Classification */}
                     <div className="flex justify-start items-center w-fit min-w-0">
                       <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
@@ -710,12 +725,17 @@ const Dashboard: React.FC<DashboardProps> = ({
                           <HardHat className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">{claim.contractorName}</span>
                         </span>
-                      ) : null}
+                      ) : (
+                        <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap text-left border border-dashed border-surface-outline-variant dark:border-gray-600">
+                          <HardHat className="h-3 w-3 flex-shrink-0 opacity-50" />
+                          <span className="truncate">No Sub Assigned</span>
+                        </span>
+                      )}
                     </div>
                     {/* Scheduled Date */}
                     <div className="flex justify-start items-center min-w-0">
                       {scheduledDate ? (
-                        <span className="text-xs text-green-600 dark:text-green-400 inline-flex items-center gap-1 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full border border-green-200 dark:border-green-800 whitespace-nowrap text-left">
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap text-left">
                           <Calendar className="h-3 w-3 flex-shrink-0" />
                           <span>{new Date(scheduledDate.date).toLocaleDateString()}</span>
                         </span>
@@ -734,6 +754,20 @@ const Dashboard: React.FC<DashboardProps> = ({
                           Eval: {new Date(claim.dateEvaluated).toLocaleDateString()}
                         </span>
                       ) : null}
+                    </div>
+                    {/* Service Order Date */}
+                    <div className="flex justify-start items-center">
+                      {serviceOrderDate ? (
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                          <Mail className="h-3 w-3 flex-shrink-0" />
+                          <span>SO: {new Date(serviceOrderDate).toLocaleDateString()}</span>
+                        </span>
+                      ) : (
+                        <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap text-left border border-dashed border-surface-outline-variant dark:border-gray-600">
+                          <Mail className="h-3 w-3 flex-shrink-0 opacity-50" />
+                          <span>No SO Sent</span>
+                        </span>
+                      )}
                     </div>
                     {/* Attachments count */}
                     <div className="flex justify-start items-center">
@@ -1038,14 +1072,14 @@ const Dashboard: React.FC<DashboardProps> = ({
       {showNewClaimModal && createPortal(
         <div 
           data-new-claim-modal
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
+          className="fixed inset-0 z-[100] flex items-start justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
           style={{ zIndex: 1000 }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowNewClaimModal(false);
           }}
         >
-          <div className="bg-surface dark:bg-gray-800 w-full max-w-4xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
-            <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-4xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 max-h-[calc(100vh-4rem)] flex flex-col">
+            <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700 flex-shrink-0 sticky top-0 z-10">
               <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                 <Plus className="h-5 w-5 text-primary" />
                 New Claim
@@ -1054,7 +1088,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-6 bg-surface dark:bg-gray-800">
+            <div className="p-6 bg-surface dark:bg-gray-800 overflow-y-auto flex-1">
               {onCreateClaim ? (
                 <NewClaimForm 
                   onSubmit={(data) => {

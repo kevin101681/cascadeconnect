@@ -2,10 +2,18 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
 import cbsbooksRouter from "./cbsbooks.js";
 import { uploadMiddleware, uploadToCloudinary } from "./cloudinary.js";
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables from .env.local first, then .env
+dotenv.config({ path: resolve(__dirname, '..', '.env.local') });
+dotenv.config({ path: resolve(__dirname, '..', '.env') });
+dotenv.config(); // Also load default .env as fallback
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -37,8 +45,19 @@ app.post("/api/upload", (req, res, next) => {
     const apiKey = process.env.CLOUDINARY_API_KEY || process.env.VITE_CLOUDINARY_API_KEY;
     const apiSecret = process.env.CLOUDINARY_API_SECRET || process.env.VITE_CLOUDINARY_API_SECRET;
     
+    // Debug logging
+    console.log('Environment check:', {
+      hasCloudName: !!cloudName,
+      hasApiKey: !!apiKey,
+      hasApiSecret: !!apiSecret,
+      cloudNameSource: cloudName ? (process.env.CLOUDINARY_CLOUD_NAME ? 'CLOUDINARY_CLOUD_NAME' : 'VITE_CLOUDINARY_CLOUD_NAME') : 'none',
+      apiKeySource: apiKey ? (process.env.CLOUDINARY_API_KEY ? 'CLOUDINARY_API_KEY' : 'VITE_CLOUDINARY_API_KEY') : 'none',
+      apiSecretSource: apiSecret ? (process.env.CLOUDINARY_API_SECRET ? 'CLOUDINARY_API_SECRET' : 'VITE_CLOUDINARY_API_SECRET') : 'none',
+    });
+    
     if (!cloudName || !apiKey || !apiSecret) {
       console.error('Cloudinary configuration missing!');
+      console.error('Available env vars with CLOUDINARY:', Object.keys(process.env).filter(k => k.includes('CLOUDINARY')));
       return res.status(500).json({ 
         error: 'Upload service not configured', 
         message: 'Cloudinary credentials are missing. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in your .env.local file (or their VITE_ prefixed variants).' 
@@ -98,7 +117,7 @@ app.post("/api/upload", (req, res, next) => {
 
 // Email API Route - Supports both SendGrid and SMTP
 app.post("/api/email/send", async (req, res) => {
-  const { to, subject, body, fromName, fromRole, replyToId } = req.body;
+  const { to, subject, body, fromName, fromRole, replyToId, attachments } = req.body;
 
   if (!to || !subject || !body) {
     return res.status(400).json({ 
@@ -121,6 +140,16 @@ app.post("/api/email/send", async (req, res) => {
       const messageId = replyToId 
         ? `${replyToId}@${new URL(process.env.SENDGRID_REPLY_EMAIL || 'cascadeconnect.netlify.app').hostname || 'cascadeconnect.netlify.app'}`
         : undefined;
+
+      // Prepare attachments for SendGrid
+      const sendGridAttachments = attachments && attachments.length > 0
+        ? attachments.map(att => ({
+            content: att.content,
+            filename: att.filename,
+            type: att.contentType || 'application/octet-stream',
+            disposition: 'attachment'
+          }))
+        : [];
 
       const msg = {
         to: to,
@@ -146,7 +175,8 @@ app.post("/api/email/send", async (req, res) => {
         // Custom args for SendGrid webhooks
         customArgs: {
           threadId: replyToId || ''
-        }
+        },
+        attachments: sendGridAttachments
       };
 
       const [response] = await sgMail.send(msg);
@@ -176,6 +206,16 @@ app.post("/api/email/send", async (req, res) => {
         ? `${replyToId}@${new URL(process.env.SMTP_FROM || 'localhost').hostname || 'localhost'}`
         : undefined;
 
+      // Prepare attachments for SMTP
+      const smtpAttachments = attachments && attachments.length > 0
+        ? attachments.map(att => ({
+            filename: att.filename,
+            content: att.content,
+            encoding: 'base64',
+            contentType: att.contentType || 'application/octet-stream'
+          }))
+        : [];
+
       const mailOptions = {
         from: `${fromName || 'Cascade Connect'} <${fromEmail}>`,
         to: to,
@@ -192,7 +232,8 @@ app.post("/api/email/send", async (req, res) => {
           'X-Thread-ID': replyToId || '',
           'In-Reply-To': messageId,
           'References': messageId
-        }
+        },
+        attachments: smtpAttachments
       };
 
       const info = await transporter.sendMail(mailOptions);

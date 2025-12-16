@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
 import { Contractor, ClaimClassification, Attachment, Homeowner, ClaimStatus, UserRole } from '../types';
 import Button from './Button';
-import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Edit2, Image as ImageIcon } from 'lucide-react';
+import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Edit2, Image as ImageIcon, Paperclip } from 'lucide-react';
 import ImageEditor from './ImageEditor';
 
 interface NewClaimFormProps {
@@ -39,6 +39,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
   
   // Image Editor State
   const [editingImage, setEditingImage] = useState<{ url: string; name: string; attachmentId: string } | null>(null);
+  // Image Viewer State
+  const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
 
   // Only show contractors if user has typed something
   const filteredContractors = contractorSearch.trim() 
@@ -72,12 +74,17 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
           let errorMessage = 'Upload failed';
           const contentType = response.headers.get('content-type');
           console.log('Error response content-type:', contentType);
+          console.log('Error response status:', response.status, response.statusText);
           
           try {
             if (contentType && contentType.includes('application/json')) {
               const errorData = await response.json();
               errorMessage = errorData.message || errorData.error || `Upload failed with status ${response.status}`;
               console.error('Upload error response (JSON):', errorData);
+              // Include details if available
+              if (errorData.details) {
+                console.error('Error details:', errorData.details);
+              }
             } else {
               // Try to get text response
               const textResponse = await response.text();
@@ -103,7 +110,15 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
         setAttachments(prev => [...prev, newAttachment]);
       } catch (error) {
         console.error('Upload error:', error);
-        alert(`Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        console.error('Full error details:', {
+          message: errorMsg,
+          error: error,
+          file: file.name,
+          size: file.size,
+          type: file.type
+        });
+        alert(`Failed to upload ${file.name}: ${errorMsg}\n\nCheck the browser console (F12) for more details.`);
       }
     }
 
@@ -187,7 +202,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
 
            {/* Classification Section (Admin Only) */}
            {isAdmin && (
-             <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+             <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-3xl border border-surface-outline-variant dark:border-gray-600">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Classification & Evaluation</h4>
               <div className="space-y-4">
                 <div>
@@ -232,7 +247,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
         <div className="space-y-6">
            {/* Assignment (Admin Only) */}
            {isAdmin && (
-             <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+             <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-3xl border border-surface-outline-variant dark:border-gray-600">
                 <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Sub Assignment</h4>
                 
                 <div className="relative">
@@ -293,84 +308,88 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
       </div>
 
       {/* File Upload Section */}
-      <div className="space-y-4 pt-6 border-t border-surface-outline-variant dark:border-gray-700">
-        <div>
-          <label className="text-sm font-medium text-surface-on dark:text-gray-100 mb-2 block">
-            Attachments (Pictures, Videos, Files)
-          </label>
-          <input
-            type="file"
-            multiple
-            accept="image/*,video/*,.pdf,.doc,.docx"
-            onChange={handleFileUpload}
-            disabled={uploading}
-            className="block w-full text-sm text-surface-on dark:text-gray-100 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-on hover:file:bg-primary-variant disabled:opacity-50"
-          />
-          {uploading && (
-            <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-1 flex items-center gap-1">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              Uploading files...
-            </p>
-          )}
-        </div>
+      <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
+        <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4 flex items-center gap-2">
+          <Paperclip className="h-5 w-5 text-primary" />
+          Attachments
+        </h3>
+        
+        <div className="space-y-4">
+          <div>
+            <input
+              type="file"
+              multiple
+              accept="image/*,video/*,.pdf,.doc,.docx"
+              onChange={handleFileUpload}
+              disabled={uploading}
+              className="block w-full text-sm text-surface-on dark:text-gray-100 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-on hover:file:bg-primary-variant disabled:opacity-50"
+            />
+            {uploading && (
+              <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-1 flex items-center gap-1">
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Uploading files...
+              </p>
+            )}
+          </div>
 
-        {attachments.length > 0 && (
-          <div className="space-y-4">
-            {/* Image Attachments Section */}
-            {attachments.filter(att => att.type === 'IMAGE').length > 0 && (
-              <div>
-                <h4 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-3 flex items-center gap-2">
-                  <ImageIcon className="h-4 w-4 text-primary" />
-                  Image Attachments
-                </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {attachments
-                    .filter(att => att.type === 'IMAGE' && att.url)
-                    .map((att) => (
-                      <div key={att.id} className="relative group aspect-square">
-                        <div className="w-full h-full bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600">
-                          <img 
-                            src={att.url} 
-                            alt={att.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2">
+          {attachments.length > 0 && (
+            <div className="space-y-4">
+              {/* Image Attachments Section */}
+              {attachments.filter(att => att.type === 'IMAGE').length > 0 && (
+                <div>
+                  <h4 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-3 flex items-center gap-2">
+                    <ImageIcon className="h-4 w-4 text-primary" />
+                    Image Attachments
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {attachments
+                      .filter(att => att.type === 'IMAGE' && att.url)
+                      .map((att) => (
+                        <div key={att.id} className="relative group aspect-square">
+                          <div className="w-full h-full bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600">
+                            <img 
+                              src={att.url} 
+                              alt={att.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setEditingImage({ url: att.url, name: att.name, attachmentId: att.id })}
+                              className="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-primary text-primary-on rounded-lg text-sm font-medium hover:bg-primary-variant transition-opacity flex items-center gap-1"
+                            >
+                              <Edit2 className="h-4 w-4" />
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setViewingImage({ url: att.url, name: att.name });
+                              }}
+                              className="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-surface-container text-surface-on rounded-lg text-sm font-medium hover:bg-surface-container-high transition-opacity"
+                            >
+                              View
+                            </button>
+                          </div>
                           <button
                             type="button"
-                            onClick={() => setEditingImage({ url: att.url, name: att.name, attachmentId: att.id })}
-                            className="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-primary text-primary-on rounded-lg text-sm font-medium hover:bg-primary-variant transition-opacity flex items-center gap-1"
+                            onClick={() => handleRemoveAttachment(att.id)}
+                            className="absolute -top-2 -right-2 bg-error text-error-on rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
+                            aria-label="Remove attachment"
                           >
-                            <Edit2 className="h-4 w-4" />
-                            Edit
+                            <X className="h-3 w-3" />
                           </button>
-                          <a
-                            href={att.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-surface-container text-surface-on rounded-lg text-sm font-medium hover:bg-surface-container-high transition-opacity"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            View
-                          </a>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveAttachment(att.id)}
-                          className="absolute -top-2 -right-2 bg-error text-error-on rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
-                          aria-label="Remove attachment"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
+                      ))}
+                  </div>
                 </div>
-              </div>
-            )}
-            
-            {/* Other Attachments (Videos, Documents) */}
-            {attachments.filter(att => att.type !== 'IMAGE').length > 0 && (
-              <div>
+              )}
+              
+              {/* Other Attachments (Videos, Documents) */}
+              {attachments.filter(att => att.type !== 'IMAGE').length > 0 && (
+                <div>
                 <h4 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-3 flex items-center gap-2">
                   <FileText className="h-4 w-4 text-primary" />
                   Other Attachments
@@ -407,6 +426,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
             )}
           </div>
         )}
+        </div>
       </div>
 
       <div className="flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700">
@@ -422,6 +442,30 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
           Create Claim
         </Button>
       </div>
+
+      {/* Image Viewer Modal */}
+      {viewingImage && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4" onClick={() => setViewingImage(null)}>
+          <div className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              onClick={() => setViewingImage(null)}
+              className="absolute top-4 right-4 z-10 p-2 bg-surface-container text-surface-on rounded-full hover:bg-surface-container-high transition-colors shadow-lg"
+              aria-label="Close"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <img
+              src={viewingImage.url}
+              alt={viewingImage.name}
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+            />
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-lg text-sm">
+              {viewingImage.name}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Image Editor Modal */}
       {editingImage && (

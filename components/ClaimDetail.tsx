@@ -70,6 +70,8 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
   
   // Image Editor State
   const [editingImage, setEditingImage] = useState<{ url: string; name: string; attachmentId: string } | null>(null);
+  // Image Viewer State
+  const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
 
   const isAdmin = currentUserRole === UserRole.ADMIN;
   const isScheduled = claim.status === ClaimStatus.SCHEDULED && claim.proposedDates.length > 0;
@@ -138,27 +140,153 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
     if (!claim.contractorId) return;
 
     // 1. Generate PDF Blob URL directly using description as summary
-    const url = generateServiceOrderPDF(claim, claim.description, true);
-    if (typeof url === 'string') {
+    try {
+      const url = await generateServiceOrderPDF(claim, claim.description, true);
+      if (typeof url === 'string') {
         setSoPdfUrl(url);
+      }
+    } catch (error) {
+      console.error('Failed to generate PDF:', error);
     }
 
     // 2. Pre-fill Email Details
     setSoSubject(`Service Order: ${claim.builderName} - ${claim.jobName} - ${claim.title}`);
-    setSoBody(`Hi ${claim.contractorName},\n\nPlease find attached the service order for the warranty claim referenced above.\n\nAddress: ${claim.address}\nIssue: ${claim.description}\n\nPlease let us know when you can schedule this.\n\nThanks,\nCascade Builder Services`);
+    const userName = currentUser?.name || 'Mary';
+    setSoBody(`Hello,\n\nThis is ${userName} with Cascade Builder Services and I have a warranty repair that needs to be scheduled. The details are described on the attached service order which also includes the homeowner's information, builder, project and lot number.  Pictures of the claim are attached to this email and also are embedded into the attached service order PDF.  Please let me know your next availability and I'll coordinate with the homeowner.  Once we have a date and time frame set, you will receive a notification requesting to accept the appointment.  Please do so as it helps with our tracking and also makes the homeowner aware that you've committed to the confirmed appointment.  Here's a quick guide explaining how to do that.\n\nOnce you've completed the assigned work, please have the homeowner sign and date the attached service order and send the signed copy back to me.\n\nIf this repair work is billable, please let me know prior to scheduling.`);
     
     setShowSOModal(true);
+  };
+
+  // Helper function to convert blob URL to base64
+  const blobUrlToBase64 = async (blobUrl: string): Promise<string> => {
+    const response = await fetch(blobUrl);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64 = reader.result as string;
+        // Remove data URL prefix (e.g., "data:application/pdf;base64,")
+        const base64Data = base64.split(',')[1] || base64;
+        resolve(base64Data);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  // Helper function to fetch image/video from URL and convert to base64
+  const urlToBase64 = async (url: string): Promise<{ base64: string; contentType: string }> => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const contentType = blob.type || 'application/octet-stream';
+      
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = reader.result as string;
+          // Remove data URL prefix
+          const base64Data = base64.split(',')[1] || base64;
+          resolve({ base64: base64Data, contentType });
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error(`Failed to fetch ${url}:`, error);
+      throw error;
+    }
+  };
+
+  // Helper function to get file extension from URL or name
+  const getFileExtension = (urlOrName: string): string => {
+    const match = urlOrName.match(/\.([a-zA-Z0-9]+)(\?|$)/);
+    return match ? match[1].toLowerCase() : '';
+  };
+
+  // Helper function to determine content type from extension
+  const getContentType = (extension: string, attachmentType: 'IMAGE' | 'VIDEO' | 'DOCUMENT'): string => {
+    if (attachmentType === 'IMAGE') {
+      const imageTypes: Record<string, string> = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp',
+        'svg': 'image/svg+xml'
+      };
+      return imageTypes[extension] || 'image/jpeg';
+    } else if (attachmentType === 'VIDEO') {
+      const videoTypes: Record<string, string> = {
+        'mp4': 'video/mp4',
+        'mov': 'video/quicktime',
+        'avi': 'video/x-msvideo',
+        'webm': 'video/webm',
+        'mkv': 'video/x-matroska'
+      };
+      return videoTypes[extension] || 'video/mp4';
+    } else {
+      const docTypes: Record<string, string> = {
+        'pdf': 'application/pdf',
+        'doc': 'application/msword',
+        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'xls': 'application/vnd.ms-excel',
+        'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      };
+      return docTypes[extension] || 'application/octet-stream';
+    }
   };
 
   const handleSendServiceOrder = async () => {
     setIsSendingSO(true);
     if (claim.contractorEmail) {
+      try {
+        const attachments: Array<{ filename: string; content: string; contentType: string }> = [];
+
+        // 1. Add PDF attachment
+        if (soPdfUrl) {
+          try {
+            const pdfBase64 = await blobUrlToBase64(soPdfUrl);
+            const claimNumber = claim.claimNumber || claim.id.substring(0, 8).toUpperCase();
+            attachments.push({
+              filename: `Service Order - ${claimNumber}.pdf`,
+              content: pdfBase64,
+              contentType: 'application/pdf'
+            });
+          } catch (error) {
+            console.error('Failed to convert PDF to base64:', error);
+          }
+        }
+
+        // 2. Add all image and video attachments
+        const imageVideoAttachments = (claim.attachments || []).filter(
+          att => att.type === 'IMAGE' || att.type === 'VIDEO'
+        );
+
+        for (const attachment of imageVideoAttachments) {
+          try {
+            const { base64, contentType } = await urlToBase64(attachment.url);
+            const extension = getFileExtension(attachment.name || attachment.url);
+            const finalContentType = contentType || getContentType(extension, attachment.type);
+            
+            attachments.push({
+              filename: attachment.name || `attachment_${attachment.id}.${extension || (attachment.type === 'IMAGE' ? 'jpg' : 'mp4')}`,
+              content: base64,
+              contentType: finalContentType
+            });
+          } catch (error) {
+            console.error(`Failed to process attachment ${attachment.id}:`, error);
+            // Continue with other attachments even if one fails
+          }
+        }
+
         await sendEmail({
-            to: claim.contractorEmail,
-            subject: soSubject,
-            body: soBody,
-            fromName: 'Cascade Admin',
-            fromRole: UserRole.ADMIN
+          to: claim.contractorEmail,
+          subject: soSubject,
+          body: soBody,
+          fromName: 'Cascade Admin',
+          fromRole: UserRole.ADMIN,
+          attachments: attachments.length > 0 ? attachments : undefined
         });
         
         // Track service order message to subcontractor
@@ -174,6 +302,10 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
         }
         
         alert('Service Order sent to Sub successfully!');
+      } catch (error) {
+        console.error('Failed to send service order:', error);
+        alert('Failed to send service order. Please try again.');
+      }
     }
     setIsSendingSO(false);
     setShowSOModal(false);
@@ -404,15 +536,15 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                             Edit
                           </button>
                         ) : null}
-                        <a
-                          href={attachmentUrl}
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setViewingImage({ url: attachmentUrl, name: attachmentName });
+                          }}
                           className="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-surface-container text-surface-on rounded-lg text-sm font-medium hover:bg-surface-container-high transition-opacity"
-                          onClick={(e) => e.stopPropagation()}
                         >
                           View
-                        </a>
+                        </button>
                       </div>
                     </div>
                   );
@@ -481,9 +613,55 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                   />
                 ) : (
                   <div className="mb-4">
-                    <p className="text-sm text-secondary-on-container dark:text-gray-300 whitespace-pre-wrap leading-relaxed bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600">
-                      {claim.internalNotes || "No internal notes."}
-                    </p>
+                    <div className="space-y-4">
+                      {claim.internalNotes ? (
+                        (() => {
+                          // Parse notes - split by double newlines to get individual notes
+                          const notes = claim.internalNotes.split(/\n\n+/).filter(n => n.trim());
+                          return notes.map((note, index) => {
+                            // Extract timestamp and user from format: [MM/DD/YYYY at HH:MM AM/PM by User Name] note text
+                            const match = note.match(/^\[([^\]]+)\]\s*(.+)$/);
+                            if (match) {
+                              const [, timestampStr, noteText] = match;
+                              // Parse timestamp to extract date/time and user
+                              const timestampMatch = timestampStr.match(/^(.+?)\s+at\s+(.+?)\s+by\s+(.+)$/);
+                              if (timestampMatch) {
+                                const [, dateStr, timeStr, userName] = timestampMatch;
+                                return (
+                                  <div key={index} className="bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600">
+                                    <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600">
+                                        <Clock className="h-3 w-3 mr-1" />
+                                        {dateStr} at {timeStr}
+                                      </span>
+                                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600">
+                                        <User className="h-3 w-3 mr-1" />
+                                        {userName}
+                                      </span>
+                                    </div>
+                                    <p className="text-sm text-secondary-on-container dark:text-gray-300 leading-relaxed">
+                                      {noteText.trim()}
+                                    </p>
+                                  </div>
+                                );
+                              }
+                            }
+                            // Fallback for notes without proper format
+                            return (
+                              <div key={index} className="bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600">
+                                <p className="text-sm text-secondary-on-container dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                  {note}
+                                </p>
+                              </div>
+                            );
+                          });
+                        })()
+                      ) : (
+                        <p className="text-sm text-secondary-on-container dark:text-gray-300 bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600">
+                          No internal notes.
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
                 
@@ -642,12 +820,12 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                     </div>
                     
                     <Button 
-                        variant="outlined" 
+                        variant="filled" 
                         onClick={handlePrepareServiceOrder} 
                         icon={<FileText className="h-4 w-4" />}
                         className="!h-12 w-full sm:w-auto whitespace-nowrap"
                     >
-                        Service Order
+                        Send to Sub
                     </Button>
                   </div>
                 )}
@@ -810,14 +988,94 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                   />
                 </div>
 
-                {/* Simulated Attachment Display */}
-                {soPdfUrl && (
-                  <div className="flex items-center gap-2 p-2 bg-primary/5 border border-primary/20 rounded-lg text-sm text-primary">
-                      <FileText className="h-4 w-4" />
-                      <span className="font-medium truncate flex-1">ServiceOrder_{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}.pdf</span>
-                      <a href={soPdfUrl} target="_blank" rel="noreferrer" className="text-xs underline hover:text-primary-on-container">Preview</a>
-                  </div>
-                )}
+                {/* Attachments Preview */}
+                {(() => {
+                  const imageAttachments = (claim.attachments || []).filter(att => att.type === 'IMAGE' && att.url);
+                  const videoAttachments = (claim.attachments || []).filter(att => att.type === 'VIDEO' && att.url);
+                  const hasPdf = soPdfUrl !== null;
+                  const hasAttachments = hasPdf || imageAttachments.length > 0 || videoAttachments.length > 0;
+
+                  if (!hasAttachments) return null;
+
+                  return (
+                    <div className="border-t border-surface-outline-variant dark:border-gray-700 pt-4">
+                      <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-3">
+                        Attachments ({(hasPdf ? 1 : 0) + imageAttachments.length + videoAttachments.length})
+                      </label>
+                      <div className="space-y-4">
+                        {/* PDF Attachment */}
+                        {hasPdf && (
+                          <div>
+                            <h4 className="text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-2 flex items-center gap-2">
+                              <FileText className="h-3 w-3 text-primary" />
+                              Service Order PDF
+                            </h4>
+                            <div className="flex items-center gap-3 p-3 bg-surface-container dark:bg-gray-700 rounded-lg border border-surface-outline-variant dark:border-gray-600">
+                              <div className="w-12 h-12 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <FileText className="h-6 w-6 text-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">
+                                  Service Order - {claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}.pdf
+                                </p>
+                                <p className="text-xs text-surface-on-variant dark:text-gray-400">PDF Document</p>
+                              </div>
+                              <a href={soPdfUrl || ''} target="_blank" rel="noreferrer" className="text-xs text-primary hover:underline">
+                                Preview
+                              </a>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Image Attachments */}
+                        {imageAttachments.length > 0 && (
+                          <div>
+                            <h4 className="text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-2 flex items-center gap-2">
+                              <ImageIcon className="h-3 w-3 text-primary" />
+                              Images ({imageAttachments.length})
+                            </h4>
+                            <div className="grid grid-cols-4 gap-2">
+                              {imageAttachments.map((att) => (
+                                <div key={att.id} className="relative aspect-square group">
+                                  <div className="w-full h-full bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600">
+                                    <img 
+                                      src={att.url} 
+                                      alt={att.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Video Attachments */}
+                        {videoAttachments.length > 0 && (
+                          <div>
+                            <h4 className="text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-2 flex items-center gap-2">
+                              <Video className="h-3 w-3 text-primary" />
+                              Videos ({videoAttachments.length})
+                            </h4>
+                            <div className="grid grid-cols-4 gap-2">
+                              {videoAttachments.map((att) => (
+                                <div key={att.id} className="relative aspect-square">
+                                  <div className="w-full h-full bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600 flex items-center justify-center">
+                                    <Video className="h-8 w-8 text-primary" />
+                                  </div>
+                                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-1 py-0.5 truncate">
+                                    {att.name}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="p-4 bg-surface-container flex justify-end gap-3">
@@ -846,6 +1104,29 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
         onClose={() => setShowCalendarPicker(false)}
         minDate={new Date()}
       />
+
+      {/* Image Viewer Modal */}
+      {viewingImage && (
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4" onClick={() => setViewingImage(null)}>
+          <div className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setViewingImage(null)}
+              className="absolute top-4 right-4 z-10 p-2 bg-surface-container text-surface-on rounded-full hover:bg-surface-container-high transition-colors shadow-lg"
+              aria-label="Close"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            <img
+              src={viewingImage.url}
+              alt={viewingImage.name}
+              className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+            />
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-lg text-sm">
+              {viewingImage.name}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Image Editor Modal */}
       {editingImage && (

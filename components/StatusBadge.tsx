@@ -6,20 +6,25 @@ interface StatusBadgeProps {
 }
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
-  // M3 Assist/Filter Chip style with colored status pills
-  const baseStyle = "inline-flex items-center px-3 h-8 rounded-lg text-sm font-medium border transition-colors";
+  // Match pill style: rounded-full, px-3 py-1, text-xs
+  const baseStyle = "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap text-left";
 
   const styles = {
-    [ClaimStatus.SUBMITTED]: "bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-200",
-    [ClaimStatus.REVIEWING]: "bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700 text-yellow-800 dark:text-yellow-200",
-    [ClaimStatus.SCHEDULING]: "bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700 text-orange-800 dark:text-orange-200",
-    [ClaimStatus.SCHEDULED]: "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-800 dark:text-green-200",
-    [ClaimStatus.COMPLETED]: "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-800 dark:text-green-200",
+    [ClaimStatus.SUBMITTED]: "bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-300",
+    [ClaimStatus.REVIEWING]: "bg-secondary-container dark:bg-gray-700 text-secondary-on-container dark:text-gray-300",
+    [ClaimStatus.SCHEDULING]: "bg-tertiary-container dark:bg-gray-700 text-tertiary-on-container dark:text-gray-300",
+    [ClaimStatus.SCHEDULED]: "bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary",
+    [ClaimStatus.COMPLETED]: "bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-100",
+  };
+
+  // Format status text (replace underscores with spaces and capitalize)
+  const formatStatus = (status: ClaimStatus): string => {
+    return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
   return (
     <span className={`${baseStyle} ${styles[status]}`}>
-      {status.replace('_', ' ')}
+      {formatStatus(status)}
     </span>
   );
 };

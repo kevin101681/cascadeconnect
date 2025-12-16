@@ -1,8 +1,16 @@
 import { v2 as cloudinary } from 'cloudinary';
 import dotenv from 'dotenv';
 import multer from 'multer';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables from .env.local first, then .env
+dotenv.config({ path: resolve(__dirname, '..', '.env.local') });
+dotenv.config({ path: resolve(__dirname, '..', '.env') });
+dotenv.config(); // Also load default .env as fallback
 
 // Configure Cloudinary
 // Support both VITE_ prefixed (for compatibility) and non-prefixed (server-side only)

@@ -1,5 +1,11 @@
 import { UserRole } from '../types';
 
+interface EmailAttachment {
+  filename: string;
+  content: string; // base64 encoded content
+  contentType?: string; // e.g., 'application/pdf', 'image/jpeg', 'video/mp4'
+}
+
 interface EmailPayload {
   to: string;
   subject: string;
@@ -7,6 +13,7 @@ interface EmailPayload {
   fromName: string;
   fromRole: UserRole;
   replyToId?: string; // Thread ID or Claim ID
+  attachments?: EmailAttachment[]; // Array of attachments
 }
 
 export const sendEmail = async (payload: EmailPayload): Promise<boolean> => {
@@ -37,6 +44,7 @@ export const sendEmail = async (payload: EmailPayload): Promise<boolean> => {
         fromName: payload.fromName,
         fromRole: payload.fromRole,
         replyToId: payload.replyToId,
+        attachments: payload.attachments,
       }),
     });
 
