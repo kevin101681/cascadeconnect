@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useSignUp } from '@clerk/clerk-react';
 import { db, isDbConfigured } from '../db';
 import { homeowners as homeownersTable, users as usersTable } from '../db/schema';
-import { eq, or } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 interface CustomSignUpProps {
   onSuccess?: () => void;
@@ -16,19 +16,19 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [error, setError] = useState('');
-  const [isChecking, setIsChecking] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
-  const checkEmailExists = async (emailToCheck: string): Promise<boolean> => {
+  // Link Clerk account to existing Cascade Connect account
+  const linkClerkAccount = async (clerkUserId: string, emailToLink: string): Promise<void> => {
     if (!isDbConfigured) {
-      // If DB not configured, allow sign-up (fallback mode)
-      return false;
+      console.log('Database not configured, skipping account linking');
+      return;
     }
 
     try {
-      const emailLower = emailToCheck.toLowerCase().trim();
+      const emailLower = emailToLink.toLowerCase().trim();
       
-      // Check homeowners table
+      // Check homeowners table first
       const homeowners = await db
         .select()
         .from(homeownersTable)
@@ -36,7 +36,13 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
         .limit(1);
       
       if (homeowners.length > 0) {
-        return true;
+        // Update homeowner with Clerk ID
+        await db
+          .update(homeownersTable)
+          .set({ clerkId: clerkUserId })
+          .where(eq(homeownersTable.email, emailLower));
+        console.log(`✅ Linked Clerk account to homeowner: ${emailLower}`);
+        return;
       }
 
       // Check users table (employees and builders)
@@ -47,14 +53,19 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
         .limit(1);
       
       if (users.length > 0) {
-        return true;
+        // Update user with Clerk ID
+        await db
+          .update(usersTable)
+          .set({ clerkId: clerkUserId })
+          .where(eq(usersTable.email, emailLower));
+        console.log(`✅ Linked Clerk account to user: ${emailLower}`);
+        return;
       }
 
-      return false;
+      console.log(`ℹ️ No existing Cascade Connect account found for ${emailLower}, proceeding with new account`);
     } catch (err) {
-      console.error('Error checking email:', err);
-      // On error, allow sign-up to proceed (fail open)
-      return false;
+      console.error('Error linking Clerk account:', err);
+      // Don't throw - allow sign-up to proceed even if linking fails
     }
   };
 
@@ -78,17 +89,8 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
       return;
     }
 
-    // Check if email exists in database
-    setIsChecking(true);
-    const emailExists = await checkEmailExists(email);
-    setIsChecking(false);
-
-    if (emailExists) {
-      setError('An account with this email already exists in Cascade Connect. Please sign in instead.');
-      return;
-    }
-
     // Proceed with Clerk sign-up
+    // Note: We allow sign-up even if email exists in Cascade Connect - we'll link accounts after sign-up
     try {
       setIsCreating(true);
       await signUp.create({
@@ -109,8 +111,17 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
         return;
       }
 
-      // If sign-up is complete, set the active session
+      // If sign-up is complete, link to Cascade Connect account if email exists
       if (signUp.status === 'complete') {
+        // Get the Clerk user ID
+        const clerkUserId = signUp.createdUserId;
+        
+        if (clerkUserId) {
+          // Link Clerk account to existing Cascade Connect account (if email exists)
+          await linkClerkAccount(clerkUserId, email.trim());
+        }
+        
+        // Set the active session
         await setActive({ session: signUp.createdSessionId });
         if (onSuccess) {
           onSuccess();
@@ -202,10 +213,10 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
         )}
         <button
           type="submit"
-          disabled={isChecking || isCreating || !isLoaded}
+          disabled={isCreating || !isLoaded}
           className="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-on dark:text-white font-medium rounded-lg transition-colors"
         >
-          {isChecking ? 'Checking...' : isCreating ? 'Creating Account...' : 'Create Account'}
+          {isCreating ? 'Creating Account...' : 'Create Account'}
         </button>
       </div>
     </form>
