@@ -995,6 +995,22 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
         {/* Netlify Tab */}
         {activeTab === 'NETLIFY' && (
           <div className="mt-6 space-y-6">
+            {/* Netlify Deploy Status Badge */}
+            <div className="flex justify-center mb-6">
+              <a 
+                href="https://app.netlify.com/projects/cascadeconnect/deploys" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block"
+              >
+                <img 
+                  src="https://api.netlify.com/api/v1/badges/a60189c5-3405-4300-8ed2-484e45afbe6e/deploy-status" 
+                  alt="Netlify Status" 
+                  className="h-6"
+                />
+              </a>
+            </div>
+            
             {netlifyLoading ? (
               <div className="flex items-center justify-center py-12">
                 <RefreshCw className="h-6 w-6 animate-spin text-primary" />
