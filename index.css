@@ -56,72 +56,117 @@ body {
     border: none !important;
 }
 
+/* Popover Card - Light Mode */
 .cl-userButtonPopoverCard {
     border-radius: 12px !important;
     padding: 8px !important;
-    background-color: var(--tw-color-surface, #ffffff) !important;
-    border: 1px solid var(--tw-color-surface-outline-variant, #c0c8cc) !important;
+    background-color: #ffffff !important; /* surface */
+    border: 1px solid #c0c8cc !important; /* surface-outline-variant */
     box-shadow: 0px 2px 6px 2px rgba(0,0,0,0.15), 0px 1px 2px 0px rgba(0,0,0,0.3) !important;
 }
 
-.dark .cl-userButtonPopoverCard {
+/* Popover Card - Dark Mode */
+.dark .cl-userButtonPopoverCard,
+html.dark .cl-userButtonPopoverCard {
     background-color: #1f2937 !important; /* dark:bg-gray-800 */
     border-color: #374151 !important; /* dark:border-gray-700 */
 }
 
+/* Header Section - Light Mode */
 .cl-userButtonPopoverHeader {
     padding: 12px !important;
-    border-bottom: 1px solid var(--tw-color-surface-outline-variant, #c0c8cc) !important;
+    border-bottom: 1px solid #c0c8cc !important; /* surface-outline-variant */
+    background-color: transparent !important;
 }
 
-.dark .cl-userButtonPopoverHeader {
-    border-bottom-color: #374151 !important;
+/* Header Section - Dark Mode */
+.dark .cl-userButtonPopoverHeader,
+html.dark .cl-userButtonPopoverHeader {
+    border-bottom-color: #374151 !important; /* dark:border-gray-700 */
+    background-color: transparent !important;
 }
 
+/* Header Title - Light Mode */
 .cl-userButtonPopoverHeaderTitle {
     font-size: 0.875rem !important;
     font-weight: 500 !important;
-    color: var(--tw-color-surface-on, #171c1f) !important;
+    color: #171c1f !important; /* surface-on */
 }
 
-.dark .cl-userButtonPopoverHeaderTitle {
+/* Header Title - Dark Mode */
+.dark .cl-userButtonPopoverHeaderTitle,
+html.dark .cl-userButtonPopoverHeaderTitle {
     color: #f9fafb !important; /* dark:text-gray-100 */
 }
 
+/* Header Subtitle - Light Mode */
 .cl-userButtonPopoverHeaderSubtitle {
     font-size: 0.75rem !important;
-    color: var(--tw-color-surface-on-variant, #40484c) !important;
+    color: #40484c !important; /* surface-on-variant */
 }
 
-.dark .cl-userButtonPopoverHeaderSubtitle {
+/* Header Subtitle - Dark Mode */
+.dark .cl-userButtonPopoverHeaderSubtitle,
+html.dark .cl-userButtonPopoverHeaderSubtitle {
     color: #9ca3af !important; /* dark:text-gray-400 */
 }
 
+/* Actions Container */
 .cl-userButtonPopoverActions {
     padding: 4px !important;
+    background-color: transparent !important;
 }
 
+/* Action Button - Light Mode */
 .cl-userButtonPopoverActionButton {
     border-radius: 8px !important;
     margin: 2px 0 !important;
     padding: 8px 12px !important;
     font-size: 0.875rem !important;
-    color: var(--tw-color-surface-on, #171c1f) !important;
+    color: #171c1f !important; /* surface-on */
+    background-color: transparent !important;
     transition: background-color 0.2s !important;
 }
 
 .cl-userButtonPopoverActionButton:hover {
-    background-color: var(--tw-color-surface-container, #f0f4f6) !important;
+    background-color: #f0f4f6 !important; /* surface-container */
 }
 
-.dark .cl-userButtonPopoverActionButton {
-    color: #f9fafb !important;
+/* Action Button - Dark Mode */
+.dark .cl-userButtonPopoverActionButton,
+html.dark .cl-userButtonPopoverActionButton {
+    color: #f9fafb !important; /* dark:text-gray-100 */
+    background-color: transparent !important;
 }
 
-.dark .cl-userButtonPopoverActionButton:hover {
+.dark .cl-userButtonPopoverActionButton:hover,
+html.dark .cl-userButtonPopoverActionButton:hover {
     background-color: #374151 !important; /* dark:hover:bg-gray-700 */
 }
 
+/* Action Button Text - Light Mode */
+.cl-userButtonPopoverActionButtonText {
+    color: #171c1f !important; /* surface-on */
+}
+
+/* Action Button Text - Dark Mode */
+.dark .cl-userButtonPopoverActionButtonText,
+html.dark .cl-userButtonPopoverActionButtonText {
+    color: #f9fafb !important; /* dark:text-gray-100 */
+}
+
+/* Action Button Icon - Light Mode */
+.cl-userButtonPopoverActionButtonIcon {
+    color: #40484c !important; /* surface-on-variant */
+}
+
+/* Action Button Icon - Dark Mode */
+.dark .cl-userButtonPopoverActionButtonIcon,
+html.dark .cl-userButtonPopoverActionButtonIcon {
+    color: #9ca3af !important; /* dark:text-gray-400 */
+}
+
+/* Sign Out Button - Light Mode */
 .cl-userButtonPopoverActionButton__signOut {
     color: #ba1a1a !important; /* error color */
 }
@@ -130,7 +175,9 @@ body {
     background-color: rgba(186, 26, 26, 0.05) !important; /* error/5 */
 }
 
-.dark .cl-userButtonPopoverActionButton__signOut:hover {
+/* Sign Out Button - Dark Mode */
+.dark .cl-userButtonPopoverActionButton__signOut:hover,
+html.dark .cl-userButtonPopoverActionButton__signOut:hover {
     background-color: rgba(186, 26, 26, 0.1) !important; /* error/10 */
 }
 
