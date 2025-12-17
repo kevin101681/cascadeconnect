@@ -23,7 +23,22 @@ console.log('✅ Starting app render...');
 root.render(
   <React.StrictMode>
     <ErrorBoundary>
-      <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+      <ClerkProvider 
+        publishableKey={PUBLISHABLE_KEY} 
+        afterSignOutUrl="/"
+        appearance={{
+          elements: {
+            rootBox: 'w-full',
+            modalContent: 'bg-surface dark:bg-gray-800',
+            formButtonPrimary: 'bg-primary hover:bg-primary/90 text-primary-on',
+            formFieldInput: 'bg-surface-container dark:bg-gray-700 border-surface-outline-variant text-surface-on',
+            footerActionLink: 'text-primary',
+            socialButtonsBlockButton: 'hidden', // Hide social login buttons
+            dividerLine: 'hidden', // Hide divider
+            dividerText: 'hidden', // Hide divider text
+          }
+        }}
+      >
         <DarkModeProvider>
           <App />
         </DarkModeProvider>

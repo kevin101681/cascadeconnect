@@ -1,8 +1,9 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, Homeowner } from '../types';
-import { UserCircle, Users, ChevronDown, Search, ArrowRight, X, Menu, LogOut, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin } from 'lucide-react';
+import { UserCircle, Users, ChevronDown, Search, ArrowRight, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin } from 'lucide-react';
 import { useDarkMode } from './DarkModeProvider';
+import { UserButton } from '@clerk/clerk-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -214,6 +215,22 @@ const Layout: React.FC<LayoutProps> = ({
                 );
               })()}
 
+              {/* Clerk User Avatar - Shows email and logout */}
+              <div className="flex items-center">
+                <UserButton 
+                  appearance={{
+                    elements: {
+                      avatarBox: 'h-10 w-10',
+                      userButtonPopoverCard: 'bg-surface dark:bg-gray-800 border-surface-outline-variant dark:border-gray-700 shadow-elevation-2',
+                      userButtonPopoverActionButton: 'text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700',
+                      userButtonPopoverActionButtonText: 'text-surface-on dark:text-gray-100',
+                      userButtonPopoverFooter: 'hidden', // Hide "Manage account" link
+                    }
+                  }}
+                  afterSignOutUrl="/"
+                />
+              </div>
+
               {/* Main Menu Dropdown - Hidden for Homeowners */}
               {(isAdmin || isBuilder) && (
                 <div className="relative" ref={menuRef}>
@@ -311,7 +328,7 @@ const Layout: React.FC<LayoutProps> = ({
 
                       <div className="my-1 border-t border-surface-outline-variant dark:border-gray-700"></div>
 
-                      {/* Switch Role / Logout */}
+                      {/* Switch Role */}
                       <button 
                         onClick={() => handleMenuAction(onSwitchRole)}
                         className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
@@ -321,16 +338,6 @@ const Layout: React.FC<LayoutProps> = ({
                         ) : (
                           <><Users className="h-4 w-4 text-surface-outline dark:text-gray-500" /> Switch to Admin View</>
                         )}
-                      </button>
-                      
-                       <button 
-                        onClick={async () => {
-                          await onSignOut();
-                        }}
-                        className="w-full text-left px-4 py-2.5 text-sm text-error hover:bg-error/5 dark:hover:bg-error/10 flex items-center gap-3"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Log Out
                       </button>
                     </div>
                   </div>
