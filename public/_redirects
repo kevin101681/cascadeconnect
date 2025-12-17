@@ -40,6 +40,9 @@
 # Handle Neon Stats API
 /api/neon/stats       /.netlify/functions/neon-stats    200!
 
+# Handle Better Auth API - redirect to Netlify Function
+/api/auth/*           /.netlify/functions/better-auth/:splat    200!
+
 # All other routes go to index.html for SPA routing
 /*    /index.html   200
 
