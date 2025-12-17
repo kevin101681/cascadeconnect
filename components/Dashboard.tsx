@@ -129,8 +129,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Schedule expansion state
   const [isScheduleExpanded, setIsScheduleExpanded] = useState(false);
   
-  // View State for Dashboard (Claims vs Messages vs Tasks)
-  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS'>(initialTab);
+  // View State for Dashboard (Claims vs Messages vs Tasks vs Documents)
+  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'DOCUMENTS'>(initialTab || 'CLAIMS');
   
   // Invite Modal State
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -785,20 +785,32 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // --- Render Helpers ---
 
-  const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false) => (
+  const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false) => (
     <motion.div 
       className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0"
       variants={cardVariants}
       initial="hidden"
       animate="visible"
     >
-      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center bg-surface-container/30 dark:bg-gray-700/30 sticky top-0 z-10">
+      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 sticky top-0 z-10">
         <h3 className={`text-lg font-bold flex items-center gap-2 ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
             {groupClaims.length}
           </span>
           {title}
         </h3>
+        {showNewClaimButton && (
+          <Button
+            onClick={() => {
+              setShowNewClaimModal(true);
+            }}
+            variant="outlined"
+            icon={<Plus className="h-4 w-4" />}
+            className="!h-9 !px-4"
+          >
+            New Claim
+          </Button>
+        )}
       </div>
       <motion.ul 
         className="divide-y divide-surface-outline-variant dark:divide-gray-700"
@@ -978,7 +990,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     </motion.div>
   );
 
-  const renderClaimsList = (claimsList: Claim[]) => {
+  const renderClaimsList = (claimsList: Claim[], isHomeownerView: boolean = false) => {
     const openClaims = claimsList.filter(c => c.status !== ClaimStatus.COMPLETED);
     const closedClaims = claimsList.filter(c => c.status === ClaimStatus.COMPLETED);
 
@@ -986,12 +998,105 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div>
         {/* Main List */}
         <div>
-          {renderClaimGroup('Active Claims', openClaims, 'No active claims.')}
-          {renderClaimGroup('Closed Claims', closedClaims, 'No closed claims history.', true)}
+          {renderClaimGroup('Active Claims', openClaims, 'No active claims.', false, isHomeownerView)}
+          {renderClaimGroup('Closed Claims', closedClaims, 'No closed claims history.', true, false)}
         </div>
       </div>
     );
   };
+
+  const renderDocumentsTab = () => (
+    <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-elevation-1">
+      <div className="p-6">
+        <div className="mb-6 space-y-2 max-h-[600px] overflow-y-auto pr-1">
+          {displayDocuments.length === 0 ? (
+            <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-12 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
+              No documents uploaded for this account.
+            </div>
+          ) : (
+            displayDocuments.map(doc => {
+              const isPDF = doc.type === 'PDF' || doc.name.toLowerCase().endsWith('.pdf') || 
+                           doc.url.startsWith('data:application/pdf') || 
+                           doc.url.includes('pdf');
+              
+              return (
+                <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 group transition-all">
+                  <div 
+                    className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                    onClick={() => {
+                      if (isPDF) {
+                        setSelectedDocument(doc);
+                        setIsPDFViewerOpen(true);
+                      }
+                    }}
+                  >
+                    <div className="p-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{doc.name}</p>
+                      <p className="text-xs text-surface-on-variant dark:text-gray-400">
+                        Uploaded by {doc.uploadedBy} • {new Date(doc.uploadDate).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    {isPDF && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setSelectedDocument(doc);
+                          setIsPDFViewerOpen(true);
+                        }}
+                        className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all z-10 relative"
+                        title="View PDF"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
+                    )}
+                    {doc.url.startsWith('data:') ? (
+                      <a 
+                        href={doc.url} 
+                        download={doc.name} 
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all"
+                        title="Download"
+                      >
+                        <Download className="h-4 w-4" />
+                      </a>
+                    ) : (
+                      <button 
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all"
+                        title="Download"
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+        
+        {/* Upload Action */}
+        <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 flex justify-center">
+          <label className={`cursor-pointer flex items-center gap-2 px-6 py-3 rounded-full transition-colors border ${isDocUploading ? 'bg-surface-container dark:bg-gray-700 border-primary/30 cursor-wait' : 'bg-surface-container dark:bg-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-600 border-surface-outline-variant dark:border-gray-600 text-primary font-medium'}`}>
+            {isDocUploading ? (
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            ) : (
+              <Upload className="h-4 w-4" />
+            )}
+            {isDocUploading ? 'Uploading...' : 'Upload New Document'}
+            <input type="file" className="hidden" onChange={handleFileUpload} disabled={isDocUploading} />
+          </label>
+        </div>
+      </div>
+    </div>
+  );
 
   const renderMessagesTab = () => (
     <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden flex flex-col md:flex-row h-[700px] shadow-elevation-1">
@@ -1314,9 +1419,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <CheckSquare className="h-5 w-5 text-primary" />
                 New Task
               </h2>
-              <button onClick={() => setShowNewTaskModal(false)} className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
-                <X className="h-5 w-5" />
-              </button>
             </div>
             
             <form onSubmit={async (e) => {
@@ -1437,6 +1539,10 @@ const Dashboard: React.FC<DashboardProps> = ({
           className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
           onClick={() => setShowManualModal(false)}
         >
+          {(() => {
+            console.log('Homeowner Manual Modal opened. Images:', HOMEOWNER_MANUAL_IMAGES);
+            return null;
+          })()}
           <div 
             className="bg-surface dark:bg-gray-800 w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-xl flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
@@ -1454,21 +1560,40 @@ const Dashboard: React.FC<DashboardProps> = ({
             
             {/* Content - Manual Images */}
             <div className="flex-1 overflow-y-auto p-6 bg-gray-100 dark:bg-gray-900">
-              <div className="space-y-4">
-                {HOMEOWNER_MANUAL_IMAGES.map((imagePath: string, index: number) => (
-                  <div key={index} className="w-full">
-                    <img 
-                      src={imagePath} 
-                      alt={`Homeowner Manual Page ${index + 1}`}
-                      className="w-full h-auto rounded-lg shadow-lg"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
+              {HOMEOWNER_MANUAL_IMAGES && HOMEOWNER_MANUAL_IMAGES.length > 0 ? (
+                <div className="space-y-4">
+                  {HOMEOWNER_MANUAL_IMAGES.map((imagePath: string, index: number) => (
+                    <div key={index} className="w-full">
+                      <img 
+                        src={imagePath} 
+                        alt={`Homeowner Manual Page ${index + 1}`}
+                        className="w-full h-auto rounded-lg shadow-lg"
+                        onError={(e) => {
+                          console.error(`Failed to load manual image: ${imagePath}`);
+                          const target = e.target as HTMLImageElement;
+                          const parent = target.parentElement;
+                          if (parent) {
+                            parent.innerHTML = `
+                              <div class="w-full p-8 bg-surface-container dark:bg-gray-700 rounded-lg shadow-lg text-center">
+                                <p class="text-surface-on-variant dark:text-gray-400 mb-2">Failed to load page ${index + 1}</p>
+                                <p class="text-xs text-surface-on-variant dark:text-gray-500">Path: ${imagePath}</p>
+                              </div>
+                            `;
+                          }
+                        }}
+                        onLoad={() => {
+                          console.log(`Successfully loaded manual image: ${imagePath}`);
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="w-full p-8 bg-surface-container dark:bg-gray-700 rounded-lg shadow-lg text-center">
+                  <p className="text-surface-on-variant dark:text-gray-400">No manual pages available</p>
+                  <p className="text-xs text-surface-on-variant dark:text-gray-500 mt-2">HOMEOWNER_MANUAL_IMAGES is empty or undefined</p>
+                </div>
+              )}
             </div>
             
             {/* Footer */}
@@ -1589,33 +1714,8 @@ const Dashboard: React.FC<DashboardProps> = ({
 
              {/* Actions Positioned Centered */}
              <div className="mt-4 pt-4 border-t border-surface-outline-variant/50 dark:border-gray-700/50 flex items-center justify-center gap-2 flex-wrap">
-                {/* Documents Button - Always shown */}
-                <Button
-                  onClick={() => setShowDocsModal(true)}
-                  variant="outlined"
-                  icon={<FileText className="h-4 w-4" />}
-                  className="!h-9 !px-4"
-                >
-                  Documents {displayDocuments.length > 0 && (
-                    <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-on text-xs font-medium">
-                      {displayDocuments.length}
-                    </span>
-                  )}
-                </Button>
-                {/* Messages Button - Show in homeowner view, or if admin wants to send message */}
-                {isHomeownerView ? (
-                  <Button
-                    onClick={() => {
-                      setShowNewMessageModal(true);
-                      setCurrentTab('MESSAGES');
-                    }}
-                    variant="outlined"
-                    icon={<Mail className="h-4 w-4" />}
-                    className="!h-9 !px-4"
-                  >
-                    Messages
-                  </Button>
-                ) : (
+                {/* Buttons removed from homeowner view - now in tabs */}
+                {!isHomeownerView && (
                   <>
                     {/* Sub List Button - Show if subcontractor list exists */}
                     {displayHomeowner.subcontractorList && displayHomeowner.subcontractorList.length > 0 && (
@@ -1875,6 +1975,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <span className="w-2 h-2 rounded-full bg-error ml-1"></span>
               )}
             </button>
+
+            <button 
+              onClick={() => setCurrentTab('DOCUMENTS')}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'DOCUMENTS' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+            >
+              <FileText className="h-4 w-4" />
+              Documents
+              {displayDocuments.length > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-primary text-primary-on text-xs font-medium">
+                  {displayDocuments.length}
+                </span>
+              )}
+            </button>
         </motion.div>
 
         {/* Content Area */}
@@ -1891,7 +2004,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             }}
             layout
           >
-            {renderClaimsList(displayClaims)}
+            {renderClaimsList(displayClaims, isHomeownerView)}
           </motion.div>
         )}
 
@@ -1934,6 +2047,22 @@ const Dashboard: React.FC<DashboardProps> = ({
             layout
           >
             {renderMessagesTab()}
+          </motion.div>
+        )}
+
+        {currentTab === 'DOCUMENTS' && (
+          <motion.div 
+            className=""
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            transition={{
+              ...springTransition,
+              delay: 0.3
+            }}
+            layout
+          >
+            {renderDocumentsTab()}
           </motion.div>
         )}
 
@@ -2033,19 +2162,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                         );
                       })
                     )}
-                 </div>
-                 
-                 {/* Footer Upload Action */}
-                 <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 flex justify-center">
-                    <label className={`cursor-pointer flex items-center gap-2 px-6 py-3 rounded-full transition-colors border ${isDocUploading ? 'bg-surface-container dark:bg-gray-700 border-primary/30 cursor-wait' : 'bg-surface-container dark:bg-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-600 border-surface-outline-variant dark:border-gray-600 text-primary font-medium'}`}>
-                        {isDocUploading ? (
-                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                        ) : (
-                          <Upload className="h-4 w-4" />
-                        )}
-                        {isDocUploading ? 'Uploading...' : 'Upload New Document'}
-                        <input type="file" className="hidden" onChange={handleFileUpload} disabled={isDocUploading} />
-                    </label>
                  </div>
                </div>
             </div>

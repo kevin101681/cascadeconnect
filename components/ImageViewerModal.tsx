@@ -598,11 +598,41 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   }, [zoomLevel, panPosition, isPanning, panStart, tool, canvasInitialized]);
 
   const handleZoomIn = () => {
-    setZoomLevel(prev => Math.min(5, prev + 0.25));
+    if (!fabricCanvasRef.current) return;
+    const { width: canvasWidth, height: canvasHeight } = calculateCanvasSize();
+    
+    // Center point of the canvas
+    const centerX = canvasWidth / 2;
+    const centerY = canvasHeight / 2;
+    
+    const newZoom = Math.min(5, zoomLevel + 0.25);
+    const zoom = newZoom / zoomLevel;
+    
+    // Adjust pan to keep center point fixed
+    const newPanX = centerX - (centerX - panPosition.x) * zoom;
+    const newPanY = centerY - (centerY - panPosition.y) * zoom;
+    
+    setZoomLevel(newZoom);
+    setPanPosition({ x: newPanX, y: newPanY });
   };
 
   const handleZoomOut = () => {
-    setZoomLevel(prev => Math.max(0.5, prev - 0.25));
+    if (!fabricCanvasRef.current) return;
+    const { width: canvasWidth, height: canvasHeight } = calculateCanvasSize();
+    
+    // Center point of the canvas
+    const centerX = canvasWidth / 2;
+    const centerY = canvasHeight / 2;
+    
+    const newZoom = Math.max(0.5, zoomLevel - 0.25);
+    const zoom = newZoom / zoomLevel;
+    
+    // Adjust pan to keep center point fixed
+    const newPanX = centerX - (centerX - panPosition.x) * zoom;
+    const newPanY = centerY - (centerY - panPosition.y) * zoom;
+    
+    setZoomLevel(newZoom);
+    setPanPosition({ x: newPanX, y: newPanY });
   };
 
   const handleResetZoom = () => {
