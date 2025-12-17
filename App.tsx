@@ -1024,7 +1024,7 @@ function App() {
         : 'https://www.cascadeconnect.app';
       const claimLink = `${baseUrl}#claims?claimId=${updatedClaim.id}`;
 
-      // 1. Homeowner or Sub accepts appointment date
+      // 1. Appointment scheduling and acceptance logic
       // Check if status changed to SCHEDULED and there's an ACCEPTED date
       const acceptedDate = updatedClaim.proposedDates?.find(d => d.status === 'ACCEPTED');
       const previousAcceptedDate = previousClaim.proposedDates?.find(d => d.status === 'ACCEPTED');
@@ -1034,11 +1034,52 @@ function App() {
           !previousAcceptedDate &&
           previousClaim.status !== ClaimStatus.SCHEDULED) {
         
-        // Determine if it's homeowner or sub acceptance based on contractor assignment
-        const isSubAcceptance = !!updatedClaim.contractorName;
-        const isHomeownerAcceptance = !isSubAcceptance && userRole === UserRole.HOMEOWNER;
+        // Determine who scheduled/accepted the appointment
+        // Get current user's email from available sources
+        const currentUserEmailValue = authUser?.primaryEmailAddress?.emailAddress || 
+                                      activeEmployee?.email || 
+                                      activeHomeowner?.email || 
+                                      '';
         
-        if (isHomeownerAcceptance) {
+        const isAdminScheduling = userRole === UserRole.ADMIN || userRole === UserRole.BUILDER;
+        const isHomeownerAcceptance = userRole === UserRole.HOMEOWNER && !updatedClaim.contractorName;
+        // Sub acceptance: must be homeowner role (subs might log in as homeowners) AND 
+        // current user's email must match the contractor's email on the claim
+        const isSubAcceptance = userRole === UserRole.HOMEOWNER && 
+                                 !!updatedClaim.contractorName && 
+                                 !!updatedClaim.contractorEmail &&
+                                 currentUserEmailValue &&
+                                 currentUserEmailValue.toLowerCase().trim() === updatedClaim.contractorEmail.toLowerCase().trim();
+        
+        if (isAdminScheduling) {
+          // Admin/Builder scheduled an appointment - send email to homeowner
+          const homeownerEmail = updatedClaim.homeownerEmail;
+          if (homeownerEmail) {
+            const emailBody = `
+An appointment has been scheduled for your warranty claim ${updatedClaim.claimNumber}:
+
+Claim: ${updatedClaim.title}
+Scheduled Date: ${new Date(acceptedDate.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at ${acceptedDate.timeSlot}
+${updatedClaim.contractorName ? `Assigned Subcontractor: ${updatedClaim.contractorName}` : ''}
+
+<div style="margin: 20px 0;">
+  <a href="${claimLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Claim</a>
+</div>
+            `.trim();
+
+            try {
+              await sendEmail({
+                to: homeownerEmail,
+                subject: `Appointment Scheduled: ${updatedClaim.claimNumber} - ${updatedClaim.title}`,
+                body: emailBody,
+                fromName: 'Cascade Builder Services',
+                fromRole: UserRole.ADMIN
+              });
+            } catch (error) {
+              console.error(`Failed to send appointment scheduled notification to homeowner ${homeownerEmail}:`, error);
+            }
+          }
+        } else if (isHomeownerAcceptance) {
           // Homeowner accepted an appointment date
           const emailBody = `
 A homeowner has accepted an appointment date for claim ${updatedClaim.claimNumber}:
@@ -1068,8 +1109,9 @@ Homeowner: ${updatedClaim.homeownerName}
             }
           }
         } else if (isSubAcceptance) {
-          // Sub accepted an appointment date
-          const emailBody = `
+          // Sub actually accepted an appointment date from their account
+          // Send email to admins
+          const adminEmailBody = `
 A subcontractor has accepted an appointment date for claim ${updatedClaim.claimNumber}:
 
 Claim: ${updatedClaim.title}
@@ -1088,13 +1130,41 @@ Homeowner: ${updatedClaim.homeownerName}
                 await sendEmail({
                   to: emp.email,
                   subject: `Sub Accepted Appointment: ${updatedClaim.claimNumber} - ${updatedClaim.title}`,
-                  body: emailBody,
+                  body: adminEmailBody,
                   fromName: 'Cascade Connect System',
                   fromRole: UserRole.ADMIN
                 });
               } catch (error) {
                 console.error(`Failed to send sub appointment acceptance notification to ${emp.email}:`, error);
               }
+            }
+          }
+
+          // Send email to homeowner
+          const homeownerEmail = updatedClaim.homeownerEmail;
+          if (homeownerEmail) {
+            const homeownerEmailBody = `
+The subcontractor has accepted the appointment date for your warranty claim ${updatedClaim.claimNumber}:
+
+Claim: ${updatedClaim.title}
+Scheduled Date: ${new Date(acceptedDate.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at ${acceptedDate.timeSlot}
+Subcontractor: ${updatedClaim.contractorName}
+
+<div style="margin: 20px 0;">
+  <a href="${claimLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Claim</a>
+</div>
+            `.trim();
+
+            try {
+              await sendEmail({
+                to: homeownerEmail,
+                subject: `Sub Accepted Appointment: ${updatedClaim.claimNumber} - ${updatedClaim.title}`,
+                body: homeownerEmailBody,
+                fromName: 'Cascade Builder Services',
+                fromRole: UserRole.ADMIN
+              });
+            } catch (error) {
+              console.error(`Failed to send sub appointment acceptance notification to homeowner ${homeownerEmail}:`, error);
             }
           }
         }

@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
 import { Contractor, ClaimClassification, Attachment, Homeowner, ClaimStatus, UserRole } from '../types';
 import Button from './Button';
-import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle } from 'lucide-react';
+import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip } from 'lucide-react';
 
 interface NewClaimFormProps {
   onSubmit: (data: any) => void;
@@ -32,8 +32,9 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
   // Internal (Admin Only)
   const [internalNotes, setInternalNotes] = useState('');
 
-  // Attachments State (file uploads disabled)
-  const [attachments] = useState<Attachment[]>([]);
+  // Attachments State
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   // Only show contractors if user has typed something
   const filteredContractors = contractorSearch.trim() 
@@ -213,6 +214,169 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
             </div>
            )}
 
+        </div>
+      </div>
+
+      {/* Attachments Section */}
+      <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+        <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3 flex items-center gap-2">
+          <Paperclip className="h-4 w-4 text-primary" />
+          Attachments
+        </h4>
+        <div className="space-y-4">
+          {/* Existing Attachments */}
+          {attachments.length > 0 && (
+            <div className="flex flex-wrap gap-3">
+              {attachments.map((att, i) => {
+                const attachmentKey = att.id || `att-${i}`;
+                const attachmentUrl = att.url || '';
+                const attachmentName = att.name || 'Attachment';
+                const attachmentType = att.type || 'DOCUMENT';
+                
+                return (
+                  <div key={attachmentKey} className="group relative w-24 h-24 bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-elevation-1 transition-all">
+                    {attachmentType === 'IMAGE' && attachmentUrl ? (
+                      <>
+                        <img 
+                          src={attachmentUrl} 
+                          alt={attachmentName} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallback = target.parentElement?.querySelector('.image-fallback');
+                            if (fallback) {
+                              (fallback as HTMLElement).style.display = 'flex';
+                            }
+                          }}
+                        />
+                        <div className="image-fallback hidden absolute inset-0 w-full h-full flex flex-col items-center justify-center p-2 text-center bg-surface-container dark:bg-gray-700">
+                          <FileText className="h-8 w-8 text-primary mb-1" />
+                          <span className="text-[10px] text-surface-on-variant truncate w-full px-1">{attachmentName}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
+                        {attachmentType === 'VIDEO' ? (
+                          <Video className="h-8 w-8 text-primary mb-2" />
+                        ) : (
+                          <FileText className="h-8 w-8 text-blue-600 mb-2" />
+                        )}
+                        <span className="text-[10px] text-surface-on-variant truncate w-full">{attachmentName}</span>
+                      </div>
+                    )}
+                    {attachmentUrl && (
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <a 
+                          href={attachmentUrl} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="text-white text-xs font-medium hover:underline"
+                        >
+                          View
+                        </a>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAttachments(attachments.filter((_, idx) => idx !== i));
+                      }}
+                      className="absolute top-1 right-1 bg-error/80 hover:bg-error text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          
+          {/* Upload Section - Always visible */}
+          <div className="border-t border-surface-outline-variant dark:border-gray-700 pt-4">
+            <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-2">
+              Upload Images or Documents
+            </label>
+            <label className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed transition-colors ${
+              isUploading ? 'bg-surface-container dark:bg-gray-700 border-primary/30 cursor-wait' : 'bg-surface-container/30 dark:bg-gray-700/30 border-surface-outline-variant dark:border-gray-600 hover:border-primary hover:bg-surface-container/50 dark:hover:bg-gray-700/50'
+            }`}>
+              {isUploading ? (
+                <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+              ) : (
+                <Upload className="h-8 w-8 text-surface-outline-variant dark:text-gray-500" />
+              )}
+              <span className="text-sm text-surface-on-variant dark:text-gray-400">
+                {isUploading ? 'Uploading...' : 'Click to upload or drag and drop'}
+              </span>
+              <span className="text-xs text-surface-on-variant dark:text-gray-500">
+                Images, PDFs, and documents (max 10MB)
+              </span>
+              <input 
+                type="file" 
+                className="hidden" 
+                multiple
+                accept="image/*,application/pdf,.doc,.docx"
+                disabled={isUploading}
+                onChange={async (e) => {
+                  const files = e.target.files;
+                  if (!files || files.length === 0) return;
+                  
+                  setIsUploading(true);
+                  const newAttachments: Attachment[] = [];
+                  
+                  try {
+                    for (const file of Array.from(files)) {
+                      if (file.size > 10 * 1024 * 1024) {
+                        alert(`File ${file.name} is too large (>10MB). Please upload a smaller file.`);
+                        continue;
+                      }
+                      
+                      try {
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        
+                        const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                        const apiEndpoint = isLocalDev 
+                          ? 'http://localhost:3000/api/upload'
+                          : `${window.location.protocol}//${window.location.hostname.startsWith('www.') ? window.location.hostname : `www.${window.location.hostname}`}/api/upload`;
+                        
+                        const response = await fetch(apiEndpoint, {
+                          method: 'POST',
+                          body: formData
+                        });
+                        
+                        if (!response.ok) {
+                          throw new Error(`Upload failed: ${response.statusText}`);
+                        }
+                        
+                        const result = await response.json();
+                        
+                        if (result.success && result.url) {
+                          newAttachments.push({
+                            id: result.publicId || crypto.randomUUID(),
+                            url: result.url,
+                            name: file.name,
+                            type: result.type || 'DOCUMENT'
+                          });
+                        }
+                      } catch (error) {
+                        console.error(`Failed to upload ${file.name}:`, error);
+                        alert(`Failed to upload ${file.name}. Please try again.`);
+                      }
+                    }
+                    
+                    if (newAttachments.length > 0) {
+                      setAttachments([...attachments, ...newAttachments]);
+                    }
+                  } finally {
+                    setIsUploading(false);
+                    // Reset input
+                    e.target.value = '';
+                  }
+                }}
+              />
+            </label>
+          </div>
         </div>
       </div>
 

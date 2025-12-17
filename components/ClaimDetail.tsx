@@ -85,7 +85,7 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
     if (!newNote.trim()) return;
     
     const now = new Date();
-    // Format: [MM/DD/YYYY at HH:MM AM/PM by User Name]
+    // Format: MM/DD/YYYY at HH:MM AM/PM by User Name (no brackets - will be displayed as pill)
     const dateStr = now.toLocaleDateString('en-US', { 
       month: '2-digit', 
       day: '2-digit', 
@@ -98,7 +98,8 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
     });
     const userName = currentUser?.name || 'Admin';
     const timestamp = `${dateStr} at ${timeStr} by ${userName}`;
-    const noteWithTimestamp = `[${timestamp}] ${newNote.trim()}`;
+    // Format: timestamp\nnote content (will be displayed with timestamp as pill)
+    const noteWithTimestamp = `${timestamp}\n${newNote.trim()}`;
     
     // Get current notes (from edit state if editing, otherwise from claim)
     const currentNotes = isEditing ? editInternalNotes : (claim.internalNotes || '');
@@ -423,9 +424,49 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                   />
                 ) : (
                   <div className="mb-4">
-                    <p className="text-sm text-secondary-on-container dark:text-gray-300 whitespace-pre-wrap leading-relaxed bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600">
-                      {claim.internalNotes || "No internal notes."}
-                    </p>
+                    <div className="text-sm text-secondary-on-container dark:text-gray-300 whitespace-pre-wrap leading-relaxed bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600">
+                      {claim.internalNotes ? (
+                        <div className="space-y-3">
+                          {claim.internalNotes.split('\n\n').map((noteBlock, idx) => {
+                            // Parse note blocks - format: "timestamp\nnote content" or "[timestamp] note content" (legacy)
+                            const lines = noteBlock.split('\n');
+                            const firstLine = lines[0] || '';
+                            const isLegacyFormat = firstLine.startsWith('[') && firstLine.includes(']');
+                            
+                            let timestamp = '';
+                            let noteContent = '';
+                            
+                            if (isLegacyFormat) {
+                              // Legacy format: [timestamp] note content
+                              const match = firstLine.match(/^\[(.+?)\]\s*(.*)$/);
+                              if (match) {
+                                timestamp = match[1];
+                                noteContent = match[2] + (lines.slice(1).length > 0 ? '\n' + lines.slice(1).join('\n') : '');
+                              } else {
+                                noteContent = noteBlock;
+                              }
+                            } else {
+                              // New format: timestamp\nnote content
+                              timestamp = firstLine;
+                              noteContent = lines.slice(1).join('\n');
+                            }
+                            
+                            return (
+                              <div key={idx} className="pb-3 border-b border-secondary-container-high dark:border-gray-600 last:border-b-0 last:pb-0">
+                                {timestamp && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary-container text-primary-on-container mb-2">
+                                    {timestamp}
+                                  </span>
+                                )}
+                                <p className="mt-2 whitespace-pre-wrap">{noteContent || noteBlock}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p>No internal notes.</p>
+                      )}
+                    </div>
                   </div>
                 )}
                 

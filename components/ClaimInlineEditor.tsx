@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Claim, UserRole, ClaimStatus, ProposedDate, Contractor, InternalEmployee, ClaimClassification } from '../types';
+import { Claim, UserRole, ClaimStatus, ProposedDate, Contractor, InternalEmployee, ClaimClassification, Attachment } from '../types';
 import Button from './Button';
 import StatusBadge from './StatusBadge';
 import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
 import { ClaimMessage } from './MessageSummaryModal';
-import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink } from 'lucide-react';
+import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload } from 'lucide-react';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
@@ -60,7 +60,11 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   const [editDescription, setEditDescription] = useState(claim.description);
   const [editClassification, setEditClassification] = useState(claim.classification);
   const [editInternalNotes, setEditInternalNotes] = useState(claim.internalNotes || '');
+  const [editDateEvaluated, setEditDateEvaluated] = useState(
+    claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : ''
+  );
   const [newNote, setNewNote] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
   
   // Scheduling state
   const [proposeDate, setProposeDate] = useState('');
@@ -89,6 +93,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     setEditDescription(claim.description);
     setEditClassification(claim.classification);
     setEditInternalNotes(claim.internalNotes || '');
+    setEditDateEvaluated(claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : '');
     // Initialize proposeDate with scheduled date if available
     if (scheduledDate) {
       // Convert ISO string to YYYY-MM-DD format for date input
@@ -107,8 +112,10 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
       title: editTitle,
       description: editDescription,
       classification: editClassification,
-      internalNotes: editInternalNotes
+      internalNotes: editInternalNotes,
+      dateEvaluated: editDateEvaluated ? new Date(editDateEvaluated) : undefined
     });
+    setIsEditing(false); // Collapse editor after saving
   };
   
   const handleCancelEdit = () => {
@@ -116,21 +123,28 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     setEditDescription(claim.description);
     setEditClassification(claim.classification);
     setEditInternalNotes(claim.internalNotes || '');
+    setEditDateEvaluated(claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : '');
     setIsEditing(false);
   };
   
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
     
-    const timestamp = new Date().toLocaleString('en-US', {
-      month: '2-digit',
-      day: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { 
+      month: '2-digit', 
+      day: '2-digit', 
+      year: 'numeric' 
     });
-    const noteWithTimestamp = `[${timestamp}] ${newNote.trim()}`;
+    const timeStr = now.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+    const userName = currentUser?.name || 'Admin';
+    const timestamp = `${dateStr} at ${timeStr} by ${userName}`;
+    // Format as pill instead of brackets: timestamp as separate element
+    const noteWithTimestamp = `${timestamp}\n${newNote.trim()}`;
     
     const currentNotes = isEditing ? editInternalNotes : (claim.internalNotes || '');
     const updatedNotes = currentNotes 
@@ -281,6 +295,165 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
             </div>
           </div>
 
+          {/* Attachments Section */}
+          <div className="bg-surface dark:bg-gray-800 px-6 pt-6 pb-4 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
+            <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4 flex items-center gap-2">
+              <Paperclip className="h-5 w-5 text-primary" />
+              Attachments
+            </h3>
+            <div className="space-y-4">
+              {/* Existing Attachments */}
+              {claim.attachments && claim.attachments.length > 0 && (
+                <div className="flex flex-wrap gap-3">
+                  {claim.attachments.map((att, i) => {
+                    const attachmentKey = att.id || `att-${i}`;
+                    const attachmentUrl = att.url || '';
+                    const attachmentName = att.name || 'Attachment';
+                    const attachmentType = att.type || 'DOCUMENT';
+                    
+                    return (
+                      <div key={attachmentKey} className="group relative w-24 h-24 bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-elevation-1 transition-all">
+                        {attachmentType === 'IMAGE' && attachmentUrl ? (
+                          <>
+                            <img 
+                              src={attachmentUrl} 
+                              alt={attachmentName} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const fallback = target.parentElement?.querySelector('.image-fallback');
+                                if (fallback) {
+                                  (fallback as HTMLElement).style.display = 'flex';
+                                }
+                              }}
+                            />
+                            <div className="image-fallback hidden absolute inset-0 w-full h-full flex flex-col items-center justify-center p-2 text-center bg-surface-container dark:bg-gray-700">
+                              <FileText className="h-8 w-8 text-primary mb-1" />
+                              <span className="text-[10px] text-surface-on-variant truncate w-full px-1">{attachmentName}</span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
+                            {attachmentType === 'VIDEO' ? (
+                              <Video className="h-8 w-8 text-primary mb-2" />
+                            ) : (
+                              <FileText className="h-8 w-8 text-blue-600 mb-2" />
+                            )}
+                            <span className="text-[10px] text-surface-on-variant truncate w-full">{attachmentName}</span>
+                          </div>
+                        )}
+                        {attachmentUrl && (
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <a 
+                              href={attachmentUrl} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="text-white text-xs font-medium hover:underline"
+                            >
+                              View
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              
+              {/* Upload Section - Always visible */}
+              {!isReadOnly && (
+                <div className="border-t border-surface-outline-variant dark:border-gray-700 pt-4">
+                  <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-2">
+                    Upload Images or Documents
+                  </label>
+                  <label className={`cursor-pointer flex flex-col items-center justify-center gap-2 p-6 rounded-xl border-2 border-dashed transition-colors ${
+                    isUploading ? 'bg-surface-container dark:bg-gray-700 border-primary/30 cursor-wait' : 'bg-surface-container/30 dark:bg-gray-700/30 border-surface-outline-variant dark:border-gray-600 hover:border-primary hover:bg-surface-container/50 dark:hover:bg-gray-700/50'
+                  }`}>
+                    {isUploading ? (
+                      <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+                    ) : (
+                      <Upload className="h-8 w-8 text-surface-outline-variant dark:text-gray-500" />
+                    )}
+                    <span className="text-sm text-surface-on-variant dark:text-gray-400">
+                      {isUploading ? 'Uploading...' : 'Click to upload or drag and drop'}
+                    </span>
+                    <span className="text-xs text-surface-on-variant dark:text-gray-500">
+                      Images, PDFs, and documents (max 10MB)
+                    </span>
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      multiple
+                      accept="image/*,application/pdf,.doc,.docx"
+                      disabled={isUploading}
+                      onChange={async (e) => {
+                        const files = e.target.files;
+                        if (!files || files.length === 0) return;
+                        
+                        setIsUploading(true);
+                        const newAttachments: Attachment[] = [];
+                        
+                        try {
+                          for (const file of Array.from(files)) {
+                            if (file.size > 10 * 1024 * 1024) {
+                              alert(`File ${file.name} is too large (>10MB). Please upload a smaller file.`);
+                              continue;
+                            }
+                            
+                            try {
+                              const formData = new FormData();
+                              formData.append('file', file);
+                              
+                              const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                              const apiEndpoint = isLocalDev 
+                                ? 'http://localhost:3000/api/upload'
+                                : `${window.location.protocol}//${window.location.hostname.startsWith('www.') ? window.location.hostname : `www.${window.location.hostname}`}/api/upload`;
+                              
+                              const response = await fetch(apiEndpoint, {
+                                method: 'POST',
+                                body: formData
+                              });
+                              
+                              if (!response.ok) {
+                                throw new Error(`Upload failed: ${response.statusText}`);
+                              }
+                              
+                              const result = await response.json();
+                              
+                              if (result.success && result.url) {
+                                newAttachments.push({
+                                  id: result.publicId || crypto.randomUUID(),
+                                  url: result.url,
+                                  name: file.name,
+                                  type: result.type || 'DOCUMENT'
+                                });
+                              }
+                            } catch (error) {
+                              console.error(`Failed to upload ${file.name}:`, error);
+                              alert(`Failed to upload ${file.name}. Please try again.`);
+                            }
+                          }
+                          
+                          if (newAttachments.length > 0) {
+                            onUpdateClaim({
+                              ...claim,
+                              attachments: [...(claim.attachments || []), ...newAttachments]
+                            });
+                          }
+                        } finally {
+                          setIsUploading(false);
+                          // Reset input
+                          e.target.value = '';
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Internal Notes and Message Summary - Moved below Claim Details */}
           {/* Internal Notes - Admin Only */}
           {isAdmin && (
@@ -303,18 +476,63 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
               {isInternalNotesExpanded && (
                 <div className="mb-4 overflow-hidden">
                   {isEditing && !isReadOnly ? (
-                    <textarea
-                      value={editInternalNotes}
-                      onChange={e => setEditInternalNotes(e.target.value)}
-                      rows={6}
-                      placeholder="Add internal notes here..."
-                      className="w-full bg-surface dark:bg-gray-700 border border-primary rounded-lg p-3 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary mb-4 resize-none overflow-hidden"
-                    />
+                    <div className="mb-4">
+                      <textarea
+                        value={editInternalNotes}
+                        onChange={e => setEditInternalNotes(e.target.value)}
+                        rows={6}
+                        placeholder="Add internal notes here..."
+                        className="w-full bg-surface dark:bg-gray-700 border border-primary rounded-lg p-3 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary resize-none overflow-hidden"
+                      />
+                      <div className="mt-2 text-xs text-secondary-on-container dark:text-gray-400">
+                        <p>Note: When you add a new note, it will be formatted with a timestamp pill automatically.</p>
+                      </div>
+                    </div>
                   ) : (
                     <div className="mb-4 overflow-hidden">
-                      <p className="text-sm text-secondary-on-container dark:text-gray-300 whitespace-pre-wrap leading-relaxed bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600 overflow-hidden">
-                        {claim.internalNotes || "No internal notes."}
-                      </p>
+                      <div className="text-sm text-secondary-on-container dark:text-gray-300 whitespace-pre-wrap leading-relaxed bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600 overflow-hidden">
+                        {claim.internalNotes ? (
+                          <div className="space-y-3">
+                            {claim.internalNotes.split('\n\n').map((noteBlock, idx) => {
+                              // Parse note blocks - format: "timestamp\nnote content" or "[timestamp] note content" (legacy)
+                              const lines = noteBlock.split('\n');
+                              const firstLine = lines[0] || '';
+                              const isLegacyFormat = firstLine.startsWith('[') && firstLine.includes(']');
+                              
+                              let timestamp = '';
+                              let noteContent = '';
+                              
+                              if (isLegacyFormat) {
+                                // Legacy format: [timestamp] note content
+                                const match = firstLine.match(/^\[(.+?)\]\s*(.*)$/);
+                                if (match) {
+                                  timestamp = match[1];
+                                  noteContent = match[2] + (lines.slice(1).length > 0 ? '\n' + lines.slice(1).join('\n') : '');
+                                } else {
+                                  noteContent = noteBlock;
+                                }
+                              } else {
+                                // New format: timestamp\nnote content
+                                timestamp = firstLine;
+                                noteContent = lines.slice(1).join('\n');
+                              }
+                              
+                              return (
+                                <div key={idx} className="pb-3 border-b border-secondary-container-high dark:border-gray-600 last:border-b-0 last:pb-0">
+                                  {timestamp && (
+                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary-container text-primary-on-container mb-2">
+                                      {timestamp}
+                                    </span>
+                                  )}
+                                  <p className="mt-2 whitespace-pre-wrap">{noteContent || noteBlock}</p>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <p>No internal notes.</p>
+                        )}
+                      </div>
                     </div>
                   )}
                 
@@ -473,9 +691,18 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
               </div>
               <div className="flex-1 sm:flex-initial">
                 <p className="text-xs text-surface-on-variant dark:text-gray-400 mb-1 text-left">Date Evaluated</p>
-                <span className="inline-flex items-center justify-start px-3 py-1 rounded-full text-sm font-medium bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 h-[2.5rem] w-full">
-                  {claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString() : 'Pending Evaluation'}
-                </span>
+                {isEditing && !isReadOnly ? (
+                  <input
+                    type="date"
+                    value={editDateEvaluated}
+                    onChange={e => setEditDateEvaluated(e.target.value)}
+                    className="w-full bg-surface-container-high dark:bg-gray-700 rounded-full pl-3 pr-4 py-2 text-sm text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all h-[2.5rem]"
+                  />
+                ) : (
+                  <span className="inline-flex items-center justify-start px-3 py-1 rounded-full text-sm font-medium bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 h-[2.5rem] w-full">
+                    {claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString() : 'Pending Evaluation'}
+                  </span>
+                )}
               </div>
             </div>
           </div>
