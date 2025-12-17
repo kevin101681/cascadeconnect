@@ -375,8 +375,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
 
           {/* Attachments Section */}
           <div className="bg-surface dark:bg-gray-800 px-6 pt-6 pb-4 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
-            <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4 flex items-center gap-2">
-              <Paperclip className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4">
               Attachments
             </h3>
             <div className="space-y-4">
@@ -544,8 +543,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 onClick={() => setIsInternalNotesExpanded(!isInternalNotesExpanded)}
                 className="w-full flex items-center justify-between mb-4 text-left"
               >
-                <h3 className="text-lg font-normal text-secondary-on-container dark:text-gray-100 flex items-center gap-2">
-                  <Lock className="h-4 w-4" />
+                <h3 className="text-lg font-normal text-secondary-on-container dark:text-gray-100">
                   Internal Notes <span className="text-xs font-normal opacity-70">(Not visible to Homeowner)</span>
                 </h3>
                 {isInternalNotesExpanded ? (
@@ -739,8 +737,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
         <div className="space-y-6">
           {/* Warranty Assessment */}
           <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
-            <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4 flex items-center gap-2">
-              <Info className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4">
               Warranty Assessment
             </h3>
             <div className="flex flex-col sm:flex-row gap-4 items-start">
@@ -831,8 +828,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           
           {/* Scheduling */}
           <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
-            <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4 flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-primary" />
+            <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4">
               Scheduling
             </h3>
             {isScheduled && scheduledDate ? (
@@ -967,8 +963,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]" onClick={() => setShowSubModal(false)}>
           <div className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-3 w-full max-w-md mx-4 animate-[scale-in_0.2s_ease-out]" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
-              <h2 className="text-lg font-medium text-surface-on dark:text-gray-100 flex items-center gap-2">
-                <HardHat className="h-5 w-5 text-primary" />
+              <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">
                 Assign Subcontractor
               </h2>
               <button onClick={() => setShowSubModal(false)} className="p-2 rounded-full hover:bg-surface-container dark:hover:bg-gray-600 transition-colors">
