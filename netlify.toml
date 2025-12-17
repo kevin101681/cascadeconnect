@@ -2,6 +2,10 @@
   command = "npm run build"
   publish = "dist"
 
+[functions]
+  node_bundler = "esbuild"
+  included_files = ["netlify/functions/**"]
+
 # Note: Environment variables should be set in Netlify dashboard, not here
 # This file only contains build configuration, no secrets
 
