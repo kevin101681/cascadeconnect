@@ -160,27 +160,40 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
         canvas.backgroundImage = null;
         canvas.renderAll();
         
-        // Load image with proper error handling
-        const img = await new Promise<any>((resolve, reject) => {
-          fabricLib.Image.fromURL(
-            currentImage.url,
-            (loadedImg: any) => {
-              if (loadedImg) {
-                resolve(loadedImg);
-              } else {
-                reject(new Error('Failed to load image'));
-              }
-            },
-            {
-              crossOrigin: 'anonymous'
-            }
-          );
+        console.log('Loading image:', currentImage.url);
+        
+        // Load image using fabric.js v6 Promise-based API
+        const img = await fabricLib.Image.fromURL(currentImage.url, {
+          crossOrigin: 'anonymous'
         });
+        
+        console.log('Image loaded, dimensions:', img.width, img.height);
+        
+        // Wait for image to be fully loaded if dimensions aren't available yet
+        if (!img.width || !img.height) {
+          await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error('Image load timeout'));
+            }, 10000); // 10 second timeout
+            
+            img.on('loaded', () => {
+              clearTimeout(timeout);
+              resolve(img);
+            });
+            
+            img.on('error', (err: any) => {
+              clearTimeout(timeout);
+              reject(err);
+            });
+          });
+        }
         
         const canvasWidth = canvas.width || 1000;
         const canvasHeight = canvas.height || 700;
         const imgWidth = img.width || 1;
         const imgHeight = img.height || 1;
+        
+        console.log('Scaling image to canvas:', { canvasWidth, canvasHeight, imgWidth, imgHeight });
         
         const scale = Math.min(
           (canvasWidth - 40) / imgWidth,
@@ -199,10 +212,11 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
         
         canvas.backgroundImage = img;
         canvas.renderAll();
+        console.log('✅ Image loaded and displayed');
         setImageLoading(false);
         saveState();
       } catch (error: any) {
-        console.error('Error loading image:', error);
+        console.error('❌ Error loading image:', error);
         setImageError(error.message || 'Failed to load image');
         setImageLoading(false);
       }
@@ -518,7 +532,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   return (
     <div
       ref={modalRef}
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+      className="fixed inset-0 z-[200] flex items-center justify-center backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();

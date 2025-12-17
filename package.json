@@ -19,6 +19,7 @@
     "add-email-preferences": "tsx scripts/add-email-preferences.ts",
     "create-contractors-table": "tsx scripts/create-contractors-table.ts",
     "create-message-threads-table": "tsx scripts/create-message-threads-table.ts",
+    "create-missing-tables": "tsx scripts/create-missing-tables.ts",
     "disable-user-mfa": "tsx scripts/disable-user-mfa.ts",
     "check-cloudinary": "node scripts/check-cloudinary.js",
     "migrate:cbsbooks": "tsx scripts/migrate-cbsbooks.ts",
