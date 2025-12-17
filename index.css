@@ -412,13 +412,13 @@ html.dark .cl-userButtonPopoverHeader * {
     background-color: #1f2937 !important; /* dark:bg-gray-800 */
 }
 
-/* Shimmer Animation for Logo on Initial Load */
+/* Shimmer Animation for Connect SVG on Initial Load */
 @keyframes shimmer {
   0% {
-    background-position: -1000px 0;
+    transform: translateX(-100%);
   }
   100% {
-    background-position: 1000px 0;
+    transform: translateX(100%);
   }
 }
 
@@ -434,22 +434,23 @@ html.dark .cl-userButtonPopoverHeader * {
   left: 0;
   right: 0;
   bottom: 0;
+  width: 50%;
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.4),
+    rgba(255, 255, 255, 0.6),
     transparent
   );
-  background-size: 1000px 100%;
-  animation: shimmer 2s ease-in-out;
+  animation: shimmer 1s ease-in-out;
   pointer-events: none;
+  z-index: 1;
 }
 
 .dark .logo-shimmer::after {
   background: linear-gradient(
     90deg,
     transparent,
-    rgba(255, 255, 255, 0.2),
+    rgba(255, 255, 255, 0.3),
     transparent
   );
 }
@@ -464,6 +465,25 @@ html.dark .cl-userButtonPopoverHeader * {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+/* Ensure animations don't affect colors or create visual shifts */
+.animate-slide-up-delay-1,
+.animate-slide-up-delay-2,
+.animate-slide-up-delay-3 {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Prevent color shifts during animations */
+[style*="slide-up-fade-in"] {
+  filter: none !important;
+  color: inherit !important;
+  background-color: inherit !important;
 }
 
 .animate-slide-up-delay-1 {

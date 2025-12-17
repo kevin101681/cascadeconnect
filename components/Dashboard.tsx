@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor } from '../types';
 import { ClaimMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
@@ -486,6 +487,37 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [effectiveHomeowner?.id]);
 
+  // Framer Motion animation variants
+  // Spring config: stiffness 400, damping 30, mass 0.6 for ~0.4s duration (within 0.5s constraint)
+  const cardVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 20 
+    },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 30,
+        mass: 0.6
+      }
+    }
+  };
+
+  // Stagger container variant
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.03,
+        delayChildren: 0.05
+      }
+    }
+  };
+
   const handleDraftInvite = async () => {
     if (!inviteName) return;
     setIsDrafting(true);
@@ -653,7 +685,13 @@ const Dashboard: React.FC<DashboardProps> = ({
   // --- Render Helpers ---
 
   const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false) => (
-    <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0">
+    <motion.div 
+      className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0"
+      variants={cardVariants}
+      initial="hidden"
+      animate="visible"
+      layout
+    >
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center bg-surface-container/30 dark:bg-gray-700/30">
         <h3 className={`text-lg font-bold flex items-center gap-2 ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
@@ -662,13 +700,18 @@ const Dashboard: React.FC<DashboardProps> = ({
           {title}
         </h3>
       </div>
-      <ul className="divide-y divide-surface-outline-variant dark:divide-gray-700">
+      <motion.ul 
+        className="divide-y divide-surface-outline-variant dark:divide-gray-700"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {groupClaims.length === 0 ? (
           <li className="p-8 text-center text-surface-on-variant dark:text-gray-400 text-sm italic">
             {emptyMsg}
           </li>
         ) : (
-          groupClaims.map((claim) => {
+          groupClaims.map((claim, index) => {
             const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
             
             // Find the most recent service order message (SUBCONTRACTOR type with "Service Order" in subject)
@@ -816,12 +859,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                     />
                   </div>
                 )}
-              </li>
+              </motion.li>
             );
           })
         )}
-      </ul>
-    </div>
+      </motion.ul>
+    </motion.div>
   );
 
   const renderClaimsList = (claimsList: Claim[]) => {
@@ -871,25 +914,33 @@ const Dashboard: React.FC<DashboardProps> = ({
              </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <motion.div 
+            className="flex-1 overflow-y-auto"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            key={displayThreads.length}
+          >
              {displayThreads.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
                   <Mail className="h-8 w-8 opacity-20 dark:opacity-40 text-surface-on dark:text-gray-400" />
                   <span className="text-sm">No messages found.</span>
                 </div>
              ) : (
-                displayThreads.map(thread => {
+                displayThreads.map((thread, index) => {
                   const lastMsg = thread.messages[thread.messages.length - 1];
                   const isUnread = !thread.isRead;
                   const isSelected = selectedThreadId === thread.id;
 
                   return (
-                    <button
+                    <motion.button
                       key={thread.id}
                       onClick={() => setSelectedThreadId(thread.id)}
                       className={`w-full text-left p-4 border-b border-surface-outline-variant/30 dark:border-gray-700/30 hover:bg-surface-container dark:hover:bg-gray-700 transition-colors group relative ${
                         isSelected ? 'bg-primary-container/20 dark:bg-primary/20' : isUnread ? 'bg-surface dark:bg-gray-800' : 'bg-surface-container/5 dark:bg-gray-700/5'
                       }`}
+                      variants={cardVariants}
+                      layout
                     >
                        {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>}
                        
@@ -913,11 +964,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                          </span>
                          {lastMsg.content}
                        </div>
-                    </button>
+                    </motion.button>
                   );
                 })
              )}
-          </div>
+          </motion.div>
        </div>
 
        {/* Right Column: Email Thread View */}
@@ -1281,10 +1332,13 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* HOMEOWNER INFO AND SCHEDULE ROW */}
         <div className="flex flex-col lg:flex-row gap-6 items-stretch relative w-full">
           {/* COMPACT HOMEOWNER HEADER CARD */}
-          <div 
-            key={homeownerCardKey}
+          <motion.div 
+            key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
             className="w-full lg:flex-1 lg:min-w-0 lg:flex-shrink lg:self-start bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 group relative flex flex-col"
-            style={{ animation: 'slide-up-fade-in 0.7s ease-out both' }}
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            layout
           >
           <div className="flex flex-col p-6">
              
@@ -1487,7 +1541,17 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           {/* Upcoming Schedule Card - Right of Homeowner Info */}
-          <div className="w-full lg:w-[300px] lg:flex-shrink-0 bg-secondary-container dark:bg-gray-800 rounded-3xl text-secondary-on-container dark:text-gray-100 flex flex-col relative border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden animate-slide-up-delay-1">
+          <motion.div 
+            className="w-full lg:w-[300px] lg:flex-shrink-0 bg-secondary-container dark:bg-gray-800 rounded-3xl text-secondary-on-container dark:text-gray-100 flex flex-col relative border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden"
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            transition={{
+              ...cardVariants.visible.transition,
+              delay: 0.1
+            }}
+            layout
+          >
             <button
               onClick={() => setIsScheduleExpanded(!isScheduleExpanded)}
               className="p-6 w-full text-left flex-shrink-0 z-10 relative"
@@ -1509,14 +1573,21 @@ const Dashboard: React.FC<DashboardProps> = ({
             
             {/* Collapsed State - Show First Appointment */}
             {!isScheduleExpanded && scheduledClaims.length > 0 && (
-              <div className="px-6 pb-6 pt-0">
+              <motion.div 
+                className="px-6 pb-6 pt-0"
+                variants={cardVariants}
+                initial="hidden"
+                animate="visible"
+              >
                 {(() => {
                   const firstClaim = scheduledClaims[0];
                   const acceptedDate = firstClaim.proposedDates.find(d => d.status === 'ACCEPTED');
                   return (
-                    <div 
+                    <motion.div 
                       className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-xl text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors"
                       onClick={() => onSelectClaim(firstClaim, true)}
+                      variants={cardVariants}
+                      layout
                     >
                       <p className="font-medium text-secondary-on-container dark:text-gray-200 text-center">{firstClaim.title}</p>
                       <p className="opacity-80 dark:opacity-70 mt-1 text-secondary-on-container dark:text-gray-300 text-center">
@@ -1527,16 +1598,21 @@ const Dashboard: React.FC<DashboardProps> = ({
                           {firstClaim.contractorName}
                         </p>
                       )}
-                    </div>
+                    </motion.div>
                   );
                 })()}
-              </div>
+              </motion.div>
             )}
             
             {!isScheduleExpanded && scheduledClaims.length === 0 && (
-              <div className="px-6 pb-6 pt-0">
+              <motion.div 
+                className="px-6 pb-6 pt-0"
+                variants={cardVariants}
+                initial="hidden"
+                animate="visible"
+              >
                 <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No confirmed appointments.</p>
-              </div>
+              </motion.div>
             )}
             
             {/* Expanded State - Show all appointments */}
@@ -1560,19 +1636,29 @@ const Dashboard: React.FC<DashboardProps> = ({
                             {c.contractorName}
                           </p>
                         )}
-                      </div>
+                      </motion.div>
                     );
                   })
                 ) : (
                   <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No confirmed appointments.</p>
                 )}
-              </div>
+              </motion.div>
             )}
-          </div>
+          </motion.div>
         </div>
 
         {/* Navigation Tabs (Context Specific) */}
-        <div className="flex gap-2 max-w-7xl mx-auto animate-slide-up-delay-2">
+        <motion.div 
+          className="flex gap-2 max-w-7xl mx-auto"
+          variants={cardVariants}
+          initial="hidden"
+          animate="visible"
+          transition={{
+            ...cardVariants.visible.transition,
+            delay: 0.2
+          }}
+          layout
+        >
            <button 
               onClick={() => setCurrentTab('CLAIMS')}
               className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'CLAIMS' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
@@ -1602,17 +1688,38 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <span className="w-2 h-2 rounded-full bg-error ml-1"></span>
               )}
             </button>
-        </div>
+        </motion.div>
 
         {/* Content Area */}
         {currentTab === 'CLAIMS' && (
-          <div className="max-w-7xl mx-auto animate-slide-up-delay-3">
+          <motion.div 
+            key={`claims-content-${displayClaims.length}`}
+            className="max-w-7xl mx-auto"
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            transition={{
+              ...cardVariants.visible.transition,
+              delay: 0.3
+            }}
+            layout
+          >
             {renderClaimsList(displayClaims)}
-          </div>
+          </motion.div>
         )}
 
         {currentTab === 'TASKS' && isAdmin && (
-          <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 p-6 shadow-elevation-1 animate-slide-up-delay-3">
+          <motion.div 
+            className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 p-6 shadow-elevation-1"
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            transition={{
+              ...cardVariants.visible.transition,
+              delay: 0.3
+            }}
+            layout
+          >
             <TaskList 
               tasks={tasks}
               employees={employees}
@@ -1628,9 +1735,12 @@ const Dashboard: React.FC<DashboardProps> = ({
         )}
 
         {currentTab === 'MESSAGES' && (
-          <div className="animate-slide-up-delay-3">
+          <div 
+            className="animate-slide-up-delay-3"
+            style={{ willChange: 'transform, opacity', backfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
+          >
             {renderMessagesTab()}
-          </div>
+          </motion.div>
         )}
 
         {/* DOCUMENTS MODAL */}
