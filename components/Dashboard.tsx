@@ -1255,11 +1255,14 @@ const Dashboard: React.FC<DashboardProps> = ({
     </>
   );
 
-  // 1. HOMEOWNER CONTEXT VIEW (When Admin selects a homeowner)
-  if ((isAdmin || isBuilder) && targetHomeowner) {
+  // 1. HOMEOWNER CONTEXT VIEW (When Admin selects a homeowner OR when admin switches to homeowner view)
+  if (((isAdmin || isBuilder) && targetHomeowner) || (userRole === UserRole.HOMEOWNER && activeHomeowner && activeHomeowner.id !== 'placeholder')) {
+    // Use targetHomeowner if in admin view, otherwise use activeHomeowner for homeowner view
+    const displayHomeowner = targetHomeowner || activeHomeowner;
+    const isHomeownerView = userRole === UserRole.HOMEOWNER;
     // Get scheduled claims for this homeowner
     const scheduledClaims = claims
-      .filter(c => c.status === ClaimStatus.SCHEDULED && c.homeownerEmail === targetHomeowner.email)
+      .filter(c => c.status === ClaimStatus.SCHEDULED && c.homeownerEmail === displayHomeowner.email)
       .slice(0, 3);
     
     return (
@@ -1281,9 +1284,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="flex items-center justify-center gap-4 flex-wrap">
                   {/* Name */}
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 truncate">{targetHomeowner.name}</h2>
+                    <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 truncate">{displayHomeowner.name}</h2>
                     {/* Edit Button - Admin Only */}
-                    {isAdmin && (
+                    {isAdmin && !isHomeownerView && (
                       <button 
                          onClick={handleOpenEditHomeowner}
                          className="p-1.5 text-surface-outline-variant dark:text-gray-400 hover:text-primary bg-transparent hover:bg-primary/10 rounded-full transition-colors flex-shrink-0"
@@ -1297,18 +1300,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                   {/* Project */}
                   <div className="flex items-center gap-1.5 text-sm flex-shrink-0">
                      <Home className="h-4 w-4 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                     <span className="font-medium text-surface-on dark:text-gray-100 truncate">{targetHomeowner.jobName || 'N/A'}</span>
+                     <span className="font-medium text-surface-on dark:text-gray-100 truncate">{displayHomeowner.jobName || 'N/A'}</span>
                   </div>
                   
                   {/* Address */}
                   <a 
-                    href={`https://maps.google.com/?q=${encodeURIComponent(targetHomeowner.address)}`}
+                    href={`https://maps.google.com/?q=${encodeURIComponent(displayHomeowner.address)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 text-surface-on-variant dark:text-gray-400 hover:text-primary transition-colors truncate flex-shrink-0"
                   >
                     <MapPin className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                    <span className="truncate">{targetHomeowner.address}</span>
+                    <span className="truncate">{displayHomeowner.address}</span>
                   </a>
                 </div>
 
@@ -1317,31 +1320,32 @@ const Dashboard: React.FC<DashboardProps> = ({
                   {/* Builder */}
                   <span className="flex items-center gap-1.5 text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-2.5 py-0.5 rounded-full border border-surface-outline-variant dark:border-gray-600 flex-shrink-0">
                     <Building2 className="h-3 w-3" />
-                    {targetHomeowner.builder}
+                    {displayHomeowner.builder}
                   </span>
                   
                   {/* Closing Date */}
                   <span className="flex items-center gap-1.5 text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-2.5 py-0.5 rounded-full border border-surface-outline-variant dark:border-gray-600 flex-shrink-0">
                      <Clock className="h-3 w-3 text-surface-outline dark:text-gray-500" />
-                     Closing: {targetHomeowner.closingDate ? new Date(targetHomeowner.closingDate).toLocaleDateString() : 'N/A'}
+                     Closing: {displayHomeowner.closingDate ? new Date(displayHomeowner.closingDate).toLocaleDateString() : 'N/A'}
                   </span>
                   
                   {/* Phone */}
-                  <a href={`tel:${targetHomeowner.phone}`} className="flex items-center gap-1.5 hover:text-primary transition-colors flex-shrink-0 text-sm text-surface-on-variant dark:text-gray-400">
+                  <a href={`tel:${displayHomeowner.phone}`} className="flex items-center gap-1.5 hover:text-primary transition-colors flex-shrink-0 text-sm text-surface-on-variant dark:text-gray-400">
                     <Phone className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                    <span className="whitespace-nowrap">{targetHomeowner.phone}</span>
+                    <span className="whitespace-nowrap">{displayHomeowner.phone}</span>
                   </a>
                   
                   {/* Email */}
                   <div className="flex items-center gap-1.5 min-w-0 flex-shrink-0 text-sm text-surface-on-variant dark:text-gray-400">
                     <Mail className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                    <a href={`mailto:${targetHomeowner.email}`} className="hover:text-primary transition-colors truncate min-w-0">{targetHomeowner.email}</a>
+                    <a href={`mailto:${displayHomeowner.email}`} className="hover:text-primary transition-colors truncate min-w-0">{displayHomeowner.email}</a>
                   </div>
                 </div>
              </div>
 
              {/* Actions Positioned Centered */}
              <div className="mt-4 pt-4 border-t border-surface-outline-variant/50 dark:border-gray-700/50 flex items-center justify-center gap-2 flex-wrap">
+                {/* Documents Button - Always shown */}
                 <Button
                   onClick={() => setShowDocsModal(true)}
                   variant="outlined"
@@ -1354,51 +1358,68 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </span>
                   )}
                 </Button>
-                {/* Sub List Button - Show if subcontractor list exists */}
-                {targetHomeowner.subcontractorList && targetHomeowner.subcontractorList.length > 0 && (
-                  <Button 
-                    onClick={() => setShowSubListModal(true)} 
-                    variant="outlined" 
-                    icon={<HardHat className="h-4 w-4" />}
+                {/* Messages Button - Show in homeowner view, or if admin wants to send message */}
+                {isHomeownerView ? (
+                  <Button
+                    onClick={() => {
+                      setShowNewMessageModal(true);
+                      setCurrentTab('MESSAGES');
+                    }}
+                    variant="outlined"
+                    icon={<Mail className="h-4 w-4" />}
                     className="!h-9 !px-4"
                   >
-                    Sub List
+                    Messages
                   </Button>
+                ) : (
+                  <>
+                    {/* Sub List Button - Show if subcontractor list exists */}
+                    {displayHomeowner.subcontractorList && displayHomeowner.subcontractorList.length > 0 && (
+                      <Button 
+                        onClick={() => setShowSubListModal(true)} 
+                        variant="outlined" 
+                        icon={<HardHat className="h-4 w-4" />}
+                        className="!h-9 !px-4"
+                      >
+                        Sub List
+                      </Button>
+                    )}
+                    {/* Punch List Button - Shows "View Punch List" if report exists, otherwise "Create Punch List" */}
+                    {(() => {
+                      const reportKey = `bluetag_report_${displayHomeowner.id}`;
+                      const hasReport = localStorage.getItem(reportKey) !== null;
+                      
+                      return (
+                        <Button
+                          onClick={() => setShowPunchListApp(true)}
+                          variant="outlined"
+                          icon={<ClipboardList className="h-4 w-4" />}
+                          className="!h-9 !px-4"
+                        >
+                          {hasReport ? 'View Punch List' : '+ Punch List'}
+                        </Button>
+                      );
+                    })()}
+                  </>
                 )}
-                {/* Punch List Button - Shows "View Punch List" if report exists, otherwise "Create Punch List" */}
-                {(() => {
-                  const reportKey = `bluetag_report_${targetHomeowner.id}`;
-                  const hasReport = localStorage.getItem(reportKey) !== null;
-                  
-                  return (
-                    <Button
-                      onClick={() => setShowPunchListApp(true)}
-                      variant="outlined"
-                      icon={<ClipboardList className="h-4 w-4" />}
-                      className="!h-9 !px-4"
-                    >
-                      {hasReport ? 'View Punch List' : '+ Punch List'}
-                    </Button>
-                  );
-                })()}
-                {/* Admin Only Actions */}
-                {isAdmin && (
+                {/* Admin Only Actions - Hidden in homeowner view */}
+                {isAdmin && !isHomeownerView && (
                   <>
                     <Button
                       onClick={async () => {
                         // Open modal immediately
-                        setInviteName(targetHomeowner.name);
-                        setInviteEmail(targetHomeowner.email);
+                        setInviteName(displayHomeowner.name);
+                        setInviteEmail(displayHomeowner.email);
                         setShowInviteModal(true);
                         // Draft email asynchronously after modal is open
                         setIsDrafting(true);
                         try {
-                          const defaultBody = await draftInviteEmail(targetHomeowner.name);
+                          const defaultBody = await draftInviteEmail(displayHomeowner.name);
                           setInviteBody(defaultBody);
                         } catch (error) {
                           console.error('Failed to draft email:', error);
                           // Set a default body if drafting fails
-                          setInviteBody(`Dear ${targetHomeowner.name},\n\nWelcome to Cascade Builder Services!`);
+                          setInviteBody(`Dear ${displayHomeowner.name},\n\nWelcome to Cascade Builder Services!`);
                         } finally {
                           setIsDrafting(false);
                         }
@@ -1424,7 +1445,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <Button
                       onClick={() => {
                         console.log('New Task button clicked');
-                        setNewTaskTitle(`Task for ${targetHomeowner.name}`);
+                        setNewTaskTitle(`Task for ${displayHomeowner.name}`);
                         setNewTaskAssignee(currentUser.id);
                         setNewTaskNotes('');
                         setSelectedClaimIds([]);
@@ -1550,8 +1571,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               Warranty
             </button>
             
-            {/* TASKS TAB - Admin Only */}
-            {isAdmin && (
+            {/* TASKS TAB - Admin Only (hidden in homeowner view) */}
+            {isAdmin && !isHomeownerView && (
               <button 
                 onClick={() => setCurrentTab('TASKS')}
                 className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'TASKS' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
