@@ -34,57 +34,37 @@ import {
 } from './db/schema';
 import { desc, eq } from 'drizzle-orm';
 
-// Better Auth integration
-import { authClient } from './lib/auth-client';
-import { useNoAuthContext } from './components/NoAuthProvider';
+// Clerk integration
+import { useUser as useClerkUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
 
-// Better Auth hooks with error handling
+// Clerk hooks with compatibility mapping
 const useUser = () => {
-  // Try to use Better Auth session, but handle errors gracefully
-  let session = null;
-  let isPending = true; // Start as pending
-  let hasError = false;
+  const { isLoaded, isSignedIn, user } = useClerkUser();
   
-  try {
-    const sessionResult = authClient.useSession();
-    if (sessionResult) {
-      session = sessionResult.data || null;
-      isPending = sessionResult.isPending !== undefined ? sessionResult.isPending : false;
-      hasError = !!sessionResult.error;
-      
-      // Log errors for debugging
-      if (sessionResult.error) {
-        console.error("Better Auth session error:", sessionResult.error);
-      }
-    }
-  } catch (err) {
-    console.error("Better Auth useSession hook error:", err);
-    // If hook fails, treat as no session but mark as loaded
-    session = null;
-    isPending = false;
-    hasError = true;
-  }
-  
-  // Map Better Auth session to standard format for compatibility
+  // Map Clerk user to standard format for compatibility
   return {
-    isSignedIn: !!session?.user && !hasError,
-    user: session?.user ? {
-      id: session.user.id,
-      primaryEmailAddress: { emailAddress: session.user.email || '' },
-      firstName: session.user.name?.split(' ')[0] || '',
-      lastName: session.user.name?.split(' ').slice(1).join(' ') || '',
-      fullName: session.user.name || session.user.email || '',
+    isSignedIn: isSignedIn || false,
+    user: user ? {
+      id: user.id,
+      primaryEmailAddress: { 
+        emailAddress: user.primaryEmailAddress?.emailAddress || user.emailAddresses[0]?.emailAddress || '' 
+      },
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      fullName: user.fullName || user.firstName || user.emailAddresses[0]?.emailAddress || '',
     } : null,
-    isLoaded: !isPending,
+    isLoaded,
   };
 };
 
 const useAuth = () => {
+  const { signOut } = useClerkAuth();
+  
   return { 
     signOut: async () => {
       try {
-        // Sign out from Better Auth
-        await authClient.signOut();
+        // Sign out from Clerk
+        await signOut();
         
         // Clear any cached session data
         if (typeof window !== 'undefined') {
@@ -100,10 +80,9 @@ const useAuth = () => {
           });
         }
         
-        // Reload to reset app state
-        window.location.href = '/';
+        // Clerk will handle redirect via afterSignOutUrl in ClerkProvider
       } catch (err) {
-        console.error("Better Auth signOut error:", err);
+        console.error("Clerk signOut error:", err);
         // Even if signOut fails, clear local storage and redirect
         if (typeof window !== 'undefined') {
           Object.keys(localStorage).forEach(key => {
@@ -159,8 +138,8 @@ const saveState = (key: string, data: any) => {
 };
 
 function App() {
-  // --- BETTER AUTH INTEGRATION ---
-  // Use Better Auth hooks with timeout protection
+  // --- CLERK INTEGRATION ---
+  // Use Clerk hooks with timeout protection
   const [authTimeout, setAuthTimeout] = useState(false);
   const { isSignedIn, user: authUser, isLoaded } = useUser();
   const { signOut } = useAuth();
@@ -2161,7 +2140,7 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
   const effectiveIsLoaded = isLoaded || authTimeout;
   const effectiveIsSignedIn = isSignedIn && !authTimeout;
 
-  // Use Better Auth's session to determine if we show AuthScreen
+  // Use Clerk's session to determine if we show AuthScreen
   // Log authentication state for debugging
   if (typeof window !== 'undefined') {
     console.log('Auth state check:', { 

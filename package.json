@@ -27,6 +27,7 @@
     "netlify:status": "netlify status"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.59.0",
     "@google/genai": "^1.33.0",
     "@neondatabase/serverless": "^0.10.1",
     "@sendgrid/mail": "^8.1.6",
