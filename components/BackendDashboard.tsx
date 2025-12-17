@@ -432,15 +432,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
         className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8"
         onClick={(e) => e.stopPropagation()}
       >
-        {renderHeader(
-          <Button
-            variant="outlined"
-            onClick={fetchStats}
-            icon={<RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />}
-          >
-            Refresh
-          </Button>
-        )}
+        {renderHeader()}
         <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
           {/* Tabs */}
           <div className="flex gap-2 mb-6 border-b border-surface-outline-variant dark:border-gray-700 overflow-x-auto">
@@ -1012,18 +1004,9 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
               <>
                 {/* Deployment History & Rollback */}
                 <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-6 border border-surface-outline-variant">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-5 w-5 text-primary" />
-                      <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">Deployment History</h2>
-                    </div>
-                    <Button 
-                      onClick={fetchNetlifyDeploys} 
-                      variant="outlined" 
-                      icon={<RefreshCw className={`h-4 w-4 ${netlifyDeploysLoading ? 'animate-spin' : ''}`} />}
-                    >
-                      Refresh
-                    </Button>
+                  <div className="flex items-center gap-2 mb-4">
+                    <Globe className="h-5 w-5 text-primary" />
+                    <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">Deployment History</h2>
                   </div>
                   {netlifyDeploysLoading ? (
                     <div className="flex items-center justify-center py-8">
