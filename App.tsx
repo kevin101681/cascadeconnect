@@ -747,16 +747,24 @@ function App() {
   const handleSwitchRole = async () => {
     if (userRole === UserRole.ADMIN) {
       // Switching from ADMIN to HOMEOWNER
+      // Require a homeowner to be selected first
+      if (!selectedAdminHomeownerId) {
+        // Show alert/message - homeowner must be selected first
+        alert('Please select a homeowner first before switching to homeowner view.');
+        return;
+      }
+      
       // If a homeowner is selected in admin view, set them as active homeowner
       // Keep selectedAdminHomeownerId so targetHomeowner is still available
-      if (selectedAdminHomeownerId) {
-        const homeowner = homeowners.find(h => h.id === selectedAdminHomeownerId);
-        if (homeowner) {
-          setActiveHomeowner(homeowner);
-        }
+      const homeowner = homeowners.find(h => h.id === selectedAdminHomeownerId);
+      if (homeowner) {
+        setActiveHomeowner(homeowner);
         // Keep selectedAdminHomeownerId so we can show admin-style card
+        setUserRole(UserRole.HOMEOWNER);
+      } else {
+        alert('Selected homeowner not found. Please select a homeowner first.');
+        return;
       }
-      setUserRole(UserRole.HOMEOWNER);
       setCurrentBuilderId(null);
     } else if (userRole === UserRole.BUILDER) {
       // Switching from BUILDER - go to HOMEOWNER if homeowner selected, otherwise ADMIN

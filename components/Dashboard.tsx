@@ -2267,304 +2267,42 @@ const Dashboard: React.FC<DashboardProps> = ({
     );
   }
 
-  // 3. HOMEOWNER PORTAL VIEW (Not Admin/Builder)
+  // 3. HOMEOWNER VIEW WITHOUT SELECTED HOMEOWNER (Admin/Builder switched to homeowner view without selection)
+  // Show prompt to select a homeowner
+  if (userRole === UserRole.HOMEOWNER && isAdminAccount && !targetHomeowner && (!activeHomeowner || activeHomeowner.id === 'placeholder')) {
+    return (
+      <>
+        {renderModals()}
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 animate-in fade-in slide-in-from-bottom-4">
+          <div className="bg-surface-container-high p-6 rounded-full">
+            <Search className="h-12 w-12 text-surface-outline" />
+          </div>
+          <div>
+            <h2 className="text-xl font-normal text-surface-on">Select a Homeowner</h2>
+            <p className="text-surface-on-variant mt-2 max-w-sm mx-auto">
+              Please select a homeowner from the search bar above before switching to homeowner view.
+            </p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // 4. FALLBACK - Should not reach here if logic is correct
+  // This handles any edge cases where we don't have a homeowner selected
   return (
     <>
       {renderModals()}
-      <div className="space-y-6">
-      {/* Homeowner Header & Actions */}
-      <div className="flex justify-between items-center bg-surface p-6 rounded-3xl border border-surface-outline-variant shadow-elevation-1">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 animate-in fade-in slide-in-from-bottom-4">
+        <div className="bg-surface-container-high p-6 rounded-full">
+          <Search className="h-12 w-12 text-surface-outline" />
+        </div>
         <div>
-          <h1 className="text-2xl font-normal text-surface-on">My Home</h1>
-          <p className="text-surface-on-variant text-sm mt-1">{activeHomeowner.address}</p>
+          <h2 className="text-xl font-normal text-surface-on">Select a Homeowner</h2>
+          <p className="text-surface-on-variant mt-2 max-w-sm mx-auto">
+            Search for a homeowner in the top bar to view their warranty claims, tasks, and account details.
+          </p>
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outlined"
-            onClick={() => setShowDocsModal(true)}
-            icon={<FileText className="h-4 w-4" />}
-          >
-            Documents {displayDocuments.length > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-on text-xs font-medium">
-                {displayDocuments.length}
-              </span>
-            )}
-          </Button>
-          <Button 
-            variant="filled" 
-            onClick={() => onNewClaim()}
-            icon={<Plus className="h-4 w-4" />}
-          >
-            New Claim
-          </Button>
-          <Button 
-            variant="outlined" 
-            onClick={() => {
-              setShowNewMessageModal(true);
-              setCurrentTab('MESSAGES');
-            }}
-            icon={<Mail className="h-4 w-4" />}
-          >
-            New Message
-          </Button>
-        </div>
-      </div>
-
-       {/* Navigation Tabs (Homeowner) */}
-       <div className="flex gap-2 max-w-7xl mx-auto">
-           <button 
-              onClick={() => setCurrentTab('CLAIMS')}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'CLAIMS' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
-            >
-              <ClipboardList className="h-4 w-4" />
-              My Claims
-            </button>
-             <button 
-              onClick={() => setCurrentTab('MESSAGES')}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'MESSAGES' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
-            >
-              <Mail className="h-4 w-4" />
-              Messages
-              {displayThreads.some(t => !t.isRead) && (
-                <span className="w-2 h-2 rounded-full bg-error ml-1"></span>
-              )}
-            </button>
-        </div>
-
-      {currentTab === 'CLAIMS' && (
-        <div className="max-w-7xl mx-auto">
-          {renderClaimsList(displayClaims)}
-        </div>
-      )}
-
-      {currentTab === 'MESSAGES' && renderMessagesTab()}
-
-      {/* NEW MESSAGE MODAL (Shared logic) */}
-      {showNewMessageModal && (
-          <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setShowNewMessageModal(false);
-            }}
-          >
-             <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
-                <div className="p-6 border-b border-surface-outline-variant flex justify-between items-center bg-surface-container">
-                  <h2 className="text-lg font-normal text-surface-on flex items-center gap-2">
-                    <Mail className="h-5 w-5 text-primary" />
-                    New Message
-                  </h2>
-                  <button onClick={() => setShowNewMessageModal(false)} className="text-surface-on-variant hover:text-surface-on">
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-                
-                <div className="p-6 space-y-4">
-                  <div className="bg-surface-container p-3 rounded-xl flex items-center justify-between">
-                     <div>
-                       <span className="text-xs font-bold text-surface-on-variant uppercase">To</span>
-                       <p className="font-medium text-surface-on">Cascade Support Team</p>
-                     </div>
-                     <div className="bg-surface p-2 rounded-full border border-surface-outline-variant">
-                        <Building2 className="h-4 w-4 text-surface-outline"/>
-                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-surface-on-variant mb-1">Subject</label>
-                    <input 
-                      type="text" 
-                      className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                      value={newMessageSubject}
-                      onChange={(e) => setNewMessageSubject(e.target.value)}
-                      placeholder="e.g. Question about warranty"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-surface-on-variant mb-1">Message</label>
-                    <textarea 
-                      rows={6}
-                      className="w-full bg-surface-container-high rounded-lg px-3 py-2 text-surface-on border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
-                      value={newMessageContent}
-                      onChange={(e) => setNewMessageContent(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="p-4 bg-surface-container flex justify-end gap-3">
-                  <Button 
-                    variant="text" 
-                    onClick={() => setShowNewMessageModal(false)}
-                    className="bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600"
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    variant="filled" 
-                    onClick={handleCreateNewThread} 
-                    disabled={!newMessageSubject || !newMessageContent || isSendingMessage} 
-                    icon={isSendingMessage ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"/> : <Send className="h-4 w-4" />}
-                  >
-                    Send Message
-                  </Button>
-                </div>
-             </div>
-          </div>
-        )}
-      
-      {/* DOCUMENTS MODAL (Reuse for Homeowner View) */}
-      {showDocsModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-            <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-               <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center">
-                  <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-primary" />
-                    Account Documents
-                  </h2>
-                  <button onClick={() => setShowDocsModal(false)} className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
-                    <X className="h-5 w-5" />
-                  </button>
-               </div>
-               
-               <div className="p-6 bg-surface dark:bg-gray-800">
-                 {/* List */}
-                 <div className="mb-6 space-y-2 max-h-60 overflow-y-auto pr-1">
-                    {displayDocuments.length === 0 ? (
-                      <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-8 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
-                        No documents uploaded for this account.
-                      </div>
-                    ) : (
-                      displayDocuments.map(doc => {
-                        const isPDF = doc.type === 'PDF' || doc.name.toLowerCase().endsWith('.pdf') || 
-                                     doc.url.startsWith('data:application/pdf') || 
-                                     doc.url.includes('pdf');
-                        
-                        return (
-                          <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 group transition-all">
-                            <div 
-                              className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
-                              onClick={() => {
-                                if (isPDF) {
-                                  setSelectedDocument(doc);
-                                  setIsPDFViewerOpen(true);
-                                }
-                              }}
-                            >
-                              <div className="p-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded">
-                                <FileText className="h-5 w-5" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{doc.name}</p>
-                                <p className="text-xs text-surface-on-variant dark:text-gray-400">
-                                  Uploaded by {doc.uploadedBy} • {new Date(doc.uploadDate).toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              {isPDF && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    console.log('PDF View button clicked:', doc.name);
-                                    console.log('Document URL:', doc.url.substring(0, 100));
-                                    setSelectedDocument(doc);
-                                    setIsPDFViewerOpen(true);
-                                    console.log('State updated - selectedDocument:', doc.id, 'isPDFViewerOpen: true');
-                                  }}
-                                  className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all z-10 relative"
-                                  title="View PDF"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </button>
-                              )}
-                              {doc.url.startsWith('data:') ? (
-                                <a 
-                                  href={doc.url} 
-                                  download={doc.name} 
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all"
-                                  title="Download"
-                                >
-                                  <Download className="h-4 w-4" />
-                                </a>
-                              ) : (
-                                <button 
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all"
-                                  title="Download"
-                                >
-                                  <Download className="h-4 w-4" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                 </div>
-                 
-                 {/* Footer Upload Action */}
-                 <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 flex justify-center">
-                    <label className={`cursor-pointer flex items-center gap-2 px-6 py-3 rounded-full transition-colors border ${isDocUploading ? 'bg-surface-container dark:bg-gray-700 border-primary/30 cursor-wait' : 'bg-surface-container dark:bg-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-600 border-surface-outline-variant dark:border-gray-600 text-primary font-medium'}`}>
-                        {isDocUploading ? (
-                          <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                        ) : (
-                          <Upload className="h-4 w-4" />
-                        )}
-                        {isDocUploading ? 'Uploading...' : 'Upload New Document'}
-                        <input type="file" className="hidden" onChange={handleFileUpload} disabled={isDocUploading} />
-                    </label>
-                 </div>
-               </div>
-            </div>
-          </div>
-        )}
-        
-        {/* PDF Viewer is now rendered via renderModals() using Portal */}
-        
-        {/* Description Expand Popup */}
-        {expandedDescription && (
-          <div 
-            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm" 
-            onClick={() => {
-              console.log('Closing popup');
-              setExpandedDescription(null);
-            }}
-          >
-            <div 
-              className="bg-surface rounded-3xl shadow-elevation-3 w-full max-w-2xl mx-4 overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-6 border-b border-surface-outline-variant flex justify-between items-center bg-surface-container/30">
-                <h3 className="text-lg font-medium text-surface-on flex items-center gap-2">
-                  <Info className="h-5 w-5 text-primary" />
-                  {expandedDescription.title}
-                </h3>
-                <button
-                  onClick={() => setExpandedDescription(null)}
-                  className="p-1 rounded-full hover:bg-surface-container transition-colors"
-                >
-                  <X className="h-5 w-5 text-surface-on-variant" />
-                </button>
-              </div>
-              <div className="p-6">
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-medium text-surface-on-variant mb-2 block">Description</label>
-                    <p className="text-sm text-surface-on whitespace-pre-wrap">{expandedDescription.description}</p>
-                  </div>
-                  {expandedDescription.internalNotes && (
-                    <div>
-                      <label className="text-xs font-medium text-surface-on-variant mb-2 block">Internal Notes</label>
-                      <p className="text-sm text-surface-on-variant whitespace-pre-wrap">{expandedDescription.internalNotes}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </>
   );
