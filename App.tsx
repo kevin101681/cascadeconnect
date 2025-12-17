@@ -224,6 +224,43 @@ function App() {
   // --- PERSISTENCE EFFECTS ---
   // Automatically save state to LocalStorage whenever it changes
   useEffect(() => { saveState('cascade_homeowners', homeowners); }, [homeowners]);
+  
+  // Migration: Populate homeownerId for existing claims loaded from localStorage
+  useEffect(() => {
+    if (homeowners.length > 0 && claims.length > 0) {
+      const needsMigration = claims.some(c => !(c as any).homeownerId);
+      if (needsMigration) {
+        const migratedClaims = claims.map(claim => {
+          if ((claim as any).homeownerId) {
+            return claim; // Already has homeownerId
+          }
+          
+          // Try to find matching homeowner by email (case-insensitive)
+          const claimEmail = claim.homeownerEmail?.toLowerCase().trim() || '';
+          const matchingHomeowner = homeowners.find(h => {
+            const homeownerEmail = h.email?.toLowerCase().trim() || '';
+            return homeownerEmail === claimEmail;
+          });
+          
+          if (matchingHomeowner) {
+            const updatedClaim = { ...claim } as any;
+            updatedClaim.homeownerId = matchingHomeowner.id;
+            return updatedClaim;
+          }
+          
+          return claim;
+        });
+        
+        // Only update if we actually migrated some claims
+        const hasChanges = migratedClaims.some((c, i) => (c as any).homeownerId !== (claims[i] as any).homeownerId);
+        if (hasChanges) {
+          console.log('🔄 Migrating claims: Populating homeownerId for existing claims');
+          setClaims(migratedClaims);
+        }
+      }
+    }
+  }, [homeowners.length]); // Run when homeowners are first loaded
+  
   useEffect(() => { saveState('cascade_claims', claims); }, [claims]);
   useEffect(() => { saveState('cascade_tasks', tasks); }, [tasks]);
   useEffect(() => { saveState('cascade_documents', documents); }, [documents]);
@@ -408,22 +445,63 @@ function App() {
             }
 
             // 2. Fetch Users (Employees & Builders)
-            const dbUsers = await db.select().from(usersTable);
-            if (dbUsers.length > 0) {
+            // Try selective query first to avoid errors if email notification columns don't exist
+            try {
+              // First, try to select only basic columns (safer - works even if email notification columns don't exist)
+              const dbUsers = await db.select({
+                id: usersTable.id,
+                name: usersTable.name,
+                email: usersTable.email,
+                role: usersTable.role,
+                password: usersTable.password,
+                builderGroupId: usersTable.builderGroupId
+              }).from(usersTable);
+              
+              if (dbUsers.length > 0) {
+                // Try to fetch email notification preferences separately if columns exist
+                let emailPrefsMap = new Map<string, any>();
+                try {
+                  const usersWithPrefs = await db.select({
+                    id: usersTable.id,
+                    emailNotifyClaimSubmitted: usersTable.emailNotifyClaimSubmitted,
+                    emailNotifyHomeownerAcceptsAppointment: usersTable.emailNotifyHomeownerAcceptsAppointment,
+                    emailNotifySubAcceptsAppointment: usersTable.emailNotifySubAcceptsAppointment,
+                    emailNotifyHomeownerRescheduleRequest: usersTable.emailNotifyHomeownerRescheduleRequest,
+                    emailNotifyTaskAssigned: usersTable.emailNotifyTaskAssigned
+                  }).from(usersTable);
+                  
+                  usersWithPrefs.forEach(u => {
+                    emailPrefsMap.set(u.id, {
+                      emailNotifyClaimSubmitted: u.emailNotifyClaimSubmitted ?? true,
+                      emailNotifyHomeownerAcceptsAppointment: u.emailNotifyHomeownerAcceptsAppointment ?? true,
+                      emailNotifySubAcceptsAppointment: u.emailNotifySubAcceptsAppointment ?? true,
+                      emailNotifyHomeownerRescheduleRequest: u.emailNotifyHomeownerRescheduleRequest ?? true,
+                      emailNotifyTaskAssigned: u.emailNotifyTaskAssigned ?? true
+                    });
+                  });
+                } catch (prefsError: any) {
+                  // Email notification columns don't exist - use defaults
+                  console.log('⚠️ Email notification columns not found, using defaults');
+                }
+                
                 const fetchedEmployees: InternalEmployee[] = dbUsers
                   .filter(u => u.role === 'ADMIN')
-                  .map(u => ({
-                      id: u.id,
-                      name: u.name,
-                      email: u.email,
-                      role: 'Administrator', // Map generic ADMIN to display role
-                      password: u.password || undefined,
-                      emailNotifyClaimSubmitted: u.emailNotifyClaimSubmitted !== false,
-                      emailNotifyHomeownerAcceptsAppointment: u.emailNotifyHomeownerAcceptsAppointment !== false,
-                      emailNotifySubAcceptsAppointment: u.emailNotifySubAcceptsAppointment !== false,
-                      emailNotifyHomeownerRescheduleRequest: u.emailNotifyHomeownerRescheduleRequest !== false,
-                      emailNotifyTaskAssigned: u.emailNotifyTaskAssigned !== false
-                  }));
+                  .map(u => {
+                    const prefs = emailPrefsMap.get(u.id);
+                    return {
+                        id: u.id,
+                        name: u.name,
+                        email: u.email,
+                        role: 'Administrator', // Map generic ADMIN to display role
+                        password: u.password || undefined,
+                        // Use preferences if available, otherwise default to true
+                        emailNotifyClaimSubmitted: prefs?.emailNotifyClaimSubmitted ?? true,
+                        emailNotifyHomeownerAcceptsAppointment: prefs?.emailNotifyHomeownerAcceptsAppointment ?? true,
+                        emailNotifySubAcceptsAppointment: prefs?.emailNotifySubAcceptsAppointment ?? true,
+                        emailNotifyHomeownerRescheduleRequest: prefs?.emailNotifyHomeownerRescheduleRequest ?? true,
+                        emailNotifyTaskAssigned: prefs?.emailNotifyTaskAssigned ?? true
+                    };
+                  });
                 
                 const fetchedBuilders: BuilderUser[] = dbUsers
                   .filter(u => u.role === 'BUILDER')
@@ -444,36 +522,68 @@ function App() {
                    setBuilderUsers(fetchedBuilders);
                    loadedBuilders = fetchedBuilders;
                 }
+              }
+            } catch (userError: any) {
+              console.error('❌ Failed to load users:', userError);
             }
 
             // 3. Fetch Claims
             const dbClaims = await db.select().from(claimsTable).orderBy(desc(claimsTable.dateSubmitted));
             if (dbClaims.length > 0) {
-              const mappedClaims: Claim[] = dbClaims.map(c => ({
-                id: c.id,
-                claimNumber: (c as any).claimNumber || undefined, // Optional field, may not exist in DB
-                title: c.title,
-                description: c.description,
-                category: c.category || 'General',
-                address: c.address || '',
-                homeownerName: c.homeownerName || '',
-                homeownerEmail: c.homeownerEmail || '',
-                builderName: c.builderName || '',
-                jobName: c.jobName || '',
-                status: c.status as ClaimStatus,
-                classification: (c.classification as any) || 'Unclassified',
-                dateSubmitted: c.dateSubmitted ? new Date(c.dateSubmitted) : new Date(),
-                dateEvaluated: c.dateEvaluated ? new Date(c.dateEvaluated) : undefined,
-                internalNotes: c.internalNotes || '',
-                nonWarrantyExplanation: c.nonWarrantyExplanation || '',
-                contractorId: c.contractorId || undefined,
-                contractorName: c.contractorName || '',
-                contractorEmail: c.contractorEmail || '',
-                proposedDates: c.proposedDates as any[] || [],
-                attachments: c.attachments as any[] || [],
-                comments: []
-              }));
-              setClaims(mappedClaims);
+              const mappedClaims: Claim[] = dbClaims.map(c => {
+                const claim: any = {
+                  id: c.id,
+                  claimNumber: (c as any).claimNumber || undefined, // Optional field, may not exist in DB
+                  title: c.title,
+                  description: c.description,
+                  category: c.category || 'General',
+                  address: c.address || '',
+                  homeownerName: c.homeownerName || '',
+                  homeownerEmail: c.homeownerEmail || '',
+                  builderName: c.builderName || '',
+                  jobName: c.jobName || '',
+                  status: c.status as ClaimStatus,
+                  classification: (c.classification as any) || 'Unclassified',
+                  dateSubmitted: c.dateSubmitted ? new Date(c.dateSubmitted) : new Date(),
+                  dateEvaluated: c.dateEvaluated ? new Date(c.dateEvaluated) : undefined,
+                  internalNotes: c.internalNotes || '',
+                  nonWarrantyExplanation: c.nonWarrantyExplanation || '',
+                  contractorId: c.contractorId || undefined,
+                  contractorName: c.contractorName || '',
+                  contractorEmail: c.contractorEmail || '',
+                  proposedDates: c.proposedDates as any[] || [],
+                  attachments: c.attachments as any[] || [],
+                  comments: []
+                };
+                // Add homeownerId if available from database
+                if ((c as any).homeownerId) {
+                  claim.homeownerId = (c as any).homeownerId;
+                }
+                return claim;
+              });
+              
+              // Migration: Populate homeownerId for claims that don't have it
+              // Match claims to homeowners by email
+              const claimsWithHomeownerId = mappedClaims.map(claim => {
+                if ((claim as any).homeownerId) {
+                  return claim; // Already has homeownerId
+                }
+                
+                // Try to find matching homeowner by email (case-insensitive)
+                const claimEmail = claim.homeownerEmail?.toLowerCase().trim() || '';
+                const matchingHomeowner = loadedHomeowners.find(h => {
+                  const homeownerEmail = h.email?.toLowerCase().trim() || '';
+                  return homeownerEmail === claimEmail;
+                });
+                
+                if (matchingHomeowner) {
+                  (claim as any).homeownerId = matchingHomeowner.id;
+                }
+                
+                return claim;
+              });
+              
+              setClaims(claimsWithHomeownerId);
             }
             
             // 4. Fetch Builder Groups
@@ -1079,7 +1189,12 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
       proposedDates: [],
       comments: [],
       attachments: data.attachments || []
-    };
+    } as any;
+    
+    // Add homeownerId to the claim object for filtering
+    if (subjectHomeowner.id) {
+      (newClaim as any).homeownerId = subjectHomeowner.id;
+    }
     
     // Update State (useEffect handles persistence)
     setClaims(prev => [newClaim, ...prev]);
@@ -1369,7 +1484,25 @@ Homeowner: ${newClaim.homeownerName}
       if (isDbConfigured) {
         try {
           console.log('🔍 Querying database for ADMIN users...');
-          const dbAdmins = await db.select().from(usersTable).where(eq(usersTable.role, 'ADMIN'));
+          // Use selective query to avoid errors if email notification columns don't exist
+          let dbAdmins;
+          try {
+            dbAdmins = await db.select().from(usersTable).where(eq(usersTable.role, 'ADMIN'));
+          } catch (selectError: any) {
+            // Fallback to selective query if email notification columns don't exist
+            if (selectError?.message?.includes('email_notify')) {
+              dbAdmins = await db.select({
+                id: usersTable.id,
+                name: usersTable.name,
+                email: usersTable.email,
+                role: usersTable.role,
+                password: usersTable.password,
+                builderGroupId: usersTable.builderGroupId
+              }).from(usersTable).where(eq(usersTable.role, 'ADMIN'));
+            } else {
+              throw selectError;
+            }
+          }
           console.log('   Found', dbAdmins.length, 'admin users in database');
           console.log('   Database admins:', dbAdmins.map(a => ({ id: a.id, email: a.email, role: a.role })));
           
@@ -1789,7 +1922,13 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
     
     // Also remove related claims, documents, and messages from state
     if (homeownerToDelete) {
-      setClaims(prev => prev.filter(c => c.homeownerEmail !== homeownerToDelete.email));
+      setClaims(prev => {
+        const deleteEmail = homeownerToDelete.email?.toLowerCase().trim() || '';
+        return prev.filter(c => {
+          const claimEmail = c.homeownerEmail?.toLowerCase().trim() || '';
+          return claimEmail !== deleteEmail;
+        });
+      });
     }
     setDocuments(prev => prev.filter(d => d.homeownerId !== id));
     setMessages(prev => prev.filter(m => m.homeownerId !== id));
@@ -2568,6 +2707,13 @@ Assigned By: ${assignerName}
           contractors={contractors}
           claimMessages={claimMessages || []}
           builderGroups={builderGroups}
+          currentBuilderId={currentBuilderId}
+          currentUserEmail={
+            authUser?.primaryEmailAddress?.emailAddress || 
+            activeEmployee?.email || 
+            activeHomeowner?.email || 
+            undefined
+          }
           initialTab={dashboardConfig.initialTab}
           initialThreadId={dashboardConfig.initialThreadId}
           tasks={tasks}

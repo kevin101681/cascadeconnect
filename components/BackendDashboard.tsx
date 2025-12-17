@@ -148,7 +148,25 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
       
       switch (table) {
         case 'USERS':
-          data = await db.select().from(usersTable).orderBy(desc(usersTable.createdAt)).catch(() => []);
+          // Use selective query to avoid errors if email notification columns don't exist
+          try {
+            data = await db.select().from(usersTable).orderBy(desc(usersTable.createdAt));
+          } catch (err: any) {
+            // Fallback to selective query if email notification columns don't exist
+            if (err?.message?.includes('email_notify')) {
+              data = await db.select({
+                id: usersTable.id,
+                name: usersTable.name,
+                email: usersTable.email,
+                role: usersTable.role,
+                password: usersTable.password,
+                builderGroupId: usersTable.builderGroupId,
+                createdAt: usersTable.createdAt
+              }).from(usersTable).orderBy(desc(usersTable.createdAt));
+            } else {
+              throw err;
+            }
+          }
           break;
         case 'HOMEOWNERS':
           data = await db.select().from(homeownersTable).orderBy(desc(homeownersTable.createdAt)).catch(() => []);

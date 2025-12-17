@@ -58,6 +58,10 @@ interface DashboardProps {
 
   // Builder Groups for Dropdown
   builderGroups?: BuilderGroup[];
+  
+  // Additional props for filtering
+  currentBuilderId?: string | null; // Builder group ID for builder users
+  currentUserEmail?: string; // Current user's email for contractor matching
 
   // Initial State Control (Optional)
   initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS';
@@ -96,6 +100,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   contractors = [],
   claimMessages = [],
   builderGroups = [],
+  currentBuilderId = null,
+  currentUserEmail,
   initialTab = 'CLAIMS',
   initialThreadId = null,
   tasks = [],
@@ -448,12 +454,102 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
-  // Filter Claims
+  // Filter Claims based on user role
   const displayClaims = claims.filter(c => {
-    if (effectiveHomeowner) {
-      return c.homeownerEmail === effectiveHomeowner.email;
+    // 1. ADMIN: Show all claims UNLESS viewing a specific homeowner (targetHomeowner)
+    // If admin has selected a homeowner to view, filter to that homeowner's claims
+    if (isAdmin) {
+      if (targetHomeowner) {
+        // Admin viewing a specific homeowner - filter to that homeowner's claims
+        // First try to match by homeownerId if available (more reliable)
+        if ((c as any).homeownerId && targetHomeowner.id) {
+          const matches = (c as any).homeownerId === targetHomeowner.id;
+          if (!matches && process.env.NODE_ENV === 'development') {
+            console.log('Admin viewing homeowner - homeownerId mismatch:', {
+              claimId: c.id,
+              claimTitle: c.title,
+              claimHomeownerId: (c as any).homeownerId,
+              targetHomeownerId: targetHomeowner.id,
+              claimEmail: c.homeownerEmail,
+              homeownerEmail: targetHomeowner.email
+            });
+          }
+          return matches;
+        }
+        // Fallback to email comparison (case-insensitive, trimmed)
+        const claimEmail = c.homeownerEmail?.toLowerCase().trim() || '';
+        const homeownerEmail = targetHomeowner.email?.toLowerCase().trim() || '';
+        const matches = claimEmail === homeownerEmail;
+        if (!matches && process.env.NODE_ENV === 'development') {
+          console.log('Admin viewing homeowner - email mismatch:', {
+            claimId: c.id,
+            claimTitle: c.title,
+            claimEmail,
+            homeownerEmail,
+            claimHomeownerId: (c as any).homeownerId,
+            targetHomeownerId: targetHomeowner.id
+          });
+        }
+        return matches;
+      }
+      // Admin viewing all - show everything
+      return true;
     }
-    return true; // Admin viewing all if no specific homeowner selected
+    
+    // 2. HOMEOWNER: Show only claims for their user ID
+    if (userRole === UserRole.HOMEOWNER && effectiveHomeowner) {
+      // First try to match by homeownerId if available (more reliable)
+      if ((c as any).homeownerId && effectiveHomeowner.id) {
+        return (c as any).homeownerId === effectiveHomeowner.id;
+      }
+      // Fallback to email comparison (case-insensitive, trimmed)
+      const claimEmail = c.homeownerEmail?.toLowerCase().trim() || '';
+      const homeownerEmail = effectiveHomeowner.email?.toLowerCase().trim() || '';
+      return claimEmail === homeownerEmail;
+    }
+    
+    // 3. BUILDER: Show only claims for homeowners in their builder group
+    if (isBuilder && currentBuilderId) {
+      // Find homeowners in this builder's group
+      const builderHomeownerIds = new Set(
+        homeowners
+          .filter(h => h.builderId === currentBuilderId)
+          .map(h => h.id)
+      );
+      
+      // Match by homeownerId if available
+      if ((c as any).homeownerId) {
+        return builderHomeownerIds.has((c as any).homeownerId);
+      }
+      
+      // Fallback to email matching
+      const claimEmail = c.homeownerEmail?.toLowerCase().trim() || '';
+      return homeowners.some(h => 
+        h.builderId === currentBuilderId && 
+        h.email?.toLowerCase().trim() === claimEmail
+      );
+    }
+    
+    // 4. CONTRACTOR/SUB: Show only claims assigned to them
+    // Check if current user's email matches a contractor's email
+    if (currentUserEmail && contractors.length > 0) {
+      const userEmailLower = currentUserEmail.toLowerCase().trim();
+      const matchingContractor = contractors.find(contractor => 
+        contractor.email?.toLowerCase().trim() === userEmailLower
+      );
+      
+      if (matchingContractor) {
+        // Show claims assigned to this contractor
+        const claimContractorEmail = c.contractorEmail?.toLowerCase().trim() || '';
+        const claimContractorId = c.contractorId;
+        
+        return claimContractorEmail === userEmailLower || 
+               claimContractorId === matchingContractor.id;
+      }
+    }
+    
+    // Default: no claims (shouldn't reach here, but safe fallback)
+    return false;
   });
 
   // Filter Documents
@@ -1267,7 +1363,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-2">Link to Claims (Optional)</label>
                   <div className="space-y-2 max-h-32 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] border border-surface-outline-variant dark:border-gray-600 rounded-lg p-2">
-                    {claims.filter(c => c.homeownerEmail === effectiveHomeowner.email && c.status !== ClaimStatus.COMPLETED).map(claim => (
+                    {claims.filter(c => {
+                      const claimEmail = c.homeownerEmail?.toLowerCase().trim() || '';
+                      const homeownerEmail = effectiveHomeowner.email?.toLowerCase().trim() || '';
+                      return claimEmail === homeownerEmail && c.status !== ClaimStatus.COMPLETED;
+                    }).map(claim => (
                       <label key={claim.id} className="flex items-center gap-2 p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded cursor-pointer">
                         <input 
                           type="checkbox" 
@@ -1326,7 +1426,11 @@ const Dashboard: React.FC<DashboardProps> = ({
     const isHomeownerView = userRole === UserRole.HOMEOWNER;
     // Get scheduled claims for this homeowner
     const scheduledClaims = claims
-      .filter(c => c.status === ClaimStatus.SCHEDULED && c.homeownerEmail === displayHomeowner.email)
+      .filter(c => {
+        const claimEmail = c.homeownerEmail?.toLowerCase().trim() || '';
+        const homeownerEmail = displayHomeowner.email?.toLowerCase().trim() || '';
+        return c.status === ClaimStatus.SCHEDULED && claimEmail === homeownerEmail;
+      })
       .slice(0, 3);
     
     return (

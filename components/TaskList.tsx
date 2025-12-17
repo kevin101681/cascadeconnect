@@ -45,7 +45,11 @@ const TaskList: React.FC<TaskListProps> = ({
 
   // Get open claims for selected homeowner (only if context exists)
   const openClaims = preSelectedHomeowner 
-    ? claims.filter(c => c.homeownerEmail === preSelectedHomeowner.email && c.status !== ClaimStatus.COMPLETED)
+    ? claims.filter(c => {
+        const claimEmail = c.homeownerEmail?.toLowerCase().trim() || '';
+        const homeownerEmail = preSelectedHomeowner.email?.toLowerCase().trim() || '';
+        return claimEmail === homeownerEmail && c.status !== ClaimStatus.COMPLETED;
+      })
     : [];
 
   const handleSubmit = (e: React.FormEvent) => {
