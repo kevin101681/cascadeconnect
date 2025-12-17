@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Transition, type Variants } from 'framer-motion';
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor } from '../types';
 import { ClaimMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
@@ -489,7 +489,14 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // Framer Motion animation variants
   // Spring config: stiffness 400, damping 30, mass 0.6 for ~0.4s duration (within 0.5s constraint)
-  const cardVariants = {
+  const springTransition: Transition = {
+    type: 'spring',
+    stiffness: 400,
+    damping: 30,
+    mass: 0.6
+  };
+
+  const cardVariants: Variants = {
     hidden: { 
       opacity: 0, 
       y: 20 
@@ -497,17 +504,12 @@ const Dashboard: React.FC<DashboardProps> = ({
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 30,
-        mass: 0.6
-      }
+      transition: springTransition
     }
   };
 
   // Stagger container variant
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -1549,7 +1551,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             initial="hidden"
             animate="visible"
             transition={{
-              ...cardVariants.visible.transition,
+              ...springTransition,
               delay: 0.1
             }}
             layout
@@ -1663,7 +1665,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           initial="hidden"
           animate="visible"
           transition={{
-            ...cardVariants.visible.transition,
+            ...springTransition,
             delay: 0.2
           }}
           layout
@@ -1708,7 +1710,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             initial="hidden"
             animate="visible"
             transition={{
-              ...cardVariants.visible.transition,
+              ...springTransition,
               delay: 0.3
             }}
             layout
@@ -1724,7 +1726,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             initial="hidden"
             animate="visible"
             transition={{
-              ...cardVariants.visible.transition,
+              ...springTransition,
               delay: 0.3
             }}
             layout
@@ -1750,7 +1752,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             initial="hidden"
             animate="visible"
             transition={{
-              ...cardVariants.visible.transition,
+              ...springTransition,
               delay: 0.3
             }}
             layout
