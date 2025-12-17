@@ -56,6 +56,7 @@ const Layout: React.FC<LayoutProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const [badgeRefreshKey, setBadgeRefreshKey] = useState(0);
+  const [contentAnimationKey, setContentAnimationKey] = useState(0);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -81,11 +82,12 @@ const Layout: React.FC<LayoutProps> = ({
     }
   }, [isMenuOpen]);
 
-  // Refresh Netlify badge every 2 seconds (for testing)
+  // Refresh Netlify badge every 10 seconds (slowed down)
   useEffect(() => {
     const interval = setInterval(() => {
       setBadgeRefreshKey(prev => prev + 1);
-    }, 2000);
+      setContentAnimationKey(prev => prev + 1);
+    }, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -401,7 +403,13 @@ const Layout: React.FC<LayoutProps> = ({
       </header>
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
+        <div 
+          key={contentAnimationKey} 
+          className="animate-in fade-in"
+          style={{ animationDuration: '1s', animationTimingFunction: 'ease-in-out' }}
+        >
+          {children}
+        </div>
       </main>
     </div>
   );

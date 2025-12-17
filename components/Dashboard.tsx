@@ -1887,9 +1887,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               }
             }}
           >
-            <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
+            <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl max-h-[85vh] rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 flex flex-col">
               {/* Header */}
-              <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center sticky top-0 z-10">
+              <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center sticky top-0 z-10 flex-shrink-0">
                 <div>
                   <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                     <HardHat className="h-6 w-6 text-primary" />
@@ -1908,7 +1908,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
               
               {/* Content */}
-              <div className="p-6 max-h-[80vh] overflow-y-auto">
+              <div className="p-6 overflow-y-auto flex-1 min-h-0">
                 <div className="bg-surface-container dark:bg-gray-700 rounded-xl border border-surface-outline-variant dark:border-gray-600 overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -1947,7 +1947,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
               
               {/* Footer */}
-              <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end">
+              <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end flex-shrink-0">
                 <Button onClick={() => setShowSubListModal(false)} variant="filled">
                   Close
                 </Button>
