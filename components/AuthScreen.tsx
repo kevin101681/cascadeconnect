@@ -57,14 +57,21 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
       
       {/* Brand Header */}
       <div className="flex flex-col items-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="h-20 w-20 bg-primary-container dark:bg-primary/20 rounded-2xl flex items-center justify-center mb-4 shadow-elevation-1 p-4">
-          <img src="/logo.png" alt="Logo" className="h-full w-full object-contain" onError={(e) => {
-            e.currentTarget.style.display = 'none';
-            e.currentTarget.parentElement!.innerHTML = '<svg class="h-10 w-10 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>';
-          }} />
+        <div className="flex items-center gap-3 mb-4">
+          <div className="bg-primary-container dark:bg-primary/20 p-3 rounded-xl border border-surface-outline-variant dark:border-gray-600 shadow-elevation-1 flex items-center justify-center">
+            <img 
+              src="/logo.svg" 
+              alt="CASCADE CONNECT Logo" 
+              className="h-10 w-10 object-contain" 
+            />
+          </div>
+          <img 
+            src="/connect.svg" 
+            alt="CASCADE CONNECT" 
+            className="h-8 object-contain" 
+          />
         </div>
-        <h1 className="text-3xl font-normal text-surface-on dark:text-gray-100 tracking-tight text-center">CASCADE CONNECT</h1>
-        <p className="text-surface-on-variant dark:text-gray-400 mt-2 text-center max-w-sm">
+        <p className="text-surface-on-variant dark:text-gray-400 text-center max-w-sm">
           The premier warranty management platform for builders and homeowners.
         </p>
       </div>
@@ -91,15 +98,7 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
               </div>
             ) : showSignIn ? (
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-medium text-surface-on dark:text-gray-100">Sign In</h2>
-                  <button
-                    onClick={() => setShowSignIn(false)}
-                    className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100"
-                  >
-                    ← Back
-                  </button>
-                </div>
+                <h2 className="text-xl font-medium text-surface-on dark:text-gray-100 mb-4">Sign In</h2>
                 <CustomSignIn 
                   onSuccess={() => {
                     setShowSignIn(false);
@@ -110,15 +109,7 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
               </div>
             ) : (
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-medium text-surface-on dark:text-gray-100">Create Account</h2>
-                  <button
-                    onClick={() => setShowSignUp(false)}
-                    className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100"
-                  >
-                    ← Back
-                  </button>
-                </div>
+                <h2 className="text-xl font-medium text-surface-on dark:text-gray-100 mb-4">Create Account</h2>
                 <CustomSignUp 
                   onSuccess={() => {
                     setShowSignUp(false);
