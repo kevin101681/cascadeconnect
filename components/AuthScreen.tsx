@@ -135,13 +135,6 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
             </div>
           </SignedIn>
         </div>
-        
-        {/* Footer */}
-        <div className="mt-8 pt-6 border-t border-surface-outline-variant text-center">
-          <p className="text-xs text-surface-on-variant dark:text-gray-400">
-            By continuing, you agree to our Terms of Service and Privacy Policy.
-          </p>
-        </div>
       </div>
     </div>
   );
