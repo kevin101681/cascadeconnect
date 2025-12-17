@@ -33,7 +33,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   const [strokeWidth, setStrokeWidth] = useState(3);
   const [fabricLoaded, setFabricLoaded] = useState(false);
   const [canvasInitialized, setCanvasInitialized] = useState(false);
-  const [imageLoading, setImageLoading] = useState(true);
+  const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
 
   // Filter to only show images
@@ -60,9 +60,13 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
     if (typeof window === 'undefined' || !isOpen) return;
     
     import('fabric').then((fabricModule) => {
-      const fabricLib = (fabricModule as any).fabric || fabricModule;
+      const fabricLib = (fabricModule as any).fabric || fabricModule.default || fabricModule;
       fabricLibRef.current = fabricLib;
       setFabricLoaded(true);
+      console.log('✅ Fabric.js loaded');
+    }).catch((error) => {
+      console.error('❌ Failed to load fabric.js:', error);
+      setImageError('Failed to load image editor library');
     });
   }, [isOpen]);
 
@@ -72,27 +76,43 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
       return;
     }
 
-    const fabricLib = fabricLibRef.current;
-    const canvasElement = canvasRef.current;
-    
-    if (!canvasElement) return;
-    
-    // Use fixed size for now, will adjust based on image
-    const canvasWidth = 1000;
-    const canvasHeight = 700;
-    
-    const canvas = new fabricLib.Canvas(canvasElement, {
-      width: canvasWidth,
-      height: canvasHeight,
-      backgroundColor: '#ffffff',
-    });
+    // Small delay to ensure canvas element is fully rendered
+    const initTimeout = setTimeout(() => {
+      const fabricLib = fabricLibRef.current;
+      const canvasElement = canvasRef.current;
+      
+      if (!fabricLib || !canvasElement) return;
+      
+      // Check if canvas is already initialized
+      if (fabricCanvasRef.current) {
+        return;
+      }
+      
+      // Use fixed size for now, will adjust based on image
+      const canvasWidth = 1000;
+      const canvasHeight = 700;
+      
+      try {
+        const canvas = new fabricLib.Canvas(canvasElement, {
+          width: canvasWidth,
+          height: canvasHeight,
+          backgroundColor: '#ffffff',
+        });
 
-    fabricCanvasRef.current = canvas;
-    setCanvasInitialized(true);
+        fabricCanvasRef.current = canvas;
+        setCanvasInitialized(true);
+        console.log('✅ Canvas initialized');
+      } catch (error) {
+        console.error('❌ Error initializing canvas:', error);
+        setImageError('Failed to initialize canvas');
+      }
+    }, 100);
 
     return () => {
-      if (canvas) {
-        canvas.dispose();
+      clearTimeout(initTimeout);
+      if (fabricCanvasRef.current) {
+        fabricCanvasRef.current.dispose();
+        fabricCanvasRef.current = null;
       }
       setCanvasInitialized(false);
     };
@@ -666,21 +686,27 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
           )}
 
           {/* Canvas */}
-          <div className="flex items-center justify-center p-8 h-full">
-            {fabricLoaded && canvasInitialized ? (
-              <canvas ref={canvasRef} className="border border-surface-outline-variant dark:border-gray-700 shadow-lg bg-white" />
-            ) : (
-              <div className="text-surface-on-variant dark:text-gray-400">Loading editor...</div>
+          <div className="flex items-center justify-center p-8 h-full relative">
+            {/* Always render canvas so ref exists */}
+            <canvas 
+              ref={canvasRef} 
+              className="border border-surface-outline-variant dark:border-gray-700 shadow-lg bg-white"
+              style={{ display: fabricLoaded && canvasInitialized ? 'block' : 'none' }}
+            />
+            {(!fabricLoaded || !canvasInitialized) && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-surface-on-variant dark:text-gray-400">Loading editor...</div>
+              </div>
             )}
-            {imageLoading && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+            {imageLoading && fabricLoaded && canvasInitialized && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 z-20">
                 <div className="bg-surface dark:bg-gray-800 rounded-lg p-4 shadow-lg">
                   <p className="text-surface-on dark:text-gray-100">Loading image...</p>
                 </div>
               </div>
             )}
             {imageError && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 z-20">
                 <div className="bg-surface dark:bg-gray-800 rounded-lg p-4 shadow-lg max-w-md">
                   <p className="text-error dark:text-red-400 mb-2">Error loading image</p>
                   <p className="text-surface-on-variant dark:text-gray-400 text-sm">{imageError}</p>
