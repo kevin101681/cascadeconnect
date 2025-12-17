@@ -27,6 +27,9 @@ interface LayoutProps {
 
   // Auth
   onSignOut: () => Promise<void>;
+  
+  // Admin account indicator (to show menu even when viewing as homeowner)
+  isAdminAccount?: boolean;
 }
 
 const Layout: React.FC<LayoutProps> = ({ 
@@ -44,7 +47,8 @@ const Layout: React.FC<LayoutProps> = ({
   onClearSelection,
   onNavigate,
   onOpenEnrollment,
-  onSignOut
+  onSignOut,
+  isAdminAccount = false
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
@@ -250,8 +254,8 @@ const Layout: React.FC<LayoutProps> = ({
                 />
               </div>
 
-              {/* Main Menu Dropdown - Hidden for Homeowners (including when admin switches to homeowner view) */}
-              {(isAdmin || isBuilder) && userRole !== UserRole.HOMEOWNER && (
+              {/* Main Menu Dropdown - Show for Admin/Builder accounts (even when viewing as homeowner) */}
+              {(isAdmin || isBuilder || isAdminAccount) && (
                 <div className="relative" ref={menuRef}>
                   <button 
                     onClick={() => setIsMenuOpen(!isMenuOpen)}

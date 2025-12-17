@@ -105,6 +105,8 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
+  // Check if user is actually logged in as admin (has currentUser/activeEmployee)
+  const isAdminAccount = !!currentUser;
   
   // PDF Viewer state
   const [selectedDocument, setSelectedDocument] = useState<HomeownerDocument | null>(null);
@@ -1256,8 +1258,15 @@ const Dashboard: React.FC<DashboardProps> = ({
   );
 
   // 1. HOMEOWNER CONTEXT VIEW (When Admin selects a homeowner OR when admin switches to homeowner view)
-  if (((isAdmin || isBuilder) && targetHomeowner) || (userRole === UserRole.HOMEOWNER && activeHomeowner && activeHomeowner.id !== 'placeholder')) {
-    // Use targetHomeowner if in admin view, otherwise use activeHomeowner for homeowner view
+  // Show admin-style card if: 
+  //   - Admin/builder with selected homeowner, OR
+  //   - Admin account (has currentUser) viewing as homeowner with valid homeowner (targetHomeowner or activeHomeowner)
+  const shouldShowAdminStyleCard = 
+    ((isAdmin || isBuilder) && targetHomeowner) || 
+    (isAdminAccount && userRole === UserRole.HOMEOWNER && (targetHomeowner || (activeHomeowner && activeHomeowner.id !== 'placeholder')));
+  
+  if (shouldShowAdminStyleCard) {
+    // Use targetHomeowner if available (preserved from admin view), otherwise use activeHomeowner for homeowner view
     const displayHomeowner = targetHomeowner || activeHomeowner;
     const isHomeownerView = userRole === UserRole.HOMEOWNER;
     // Get scheduled claims for this homeowner

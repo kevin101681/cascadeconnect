@@ -748,11 +748,13 @@ function App() {
     if (userRole === UserRole.ADMIN) {
       // Switching from ADMIN to HOMEOWNER
       // If a homeowner is selected in admin view, set them as active homeowner
+      // Keep selectedAdminHomeownerId so targetHomeowner is still available
       if (selectedAdminHomeownerId) {
         const homeowner = homeowners.find(h => h.id === selectedAdminHomeownerId);
         if (homeowner) {
           setActiveHomeowner(homeowner);
         }
+        // Keep selectedAdminHomeownerId so we can show admin-style card
       }
       setUserRole(UserRole.HOMEOWNER);
       setCurrentBuilderId(null);
@@ -763,6 +765,7 @@ function App() {
         if (homeowner) {
           setActiveHomeowner(homeowner);
           setUserRole(UserRole.HOMEOWNER);
+          // Keep selectedAdminHomeownerId so we can show admin-style card
         } else {
           setUserRole(UserRole.ADMIN);
         }
@@ -2240,6 +2243,9 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
     );
   }
 
+  // Determine if user is logged in as admin account (has activeEmployee)
+  const isAdminAccount = !!activeEmployee && activeEmployee.id !== 'placeholder';
+
   return (
     <Layout 
       userRole={userRole} 
@@ -2264,6 +2270,7 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
         }
         await signOut();
       }}
+      isAdminAccount={isAdminAccount}
     >
       {currentView === 'DASHBOARD' && (
         <Dashboard 
