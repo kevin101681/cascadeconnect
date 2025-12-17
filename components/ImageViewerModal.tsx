@@ -73,9 +73,17 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
     }
 
     const fabricLib = fabricLibRef.current;
-    const canvas = new fabricLib.Canvas(canvasRef.current, {
-      width: 800,
-      height: 600,
+    const canvasElement = canvasRef.current;
+    
+    if (!canvasElement) return;
+    
+    // Use fixed size for now, will adjust based on image
+    const canvasWidth = 1000;
+    const canvasHeight = 700;
+    
+    const canvas = new fabricLib.Canvas(canvasElement, {
+      width: canvasWidth,
+      height: canvasHeight,
       backgroundColor: '#ffffff',
     });
 
@@ -128,18 +136,43 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
 
     const loadImage = async () => {
       try {
-        const img = await fabricLib.Image.fromURL(currentImage.url);
+        // Clear existing background image first
+        canvas.backgroundImage = null;
+        canvas.renderAll();
+        
+        // Load image with proper error handling
+        const img = await new Promise<any>((resolve, reject) => {
+          fabricLib.Image.fromURL(
+            currentImage.url,
+            (loadedImg: any) => {
+              if (loadedImg) {
+                resolve(loadedImg);
+              } else {
+                reject(new Error('Failed to load image'));
+              }
+            },
+            {
+              crossOrigin: 'anonymous'
+            }
+          );
+        });
+        
+        const canvasWidth = canvas.width || 1000;
+        const canvasHeight = canvas.height || 700;
+        const imgWidth = img.width || 1;
+        const imgHeight = img.height || 1;
+        
         const scale = Math.min(
-          (canvas.width! - 40) / img.width!,
-          (canvas.height! - 40) / img.height!
+          (canvasWidth - 40) / imgWidth,
+          (canvasHeight - 40) / imgHeight
         );
         
         img.scale(scale);
-        const scaledWidth = img.width! * scale;
-        const scaledHeight = img.height! * scale;
+        const scaledWidth = imgWidth * scale;
+        const scaledHeight = imgHeight * scale;
         img.set({
-          left: (canvas.width! - scaledWidth) / 2,
-          top: (canvas.height! - scaledHeight) / 2,
+          left: (canvasWidth - scaledWidth) / 2,
+          top: (canvasHeight - scaledHeight) / 2,
           selectable: false,
           evented: false,
         });
@@ -156,7 +189,8 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
     };
 
     loadImage();
-  }, [currentIndex, fabricLoaded, canvasInitialized, isOpen, imageAttachments, saveState]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentIndex, fabricLoaded, canvasInitialized, isOpen]);
 
   // Set up tool handlers
   const toolRef = useRef(tool);
@@ -498,7 +532,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
 
         {/* Toolbar */}
         {fabricLoaded && (
-          <div className="flex items-center gap-2 p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50">
+          <div className="flex items-center justify-center gap-2 p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50">
             <div className="flex items-center gap-2">
               <button
                 onClick={(e) => { e.stopPropagation(); setTool('select'); }}
@@ -568,9 +602,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
               </button>
             </div>
 
-            <div className="flex-1" />
-
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mx-4">
               <input
                 type="color"
                 value={color}
@@ -592,7 +624,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center gap-2 ml-4">
+            <div className="flex items-center gap-2">
               <button
                 onClick={handleUndo}
                 disabled={historyIndex <= 0}
@@ -671,9 +703,9 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
 
         {/* Footer */}
         <div className="p-4 border-t border-surface-outline-variant dark:border-gray-700 flex items-center justify-between">
-          {/* Navigation Dots */}
+          {/* Navigation Dots - Centered */}
           {imageAttachments.length > 1 && (
-            <div className="flex gap-1">
+            <div className="flex gap-1 absolute left-1/2 -translate-x-1/2">
               {imageAttachments.map((_, idx) => (
                 <button
                   key={idx}
