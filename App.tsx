@@ -759,7 +759,7 @@ function App() {
 
   // UI State - Persistent (but reset INVOICES on page load to prevent auto-opening)
   // Check URL hash for invoice creation link
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND'>(() => {
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND'>(() => {
     // Check if URL has invoice creation parameters
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
@@ -794,7 +794,7 @@ function App() {
         }
       }
     }
-    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY'>('cascade_ui_view', 'DASHBOARD');
+    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY'>('cascade_ui_view', 'DASHBOARD');
     // Don't auto-open modals on page load - always start at DASHBOARD
     return saved === 'INVOICES' ? 'DASHBOARD' : saved;
   });
@@ -2817,9 +2817,8 @@ Assigned By: ${assignerName}
           </div>
         </div>
       )}
-      {(currentView === 'TEAM' || currentView === 'SUBS') && (
+      {currentView === 'TEAM' && (
         <InternalUserManagement 
-          key={currentView}
           employees={employees}
           onAddEmployee={handleAddEmployee}
           onUpdateEmployee={handleUpdateEmployee}
@@ -2834,7 +2833,7 @@ Assigned By: ${assignerName}
           onUpdateBuilderUser={handleUpdateBuilderUser}
           onDeleteBuilderUser={handleDeleteBuilderUser}
           onClose={() => setCurrentView('DASHBOARD')}
-          initialTab={currentView === 'SUBS' ? 'SUBS' : 'EMPLOYEES'}
+          initialTab="EMPLOYEES"
         />
       )}
       {currentView === 'BUILDERS' && (

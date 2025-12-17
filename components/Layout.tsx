@@ -22,7 +22,7 @@ interface LayoutProps {
   onClearSelection: () => void;
 
   // Navigation & Actions
-  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'SUBS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND') => void;
+  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND') => void;
   onOpenEnrollment: () => void;
 
   // Auth
@@ -290,13 +290,6 @@ const Layout: React.FC<LayoutProps> = ({
                           >
                             <Users className="h-4 w-4 text-surface-outline dark:text-gray-500" />
                             Internal Users
-                          </button>
-                          <button 
-                            onClick={() => handleMenuAction(() => onNavigate('SUBS'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
-                          >
-                            <HardHat className="h-4 w-4 text-surface-outline dark:text-gray-500" />
-                            Subs (Contractors)
                           </button>
                            <button 
                             onClick={() => handleMenuAction(() => onNavigate('BUILDERS'))}
