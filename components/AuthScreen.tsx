@@ -19,6 +19,17 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
   const [showSignUp, setShowSignUp] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
 
+  // Bypass login for testing
+  const handleBypassLogin = () => {
+    if (typeof window !== 'undefined') {
+      // Clear all auth flags to bypass login
+      sessionStorage.removeItem('cascade_logged_out');
+      sessionStorage.setItem('cascade_bypass_login', 'true');
+      // Reload to trigger App.tsx to re-evaluate auth state
+      window.location.reload();
+    }
+  };
+
   // Redirect to app when user signs in
   useEffect(() => {
     // Only redirect if user is signed in (isLoaded check is less critical here)
@@ -92,6 +103,13 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
                   className="w-full bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600 text-surface-on dark:text-gray-100 font-medium py-3 px-4 rounded-lg transition-colors border border-surface-outline-variant dark:border-gray-600"
                 >
                   Create Account
+                </button>
+                {/* Bypass Login Button for Testing */}
+                <button 
+                  onClick={handleBypassLogin}
+                  className="w-full bg-yellow-500/10 dark:bg-yellow-500/20 hover:bg-yellow-500/20 dark:hover:bg-yellow-500/30 text-yellow-700 dark:text-yellow-400 font-medium py-2 px-4 rounded-lg transition-colors border border-yellow-500/30 dark:border-yellow-500/40 text-sm mt-2"
+                >
+                  Bypass Login (Testing)
                 </button>
               </div>
             ) : showSignIn ? (

@@ -2172,15 +2172,19 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
   // Check if user explicitly logged out (read directly from sessionStorage, don't use state to avoid re-render loops)
   const hasLoggedOut = typeof window !== 'undefined' && sessionStorage.getItem('cascade_logged_out') === 'true';
   const forceShowLogin = typeof window !== 'undefined' && sessionStorage.getItem('cascade_force_login') === 'true';
+  const bypassLogin = typeof window !== 'undefined' && sessionStorage.getItem('cascade_bypass_login') === 'true';
   
   // Show AuthScreen if:
   // 1. Auth is enabled and user is not signed in, OR
   // 2. User explicitly logged out, OR
   // 3. User wants to force show login (for testing when auth is disabled)
   // BUT: If user IS signed in with Clerk, always proceed to app (even if TEMP_DISABLE_AUTH is true)
+  // BUT: If bypass login is set, skip auth screen
   const shouldShowAuthScreen = 
-    (!TEMP_DISABLE_AUTH && (!effectiveIsSignedIn && effectiveIsLoaded || hasLoggedOut)) || 
-    (TEMP_DISABLE_AUTH && (hasLoggedOut || forceShowLogin) && !effectiveIsSignedIn);
+    !bypassLogin && (
+      (!TEMP_DISABLE_AUTH && (!effectiveIsSignedIn && effectiveIsLoaded || hasLoggedOut)) || 
+      (TEMP_DISABLE_AUTH && (hasLoggedOut || forceShowLogin) && !effectiveIsSignedIn)
+    );
   
   if (shouldShowAuthScreen) {
     console.log('Showing AuthScreen - user not signed in, logged out, or login forced');
