@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { InternalEmployee, Contractor, BuilderUser, BuilderGroup, UserRole } from '../types';
 import Button from './Button';
-import { Plus, Edit2, Mail, Trash2, UserCheck, Shield, X, HardHat, Briefcase, Phone, User, Lock } from 'lucide-react';
+import { Plus, Edit2, Mail, Trash2, UserCheck, Shield, X, HardHat, Briefcase, Phone, User, Lock, Bell } from 'lucide-react';
 
 interface InternalUserManagementProps {
   employees: InternalEmployee[];
@@ -54,6 +54,13 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
   const [empName, setEmpName] = useState('');
   const [empEmail, setEmpEmail] = useState('');
   const [empRole, setEmpRole] = useState('');
+  
+  // Email Notification Preferences
+  const [empEmailNotifyClaimSubmitted, setEmpEmailNotifyClaimSubmitted] = useState(true);
+  const [empEmailNotifyHomeownerAcceptsAppointment, setEmpEmailNotifyHomeownerAcceptsAppointment] = useState(true);
+  const [empEmailNotifySubAcceptsAppointment, setEmpEmailNotifySubAcceptsAppointment] = useState(true);
+  const [empEmailNotifyHomeownerRescheduleRequest, setEmpEmailNotifyHomeownerRescheduleRequest] = useState(true);
+  const [empEmailNotifyTaskAssigned, setEmpEmailNotifyTaskAssigned] = useState(true);
 
   // Sub Form State
   const [subCompany, setSubCompany] = useState('');
@@ -75,6 +82,12 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     setEmpName('');
     setEmpEmail('');
     setEmpRole('Warranty Manager');
+    // Reset email preferences to defaults (all true)
+    setEmpEmailNotifyClaimSubmitted(true);
+    setEmpEmailNotifyHomeownerAcceptsAppointment(true);
+    setEmpEmailNotifySubAcceptsAppointment(true);
+    setEmpEmailNotifyHomeownerRescheduleRequest(true);
+    setEmpEmailNotifyTaskAssigned(true);
     setShowEmpModal(true);
   };
 
@@ -83,15 +96,33 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     setEmpName(emp.name);
     setEmpEmail(emp.email);
     setEmpRole(emp.role);
+    // Load email preferences (default to true if not set)
+    setEmpEmailNotifyClaimSubmitted(emp.emailNotifyClaimSubmitted !== false);
+    setEmpEmailNotifyHomeownerAcceptsAppointment(emp.emailNotifyHomeownerAcceptsAppointment !== false);
+    setEmpEmailNotifySubAcceptsAppointment(emp.emailNotifySubAcceptsAppointment !== false);
+    setEmpEmailNotifyHomeownerRescheduleRequest(emp.emailNotifyHomeownerRescheduleRequest !== false);
+    setEmpEmailNotifyTaskAssigned(emp.emailNotifyTaskAssigned !== false);
     setShowEmpModal(true);
   };
 
   const handleSubmitEmp = (e: React.FormEvent) => {
     e.preventDefault();
+    const employeeData: InternalEmployee = {
+      id: editingEmpId || crypto.randomUUID(),
+      name: empName,
+      email: empEmail,
+      role: empRole,
+      emailNotifyClaimSubmitted: empEmailNotifyClaimSubmitted,
+      emailNotifyHomeownerAcceptsAppointment: empEmailNotifyHomeownerAcceptsAppointment,
+      emailNotifySubAcceptsAppointment: empEmailNotifySubAcceptsAppointment,
+      emailNotifyHomeownerRescheduleRequest: empEmailNotifyHomeownerRescheduleRequest,
+      emailNotifyTaskAssigned: empEmailNotifyTaskAssigned,
+    };
+    
     if (editingEmpId) {
-      onUpdateEmployee({ id: editingEmpId, name: empName, email: empEmail, role: empRole });
+      onUpdateEmployee(employeeData);
     } else {
-      onAddEmployee({ id: crypto.randomUUID(), name: empName, email: empEmail, role: empRole });
+      onAddEmployee(employeeData);
     }
     setShowEmpModal(false);
   };
@@ -399,6 +430,95 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                   <option>Technical Lead</option>
                 </select>
               </div>
+              
+              {/* Email Notification Preferences */}
+              <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-4">
+                  <Bell className="h-4 w-4 text-primary" />
+                  <label className="text-sm font-medium text-surface-on dark:text-gray-100">Email Notifications</label>
+                </div>
+                <div className="space-y-3">
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-sm text-surface-on dark:text-gray-100">Homeowner submits a claim</span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={empEmailNotifyClaimSubmitted}
+                        onChange={(e) => setEmpEmailNotifyClaimSubmitted(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${empEmailNotifyClaimSubmitted ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empEmailNotifyClaimSubmitted ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      </div>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-sm text-surface-on dark:text-gray-100">Homeowner accepts an appointment date</span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={empEmailNotifyHomeownerAcceptsAppointment}
+                        onChange={(e) => setEmpEmailNotifyHomeownerAcceptsAppointment(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${empEmailNotifyHomeownerAcceptsAppointment ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empEmailNotifyHomeownerAcceptsAppointment ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      </div>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-sm text-surface-on dark:text-gray-100">Sub accepts an appointment date</span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={empEmailNotifySubAcceptsAppointment}
+                        onChange={(e) => setEmpEmailNotifySubAcceptsAppointment(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${empEmailNotifySubAcceptsAppointment ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empEmailNotifySubAcceptsAppointment ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      </div>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-sm text-surface-on dark:text-gray-100">Homeowner requests a reschedule</span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={empEmailNotifyHomeownerRescheduleRequest}
+                        onChange={(e) => setEmpEmailNotifyHomeownerRescheduleRequest(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${empEmailNotifyHomeownerRescheduleRequest ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empEmailNotifyHomeownerRescheduleRequest ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      </div>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-sm text-surface-on dark:text-gray-100">New task assigned to user</span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={empEmailNotifyTaskAssigned}
+                        onChange={(e) => setEmpEmailNotifyTaskAssigned(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${empEmailNotifyTaskAssigned ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empEmailNotifyTaskAssigned ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      </div>
+                    </div>
+                  </label>
+                  
+                  <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-2 pt-2 border-t border-surface-outline-variant/50 dark:border-gray-700/50">
+                    Note: Users always receive email notifications when a homeowner sends a message if they are on the thread.
+                  </p>
+                </div>
+              </div>
+              
               <div className="flex justify-end gap-3 pt-4">
                 <Button type="button" variant="text" onClick={() => setShowEmpModal(false)}>Cancel</Button>
                 <Button type="submit" variant="filled">{editingEmpId ? 'Save Changes' : 'Create User'}</Button>

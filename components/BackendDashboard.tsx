@@ -1010,6 +1010,109 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
               </div>
             ) : netlifyInfo ? (
               <>
+                {/* Deployment History & Rollback */}
+                <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-6 border border-surface-outline-variant">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Globe className="h-5 w-5 text-primary" />
+                      <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">Deployment History</h2>
+                    </div>
+                    <Button 
+                      onClick={fetchNetlifyDeploys} 
+                      variant="outlined" 
+                      icon={<RefreshCw className={`h-4 w-4 ${netlifyDeploysLoading ? 'animate-spin' : ''}`} />}
+                    >
+                      Refresh
+                    </Button>
+                  </div>
+                  {netlifyDeploysLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+                      <span className="ml-3 text-surface-on-variant dark:text-gray-400">Loading deployments...</span>
+                    </div>
+                  ) : netlifyDeploys?.success && netlifyDeploys.deployments ? (
+                    <div className="space-y-3">
+                      <div className="text-sm text-surface-on-variant dark:text-gray-400 mb-4">
+                        {netlifyDeploys.count} recent deployments. Rollback to any previous version if issues occur.
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-surface-container-high dark:bg-gray-600 border-b border-surface-outline-variant">
+                            <tr>
+                              <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">State</th>
+                              <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Branch</th>
+                              <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Commit</th>
+                              <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Deployed</th>
+                              <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-surface-outline-variant dark:divide-gray-600">
+                            {netlifyDeploys.deployments.map((deploy: any) => (
+                              <tr key={deploy.id} className="hover:bg-surface-container-high dark:hover:bg-gray-600">
+                                <td className="px-4 py-3 text-sm">
+                                  {deploy.is_published ? (
+                                    <span className="inline-flex items-center gap-1">
+                                      <span className="text-green-600 dark:text-green-400 font-medium">● Published</span>
+                                    </span>
+                                  ) : deploy.state === 'ready' ? (
+                                    <span className="text-surface-on dark:text-gray-100">Ready</span>
+                                  ) : deploy.state === 'error' ? (
+                                    <span className="text-red-600 dark:text-red-400">Error</span>
+                                  ) : (
+                                    <span className="text-surface-on-variant dark:text-gray-400 capitalize">{deploy.state}</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{deploy.branch || 'N/A'}</td>
+                                <td className="px-4 py-3 text-sm">
+                                  {deploy.commit_ref ? (
+                                    <a 
+                                      href={deploy.commit_url || '#'} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-primary hover:underline font-mono text-xs"
+                                    >
+                                      {deploy.commit_ref.substring(0, 7)}
+                                    </a>
+                                  ) : (
+                                    <span className="text-surface-on-variant dark:text-gray-400">N/A</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
+                                  {deploy.published_at 
+                                    ? new Date(deploy.published_at).toLocaleString()
+                                    : deploy.created_at 
+                                    ? new Date(deploy.created_at).toLocaleString()
+                                    : 'N/A'}
+                                </td>
+                                <td className="px-4 py-3 text-sm">
+                                  {!deploy.is_published && deploy.state === 'ready' && (
+                                    <Button
+                                      variant="outlined"
+                                      onClick={() => rollbackDeployment(deploy.id)}
+                                      className="text-xs"
+                                    >
+                                      Rollback
+                                    </Button>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {netlifyDeploys.deployments.length === 0 && (
+                        <div className="text-center py-8 text-surface-on-variant dark:text-gray-400">
+                          No deployments found. Set NETLIFY_AUTH_TOKEN to view deployment history.
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-surface-on-variant dark:text-gray-400">
+                      {netlifyDeploys?.error || 'Failed to load deployments. Set NETLIFY_AUTH_TOKEN and SITE_ID to enable rollback.'}
+                    </div>
+                  )}
+                </div>
+
                 {/* Deploy Status */}
                 {netlifyInfo.deployStatus && (
                   <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-6 border border-surface-outline-variant">
@@ -1351,109 +1454,6 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
                       </div>
                     </div>
                   </div>
-                </div>
-
-                {/* Deployment History & Rollback */}
-                <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-6 border border-surface-outline-variant">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-5 w-5 text-primary" />
-                      <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">Deployment History</h2>
-                    </div>
-                    <Button 
-                      onClick={fetchNetlifyDeploys} 
-                      variant="outlined" 
-                      icon={<RefreshCw className={`h-4 w-4 ${netlifyDeploysLoading ? 'animate-spin' : ''}`} />}
-                    >
-                      Refresh
-                    </Button>
-                  </div>
-                  {netlifyDeploysLoading ? (
-                    <div className="flex items-center justify-center py-8">
-                      <RefreshCw className="h-6 w-6 animate-spin text-primary" />
-                      <span className="ml-3 text-surface-on-variant dark:text-gray-400">Loading deployments...</span>
-                    </div>
-                  ) : netlifyDeploys?.success && netlifyDeploys.deployments ? (
-                    <div className="space-y-3">
-                      <div className="text-sm text-surface-on-variant dark:text-gray-400 mb-4">
-                        {netlifyDeploys.count} recent deployments. Rollback to any previous version if issues occur.
-                      </div>
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead className="bg-surface-container-high dark:bg-gray-600 border-b border-surface-outline-variant">
-                            <tr>
-                              <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">State</th>
-                              <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Branch</th>
-                              <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Commit</th>
-                              <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Deployed</th>
-                              <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-surface-outline-variant dark:divide-gray-600">
-                            {netlifyDeploys.deployments.map((deploy: any) => (
-                              <tr key={deploy.id} className="hover:bg-surface-container-high dark:hover:bg-gray-600">
-                                <td className="px-4 py-3 text-sm">
-                                  {deploy.is_published ? (
-                                    <span className="inline-flex items-center gap-1">
-                                      <span className="text-green-600 dark:text-green-400 font-medium">● Published</span>
-                                    </span>
-                                  ) : deploy.state === 'ready' ? (
-                                    <span className="text-surface-on dark:text-gray-100">Ready</span>
-                                  ) : deploy.state === 'error' ? (
-                                    <span className="text-red-600 dark:text-red-400">Error</span>
-                                  ) : (
-                                    <span className="text-surface-on-variant dark:text-gray-400 capitalize">{deploy.state}</span>
-                                  )}
-                                </td>
-                                <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{deploy.branch || 'N/A'}</td>
-                                <td className="px-4 py-3 text-sm">
-                                  {deploy.commit_ref ? (
-                                    <a 
-                                      href={deploy.commit_url || '#'} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="text-primary hover:underline font-mono text-xs"
-                                    >
-                                      {deploy.commit_ref.substring(0, 7)}
-                                    </a>
-                                  ) : (
-                                    <span className="text-surface-on-variant dark:text-gray-400">N/A</span>
-                                  )}
-                                </td>
-                                <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
-                                  {deploy.published_at 
-                                    ? new Date(deploy.published_at).toLocaleString()
-                                    : deploy.created_at 
-                                    ? new Date(deploy.created_at).toLocaleString()
-                                    : 'N/A'}
-                                </td>
-                                <td className="px-4 py-3 text-sm">
-                                  {!deploy.is_published && deploy.state === 'ready' && (
-                                    <Button
-                                      variant="outlined"
-                                      onClick={() => rollbackDeployment(deploy.id)}
-                                      className="text-xs"
-                                    >
-                                      Rollback
-                                    </Button>
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      {netlifyDeploys.deployments.length === 0 && (
-                        <div className="text-center py-8 text-surface-on-variant dark:text-gray-400">
-                          No deployments found. Set NETLIFY_AUTH_TOKEN to view deployment history.
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-surface-on-variant dark:text-gray-400">
-                      {netlifyDeploys?.error || 'Failed to load deployments. Set NETLIFY_AUTH_TOKEN and SITE_ID to enable rollback.'}
-                    </div>
-                  )}
                 </div>
               </>
             ) : (

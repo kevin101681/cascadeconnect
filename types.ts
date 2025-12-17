@@ -92,6 +92,12 @@ export interface InternalEmployee {
   role: string;
   email: string;
   password?: string;
+  // Email Notification Preferences
+  emailNotifyClaimSubmitted?: boolean;
+  emailNotifyHomeownerAcceptsAppointment?: boolean;
+  emailNotifySubAcceptsAppointment?: boolean;
+  emailNotifyHomeownerRescheduleRequest?: boolean;
+  emailNotifyTaskAssigned?: boolean;
 }
 
 export interface Contractor {

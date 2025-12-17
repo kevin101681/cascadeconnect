@@ -417,7 +417,12 @@ function App() {
                       name: u.name,
                       email: u.email,
                       role: 'Administrator', // Map generic ADMIN to display role
-                      password: u.password || undefined
+                      password: u.password || undefined,
+                      emailNotifyClaimSubmitted: u.emailNotifyClaimSubmitted !== false,
+                      emailNotifyHomeownerAcceptsAppointment: u.emailNotifyHomeownerAcceptsAppointment !== false,
+                      emailNotifySubAcceptsAppointment: u.emailNotifySubAcceptsAppointment !== false,
+                      emailNotifyHomeownerRescheduleRequest: u.emailNotifyHomeownerRescheduleRequest !== false,
+                      emailNotifyTaskAssigned: u.emailNotifyTaskAssigned !== false
                   }));
                 
                 const fetchedBuilders: BuilderUser[] = dbUsers
@@ -877,6 +882,9 @@ function App() {
   };
 
   const handleUpdateClaim = async (updatedClaim: Claim) => {
+    // Get the previous claim state to detect changes
+    const previousClaim = claims.find(c => c.id === updatedClaim.id);
+    
     setClaims(prev => prev.map(c => c.id === updatedClaim.id ? updatedClaim : c));
 
     if (isDbConfigured) {
@@ -896,6 +904,124 @@ function App() {
         } as any).where(eq(claimsTable.id, updatedClaim.id));
       } catch (e) {
         console.error("Failed to update claim in DB:", e);
+      }
+    }
+
+    // Email notification logic based on claim changes
+    if (previousClaim) {
+      const baseUrl = typeof window !== 'undefined' 
+        ? `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`
+        : 'https://www.cascadeconnect.app';
+      const claimLink = `${baseUrl}#claims?claimId=${updatedClaim.id}`;
+
+      // 1. Homeowner or Sub accepts appointment date
+      // Check if status changed to SCHEDULED and there's an ACCEPTED date
+      const acceptedDate = updatedClaim.proposedDates?.find(d => d.status === 'ACCEPTED');
+      const previousAcceptedDate = previousClaim.proposedDates?.find(d => d.status === 'ACCEPTED');
+      
+      if (updatedClaim.status === ClaimStatus.SCHEDULED && 
+          acceptedDate && 
+          !previousAcceptedDate &&
+          previousClaim.status !== ClaimStatus.SCHEDULED) {
+        
+        // Determine if it's homeowner or sub acceptance based on contractor assignment
+        const isSubAcceptance = !!updatedClaim.contractorName;
+        const isHomeownerAcceptance = !isSubAcceptance && userRole === UserRole.HOMEOWNER;
+        
+        if (isHomeownerAcceptance) {
+          // Homeowner accepted an appointment date
+          const emailBody = `
+A homeowner has accepted an appointment date for claim ${updatedClaim.claimNumber}:
+
+Claim: ${updatedClaim.title}
+Scheduled Date: ${new Date(acceptedDate.date).toLocaleDateString()} at ${acceptedDate.timeSlot}
+Homeowner: ${updatedClaim.homeownerName}
+
+<div style="margin: 20px 0;">
+  <a href="${claimLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Claim</a>
+</div>
+          `.trim();
+
+          for (const emp of employees) {
+            if (emp.emailNotifyHomeownerAcceptsAppointment !== false) {
+              try {
+                await sendEmail({
+                  to: emp.email,
+                  subject: `Appointment Accepted: ${updatedClaim.claimNumber} - ${updatedClaim.title}`,
+                  body: emailBody,
+                  fromName: 'Cascade Connect System',
+                  fromRole: UserRole.ADMIN
+                });
+              } catch (error) {
+                console.error(`Failed to send appointment acceptance notification to ${emp.email}:`, error);
+              }
+            }
+          }
+        } else if (isSubAcceptance) {
+          // Sub accepted an appointment date
+          const emailBody = `
+A subcontractor has accepted an appointment date for claim ${updatedClaim.claimNumber}:
+
+Claim: ${updatedClaim.title}
+Scheduled Date: ${new Date(acceptedDate.date).toLocaleDateString()} at ${acceptedDate.timeSlot}
+Subcontractor: ${updatedClaim.contractorName}
+Homeowner: ${updatedClaim.homeownerName}
+
+<div style="margin: 20px 0;">
+  <a href="${claimLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Claim</a>
+</div>
+          `.trim();
+
+          for (const emp of employees) {
+            if (emp.emailNotifySubAcceptsAppointment !== false) {
+              try {
+                await sendEmail({
+                  to: emp.email,
+                  subject: `Sub Accepted Appointment: ${updatedClaim.claimNumber} - ${updatedClaim.title}`,
+                  body: emailBody,
+                  fromName: 'Cascade Connect System',
+                  fromRole: UserRole.ADMIN
+                });
+              } catch (error) {
+                console.error(`Failed to send sub appointment acceptance notification to ${emp.email}:`, error);
+              }
+            }
+          }
+        }
+      }
+
+      // 3. Homeowner requests reschedule
+      // Check if status changed from SCHEDULED to SCHEDULING
+      if (previousClaim.status === ClaimStatus.SCHEDULED && 
+          updatedClaim.status === ClaimStatus.SCHEDULING &&
+          userRole === UserRole.HOMEOWNER) {
+        const emailBody = `
+A homeowner has requested to reschedule claim ${updatedClaim.claimNumber}:
+
+Claim: ${updatedClaim.title}
+Homeowner: ${updatedClaim.homeownerName}
+Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDate.date).toLocaleDateString()} at ${previousAcceptedDate.timeSlot}` : 'N/A'}
+
+<div style="margin: 20px 0;">
+  <a href="${claimLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Claim</a>
+</div>
+        `.trim();
+
+        for (const emp of employees) {
+          if (emp.emailNotifyHomeownerRescheduleRequest !== false) {
+            try {
+              await sendEmail({
+                to: emp.email,
+                subject: `Reschedule Requested: ${updatedClaim.claimNumber} - ${updatedClaim.title}`,
+                body: emailBody,
+                fromName: 'Cascade Connect System',
+                fromRole: UserRole.ADMIN
+              });
+            } catch (error) {
+              console.error(`Failed to send reschedule request notification to ${emp.email}:`, error);
+            }
+          }
+        }
       }
     }
   };
@@ -1001,6 +1127,46 @@ function App() {
       }
     } else if (isDbConfigured && !db) {
       console.warn("⚠️ Database configured but connection failed. Data saved to localStorage only.");
+    }
+
+    // Send email notifications to users who have this preference enabled
+    if (userRole === UserRole.HOMEOWNER) {
+      const baseUrl = typeof window !== 'undefined' 
+        ? `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`
+        : 'https://www.cascadeconnect.app';
+      const claimLink = `${baseUrl}#claims?claimId=${newClaim.id}`;
+
+      const emailBody = `
+A new claim has been submitted:
+
+Claim Number: ${newClaim.claimNumber}
+Title: ${newClaim.title}
+Description: ${newClaim.description}
+Category: ${newClaim.category}
+Address: ${newClaim.address}
+Homeowner: ${newClaim.homeownerName}
+
+<div style="margin: 20px 0;">
+  <a href="${claimLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Claim</a>
+</div>
+      `.trim();
+
+      // Send to all employees who have this preference enabled
+      for (const emp of employees) {
+        if (emp.emailNotifyClaimSubmitted !== false) {
+          try {
+            await sendEmail({
+              to: emp.email,
+              subject: `New Claim Submitted: ${newClaim.claimNumber} - ${newClaim.title}`,
+              body: emailBody,
+              fromName: 'Cascade Connect System',
+              fromRole: UserRole.ADMIN
+            });
+          } catch (error) {
+            console.error(`Failed to send claim notification to ${emp.email}:`, error);
+          }
+        }
+      }
     }
   };
 
@@ -1704,6 +1870,41 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
         console.error("Failed to save task to DB", e);
       }
     }
+
+    // Send email notification to the assigned user if they have this preference enabled
+    const assignedEmployee = employees.find(e => e.id === newTask.assignedToId);
+    if (assignedEmployee && assignedEmployee.emailNotifyTaskAssigned !== false) {
+      const baseUrl = typeof window !== 'undefined' 
+        ? `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`
+        : 'https://www.cascadeconnect.app';
+      const taskLink = `${baseUrl}#tasks`;
+
+      const assignerName = employees.find(e => e.id === newTask.assignedById)?.name || 'System';
+      const emailBody = `
+A new task has been assigned to you:
+
+Task: ${newTask.title}
+${newTask.description ? `Description: ${newTask.description}` : ''}
+Due Date: ${newTask.dueDate ? new Date(newTask.dueDate).toLocaleDateString() : 'Not set'}
+Assigned By: ${assignerName}
+
+<div style="margin: 20px 0;">
+  <a href="${taskLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Tasks</a>
+</div>
+      `.trim();
+
+      try {
+        await sendEmail({
+          to: assignedEmployee.email,
+          subject: `New Task Assigned: ${newTask.title}`,
+          body: emailBody,
+          fromName: 'Cascade Connect System',
+          fromRole: UserRole.ADMIN
+        });
+      } catch (error) {
+        console.error(`Failed to send task assignment notification to ${assignedEmployee.email}:`, error);
+      }
+    }
   };
   
   const handleToggleTask = async (taskId: string) => { 
@@ -1736,7 +1937,12 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
              name: emp.name,
              email: emp.email,
              role: 'ADMIN',
-             password: emp.password
+             password: emp.password,
+             emailNotifyClaimSubmitted: emp.emailNotifyClaimSubmitted !== false,
+             emailNotifyHomeownerAcceptsAppointment: emp.emailNotifyHomeownerAcceptsAppointment !== false,
+             emailNotifySubAcceptsAppointment: emp.emailNotifySubAcceptsAppointment !== false,
+             emailNotifyHomeownerRescheduleRequest: emp.emailNotifyHomeownerRescheduleRequest !== false,
+             emailNotifyTaskAssigned: emp.emailNotifyTaskAssigned !== false
            } as any);
          } catch(e) { console.error(e); }
       }
@@ -1749,6 +1955,11 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
           await db.update(usersTable).set({
             name: emp.name,
             email: emp.email,
+            emailNotifyClaimSubmitted: emp.emailNotifyClaimSubmitted !== false,
+            emailNotifyHomeownerAcceptsAppointment: emp.emailNotifyHomeownerAcceptsAppointment !== false,
+            emailNotifySubAcceptsAppointment: emp.emailNotifySubAcceptsAppointment !== false,
+            emailNotifyHomeownerRescheduleRequest: emp.emailNotifyHomeownerRescheduleRequest !== false,
+            emailNotifyTaskAssigned: emp.emailNotifyTaskAssigned !== false
             // role update ignored for now to map to enum
           }).where(eq(usersTable.id, emp.id));
         } catch(e) { console.error(e); }

@@ -25,6 +25,14 @@ export const users = pgTable('users', {
   // For Builder Users
   builderGroupId: uuid('builder_group_id').references(() => builderGroups.id),
   
+  // Email Notification Preferences
+  emailNotifyClaimSubmitted: boolean('email_notify_claim_submitted').default(true),
+  emailNotifyHomeownerAcceptsAppointment: boolean('email_notify_homeowner_accepts_appointment').default(true),
+  emailNotifySubAcceptsAppointment: boolean('email_notify_sub_accepts_appointment').default(true),
+  emailNotifyHomeownerRescheduleRequest: boolean('email_notify_homeowner_reschedule_request').default(true),
+  emailNotifyTaskAssigned: boolean('email_notify_task_assigned').default(true),
+  // Note: Users always get email notifications when homeowner sends a message (if on thread)
+  
   createdAt: timestamp('created_at').defaultNow(),
 });
 
