@@ -2140,7 +2140,7 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
   };
   
   // Handlers for Tasks/Employees/Contractors
-  const handleAddTask = async (taskData: Partial<Task>) => {
+  const handleAddTask = async (taskData: Partial<Task>): Promise<void> => {
     const newTask: Task = {
       id: crypto.randomUUID(),
       title: taskData.title || 'New Task',
@@ -2152,6 +2152,8 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
       dueDate: taskData.dueDate || new Date(Date.now() + 86400000),
       relatedClaimIds: taskData.relatedClaimIds || []
     };
+    
+    // Update state first (useEffect will save to localStorage)
     setTasks(prev => [newTask, ...prev]);
 
     if (isDbConfigured) {
@@ -2167,8 +2169,10 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
           dueDate: newTask.dueDate,
           relatedClaimIds: newTask.relatedClaimIds
         } as any);
+        console.log('✅ Task saved to database:', newTask.id);
       } catch (e) {
         console.error("Failed to save task to DB", e);
+        throw e; // Re-throw to let the form handler catch it
       }
     }
 
@@ -2204,6 +2208,7 @@ Assigned By: ${assignerName}
         });
       } catch (error) {
         console.error(`Failed to send task assignment notification to ${assignedEmployee.email}:`, error);
+        // Don't throw - email failure shouldn't prevent task creation
       }
     }
   };

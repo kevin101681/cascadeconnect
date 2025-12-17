@@ -16,6 +16,7 @@ import PDFViewer from './PDFViewer';
 import ClaimInlineEditor from './ClaimInlineEditor';
 import NewClaimForm from './NewClaimForm';
 import PunchListApp from './PunchListApp';
+import { HOMEOWNER_MANUAL_IMAGES } from '../lib/bluetag/constants';
 
 interface DashboardProps {
   claims: Claim[];
@@ -1379,9 +1380,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-2">Link to Claims (Optional)</label>
                   <div className="space-y-2 max-h-32 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] border border-surface-outline-variant dark:border-gray-600 rounded-lg p-2">
                     {claims.filter(c => {
+                      // First try to match by homeownerId if available (more reliable)
+                      if ((c as any).homeownerId && effectiveHomeowner.id) {
+                        return (c as any).homeownerId === effectiveHomeowner.id;
+                      }
+                      // Fallback to email comparison (case-insensitive, trimmed)
                       const claimEmail = c.homeownerEmail?.toLowerCase().trim() || '';
                       const homeownerEmail = effectiveHomeowner.email?.toLowerCase().trim() || '';
-                      return claimEmail === homeownerEmail && c.status !== ClaimStatus.COMPLETED;
+                      return claimEmail === homeownerEmail;
                     }).map(claim => (
                       <label key={claim.id} className="flex items-center gap-2 p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded cursor-pointer">
                         <input 
@@ -1420,6 +1426,57 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </Button>
               </div>
             </form>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* HOMEOWNER MANUAL MODAL */}
+      {showManualModal && createPortal(
+        <div 
+          className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setShowManualModal(false)}
+        >
+          <div 
+            className="bg-surface dark:bg-gray-800 w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-xl flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center shrink-0">
+              <h2 className="text-xl font-bold text-surface-on dark:text-gray-100">Homeowner Manual</h2>
+              <button
+                onClick={() => setShowManualModal(false)}
+                className="p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors"
+              >
+                <X className="h-5 w-5 text-surface-on dark:text-gray-100" />
+              </button>
+            </div>
+            
+            {/* Content - Manual Images */}
+            <div className="flex-1 overflow-y-auto p-6 bg-gray-100 dark:bg-gray-900">
+              <div className="space-y-4">
+                {HOMEOWNER_MANUAL_IMAGES.map((imagePath: string, index: number) => (
+                  <div key={index} className="w-full">
+                    <img 
+                      src={imagePath} 
+                      alt={`Homeowner Manual Page ${index + 1}`}
+                      className="w-full h-auto rounded-lg shadow-lg"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div className="p-4 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end shrink-0">
+              <Button variant="filled" onClick={() => setShowManualModal(false)}>
+                Close
+              </Button>
+            </div>
           </div>
         </div>,
         document.body
@@ -2564,61 +2621,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Homeowner Manual Modal */}
-      {showManualModal && createPortal(
-        <div 
-          className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
-          onClick={() => setShowManualModal(false)}
-        >
-          <div 
-            className="bg-surface dark:bg-gray-800 w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-xl flex flex-col overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center shrink-0">
-              <h2 className="text-xl font-bold text-surface-on dark:text-gray-100">Homeowner Manual</h2>
-              <button
-                onClick={() => setShowManualModal(false)}
-                className="p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors"
-              >
-                <X className="h-5 w-5 text-surface-on dark:text-gray-100" />
-              </button>
-            </div>
-            
-            {/* Content - Manual Images */}
-            <div className="flex-1 overflow-y-auto p-6 bg-gray-100 dark:bg-gray-900">
-              <div className="space-y-4">
-                {[
-                  "/images/manual/page1.png",
-                  "/images/manual/page2.png",
-                  "/images/manual/page3.png",
-                  "/images/manual/page4.png"
-                ].map((imagePath, index) => (
-                  <div key={index} className="w-full">
-                    <img 
-                      src={imagePath} 
-                      alt={`Homeowner Manual Page ${index + 1}`}
-                      className="w-full h-auto rounded-lg shadow-lg"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                      }}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Footer */}
-            <div className="p-4 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end shrink-0">
-              <Button variant="filled" onClick={() => setShowManualModal(false)}>
-                Close
-              </Button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
     </>
   );
 };
