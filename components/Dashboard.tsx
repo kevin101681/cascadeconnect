@@ -788,9 +788,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       variants={cardVariants}
       initial="hidden"
       animate="visible"
-      layout
     >
-      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center bg-surface-container/30 dark:bg-gray-700/30">
+      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center bg-surface-container/30 dark:bg-gray-700/30 sticky top-0 z-10">
         <h3 className={`text-lg font-bold flex items-center gap-2 ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
             {groupClaims.length}
@@ -825,7 +824,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 key={claim.id} 
                 className="hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors"
                 variants={cardVariants}
-                layout
               >
                 <div 
                   className="w-full px-6 py-3 group relative cursor-pointer"
@@ -939,26 +937,36 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
                 
                 {/* Inline Expandable Editor */}
-                {expandedClaimId === claim.id && onUpdateClaim && (
-                  <div className="border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
-                    <ClaimInlineEditor
-                      claim={claim}
-                      onUpdateClaim={onUpdateClaim}
-                      contractors={contractors}
-                      currentUser={currentUser}
-                      userRole={userRole}
-                      onAddInternalNote={onAddInternalNote}
-                      claimMessages={claimMessages.filter(m => m.claimId === claim.id)}
-                      onTrackClaimMessage={onTrackClaimMessage}
-                      onSendMessage={() => {
-                        if (onSelectClaim) {
-                          onSelectClaim(claim, false);
-                        }
-                      }}
-                      onNavigate={onNavigate}
-                    />
-                  </div>
-                )}
+                <AnimatePresence>
+                  {expandedClaimId === claim.id && onUpdateClaim && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2, ease: 'easeInOut' }}
+                      className="overflow-hidden"
+                    >
+                      <div className="border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
+                        <ClaimInlineEditor
+                          claim={claim}
+                          onUpdateClaim={onUpdateClaim}
+                          contractors={contractors}
+                          currentUser={currentUser}
+                          userRole={userRole}
+                          onAddInternalNote={onAddInternalNote}
+                          claimMessages={claimMessages.filter(m => m.claimId === claim.id)}
+                          onTrackClaimMessage={onTrackClaimMessage}
+                          onSendMessage={() => {
+                            if (onSelectClaim) {
+                              onSelectClaim(claim, false);
+                            }
+                          }}
+                          onNavigate={onNavigate}
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.li>
             );
           })

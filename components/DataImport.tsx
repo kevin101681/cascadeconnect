@@ -234,28 +234,32 @@ const DataImport: React.FC<DataImportProps> = ({
             }));
             importedMessages.push(...transformed);
           } else if (importType === 'BUILDERS') {
-            // Import builder groups
-            const transformedGroups: BuilderGroup[] = chunk.map((row: any) => ({
-              id: crypto.randomUUID(),
-              name: row.name || 'Unknown Builder',
-              email: row.email || '',
-            }));
-            importedBuilders.push(...transformedGroups);
-            
-            // If builder users are included in the same import
-            if (row.userName && row.userEmail) {
-              const userId = crypto.randomUUID();
-              const password = row.password || crypto.randomUUID().substring(0, 8);
-              const builderUser: BuilderUser = {
-                id: userId,
-                name: row.userName,
-                email: row.userEmail,
-                builderGroupId: transformedGroups[transformedGroups.length - 1].id,
-                role: UserRole.BUILDER
+            // Import builder groups and builder users
+            chunk.forEach((row: any) => {
+              // Create builder group
+              const builderGroupId = crypto.randomUUID();
+              const builderGroup: BuilderGroup = {
+                id: builderGroupId,
+                name: row.name || 'Unknown Builder',
+                email: row.email || '',
               };
-              importedBuilderUsers.push(builderUser);
-              builderUserPasswords.set(userId, password);
-            }
+              importedBuilders.push(builderGroup);
+              
+              // If builder users are included in the same row
+              if (row.userName && row.userEmail) {
+                const userId = crypto.randomUUID();
+                const password = row.password || crypto.randomUUID().substring(0, 8);
+                const builderUser: BuilderUser = {
+                  id: userId,
+                  name: row.userName,
+                  email: row.userEmail,
+                  builderGroupId: builderGroupId,
+                  role: UserRole.BUILDER
+                };
+                importedBuilderUsers.push(builderUser);
+                builderUserPasswords.set(userId, password);
+              }
+            });
           }
 
           const currentProgress = Math.round(((i + 1) / totalChunks) * 100);
