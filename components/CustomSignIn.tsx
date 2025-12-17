@@ -88,7 +88,7 @@ const CustomSignIn: React.FC<CustomSignInProps> = ({ onSuccess, onCancel }) => {
         setError('Additional verification required. Please check your email or contact support.');
       } else if (status === 'needs_second_factor') {
         // Two-factor authentication required
-        setError('Two-factor authentication required. Please complete 2FA.');
+        setError('Two-factor authentication is currently required. Please contact your administrator to disable 2FA in Clerk settings, or complete the 2FA verification.');
       } else if (sessionId) {
         // If we have a session ID even if status isn't 'complete', try to use it
         console.warn('Sign-in status is not complete but session ID exists, attempting to activate...', { status, sessionId });
