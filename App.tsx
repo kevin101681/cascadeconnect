@@ -2196,14 +2196,23 @@ Assigned By: ${assignerName}
       setContractors(prev => [...prev, sub]);
       if (isDbConfigured) {
         try {
+          // Validate UUID
+          const isValidUUID = (str: string) => {
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            return uuidRegex.test(str);
+          };
+          const dbId = (sub.id && isValidUUID(sub.id)) ? sub.id : crypto.randomUUID();
+          
           await db.insert(contractorsTable).values({
+             id: dbId,
              companyName: sub.companyName,
-             contactName: sub.contactName,
+             contactName: sub.contactName || null,
              email: sub.email,
              specialty: sub.specialty
           } as any);
           console.log("✅ Contractor saved to database");
         } catch(e: any) { 
+          console.error("Failed to save contractor to database:", e);
           console.log("Contractors table not found, using local storage:", e.message);
           // Contractor is still saved to local storage, so user can continue
         }

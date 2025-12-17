@@ -706,7 +706,7 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                               month: 'short', 
                               day: 'numeric' 
                             })
-                          : 'Pick a date'
+                          : 'Add'
                         }
                       </span>
                     </button>

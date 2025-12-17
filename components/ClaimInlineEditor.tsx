@@ -840,7 +840,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                               day: '2-digit',
                               year: '2-digit'
                             })
-                          : 'Pick a date'}
+                          : 'Add'}
                       </span>
                     </button>
                   </div>
