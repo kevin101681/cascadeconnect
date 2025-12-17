@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import {
   SignedIn,
   SignedOut,
-  SignInButton,
   UserButton,
   useUser,
 } from '@clerk/clerk-react';
 import CustomSignUp from './CustomSignUp';
+import CustomSignIn from './CustomSignIn';
 
 interface AuthScreenProps {
   // Props are kept for compatibility
@@ -17,6 +17,7 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
   const { isSignedIn, isLoaded } = useUser();
   const [isRedirecting, setIsRedirecting] = React.useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
+  const [showSignIn, setShowSignIn] = useState(false);
 
   // Redirect to app when user signs in
   useEffect(() => {
@@ -73,30 +74,39 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
         
         <div className="space-y-6">
           <SignedOut>
-            {!showSignUp ? (
+            {!showSignUp && !showSignIn ? (
               <div className="flex flex-col gap-4">
-                <SignInButton 
-                  mode="modal"
-                  appearance={{
-                    elements: {
-                      rootBox: 'w-full',
-                      modalContent: 'bg-surface dark:bg-gray-800',
-                      formButtonPrimary: 'bg-primary hover:bg-primary/90 text-primary-on',
-                      formFieldInput: 'bg-surface-container dark:bg-gray-700 border-surface-outline-variant',
-                      footerActionLink: 'text-primary',
-                    }
-                  }}
+                <button 
+                  onClick={() => setShowSignIn(true)}
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-on dark:text-white font-medium py-3 px-4 rounded-lg transition-colors shadow-sm"
                 >
-                  <button className="w-full bg-primary hover:bg-primary/90 text-primary-on dark:text-white font-medium py-3 px-4 rounded-lg transition-colors shadow-sm">
-                    Sign In
-                  </button>
-                </SignInButton>
+                  Sign In
+                </button>
                 <button 
                   onClick={() => setShowSignUp(true)}
                   className="w-full bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600 text-surface-on dark:text-gray-100 font-medium py-3 px-4 rounded-lg transition-colors border border-surface-outline-variant dark:border-gray-600"
                 >
                   Create Account
                 </button>
+              </div>
+            ) : showSignIn ? (
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-medium text-surface-on dark:text-gray-100">Sign In</h2>
+                  <button
+                    onClick={() => setShowSignIn(false)}
+                    className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100"
+                  >
+                    ← Back
+                  </button>
+                </div>
+                <CustomSignIn 
+                  onSuccess={() => {
+                    setShowSignIn(false);
+                    // Redirect will happen automatically via useEffect
+                  }}
+                  onCancel={() => setShowSignIn(false)}
+                />
               </div>
             ) : (
               <div>
