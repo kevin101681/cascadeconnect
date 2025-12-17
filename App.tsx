@@ -2167,7 +2167,7 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
   
   // TEMPORARY: Disable authentication for testing
   // TODO: Re-enable authentication after testing - set TEMP_DISABLE_AUTH to false
-  const TEMP_DISABLE_AUTH = true;
+  const TEMP_DISABLE_AUTH = false; // Changed to false to enable proper Clerk authentication
   
   // Check if user explicitly logged out (read directly from sessionStorage, don't use state to avoid re-render loops)
   const hasLoggedOut = typeof window !== 'undefined' && sessionStorage.getItem('cascade_logged_out') === 'true';
@@ -2177,7 +2177,12 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
   // 1. Auth is enabled and user is not signed in, OR
   // 2. User explicitly logged out, OR
   // 3. User wants to force show login (for testing when auth is disabled)
-  if ((!TEMP_DISABLE_AUTH && (!effectiveIsSignedIn && effectiveIsLoaded || hasLoggedOut)) || (TEMP_DISABLE_AUTH && (hasLoggedOut || forceShowLogin))) {
+  // BUT: If user IS signed in with Clerk, always proceed to app (even if TEMP_DISABLE_AUTH is true)
+  const shouldShowAuthScreen = 
+    (!TEMP_DISABLE_AUTH && (!effectiveIsSignedIn && effectiveIsLoaded || hasLoggedOut)) || 
+    (TEMP_DISABLE_AUTH && (hasLoggedOut || forceShowLogin) && !effectiveIsSignedIn);
+  
+  if (shouldShowAuthScreen) {
     console.log('Showing AuthScreen - user not signed in, logged out, or login forced');
     return <AuthScreenWrapper />;
   }
