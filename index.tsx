@@ -26,6 +26,8 @@ root.render(
       <ClerkProvider 
         publishableKey={PUBLISHABLE_KEY} 
         afterSignOutUrl="/"
+        signInFallbackRedirectUrl="/"
+        signUpFallbackRedirectUrl="/"
         appearance={{
           elements: {
             rootBox: 'w-full',
