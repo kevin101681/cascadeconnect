@@ -999,6 +999,13 @@ function App() {
 
     if (isDbConfigured) {
       try {
+        // Validate UUIDs
+        const isValidUUID = (str: string) => {
+          const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+          return uuidRegex.test(str);
+        };
+        const dbContractorId = (updatedClaim.contractorId && isValidUUID(updatedClaim.contractorId)) ? updatedClaim.contractorId : null;
+        
         await db.update(claimsTable).set({
           title: updatedClaim.title,
           description: updatedClaim.description,
@@ -1007,7 +1014,7 @@ function App() {
           dateEvaluated: updatedClaim.dateEvaluated || null,
           internalNotes: updatedClaim.internalNotes || null,
           nonWarrantyExplanation: updatedClaim.nonWarrantyExplanation || null,
-          contractorId: updatedClaim.contractorId || null,
+          contractorId: dbContractorId, // Use validated UUID or null
           contractorName: updatedClaim.contractorName || null,
           contractorEmail: updatedClaim.contractorEmail || null,
           proposedDates: updatedClaim.proposedDates,
@@ -1273,12 +1280,13 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
     // DB Insert
     if (isDbConfigured) {
       try {
-        // Validate homeownerId is a valid UUID
+        // Validate UUIDs
         const isValidUUID = (str: string) => {
           const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
           return uuidRegex.test(str);
         };
         const dbHomeownerId = (subjectHomeowner.id && isValidUUID(subjectHomeowner.id)) ? subjectHomeowner.id : null;
+        const dbContractorId = (newClaim.contractorId && isValidUUID(newClaim.contractorId)) ? newClaim.contractorId : null;
         
         const result = await db.insert(claimsTable).values({
           id: newClaim.id, // Explicit ID
@@ -1298,7 +1306,7 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
           dateEvaluated: newClaim.dateEvaluated || null,
           nonWarrantyExplanation: newClaim.nonWarrantyExplanation || null,
           internalNotes: newClaim.internalNotes || null,
-          contractorId: newClaim.contractorId || null,
+          contractorId: dbContractorId, // Use validated UUID or null
           contractorName: newClaim.contractorName || null,
           contractorEmail: newClaim.contractorEmail || null,
           proposedDates: [],

@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
 import { Contractor, ClaimClassification, Attachment, Homeowner, ClaimStatus, UserRole } from '../types';
 import Button from './Button';
+import ImageViewerModal from './ImageViewerModal';
 import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip } from 'lucide-react';
 
 interface NewClaimFormProps {
@@ -35,6 +36,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
   // Attachments State
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [imageViewerIndex, setImageViewerIndex] = useState(0);
 
   // Only show contractors if user has typed something
   const filteredContractors = contractorSearch.trim() 
@@ -233,61 +236,66 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
                 const attachmentName = att.name || 'Attachment';
                 const attachmentType = att.type || 'DOCUMENT';
                 
-                return (
-                  <div key={attachmentKey} className="group relative w-24 h-24 bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-elevation-1 transition-all">
-                    {attachmentType === 'IMAGE' && attachmentUrl ? (
-                      <>
-                        <img 
-                          src={attachmentUrl} 
-                          alt={attachmentName} 
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const fallback = target.parentElement?.querySelector('.image-fallback');
-                            if (fallback) {
-                              (fallback as HTMLElement).style.display = 'flex';
+                    return (
+                      <div 
+                        key={attachmentKey} 
+                        className={`relative w-24 h-24 bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-elevation-1 transition-all ${
+                          attachmentType === 'IMAGE' && attachmentUrl ? 'cursor-pointer' : ''
+                        }`}
+                        onClick={() => {
+                          if (attachmentType === 'IMAGE' && attachmentUrl) {
+                            const imageIndex = attachments
+                              .filter(a => a.type === 'IMAGE' && a.url)
+                              .findIndex(a => a.url === attachmentUrl);
+                            if (imageIndex !== -1) {
+                              setImageViewerIndex(imageIndex);
+                              setImageViewerOpen(true);
                             }
-                          }}
-                        />
-                        <div className="image-fallback hidden absolute inset-0 w-full h-full flex flex-col items-center justify-center p-2 text-center bg-surface-container dark:bg-gray-700">
-                          <FileText className="h-8 w-8 text-primary mb-1" />
-                          <span className="text-[10px] text-surface-on-variant truncate w-full px-1">{attachmentName}</span>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
-                        {attachmentType === 'VIDEO' ? (
-                          <Video className="h-8 w-8 text-primary mb-2" />
+                          }
+                        }}
+                      >
+                        {attachmentType === 'IMAGE' && attachmentUrl ? (
+                          <>
+                            <img 
+                              src={attachmentUrl} 
+                              alt={attachmentName} 
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                const fallback = target.parentElement?.querySelector('.image-fallback');
+                                if (fallback) {
+                                  (fallback as HTMLElement).style.display = 'flex';
+                                }
+                              }}
+                            />
+                            <div className="image-fallback hidden absolute inset-0 w-full h-full flex flex-col items-center justify-center p-2 text-center bg-surface-container dark:bg-gray-700">
+                              <FileText className="h-8 w-8 text-primary mb-1" />
+                              <span className="text-[10px] text-surface-on-variant truncate w-full px-1">{attachmentName}</span>
+                            </div>
+                          </>
                         ) : (
-                          <FileText className="h-8 w-8 text-blue-600 mb-2" />
+                          <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
+                            {attachmentType === 'VIDEO' ? (
+                              <Video className="h-8 w-8 text-primary mb-2" />
+                            ) : (
+                              <FileText className="h-8 w-8 text-blue-600 mb-2" />
+                            )}
+                            <span className="text-[10px] text-surface-on-variant truncate w-full">{attachmentName}</span>
+                          </div>
                         )}
-                        <span className="text-[10px] text-surface-on-variant truncate w-full">{attachmentName}</span>
-                      </div>
-                    )}
-                    {attachmentUrl && (
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <a 
-                          href={attachmentUrl} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="text-white text-xs font-medium hover:underline"
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAttachments(attachments.filter((_, idx) => idx !== i));
+                          }}
+                          className="absolute top-1 right-1 bg-error/80 hover:bg-error text-white rounded-full p-1 z-10"
                         >
-                          View
-                        </a>
+                          <X className="h-3 w-3" />
+                        </button>
                       </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAttachments(attachments.filter((_, idx) => idx !== i));
-                      }}
-                      className="absolute top-1 right-1 bg-error/80 hover:bg-error text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                );
+                    );
               })}
             </div>
           )}
@@ -393,6 +401,26 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
           Create Claim
         </Button>
       </div>
+
+      {/* Image Viewer Modal */}
+      <ImageViewerModal
+        isOpen={imageViewerOpen}
+        attachments={attachments}
+        initialIndex={imageViewerIndex}
+        onClose={() => setImageViewerOpen(false)}
+        onUpdateAttachment={(index, updatedUrl) => {
+          const updatedAttachments = [...attachments];
+          const imageAttachments = updatedAttachments.filter(a => a.type === 'IMAGE' && a.url);
+          const actualIndex = attachments.findIndex(a => a.url === imageAttachments[index]?.url);
+          if (actualIndex !== -1) {
+            updatedAttachments[actualIndex] = {
+              ...updatedAttachments[actualIndex],
+              url: updatedUrl
+            };
+            setAttachments(updatedAttachments);
+          }
+        }}
+      />
     </form>
   );
 };

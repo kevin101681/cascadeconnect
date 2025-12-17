@@ -5,6 +5,7 @@ import StatusBadge from './StatusBadge';
 import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
 import { ClaimMessage } from './MessageSummaryModal';
+import ImageViewerModal from './ImageViewerModal';
 import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload } from 'lucide-react';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
@@ -65,6 +66,8 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   );
   const [newNote, setNewNote] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [imageViewerIndex, setImageViewerIndex] = useState(0);
   
   // Scheduling state
   const [proposeDate, setProposeDate] = useState('');
@@ -312,7 +315,23 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                     const attachmentType = att.type || 'DOCUMENT';
                     
                     return (
-                      <div key={attachmentKey} className="group relative w-24 h-24 bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-elevation-1 transition-all">
+                      <div 
+                        key={attachmentKey} 
+                        className={`relative w-24 h-24 bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-elevation-1 transition-all ${
+                          attachmentType === 'IMAGE' && attachmentUrl ? 'cursor-pointer' : ''
+                        }`}
+                        onClick={() => {
+                          if (attachmentType === 'IMAGE' && attachmentUrl) {
+                            const imageIndex = claim.attachments
+                              .filter(a => a.type === 'IMAGE' && a.url)
+                              .findIndex(a => a.url === attachmentUrl);
+                            if (imageIndex !== -1) {
+                              setImageViewerIndex(imageIndex);
+                              setImageViewerOpen(true);
+                            }
+                          }
+                        }}
+                      >
                         {attachmentType === 'IMAGE' && attachmentUrl ? (
                           <>
                             <img 
@@ -341,18 +360,6 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                               <FileText className="h-8 w-8 text-blue-600 mb-2" />
                             )}
                             <span className="text-[10px] text-surface-on-variant truncate w-full">{attachmentName}</span>
-                          </div>
-                        )}
-                        {attachmentUrl && (
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <a 
-                              href={attachmentUrl} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="text-white text-xs font-medium hover:underline"
-                            >
-                              View
-                            </a>
                           </div>
                         )}
                       </div>
@@ -769,15 +776,15 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                 </div>
                 {isAdmin && (
                   <div className="flex flex-col md:flex-row gap-4 items-end pt-4 border-t border-green-200 dark:border-green-800">
-                    <div className="w-full flex-1">
+                    <div className="w-full flex-1 min-w-0">
                       <label className="block text-xs text-surface-on-variant dark:text-gray-400 mb-1 ml-1 font-medium">Edit Scheduled Date</label>
                       <button
                         type="button"
                         onClick={() => setShowCalendarPicker(true)}
-                        className="w-full rounded-full border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-700 hover:border-primary hover:bg-surface-container-high dark:hover:bg-gray-600 transition-all cursor-pointer px-4 py-2 text-left flex items-center gap-3 text-sm text-surface-on dark:text-gray-100 h-[2.5rem]"
+                        className="w-full rounded-full border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-700 hover:border-primary hover:bg-surface-container-high dark:hover:bg-gray-600 transition-all cursor-pointer px-4 py-2 text-left flex items-center gap-3 text-sm text-surface-on dark:text-gray-100 min-h-[2.5rem]"
                       >
                         <Calendar className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
-                        <span className={proposeDate ? 'text-surface-on dark:text-gray-100' : 'text-surface-on-variant dark:text-gray-400'}>
+                        <span className={`truncate ${proposeDate ? 'text-surface-on dark:text-gray-100' : 'text-surface-on-variant dark:text-gray-400'}`}>
                           {proposeDate
                             ? new Date(proposeDate).toLocaleDateString('en-US', {
                                 month: '2-digit',
@@ -805,6 +812,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                       onClick={handleConfirmSchedule}
                       disabled={!proposeDate}
                       icon={<CheckCircle className="h-4 w-4" />}
+                      className="w-full md:w-auto whitespace-nowrap"
                     >
                       Update
                     </Button>
@@ -817,15 +825,15 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                   <h4 className="text-sm font-bold text-surface-on dark:text-gray-100">Confirm Appointment Details</h4>
                 </div>
                 <div className="flex flex-col md:flex-row gap-4 items-end">
-                  <div className="w-full flex-1">
+                  <div className="w-full flex-1 min-w-0">
                     <label className="block text-xs text-surface-on-variant dark:text-gray-400 mb-1 ml-1 font-medium">Scheduled Date</label>
                     <button
                       type="button"
                       onClick={() => setShowCalendarPicker(true)}
-                      className="w-full rounded-full border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-700 hover:border-primary hover:bg-surface-container-high dark:hover:bg-gray-600 transition-all cursor-pointer px-4 py-2 text-left flex items-center gap-3 text-sm text-surface-on dark:text-gray-100 h-[2.5rem]"
+                      className="w-full rounded-full border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-700 hover:border-primary hover:bg-surface-container-high dark:hover:bg-gray-600 transition-all cursor-pointer px-4 py-2 text-left flex items-center gap-3 text-sm text-surface-on dark:text-gray-100 min-h-[2.5rem]"
                     >
                       <Calendar className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
-                      <span className={proposeDate ? 'text-surface-on dark:text-gray-100' : 'text-surface-on-variant dark:text-gray-400'}>
+                      <span className={`truncate ${proposeDate ? 'text-surface-on dark:text-gray-100' : 'text-surface-on-variant dark:text-gray-400'}`}>
                         {proposeDate
                           ? new Date(proposeDate).toLocaleDateString('en-US', {
                               month: '2-digit',
@@ -853,6 +861,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                     onClick={handleConfirmSchedule}
                     disabled={!proposeDate}
                     icon={<CheckCircle className="h-4 w-4" />}
+                    className="w-full md:w-auto whitespace-nowrap"
                   >
                     Confirm
                   </Button>
@@ -983,6 +992,29 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
           )
         )}
       </div>
+
+      {/* Image Viewer Modal */}
+      <ImageViewerModal
+        isOpen={imageViewerOpen}
+        attachments={claim.attachments || []}
+        initialIndex={imageViewerIndex}
+        onClose={() => setImageViewerOpen(false)}
+        onUpdateAttachment={(index, updatedUrl) => {
+          const updatedAttachments = [...(claim.attachments || [])];
+          const imageAttachments = updatedAttachments.filter(a => a.type === 'IMAGE' && a.url);
+          const actualIndex = claim.attachments.findIndex(a => a.url === imageAttachments[index]?.url);
+          if (actualIndex !== -1) {
+            updatedAttachments[actualIndex] = {
+              ...updatedAttachments[actualIndex],
+              url: updatedUrl
+            };
+            onUpdateClaim({
+              ...claim,
+              attachments: updatedAttachments
+            });
+          }
+        }}
+      />
     </div>
   );
 };

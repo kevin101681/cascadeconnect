@@ -7,6 +7,7 @@ import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
 import { ClaimMessage } from './MessageSummaryModal';
 import { Calendar, CheckCircle, FileText, Mail, MessageSquare, ArrowLeft, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink } from 'lucide-react';
+import ImageViewerModal from './ImageViewerModal';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
 
@@ -66,6 +67,8 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
   const [soBody, setSoBody] = useState('');
   const [isSendingSO, setIsSendingSO] = useState(false);
   const [showCalendarPicker, setShowCalendarPicker] = useState(false);
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [imageViewerIndex, setImageViewerIndex] = useState(0);
 
   const isAdmin = currentUserRole === UserRole.ADMIN;
   const isScheduled = claim.status === ClaimStatus.SCHEDULED && claim.proposedDates.length > 0;
@@ -305,7 +308,23 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                   const attachmentType = att.type || 'DOCUMENT';
                   
                   return (
-                    <div key={attachmentKey} className="group relative w-24 h-24 bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-elevation-1 transition-all">
+                    <div 
+                      key={attachmentKey} 
+                      className={`relative w-24 h-24 bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-elevation-1 transition-all ${
+                        attachmentType === 'IMAGE' && attachmentUrl ? 'cursor-pointer' : ''
+                      }`}
+                      onClick={() => {
+                        if (attachmentType === 'IMAGE' && attachmentUrl) {
+                          const imageIndex = claim.attachments
+                            .filter(a => a.type === 'IMAGE' && a.url)
+                            .findIndex(a => a.url === attachmentUrl);
+                          if (imageIndex !== -1) {
+                            setImageViewerIndex(imageIndex);
+                            setImageViewerOpen(true);
+                          }
+                        }
+                      }}
+                    >
                       {attachmentType === 'IMAGE' && attachmentUrl ? (
                         <>
                           <img 
@@ -335,25 +354,6 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
                             <FileText className="h-8 w-8 text-blue-600 mb-2" />
                           )}
                           <span className="text-[10px] text-surface-on-variant truncate w-full">{attachmentName}</span>
-                        </div>
-                      )}
-                      {/* Hover Overlay */}
-                      {attachmentUrl && (
-                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <a 
-                            href={attachmentUrl} 
-                            target="_blank" 
-                            rel="noreferrer" 
-                            className="text-white text-xs font-medium hover:underline"
-                            onClick={(e) => {
-                              if (!attachmentUrl) {
-                                e.preventDefault();
-                                alert('Attachment URL is missing');
-                              }
-                            }}
-                          >
-                            View
-                          </a>
                         </div>
                       )}
                     </div>
@@ -830,6 +830,28 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
         minDate={new Date()}
       />
 
+      {/* Image Viewer Modal */}
+      <ImageViewerModal
+        isOpen={imageViewerOpen}
+        attachments={claim.attachments || []}
+        initialIndex={imageViewerIndex}
+        onClose={() => setImageViewerOpen(false)}
+        onUpdateAttachment={(index, updatedUrl) => {
+          const updatedAttachments = [...(claim.attachments || [])];
+          const imageAttachments = updatedAttachments.filter(a => a.type === 'IMAGE' && a.url);
+          const actualIndex = claim.attachments.findIndex(a => a.url === imageAttachments[index]?.url);
+          if (actualIndex !== -1) {
+            updatedAttachments[actualIndex] = {
+              ...updatedAttachments[actualIndex],
+              url: updatedUrl
+            };
+            onUpdateClaim({
+              ...claim,
+              attachments: updatedAttachments
+            });
+          }
+        }}
+      />
     </div>
   );
 };
