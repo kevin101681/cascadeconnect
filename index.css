@@ -93,10 +93,28 @@ html.dark .cl-userButtonPopoverCard {
     background-color: transparent !important;
 }
 
+.cl-userButtonPopoverHeader > *,
+.cl-userButtonPopoverHeader p,
+.cl-userButtonPopoverHeader span,
+.cl-userButtonPopoverHeader div {
+    background-color: transparent !important;
+}
+
 /* Header Section - Dark Mode */
 .dark .cl-userButtonPopoverHeader,
 html.dark .cl-userButtonPopoverHeader {
     border-bottom-color: #374151 !important; /* dark:border-gray-700 */
+    background-color: transparent !important;
+}
+
+.dark .cl-userButtonPopoverHeader > *,
+html.dark .cl-userButtonPopoverHeader > *,
+.dark .cl-userButtonPopoverHeader p,
+html.dark .cl-userButtonPopoverHeader p,
+.dark .cl-userButtonPopoverHeader span,
+html.dark .cl-userButtonPopoverHeader span,
+.dark .cl-userButtonPopoverHeader div,
+html.dark .cl-userButtonPopoverHeader div {
     background-color: transparent !important;
 }
 
@@ -147,11 +165,20 @@ html.dark .cl-userButtonPopoverActions > * {
     font-size: 0.875rem !important;
     color: #171c1f !important; /* surface-on */
     background-color: transparent !important;
+    border: none !important;
     transition: background-color 0.2s !important;
 }
 
 .cl-userButtonPopoverActionButton:hover {
     background-color: #f0f4f6 !important; /* surface-container */
+    border: none !important;
+}
+
+.cl-userButtonPopoverActionButton > *,
+.cl-userButtonPopoverActionButton span,
+.cl-userButtonPopoverActionButton div {
+    background-color: transparent !important;
+    border: none !important;
 }
 
 /* Action Button - Dark Mode */
@@ -159,11 +186,23 @@ html.dark .cl-userButtonPopoverActions > * {
 html.dark .cl-userButtonPopoverActionButton {
     color: #f9fafb !important; /* dark:text-gray-100 */
     background-color: transparent !important;
+    border: none !important;
 }
 
 .dark .cl-userButtonPopoverActionButton:hover,
 html.dark .cl-userButtonPopoverActionButton:hover {
     background-color: #374151 !important; /* dark:hover:bg-gray-700 */
+    border: none !important;
+}
+
+.dark .cl-userButtonPopoverActionButton > *,
+html.dark .cl-userButtonPopoverActionButton > *,
+.dark .cl-userButtonPopoverActionButton span,
+html.dark .cl-userButtonPopoverActionButton span,
+.dark .cl-userButtonPopoverActionButton div,
+html.dark .cl-userButtonPopoverActionButton div {
+    background-color: transparent !important;
+    border: none !important;
 }
 
 /* Action Button Text - Light Mode */
