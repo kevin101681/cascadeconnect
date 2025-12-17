@@ -412,3 +412,69 @@ html.dark .cl-userButtonPopoverHeader * {
     background-color: #1f2937 !important; /* dark:bg-gray-800 */
 }
 
+/* Shimmer Animation for Logo on Initial Load */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.logo-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.logo-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s ease-in-out;
+  pointer-events: none;
+}
+
+.dark .logo-shimmer::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+}
+
+/* Staggered slide-up animations for dashboard elements */
+@keyframes slide-up-fade-in {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-up-delay-1 {
+  animation: slide-up-fade-in 0.7s ease-out 0.1s both;
+}
+
+.animate-slide-up-delay-2 {
+  animation: slide-up-fade-in 0.7s ease-out 0.2s both;
+}
+
+.animate-slide-up-delay-3 {
+  animation: slide-up-fade-in 0.7s ease-out 0.3s both;
+}
+

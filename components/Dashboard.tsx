@@ -1283,7 +1283,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           {/* COMPACT HOMEOWNER HEADER CARD */}
           <div 
             key={homeownerCardKey}
-            className="w-full lg:flex-1 lg:min-w-0 lg:flex-shrink lg:self-start bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 group relative flex flex-col animate-[slide-up_0.4s_ease-out,fade-in_0.4s_ease-out]"
+            className="w-full lg:flex-1 lg:min-w-0 lg:flex-shrink lg:self-start bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 group relative flex flex-col"
+            style={{ animation: 'slide-up-fade-in 0.7s ease-out both' }}
           >
           <div className="flex flex-col p-6">
              
@@ -1486,7 +1487,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           {/* Upcoming Schedule Card - Right of Homeowner Info */}
-          <div className="w-full lg:w-[300px] lg:flex-shrink-0 bg-secondary-container dark:bg-gray-800 rounded-3xl text-secondary-on-container dark:text-gray-100 flex flex-col relative border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden">
+          <div className="w-full lg:w-[300px] lg:flex-shrink-0 bg-secondary-container dark:bg-gray-800 rounded-3xl text-secondary-on-container dark:text-gray-100 flex flex-col relative border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden animate-slide-up-delay-1">
             <button
               onClick={() => setIsScheduleExpanded(!isScheduleExpanded)}
               className="p-6 w-full text-left flex-shrink-0 z-10 relative"
@@ -1571,7 +1572,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Navigation Tabs (Context Specific) */}
-        <div className="flex gap-2 max-w-7xl mx-auto">
+        <div className="flex gap-2 max-w-7xl mx-auto animate-slide-up-delay-2">
            <button 
               onClick={() => setCurrentTab('CLAIMS')}
               className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'CLAIMS' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
@@ -1605,13 +1606,13 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Content Area */}
         {currentTab === 'CLAIMS' && (
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto animate-slide-up-delay-3">
             {renderClaimsList(displayClaims)}
           </div>
         )}
 
         {currentTab === 'TASKS' && isAdmin && (
-          <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 p-6 shadow-elevation-1">
+          <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 p-6 shadow-elevation-1 animate-slide-up-delay-3">
             <TaskList 
               tasks={tasks}
               employees={employees}
@@ -1626,7 +1627,11 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         )}
 
-        {currentTab === 'MESSAGES' && renderMessagesTab()}
+        {currentTab === 'MESSAGES' && (
+          <div className="animate-slide-up-delay-3">
+            {renderMessagesTab()}
+          </div>
+        )}
 
         {/* DOCUMENTS MODAL */}
         {showDocsModal && (

@@ -56,6 +56,7 @@ const Layout: React.FC<LayoutProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const [badgeRefreshKey, setBadgeRefreshKey] = useState(0);
+  const [showLogoShimmer, setShowLogoShimmer] = useState(true);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -89,6 +90,16 @@ const Layout: React.FC<LayoutProps> = ({
     return () => clearInterval(interval);
   }, []);
 
+  // Remove shimmer animation after it completes
+  useEffect(() => {
+    if (showLogoShimmer) {
+      const timer = setTimeout(() => {
+        setShowLogoShimmer(false);
+      }, 2000); // Match animation duration
+      return () => clearTimeout(timer);
+    }
+  }, [showLogoShimmer]);
+
   const handleMenuAction = (action: () => void) => {
     action();
     setIsMenuOpen(false);
@@ -103,7 +114,7 @@ const Layout: React.FC<LayoutProps> = ({
             
             {/* Logo */}
             <button onClick={() => onNavigate('DASHBOARD')} className="flex items-center gap-3 flex-shrink-0 focus:outline-none">
-              <div className="bg-gray-100 dark:bg-gray-700 p-2 rounded-xl border border-surface-outline-variant dark:border-gray-600 shadow-sm h-10 w-12 flex items-center justify-center overflow-hidden">
+              <div className={`bg-gray-200 dark:bg-[#374151] p-2 rounded-xl border border-surface-outline-variant dark:border-gray-600 shadow-sm h-10 w-12 flex items-center justify-center overflow-hidden ${showLogoShimmer ? 'logo-shimmer' : ''}`}>
                 <img 
                   src="/logo.svg" 
                   alt="CASCADE CONNECT Logo" 
@@ -113,7 +124,7 @@ const Layout: React.FC<LayoutProps> = ({
               <img 
                 src="/connect.svg" 
                 alt="CASCADE CONNECT" 
-                className="h-7 object-contain hidden md:block" 
+                className={`h-7 object-contain hidden md:block ${showLogoShimmer ? 'logo-shimmer' : ''}`}
               />
             </button>
             
