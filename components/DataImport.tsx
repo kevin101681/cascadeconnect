@@ -231,7 +231,7 @@ const DataImport: React.FC<DataImportProps> = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]">
-      <div className="bg-surface dark:bg-gray-800 w-full max-w-7xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
+      <div className="bg-surface dark:bg-gray-800 w-full max-w-7xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 min-h-[600px] flex flex-col">
         <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center">
           <div>
             <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 mb-2 flex items-center gap-2">
@@ -249,7 +249,7 @@ const DataImport: React.FC<DataImportProps> = ({
           </button>
         </div>
 
-        <div className="p-6 max-h-[80vh] overflow-y-auto">
+        <div className="p-6 max-h-[80vh] overflow-y-auto flex-1">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
         {/* Configuration Card */}

@@ -403,11 +403,11 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
         }}
       >
         <div 
-          className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8"
+          className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 min-h-[600px] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {renderHeader()}
-          <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+          <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto flex-1">
             <div className="flex items-center justify-center py-12">
               <RefreshCw className="h-8 w-8 animate-spin text-primary" />
               <span className="ml-3 text-surface-on-variant dark:text-gray-400">Loading backend data...</span>
@@ -429,7 +429,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
         }}
       >
         <div 
-          className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8"
+          className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 min-h-[600px] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {renderHeader(
@@ -437,7 +437,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
               Retry
             </Button>
           )}
-          <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+          <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto flex-1">
             <div className="flex items-center justify-center py-12">
               <AlertCircle className="h-8 w-8 text-error" />
               <span className="ml-3 text-error">{error}</span>
@@ -458,11 +458,11 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
       }}
     >
       <div 
-        className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8"
+        className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 min-h-[600px] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {renderHeader()}
-        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto flex-1">
           {/* Tabs */}
           <div className="flex gap-2 mb-6 border-b border-surface-outline-variant dark:border-gray-700 overflow-x-auto">
             {(['NETLIFY', 'OVERVIEW', 'USERS', 'HOMEOWNERS', 'CLAIMS', 'DOCUMENTS', 'TASKS', 'MESSAGES', 'NEON'] as const).map(tab => (

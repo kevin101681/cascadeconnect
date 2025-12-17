@@ -203,7 +203,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]">
-      <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
+      <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 min-h-[600px] flex flex-col">
         <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center">
           <div>
             <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
@@ -220,7 +220,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
           </button>
         </div>
 
-        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto flex-1">
       {/* Tabs */}
       <div className="flex border-b border-surface-outline-variant dark:border-gray-700">
         <button

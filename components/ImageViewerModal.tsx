@@ -23,6 +23,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fabricCanvasRef = useRef<any>(null);
+  const canvasContainerRef = useRef<HTMLDivElement>(null);
   const fabricLibRef = useRef<any>(null);
   
   // Editing state
@@ -71,6 +72,19 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
     });
   }, [isOpen]);
 
+  // Helper function to calculate canvas size
+  const calculateCanvasSize = () => {
+    const container = canvasContainerRef.current;
+    if (!container) return { width: 1000, height: 700 };
+    
+    const containerRect = container.getBoundingClientRect();
+    const padding = 32; // 2rem = 32px (p-8)
+    const maxWidth = Math.min(1200, containerRect.width - padding * 2);
+    const maxHeight = containerRect.height - padding * 2;
+    
+    return { width: maxWidth, height: maxHeight };
+  };
+
   // Initialize canvas after fabric is loaded
   useEffect(() => {
     if (!fabricLoaded || !fabricLibRef.current || !canvasRef.current || !isOpen) {
@@ -89,9 +103,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
         return;
       }
       
-      // Use fixed size for now, will adjust based on image
-      const canvasWidth = 1000;
-      const canvasHeight = 700;
+      const { width: canvasWidth, height: canvasHeight } = calculateCanvasSize();
       
       try {
       const canvas = new fabricLib.Canvas(canvasElement, {
@@ -118,6 +130,23 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
       setCanvasInitialized(false);
     };
   }, [fabricLoaded, isOpen]);
+
+  // Handle window resize to recalculate canvas size
+  useEffect(() => {
+    if (!isOpen || !fabricCanvasRef.current) return;
+
+    const handleResize = () => {
+      const canvas = fabricCanvasRef.current;
+      if (!canvas) return;
+      
+      const { width: newWidth, height: newHeight } = calculateCanvasSize();
+      canvas.setDimensions({ width: newWidth, height: newHeight });
+      canvas.renderAll();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isOpen]);
 
   // Save state for undo/redo
   const saveState = React.useCallback(() => {
@@ -196,19 +225,38 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
         
         console.log('Scaling image to canvas:', { canvasWidth, canvasHeight, imgWidth, imgHeight });
         
+        // Scale to fit within canvas with some padding
+        const padding = 20;
         const scale = Math.min(
-          (canvasWidth - 40) / imgWidth,
-          (canvasHeight - 40) / imgHeight
+          (canvasWidth - padding * 2) / imgWidth,
+          (canvasHeight - padding * 2) / imgHeight
         );
         
         img.scale(scale);
         const scaledWidth = imgWidth * scale;
         const scaledHeight = imgHeight * scale;
+        
+        // Create rounded rectangle clip path for the image
+        const cornerRadius = 16; // rounded-xl = 16px
+        const imgLeft = (canvasWidth - scaledWidth) / 2;
+        const imgTop = (canvasHeight - scaledHeight) / 2;
+        
+        const clipPath = new fabricLib.Rect({
+          left: imgLeft,
+          top: imgTop,
+          width: scaledWidth,
+          height: scaledHeight,
+          rx: cornerRadius,
+          ry: cornerRadius,
+          absolutePositioned: true,
+        });
+        
         img.set({
-          left: (canvasWidth - scaledWidth) / 2,
-          top: (canvasHeight - scaledHeight) / 2,
+          left: imgLeft,
+          top: imgTop,
           selectable: false,
           evented: false,
+          clipPath: clipPath,
         });
         
         canvas.backgroundImage = img;
@@ -691,7 +739,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
         )}
 
         {/* Canvas Container */}
-        <div className="relative flex-1 overflow-auto bg-gray-100 dark:bg-gray-900 min-h-[400px]">
+        <div ref={canvasContainerRef} className="relative flex-1 overflow-hidden min-h-[400px]">
           {/* Previous Button */}
           {hasPrevious && (
             <button
@@ -708,7 +756,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
             {/* Always render canvas so ref exists */}
             <canvas 
               ref={canvasRef} 
-              className="border border-surface-outline-variant dark:border-gray-700 shadow-lg rounded-xl overflow-hidden"
+              className="shadow-lg"
               style={{ display: fabricLoaded && canvasInitialized ? 'block' : 'none' }}
             />
             {(!fabricLoaded || !canvasInitialized) && (
