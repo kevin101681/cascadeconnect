@@ -220,11 +220,30 @@ const Layout: React.FC<LayoutProps> = ({
                 <UserButton 
                   appearance={{
                     elements: {
-                      avatarBox: 'h-10 w-10',
-                      userButtonPopoverCard: 'bg-surface dark:bg-gray-800 border-surface-outline-variant dark:border-gray-700 shadow-elevation-2',
-                      userButtonPopoverActionButton: 'text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700',
+                      // Avatar styling - primary color background
+                      avatarBox: 'h-10 w-10 bg-primary',
+                      avatarImage: 'rounded-full',
+                      
+                      // Popover card styling to match Cascade Connect
+                      userButtonPopoverCard: 'bg-surface dark:bg-gray-800 rounded-xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-2 p-2',
+                      
+                      // User info section
+                      userButtonPopoverHeader: 'px-3 py-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50',
+                      userButtonPopoverHeaderTitle: 'text-sm font-medium text-surface-on dark:text-gray-100',
+                      userButtonPopoverHeaderSubtitle: 'text-xs text-surface-on-variant dark:text-gray-400',
+                      
+                      // Action buttons styling
+                      userButtonPopoverActions: 'py-1',
+                      userButtonPopoverActionButton: 'text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-lg px-3 py-2 text-sm transition-colors',
                       userButtonPopoverActionButtonText: 'text-surface-on dark:text-gray-100',
-                      userButtonPopoverFooter: 'hidden', // Hide "Manage account" link
+                      userButtonPopoverActionButtonIcon: 'text-surface-outline-variant dark:text-gray-500',
+                      
+                      // Hide account management
+                      userButtonPopoverFooter: 'hidden',
+                      userButtonPopoverActionButton__manageAccount: 'hidden',
+                      
+                      // Sign out button styling
+                      userButtonPopoverActionButton__signOut: 'text-error hover:bg-error/5 dark:hover:bg-error/10',
                     }
                   }}
                   afterSignOutUrl="/"
