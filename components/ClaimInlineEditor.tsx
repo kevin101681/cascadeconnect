@@ -189,7 +189,14 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     }
     
     setSoSubject(`Service Order: ${claim.title} - ${claim.address}`);
-    setSoBody(`We have a warranty claim that requires your attention.\n\nClaim Details:\n- Title: ${claim.title}\n- Address: ${claim.address}\n- Description: ${claim.description}\n\nPlease schedule a service call at your earliest convenience.`);
+    const senderName = currentUser?.name || 'Admin';
+    setSoBody(`Hello,
+ 
+This is ${senderName} with Cascade Builder Services and I have a warranty repair that needs to be scheduled. The details are described on the attached service order which also includes the homeowner's information, builder, project and lot number.  Pictures of the claim are attached and are also on the service order PDF.  Please let me know your next availability and I'll coordinate with the homeowner.  Once we have a date and time frame set, you will receive a notification requesting to accept the appointment.  Please do so as it helps with our tracking and also makes the homeowner aware that you've committed to the confirmed appointment. 
+
+Once you've completed the assigned work, please have the homeowner sign and date the attached service order and send the signed copy back to me.
+ 
+If this repair work is billable, please let me know prior to scheduling.`);
     setShowSOModal(true);
     
     // Generate PDF
@@ -209,12 +216,80 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     
     setIsSendingSO(true);
     try {
+      // Import PDF generation function
+      const { generateServiceOrderPDFBlob } = await import('../services/pdfService');
+      
+      // Generate PDF blob
+      const summary = `Service Order: ${claim.title} - ${claim.address}`;
+      const pdfBlob = await generateServiceOrderPDFBlob(claim, summary);
+      
+      // Convert PDF blob to base64
+      const pdfBase64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64 = (reader.result as string).split(',')[1];
+          resolve(base64);
+        };
+        reader.readAsDataURL(pdfBlob);
+      });
+      
+      // Get claim number for filename
+      const claimNumber = claim.claimNumber || claim.id.substring(0, 8).toUpperCase();
+      const pdfFilename = `ServiceOrder_${claimNumber}.pdf`;
+      
+      // Get image attachments and convert to base64
+      const imageAttachments = (claim.attachments || []).filter(att => att.type === 'IMAGE' && att.url);
+      const imageAttachmentsBase64 = await Promise.all(
+        imageAttachments.map(async (attachment) => {
+          try {
+            const response = await fetch(attachment.url);
+            const blob = await response.blob();
+            const base64 = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                const base64 = (reader.result as string).split(',')[1];
+                resolve(base64);
+              };
+              reader.readAsDataURL(blob);
+            });
+            
+            // Determine content type from URL or blob
+            const contentType = blob.type || (attachment.url.match(/\.(jpg|jpeg)$/i) ? 'image/jpeg' : 'image/png');
+            const extension = contentType.includes('jpeg') || contentType.includes('jpg') ? 'jpg' : 'png';
+            const filename = attachment.name || `image_${attachment.id || Date.now()}.${extension}`;
+            
+            return {
+              filename,
+              content: base64,
+              contentType
+            };
+          } catch (error) {
+            console.error(`Failed to convert image ${attachment.name} to base64:`, error);
+            return null;
+          }
+        })
+      );
+      
+      // Filter out any failed conversions
+      const validImageAttachments = imageAttachmentsBase64.filter(att => att !== null) as Array<{ filename: string; content: string; contentType: string }>;
+      
+      // Combine PDF and image attachments
+      const allAttachments = [
+        {
+          filename: pdfFilename,
+          content: pdfBase64,
+          contentType: 'application/pdf'
+        },
+        ...validImageAttachments
+      ];
+      
       await sendEmail({
         to: claim.contractorEmail,
         subject: soSubject,
         body: soBody,
         fromName: 'Cascade Admin',
-        fromRole: UserRole.ADMIN
+        fromRole: UserRole.ADMIN,
+        attachments: allAttachments
       });
       
       if (onTrackClaimMessage && claim.contractorName && claim.contractorEmail) {

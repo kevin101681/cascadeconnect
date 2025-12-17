@@ -1291,40 +1291,79 @@ export const Dashboard = React.memo<DashboardProps>(({
                             onEmailBoth: async () => {
                                 console.log('Email Both Docs button clicked');
                                 try {
+                                    // Dynamically import sendEmail to avoid circular dependencies
+                                    const { sendEmail } = await import('../../../services/emailService');
+                                    const { UserRole } = await import('../../../types');
+                                    
                                     const getSafeName = () => {
                                         const name = project.fields?.[0]?.value || "Project";
                                         return name.replace(/[^a-z0-9]/gi, '_');
                                     };
-                                    const generateReportFile = async () => {
-                                        const res = await generatePDFWithMetadata({ project, locations }, companyLogo, project.reportMarks);
-                                        const blob = res.doc.output('blob');
-                                        const filename = `${getSafeName()} - New Home Completion List.pdf`;
-                                        return new File([blob], filename, { type: 'application/pdf' });
-                                    };
-                                    const generateSignOffFile = async () => {
-                                        const blobUrl = await generateSignOffPDF(project, SIGN_OFF_TITLE, signOffTemplates[0], companyLogo, project.signOffImage, project.signOffStrokes, 800, undefined, 16);
-                                        const blob = await fetch(blobUrl).then(r => r.blob());
-                                        const filename = `${getSafeName()} - Sign Off Sheet.pdf`;
-                                        return new File([blob], filename, { type: 'application/pdf' });
-                                    };
-                                    const handleShare = async (files: File[], title?: string, text?: string) => {
-                                        if (navigator.share && navigator.canShare && navigator.canShare({ files })) {
-                                            try {
-                                                await navigator.share({ files, title, text });
-                                            } catch (error) {
-                                                console.error("Share failed", error);
-                                            }
-                                        } else {
-                                            alert("Sharing files is not supported on this browser/device.");
-                                        }
-                                    };
                                     
-                                    const reportFile = await generateReportFile();
-                                    const signOffFile = await generateSignOffFile();
+                                    // Generate PDFs
+                                    const reportRes = await generatePDFWithMetadata({ project, locations }, companyLogo, project.reportMarks);
+                                    const reportBlob = reportRes.doc.output('blob');
+                                    const reportFilename = `${getSafeName()} - New Home Completion List.pdf`;
+                                    
+                                    const signOffBlobUrl = await generateSignOffPDF(project, SIGN_OFF_TITLE, signOffTemplates[0], companyLogo, project.signOffImage, project.signOffStrokes, 800, undefined, 16);
+                                    const signOffBlob = await fetch(signOffBlobUrl).then(r => r.blob());
+                                    const signOffFilename = `${getSafeName()} - Sign Off Sheet.pdf`;
+                                    
+                                    // Convert blobs to base64 for email attachments
+                                    const reportBase64 = await new Promise<string>((resolve) => {
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => {
+                                            const base64 = (reader.result as string).split(',')[1];
+                                            resolve(base64);
+                                        };
+                                        reader.readAsDataURL(reportBlob);
+                                    });
+                                    
+                                    const signOffBase64 = await new Promise<string>((resolve) => {
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => {
+                                            const base64 = (reader.result as string).split(',')[1];
+                                            resolve(base64);
+                                        };
+                                        reader.readAsDataURL(signOffBlob);
+                                    });
+                                    
+                                    // Get homeowner email from project fields
+                                    const homeownerEmailField = project.fields?.find(f => f.label === 'Email Address' || f.icon === 'Mail');
+                                    const homeownerEmail = homeownerEmailField?.value || '';
+                                    const homeownerName = project.fields?.[0]?.value || 'Homeowner';
+                                    
+                                    if (!homeownerEmail) {
+                                        alert('Homeowner email not found. Please ensure the email address is set in the project fields.');
+                                        return;
+                                    }
+                                    
+                                    // Send email via SendGrid
                                     const safeProjectName = project.fields?.[0]?.value || "Project";
-                                    await handleShare([reportFile, signOffFile], `${safeProjectName} - Walk through docs`, "Here's the punch list and sign off sheet. The rewalk is scheduled for");
+                                    await sendEmail({
+                                        to: homeownerEmail,
+                                        subject: `${safeProjectName} - Walk through docs`,
+                                        body: "Here's the punch list and sign off sheet. The rewalk is scheduled for",
+                                        fromName: 'Cascade Builder Services',
+                                        fromRole: UserRole.ADMIN,
+                                        attachments: [
+                                            {
+                                                filename: reportFilename,
+                                                content: reportBase64,
+                                                contentType: 'application/pdf'
+                                            },
+                                            {
+                                                filename: signOffFilename,
+                                                content: signOffBase64,
+                                                contentType: 'application/pdf'
+                                            }
+                                        ]
+                                    });
+                                    
+                                    console.log('✅ Email sent successfully via SendGrid');
                                 } catch (error) {
                                     console.error("Failed to email both docs:", error);
+                                    alert('Failed to send email. Please try again or contact support.');
                                 }
                             },
                             onHomeownerManual: () => {

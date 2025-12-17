@@ -145,7 +145,14 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
 
     // 2. Pre-fill Email Details
     setSoSubject(`Service Order: ${claim.builderName} - ${claim.jobName} - ${claim.title}`);
-    setSoBody(`Hi ${claim.contractorName},\n\nPlease find attached the service order for the warranty claim referenced above.\n\nAddress: ${claim.address}\nIssue: ${claim.description}\n\nPlease let us know when you can schedule this.\n\nThanks,\nCascade Builder Services`);
+    const senderName = currentUser?.name || 'Admin';
+    setSoBody(`Hello,
+ 
+This is ${senderName} with Cascade Builder Services and I have a warranty repair that needs to be scheduled. The details are described on the attached service order which also includes the homeowner's information, builder, project and lot number.  Pictures of the claim are attached and are also on the service order PDF.  Please let me know your next availability and I'll coordinate with the homeowner.  Once we have a date and time frame set, you will receive a notification requesting to accept the appointment.  Please do so as it helps with our tracking and also makes the homeowner aware that you've committed to the confirmed appointment. 
+
+Once you've completed the assigned work, please have the homeowner sign and date the attached service order and send the signed copy back to me.
+ 
+If this repair work is billable, please let me know prior to scheduling.`);
     
     setShowSOModal(true);
   };
@@ -153,27 +160,99 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
   const handleSendServiceOrder = async () => {
     setIsSendingSO(true);
     if (claim.contractorEmail) {
-        await sendEmail({
+        try {
+          // Import PDF generation function
+          const { generateServiceOrderPDFBlob } = await import('../services/pdfService');
+          
+          // Generate PDF blob
+          const pdfBlob = await generateServiceOrderPDFBlob(claim, claim.description);
+          
+          // Convert PDF blob to base64
+          const pdfBase64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              const base64 = (reader.result as string).split(',')[1];
+              resolve(base64);
+            };
+            reader.readAsDataURL(pdfBlob);
+          });
+          
+          // Get claim number for filename
+          const claimNumber = claim.claimNumber || claim.id.substring(0, 8).toUpperCase();
+          const pdfFilename = `ServiceOrder_${claimNumber}.pdf`;
+          
+          // Get image attachments and convert to base64
+          const imageAttachments = (claim.attachments || []).filter(att => att.type === 'IMAGE' && att.url);
+          const imageAttachmentsBase64 = await Promise.all(
+            imageAttachments.map(async (attachment) => {
+              try {
+                const response = await fetch(attachment.url);
+                const blob = await response.blob();
+                const base64 = await new Promise<string>((resolve) => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    const base64 = (reader.result as string).split(',')[1];
+                    resolve(base64);
+                  };
+                  reader.readAsDataURL(blob);
+                });
+                
+                // Determine content type from URL or blob
+                const contentType = blob.type || (attachment.url.match(/\.(jpg|jpeg)$/i) ? 'image/jpeg' : 'image/png');
+                const extension = contentType.includes('jpeg') || contentType.includes('jpg') ? 'jpg' : 'png';
+                const filename = attachment.name || `image_${attachment.id || Date.now()}.${extension}`;
+                
+                return {
+                  filename,
+                  content: base64,
+                  contentType
+                };
+              } catch (error) {
+                console.error(`Failed to convert image ${attachment.name} to base64:`, error);
+                return null;
+              }
+            })
+          );
+          
+          // Filter out any failed conversions
+          const validImageAttachments = imageAttachmentsBase64.filter(att => att !== null) as Array<{ filename: string; content: string; contentType: string }>;
+          
+          // Combine PDF and image attachments
+          const allAttachments = [
+            {
+              filename: pdfFilename,
+              content: pdfBase64,
+              contentType: 'application/pdf'
+            },
+            ...validImageAttachments
+          ];
+          
+          await sendEmail({
             to: claim.contractorEmail,
             subject: soSubject,
             body: soBody,
             fromName: 'Cascade Admin',
-            fromRole: UserRole.ADMIN
-        });
-        
-        // Track service order message to subcontractor
-        if (onTrackClaimMessage && claim.contractorName && claim.contractorEmail) {
-          onTrackClaimMessage(claim.id, {
-            type: 'SUBCONTRACTOR',
-            subject: soSubject,
-            recipient: claim.contractorName,
-            recipientEmail: claim.contractorEmail,
-            content: soBody,
-            senderName: currentUser?.name || 'Admin'
+            fromRole: UserRole.ADMIN,
+            attachments: allAttachments
           });
+          
+          // Track service order message to subcontractor
+          if (onTrackClaimMessage && claim.contractorName && claim.contractorEmail) {
+            onTrackClaimMessage(claim.id, {
+              type: 'SUBCONTRACTOR',
+              subject: soSubject,
+              recipient: claim.contractorName,
+              recipientEmail: claim.contractorEmail,
+              content: soBody,
+              senderName: currentUser?.name || 'Admin'
+            });
+          }
+          
+          alert('Service Order sent to Sub successfully!');
+        } catch (error) {
+          console.error('Failed to send service order:', error);
+          alert('Failed to send service order. Please try again.');
         }
-        
-        alert('Service Order sent to Sub successfully!');
     }
     setIsSendingSO(false);
     setShowSOModal(false);
