@@ -64,7 +64,7 @@ app.use(express.json());
 app.all("/api/auth/*", toNodeHandler(auth));
 
 // Convert Express app to Netlify Function using serverless-http
-const handler = serverless(app, {
+const serverlessHandler = serverless(app, {
   binary: ['image/*', 'application/pdf'],
 });
 
@@ -73,7 +73,7 @@ export const handler = async (event, context) => {
   context.callbackWaitsForEmptyEventLoop = false;
   
   try {
-    return await handler(event, context);
+    return await serverlessHandler(event, context);
   } catch (error) {
     console.error('Better Auth function error:', error);
     return {
