@@ -1,0 +1,29 @@
+# Ensure consistent line endings across platforms
+* text=auto
+
+# JSON files should use LF line endings
+*.json text eol=lf
+
+# Package files should use LF
+package.json text eol=lf
+package-lock.json text eol=lf
+
+# Source files
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+
+# Config files
+*.toml text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text eol=lf

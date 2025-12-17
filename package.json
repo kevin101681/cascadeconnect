@@ -24,7 +24,8 @@
     "netlify:init": "netlify init",
     "netlify:deploy": "netlify deploy",
     "netlify:deploy:prod": "netlify deploy --prod",
-    "netlify:status": "netlify status"
+    "netlify:status": "netlify status",
+    "verify:package": "node scripts/verify-package-json.js"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.59.0",
