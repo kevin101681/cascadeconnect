@@ -70,8 +70,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
 
 
   // M3 Input Styles
-  const inputClass = "peer block w-full rounded-md border border-surface-outline dark:border-gray-600 bg-transparent dark:bg-gray-700 px-3 py-3 text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors placeholder-transparent";
-  const labelClass = "absolute left-2 -top-2 z-[1] bg-surface dark:bg-gray-800 px-1 text-xs text-surface-outline-variant dark:text-gray-400 transition-all peer-placeholder-shown:top-3.5 peer-placeholder-shown:text-sm peer-focus:-top-2 peer-focus:text-xs peer-focus:text-primary";
+  const inputClass = "block w-full rounded-md border border-surface-outline dark:border-gray-600 bg-transparent dark:bg-gray-700 px-3 py-3 text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors";
+  const labelClass = "block text-xs text-surface-on dark:text-gray-100 mb-1 ml-1 font-medium";
   const selectClass = "block w-full rounded-md border border-surface-outline dark:border-gray-600 bg-transparent dark:bg-gray-700 px-3 py-3 text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors";
 
   return (
@@ -88,7 +88,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left Column: Basic Info */}
         <div className="space-y-6">
-           <div className="relative">
+           <div>
+            <label htmlFor="title" className={labelClass}>Claim Title</label>
             <input
               id="title"
               type="text"
@@ -97,10 +98,10 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
-            <label htmlFor="title" className={labelClass}>Claim Title</label>
           </div>
 
-          <div className="relative">
+          <div>
+            <label htmlFor="description" className={labelClass}>Description</label>
             <textarea
               id="description"
               rows={4}
@@ -108,9 +109,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
               className={inputClass}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Description"
             />
-            <label htmlFor="description" className={labelClass}>Problem Description</label>
           </div>
 
            {/* Classification Section (Admin Only) */}
@@ -205,7 +204,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
 
            {/* Internal Notes (Admin Only) */}
            {isAdmin && (
-             <div className="relative">
+             <div>
+              <label htmlFor="internalNotes" className={labelClass}>Internal Notes (Admin Only)</label>
               <textarea
                 id="internalNotes"
                 rows={4}
@@ -213,7 +213,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
                 value={internalNotes}
                 onChange={(e) => setInternalNotes(e.target.value)}
               />
-              <label htmlFor="internalNotes" className={labelClass}>Internal Notes (Admin Only)</label>
             </div>
            )}
 

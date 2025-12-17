@@ -796,8 +796,8 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                       </button>
                     </div>
                     <div className="w-full md:w-auto md:min-w-[200px]">
+                      <label className="block text-xs text-surface-on dark:text-gray-100 mb-1 ml-1 font-medium">Time Slot</label>
                       <MaterialSelect
-                        label="Time Slot"
                         options={[
                           { value: 'AM', label: 'AM (8am - 12pm)' },
                           { value: 'PM', label: 'PM (12pm - 4pm)' },
@@ -826,7 +826,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                 </div>
                 <div className="flex flex-col md:flex-row gap-4 items-end">
                   <div className="w-full flex-1 min-w-0">
-                    <label className="block text-xs text-surface-on-variant dark:text-gray-400 mb-1 ml-1 font-medium">Scheduled Date</label>
+                    <label className="block text-xs text-surface-on dark:text-gray-100 mb-1 ml-1 font-medium">Scheduled Date</label>
                     <button
                       type="button"
                       onClick={() => setShowCalendarPicker(true)}
@@ -845,8 +845,8 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                     </button>
                   </div>
                   <div className="w-full md:w-auto md:min-w-[200px]">
+                    <label className="block text-xs text-surface-on dark:text-gray-100 mb-1 ml-1 font-medium">Time Slot</label>
                     <MaterialSelect
-                      label="Time Slot"
                       options={[
                         { value: 'AM', label: 'AM (8am - 12pm)' },
                         { value: 'PM', label: 'PM (12pm - 4pm)' },

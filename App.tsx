@@ -1364,6 +1364,90 @@ Homeowner: ${newClaim.homeownerName}
   };
 
   const handleEnrollHomeowner = async (data: Partial<Homeowner>, tradeListFile: File | null, subcontractorList?: any[]) => {
+    // Scan subcontractor list and add new subs to contractors database
+    if (subcontractorList && subcontractorList.length > 0) {
+      console.log('📋 Scanning subcontractor list for new contractors...');
+      
+      // Normalize column names (case-insensitive lookup)
+      const findColumn = (row: any, possibleNames: string[]): string | null => {
+        const rowKeys = Object.keys(row);
+        for (const name of possibleNames) {
+          const found = rowKeys.find(key => key.toLowerCase() === name.toLowerCase());
+          if (found && row[found]) {
+            return String(row[found]).trim();
+          }
+        }
+        return null;
+      };
+      
+      let addedCount = 0;
+      let skippedCount = 0;
+      
+      for (const subRow of subcontractorList) {
+        // Extract email (try multiple column name variations)
+        const email = findColumn(subRow, ['email', 'e-mail', 'email address', 'contact email', 'sub email']);
+        if (!email) {
+          console.log('⚠️ Skipping sub row - no email found:', subRow);
+          skippedCount++;
+          continue;
+        }
+        
+        // Normalize email
+        const normalizedEmail = email.toLowerCase().trim();
+        
+        // Check if contractor already exists by email (check both local state and database)
+        const existingContractor = contractors.find(c => c.email.toLowerCase().trim() === normalizedEmail);
+        if (existingContractor) {
+          console.log(`✓ Contractor already exists in local state: ${normalizedEmail}`);
+          skippedCount++;
+          continue;
+        }
+        
+        // Also check database if configured
+        if (isDbConfigured) {
+          try {
+            const dbContractors = await db.select().from(contractorsTable).where(eq(contractorsTable.email, normalizedEmail));
+            if (dbContractors.length > 0) {
+              console.log(`✓ Contractor already exists in database: ${normalizedEmail}`);
+              skippedCount++;
+              continue;
+            }
+          } catch (error) {
+            // If contractors table doesn't exist, continue with adding
+            console.log('⚠️ Could not check database for existing contractors, continuing...');
+          }
+        }
+        
+        // Extract name (try multiple column name variations)
+        const name = findColumn(subRow, ['name', 'contact name', 'contact', 'company name', 'company', 'sub name', 'subcontractor name']);
+        const companyName = findColumn(subRow, ['company name', 'company', 'business name', 'firm name']) || name || 'Unknown Company';
+        const contactName = name || findColumn(subRow, ['contact', 'contact person', 'rep name']) || '';
+        
+        // Extract specialty if available
+        const specialty = findColumn(subRow, ['specialty', 'specialty type', 'trade', 'type', 'category']) || 'General';
+        
+        // Create new contractor
+        const newContractor: Contractor = {
+          id: crypto.randomUUID(),
+          companyName: companyName,
+          contactName: contactName || null,
+          email: normalizedEmail,
+          specialty: specialty
+        };
+        
+        // Add to contractors database
+        try {
+          await handleAddContractor(newContractor);
+          addedCount++;
+          console.log(`✅ Added new contractor: ${companyName} (${normalizedEmail})`);
+        } catch (error) {
+          console.error(`❌ Failed to add contractor ${normalizedEmail}:`, error);
+        }
+      }
+      
+      console.log(`📊 Sub contractor scan complete: ${addedCount} added, ${skippedCount} skipped`);
+    }
+    
     const newId = crypto.randomUUID();
     const newHomeowner: Homeowner = {
       id: newId,
@@ -2871,6 +2955,9 @@ Assigned By: ${assignerName}
           onClearHomeowners={handleClearHomeowners} 
           existingBuilderGroups={builderGroups} 
           onImportBuilderGroups={handleImportBuilderGroups}
+          onImportTasks={handleImportTasks}
+          onImportMessages={handleImportMessages}
+          onImportBuilderUsers={handleImportBuilderUsers}
           onClose={() => setCurrentView('DASHBOARD')} 
         />
       )}

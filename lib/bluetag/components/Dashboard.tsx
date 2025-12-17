@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react';
 import { LocationGroup, ProjectDetails, Issue, SignOffTemplate, SignOffSection, ProjectField, Point, SignOffStroke } from '../types';
-import { ChevronRight, ArrowLeft, X, Plus, PenTool, Save, Trash2, Check, ChevronDown, Undo, Redo, Info, Download, Sun, Moon, FileText, MapPin, Eye, RefreshCw, Minimize2, Share, Mail, Pencil, Edit2, Send, Calendar, ChevronUp, Hand, Move, AlertCircle, MousePointer2, Settings, GripVertical, AlignLeft, CheckSquare, PanelLeft, User as UserIcon, Phone, Briefcase, Hash, Sparkles, Camera, Mic, MicOff, Layers, Eraser } from 'lucide-react';
+import { ChevronRight, ArrowLeft, X, Plus, PenTool, Save, Trash2, Check, ChevronDown, Undo, Redo, Info, Download, Sun, Moon, FileText, MapPin, Eye, RefreshCw, Minimize2, Share, Mail, Pencil, Edit2, Send, Calendar, ChevronUp, Hand, Move, AlertCircle, MousePointer2, Settings, GripVertical, AlignLeft, CheckSquare, PanelLeft, User as UserIcon, Phone, Briefcase, Hash, Sparkles, Camera, Mic, MicOff, Layers, Eraser, Book } from 'lucide-react';
 import { generateSignOffPDF, SIGN_OFF_TITLE, generatePDFWithMetadata, ImageLocation, CheckboxLocation } from '../pdfService';
 import { AddIssueForm, LocationDetail, AutoResizeTextarea, compressImage, DeleteConfirmationModal } from './LocationDetail';
 import { generateUUID, PREDEFINED_LOCATIONS } from '../constants';
@@ -60,6 +60,8 @@ export interface ReportCardProps {
     readOnly?: boolean;
     actions?: {
         onEmail?: () => void;
+        onEmailBoth?: () => void;
+        onHomeownerManual?: () => void;
         onViewReport?: () => void;
         onViewSignOff?: () => void;
         onDownloadReportPDF?: () => void;
@@ -186,7 +188,7 @@ export const ReportCard: React.FC<ReportCardProps> = ({
                                 console.log('Report preview button clicked');
                                 actions.onViewReport?.(); 
                             }}
-                            className={`h-12 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-colors active:scale-95 shadow-sm shrink-0 border px-3 sm:px-4 gap-1.5 ${
+                            className={`h-12 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-colors active:scale-95 shadow-sm shrink-0 border px-3 sm:px-4 ${
                                 isReportSaved 
                                     ? 'bg-primary-container dark:bg-primary/20 border-primary/30 dark:border-primary/30 text-primary dark:text-primary hover:bg-primary-container/80 dark:hover:bg-primary/30 border-solid' 
                                     : 'bg-surface-container dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 text-surface-on-variant dark:text-gray-300 hover:bg-surface-container-high dark:hover:bg-gray-600 hover:text-primary border-solid'
@@ -195,7 +197,6 @@ export const ReportCard: React.FC<ReportCardProps> = ({
                             type="button"
                         >
                             <FileText size={18} className="sm:w-[20px] sm:h-[20px]" />
-                            <span className="text-xs font-bold whitespace-nowrap">View Report</span>
                         </button>
                         <button 
                             onClick={(e) => { 
@@ -204,7 +205,7 @@ export const ReportCard: React.FC<ReportCardProps> = ({
                                 console.log('Sign off button clicked');
                                 actions.onViewSignOff?.(); 
                             }}
-                            className={`h-12 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-colors active:scale-95 shadow-sm shrink-0 border px-3 sm:px-4 gap-1.5 ${
+                            className={`h-12 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-colors active:scale-95 shadow-sm shrink-0 border px-3 sm:px-4 ${
                                 isSignOffSaved 
                                     ? 'bg-primary-container dark:bg-primary/20 border-primary/30 dark:border-primary/30 text-primary dark:text-primary hover:bg-primary-container/80 dark:hover:bg-primary/30 border-solid' 
                                     : 'bg-surface-container dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 text-surface-on-variant dark:text-gray-300 hover:bg-surface-container-high dark:hover:bg-gray-600 hover:text-primary border-solid'
@@ -213,7 +214,6 @@ export const ReportCard: React.FC<ReportCardProps> = ({
                             type="button"
                         >
                             <PenTool size={18} className="sm:w-[20px] sm:h-[20px]" />
-                            <span className="text-xs font-bold whitespace-nowrap">View Sign Off</span>
                         </button>
                         <button 
                             onClick={(e) => { 
@@ -231,7 +231,7 @@ export const ReportCard: React.FC<ReportCardProps> = ({
                             type="button"
                         >
                             <Download size={18} className="sm:w-[20px] sm:h-[20px]" />
-                            <span className="text-xs font-bold whitespace-nowrap">Download Report</span>
+                            <span className="text-xs font-bold whitespace-nowrap">Report</span>
                         </button>
                         <button 
                             onClick={(e) => { 
@@ -249,8 +249,38 @@ export const ReportCard: React.FC<ReportCardProps> = ({
                             type="button"
                         >
                             <Download size={18} className="sm:w-[20px] sm:h-[20px]" />
-                            <span className="text-xs font-bold whitespace-nowrap">Download Sign Off</span>
+                            <span className="text-xs font-bold whitespace-nowrap">Sign Off</span>
                         </button>
+                        {actions.onHomeownerManual && (
+                            <button 
+                                onClick={(e) => { 
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    actions.onHomeownerManual?.(); 
+                                }}
+                                className="h-12 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-colors active:scale-95 shadow-sm shrink-0 border px-3 sm:px-4 gap-1.5 bg-surface-container dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 text-surface-on-variant dark:text-gray-300 hover:bg-surface-container-high dark:hover:bg-gray-600 hover:text-primary border-solid"
+                                title="Homeowner Manual"
+                                type="button"
+                            >
+                                <Book size={18} className="sm:w-[20px] sm:h-[20px]" />
+                                <span className="text-xs font-bold whitespace-nowrap">Homeowner Manual</span>
+                            </button>
+                        )}
+                        {actions.onEmailBoth && (
+                            <button 
+                                onClick={(e) => { 
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    actions.onEmailBoth?.(); 
+                                }}
+                                className="h-12 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-colors active:scale-95 shadow-sm shrink-0 border px-3 sm:px-4 gap-1.5 bg-primary text-primary-on border-primary hover:bg-primary/90 border-solid"
+                                title="Email Both Docs"
+                                type="button"
+                            >
+                                <Mail size={18} className="sm:w-[20px] sm:h-[20px]" />
+                                <span className="text-xs font-bold whitespace-nowrap">Email Both Docs</span>
+                            </button>
+                        )}
                     </>
                 )}
             </div>
@@ -1257,6 +1287,51 @@ export const Dashboard = React.memo<DashboardProps>(({
                                 } catch (error) {
                                     console.error('Error downloading sign off PDF:', error);
                                 }
+                            },
+                            onEmailBoth: async () => {
+                                console.log('Email Both Docs button clicked');
+                                try {
+                                    const getSafeName = () => {
+                                        const name = project.fields?.[0]?.value || "Project";
+                                        return name.replace(/[^a-z0-9]/gi, '_');
+                                    };
+                                    const generateReportFile = async () => {
+                                        const res = await generatePDFWithMetadata({ project, locations }, companyLogo, project.reportMarks);
+                                        const blob = res.doc.output('blob');
+                                        const filename = `${getSafeName()} - New Home Completion List.pdf`;
+                                        return new File([blob], filename, { type: 'application/pdf' });
+                                    };
+                                    const generateSignOffFile = async () => {
+                                        const blobUrl = await generateSignOffPDF(project, SIGN_OFF_TITLE, signOffTemplates[0], companyLogo, project.signOffImage, project.signOffStrokes, 800, undefined, 16);
+                                        const blob = await fetch(blobUrl).then(r => r.blob());
+                                        const filename = `${getSafeName()} - Sign Off Sheet.pdf`;
+                                        return new File([blob], filename, { type: 'application/pdf' });
+                                    };
+                                    const handleShare = async (files: File[], title?: string, text?: string) => {
+                                        if (navigator.share && navigator.canShare && navigator.canShare({ files })) {
+                                            try {
+                                                await navigator.share({ files, title, text });
+                                            } catch (error) {
+                                                console.error("Share failed", error);
+                                            }
+                                        } else {
+                                            alert("Sharing files is not supported on this browser/device.");
+                                        }
+                                    };
+                                    
+                                    const reportFile = await generateReportFile();
+                                    const signOffFile = await generateSignOffFile();
+                                    const safeProjectName = project.fields?.[0]?.value || "Project";
+                                    await handleShare([reportFile, signOffFile], `${safeProjectName} - Walk through docs`, "Here's the punch list and sign off sheet. The rewalk is scheduled for");
+                                } catch (error) {
+                                    console.error("Failed to email both docs:", error);
+                                }
+                            },
+                            onHomeownerManual: () => {
+                                console.log('Homeowner Manual button clicked');
+                                // Open homeowner manual - you may need to provide a URL or file
+                                // For now, this is a placeholder that can be customized
+                                window.open('/homeowner-manual.pdf', '_blank');
                             }
                         }}
                         onViewAllItems={() => {

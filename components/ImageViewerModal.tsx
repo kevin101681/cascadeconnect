@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { X, ChevronLeft, ChevronRight, Save, Undo, Redo, Type, Square, Circle, Minus, Pencil, Download } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Save, Undo, Redo, Type, Square, Circle, Minus, Pencil, Download, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { Attachment } from '../types';
 import Button from './Button';
 
@@ -37,6 +37,10 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   const [canvasInitialized, setCanvasInitialized] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
   // Filter to only show images
   const imageAttachments = attachments.filter(att => att.type === 'IMAGE' && att.url);
@@ -263,6 +267,9 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
         canvas.renderAll();
         console.log('✅ Image loaded and displayed');
         setImageLoading(false);
+        // Reset zoom and pan when new image loads
+        setZoomLevel(1);
+        setPanPosition({ x: 0, y: 0 });
         saveState();
       } catch (error: any) {
         console.error('❌ Error loading image:', error);
@@ -504,6 +511,105 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
     canvas.defaultCursor = tool === 'select' ? 'default' : 'crosshair';
   }, [tool, canvasInitialized]);
 
+  // Apply zoom and pan to canvas
+  useEffect(() => {
+    if (!fabricCanvasRef.current || !canvasInitialized) return;
+    const canvas = fabricCanvasRef.current;
+    
+    // Apply zoom and pan using viewport transform
+    const vpt = canvas.viewportTransform || [1, 0, 0, 1, 0, 0];
+    vpt[0] = zoomLevel; // Scale X
+    vpt[3] = zoomLevel; // Scale Y
+    vpt[4] = panPosition.x; // Translate X
+    vpt[5] = panPosition.y; // Translate Y
+    canvas.setViewportTransform(vpt);
+    canvas.renderAll();
+  }, [zoomLevel, panPosition, canvasInitialized]);
+
+  // Handle mouse wheel zoom
+  useEffect(() => {
+    if (!fabricCanvasRef.current || !canvasInitialized) return;
+    const canvas = fabricCanvasRef.current;
+    const canvasElement = canvas.getElement();
+    
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      const newZoom = Math.max(0.5, Math.min(5, zoomLevel + delta));
+      
+      // Zoom towards mouse position
+      const pointer = canvas.getPointer(e);
+      const zoomPoint = { x: pointer.x, y: pointer.y };
+      
+      const zoom = newZoom / zoomLevel;
+      const newPanX = zoomPoint.x - (zoomPoint.x - panPosition.x) * zoom;
+      const newPanY = zoomPoint.y - (zoomPoint.y - panPosition.y) * zoom;
+      
+      setZoomLevel(newZoom);
+      setPanPosition({ x: newPanX, y: newPanY });
+    };
+    
+    canvasElement.addEventListener('wheel', handleWheel, { passive: false });
+    
+    return () => {
+      canvasElement.removeEventListener('wheel', handleWheel);
+    };
+  }, [zoomLevel, panPosition, canvasInitialized]);
+
+  // Handle pan with mouse drag (only when zoomed in and using select tool)
+  useEffect(() => {
+    if (!fabricCanvasRef.current || !canvasInitialized || tool !== 'select' || zoomLevel <= 1) return;
+    const canvas = fabricCanvasRef.current;
+    
+    const handleMouseDown = (opt: any) => {
+      // Only pan if no object is being clicked and space is pressed, or if middle mouse button
+      if (opt.e.button === 1 || (opt.e.button === 0 && opt.e.shiftKey)) {
+        setIsPanning(true);
+        setPanStart({ x: opt.e.clientX - panPosition.x, y: opt.e.clientY - panPosition.y });
+        opt.e.preventDefault();
+      }
+    };
+    
+    const handleMouseMove = (opt: any) => {
+      if (isPanning) {
+        setPanPosition({
+          x: opt.e.clientX - panStart.x,
+          y: opt.e.clientY - panStart.y
+        });
+        opt.e.preventDefault();
+      }
+    };
+    
+    const handleMouseUp = () => {
+      setIsPanning(false);
+    };
+    
+    canvas.on('mouse:down', handleMouseDown);
+    canvas.on('mouse:move', handleMouseMove);
+    canvas.on('mouse:up', handleMouseUp);
+    
+    return () => {
+      canvas.off('mouse:down', handleMouseDown);
+      canvas.off('mouse:move', handleMouseMove);
+      canvas.off('mouse:up', handleMouseUp);
+    };
+  }, [zoomLevel, panPosition, isPanning, panStart, tool, canvasInitialized]);
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(5, prev + 0.25));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(0.5, prev - 0.25));
+  };
+
+  const handleResetZoom = () => {
+    setZoomLevel(1);
+    setPanPosition({ x: 0, y: 0 });
+  };
+
   if (!isOpen || imageAttachments.length === 0) return null;
 
   const currentImage = imageAttachments[currentIndex];
@@ -735,6 +841,37 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
                 <Download className="h-5 w-5" />
               </button>
             </div>
+            
+            {/* Zoom Controls */}
+            <div className="flex items-center gap-2 border-l border-surface-outline-variant dark:border-gray-600 pl-2 ml-2">
+              <button
+                onClick={(e) => { e.stopPropagation(); handleZoomOut(); }}
+                className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-600"
+                title="Zoom Out"
+                disabled={zoomLevel <= 0.5}
+              >
+                <ZoomOut className="h-5 w-5" />
+              </button>
+              <span className="text-sm text-surface-on-variant dark:text-gray-400 min-w-[3rem] text-center">
+                {Math.round(zoomLevel * 100)}%
+              </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleZoomIn(); }}
+                className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-600"
+                title="Zoom In"
+                disabled={zoomLevel >= 5}
+              >
+                <ZoomIn className="h-5 w-5" />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); handleResetZoom(); }}
+                className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-600"
+                title="Reset Zoom"
+                disabled={zoomLevel === 1 && panPosition.x === 0 && panPosition.y === 0}
+              >
+                <RotateCcw className="h-5 w-5" />
+              </button>
+            </div>
           </div>
         )}
 
@@ -752,12 +889,15 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
           )}
 
           {/* Canvas */}
-          <div className="flex items-center justify-center p-8 h-full relative">
+          <div className="flex items-center justify-center p-8 h-full relative overflow-hidden">
             {/* Always render canvas so ref exists */}
-            <canvas 
-              ref={canvasRef} 
+            <canvas
+              ref={canvasRef}
               className="shadow-lg"
-              style={{ display: fabricLoaded && canvasInitialized ? 'block' : 'none' }}
+              style={{ 
+                display: fabricLoaded && canvasInitialized ? 'block' : 'none',
+                cursor: isPanning ? 'grabbing' : (zoomLevel > 1 && tool === 'select' ? 'grab' : 'default')
+              }}
             />
             {(!fabricLoaded || !canvasInitialized) && (
               <div className="absolute inset-0 flex items-center justify-center">
