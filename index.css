@@ -57,6 +57,12 @@ body {
 }
 
 /* Popover Card - Light Mode */
+.cl-userButtonPopoverCard,
+.cl-userButtonPopoverCard > *,
+.cl-userButtonPopoverCard * {
+    background-color: #ffffff !important; /* surface */
+}
+
 .cl-userButtonPopoverCard {
     border-radius: 12px !important;
     padding: 8px !important;
@@ -67,8 +73,16 @@ body {
 
 /* Popover Card - Dark Mode */
 .dark .cl-userButtonPopoverCard,
-html.dark .cl-userButtonPopoverCard {
+html.dark .cl-userButtonPopoverCard,
+.dark .cl-userButtonPopoverCard > *,
+html.dark .cl-userButtonPopoverCard > *,
+.dark .cl-userButtonPopoverCard *,
+html.dark .cl-userButtonPopoverCard * {
     background-color: #1f2937 !important; /* dark:bg-gray-800 */
+}
+
+.dark .cl-userButtonPopoverCard,
+html.dark .cl-userButtonPopoverCard {
     border-color: #374151 !important; /* dark:border-gray-700 */
 }
 
@@ -112,8 +126,16 @@ html.dark .cl-userButtonPopoverHeaderSubtitle {
 }
 
 /* Actions Container */
-.cl-userButtonPopoverActions {
+.cl-userButtonPopoverActions,
+.cl-userButtonPopoverActions > * {
     padding: 4px !important;
+    background-color: transparent !important;
+}
+
+.dark .cl-userButtonPopoverActions,
+html.dark .cl-userButtonPopoverActions,
+.dark .cl-userButtonPopoverActions > *,
+html.dark .cl-userButtonPopoverActions > * {
     background-color: transparent !important;
 }
 
@@ -185,5 +207,63 @@ html.dark .cl-userButtonPopoverActionButton__signOut:hover {
 .cl-userButtonPopoverActionButton__manageAccount,
 .cl-userButtonPopoverFooter {
     display: none !important;
+}
+
+/* Ensure all popover content areas use correct background */
+.cl-userButtonPopoverContent,
+.cl-userButtonPopoverContent > *,
+.cl-userButtonPopoverMain,
+.cl-userButtonPopoverMain > *,
+.cl-userButtonPopoverCard > div,
+.cl-userButtonPopoverCard > div > * {
+    background-color: #ffffff !important;
+}
+
+.dark .cl-userButtonPopoverContent,
+html.dark .cl-userButtonPopoverContent,
+.dark .cl-userButtonPopoverContent > *,
+html.dark .cl-userButtonPopoverContent > *,
+.dark .cl-userButtonPopoverMain,
+html.dark .cl-userButtonPopoverMain,
+.dark .cl-userButtonPopoverMain > *,
+html.dark .cl-userButtonPopoverMain > *,
+.dark .cl-userButtonPopoverCard > div,
+html.dark .cl-userButtonPopoverCard > div,
+.dark .cl-userButtonPopoverCard > div > *,
+html.dark .cl-userButtonPopoverCard > div > * {
+    background-color: #1f2937 !important; /* dark:bg-gray-800 */
+}
+
+/* Ensure popover root element uses correct background */
+.cl-userButtonPopover,
+.cl-userButtonPopover > div,
+.cl-userButtonPopover > div > div {
+    background-color: #ffffff !important;
+}
+
+.dark .cl-userButtonPopover,
+html.dark .cl-userButtonPopover,
+.dark .cl-userButtonPopover > div,
+html.dark .cl-userButtonPopover > div,
+.dark .cl-userButtonPopover > div > div,
+html.dark .cl-userButtonPopover > div > div {
+    background-color: #1f2937 !important; /* dark:bg-gray-800 */
+}
+
+/* Target any wrapper or container elements */
+[class*="cl-userButtonPopover"] {
+    background-color: #ffffff !important;
+}
+
+.dark [class*="cl-userButtonPopover"],
+html.dark [class*="cl-userButtonPopover"] {
+    background-color: #1f2937 !important; /* dark:bg-gray-800 */
+}
+
+/* Ensure text colors are correct in all modes */
+[class*="cl-userButtonPopover"] p,
+[class*="cl-userButtonPopover"] span,
+[class*="cl-userButtonPopover"] div {
+    color: inherit !important;
 }
 
