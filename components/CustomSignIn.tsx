@@ -36,27 +36,75 @@ const CustomSignIn: React.FC<CustomSignInProps> = ({ onSuccess, onCancel }) => {
     // Proceed with Clerk sign-in
     try {
       setIsSigningIn(true);
+      
+      // Create the sign-in attempt
       const result = await signIn.create({
         identifier: email.trim(),
         password: password,
       });
 
-      // Complete the sign-in process
-      if (result.status === 'complete') {
-        await setActive({ session: result.createdSessionId });
-        if (onSuccess) {
-          onSuccess();
-        }
-      } else {
-        // Sign-in created but not complete - might need additional steps
-        if (result.createdSessionId) {
-          await setActive({ session: result.createdSessionId });
+      // Log for debugging
+      console.log('Sign-in result:', {
+        resultStatus: result.status,
+        signInStatus: signIn.status,
+        resultSessionId: result.createdSessionId,
+        signInSessionId: signIn.createdSessionId,
+        result: result,
+        signIn: signIn
+      });
+
+      // Check the sign-in status after creation
+      // The status can be on either the result or the signIn object
+      const status = result.status || signIn.status;
+      const sessionId = result.createdSessionId || signIn.createdSessionId;
+      
+      if (status === 'complete') {
+        // Sign-in is complete, activate the session
+        if (sessionId) {
+          await setActive({ session: sessionId });
           if (onSuccess) {
             onSuccess();
           }
         } else {
-          setError('Sign-in incomplete. Please try again.');
+          // If no session ID but status is complete, try to proceed anyway
+          // Clerk might handle session creation automatically
+          console.warn('Sign-in complete but no session ID found, attempting to proceed...');
+          // Wait a moment for Clerk to finalize the session
+          await new Promise(resolve => setTimeout(resolve, 200));
+          // Check if we now have a session
+          const finalSessionId = signIn.createdSessionId;
+          if (finalSessionId) {
+            await setActive({ session: finalSessionId });
+            if (onSuccess) {
+              onSuccess();
+            }
+          } else {
+            setError('Sign-in completed but session could not be activated. Please try again.');
+          }
         }
+      } else if (status === 'needs_first_factor') {
+        // Additional verification required (email code, 2FA, etc.)
+        // For now, show an error - in the future we could add verification UI
+        setError('Additional verification required. Please check your email or contact support.');
+      } else if (status === 'needs_second_factor') {
+        // Two-factor authentication required
+        setError('Two-factor authentication required. Please complete 2FA.');
+      } else if (sessionId) {
+        // If we have a session ID even if status isn't 'complete', try to use it
+        console.warn('Sign-in status is not complete but session ID exists, attempting to activate...', { status, sessionId });
+        try {
+          await setActive({ session: sessionId });
+          if (onSuccess) {
+            onSuccess();
+          }
+        } catch (activeError) {
+          console.error('Failed to activate session:', activeError);
+          setError(`Sign-in incomplete (status: ${status}). Please try again or contact support.`);
+        }
+      } else {
+        // Unknown status - log for debugging
+        console.warn('Unexpected sign-in status:', status, { result, signInStatus: signIn.status });
+        setError(`Sign-in incomplete (status: ${status || 'unknown'}). Please try again or contact support.`);
       }
     } catch (err: any) {
       console.error('Sign-in error:', err);
