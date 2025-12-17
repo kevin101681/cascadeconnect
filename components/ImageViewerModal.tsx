@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X, ChevronLeft, ChevronRight, Save, Undo, Redo, Type, Square, Circle, Minus, Pencil, Download } from 'lucide-react';
 import { Attachment } from '../types';
 import Button from './Button';
@@ -93,11 +94,11 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
       const canvasHeight = 700;
       
       try {
-        const canvas = new fabricLib.Canvas(canvasElement, {
-          width: canvasWidth,
-          height: canvasHeight,
-          backgroundColor: '#ffffff',
-        });
+      const canvas = new fabricLib.Canvas(canvasElement, {
+        width: canvasWidth,
+        height: canvasHeight,
+        backgroundColor: 'transparent',
+      });
 
         fabricCanvasRef.current = canvas;
         setCanvasInitialized(true);
@@ -529,10 +530,13 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
     }
   };
 
-  return (
+  if (!isOpen || imageAttachments.length === 0) return null;
+
+  return createPortal(
     <div
       ref={modalRef}
       className="fixed inset-0 z-[200] flex items-center justify-center backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
@@ -704,7 +708,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
             {/* Always render canvas so ref exists */}
             <canvas 
               ref={canvasRef} 
-              className="border border-surface-outline-variant dark:border-gray-700 shadow-lg bg-white"
+              className="border border-surface-outline-variant dark:border-gray-700 shadow-lg rounded-xl overflow-hidden"
               style={{ display: fabricLoaded && canvasInitialized ? 'block' : 'none' }}
             />
             {(!fabricLoaded || !canvasInitialized) && (
@@ -776,7 +780,8 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
