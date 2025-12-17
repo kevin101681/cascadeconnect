@@ -1018,7 +1018,6 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
                   src={`https://api.netlify.com/api/v1/badges/a60189c5-3405-4300-8ed2-484e45afbe6e/deploy-status?t=${badgeRefreshKey}`}
                   alt="Netlify Status" 
                   className="h-6"
-                  key={badgeRefreshKey}
                 />
               </a>
             </div>
