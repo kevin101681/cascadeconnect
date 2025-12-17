@@ -56,7 +56,6 @@ const Layout: React.FC<LayoutProps> = ({
   const menuRef = useRef<HTMLDivElement>(null);
   const { isDarkMode, toggleDarkMode } = useDarkMode();
   const [badgeRefreshKey, setBadgeRefreshKey] = useState(0);
-  const [showLogoShimmer, setShowLogoShimmer] = useState(true);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -90,15 +89,6 @@ const Layout: React.FC<LayoutProps> = ({
     return () => clearInterval(interval);
   }, []);
 
-  // Remove shimmer animation after it completes
-  useEffect(() => {
-    if (showLogoShimmer) {
-      const timer = setTimeout(() => {
-        setShowLogoShimmer(false);
-      }, 2000); // Match animation duration
-      return () => clearTimeout(timer);
-    }
-  }, [showLogoShimmer]);
 
   const handleMenuAction = (action: () => void) => {
     action();
@@ -121,7 +111,7 @@ const Layout: React.FC<LayoutProps> = ({
                   className="h-6 w-6 object-contain" 
                 />
               </div>
-              <div className={`relative hidden md:block ${showLogoShimmer ? 'logo-shimmer' : ''}`}>
+              <div className="relative hidden md:block">
                 <img 
                   src="/connect.svg" 
                   alt="CASCADE CONNECT" 
