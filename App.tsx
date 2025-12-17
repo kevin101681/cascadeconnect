@@ -2605,7 +2605,17 @@ Assigned By: ${assignerName}
         />
       )}
       {currentView === 'BUILDERS' && (
-        <BuilderManagement builderGroups={builderGroups} onAddGroup={handleAddBuilderGroup} onUpdateGroup={handleUpdateBuilderGroup} onDeleteGroup={handleDeleteBuilderGroup} onClose={() => setCurrentView('DASHBOARD')} />
+        <BuilderManagement 
+          builderGroups={builderGroups} 
+          builderUsers={builderUsers}
+          onAddGroup={handleAddBuilderGroup} 
+          onUpdateGroup={handleUpdateBuilderGroup} 
+          onDeleteGroup={handleDeleteBuilderGroup}
+          onAddUser={handleAddBuilderUser}
+          onUpdateUser={handleUpdateBuilderUser}
+          onDeleteUser={handleDeleteBuilderUser}
+          onClose={() => setCurrentView('DASHBOARD')} 
+        />
       )}
       {currentView === 'HOMEOWNERS' && (
         <HomeownersList 
@@ -2629,11 +2639,6 @@ Assigned By: ${assignerName}
           onClearHomeowners={handleClearHomeowners} 
           existingBuilderGroups={builderGroups} 
           onImportBuilderGroups={handleImportBuilderGroups}
-          onImportBuilderUsers={handleImportBuilderUsers}
-          onImportTasks={handleImportTasks}
-          onImportMessages={handleImportMessages}
-          employees={employees.map(e => ({ id: e.id, name: e.name }))}
-          homeowners={homeowners.map(h => ({ id: h.id, email: h.email }))}
           onClose={() => setCurrentView('DASHBOARD')} 
         />
       )}

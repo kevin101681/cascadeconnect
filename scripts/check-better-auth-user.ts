@@ -140,3 +140,5 @@ async function checkBetterAuthUser() {
 
 // Run the script
 checkBetterAuthUser();
+
+

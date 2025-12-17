@@ -118,3 +118,5 @@ async function createBetterAuthUser() {
 
 // Run the script
 createBetterAuthUser();
+
+

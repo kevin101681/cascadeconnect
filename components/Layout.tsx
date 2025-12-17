@@ -55,8 +55,6 @@ const Layout: React.FC<LayoutProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { isDarkMode, toggleDarkMode } = useDarkMode();
-  const [badgeRefreshKey, setBadgeRefreshKey] = useState(0);
-  const [contentAnimationKey, setContentAnimationKey] = useState(0);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -82,14 +80,6 @@ const Layout: React.FC<LayoutProps> = ({
     }
   }, [isMenuOpen]);
 
-  // Refresh Netlify badge every 10 seconds (slowed down)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setBadgeRefreshKey(prev => prev + 1);
-      setContentAnimationKey(prev => prev + 1);
-    }, 10000);
-    return () => clearInterval(interval);
-  }, []);
 
 
   const handleMenuAction = (action: () => void) => {
@@ -106,7 +96,7 @@ const Layout: React.FC<LayoutProps> = ({
             
             {/* Logo */}
             <button onClick={() => onNavigate('DASHBOARD')} className="flex items-center gap-3 flex-shrink-0 focus:outline-none">
-              <div className="bg-gray-200 dark:bg-[#374151] p-2 rounded-xl border border-surface-outline-variant dark:border-gray-600 shadow-sm h-10 w-12 flex items-center justify-center overflow-hidden">
+              <div className="bg-gray-200 dark:bg-gray-800 p-2 rounded-xl border border-surface-outline-variant dark:border-gray-600 shadow-sm h-10 w-12 flex items-center justify-center overflow-hidden">
                 <img 
                   src="/logo.svg" 
                   alt="CASCADE CONNECT Logo" 
@@ -173,21 +163,6 @@ const Layout: React.FC<LayoutProps> = ({
 
             {/* Right Actions */}
             <div className="flex items-center gap-4 flex-shrink-0">
-              {/* Netlify Deploy Status Badge (Testing) */}
-              <a 
-                href="https://app.netlify.com/projects/cascadeconnect/deploys" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-block"
-                title="Netlify Deployment Status"
-              >
-                <img 
-                  src={`https://api.netlify.com/api/v1/badges/a60189c5-3405-4300-8ed2-484e45afbe6e/deploy-status?t=${badgeRefreshKey}`}
-                  alt="Netlify Status" 
-                  className="h-5"
-                />
-              </a>
-
               {/* Dark Mode Toggle */}
               <button
                 onClick={toggleDarkMode}
@@ -403,13 +378,7 @@ const Layout: React.FC<LayoutProps> = ({
       </header>
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div 
-          key={contentAnimationKey} 
-          className="animate-in fade-in"
-          style={{ animationDuration: '1s', animationTimingFunction: 'ease-in-out' }}
-        >
-          {children}
-        </div>
+        {children}
       </main>
     </div>
   );

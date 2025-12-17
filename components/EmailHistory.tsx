@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Send, CheckCircle, XCircle, Eye, MousePointerClick, AlertCircle, TrendingUp, Calendar, RefreshCw, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Mail, Send, CheckCircle, XCircle, Eye, MousePointerClick, AlertCircle, TrendingUp, Calendar, RefreshCw, X } from 'lucide-react';
 import Button from './Button';
 
 interface EmailStats {
@@ -26,33 +26,14 @@ interface EmailStats {
   }>;
 }
 
-interface EmailOpen {
-  email: string;
-  timestamp: string;
-  ip?: string;
-  user_agent?: string;
-}
-
-interface EmailClick {
-  email: string;
-  timestamp: string;
-  url: string;
-  ip?: string;
-  user_agent?: string;
-}
-
 interface EmailActivity {
   msg_id: string;
   from: string;
-  from_name?: string;
   subject: string;
   to: string[];
   status: string;
-  sent_at?: string;
   opens_count: number;
   clicks_count: number;
-  opens: EmailOpen[];
-  clicks: EmailClick[];
   last_event_time: string;
 }
 
@@ -77,7 +58,6 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
   const [data, setData] = useState<EmailAnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedEmails, setExpandedEmails] = useState<Set<string>>(new Set());
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
     date.setDate(date.getDate() - 30);
@@ -130,12 +110,6 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
 
       const result = await response.json();
       console.log('Email analytics response:', result);
-      console.log('Activity data:', result.activity);
-      if (result.activity && result.activity.length > 0) {
-        console.log('First email activity:', result.activity[0]);
-        console.log('First email opens:', result.activity[0].opens);
-        console.log('First email clicks:', result.activity[0].clicks);
-      }
       setData(result);
     } catch (err: any) {
       console.error('Failed to fetch email analytics:', err);
@@ -369,222 +343,49 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
           </div>
 
           {/* Recent Activity */}
-          {data?.activity && Array.isArray(data.activity) && data.activity.length > 0 ? (
+          {data?.activity && data.activity.length > 0 && (
             <div className="mt-6">
               <h2 className="text-lg font-medium text-surface-on dark:text-gray-100 mb-4">
-                Email History ({data.activityCount || data.activity.length} emails)
+                Recent Email Activity ({data.activityCount} emails)
               </h2>
-              <div className="space-y-4">
-                {data.activity.slice(0, 50).map((email, idx) => {
-                  const emailId = email.msg_id || `email-${idx}`;
-                  const isExpanded = expandedEmails.has(emailId);
-                  return (
-                    <div key={emailId} className="bg-surface-container dark:bg-gray-700 rounded-xl border border-surface-outline-variant overflow-hidden">
-                      {/* Email Summary Row */}
-                      <div 
-                        className="p-4 hover:bg-surface-container-high dark:hover:bg-gray-600 cursor-pointer transition-colors"
-                        onClick={() => {
-                          const newExpanded = new Set(expandedEmails);
-                          if (isExpanded) {
-                            newExpanded.delete(emailId);
-                          } else {
-                            newExpanded.add(emailId);
-                          }
-                          setExpandedEmails(newExpanded);
-                        }}
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Mail className="h-4 w-4 text-primary flex-shrink-0" />
-                              <span className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{email.subject}</span>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-surface-on-variant dark:text-gray-400">
-                              <div>
-                                <span className="font-medium">From:</span> {email.from_name ? `${email.from_name} <${email.from}>` : email.from}
-                              </div>
-                              <div>
-                                <span className="font-medium">To:</span> {Array.isArray(email.to) ? email.to.slice(0, 2).join(', ') + (email.to.length > 2 ? ` +${email.to.length - 2} more` : '') : email.to}
-                              </div>
-                              <div>
-                                <span className="font-medium">Sent:</span> {email.sent_at || email.last_event_time ? new Date(email.sent_at || email.last_event_time).toLocaleString() : 'N/A'}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4 mt-2">
-                              <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusColor(email.status)} bg-opacity-10`}>
-                                {email.status}
-                              </span>
-                              {email.opens_count > 0 && (
-                                <span className="text-xs text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
-                                  <Eye className="h-3 w-3" />
-                                  {email.opens_count} {email.opens_count === 1 ? 'open' : 'opens'}
-                                </span>
-                              )}
-                              {email.clicks_count > 0 && (
-                                <span className="text-xs text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
-                                  <MousePointerClick className="h-3 w-3" />
-                                  {email.clicks_count} {email.clicks_count === 1 ? 'click' : 'clicks'}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <button className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
-                            {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Expanded Details */}
-                      {isExpanded && (
-                        <div className="border-t border-surface-outline-variant dark:border-gray-600 p-4 space-y-4 bg-surface dark:bg-gray-800">
-                          {/* Email Details */}
-                          <div>
-                            <h4 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-2">Email Details</h4>
-                            <div className="space-y-2 text-xs">
-                              <div className="flex items-start gap-2">
-                                <span className="font-medium text-surface-on-variant dark:text-gray-400 min-w-[80px]">Message ID:</span>
-                                <span className="text-surface-on dark:text-gray-100 font-mono break-all">{email.msg_id || 'N/A'}</span>
-                              </div>
-                              <div className="flex items-start gap-2">
-                                <span className="font-medium text-surface-on-variant dark:text-gray-400 min-w-[80px]">From:</span>
-                                <span className="text-surface-on dark:text-gray-100">
-                                  {email.from_name ? `${email.from_name} <${email.from}>` : email.from || 'N/A'}
-                                </span>
-                              </div>
-                              <div className="flex items-start gap-2">
-                                <span className="font-medium text-surface-on-variant dark:text-gray-400 min-w-[80px]">Subject:</span>
-                                <span className="text-surface-on dark:text-gray-100">{email.subject || 'N/A'}</span>
-                              </div>
-                              <div className="flex items-start gap-2">
-                                <span className="font-medium text-surface-on-variant dark:text-gray-400 min-w-[80px]">Status:</span>
-                                <span className={`font-medium ${getStatusColor(email.status)}`}>
-                                  {email.status || 'unknown'}
-                                </span>
-                              </div>
-                              <div className="flex items-start gap-2">
-                                <span className="font-medium text-surface-on-variant dark:text-gray-400 min-w-[80px]">Sent:</span>
-                                <span className="text-surface-on dark:text-gray-100">
-                                  {email.sent_at || email.last_event_time 
-                                    ? new Date(email.sent_at || email.last_event_time).toLocaleString() 
-                                    : 'N/A'}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Recipients */}
-                          <div>
-                            <h4 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-2">Recipients</h4>
-                            <div className="flex flex-wrap gap-2">
-                              {Array.isArray(email.to) && email.to.length > 0 ? (
-                                email.to.map((recipient, i) => (
-                                  <span key={i} className="text-xs px-2 py-1 bg-surface-container dark:bg-gray-700 rounded-full text-surface-on dark:text-gray-100">
-                                    {recipient}
-                                  </span>
-                                ))
-                              ) : email.to && typeof email.to === 'string' ? (
-                                <span className="text-xs px-2 py-1 bg-surface-container dark:bg-gray-700 rounded-full text-surface-on dark:text-gray-100">
-                                  {email.to}
-                                </span>
-                              ) : (
-                                <span className="text-xs text-surface-on-variant dark:text-gray-400">No recipients found</span>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Opens */}
-                          {email.opens && Array.isArray(email.opens) && email.opens.length > 0 ? (
-                            <div>
-                              <h4 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-2 flex items-center gap-2">
-                                <Eye className="h-4 w-4 text-primary" />
-                                Opens ({email.opens.length})
-                              </h4>
-                              <div className="space-y-2">
-                                {email.opens.map((open, i) => (
-                                  <div key={i} className="text-xs bg-surface-container dark:bg-gray-700 rounded-lg p-2">
-                                    <div className="flex items-center justify-between">
-                                      <span className="font-medium text-surface-on dark:text-gray-100">{open.email || 'Unknown'}</span>
-                                      <span className="text-surface-on-variant dark:text-gray-400">
-                                        {open.timestamp ? new Date(open.timestamp).toLocaleString() : 'N/A'}
-                                      </span>
-                                    </div>
-                                    {(open.ip && open.ip !== 'N/A') && (
-                                      <div className="text-surface-on-variant dark:text-gray-400 mt-1">
-                                        IP: {open.ip} {open.user_agent && open.user_agent !== 'N/A' && `• ${open.user_agent}`}
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ) : (
-                            <div>
-                              <h4 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-2 flex items-center gap-2">
-                                <Eye className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-                                Opens
-                              </h4>
-                              <div className="text-xs text-surface-on-variant dark:text-gray-400">
-                                No opens recorded for this email
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Clicks */}
-                          {email.clicks && Array.isArray(email.clicks) && email.clicks.length > 0 ? (
-                            <div>
-                              <h4 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-2 flex items-center gap-2">
-                                <MousePointerClick className="h-4 w-4 text-primary" />
-                                Clicks ({email.clicks.length})
-                              </h4>
-                              <div className="space-y-2">
-                                {email.clicks.map((click, i) => (
-                                  <div key={i} className="text-xs bg-surface-container dark:bg-gray-700 rounded-lg p-2">
-                                    <div className="flex items-center justify-between">
-                                      <span className="font-medium text-surface-on dark:text-gray-100">{click.email || 'Unknown'}</span>
-                                      <span className="text-surface-on-variant dark:text-gray-400">
-                                        {click.timestamp ? new Date(click.timestamp).toLocaleString() : 'N/A'}
-                                      </span>
-                                    </div>
-                                    {click.url && click.url !== 'N/A' && (
-                                      <div className="text-primary mt-1 truncate" title={click.url}>
-                                        {click.url}
-                                      </div>
-                                    )}
-                                    {(click.ip && click.ip !== 'N/A') && (
-                                      <div className="text-surface-on-variant dark:text-gray-400 mt-1">
-                                        IP: {click.ip} {click.user_agent && click.user_agent !== 'N/A' && `• ${click.user_agent}`}
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          ) : (
-                            <div>
-                              <h4 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-2 flex items-center gap-2">
-                                <MousePointerClick className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-                                Clicks
-                              </h4>
-                              <div className="text-xs text-surface-on-variant dark:text-gray-400">
-                                No clicks recorded for this email
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+              <div className="bg-surface-container dark:bg-gray-700 rounded-xl border border-surface-outline-variant overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-surface-container-high dark:bg-gray-600 border-b border-surface-outline-variant">
+                      <tr>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">From</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">To</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Subject</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Status</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Opens</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Clicks</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-surface-outline-variant dark:divide-gray-600">
+                      {data.activity.slice(0, 50).map((email, idx) => (
+                        <tr key={email.msg_id || idx} className="hover:bg-surface-container-high dark:hover:bg-gray-600">
+                          <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{email.from}</td>
+                          <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">
+                            {Array.isArray(email.to) ? email.to.join(', ') : email.to}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100 truncate max-w-xs">{email.subject}</td>
+                          <td className={`px-4 py-3 text-sm font-medium ${getStatusColor(email.status)}`}>
+                            {email.status}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{email.opens_count || 0}</td>
+                          <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{email.clicks_count || 0}</td>
+                          <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
+                            {email.last_event_time ? new Date(email.last_event_time).toLocaleDateString() : 'N/A'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
-          ) : data?.activity && Array.isArray(data.activity) && data.activity.length === 0 ? (
-            <div className="mt-6">
-              <div className="text-center py-8 text-surface-on-variant dark:text-gray-400">
-                <Mail className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>No email activity found for the selected date range.</p>
-              </div>
-            </div>
-          ) : null}
+          )}
         </div>
       </div>
     </div>

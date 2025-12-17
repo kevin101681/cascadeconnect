@@ -57,3 +57,5 @@ if (databaseUrl) {
 } else {
   console.warn("⚠️ Better Auth configured without database - authentication will not work");
 }
+
+

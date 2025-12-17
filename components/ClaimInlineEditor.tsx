@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Claim, UserRole, ClaimStatus, ProposedDate, Contractor, InternalEmployee, ClaimClassification, Attachment } from '../types';
+import { Claim, UserRole, ClaimStatus, ProposedDate, Contractor, InternalEmployee, ClaimClassification } from '../types';
 import Button from './Button';
 import StatusBadge from './StatusBadge';
 import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
 import { ClaimMessage } from './MessageSummaryModal';
-import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Image as ImageIcon, Loader2, Download } from 'lucide-react';
+import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink } from 'lucide-react';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
-import ImageEditor from './ImageEditor';
-import ImageViewer from './ImageViewer';
 
 interface ClaimInlineEditorProps {
   claim: Claim;
@@ -62,17 +60,12 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   const [editDescription, setEditDescription] = useState(claim.description);
   const [editClassification, setEditClassification] = useState(claim.classification);
   const [editInternalNotes, setEditInternalNotes] = useState(claim.internalNotes || '');
-  const [displayInternalNotes, setDisplayInternalNotes] = useState(claim.internalNotes || '');
-  const [editDateEvaluated, setEditDateEvaluated] = useState(
-    claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : ''
-  );
   const [newNote, setNewNote] = useState('');
   
   // Scheduling state
   const [proposeDate, setProposeDate] = useState('');
   const [proposeTime, setProposeTime] = useState<'AM' | 'PM' | 'All Day'>('AM');
   const [showCalendarPicker, setShowCalendarPicker] = useState(false);
-  const [showDateEvaluatedPicker, setShowDateEvaluatedPicker] = useState(false);
   
   // Service Order state
   const [showSOModal, setShowSOModal] = useState(false);
@@ -83,15 +76,6 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   
   // Sub Assignment Modal state
   const [showSubModal, setShowSubModal] = useState(false);
-  
-  // Image Editor State
-  const [editingImage, setEditingImage] = useState<{ url: string; name: string; attachmentId: string } | null>(null);
-  // Image Viewer State
-  const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
-  
-  // Attachments State
-  const [attachments, setAttachments] = useState<Attachment[]>(claim.attachments || []);
-  const [uploading, setUploading] = useState(false);
   
   // Collapsible state - default to collapsed
   const [isInternalNotesExpanded, setIsInternalNotesExpanded] = useState(false);
@@ -105,9 +89,6 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     setEditDescription(claim.description);
     setEditClassification(claim.classification);
     setEditInternalNotes(claim.internalNotes || '');
-    setDisplayInternalNotes(claim.internalNotes || '');
-    setEditDateEvaluated(claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : '');
-    setAttachments(claim.attachments || []);
     // Initialize proposeDate with scheduled date if available
     if (scheduledDate) {
       // Convert ISO string to YYYY-MM-DD format for date input
@@ -126,73 +107,8 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
       title: editTitle,
       description: editDescription,
       classification: editClassification,
-      internalNotes: editInternalNotes,
-      dateEvaluated: editDateEvaluated ? new Date(editDateEvaluated) : undefined,
-      attachments: attachments
+      internalNotes: editInternalNotes
     });
-  };
-  
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    
-    setUploading(true);
-    
-    for (const file of Array.from(files)) {
-      const fileId = `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const response = await fetch('/api/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
-        if (!response.ok) {
-          let errorMessage = 'Upload failed';
-          const contentType = response.headers.get('content-type');
-          
-          try {
-            if (contentType && contentType.includes('application/json')) {
-              const errorData = await response.json();
-              errorMessage = errorData.message || errorData.error || `Upload failed with status ${response.status}`;
-            } else {
-              const textResponse = await response.text();
-              errorMessage = textResponse || `Upload failed with status ${response.status}`;
-            }
-          } catch (parseError) {
-            console.error('Failed to parse error response:', parseError);
-            errorMessage = `Upload failed with status ${response.status}`;
-          }
-          throw new Error(errorMessage);
-        }
-
-        const result = await response.json();
-        
-        const newAttachment: Attachment = {
-          id: fileId,
-          type: result.type,
-          url: result.url,
-          name: result.name || file.name,
-        };
-
-        setAttachments(prev => [...prev, newAttachment]);
-      } catch (error) {
-        console.error('Upload error:', error);
-        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-        alert(`Failed to upload ${file.name}: ${errorMsg}`);
-      }
-    }
-    
-    setUploading(false);
-    // Reset file input
-    if (e.target) e.target.value = '';
-  };
-
-  const handleRemoveAttachment = (id: string) => {
-    setAttachments(prev => prev.filter(att => att.id !== id));
   };
   
   const handleCancelEdit = () => {
@@ -200,28 +116,20 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     setEditDescription(claim.description);
     setEditClassification(claim.classification);
     setEditInternalNotes(claim.internalNotes || '');
-    setEditDateEvaluated(claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : '');
-    setAttachments(claim.attachments || []);
     setIsEditing(false);
   };
   
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
     
-    const now = new Date();
-    // Format: [MM/DD/YYYY at HH:MM AM/PM by User Name]
-    const dateStr = now.toLocaleDateString('en-US', { 
-      month: '2-digit', 
-      day: '2-digit', 
-      year: 'numeric' 
-    });
-    const timeStr = now.toLocaleTimeString('en-US', { 
-      hour: 'numeric', 
+    const timestamp = new Date().toLocaleString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
       minute: '2-digit',
-      hour12: true 
+      hour12: true
     });
-    const userName = currentUser?.name || 'Admin';
-    const timestamp = `${dateStr} at ${timeStr} by ${userName}`;
     const noteWithTimestamp = `[${timestamp}] ${newNote.trim()}`;
     
     const currentNotes = isEditing ? editInternalNotes : (claim.internalNotes || '');
@@ -236,9 +144,6 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     if (onAddInternalNote) {
       await onAddInternalNote(claim.id, noteWithTimestamp, currentUser?.name || 'Admin');
     }
-    
-    // Update display immediately so the pill shows right away
-    setDisplayInternalNotes(updatedNotes);
     
     onUpdateClaim({
       ...claim,
@@ -267,14 +172,13 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     }
     
     setSoSubject(`Service Order: ${claim.title} - ${claim.address}`);
-    const userName = currentUser?.name || 'Mary';
-    setSoBody(`Hello,\n\nThis is ${userName} with Cascade Builder Services and I have a warranty repair that needs to be scheduled. The details are described on the attached service order which also includes the homeowner's information, builder, project and lot number.  Pictures of the claim are attached to this email and also are embedded into the attached service order PDF.  Please let me know your next availability and I'll coordinate with the homeowner.  Once we have a date and time frame set, you will receive a notification requesting to accept the appointment.  Please do so as it helps with our tracking and also makes the homeowner aware that you've committed to the confirmed appointment.  Here's a quick guide explaining how to do that.\n\nOnce you've completed the assigned work, please have the homeowner sign and date the attached service order and send the signed copy back to me.\n\nIf this repair work is billable, please let me know prior to scheduling.`);
+    setSoBody(`We have a warranty claim that requires your attention.\n\nClaim Details:\n- Title: ${claim.title}\n- Address: ${claim.address}\n- Description: ${claim.description}\n\nPlease schedule a service call at your earliest convenience.`);
     setShowSOModal(true);
     
     // Generate PDF
     try {
       const summary = `Service Order: ${claim.title} - ${claim.address}`;
-      const pdfUrl = await generateServiceOrderPDF(claim, summary, true);
+      const pdfUrl = generateServiceOrderPDF(claim, summary, true);
       if (pdfUrl && typeof pdfUrl === 'string') {
         setSoPdfUrl(pdfUrl);
       }
@@ -282,153 +186,18 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
       console.error('Failed to generate PDF:', error);
     }
   };
-
-  const handleDownloadServiceOrder = async () => {
-    if (!claim.contractorId || !claim.contractorName) {
-      alert('Please assign a contractor first.');
-      return;
-    }
-    
-    try {
-      const summary = `Service Order: ${claim.title} - ${claim.address}`;
-      await generateServiceOrderPDF(claim, summary, false); // false triggers download
-    } catch (error) {
-      console.error('Failed to generate PDF:', error);
-      alert('Failed to generate service order PDF. Please try again.');
-    }
-  };
   
-  // Helper function to convert blob URL to base64
-  const blobUrlToBase64 = async (blobUrl: string): Promise<string> => {
-    const response = await fetch(blobUrl);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        // Remove data URL prefix (e.g., "data:application/pdf;base64,")
-        const base64Data = base64.split(',')[1] || base64;
-        resolve(base64Data);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  };
-
-  // Helper function to fetch image/video from URL and convert to base64
-  const urlToBase64 = async (url: string): Promise<{ base64: string; contentType: string }> => {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const contentType = blob.type || 'application/octet-stream';
-      
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64 = reader.result as string;
-          // Remove data URL prefix
-          const base64Data = base64.split(',')[1] || base64;
-          resolve({ base64: base64Data, contentType });
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } catch (error) {
-      console.error(`Failed to fetch ${url}:`, error);
-      throw error;
-    }
-  };
-
-  // Helper function to get file extension from URL or name
-  const getFileExtension = (urlOrName: string): string => {
-    const match = urlOrName.match(/\.([a-zA-Z0-9]+)(\?|$)/);
-    return match ? match[1].toLowerCase() : '';
-  };
-
-  // Helper function to determine content type from extension
-  const getContentType = (extension: string, attachmentType: 'IMAGE' | 'VIDEO' | 'DOCUMENT'): string => {
-    if (attachmentType === 'IMAGE') {
-      const imageTypes: Record<string, string> = {
-        'jpg': 'image/jpeg',
-        'jpeg': 'image/jpeg',
-        'png': 'image/png',
-        'gif': 'image/gif',
-        'webp': 'image/webp',
-        'svg': 'image/svg+xml'
-      };
-      return imageTypes[extension] || 'image/jpeg';
-    } else if (attachmentType === 'VIDEO') {
-      const videoTypes: Record<string, string> = {
-        'mp4': 'video/mp4',
-        'mov': 'video/quicktime',
-        'avi': 'video/x-msvideo',
-        'webm': 'video/webm',
-        'mkv': 'video/x-matroska'
-      };
-      return videoTypes[extension] || 'video/mp4';
-    } else {
-      const docTypes: Record<string, string> = {
-        'pdf': 'application/pdf',
-        'doc': 'application/msword',
-        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'xls': 'application/vnd.ms-excel',
-        'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-      };
-      return docTypes[extension] || 'application/octet-stream';
-    }
-  };
-
   const handleSendServiceOrder = async () => {
     if (!soSubject || !soBody || !claim.contractorEmail) return;
     
     setIsSendingSO(true);
     try {
-      const attachments: Array<{ filename: string; content: string; contentType: string }> = [];
-
-      // 1. Add PDF attachment
-      if (soPdfUrl) {
-        try {
-          const pdfBase64 = await blobUrlToBase64(soPdfUrl);
-          const claimNumber = claim.claimNumber || claim.id.substring(0, 8).toUpperCase();
-          attachments.push({
-            filename: `Service Order - ${claimNumber}.pdf`,
-            content: pdfBase64,
-            contentType: 'application/pdf'
-          });
-        } catch (error) {
-          console.error('Failed to convert PDF to base64:', error);
-        }
-      }
-
-      // 2. Add all image and video attachments
-      const imageVideoAttachments = (claim.attachments || []).filter(
-        att => att.type === 'IMAGE' || att.type === 'VIDEO'
-      );
-
-      for (const attachment of imageVideoAttachments) {
-        try {
-          const { base64, contentType } = await urlToBase64(attachment.url);
-          const extension = getFileExtension(attachment.name || attachment.url);
-          const finalContentType = contentType || getContentType(extension, attachment.type);
-          
-          attachments.push({
-            filename: attachment.name || `attachment_${attachment.id}.${extension || (attachment.type === 'IMAGE' ? 'jpg' : 'mp4')}`,
-            content: base64,
-            contentType: finalContentType
-          });
-        } catch (error) {
-          console.error(`Failed to process attachment ${attachment.id}:`, error);
-          // Continue with other attachments even if one fails
-        }
-      }
-
       await sendEmail({
         to: claim.contractorEmail,
         subject: soSubject,
         body: soBody,
         fromName: 'Cascade Admin',
-        fromRole: UserRole.ADMIN,
-        attachments: attachments.length > 0 ? attachments : undefined
+        fromRole: UserRole.ADMIN
       });
       
       if (onTrackClaimMessage && claim.contractorName && claim.contractorEmail) {
@@ -512,134 +281,6 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
             </div>
           </div>
 
-          {/* Attachments Card */}
-          <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
-            <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4 flex items-center gap-2">
-              <Paperclip className="h-5 w-5 text-primary" />
-              Attachments
-            </h3>
-            
-            <div className="space-y-4">
-              {isEditing && !isReadOnly && (
-                <div>
-                  <input
-                    type="file"
-                    multiple
-                    accept="image/*,video/*,.pdf,.doc,.docx"
-                    onChange={handleFileUpload}
-                    disabled={uploading}
-                    className="block w-full text-sm text-surface-on dark:text-gray-100 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-on hover:file:bg-primary-variant disabled:opacity-50"
-                  />
-                  {uploading && (
-                    <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-1 flex items-center gap-1">
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                      Uploading files...
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {attachments.length > 0 && (
-                <div className="space-y-4">
-                  {/* Image Attachments Section */}
-                  {attachments.filter(att => att.type === 'IMAGE' && att.url).length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-3 flex items-center gap-2">
-                        <ImageIcon className="h-4 w-4 text-primary" />
-                        Image Attachments
-                      </h4>
-                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {attachments
-                          .filter(att => att.type === 'IMAGE' && att.url)
-                          .map((att, i) => {
-                            const attachmentKey = att.id || `img-${i}`;
-                            const attachmentUrl = att.url || '';
-                            const attachmentName = att.name || 'Image';
-                            
-                            return (
-                              <div key={attachmentKey} className="group relative aspect-square bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-elevation-2 transition-all">
-                                <img 
-                                  src={attachmentUrl} 
-                                  alt={attachmentName}
-                                  className="w-full h-full object-cover"
-                                />
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2">
-                                  {isEditing && isAdmin ? (
-                                    <button
-                                      onClick={() => setEditingImage({ url: attachmentUrl, name: attachmentName, attachmentId: attachmentKey })}
-                                      className="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-primary text-primary-on rounded-lg text-sm font-medium hover:bg-primary-variant transition-opacity flex items-center gap-1"
-                                    >
-                                      <Edit2 className="h-4 w-4" />
-                                      Edit
-                                    </button>
-                                  ) : null}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setViewingImage({ url: attachmentUrl, name: attachmentName });
-                                    }}
-                                    className="opacity-0 group-hover:opacity-100 px-3 py-1.5 bg-surface-container text-surface-on rounded-lg text-sm font-medium hover:bg-surface-container-high transition-opacity"
-                                  >
-                                    View
-                                  </button>
-                                </div>
-                                {isEditing && !isReadOnly && (
-                                  <button
-                                    onClick={() => handleRemoveAttachment(attachmentKey)}
-                                    className="absolute -top-2 -right-2 bg-error text-error-on rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
-                                    aria-label="Remove attachment"
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </button>
-                                )}
-                              </div>
-                            );
-                          })}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Other Attachments (Videos, Documents) */}
-                  {attachments.filter(att => att.type !== 'IMAGE').length > 0 && (
-                    <div>
-                      <h4 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-3 flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-primary" />
-                        Other Attachments
-                      </h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        {attachments
-                          .filter(att => att.type !== 'IMAGE')
-                          .map((att) => (
-                            <div key={att.id} className="relative group">
-                              <div className="w-full h-24 bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600 flex flex-col items-center justify-center p-2">
-                                {att.type === 'VIDEO' ? (
-                                  <Video className="h-6 w-6 text-primary mb-1" />
-                                ) : (
-                                  <FileText className="h-6 w-6 text-primary mb-1" />
-                                )}
-                                <span className="text-[10px] text-surface-on-variant truncate w-full text-center">
-                                  {att.name}
-                                </span>
-                              </div>
-                              {isEditing && !isReadOnly && (
-                                <button
-                                  onClick={() => handleRemoveAttachment(att.id)}
-                                  className="absolute -top-2 -right-2 bg-error text-error-on rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-md z-10"
-                                  aria-label="Remove attachment"
-                                >
-                                  <X className="h-3 w-3" />
-                                </button>
-                              )}
-                            </div>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-
           {/* Internal Notes and Message Summary - Moved below Claim Details */}
           {/* Internal Notes - Admin Only */}
           {isAdmin && (
@@ -670,54 +311,10 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                       className="w-full bg-surface dark:bg-gray-700 border border-primary rounded-lg p-3 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary mb-4 resize-none overflow-hidden"
                     />
                   ) : (
-                    <div className="mb-4 overflow-hidden space-y-4">
-                      {displayInternalNotes ? (
-                        (() => {
-                          // Parse notes - split by double newlines to get individual notes
-                          const notes = displayInternalNotes.split(/\n\n+/).filter(n => n.trim());
-                          return notes.map((note, index) => {
-                            // Extract timestamp and user from format: [MM/DD/YYYY at HH:MM AM/PM by User Name] note text
-                            const match = note.match(/^\[([^\]]+)\]\s*(.+)$/);
-                            if (match) {
-                              const [, timestampStr, noteText] = match;
-                              // Parse timestamp to extract date/time and user
-                              const timestampMatch = timestampStr.match(/^(.+?)\s+at\s+(.+?)\s+by\s+(.+)$/);
-                              if (timestampMatch) {
-                                const [, dateStr, timeStr, userName] = timestampMatch;
-                                return (
-                                  <div key={index} className="bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600">
-                                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600">
-                                        <Clock className="h-3 w-3 mr-1" />
-                                        {dateStr} at {timeStr}
-                                      </span>
-                                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600">
-                                        <User className="h-3 w-3 mr-1" />
-                                        {userName}
-                                      </span>
-                                    </div>
-                                    <p className="text-sm text-secondary-on-container dark:text-gray-300 leading-relaxed">
-                                      {noteText.trim()}
-                                    </p>
-                                  </div>
-                                );
-                              }
-                            }
-                            // Fallback for notes without proper format
-                            return (
-                              <div key={index} className="bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600">
-                                <p className="text-sm text-secondary-on-container dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
-                                  {note}
-                                </p>
-                              </div>
-                            );
-                          });
-                        })()
-                      ) : (
-                        <p className="text-sm text-secondary-on-container dark:text-gray-300 bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600">
-                          No internal notes.
-                        </p>
-                      )}
+                    <div className="mb-4 overflow-hidden">
+                      <p className="text-sm text-secondary-on-container dark:text-gray-300 whitespace-pre-wrap leading-relaxed bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600 overflow-hidden">
+                        {claim.internalNotes || "No internal notes."}
+                      </p>
                     </div>
                   )}
                 
@@ -848,7 +445,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
             </h3>
             <div className="flex flex-col sm:flex-row gap-4 items-start">
               <div className="flex-1 sm:flex-initial sm:min-w-[200px]">
-                <p className="text-xs text-surface-on-variant dark:text-gray-400 mb-1 font-medium">Classification</p>
+                <p className="text-xs text-surface-on-variant dark:text-gray-400 mb-1">Classification</p>
                 {isEditing && !isReadOnly ? (
                   <div className="relative w-full">
                     <select
@@ -874,24 +471,11 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                   </span>
                 )}
               </div>
-              <div className="flex-1 sm:flex-initial sm:min-w-[200px]">
-                <p className="text-xs text-surface-on-variant dark:text-gray-400 mb-1 font-medium">Date Evaluated</p>
-                {isEditing && !isReadOnly ? (
-                  <button
-                    type="button"
-                    onClick={() => setShowDateEvaluatedPicker(true)}
-                    className="block w-full rounded-md border border-surface-outline dark:border-gray-600 bg-transparent dark:bg-gray-700 px-3 py-2 text-surface-on dark:text-gray-100 hover:border-primary focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors h-[2.5rem] text-left flex items-center gap-2"
-                  >
-                    <Calendar className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
-                    <span className={editDateEvaluated ? 'text-surface-on dark:text-gray-100' : 'text-surface-on-variant dark:text-gray-400'}>
-                      {editDateEvaluated ? new Date(editDateEvaluated).toLocaleDateString() : 'Select date'}
-                    </span>
-                  </button>
-                ) : (
-                  <span className="inline-flex items-center justify-start px-3 py-1 rounded-full text-sm font-medium bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 h-[2.5rem] w-full">
-                    {claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString() : 'Pending Evaluation'}
-                  </span>
-                )}
+              <div className="flex-1 sm:flex-initial">
+                <p className="text-xs text-surface-on-variant dark:text-gray-400 mb-1 text-left">Date Evaluated</p>
+                <span className="inline-flex items-center justify-start px-3 py-1 rounded-full text-sm font-medium bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 h-[2.5rem] w-full">
+                  {claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString() : 'Pending Evaluation'}
+                </span>
               </div>
             </div>
           </div>
@@ -914,38 +498,22 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                       </div>
                     </div>
                     <Button 
-                      variant="filled" 
-                      onClick={() => setShowSubModal(true)} 
-                      icon={<Edit2 className="h-4 w-4" />}
-                      className="!h-12 w-full sm:w-auto whitespace-nowrap"
-                    >
-                      Change Sub
-                    </Button>
-                    <Button 
-                      variant="filled" 
+                      variant="outlined" 
                       onClick={handlePrepareServiceOrder} 
                       icon={<FileText className="h-4 w-4" />}
                       className="!h-12 w-full sm:w-auto whitespace-nowrap"
                     >
-                      Send to Sub
-                    </Button>
-                    <Button 
-                      variant="filled" 
-                      onClick={handleDownloadServiceOrder} 
-                      icon={<Download className="h-4 w-4" />}
-                      className="!h-12 w-full sm:w-auto whitespace-nowrap"
-                    >
-                      Download S.O.
+                      Service Order
                     </Button>
                   </>
                 ) : (
                   <Button 
-                    variant="filled" 
+                    variant="outlined" 
                     onClick={() => setShowSubModal(true)} 
                     icon={<Plus className="h-4 w-4" />}
                     className="!h-12 w-full sm:w-auto whitespace-nowrap"
                   >
-                    Assign
+                    + Sub
                   </Button>
                 )}
               </div>
@@ -994,8 +562,8 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                       </button>
                     </div>
                     <div className="w-full md:w-auto md:min-w-[200px]">
-                      <label className="block text-xs text-surface-on-variant dark:text-gray-400 mb-1 font-medium">Time Slot</label>
                       <MaterialSelect
+                        label="Time Slot"
                         options={[
                           { value: 'AM', label: 'AM (8am - 12pm)' },
                           { value: 'PM', label: 'PM (12pm - 4pm)' },
@@ -1042,8 +610,8 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                     </button>
                   </div>
                   <div className="w-full md:w-auto md:min-w-[200px]">
-                    <label className="block text-xs text-surface-on-variant dark:text-gray-400 mb-1 font-medium">Time Slot</label>
                     <MaterialSelect
+                      label="Time Slot"
                       options={[
                         { value: 'AM', label: 'AM (8am - 12pm)' },
                         { value: 'PM', label: 'PM (12pm - 4pm)' },
@@ -1083,23 +651,10 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
         />
       )}
       
-      {/* Date Evaluated Picker */}
-      {showDateEvaluatedPicker && (
-        <CalendarPicker
-          isOpen={showDateEvaluatedPicker}
-          selectedDate={editDateEvaluated ? new Date(editDateEvaluated) : null}
-          onSelectDate={(date) => {
-            setEditDateEvaluated(date.toISOString().split('T')[0]);
-            setShowDateEvaluatedPicker(false);
-          }}
-          onClose={() => setShowDateEvaluatedPicker(false)}
-        />
-      )}
-      
       {/* Sub Assignment Modal */}
       {showSubModal && (
         <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]" onClick={() => setShowSubModal(false)}>
-          <div className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-3 w-full max-w-md mx-4 animate-[scale-in_0.2s_ease-out] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-3 w-full max-w-md mx-4 animate-[scale-in_0.2s_ease-out]" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
               <h2 className="text-lg font-medium text-surface-on dark:text-gray-100 flex items-center gap-2">
                 <HardHat className="h-5 w-5 text-primary" />
@@ -1111,21 +666,26 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
             </div>
             <div className="p-6 space-y-4 bg-surface dark:bg-gray-800">
               <div>
-                <p className="block text-xs text-surface-on-variant dark:text-gray-400 mb-1 font-medium">Select Subcontractor</p>
-                <MaterialSelect
-                  value={claim.contractorId || ''}
-                  onChange={(value) => {
-                    if (value && value !== '') {
-                      handleAssignContractor(value);
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-2">Select Subcontractor</label>
+                <select 
+                  className="w-full bg-surface-container dark:bg-gray-700 rounded-lg px-4 py-3 text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none cursor-pointer"
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleAssignContractor(e.target.value);
                       setShowSubModal(false);
                     }
                   }}
-                  options={contractors.map(c => ({
-                    value: c.id,
-                    label: `${c.companyName} (${c.specialty})`
-                  }))}
-                  className="h-[2.5rem]"
-                />
+                  defaultValue=""
+                >
+                  <option value="" disabled className="bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400">
+                    Select a sub...
+                  </option>
+                  {contractors.map(c => (
+                    <option key={c.id} value={c.id} className="bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100">
+                      {c.companyName} ({c.specialty})
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-2 bg-surface-container dark:bg-gray-700">
@@ -1164,92 +724,6 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
                   onChange={e => setSoBody(e.target.value)}
                 />
               </div>
-
-              {/* Attachments Preview */}
-              {(() => {
-                const imageAttachments = (claim.attachments || []).filter(att => att.type === 'IMAGE' && att.url);
-                const videoAttachments = (claim.attachments || []).filter(att => att.type === 'VIDEO' && att.url);
-                const hasPdf = soPdfUrl !== null;
-                const hasAttachments = hasPdf || imageAttachments.length > 0 || videoAttachments.length > 0;
-
-                if (!hasAttachments) return null;
-
-                return (
-                  <div className="border-t border-surface-outline-variant dark:border-gray-700 pt-4">
-                    <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-3">
-                      Attachments ({(hasPdf ? 1 : 0) + imageAttachments.length + videoAttachments.length})
-                    </label>
-                    <div className="space-y-4">
-                      {/* PDF Attachment */}
-                      {hasPdf && (
-                        <div>
-                          <h4 className="text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-2 flex items-center gap-2">
-                            <FileText className="h-3 w-3 text-primary" />
-                            Service Order PDF
-                          </h4>
-                          <div className="flex items-center gap-3 p-3 bg-surface-container dark:bg-gray-700 rounded-lg border border-surface-outline-variant dark:border-gray-600">
-                            <div className="w-12 h-12 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <FileText className="h-6 w-6 text-primary" />
-                            </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">
-                                  Service Order - {claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}.pdf
-                                </p>
-                                <p className="text-xs text-surface-on-variant dark:text-gray-400">PDF Document</p>
-                              </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Image Attachments */}
-                      {imageAttachments.length > 0 && (
-                        <div>
-                          <h4 className="text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-2 flex items-center gap-2">
-                            <ImageIcon className="h-3 w-3 text-primary" />
-                            Images ({imageAttachments.length})
-                          </h4>
-                          <div className="grid grid-cols-4 gap-2">
-                            {imageAttachments.map((att) => (
-                              <div key={att.id} className="relative aspect-square group">
-                                <div className="w-full h-full bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600">
-                                  <img 
-                                    src={att.url} 
-                                    alt={att.name}
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Video Attachments */}
-                      {videoAttachments.length > 0 && (
-                        <div>
-                          <h4 className="text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-2 flex items-center gap-2">
-                            <Video className="h-3 w-3 text-primary" />
-                            Videos ({videoAttachments.length})
-                          </h4>
-                          <div className="grid grid-cols-4 gap-2">
-                            {videoAttachments.map((att) => (
-                              <div key={att.id} className="relative aspect-square">
-                                <div className="w-full h-full bg-surface-container dark:bg-gray-700 rounded-lg overflow-hidden border border-surface-outline-variant dark:border-gray-600 flex items-center justify-center">
-                                  <Video className="h-8 w-8 text-primary" />
-                                </div>
-                                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] px-1 py-0.5 truncate">
-                                  {att.name}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
             </div>
             <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-2 bg-surface-container dark:bg-gray-700">
               <Button variant="text" onClick={() => setShowSOModal(false)}>Cancel</Button>
@@ -1264,7 +738,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
       {/* Bottom Action Buttons */}
       <div className="flex justify-end gap-2 pt-4 border-t border-surface-outline-variant dark:border-gray-700">
         <Button 
-          variant="filled" 
+          variant="tonal" 
           onClick={() => onSendMessage(claim)} 
           icon={<MessageSquare className="h-4 w-4" />}
           className="!h-10"
@@ -1282,62 +756,6 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
           )
         )}
       </div>
-
-      {/* Image Viewer Modal */}
-      {viewingImage && (
-        <ImageViewer
-          imageUrl={viewingImage.url}
-          imageName={viewingImage.name}
-          onClose={() => setViewingImage(null)}
-        />
-      )}
-
-      {/* Image Editor Modal */}
-      {editingImage && (
-        <ImageEditor
-          imageUrl={editingImage.url}
-          imageName={editingImage.name}
-          onSave={async (editedImageUrl) => {
-            // Upload edited image to Cloudinary
-            try {
-              const formData = new FormData();
-              // Convert data URL to blob
-              const response = await fetch(editedImageUrl);
-              const blob = await response.blob();
-              formData.append('file', blob, `edited-${editingImage.name}`);
-
-              const uploadResponse = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData,
-              });
-
-              if (!uploadResponse.ok) {
-                throw new Error('Failed to upload edited image');
-              }
-
-              const result = await uploadResponse.json();
-              
-              // Update the attachment URL in the claim
-              const updatedAttachments = claim.attachments.map(att => 
-                att.id === editingImage.attachmentId || (!att.id && att.url === editingImage.url)
-                  ? { ...att, url: result.url }
-                  : att
-              );
-
-              onUpdateClaim({
-                ...claim,
-                attachments: updatedAttachments
-              });
-
-              setEditingImage(null);
-            } catch (error) {
-              console.error('Failed to save edited image:', error);
-              alert('Failed to save edited image. Please try again.');
-            }
-          }}
-          onClose={() => setEditingImage(null)}
-        />
-      )}
     </div>
   );
 };
