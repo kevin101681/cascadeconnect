@@ -69,7 +69,7 @@ interface DashboardProps {
 
   // Tasks Widget Support
   tasks?: Task[];
-  onAddTask: (task: Partial<Task>) => void;
+  onAddTask: (task: Partial<Task>) => Promise<void> | void;
   onToggleTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
   onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND') => void;
@@ -197,6 +197,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // Punch List App State
   const [showPunchListApp, setShowPunchListApp] = useState(false);
+  const [showManualModal, setShowManualModal] = useState(false);
 
   // Debug: Log modal state changes
   useEffect(() => {
@@ -626,9 +627,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const handleSendInvite = async () => {
     setIsDrafting(true);
+    const subject = `A Warm Welcome to Your New Home, ${inviteName}! Important Information from Cascade Builder Services`;
     await sendEmail({
       to: inviteEmail,
-      subject: 'Welcome to Cascade Builder Services',
+      subject: subject,
       body: inviteBody,
       fromName: 'Cascade Admin',
       fromRole: UserRole.ADMIN
@@ -1316,24 +1318,29 @@ const Dashboard: React.FC<DashboardProps> = ({
               </button>
             </div>
             
-            <form onSubmit={(e) => {
+            <form onSubmit={async (e) => {
               e.preventDefault();
-              onAddTask({
-                title: newTaskTitle,
-                description: newTaskNotes,
-                assignedToId: newTaskAssignee,
-                assignedById: currentUser.id,
-                isCompleted: false,
-                dateAssigned: new Date(),
-                dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-                relatedClaimIds: selectedClaimIds
-              });
-              setNewTaskTitle('');
-              setNewTaskNotes('');
-              setNewTaskAssignee(currentUser.id);
-              setSelectedClaimIds([]);
-              setShowNewTaskModal(false);
-              setCurrentTab('TASKS');
+              try {
+                await onAddTask({
+                  title: newTaskTitle,
+                  description: newTaskNotes,
+                  assignedToId: newTaskAssignee,
+                  assignedById: currentUser.id,
+                  isCompleted: false,
+                  dateAssigned: new Date(),
+                  dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+                  relatedClaimIds: selectedClaimIds
+                });
+                setNewTaskTitle('');
+                setNewTaskNotes('');
+                setNewTaskAssignee(currentUser.id);
+                setSelectedClaimIds([]);
+                setShowNewTaskModal(false);
+                setCurrentTab('TASKS');
+              } catch (error) {
+                console.error('Failed to create task:', error);
+                alert('Failed to create task. Please try again.');
+              }
             }} className="p-6 space-y-4 bg-surface dark:bg-gray-800 flex-1 overflow-y-auto">
               <div>
                 <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Task Title</label>
@@ -2100,6 +2107,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                     };
                     reader.readAsDataURL(pdfBlob);
                   }}
+                  onCreateMessage={async (homeownerId: string, subject: string, content: string, attachments?: Array<{ filename: string; content: string; contentType: string }>) => {
+                    // Create a message thread for the punch list email
+                    onCreateThread(homeownerId, subject, content);
+                    // Note: Attachments are sent via email, but not stored in the message thread
+                    // The message thread will show the email was sent
+                  }}
+                  onShowManual={() => setShowManualModal(true)}
                 />
               </div>
               
@@ -2549,6 +2563,62 @@ const Dashboard: React.FC<DashboardProps> = ({
           </p>
         </div>
       </div>
+
+      {/* Homeowner Manual Modal */}
+      {showManualModal && createPortal(
+        <div 
+          className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setShowManualModal(false)}
+        >
+          <div 
+            className="bg-surface dark:bg-gray-800 w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-xl flex flex-col overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center shrink-0">
+              <h2 className="text-xl font-bold text-surface-on dark:text-gray-100">Homeowner Manual</h2>
+              <button
+                onClick={() => setShowManualModal(false)}
+                className="p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors"
+              >
+                <X className="h-5 w-5 text-surface-on dark:text-gray-100" />
+              </button>
+            </div>
+            
+            {/* Content - Manual Images */}
+            <div className="flex-1 overflow-y-auto p-6 bg-gray-100 dark:bg-gray-900">
+              <div className="space-y-4">
+                {[
+                  "/images/manual/page1.png",
+                  "/images/manual/page2.png",
+                  "/images/manual/page3.png",
+                  "/images/manual/page4.png"
+                ].map((imagePath, index) => (
+                  <div key={index} className="w-full">
+                    <img 
+                      src={imagePath} 
+                      alt={`Homeowner Manual Page ${index + 1}`}
+                      className="w-full h-auto rounded-lg shadow-lg"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            {/* Footer */}
+            <div className="p-4 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end shrink-0">
+              <Button variant="filled" onClick={() => setShowManualModal(false)}>
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </>
   );
 };

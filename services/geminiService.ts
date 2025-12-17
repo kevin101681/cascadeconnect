@@ -99,54 +99,28 @@ Cascade Builder Services`;
 };
 
 export const draftInviteEmail = async (homeownerName: string): Promise<string> => {
-  const ai = getAI();
-  if (!ai) {
-    // Fallback template
-    return `Dear ${homeownerName},
+  // Use the new template without AI
+  return `Dear ${homeownerName},
 
-Welcome home! Congratulations on your purchase.
-Your builder has partnered with Cascade Builder Services to ensure you receive exceptional support during your one-year warranty term.
+On behalf of Cascade Builder Services, we extend our warmest congratulations on your new home! We hope you settle in beautifully and enjoying every moment in your wonderful new space.
 
-We've set up an online customer service portal for you at cascadebuilderservices.com.
+We're writing to you today because Cascade Builder Services proudly partners with your builder to provide dedicated warranty support for your home. Our goal is to ensure your peace of mind and the long-term enjoyment of your investment.
 
-Action Required: Please click the link below to activate your account.
+As part of this partnership, we facilitate important warranty evaluations, including your 60-day and 11-month assessments. These scheduled evaluations are designed to proactively address any potential concerns and ensure everything in your home continues to meet the highest standards.
 
-[ ACCEPT ]
-https://cascadebuilderservices.com/register?account_id=new
+To help us serve you best and to give you easy access to your warranty information, service requests, and important documents, we kindly ask you to activate your online account. It's a quick and simple process!
 
-Sincerely,
-Cascade Builder Services`;
-  }
-  
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: `Draft a warm welcome email to new homeowner ${homeownerName} from Cascade Builder Services.
-      
-      Instructions:
-      - Welcome them to their new home.
-      - Explain we partner with their builder for warranty support (60-day and 11-month evaluations).
-      - Ask them to activate their online account at cascadebuilderservices.com.
-      - Include a placeholder for the activation link.
-      - Contact: info@cascadebuilderservices.com.`,
-    });
-    return response.text || `Dear ${homeownerName}, Welcome home!`;
-  } catch (error) {
-    console.error("Gemini API Error (draftInviteEmail):", error);
-    // Fallback template
-    return `Dear ${homeownerName},
+Please visit **cascadebuilderservices.com** and use the activation link below to get started:
 
-Welcome home! Congratulations on your purchase.
-Your builder has partnered with Cascade Builder Services to ensure you receive exceptional support during your one-year warranty term.
+<div style="margin: 20px 0; text-align: center;">
+  <a href="https://cascadebuilderservices.com/register?account_id=new" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 24px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">Activate Your Account</a>
+</div>
 
-We've set up an online customer service portal for you at cascadebuilderservices.com.
+Should you have any questions as you get settled, or require assistance with your account activation, please don't hesitate to reach out to us. We're here to help!
 
-Action Required: Please click the link below to activate your account.
+Warmly,
 
-[ ACCEPT ]
-https://cascadebuilderservices.com/register?account_id=new
-
-Sincerely,
-Cascade Builder Services`;
-  }
+The Team at Cascade Builder Services
+info@cascadebuilderservices.com
+cascadebuilderservices.com`;
 };

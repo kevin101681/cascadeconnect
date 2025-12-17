@@ -19,6 +19,8 @@ interface PunchListAppProps {
   homeowner: Homeowner;
   onClose: () => void;
   onSavePDF?: (pdfBlob: Blob, filename: string) => void;
+  onCreateMessage?: (homeownerId: string, subject: string, content: string, attachments?: Array<{ filename: string; content: string; contentType: string }>) => Promise<void>;
+  onShowManual?: () => void;
 }
 
 // Helper to generate UUID
@@ -37,7 +39,9 @@ const PREDEFINED_LOCATIONS = [
 const PunchListApp: React.FC<PunchListAppProps> = ({
   homeowner,
   onClose,
-  onSavePDF
+  onSavePDF,
+  onCreateMessage,
+  onShowManual
 }) => {
   const [BlueTagDashboard, setBlueTagDashboard] = useState<React.ComponentType<any> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -74,7 +78,8 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
       { id: generateUUID(), label: 'Project Lot/Unit Number', value: homeowner.jobName || '', icon: 'Hash' },
       { id: generateUUID(), label: 'Address', value: homeowner.address, icon: 'MapPin' },
       { id: generateUUID(), label: 'Phone Number', value: homeowner.phone || '', icon: 'Phone' },
-      { id: generateUUID(), label: 'Email Address', value: homeowner.email, icon: 'Mail' }
+      { id: generateUUID(), label: 'Email Address', value: homeowner.email, icon: 'Mail' },
+      { id: 'homeownerId', label: 'Homeowner ID', value: homeowner.id, icon: 'User' } // Hidden field for homeowner ID
     ]
   });
 
@@ -184,10 +189,11 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
         { id: prev.fields[1]?.id || generateUUID(), label: 'Project Lot/Unit Number', value: homeowner.jobName || '', icon: 'Hash' },
         { id: prev.fields[2]?.id || generateUUID(), label: 'Address', value: homeowner.address, icon: 'MapPin' },
         { id: prev.fields[3]?.id || generateUUID(), label: 'Phone Number', value: homeowner.phone || '', icon: 'Phone' },
-        { id: prev.fields[4]?.id || generateUUID(), label: 'Email Address', value: homeowner.email, icon: 'Mail' }
+        { id: prev.fields[4]?.id || generateUUID(), label: 'Email Address', value: homeowner.email, icon: 'Mail' },
+        { id: 'homeownerId', label: 'Homeowner ID', value: homeowner.id, icon: 'User' } // Hidden field for homeowner ID
       ]
     }));
-  }, [homeowner.name, homeowner.jobName, homeowner.address, homeowner.phone, homeowner.email]);
+  }, [homeowner.name, homeowner.jobName, homeowner.address, homeowner.phone, homeowner.email, homeowner.id]);
 
   const handleSelectLocation = (id: string) => {
     setActiveLocationId(id);
@@ -269,6 +275,8 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
           onUpdateTemplates={setSignOffTemplates}
           embedded={true}
           initialExpand={false}
+          onCreateMessage={onCreateMessage}
+          onShowManual={onShowManual}
         />
         </div>
       ) : (

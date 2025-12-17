@@ -32,6 +32,8 @@ export interface DashboardProps {
   onDelete?: (e: React.MouseEvent, rect?: DOMRect) => void;
   isClientInfoCollapsed?: boolean;
   onToggleClientInfo?: (collapsed: boolean) => void;
+  onCreateMessage?: (homeownerId: string, subject: string, content: string, attachments?: Array<{ filename: string; content: string; contentType: string }>) => Promise<void>;
+  onShowManual?: () => void;
 }
 
 // Map strings to Icon components for display
@@ -1116,7 +1118,9 @@ export const Dashboard = React.memo<DashboardProps>(({
   isExiting = false,
   onDelete,
   isClientInfoCollapsed,
-  onToggleClientInfo
+  onToggleClientInfo,
+  onCreateMessage,
+  onShowManual
 }) => {
     const [shouldInitialExpand] = useState(initialExpand);
 
@@ -1338,29 +1342,48 @@ export const Dashboard = React.memo<DashboardProps>(({
                                         return;
                                     }
                                     
-                                    // Send email via SendGrid
                                     const safeProjectName = project.fields?.[0]?.value || "Project";
+                                    const subject = `${safeProjectName} - Walk through docs`;
+                                    const body = "Here's the punch list and sign off sheet. The rewalk is scheduled for";
+                                    
+                                    const attachments = [
+                                        {
+                                            filename: reportFilename,
+                                            content: reportBase64,
+                                            contentType: 'application/pdf'
+                                        },
+                                        {
+                                            filename: signOffFilename,
+                                            content: signOffBase64,
+                                            contentType: 'application/pdf'
+                                        }
+                                    ];
+                                    
+                                    // Send email via SendGrid
                                     await sendEmail({
                                         to: homeownerEmail,
-                                        subject: `${safeProjectName} - Walk through docs`,
-                                        body: "Here's the punch list and sign off sheet. The rewalk is scheduled for",
+                                        subject: subject,
+                                        body: body,
                                         fromName: 'Cascade Builder Services',
                                         fromRole: UserRole.ADMIN,
-                                        attachments: [
-                                            {
-                                                filename: reportFilename,
-                                                content: reportBase64,
-                                                contentType: 'application/pdf'
-                                            },
-                                            {
-                                                filename: signOffFilename,
-                                                content: signOffBase64,
-                                                contentType: 'application/pdf'
-                                            }
-                                        ]
+                                        attachments: attachments
                                     });
                                     
+                                    // Create message in app if callback is provided
+                                    if (onCreateMessage) {
+                                        // Get homeowner ID from project fields
+                                        const homeownerIdField = project.fields?.find(f => f.id === 'homeownerId');
+                                        const homeownerId = homeownerIdField?.value || '';
+                                        
+                                        if (homeownerId) {
+                                            await onCreateMessage(homeownerId, subject, body, attachments);
+                                        } else {
+                                            console.warn('Homeowner ID not found in project fields');
+                                        }
+                                    }
+                                    
                                     console.log('✅ Email sent successfully via SendGrid');
+                                    alert('Email sent successfully!');
                                 } catch (error) {
                                     console.error("Failed to email both docs:", error);
                                     alert('Failed to send email. Please try again or contact support.');
@@ -1368,9 +1391,12 @@ export const Dashboard = React.memo<DashboardProps>(({
                             },
                             onHomeownerManual: () => {
                                 console.log('Homeowner Manual button clicked');
-                                // Open homeowner manual - you may need to provide a URL or file
-                                // For now, this is a placeholder that can be customized
-                                window.open('/homeowner-manual.pdf', '_blank');
+                                if (onShowManual) {
+                                    onShowManual();
+                                } else {
+                                    // Fallback: try to open PDF
+                                    window.open('/homeowner-manual.pdf', '_blank');
+                                }
                             }
                         }}
                         onViewAllItems={() => {
