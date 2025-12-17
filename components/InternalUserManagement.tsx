@@ -402,16 +402,16 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
 
       {/* EMPLOYEE MODAL */}
       {showEmpModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]">
-          <div className="bg-surface dark:bg-gray-800 w-full max-w-md rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
-            <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out] overflow-y-auto">
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-md rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex-shrink-0">
               <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                 <UserCheck className="h-5 w-5 text-primary" />
                 {editingEmpId ? 'Edit Team Member' : 'New Team Member'}
               </h2>
             </div>
             
-            <form onSubmit={handleSubmitEmp} className="p-6 space-y-4 bg-surface dark:bg-gray-800">
+            <form onSubmit={handleSubmitEmp} className="p-6 space-y-4 bg-surface dark:bg-gray-800 overflow-y-auto flex-1">
               <div>
                 <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Full Name</label>
                 <input type="text" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={empName} onChange={(e) => setEmpName(e.target.value)} />

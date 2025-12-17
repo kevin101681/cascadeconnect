@@ -90,16 +90,21 @@ html.dark .cl-userButtonPopoverCard {
 .cl-userButtonPopoverHeader {
     padding: 12px !important;
     border-bottom: 1px solid #c0c8cc !important; /* surface-outline-variant */
-    background-color: transparent !important;
+    background-color: #ffffff !important; /* surface */
 }
 
 .cl-userButtonPopoverHeader > *,
 .cl-userButtonPopoverHeader p,
 .cl-userButtonPopoverHeader span,
-.cl-userButtonPopoverHeader div,
+.cl-userButtonPopoverHeader div {
+    background-color: #ffffff !important; /* surface */
+    border: none !important;
+    box-shadow: none !important;
+}
+
 .cl-userButtonPopoverHeaderTitle,
 .cl-userButtonPopoverHeaderSubtitle {
-    background-color: transparent !important;
+    background-color: #ffffff !important; /* surface */
     border: none !important;
     box-shadow: none !important;
 }
@@ -108,7 +113,7 @@ html.dark .cl-userButtonPopoverCard {
 .dark .cl-userButtonPopoverHeader,
 html.dark .cl-userButtonPopoverHeader {
     border-bottom-color: #374151 !important; /* dark:border-gray-700 */
-    background-color: transparent !important;
+    background-color: #1f2937 !important; /* dark:bg-gray-800 */
 }
 
 .dark .cl-userButtonPopoverHeader > *,
@@ -118,39 +123,72 @@ html.dark .cl-userButtonPopoverHeader p,
 .dark .cl-userButtonPopoverHeader span,
 html.dark .cl-userButtonPopoverHeader span,
 .dark .cl-userButtonPopoverHeader div,
-html.dark .cl-userButtonPopoverHeader div,
+html.dark .cl-userButtonPopoverHeader div {
+    background-color: #1f2937 !important; /* dark:bg-gray-800 */
+    border: none !important;
+    box-shadow: none !important;
+}
+
 .dark .cl-userButtonPopoverHeaderTitle,
 html.dark .cl-userButtonPopoverHeaderTitle,
 .dark .cl-userButtonPopoverHeaderSubtitle,
 html.dark .cl-userButtonPopoverHeaderSubtitle {
-    background-color: transparent !important;
+    background-color: #1f2937 !important; /* dark:bg-gray-800 */
     border: none !important;
     box-shadow: none !important;
 }
 
 /* Header Title - Light Mode */
-.cl-userButtonPopoverHeaderTitle {
+.cl-userButtonPopoverHeaderTitle,
+.cl-userButtonPopoverHeaderTitle *,
+.cl-userButtonPopoverHeaderTitle span,
+.cl-userButtonPopoverHeaderTitle p,
+.cl-userButtonPopoverHeaderTitle div {
     font-size: 0.875rem !important;
     font-weight: 500 !important;
     color: #171c1f !important; /* surface-on */
+    background-color: #ffffff !important; /* surface */
 }
 
 /* Header Title - Dark Mode */
 .dark .cl-userButtonPopoverHeaderTitle,
-html.dark .cl-userButtonPopoverHeaderTitle {
+html.dark .cl-userButtonPopoverHeaderTitle,
+.dark .cl-userButtonPopoverHeaderTitle *,
+html.dark .cl-userButtonPopoverHeaderTitle *,
+.dark .cl-userButtonPopoverHeaderTitle span,
+html.dark .cl-userButtonPopoverHeaderTitle span,
+.dark .cl-userButtonPopoverHeaderTitle p,
+html.dark .cl-userButtonPopoverHeaderTitle p,
+.dark .cl-userButtonPopoverHeaderTitle div,
+html.dark .cl-userButtonPopoverHeaderTitle div {
     color: #f9fafb !important; /* dark:text-gray-100 */
+    background-color: #1f2937 !important; /* dark:bg-gray-800 */
 }
 
 /* Header Subtitle - Light Mode */
-.cl-userButtonPopoverHeaderSubtitle {
+.cl-userButtonPopoverHeaderSubtitle,
+.cl-userButtonPopoverHeaderSubtitle *,
+.cl-userButtonPopoverHeaderSubtitle span,
+.cl-userButtonPopoverHeaderSubtitle p,
+.cl-userButtonPopoverHeaderSubtitle div {
     font-size: 0.75rem !important;
     color: #40484c !important; /* surface-on-variant */
+    background-color: #ffffff !important; /* surface */
 }
 
 /* Header Subtitle - Dark Mode */
 .dark .cl-userButtonPopoverHeaderSubtitle,
-html.dark .cl-userButtonPopoverHeaderSubtitle {
+html.dark .cl-userButtonPopoverHeaderSubtitle,
+.dark .cl-userButtonPopoverHeaderSubtitle *,
+html.dark .cl-userButtonPopoverHeaderSubtitle *,
+.dark .cl-userButtonPopoverHeaderSubtitle span,
+html.dark .cl-userButtonPopoverHeaderSubtitle span,
+.dark .cl-userButtonPopoverHeaderSubtitle p,
+html.dark .cl-userButtonPopoverHeaderSubtitle p,
+.dark .cl-userButtonPopoverHeaderSubtitle div,
+html.dark .cl-userButtonPopoverHeaderSubtitle div {
     color: #9ca3af !important; /* dark:text-gray-400 */
+    background-color: #1f2937 !important; /* dark:bg-gray-800 */
 }
 
 /* Actions Container */
@@ -351,13 +389,26 @@ html.dark .cl-userButtonPopoverCard {
     color: inherit !important;
 }
 
-/* Remove any dark gray backgrounds from nested containers */
-[class*="cl-userButtonPopover"] [class*="cl-"] {
-    background-color: transparent !important;
+/* Ensure nested containers inherit proper backgrounds */
+[class*="cl-userButtonPopover"] [class*="cl-"]:not(.cl-userButtonPopoverHeader):not(.cl-userButtonPopoverHeaderTitle):not(.cl-userButtonPopoverHeaderSubtitle) {
+    background-color: #ffffff !important;
 }
 
-.dark [class*="cl-userButtonPopover"] [class*="cl-"],
-html.dark [class*="cl-userButtonPopover"] [class*="cl-"] {
-    background-color: transparent !important;
+.dark [class*="cl-userButtonPopover"] [class*="cl-"]:not(.cl-userButtonPopoverHeader):not(.cl-userButtonPopoverHeaderTitle):not(.cl-userButtonPopoverHeaderSubtitle),
+html.dark [class*="cl-userButtonPopover"] [class*="cl-"]:not(.cl-userButtonPopoverHeader):not(.cl-userButtonPopoverHeaderTitle):not(.cl-userButtonPopoverHeaderSubtitle) {
+    background-color: #1f2937 !important; /* dark:bg-gray-800 */
+}
+
+/* Force header and its children to have proper backgrounds */
+.cl-userButtonPopoverHeader,
+.cl-userButtonPopoverHeader * {
+    background-color: #ffffff !important;
+}
+
+.dark .cl-userButtonPopoverHeader,
+html.dark .cl-userButtonPopoverHeader,
+.dark .cl-userButtonPopoverHeader *,
+html.dark .cl-userButtonPopoverHeader * {
+    background-color: #1f2937 !important; /* dark:bg-gray-800 */
 }
 
