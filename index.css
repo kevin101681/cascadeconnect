@@ -96,8 +96,12 @@ html.dark .cl-userButtonPopoverCard {
 .cl-userButtonPopoverHeader > *,
 .cl-userButtonPopoverHeader p,
 .cl-userButtonPopoverHeader span,
-.cl-userButtonPopoverHeader div {
+.cl-userButtonPopoverHeader div,
+.cl-userButtonPopoverHeaderTitle,
+.cl-userButtonPopoverHeaderSubtitle {
     background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 /* Header Section - Dark Mode */
@@ -114,8 +118,14 @@ html.dark .cl-userButtonPopoverHeader p,
 .dark .cl-userButtonPopoverHeader span,
 html.dark .cl-userButtonPopoverHeader span,
 .dark .cl-userButtonPopoverHeader div,
-html.dark .cl-userButtonPopoverHeader div {
+html.dark .cl-userButtonPopoverHeader div,
+.dark .cl-userButtonPopoverHeaderTitle,
+html.dark .cl-userButtonPopoverHeaderTitle,
+.dark .cl-userButtonPopoverHeaderSubtitle,
+html.dark .cl-userButtonPopoverHeaderSubtitle {
     background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 /* Header Title - Light Mode */
@@ -166,19 +176,27 @@ html.dark .cl-userButtonPopoverActions > * {
     color: #171c1f !important; /* surface-on */
     background-color: transparent !important;
     border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
     transition: background-color 0.2s !important;
 }
 
 .cl-userButtonPopoverActionButton:hover {
     background-color: #f0f4f6 !important; /* surface-container */
     border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 .cl-userButtonPopoverActionButton > *,
 .cl-userButtonPopoverActionButton span,
-.cl-userButtonPopoverActionButton div {
+.cl-userButtonPopoverActionButton div,
+.cl-userButtonPopoverActionButtonText,
+.cl-userButtonPopoverActionButtonIcon {
     background-color: transparent !important;
     border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 /* Action Button - Dark Mode */
@@ -187,12 +205,16 @@ html.dark .cl-userButtonPopoverActionButton {
     color: #f9fafb !important; /* dark:text-gray-100 */
     background-color: transparent !important;
     border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 .dark .cl-userButtonPopoverActionButton:hover,
 html.dark .cl-userButtonPopoverActionButton:hover {
     background-color: #374151 !important; /* dark:hover:bg-gray-700 */
     border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 .dark .cl-userButtonPopoverActionButton > *,
@@ -200,9 +222,15 @@ html.dark .cl-userButtonPopoverActionButton > *,
 .dark .cl-userButtonPopoverActionButton span,
 html.dark .cl-userButtonPopoverActionButton span,
 .dark .cl-userButtonPopoverActionButton div,
-html.dark .cl-userButtonPopoverActionButton div {
+html.dark .cl-userButtonPopoverActionButton div,
+.dark .cl-userButtonPopoverActionButtonText,
+html.dark .cl-userButtonPopoverActionButtonText,
+.dark .cl-userButtonPopoverActionButtonIcon,
+html.dark .cl-userButtonPopoverActionButtonIcon {
     background-color: transparent !important;
     border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 /* Action Button Text - Light Mode */
@@ -299,10 +327,37 @@ html.dark [class*="cl-userButtonPopover"] {
     background-color: #1f2937 !important; /* dark:bg-gray-800 */
 }
 
+/* Remove borders and shadows from all popover elements */
+[class*="cl-userButtonPopover"] {
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Only allow border on the main card */
+.cl-userButtonPopoverCard {
+    border: 1px solid #c0c8cc !important;
+    box-shadow: 0px 2px 6px 2px rgba(0,0,0,0.15), 0px 1px 2px 0px rgba(0,0,0,0.3) !important;
+}
+
+.dark .cl-userButtonPopoverCard,
+html.dark .cl-userButtonPopoverCard {
+    border-color: #374151 !important;
+}
+
 /* Ensure text colors are correct in all modes */
 [class*="cl-userButtonPopover"] p,
 [class*="cl-userButtonPopover"] span,
 [class*="cl-userButtonPopover"] div {
     color: inherit !important;
+}
+
+/* Remove any dark gray backgrounds from nested containers */
+[class*="cl-userButtonPopover"] [class*="cl-"] {
+    background-color: transparent !important;
+}
+
+.dark [class*="cl-userButtonPopover"] [class*="cl-"],
+html.dark [class*="cl-userButtonPopover"] [class*="cl-"] {
+    background-color: transparent !important;
 }
 
