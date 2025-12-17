@@ -44,6 +44,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
   const [netlifyDeploysLoading, setNetlifyDeploysLoading] = useState(false);
   const [neonStats, setNeonStats] = useState<any>(null);
   const [neonStatsLoading, setNeonStatsLoading] = useState(false);
+  const [badgeRefreshKey, setBadgeRefreshKey] = useState(0);
 
   const fetchStats = async () => {
     if (!isDbConfigured) {
@@ -329,6 +330,16 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
       fetchDetailedData(activeTab);
     } else {
       setDetailedData(null);
+    }
+  }, [activeTab]);
+
+  // Refresh Netlify badge every 2 seconds when on NETLIFY tab
+  useEffect(() => {
+    if (activeTab === 'NETLIFY') {
+      const interval = setInterval(() => {
+        setBadgeRefreshKey(prev => prev + 1);
+      }, 2000);
+      return () => clearInterval(interval);
     }
   }, [activeTab]);
 
@@ -1004,9 +1015,10 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
                 className="inline-block"
               >
                 <img 
-                  src="https://api.netlify.com/api/v1/badges/a60189c5-3405-4300-8ed2-484e45afbe6e/deploy-status" 
+                  src={`https://api.netlify.com/api/v1/badges/a60189c5-3405-4300-8ed2-484e45afbe6e/deploy-status?t=${badgeRefreshKey}`}
                   alt="Netlify Status" 
                   className="h-6"
+                  key={badgeRefreshKey}
                 />
               </a>
             </div>
