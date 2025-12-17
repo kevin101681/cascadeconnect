@@ -13,6 +13,7 @@ import TaskList from './components/TaskList';
 import MessageSummaryModal, { ClaimMessage } from './components/MessageSummaryModal';
 import InvoicesModal from './components/InvoicesModal';
 import HomeownersList from './components/HomeownersList';
+import { X, Info } from 'lucide-react';
 import EmailHistory from './components/EmailHistory';
 import BackendDashboard from './components/BackendDashboard';
 import HomeownerSelector from './components/HomeownerSelector';
@@ -718,6 +719,10 @@ function App() {
   useEffect(() => { saveState('cascade_ui_homeowner_id', selectedAdminHomeownerId); }, [selectedAdminHomeownerId]);
 
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
+  
+  // Alert modal state
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  
   const selectedClaim = claims.find(c => c.id === selectedClaimId);
   const targetHomeowner = selectedAdminHomeownerId ? homeowners.find(h => h.id === selectedAdminHomeownerId) || null : null;
 
@@ -749,8 +754,8 @@ function App() {
       // Switching from ADMIN to HOMEOWNER
       // Require a homeowner to be selected first
       if (!selectedAdminHomeownerId) {
-        // Show alert/message - homeowner must be selected first
-        alert('Please select a homeowner first before switching to homeowner view.');
+        // Show custom alert modal - homeowner must be selected first
+        setAlertMessage('Please select a homeowner first before switching to homeowner view.');
         return;
       }
       
@@ -762,7 +767,7 @@ function App() {
         // Keep selectedAdminHomeownerId so we can show admin-style card
         setUserRole(UserRole.HOMEOWNER);
       } else {
-        alert('Selected homeowner not found. Please select a homeowner first.');
+        setAlertMessage('Selected homeowner not found. Please select a homeowner first.');
         return;
       }
       setCurrentBuilderId(null);
@@ -2255,7 +2260,53 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
   const isAdminAccount = !!activeEmployee && activeEmployee.id !== 'placeholder';
 
   return (
-    <Layout 
+    <>
+      {/* Custom Alert Modal */}
+      {alertMessage && (
+        <div 
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+          onClick={() => setAlertMessage(null)}
+        >
+          <div 
+            className="bg-surface dark:bg-gray-800 w-full max-w-md rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary-container dark:bg-primary/20 rounded-full">
+                  <Info className="h-5 w-5 text-primary" />
+                </div>
+                <h2 className="text-lg font-normal text-surface-on dark:text-gray-100">
+                  Notice
+                </h2>
+              </div>
+              <button 
+                onClick={() => setAlertMessage(null)} 
+                className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <p className="text-sm text-surface-on dark:text-gray-100">
+                {alertMessage}
+              </p>
+            </div>
+
+            <div className="p-4 bg-surface-container dark:bg-gray-700 flex justify-end border-t border-surface-outline-variant dark:border-gray-700">
+              <button
+                onClick={() => setAlertMessage(null)}
+                className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-on dark:text-white font-medium rounded-lg transition-colors"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Layout 
       userRole={userRole} 
       // Switch Role now rotates through roles (for demo/admin testing) but respects Neon Auth session
       onSwitchRole={handleSwitchRole}
@@ -2429,6 +2480,7 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
       )}
       <HomeownerEnrollment isOpen={isEnrollmentOpen} onClose={() => setIsEnrollmentOpen(false)} onEnroll={handleEnrollHomeowner} builderGroups={builderGroups} />
     </Layout>
+    </>
   );
 }
 
