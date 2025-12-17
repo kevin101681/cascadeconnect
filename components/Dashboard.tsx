@@ -2248,16 +2248,16 @@ const Dashboard: React.FC<DashboardProps> = ({
       <>
         {renderModals()}
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 animate-in fade-in slide-in-from-bottom-4">
-            <div className="bg-surface-container-high p-6 rounded-full">
-                <Search className="h-12 w-12 text-surface-outline" />
+            <div className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full">
+                <Search className="h-12 w-12 text-surface-outline dark:text-gray-400" />
             </div>
             <div>
-                <h2 className="text-xl font-normal text-surface-on">Select a Homeowner</h2>
-                <p className="text-surface-on-variant mt-2 max-w-sm mx-auto">
+                <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">Select a Homeowner</h2>
+                <p className="text-surface-on-variant dark:text-gray-400 mt-2 max-w-sm mx-auto">
                     Search for a homeowner in the top bar to view their warranty claims, tasks, and account details.
                 </p>
                 {isBuilder && (
-                   <p className="text-surface-on-variant mt-1 text-xs">
+                   <p className="text-surface-on-variant dark:text-gray-400 mt-1 text-xs">
                      You are logged in as a Builder. Access is limited to your homeowners.
                    </p>
                 )}
@@ -2274,12 +2274,12 @@ const Dashboard: React.FC<DashboardProps> = ({
       <>
         {renderModals()}
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 animate-in fade-in slide-in-from-bottom-4">
-          <div className="bg-surface-container-high p-6 rounded-full">
-            <Search className="h-12 w-12 text-surface-outline" />
+          <div className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full">
+            <Search className="h-12 w-12 text-surface-outline dark:text-gray-400" />
           </div>
           <div>
-            <h2 className="text-xl font-normal text-surface-on">Select a Homeowner</h2>
-            <p className="text-surface-on-variant mt-2 max-w-sm mx-auto">
+            <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">Select a Homeowner</h2>
+            <p className="text-surface-on-variant dark:text-gray-400 mt-2 max-w-sm mx-auto">
               Please select a homeowner from the search bar above before switching to homeowner view.
             </p>
           </div>
@@ -2294,12 +2294,12 @@ const Dashboard: React.FC<DashboardProps> = ({
     <>
       {renderModals()}
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 animate-in fade-in slide-in-from-bottom-4">
-        <div className="bg-surface-container-high p-6 rounded-full">
-          <Search className="h-12 w-12 text-surface-outline" />
+        <div className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full">
+          <Search className="h-12 w-12 text-surface-outline dark:text-gray-400" />
         </div>
         <div>
-          <h2 className="text-xl font-normal text-surface-on">Select a Homeowner</h2>
-          <p className="text-surface-on-variant mt-2 max-w-sm mx-auto">
+          <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">Select a Homeowner</h2>
+          <p className="text-surface-on-variant dark:text-gray-400 mt-2 max-w-sm mx-auto">
             Search for a homeowner in the top bar to view their warranty claims, tasks, and account details.
           </p>
         </div>
