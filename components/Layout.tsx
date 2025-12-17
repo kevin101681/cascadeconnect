@@ -55,6 +55,7 @@ const Layout: React.FC<LayoutProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { isDarkMode, toggleDarkMode } = useDarkMode();
+  const [badgeRefreshKey, setBadgeRefreshKey] = useState(0);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -79,6 +80,14 @@ const Layout: React.FC<LayoutProps> = ({
       };
     }
   }, [isMenuOpen]);
+
+  // Refresh Netlify badge every 2 seconds (for testing)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBadgeRefreshKey(prev => prev + 1);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleMenuAction = (action: () => void) => {
     action();
@@ -159,6 +168,22 @@ const Layout: React.FC<LayoutProps> = ({
 
             {/* Right Actions */}
             <div className="flex items-center gap-4 flex-shrink-0">
+              {/* Netlify Deploy Status Badge (Testing) */}
+              <a 
+                href="https://app.netlify.com/projects/cascadeconnect/deploys" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block"
+                title="Netlify Deployment Status"
+              >
+                <img 
+                  src={`https://api.netlify.com/api/v1/badges/a60189c5-3405-4300-8ed2-484e45afbe6e/deploy-status?t=${badgeRefreshKey}`}
+                  alt="Netlify Status" 
+                  className="h-5"
+                  key={badgeRefreshKey}
+                />
+              </a>
+
               {/* Dark Mode Toggle */}
               <button
                 onClick={toggleDarkMode}
