@@ -746,18 +746,41 @@ function App() {
 
   const handleSwitchRole = async () => {
     if (userRole === UserRole.ADMIN) {
-      setUserRole(UserRole.BUILDER);
-      if (builderGroups.length > 0) setCurrentBuilderId(builderGroups[0].id);
-    } else if (userRole === UserRole.BUILDER) {
+      // Switching from ADMIN to HOMEOWNER
+      // If a homeowner is selected in admin view, set them as active homeowner
+      if (selectedAdminHomeownerId) {
+        const homeowner = homeowners.find(h => h.id === selectedAdminHomeownerId);
+        if (homeowner) {
+          setActiveHomeowner(homeowner);
+        }
+      }
       setUserRole(UserRole.HOMEOWNER);
       setCurrentBuilderId(null);
+    } else if (userRole === UserRole.BUILDER) {
+      // Switching from BUILDER - go to HOMEOWNER if homeowner selected, otherwise ADMIN
+      if (selectedAdminHomeownerId) {
+        const homeowner = homeowners.find(h => h.id === selectedAdminHomeownerId);
+        if (homeowner) {
+          setActiveHomeowner(homeowner);
+          setUserRole(UserRole.HOMEOWNER);
+        } else {
+          setUserRole(UserRole.ADMIN);
+        }
+      } else {
+        setUserRole(UserRole.ADMIN);
+      }
+      setCurrentBuilderId(null);
     } else {
+      // Switching from HOMEOWNER to ADMIN
+      // Preserve the current active homeowner as selected in admin view
+      if (activeHomeowner && activeHomeowner.id !== 'placeholder') {
+        setSelectedAdminHomeownerId(activeHomeowner.id);
+      }
       setUserRole(UserRole.ADMIN);
       setCurrentBuilderId(null);
     }
     setCurrentView('DASHBOARD');
     setSelectedClaimId(null);
-    setSelectedAdminHomeownerId(null);
     setDashboardConfig({});
   };
   
