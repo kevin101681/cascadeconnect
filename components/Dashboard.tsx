@@ -723,9 +723,11 @@ const Dashboard: React.FC<DashboardProps> = ({
             const serviceOrderDate = serviceOrderMessages.length > 0 ? serviceOrderMessages[0].timestamp : null;
             
             return (
-              <li 
+              <motion.li 
                 key={claim.id} 
                 className="hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors"
+                variants={cardVariants}
+                layout
               >
                 <div 
                   className="w-full px-6 py-3 group relative cursor-pointer"
@@ -1328,7 +1330,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     return (
       <>
         {renderModals()}
-      <div className="space-y-8 animate-in fade-in slide-in-from-top-4 max-w-7xl mx-auto">
+        <div className="space-y-8 animate-in fade-in slide-in-from-top-4 max-w-7xl mx-auto">
         {/* HOMEOWNER INFO AND SCHEDULE ROW */}
         <div className="flex flex-col lg:flex-row gap-6 items-stretch relative w-full">
           {/* COMPACT HOMEOWNER HEADER CARD */}
@@ -1340,7 +1342,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             animate="visible"
             layout
           >
-          <div className="flex flex-col p-6">
+            <div className="flex flex-col p-6">
              
              {/* Two-Line Layout with Even Spacing - Center Aligned */}
              <div className="flex flex-col gap-3 mb-4 w-full">
@@ -1537,8 +1539,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </>
                 )}
               </div>
-          </div>
-          </div>
+            </div>
+          </motion.div>
 
           {/* Upcoming Schedule Card - Right of Homeowner Info */}
           <motion.div 
@@ -1617,15 +1619,22 @@ const Dashboard: React.FC<DashboardProps> = ({
             
             {/* Expanded State - Show all appointments */}
             {isScheduleExpanded && (
-              <div className="px-6 pb-6 pt-0 space-y-3 max-h-96 overflow-y-auto">
+              <motion.div 
+                className="px-6 pb-6 pt-0 space-y-3 max-h-96 overflow-y-auto"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
                 {scheduledClaims.length > 0 ? (
-                  scheduledClaims.map(c => {
+                  scheduledClaims.map((c, index) => {
                     const acceptedDate = c.proposedDates.find(d => d.status === 'ACCEPTED');
                     return (
-                      <div 
+                      <motion.div 
                         key={c.id} 
                         className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-xl text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors"
                         onClick={() => onSelectClaim(c, true)}
+                        variants={cardVariants}
+                        layout
                       >
                         <p className="font-medium text-secondary-on-container dark:text-gray-200 text-center">{c.title}</p>
                         <p className="opacity-80 dark:opacity-70 mt-1 text-secondary-on-container dark:text-gray-300 text-center">
@@ -1731,13 +1740,20 @@ const Dashboard: React.FC<DashboardProps> = ({
               onDeleteTask={onDeleteTask}
               preSelectedHomeowner={targetHomeowner}
             />
-          </div>
+          </motion.div>
         )}
 
         {currentTab === 'MESSAGES' && (
-          <div 
-            className="animate-slide-up-delay-3"
-            style={{ willChange: 'transform, opacity', backfaceVisibility: 'hidden', transform: 'translateZ(0)' }}
+          <motion.div 
+            className=""
+            variants={cardVariants}
+            initial="hidden"
+            animate="visible"
+            transition={{
+              ...cardVariants.visible.transition,
+              delay: 0.3
+            }}
+            layout
           >
             {renderMessagesTab()}
           </motion.div>
@@ -2352,7 +2368,7 @@ const Dashboard: React.FC<DashboardProps> = ({
              </div>
           </div>
         )}
-      </div>
+        </div>
       </>
     );
   }
