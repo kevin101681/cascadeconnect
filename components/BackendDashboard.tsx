@@ -36,7 +36,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'USERS' | 'HOMEOWNERS' | 'CLAIMS' | 'DOCUMENTS' | 'TASKS' | 'MESSAGES' | 'NEON' | 'NETLIFY'>('OVERVIEW');
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'USERS' | 'HOMEOWNERS' | 'CLAIMS' | 'DOCUMENTS' | 'TASKS' | 'MESSAGES' | 'NEON' | 'NETLIFY'>('NETLIFY');
   const [detailedData, setDetailedData] = useState<any>(null);
   const [netlifyInfo, setNetlifyInfo] = useState<any>(null);
   const [netlifyLoading, setNetlifyLoading] = useState(false);
@@ -465,7 +465,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
         <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
           {/* Tabs */}
           <div className="flex gap-2 mb-6 border-b border-surface-outline-variant dark:border-gray-700 overflow-x-auto">
-            {(['OVERVIEW', 'USERS', 'HOMEOWNERS', 'CLAIMS', 'DOCUMENTS', 'TASKS', 'MESSAGES', 'NEON', 'NETLIFY'] as const).map(tab => (
+            {(['NETLIFY', 'OVERVIEW', 'USERS', 'HOMEOWNERS', 'CLAIMS', 'DOCUMENTS', 'TASKS', 'MESSAGES', 'NEON'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
