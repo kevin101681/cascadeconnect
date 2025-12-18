@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { Task, InternalEmployee, Claim, Homeowner, ClaimStatus } from '../types';
 import Button from './Button';
-import { Check, Plus, User, Calendar, Trash2, Home, CheckCircle, Square, CheckSquare, HardHat, X } from 'lucide-react';
+import { Check, Plus, User, Calendar, Trash2, Home, CheckCircle, Square, CheckSquare, HardHat } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 
 interface TaskListProps {
@@ -79,41 +78,28 @@ const TaskList: React.FC<TaskListProps> = ({
     );
   };
 
-  return createPortal(
-    <div 
-      className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-[backdrop-fade-in_0.2s_ease-out]"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && onClose) {
-          onClose();
-        }
-      }}
-    >
-      <div 
-        className="bg-surface dark:bg-gray-800 w-full max-w-4xl rounded-3xl shadow-elevation-3 overflow-hidden flex flex-col max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex justify-between items-start p-6 border-b border-surface-outline-variant dark:border-gray-700 shrink-0">
-          <div className="flex-1">
-            <h1 className="text-2xl font-normal text-surface-on dark:text-gray-100">My Tasks</h1>
-            <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
-              {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
-            </p>
-          </div>
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="p-2 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors"
-              title="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          )}
+  return (
+    <div className="w-full">
+      {/* Header */}
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex-1">
+          <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">My Tasks</h2>
+          <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
+            {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
+          </p>
         </div>
+        <Button
+          onClick={() => setShowForm(!showForm)}
+          variant="filled"
+          icon={<Plus className="h-4 w-4" />}
+          className="!h-9 !px-4"
+        >
+          New Task
+        </Button>
+      </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto flex-1">
-          <div className="space-y-6">
+      {/* Content */}
+      <div className="space-y-6">
         {showForm && (
           <div className="bg-surface dark:bg-gray-800 rounded-2xl border border-surface-outline-variant dark:border-gray-700 p-5 animate-in slide-in-from-top-2">
             <h3 className="font-medium text-surface-on dark:text-gray-100 mb-4">New Task</h3>
@@ -334,11 +320,8 @@ const TaskList: React.FC<TaskListProps> = ({
           })
           )}
         </div>
-          </div>
-        </div>
       </div>
-    </div>,
-    document.body
+    </div>
   );
 };
 

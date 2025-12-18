@@ -2928,11 +2928,47 @@ Assigned By: ${assignerName}
         />
       )}
       {currentView === 'TASKS' && (
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-surface dark:bg-gray-800 p-8 rounded-3xl shadow-elevation-1 border border-surface-outline-variant">
-            <TaskList tasks={tasks} employees={employees} currentUser={activeEmployee} claims={claims} homeowners={homeowners} onAddTask={handleAddTask} onToggleTask={handleToggleTask} onDeleteTask={handleDeleteTask} onClose={() => setCurrentView('DASHBOARD')} />
-          </div>
-        </div>
+        <Dashboard 
+          claims={claims} 
+          userRole={userRole} 
+          onSelectClaim={handleSelectClaim}
+          onNewClaim={handleNewClaimStart}
+          onCreateClaim={handleCreateClaim}
+          homeowners={availableHomeowners}
+          activeHomeowner={activeHomeowner}
+          employees={employees}
+          currentUser={activeEmployee}
+          targetHomeowner={targetHomeowner}
+          onClearHomeownerSelection={handleClearHomeownerSelection}
+          onUpdateHomeowner={handleUpdateHomeowner}
+          documents={documents}
+          onUploadDocument={handleUploadDocument}
+          onDeleteDocument={handleDeleteDocument}
+          messages={messages}
+          onSendMessage={handleSendMessage}
+          onCreateThread={handleCreateThread}
+          onUpdateThread={handleUpdateThread}
+          onAddInternalNote={addInternalNoteToClaim}
+          onTrackClaimMessage={trackClaimMessage}
+          onUpdateClaim={handleUpdateClaim}
+          contractors={contractors}
+          claimMessages={claimMessages || []}
+          builderGroups={builderGroups}
+          currentBuilderId={currentBuilderId}
+          currentUserEmail={
+            authUser?.primaryEmailAddress?.emailAddress || 
+            activeEmployee?.email || 
+            activeHomeowner?.email || 
+            undefined
+          }
+          initialTab="TASKS"
+          initialThreadId={null}
+          tasks={tasks}
+          onAddTask={handleAddTask}
+          onToggleTask={handleToggleTask}
+          onDeleteTask={handleDeleteTask}
+          onNavigate={setCurrentView}
+        />
       )}
       {currentView === 'TEAM' && (
         <InternalUserManagement 
