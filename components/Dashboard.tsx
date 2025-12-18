@@ -2192,7 +2192,25 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     doc.url.includes('pdf');
                        
                        return (
-                         <div key={doc.id} className="flex flex-col bg-surface-container dark:bg-gray-700 rounded-xl overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-lg transition-all">
+                         <div key={doc.id} className="flex flex-col bg-surface-container dark:bg-gray-700 rounded-xl overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-lg transition-all relative">
+                           {/* Delete Button - Top Right */}
+                           {isAdminAccount && onDeleteDocument && (
+                             <button
+                               type="button"
+                               onClick={(e) => {
+                                 e.preventDefault();
+                                 e.stopPropagation();
+                                 if (confirm(`Are you sure you want to delete "${doc.name}"?`)) {
+                                   onDeleteDocument(doc.id);
+                                 }
+                               }}
+                               className="absolute top-2 right-2 z-10 p-1.5 bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg shadow-md transition-all flex items-center justify-center"
+                               title="Delete"
+                             >
+                               <Trash2 className="h-4 w-4" />
+                             </button>
+                           )}
+                           
                            {/* Thumbnail */}
                            <div 
                              className="w-full aspect-[3/4] bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden cursor-pointer relative group"
@@ -2223,76 +2241,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                              )}
                            </div>
                            
-                           {/* Document Info & Actions */}
-                           <div className="p-3 flex flex-col gap-2">
-                             <div className="min-w-0">
-                               <p className="text-xs font-medium text-surface-on dark:text-gray-100 truncate" title={doc.name}>
-                                 {doc.name}
-                               </p>
-                               <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-1">
-                                 {new Date(doc.uploadDate).toLocaleDateString()}
-                               </p>
-                             </div>
-                             
-                             {/* Action Buttons */}
-                             <div className="flex items-center gap-1 justify-center">
-                               {isPDF && (
-                                 <button
-                                   type="button"
-                                   onClick={(e) => {
-                                     e.preventDefault();
-                                     e.stopPropagation();
-                                     setSelectedDocument(doc);
-                                     setIsPDFViewerOpen(true);
-                                   }}
-                                   className="flex-1 px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition-all flex items-center justify-center gap-1"
-                                   title="View PDF"
-                                 >
-                                   <Eye className="h-3.5 w-3.5" />
-                                   <span>View</span>
-                                 </button>
-                               )}
-                               {doc.url.startsWith('data:') ? (
-                                 <a 
-                                   href={doc.url} 
-                                   download={doc.name} 
-                                   onClick={(e) => e.stopPropagation()}
-                                   className="flex-1 px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition-all flex items-center justify-center gap-1"
-                                   title="Download"
-                                 >
-                                   <Download className="h-3.5 w-3.5" />
-                                   <span>Download</span>
-                                 </a>
-                               ) : (
-                                 <button 
-                                   onClick={(e) => {
-                                     e.stopPropagation();
-                                     window.open(doc.url, '_blank');
-                                   }}
-                                   className="flex-1 px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition-all flex items-center justify-center gap-1"
-                                   title="Download"
-                                 >
-                                   <Download className="h-3.5 w-3.5" />
-                                   <span>Download</span>
-                                 </button>
-                               )}
-                               {isAdminAccount && onDeleteDocument && (
-                                 <button
-                                   type="button"
-                                   onClick={(e) => {
-                                     e.preventDefault();
-                                     e.stopPropagation();
-                                     if (confirm(`Are you sure you want to delete "${doc.name}"?`)) {
-                                       onDeleteDocument(doc.id);
-                                     }
-                                   }}
-                                   className="px-2 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all flex items-center justify-center"
-                                   title="Delete"
-                                 >
-                                   <Trash2 className="h-3.5 w-3.5" />
-                                 </button>
-                               )}
-                             </div>
+                           {/* Document Info */}
+                           <div className="p-3">
+                             <p className="text-xs font-medium text-surface-on dark:text-gray-100 truncate" title={doc.name}>
+                               {doc.name}
+                             </p>
+                             <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-1">
+                               {new Date(doc.uploadDate).toLocaleDateString()}
+                             </p>
                            </div>
                          </div>
                        );
