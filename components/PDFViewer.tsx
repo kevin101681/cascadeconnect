@@ -333,12 +333,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                   backfaceVisibility: 'hidden'
                 }}
               >
-                <PDFPageCanvas 
-                  page={pages[currentPageIndex]} 
-                  pageIndex={currentPageIndex}
-                  scale={scale}
-                  rotation={rotation}
-                />
+                <div className="w-full">
+                  <PDFPageCanvas 
+                    page={pages[currentPageIndex]} 
+                    pageIndex={currentPageIndex}
+                    scale={scale}
+                    rotation={rotation}
+                  />
+                </div>
               </div>
             </div>
           ) : !isPDF ? (
