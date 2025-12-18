@@ -73,6 +73,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   const [proposeDate, setProposeDate] = useState('');
   const [proposeTime, setProposeTime] = useState<'AM' | 'PM' | 'All Day'>('AM');
   const [showCalendarPicker, setShowCalendarPicker] = useState(false);
+  const [showDateEvaluatedPicker, setShowDateEvaluatedPicker] = useState(false);
   
   // Service Order state
   const [showSOModal, setShowSOModal] = useState(false);
@@ -770,13 +771,23 @@ If this repair work is billable, please let me know prior to scheduling.`);
               </div>
               <div className="flex-1 sm:flex-initial">
                 <p className="text-xs text-surface-on-variant dark:text-gray-400 mb-1 text-left">Date Evaluated</p>
-                {isEditing && !isReadOnly ? (
-                  <input
-                    type="date"
-                    value={editDateEvaluated}
-                    onChange={e => setEditDateEvaluated(e.target.value)}
-                    className="w-full bg-surface-container-high dark:bg-gray-700 rounded-full pl-3 pr-4 py-2 text-sm text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all h-[2.5rem]"
-                  />
+                {isEditing && !isReadOnly && isAdmin ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowDateEvaluatedPicker(true)}
+                    className="w-full rounded-full border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-700 hover:border-primary hover:bg-surface-container-high dark:hover:bg-gray-600 transition-all cursor-pointer px-4 py-2 text-left flex items-center gap-3 text-sm text-surface-on dark:text-gray-100 min-h-[2.5rem]"
+                  >
+                    <Calendar className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
+                    <span className={`truncate flex-1 ${editDateEvaluated ? 'text-surface-on dark:text-gray-100' : 'text-surface-on-variant dark:text-gray-400'}`}>
+                      {editDateEvaluated
+                        ? new Date(editDateEvaluated).toLocaleDateString('en-US', {
+                            month: '2-digit',
+                            day: '2-digit',
+                            year: 'numeric'
+                          })
+                        : 'Select date'}
+                    </span>
+                  </button>
                 ) : (
                   <span className="inline-flex items-center justify-start px-3 py-1 rounded-full text-sm font-medium bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 h-[2.5rem] w-full">
                     {claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString() : 'Pending Evaluation'}
@@ -804,7 +815,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                       </div>
                     </div>
                     <Button 
-                      variant="outlined" 
+                      variant="filled" 
                       onClick={handlePrepareServiceOrder} 
                       icon={<FileText className="h-4 w-4" />}
                       className="!h-12 w-full sm:w-auto whitespace-nowrap"
@@ -915,17 +926,24 @@ If this repair work is billable, please let me know prior to scheduling.`);
                       </span>
                     </button>
                   </div>
-                  <div className="w-full md:w-auto md:min-w-[200px]">
+                  <div className="w-full md:w-auto">
                     <label className="block text-xs text-surface-on dark:text-gray-100 mb-1 ml-1 font-medium">Time Slot</label>
-                    <MaterialSelect
-                      options={[
-                        { value: 'AM', label: 'AM (8am - 12pm)' },
-                        { value: 'PM', label: 'PM (12pm - 4pm)' },
-                        { value: 'All Day', label: 'All Day' },
-                      ]}
-                      value={proposeTime}
-                      onChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
-                    />
+                    <div className="flex gap-2">
+                      {(['AM', 'PM', 'All Day'] as const).map((slot) => (
+                        <button
+                          key={slot}
+                          type="button"
+                          onClick={() => setProposeTime(slot)}
+                          className={`rounded-full border transition-all cursor-pointer px-4 py-2 text-sm text-surface-on dark:text-gray-100 min-h-[2.5rem] whitespace-nowrap ${
+                            proposeTime === slot
+                              ? 'border-primary bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary'
+                              : 'border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-700 hover:border-primary hover:bg-surface-container-high dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          {slot}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   <Button
                     variant="filled"
@@ -955,6 +973,19 @@ If this repair work is billable, please let me know prior to scheduling.`);
             setShowCalendarPicker(false);
           }}
           onClose={() => setShowCalendarPicker(false)}
+        />
+      )}
+
+      {/* Date Evaluated Calendar Picker */}
+      {showDateEvaluatedPicker && (
+        <CalendarPicker
+          isOpen={showDateEvaluatedPicker}
+          selectedDate={editDateEvaluated ? new Date(editDateEvaluated) : null}
+          onSelectDate={(date) => {
+            setEditDateEvaluated(date.toISOString().split('T')[0]);
+            setShowDateEvaluatedPicker(false);
+          }}
+          onClose={() => setShowDateEvaluatedPicker(false)}
         />
       )}
       
@@ -1044,7 +1075,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
       {/* Bottom Action Buttons */}
       <div className="flex justify-end gap-2 pt-4 border-t border-surface-outline-variant dark:border-gray-700">
         <Button 
-          variant="tonal" 
+          variant="filled" 
           onClick={() => onSendMessage(claim)} 
           icon={<MessageSquare className="h-4 w-4" />}
           className="!h-10"
@@ -1054,7 +1085,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
         {!isReadOnly && (
           isEditing ? (
             <>
-              <Button variant="outlined" onClick={handleCancelEdit} className="!h-10">Cancel</Button>
+              <Button variant="filled" onClick={handleCancelEdit} className="!h-10">Cancel</Button>
               <Button variant="filled" onClick={handleSaveDetails} icon={<Save className="h-4 w-4" />} className="!h-10">Save</Button>
             </>
           ) : (

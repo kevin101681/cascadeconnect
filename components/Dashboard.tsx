@@ -1716,6 +1716,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {/* Buttons removed from homeowner view - now in tabs */}
                 {!isHomeownerView && (
                   <>
+                    {/* Documents Button - Admin view only */}
+                    <Button
+                      onClick={() => setShowDocsModal(true)}
+                      variant="outlined"
+                      icon={<FileText className="h-4 w-4" />}
+                      className="!h-9 !px-4"
+                    >
+                      Documents {displayDocuments.length > 0 && (
+                        <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-on text-xs font-medium">
+                          {displayDocuments.length}
+                        </span>
+                      )}
+                    </Button>
                     {/* Sub List Button - Show if subcontractor list exists */}
                     {displayHomeowner.subcontractorList && displayHomeowner.subcontractorList.length > 0 && (
                       <Button 
@@ -1975,18 +1988,21 @@ const Dashboard: React.FC<DashboardProps> = ({
               )}
             </button>
 
-            <button 
-              onClick={() => setCurrentTab('DOCUMENTS')}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'DOCUMENTS' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
-            >
-              <FileText className="h-4 w-4" />
-              Documents
-              {displayDocuments.length > 0 && (
-                <span className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-primary text-primary-on text-xs font-medium">
-                  {displayDocuments.length}
-                </span>
-              )}
-            </button>
+            {/* Documents Tab - Homeowner View Only */}
+            {isHomeownerView && (
+              <button 
+                onClick={() => setCurrentTab('DOCUMENTS')}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'DOCUMENTS' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+              >
+                <FileText className="h-4 w-4" />
+                Documents
+                {displayDocuments.length > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-primary text-primary-on text-xs font-medium">
+                    {displayDocuments.length}
+                  </span>
+                )}
+              </button>
+            )}
         </motion.div>
 
         {/* Content Area */}
@@ -2049,7 +2065,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </motion.div>
         )}
 
-        {currentTab === 'DOCUMENTS' && (
+        {currentTab === 'DOCUMENTS' && isHomeownerView && (
           <motion.div 
             className=""
             variants={cardVariants}
