@@ -8,7 +8,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor } from '../types';
 import { ClaimMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2 } from 'lucide-react';
 import Button from './Button';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
@@ -2192,24 +2192,112 @@ const Dashboard: React.FC<DashboardProps> = ({
                                     doc.url.includes('pdf');
                        
                        return (
-                         <div key={doc.id} className="flex flex-col bg-surface-container dark:bg-gray-700 rounded-xl overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-lg transition-all relative">
-                           {/* Delete Button - Top Right */}
-                           {isAdminAccount && onDeleteDocument && (
-                             <button
-                               type="button"
-                               onClick={(e) => {
-                                 e.preventDefault();
-                                 e.stopPropagation();
-                                 if (confirm(`Are you sure you want to delete "${doc.name}"?`)) {
-                                   onDeleteDocument(doc.id);
-                                 }
-                               }}
-                               className="absolute top-2 right-2 z-10 p-1.5 bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg shadow-md transition-all flex items-center justify-center"
-                               title="Delete"
-                             >
-                               <Trash2 className="h-4 w-4" />
-                             </button>
-                           )}
+                         <div key={doc.id} className="flex flex-col bg-surface-container dark:bg-gray-700 rounded-xl overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-lg transition-all relative group">
+                           {/* Header with Action Buttons */}
+                           <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent p-2 flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                             {isPDF && (
+                               <>
+                                 {/* Save to Google Drive */}
+                                 <button
+                                   type="button"
+                                   onClick={(e) => {
+                                     e.preventDefault();
+                                     e.stopPropagation();
+                                     // Create a link that opens Google Drive
+                                     const link = document.createElement('a');
+                                     link.href = `https://drive.google.com/drive/folders`;
+                                     link.target = '_blank';
+                                     link.click();
+                                     // Also trigger download as fallback
+                                     if (doc.url.startsWith('data:')) {
+                                       const downloadLink = document.createElement('a');
+                                       downloadLink.href = doc.url;
+                                       downloadLink.download = doc.name;
+                                       document.body.appendChild(downloadLink);
+                                       downloadLink.click();
+                                       document.body.removeChild(downloadLink);
+                                     }
+                                   }}
+                                   className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
+                                   title="Save to Google Drive"
+                                 >
+                                   <Share2 className="h-3.5 w-3.5" />
+                                 </button>
+                                 
+                                 {/* Download */}
+                                 {doc.url.startsWith('data:') ? (
+                                   <a 
+                                     href={doc.url} 
+                                     download={doc.name} 
+                                     onClick={(e) => e.stopPropagation()}
+                                     className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
+                                     title="Download"
+                                   >
+                                     <Download className="h-3.5 w-3.5" />
+                                   </a>
+                                 ) : (
+                                   <button 
+                                     onClick={(e) => {
+                                       e.stopPropagation();
+                                       window.open(doc.url, '_blank');
+                                     }}
+                                     className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
+                                     title="Download"
+                                   >
+                                     <Download className="h-3.5 w-3.5" />
+                                   </button>
+                                 )}
+                                 
+                                 {/* Print */}
+                                 <button
+                                   type="button"
+                                   onClick={(e) => {
+                                     e.preventDefault();
+                                     e.stopPropagation();
+                                     const printWindow = window.open('', '_blank');
+                                     if (printWindow && doc.url) {
+                                       printWindow.document.write(`
+                                         <html>
+                                           <head><title>${doc.name}</title></head>
+                                           <body style="margin:0;">
+                                             <iframe src="${doc.url}" style="width:100%;height:100vh;border:none;"></iframe>
+                                           </body>
+                                         </html>
+                                       `);
+                                       printWindow.document.close();
+                                       printWindow.onload = () => {
+                                         setTimeout(() => {
+                                           printWindow.print();
+                                         }, 250);
+                                       };
+                                     }
+                                   }}
+                                   className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
+                                   title="Print"
+                                 >
+                                   <Printer className="h-3.5 w-3.5" />
+                                 </button>
+                               </>
+                             )}
+                             
+                             {/* Delete */}
+                             {isAdminAccount && onDeleteDocument && (
+                               <button
+                                 type="button"
+                                 onClick={(e) => {
+                                   e.preventDefault();
+                                   e.stopPropagation();
+                                   if (confirm(`Are you sure you want to delete "${doc.name}"?`)) {
+                                     onDeleteDocument(doc.id);
+                                   }
+                                 }}
+                                 className="p-1.5 bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg shadow-md transition-all flex items-center justify-center"
+                                 title="Delete"
+                               >
+                                 <Trash2 className="h-3.5 w-3.5" />
+                               </button>
+                             )}
+                           </div>
                            
                            {/* Thumbnail */}
                            <div 
@@ -2223,15 +2311,20 @@ const Dashboard: React.FC<DashboardProps> = ({
                              style={{ overflow: 'hidden' }}
                            >
                              {isPDF ? (
-                               <iframe
-                                 src={doc.url + '#toolbar=0&navpanes=0&scrollbar=0'}
-                                 className="w-full h-full border-0"
-                                 title={doc.name}
-                                 style={{ 
-                                   pointerEvents: 'none',
-                                   overflow: 'hidden'
-                                 }}
-                               />
+                               <div className="w-full h-full overflow-hidden" style={{ position: 'relative' }}>
+                                 <iframe
+                                   src={doc.url + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH'}
+                                   className="w-full h-full border-0"
+                                   title={doc.name}
+                                   scrolling="no"
+                                   style={{ 
+                                     pointerEvents: 'none',
+                                     overflow: 'hidden',
+                                     width: '100%',
+                                     height: '100%'
+                                   }}
+                                 />
+                               </div>
                              ) : (
                                <div className="p-8 flex flex-col items-center justify-center text-center">
                                  <FileText className="h-12 w-12 text-surface-outline-variant dark:text-gray-500 mb-2" />
@@ -2239,7 +2332,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                </div>
                              )}
                              {isPDF && (
-                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
                                  <Eye className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                                </div>
                              )}
