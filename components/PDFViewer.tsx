@@ -96,8 +96,21 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
           const blobUrl = URL.createObjectURL(blob);
           blobUrlRef.current = blobUrl;
           console.log('Created blob URL:', blobUrl.substring(0, 50), 'for document:', doc.name);
+          
+          // Set a timeout to check if PDF loads
+          const loadTimeout = setTimeout(() => {
+            console.log('PDF load timeout - checking if still loading');
+            if (isLoading) {
+              console.warn('PDF may not have loaded properly');
+            }
+          }, 3000);
+          
           setPdfUrl(blobUrl);
           setIsLoading(false);
+          
+          return () => {
+            clearTimeout(loadTimeout);
+          };
         } catch (err) {
           console.error('Error creating blob URL:', err);
           setError(`Failed to process PDF: ${err instanceof Error ? err.message : 'Unknown error'}`);
@@ -184,9 +197,15 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
               </>
             )}
             <button
-              onClick={handleDownload}
+              onClick={() => {
+                if (pdfUrl) {
+                  window.open(pdfUrl, '_blank');
+                } else {
+                  handleDownload();
+                }
+              }}
               className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
-              title="Download"
+              title="Open in new tab"
             >
               <Download className="h-5 w-5" />
             </button>
@@ -205,16 +224,34 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
           {error ? (
             <div className="text-center p-8">
               <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
-              <button
-                onClick={handleDownload}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-              >
-                Download Instead
-              </button>
+              <div className="flex gap-3 justify-center">
+                {pdfUrl && (
+                  <button
+                    onClick={() => window.open(pdfUrl, '_blank')}
+                    className="px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors"
+                  >
+                    Open in New Tab
+                  </button>
+                )}
+                <button
+                  onClick={handleDownload}
+                  className="px-4 py-2 bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 rounded-lg hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
+                >
+                  Download
+                </button>
+              </div>
             </div>
           ) : isLoading ? (
             <div className="text-center p-8">
-              <p className="text-surface-on-variant dark:text-gray-400">Loading PDF...</p>
+              <p className="text-surface-on-variant dark:text-gray-400 mb-4">Loading PDF...</p>
+              {pdfUrl && (
+                <button
+                  onClick={() => window.open(pdfUrl, '_blank')}
+                  className="px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  Open in New Tab
+                </button>
+              )}
             </div>
           ) : isPDF ? (
             doc.url && doc.url !== '#' && pdfUrl ? (
@@ -233,50 +270,31 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                     position: 'relative'
                   }}
                 >
-                  <object
-                    key={pdfUrl}
-                    data={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
-                    type="application/pdf"
+                  {/* Try multiple approaches for better compatibility */}
+                  {/* Approach 1: Direct iframe with blob URL */}
+                  <iframe
+                    key={`iframe-${pdfUrl}`}
+                    src={pdfUrl}
                     width="100%"
                     height="100%"
+                    className="border-0"
+                    title={doc.name}
                     style={{
                       minHeight: '600px',
                       display: 'block',
-                      border: 'none'
+                      width: '100%',
+                      height: '100%'
                     }}
-                    onError={() => {
-                      console.error('PDF object failed to load, trying iframe fallback');
+                    onError={(e) => {
+                      console.error('PDF iframe failed to load:', e);
+                      // Try fallback approach
+                      setError('PDF viewer not available. Click download to view the file.');
                     }}
-                  >
-                    <iframe
-                      src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
-                      width="100%"
-                      height="100%"
-                      className="border-0"
-                      title={doc.name}
-                      style={{
-                        minHeight: '600px',
-                        display: 'block'
-                      }}
-                      onError={() => {
-                        console.error('PDF iframe fallback also failed to load');
-                        setError('Failed to load PDF. Please try downloading instead.');
-                      }}
-                      onLoad={() => {
-                        console.log('PDF iframe fallback loaded successfully');
-                        setIsLoading(false);
-                      }}
-                    />
-                    <p className="text-center p-8 text-surface-on-variant dark:text-gray-400">
-                      Your browser does not support PDF viewing. 
-                      <button
-                        onClick={handleDownload}
-                        className="ml-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-                      >
-                        Download PDF
-                      </button>
-                    </p>
-                  </object>
+                    onLoad={() => {
+                      console.log('PDF iframe loaded successfully');
+                      setIsLoading(false);
+                    }}
+                  />
                 </div>
               </div>
             ) : (
