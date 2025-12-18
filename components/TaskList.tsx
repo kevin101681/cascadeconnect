@@ -222,8 +222,8 @@ const TaskList: React.FC<TaskListProps> = ({
 
             return (
               <div 
-                key={task.id} 
-                className={`group flex flex-col rounded-2xl border transition-all ${
+                key={task.id}
+                className={`group flex flex-col rounded-2xl border transition-all overflow-hidden ${
                   task.isCompleted 
                     ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75' 
                     : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
@@ -231,8 +231,24 @@ const TaskList: React.FC<TaskListProps> = ({
               >
                 {/* Collapsed Header - Clickable */}
                 <div 
-                  className="flex items-center justify-between gap-4 p-4 cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-700/50 transition-colors"
-                  onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
+                  className={`flex items-center justify-between gap-4 p-4 cursor-pointer transition-colors ${
+                    isExpanded 
+                      ? 'rounded-t-2xl' 
+                      : 'rounded-2xl'
+                  } hover:bg-surface-container-high dark:hover:bg-gray-700/50`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const currentScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
+                    setExpandedTaskId(isExpanded ? null : task.id);
+                    // Maintain scroll position after state update
+                    requestAnimationFrame(() => {
+                      window.scrollTo(0, currentScrollY);
+                      requestAnimationFrame(() => {
+                        window.scrollTo(0, currentScrollY);
+                      });
+                    });
+                  }}
                 >
                   <div className="flex items-center gap-3 flex-1">
                     <button 
