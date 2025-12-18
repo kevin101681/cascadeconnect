@@ -36,38 +36,40 @@ const PDFPage = forwardRef<HTMLDivElement, PDFPageProps>(({ pageNumber, width, h
         backgroundColor: '#fff'
       }}
     >
-      <Page
-        pageNumber={pageNumber}
-        width={width}
-        height={height}
-        renderTextLayer={false}
-        renderAnnotationLayer={false}
-        loading={
-          <div style={{ 
-            width, 
-            height, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            backgroundColor: '#f0f0f0' 
-          }}>
-            Loading page...
-          </div>
-        }
-        error={
-          <div style={{ 
-            width, 
-            height, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            backgroundColor: '#fee', 
-            color: '#c00' 
-          }}>
-            Error loading page
-          </div>
-        }
-      />
+      <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+        <Page
+          pageNumber={pageNumber}
+          width={width}
+          height={height}
+          renderTextLayer={false}
+          renderAnnotationLayer={false}
+          loading={
+            <div style={{ 
+              width, 
+              height, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              backgroundColor: '#f0f0f0' 
+            }}>
+              Loading page...
+            </div>
+          }
+          error={
+            <div style={{ 
+              width, 
+              height, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              backgroundColor: '#fee', 
+              color: '#c00' 
+            }}>
+              Error loading page
+            </div>
+          }
+        />
+      </div>
     </div>
   );
 });
@@ -79,12 +81,40 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
   const [documentLoading, setDocumentLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pageDimensions, setPageDimensions] = useState({ width: 800, height: 1200 });
   const flipBookRef = useRef<any>(null);
   const blobUrlRef = useRef<string | null>(null);
 
-  // Fixed dimensions for smooth page flip animation
-  const PAGE_WIDTH = 800;
-  const PAGE_HEIGHT = 1200;
+  // Calculate dimensions that fit within viewport with padding
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const updateDimensions = () => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const padding = 80; // Padding around the book
+      const maxWidth = viewportWidth - padding;
+      const maxHeight = viewportHeight - padding;
+
+      // Maintain 2:3 aspect ratio (common for PDF pages)
+      const aspectRatio = 2 / 3;
+      
+      let width = Math.min(800, maxWidth);
+      let height = width / aspectRatio;
+
+      // If height is too large, scale down based on height
+      if (height > maxHeight) {
+        height = maxHeight;
+        width = height * aspectRatio;
+      }
+
+      setPageDimensions({ width: Math.round(width), height: Math.round(height) });
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen || !doc.url) {
@@ -174,7 +204,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
       <div
         className="flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: '100%', height: '100%', padding: '40px', boxSizing: 'border-box', overflow: 'hidden' }}
       >
         {error && (
           <div className="bg-red-500 text-white p-4 rounded-lg">
@@ -195,24 +225,26 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
             }
           >
             {!documentLoading && numPages > 0 && (
-              <HTMLFlipBook
-                ref={flipBookRef}
-                width={PAGE_WIDTH}
-                height={PAGE_HEIGHT}
-                size="fixed"
-                showCover={false}
-                className="pdf-flipbook"
-                {...({} as any)}
-              >
-                {Array.from(new Array(numPages), (el, index) => (
-                  <PDFPage
-                    key={`page_${index + 1}`}
-                    pageNumber={index + 1}
-                    width={PAGE_WIDTH}
-                    height={PAGE_HEIGHT}
-                  />
-                ))}
-              </HTMLFlipBook>
+              <div style={{ maxWidth: '100%', maxHeight: '100%', overflow: 'hidden' }}>
+                <HTMLFlipBook
+                  ref={flipBookRef}
+                  width={pageDimensions.width}
+                  height={pageDimensions.height}
+                  size="fixed"
+                  showCover={false}
+                  className="pdf-flipbook"
+                  {...({} as any)}
+                >
+                  {Array.from(new Array(numPages), (el, index) => (
+                    <PDFPage
+                      key={`page_${index + 1}`}
+                      pageNumber={index + 1}
+                      width={pageDimensions.width}
+                      height={pageDimensions.height}
+                    />
+                  ))}
+                </HTMLFlipBook>
+              </div>
             )}
           </Document>
         )}
