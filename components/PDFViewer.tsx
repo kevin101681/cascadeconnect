@@ -3,8 +3,10 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import HTMLFlipBook from 'react-pageflip';
 import { HomeownerDocument } from '../types';
 
-// Set up PDF.js worker - use CDN for compatibility
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Set up PDF.js worker - import worker using Vite's ?url syntax
+// @ts-ignore - Vite handles ?url imports
+import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
 interface PDFViewerProps {
   document: HomeownerDocument;
