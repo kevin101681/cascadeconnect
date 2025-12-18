@@ -853,11 +853,13 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     <div className="text-xl font-medium text-surface-on dark:text-gray-100">
                       {new Date(scheduledDate.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </div>
-                    <div className="mt-2">
-                      <span className="inline-block rounded-full border border-primary bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-4 py-2 text-sm font-medium min-h-[2.5rem] whitespace-nowrap flex items-center">
-                        {scheduledDate.timeSlot}
-                      </span>
-                    </div>
+                    {scheduledDate.timeSlot !== 'All Day' && (
+                      <div className="mt-2">
+                        <span className="inline-block rounded-full border border-primary bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-4 py-2 text-sm font-medium whitespace-nowrap">
+                          {scheduledDate.timeSlot === 'AM' ? '8am-12pm' : '12pm-4pm'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
                 {isAdmin && (

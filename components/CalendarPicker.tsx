@@ -177,7 +177,7 @@ const CalendarPicker: React.FC<CalendarPickerProps> = ({
                       : selected
                       ? 'bg-primary dark:bg-primary text-primary-on dark:text-primary-on shadow-elevation-1 hover:shadow-elevation-2 hover:bg-primary/90 dark:hover:bg-primary/90'
                       : isTodayDate
-                      ? 'bg-primary-container dark:bg-primary-container/30 text-primary-on-container dark:text-primary border-2 border-primary dark:border-primary/50 hover:bg-primary-container/80 dark:hover:bg-primary-container/40'
+                      ? 'bg-primary-container dark:bg-primary-container/30 text-primary-on-container dark:text-primary-on-container border-2 border-primary dark:border-primary/50 hover:bg-primary-container/80 dark:hover:bg-primary-container/40'
                       : 'text-surface-on dark:text-gray-100 hover:bg-surface-container-high dark:hover:bg-gray-700 active:bg-surface-container dark:active:bg-gray-600'
                     }
                   `}
