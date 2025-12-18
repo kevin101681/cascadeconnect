@@ -2462,6 +2462,19 @@ Assigned By: ${assignerName}
     
     const dbHomeownerId = (homeownerId && isValidUUID(homeownerId)) ? homeownerId : null;
     
+    // Generate thumbnail for PDFs
+    let thumbnailUrl: string | undefined = undefined;
+    if (doc.type === 'PDF' && doc.url) {
+      try {
+        const { generatePDFThumbnail } = await import('./lib/pdfThumbnail');
+        thumbnailUrl = await generatePDFThumbnail(doc.url);
+        console.log("✅ PDF thumbnail generated");
+      } catch (error) {
+        console.error("Failed to generate PDF thumbnail:", error);
+        // Continue without thumbnail - not critical
+      }
+    }
+    
     const newDoc: HomeownerDocument = {
       id: crypto.randomUUID(),
       homeownerId: homeownerId, // Keep original for local storage
@@ -2469,7 +2482,8 @@ Assigned By: ${assignerName}
       uploadedBy: doc.uploadedBy || 'System',
       uploadDate: new Date(),
       url: doc.url || '#',
-      type: doc.type || 'FILE'
+      type: doc.type || 'FILE',
+      thumbnailUrl: thumbnailUrl
     };
     setDocuments(prev => [newDoc, ...prev]);
 
@@ -2488,6 +2502,19 @@ Assigned By: ${assignerName}
       } catch(e) { 
         console.error("Failed to save document to DB:", e);
         // Document is still saved to local storage, so user can continue
+      }
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string) => {
+    setDocuments(prev => prev.filter(doc => doc.id !== docId));
+
+    if (isDbConfigured) {
+      try {
+        await db.delete(documentsTable).where(eq(documentsTable.id, docId));
+        console.log("✅ Document deleted from database");
+      } catch(e) { 
+        console.error("Failed to delete document from DB:", e);
       }
     }
   };
@@ -2873,6 +2900,7 @@ Assigned By: ${assignerName}
           onUpdateHomeowner={handleUpdateHomeowner}
           documents={documents}
           onUploadDocument={handleUploadDocument}
+          onDeleteDocument={handleDeleteDocument}
           messages={messages}
           onSendMessage={handleSendMessage}
           onCreateThread={handleCreateThread}

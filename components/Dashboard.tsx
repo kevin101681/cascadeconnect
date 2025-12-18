@@ -2312,18 +2312,31 @@ const Dashboard: React.FC<DashboardProps> = ({
                            >
                              {isPDF ? (
                                <div className="w-full h-full overflow-hidden" style={{ position: 'relative' }}>
-                                 <iframe
-                                   src={doc.url + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1'}
-                                   className="w-full h-full border-0"
-                                   title={doc.name}
-                                   scrolling="no"
-                                   style={{ 
-                                     pointerEvents: 'none',
-                                     overflow: 'hidden',
-                                     width: '100%',
-                                     height: '100%'
-                                   }}
-                                 />
+                                 {doc.thumbnailUrl ? (
+                                   <img
+                                     src={doc.thumbnailUrl}
+                                     alt={doc.name}
+                                     className="w-full h-full object-contain"
+                                     style={{ 
+                                       pointerEvents: 'none',
+                                       width: '100%',
+                                       height: '100%'
+                                     }}
+                                   />
+                                 ) : (
+                                   <iframe
+                                     src={doc.url + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1'}
+                                     className="w-full h-full border-0"
+                                     title={doc.name}
+                                     scrolling="no"
+                                     style={{ 
+                                       pointerEvents: 'none',
+                                       overflow: 'hidden',
+                                       width: '100%',
+                                       height: '100%'
+                                     }}
+                                   />
+                                 )}
                                </div>
                              ) : (
                                <div className="p-8 flex flex-col items-center justify-center text-center">

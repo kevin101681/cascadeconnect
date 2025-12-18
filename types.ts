@@ -169,6 +169,7 @@ export interface HomeownerDocument {
   uploadDate: Date;
   url: string;
   type: string; // 'PDF', 'DOCX', etc.
+  thumbnailUrl?: string; // Pre-rendered thumbnail image URL (data URL or URL)
 }
 
 export interface Claim {
