@@ -288,11 +288,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                       e.stopPropagation();
                       handlePrevPage();
                     }}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 z-[1002] bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 text-surface-on dark:text-gray-100 rounded-full p-3 shadow-elevation-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center backdrop-blur-sm"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-[1002] p-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
                     title="Previous page"
                     aria-label="Previous page"
                   >
-                    <ChevronLeft className="h-6 w-6" />
+                    <ChevronLeft className="h-6 w-6 text-gray-700" style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))' }} />
                   </button>
                 )}
                 
@@ -303,11 +303,11 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                       e.stopPropagation();
                       handleNextPage();
                     }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 z-[1002] bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 text-surface-on dark:text-gray-100 rounded-full p-3 shadow-elevation-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center backdrop-blur-sm"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-[1002] p-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
                     title="Next page"
                     aria-label="Next page"
                   >
-                    <ChevronRight className="h-6 w-6" />
+                    <ChevronRight className="h-6 w-6 text-gray-700" style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))' }} />
                   </button>
                 )}
 
