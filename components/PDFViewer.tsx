@@ -64,6 +64,27 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const blobUrlRef = useRef<string | null>(null);
+  const blobRef = useRef<Blob | null>(null);
+
+  // Cleanup blob URL only when component closes or unmounts
+  useEffect(() => {
+    return () => {
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = null;
+      }
+      blobRef.current = null;
+    };
+  }, []);
+
+  // Cleanup blob URL when modal closes
+  useEffect(() => {
+    if (!isOpen && blobUrlRef.current) {
+      URL.revokeObjectURL(blobUrlRef.current);
+      blobUrlRef.current = null;
+      blobRef.current = null;
+    }
+  }, [isOpen]);
 
   const handleZoomIn = () => {
     setScale(prev => Math.min(prev + 0.25, 3));
@@ -128,11 +149,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
         setError(null);
         setPages([]);
         
-        // Cleanup previous blob URL if it exists
+        // Cleanup previous blob URL if it exists (but keep blob for potential reuse)
         if (blobUrlRef.current) {
           URL.revokeObjectURL(blobUrlRef.current);
           blobUrlRef.current = null;
         }
+        blobRef.current = null;
         
         try {
           let finalUrl = doc.url;
@@ -156,6 +178,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
               throw new Error('Invalid PDF data - file appears to be empty');
             }
             
+            // Store blob in ref to prevent garbage collection
+            blobRef.current = blob;
             const blobUrl = URL.createObjectURL(blob);
             blobUrlRef.current = blobUrl;
             finalUrl = blobUrl;
@@ -193,14 +217,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
       setPdfUrl(null);
       setIsLoading(false);
     }
-    
-    // Cleanup blob URL on unmount or when doc changes
-    return () => {
-      if (blobUrlRef.current) {
-        URL.revokeObjectURL(blobUrlRef.current);
-        blobUrlRef.current = null;
-      }
-    };
   }, [isOpen, doc.url, doc.name]);
 
   // Don't return null early - let the component render so useEffect can run
