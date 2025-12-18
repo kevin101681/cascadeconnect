@@ -217,6 +217,20 @@ export const ReportCard: React.FC<ReportCardProps> = ({
                         >
                             <PenTool size={18} className="sm:w-[20px] sm:h-[20px]" />
                         </button>
+                        {actions.onEmailBoth && (
+                            <button 
+                                onClick={(e) => { 
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    actions.onEmailBoth?.(); 
+                                }}
+                                className="h-12 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-colors active:scale-95 shadow-sm shrink-0 border px-3 sm:px-4 bg-surface-container dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 text-surface-on-variant dark:text-gray-300 hover:bg-surface-container-high dark:hover:bg-gray-600 hover:text-primary border-solid"
+                                title="Email Both Docs"
+                                type="button"
+                            >
+                                <Mail size={18} className="sm:w-[20px] sm:h-[20px]" />
+                            </button>
+                        )}
                         <button 
                             onClick={(e) => { 
                                 e.preventDefault();
@@ -261,26 +275,11 @@ export const ReportCard: React.FC<ReportCardProps> = ({
                                     actions.onHomeownerManual?.(); 
                                 }}
                                 className="h-12 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-colors active:scale-95 shadow-sm shrink-0 border px-3 sm:px-4 gap-1.5 bg-surface-container dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 text-surface-on-variant dark:text-gray-300 hover:bg-surface-container-high dark:hover:bg-gray-600 hover:text-primary border-solid"
-                                title="Homeowner Manual"
+                                title="Manual"
                                 type="button"
                             >
                                 <Book size={18} className="sm:w-[20px] sm:h-[20px]" />
-                                <span className="text-xs font-bold whitespace-nowrap">Homeowner Manual</span>
-                            </button>
-                        )}
-                        {actions.onEmailBoth && (
-                            <button 
-                                onClick={(e) => { 
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    actions.onEmailBoth?.(); 
-                                }}
-                                className="h-12 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-colors active:scale-95 shadow-sm shrink-0 border px-3 sm:px-4 gap-1.5 bg-primary text-primary-on border-primary hover:bg-primary/90 border-solid"
-                                title="Email Both Docs"
-                                type="button"
-                            >
-                                <Mail size={18} className="sm:w-[20px] sm:h-[20px]" />
-                                <span className="text-xs font-bold whitespace-nowrap">Email Both Docs</span>
+                                <span className="text-xs font-bold whitespace-nowrap">Manual</span>
                             </button>
                         )}
                     </>
