@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Download, ZoomIn, ZoomOut, RotateCw, FileText, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { motion, useMotionValue, useTransform, PanInfo, useAnimationControls } from 'framer-motion';
 import { HomeownerDocument } from '../types';
 
 interface PDFViewerProps {
@@ -15,7 +16,16 @@ interface PDFPageCanvasProps {
   rotation: number;
 }
 
-const PDFPageCanvas: React.FC<PDFPageCanvasProps> = ({ page, pageIndex, scale, rotation }) => {
+interface PDFPageCanvasProps {
+  page: any;
+  pageIndex: number;
+  scale: number;
+  rotation: number;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+const PDFPageCanvas: React.FC<PDFPageCanvasProps> = ({ page, pageIndex, scale, rotation, className = '', style }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -45,11 +55,290 @@ const PDFPageCanvas: React.FC<PDFPageCanvasProps> = ({ page, pageIndex, scale, r
   }, [page, scale, rotation]);
 
   return (
-    <div className="relative mb-4 w-full flex justify-center">
+    <div className={`relative mb-4 w-full flex justify-center ${className}`} style={style}>
       <canvas 
         ref={canvasRef} 
         className="shadow-lg rounded-sm bg-white dark:bg-gray-800 pdf-page-canvas block" 
       />
+    </div>
+  );
+};
+
+interface PageFlipProps {
+  currentPage: any;
+  nextPage: any | null;
+  previousPage: any | null;
+  currentPageIndex: number;
+  scale: number;
+  rotation: number;
+  onPageChange: (newIndex: number) => void;
+  canGoNext: boolean;
+  canGoPrevious: boolean;
+}
+
+const PageFlip: React.FC<PageFlipProps> = ({ 
+  currentPage, 
+  nextPage,
+  previousPage,
+  currentPageIndex, 
+  scale, 
+  rotation,
+  onPageChange,
+  canGoNext,
+  canGoPrevious
+}) => {
+  const [isFlipping, setIsFlipping] = useState(false);
+  const [flipDirection, setFlipDirection] = useState<'next' | 'previous' | null>(null);
+  const controls = useAnimationControls();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
+  
+  // Motion values for drag
+  const dragX = useMotionValue(0);
+  const dragY = useMotionValue(0);
+  
+  // Calculate page dimensions for drag constraints
+  const [pageWidth, setPageWidth] = useState(800); // Default fallback
+  
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (pageRef.current) {
+        const rect = pageRef.current.getBoundingClientRect();
+        if (rect.width > 0) {
+          setPageWidth(rect.width);
+        }
+      }
+    };
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, [currentPage, scale]);
+
+  // Transform functions for 3D page flip - using percentage for better responsiveness
+  const progress = useTransform(dragX, [-pageWidth, 0, pageWidth], [-1, 0, 1]);
+  const rotateY = useTransform(progress, [-1, 0, 1], [-180, 0, 180]);
+  
+  // Calculate flip progress (0 to 1) for shadows and effects
+  const flipProgress = useTransform(progress, [-1, 0, 1], [1, 0, 1]);
+  
+  // Shadow and opacity based on flip progress
+  const shadowIntensity = useTransform(flipProgress, [0, 0.5, 1], [0.2, 0.8, 0.2]);
+  const pageOpacity = useTransform(flipProgress, [0, 0.3, 0.7, 1], [1, 0.95, 0.7, 0.3]);
+  
+  // Gradient position based on drag direction
+  const gradientPosition = useTransform(
+    progress,
+    [-1, 0, 1],
+    ['0%', '50%', '100%']
+  );
+  
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const threshold = pageWidth * 0.25; // 25% of page width to trigger flip
+    const velocity = Math.abs(info.velocity.x);
+    
+    // Determine if we should flip based on drag distance or velocity
+    if (Math.abs(info.offset.x) > threshold || velocity > 400) {
+      if (info.offset.x > 0 && canGoPrevious) {
+        // Flip to previous page
+        setFlipDirection('previous');
+        setIsFlipping(true);
+        controls.start({
+          x: pageWidth,
+          transition: {
+            duration: 0.6,
+            ease: [0.34, 1.56, 0.64, 1], // cubic-bezier for natural snap
+          }
+        }).then(() => {
+          onPageChange(currentPageIndex - 1);
+          dragX.set(0);
+          dragY.set(0);
+          setIsFlipping(false);
+          setFlipDirection(null);
+          controls.set({ x: 0 });
+        });
+        return;
+      } else if (info.offset.x < 0 && canGoNext) {
+        // Flip to next page
+        setFlipDirection('next');
+        setIsFlipping(true);
+        controls.start({
+          x: -pageWidth,
+          transition: {
+            duration: 0.6,
+            ease: [0.34, 1.56, 0.64, 1], // cubic-bezier for natural snap
+          }
+        }).then(() => {
+          onPageChange(currentPageIndex + 1);
+          dragX.set(0);
+          dragY.set(0);
+          setIsFlipping(false);
+          setFlipDirection(null);
+          controls.set({ x: 0 });
+        });
+        return;
+      }
+    }
+    
+    // Snap back to center
+    controls.start({
+      x: 0,
+      transition: {
+        duration: 0.3,
+        ease: [0.34, 1.56, 0.64, 1],
+      }
+    });
+    dragX.set(0);
+    dragY.set(0);
+  };
+
+  const handleAnimatedFlip = (direction: 'next' | 'previous') => {
+    if (isFlipping) return;
+    if (direction === 'next' && !canGoNext) return;
+    if (direction === 'previous' && !canGoPrevious) return;
+    
+    setFlipDirection(direction);
+    setIsFlipping(true);
+    
+    const targetX = direction === 'next' ? -pageWidth : pageWidth;
+    
+    controls.start({
+      x: targetX,
+      transition: {
+        duration: 0.6,
+        ease: [0.34, 1.56, 0.64, 1], // cubic-bezier for natural snap
+      }
+    }).then(() => {
+      onPageChange(direction === 'next' ? currentPageIndex + 1 : currentPageIndex - 1);
+      dragX.set(0);
+      dragY.set(0);
+      setIsFlipping(false);
+      setFlipDirection(null);
+      controls.set({ x: 0 });
+    });
+  };
+
+  // Expose flip function for button clicks
+  useEffect(() => {
+    (window as any).__pdfPageFlip = {
+      flipNext: () => handleAnimatedFlip('next'),
+      flipPrevious: () => handleAnimatedFlip('previous'),
+    };
+    return () => {
+      delete (window as any).__pdfPageFlip;
+    };
+  }, [canGoNext, canGoPrevious, isFlipping, currentPageIndex, pageWidth]);
+
+  // Determine which page to show underneath based on flip direction
+  const underlyingPage = flipDirection === 'next' && nextPage 
+    ? nextPage 
+    : flipDirection === 'previous' && previousPage
+    ? previousPage
+    : nextPage || previousPage;
+
+  return (
+    <div 
+      ref={containerRef}
+      className="relative w-full flex justify-center"
+      style={{ 
+        perspective: '2000px',
+        perspectiveOrigin: 'center center',
+        transformStyle: 'preserve-3d',
+      }}
+    >
+      {/* Underlying page (pre-rendered for smooth transition) */}
+      {underlyingPage && (
+        <div 
+          className="absolute flex justify-center w-full"
+          style={{ 
+            zIndex: 0,
+          }}
+        >
+          <PDFPageCanvas
+            page={underlyingPage}
+            pageIndex={flipDirection === 'next' 
+              ? currentPageIndex + 1 
+              : flipDirection === 'previous'
+              ? currentPageIndex - 1
+              : nextPage ? currentPageIndex + 1 : currentPageIndex - 1}
+            scale={scale}
+            rotation={rotation}
+            style={{ opacity: 0.95 }}
+          />
+        </div>
+      )}
+      
+      {/* Current page (flippable) */}
+      <motion.div
+        ref={pageRef}
+        className="relative z-10 cursor-grab active:cursor-grabbing"
+        style={{
+          x: dragX,
+          rotateY: rotateY,
+          opacity: pageOpacity,
+          transformStyle: 'preserve-3d',
+          backfaceVisibility: 'hidden',
+        }}
+        animate={controls}
+        drag="x"
+        dragConstraints={{ 
+          left: canGoPrevious ? -pageWidth : 0, 
+          right: canGoNext ? pageWidth : 0 
+        }}
+        dragElastic={0.05}
+        onDragEnd={handleDragEnd}
+        whileDrag={{ 
+          cursor: 'grabbing',
+        }}
+        dragDirectionLock
+        dragMomentum={false}
+      >
+        <div className="relative" style={{ transformStyle: 'preserve-3d' }}>
+          {/* Shadow on the turning edge - right side when flipping left (next) */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none rounded-sm"
+            style={{
+              background: 'linear-gradient(to right, rgba(0,0,0,0) 70%, rgba(0,0,0,0.5) 85%, rgba(0,0,0,0.8) 95%, rgba(0,0,0,1) 100%)',
+              opacity: useTransform(progress, [-1, -0.3, 0], [0, 0.4, 0]),
+            }}
+          />
+          
+          {/* Shadow on the turning edge - left side when flipping right (previous) */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none rounded-sm"
+            style={{
+              background: 'linear-gradient(to left, rgba(0,0,0,0) 70%, rgba(0,0,0,0.5) 85%, rgba(0,0,0,0.8) 95%, rgba(0,0,0,1) 100%)',
+              opacity: useTransform(progress, [0, 0.3, 1], [0, 0.4, 0]),
+            }}
+          />
+          
+          {/* Gradient overlay for depth effect - right side when flipping left */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none rounded-sm"
+            style={{
+              background: 'linear-gradient(to right, transparent 60%, rgba(255,255,255,0.4) 75%, rgba(0,0,0,0.3) 90%, transparent 100%)',
+              opacity: useTransform(progress, [-1, -0.2, 0], [0, 0.7, 0]),
+              mixBlendMode: 'overlay' as const,
+            }}
+          />
+          
+          {/* Gradient overlay for depth effect - left side when flipping right */}
+          <motion.div
+            className="absolute inset-0 pointer-events-none rounded-sm"
+            style={{
+              background: 'linear-gradient(to left, transparent 60%, rgba(255,255,255,0.4) 75%, rgba(0,0,0,0.3) 90%, transparent 100%)',
+              opacity: useTransform(progress, [0, 0.2, 1], [0, 0.7, 0]),
+              mixBlendMode: 'overlay' as const,
+            }}
+          />
+          
+          <PDFPageCanvas
+            page={currentPage}
+            pageIndex={currentPageIndex}
+            scale={scale}
+            rotation={rotation}
+          />
+        </div>
+      </motion.div>
     </div>
   );
 };
@@ -100,15 +389,23 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
   };
   
   const handlePreviousPage = () => {
-    if (currentPageIndex > 0) {
+    if (currentPageIndex > 0 && (window as any).__pdfPageFlip?.flipPrevious) {
+      (window as any).__pdfPageFlip.flipPrevious();
+    } else if (currentPageIndex > 0) {
       setCurrentPageIndex(prev => prev - 1);
     }
   };
   
   const handleNextPage = () => {
-    if (currentPageIndex < pages.length - 1) {
+    if (currentPageIndex < pages.length - 1 && (window as any).__pdfPageFlip?.flipNext) {
+      (window as any).__pdfPageFlip.flipNext();
+    } else if (currentPageIndex < pages.length - 1) {
       setCurrentPageIndex(prev => prev + 1);
     }
+  };
+  
+  const handlePageChange = (newIndex: number) => {
+    setCurrentPageIndex(newIndex);
   };
 
   const handleDownload = () => {
@@ -331,17 +628,18 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
           ) : isPDF && pages.length > 0 ? (
-            <div className="p-4 flex flex-col items-center relative">
-              <div key={currentPageIndex} className="w-full flex justify-center">
-                <div className="w-full">
-                  <PDFPageCanvas 
-                    page={pages[currentPageIndex]} 
-                    pageIndex={currentPageIndex}
-                    scale={scale}
-                    rotation={rotation}
-                  />
-                </div>
-              </div>
+            <div className="p-4 flex flex-col items-center relative" style={{ minHeight: '100%' }}>
+              <PageFlip
+                currentPage={pages[currentPageIndex]}
+                nextPage={currentPageIndex < pages.length - 1 ? pages[currentPageIndex + 1] : null}
+                previousPage={currentPageIndex > 0 ? pages[currentPageIndex - 1] : null}
+                currentPageIndex={currentPageIndex}
+                scale={scale}
+                rotation={rotation}
+                onPageChange={handlePageChange}
+                canGoNext={currentPageIndex < pages.length - 1}
+                canGoPrevious={currentPageIndex > 0}
+              />
             </div>
           ) : !isPDF ? (
             <div className="text-center p-8">
