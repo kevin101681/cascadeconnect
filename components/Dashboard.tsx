@@ -2313,7 +2313,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                              {isPDF ? (
                                <div className="w-full h-full overflow-hidden" style={{ position: 'relative' }}>
                                  <iframe
-                                   src={doc.url + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH'}
+                                   src={doc.url + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1'}
                                    className="w-full h-full border-0"
                                    title={doc.name}
                                    scrolling="no"
