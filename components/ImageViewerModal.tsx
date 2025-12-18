@@ -10,6 +10,7 @@ interface ImageViewerModalProps {
   initialIndex: number;
   onClose: () => void;
   onUpdateAttachment?: (index: number, updatedUrl: string) => void;
+  readOnly?: boolean; // If true, hide editing tools (view-only mode)
 }
 
 const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
