@@ -918,6 +918,51 @@ const Dashboard: React.FC<DashboardProps> = ({
           </button>
         )}
       </div>
+      {/* Column Headers */}
+      {groupClaims.length > 0 && (
+        <div className="px-6 py-3 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50 sticky top-[73px] z-10">
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex justify-start items-center">
+              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1">Claim #</span>
+            </div>
+            <div>
+              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1">Status</span>
+            </div>
+            <div className="min-w-0 flex items-center justify-start max-w-[200px]">
+              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate">Title</span>
+            </div>
+            <div className="min-w-0 flex items-center justify-start max-w-[300px]">
+              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate">Description</span>
+            </div>
+            <div className="flex justify-start items-center w-fit min-w-0">
+              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Classification</span>
+            </div>
+            {(isAdmin || isBuilder) && !effectiveHomeowner && (
+              <div className="flex justify-start items-center">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Homeowner</span>
+              </div>
+            )}
+            <div className="flex justify-start items-center">
+              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Contractor</span>
+            </div>
+            <div className="flex justify-start items-center min-w-0">
+              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Scheduled</span>
+            </div>
+            <div className="flex justify-start items-center">
+              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Submitted</span>
+            </div>
+            <div className="flex justify-start items-center">
+              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Evaluated</span>
+            </div>
+            <div className="flex justify-start items-center">
+              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Service Order</span>
+            </div>
+            <div className="flex justify-start items-center">
+              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Attachments</span>
+            </div>
+          </div>
+        </div>
+      )}
       <motion.ul 
         className="divide-y divide-surface-outline-variant dark:divide-gray-700"
         variants={containerVariants}
@@ -1898,7 +1943,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         setShowNewMessageModal(true);
                         setCurrentTab('MESSAGES');
                       }}
-                      variant="outlined" 
+                      variant="filled" 
                       icon={<Mail className="h-4 w-4" />}
                       className="!h-9 !px-4"
                     >
@@ -2038,7 +2083,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         >
            <button 
               onClick={() => setCurrentTab('CLAIMS')}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'CLAIMS' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'CLAIMS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
             >
               <ClipboardList className="h-4 w-4" />
               Warranty
@@ -2048,7 +2093,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && !isHomeownerView && (
               <button 
                 onClick={() => setCurrentTab('TASKS')}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'TASKS' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'TASKS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
               >
                 <CheckSquare className="h-4 w-4" />
                 Tasks
@@ -2057,7 +2102,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             <button 
               onClick={() => setCurrentTab('MESSAGES')}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'MESSAGES' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'MESSAGES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
             >
               <Mail className="h-4 w-4" />
               Messages
@@ -2070,7 +2115,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isHomeownerView && (
               <button 
                 onClick={() => setCurrentTab('DOCUMENTS')}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'DOCUMENTS' ? 'bg-primary-container dark:bg-primary/20 text-primary' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
               >
                 <FileText className="h-4 w-4" />
                 Documents
