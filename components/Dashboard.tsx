@@ -7,7 +7,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor } from '../types';
 import { ClaimMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Sparkles, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info } from 'lucide-react';
 import Button from './Button';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
@@ -618,13 +618,6 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
-  const handleDraftInvite = async () => {
-    if (!inviteName) return;
-    setIsDrafting(true);
-    const draft = await draftInviteEmail(inviteName);
-    setInviteBody(draft);
-    setIsDrafting(false);
-  };
 
   const handleSendInvite = async () => {
     setIsDrafting(true);
@@ -2178,6 +2171,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                       })
                     )}
                  </div>
+                 
+                 {/* Upload Action */}
+                 <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 flex justify-center">
+                   <label className={`cursor-pointer flex items-center gap-2 px-6 py-3 rounded-full transition-colors border ${isDocUploading ? 'bg-surface-container dark:bg-gray-700 border-primary/30 cursor-wait' : 'bg-surface-container dark:bg-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-600 border-surface-outline-variant dark:border-gray-600 text-primary font-medium'}`}>
+                     {isDocUploading ? (
+                       <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                     ) : (
+                       <Upload className="h-4 w-4" />
+                     )}
+                     {isDocUploading ? 'Uploading...' : 'Upload New Document'}
+                     <input type="file" className="hidden" onChange={handleFileUpload} disabled={isDocUploading} />
+                   </label>
+                 </div>
                </div>
             </div>
           </div>
@@ -2356,18 +2362,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     />
                   </div>
                   <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-300">Invitation Message</label>
-                      <Button 
-                        variant="text" 
-                        onClick={handleDraftInvite} 
-                        disabled={isDrafting || !inviteName} 
-                        className="!h-6 !text-xs !px-2"
-                        icon={isDrafting ? <div className="animate-spin h-3 w-3 border-2 border-primary border-t-transparent rounded-full"/> : <Sparkles className="h-3 w-3" />}
-                      >
-                        {isDrafting ? 'Drafting...' : 'Reset Template'}
-                      </Button>
-                    </div>
+                    <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-300 mb-1">Invitation Message</label>
                     {isDrafting ? (
                       <div className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 flex items-center justify-center min-h-[200px]">
                         <div className="flex items-center gap-2 text-surface-on-variant dark:text-gray-400">

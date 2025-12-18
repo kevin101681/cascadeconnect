@@ -15,6 +15,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
   const [totalPages, setTotalPages] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const blobUrlRef = useRef<string | null>(null);
 
   const handleZoomIn = () => {
@@ -52,8 +53,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                 doc.url.includes('pdf');
 
   useEffect(() => {
-    if (isOpen) {
-      console.log('PDFViewer rendering:', doc.name, 'isOpen:', isOpen);
+    if (isOpen && doc.url) {
+      console.log('PDFViewer rendering:', doc.name, 'isOpen:', isOpen, 'url type:', doc.url.substring(0, 20));
+      setIsLoading(true);
+      setError(null);
       
       // Cleanup previous blob URL if it exists
       if (blobUrlRef.current) {
@@ -64,7 +67,16 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
       // For data URLs, create a blob URL for better compatibility
       if (doc.url.startsWith('data:')) {
         try {
-          const byteCharacters = atob(doc.url.split(',')[1]);
+          // Extract the base64 part (everything after the comma)
+          const base64Data = doc.url.split(',')[1];
+          if (!base64Data) {
+            console.error('Invalid data URL format');
+            setPdfUrl(doc.url);
+            setIsLoading(false);
+            return;
+          }
+          
+          const byteCharacters = atob(base64Data);
           const byteNumbers = new Array(byteCharacters.length);
           for (let i = 0; i < byteCharacters.length; i++) {
             byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -73,16 +85,23 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
           const blob = new Blob([byteArray], { type: 'application/pdf' });
           const blobUrl = URL.createObjectURL(blob);
           blobUrlRef.current = blobUrl;
+          console.log('Created blob URL:', blobUrl.substring(0, 50));
           setPdfUrl(blobUrl);
+          setIsLoading(false);
         } catch (err) {
           console.error('Error creating blob URL:', err);
+          // Fallback to original data URL
           setPdfUrl(doc.url);
+          setIsLoading(false);
         }
       } else {
+        // For non-data URLs, use directly
         setPdfUrl(doc.url);
+        setIsLoading(false);
       }
     } else {
       setPdfUrl(null);
+      setIsLoading(false);
     }
     
     // Cleanup blob URL on unmount or when doc changes
@@ -92,7 +111,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
         blobUrlRef.current = null;
       }
     };
-  }, [isOpen, doc.url]);
+  }, [isOpen, doc.url, doc.name]);
 
   // Don't return null early - let the component render so useEffect can run
   if (!isOpen) {
@@ -182,28 +201,67 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                 Download Instead
               </button>
             </div>
+          ) : isLoading ? (
+            <div className="text-center p-8">
+              <p className="text-surface-on-variant dark:text-gray-400">Loading PDF...</p>
+            </div>
           ) : isPDF ? (
             doc.url && doc.url !== '#' && pdfUrl ? (
               <div 
-                className="bg-white dark:bg-gray-800 shadow-lg w-full h-full flex items-center justify-center overflow-auto"
+                className="bg-white dark:bg-gray-800 shadow-lg w-full h-full flex items-center justify-center overflow-auto relative"
               >
-                <iframe
-                  src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
-                  className="w-full h-full min-h-[600px] border-0 bg-white dark:bg-gray-800"
-                  title={doc.name}
-                  style={{
-                    transform: `scale(${scale}) rotate(${rotation}deg)`,
-                    transformOrigin: 'center',
-                    transition: 'transform 0.2s ease'
-                  }}
-                  onError={() => {
-                    console.error('PDF iframe failed to load');
-                    setError('Failed to load PDF. Please try downloading instead.');
-                  }}
-                  onLoad={() => {
-                    console.log('PDF iframe loaded successfully');
-                  }}
-                />
+                {scale !== 1 || rotation !== 0 ? (
+                  <div
+                    style={{
+                      transform: `scale(${scale}) rotate(${rotation}deg)`,
+                      transformOrigin: 'center',
+                      transition: 'transform 0.2s ease',
+                      width: '100%',
+                      height: '100%',
+                      minHeight: '600px'
+                    }}
+                  >
+                    <iframe
+                      key={pdfUrl}
+                      src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
+                      className="w-full h-full border-0"
+                      title={doc.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        minHeight: '600px',
+                        display: 'block'
+                      }}
+                      onError={() => {
+                        console.error('PDF iframe failed to load');
+                        setError('Failed to load PDF. Please try downloading instead.');
+                      }}
+                      onLoad={() => {
+                        console.log('PDF iframe loaded successfully');
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <iframe
+                    key={pdfUrl}
+                    src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1`}
+                    className="w-full h-full border-0"
+                    title={doc.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      minHeight: '600px',
+                      display: 'block'
+                    }}
+                    onError={() => {
+                      console.error('PDF iframe failed to load');
+                      setError('Failed to load PDF. Please try downloading instead.');
+                    }}
+                    onLoad={() => {
+                      console.log('PDF iframe loaded successfully');
+                    }}
+                  />
+                )}
               </div>
             ) : (
               <div className="text-center p-8">

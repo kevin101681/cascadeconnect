@@ -85,6 +85,7 @@ const TaskList: React.FC<TaskListProps> = ({
       subtitle={`${filteredTasks.length} ${filteredTasks.length === 1 ? 'task' : 'tasks'}`}
       onClose={onClose || (() => {})}
       maxWidth="4xl"
+      hideCloseButton={true}
     >
       <div className="space-y-6">
         {showForm && (
@@ -209,7 +210,7 @@ const TaskList: React.FC<TaskListProps> = ({
                 className={`group flex flex-col gap-4 p-5 rounded-2xl border transition-all ${
                   task.isCompleted 
                     ? 'bg-surface-container/30 dark:bg-gray-700/30 border-surface-container-high dark:border-gray-600 opacity-75' 
-                    : 'bg-surface dark:bg-gray-800 border-surface-outline-variant dark:border-gray-700 shadow-sm hover:shadow-elevation-1'
+                    : 'bg-surface-container dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
                 }`}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -230,7 +231,7 @@ const TaskList: React.FC<TaskListProps> = ({
                             <span className={`inline-block px-3 py-1 rounded-full font-bold text-sm mb-2 ${
                                 task.isCompleted 
                                 ? 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 line-through' 
-                                : 'bg-primary-container text-primary-on-container'
+                                : 'bg-primary text-primary-on'
                             }`}>
                                 {task.title}
                             </span>

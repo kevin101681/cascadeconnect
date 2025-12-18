@@ -31,7 +31,7 @@ exports.handler = async (event, context) => {
   }
 
   try {
-    const { to, subject, body, fromName, fromRole, replyToId } = JSON.parse(event.body || '{}');
+    const { to, subject, body, fromName, fromRole, replyToId, attachments } = JSON.parse(event.body || '{}');
 
     if (!to || !subject || !body) {
       return {
@@ -92,6 +92,16 @@ exports.handler = async (event, context) => {
         ? `${replyToId}@${(process.env.SENDGRID_REPLY_EMAIL || 'cascadeconnect.netlify.app').split('@')[1] || 'cascadeconnect.netlify.app'}`
         : undefined;
 
+      // Prepare attachments for SendGrid
+      const sendGridAttachments = attachments && attachments.length > 0
+        ? attachments.map(att => ({
+            content: att.content,
+            filename: att.filename,
+            type: att.contentType || 'application/octet-stream',
+            disposition: 'attachment'
+          }))
+        : [];
+
       const msg = {
         to: to,
         from: {
@@ -114,7 +124,8 @@ exports.handler = async (event, context) => {
         },
         customArgs: {
           threadId: replyToId || ''
-        }
+        },
+        attachments: sendGridAttachments
       };
 
       const [response] = await sgMail.send(msg);
@@ -168,6 +179,16 @@ exports.handler = async (event, context) => {
         ? `${replyToId}@${(process.env.SMTP_FROM || 'localhost').split('@')[1] || 'localhost'}`
         : undefined;
 
+      // Prepare attachments for SMTP
+      const smtpAttachments = attachments && attachments.length > 0
+        ? attachments.map(att => ({
+            filename: att.filename,
+            content: att.content,
+            encoding: 'base64',
+            contentType: att.contentType || 'application/octet-stream'
+          }))
+        : [];
+
       const mailOptions = {
         from: `${fromName || 'Cascade Connect'} <${fromEmail}>`,
         to: to,
@@ -184,7 +205,8 @@ exports.handler = async (event, context) => {
           'X-Thread-ID': replyToId || '',
           'In-Reply-To': smtpMessageId,
           'References': smtpMessageId
-        }
+        },
+        attachments: smtpAttachments
       };
 
       const info = await transporter.sendMail(mailOptions);

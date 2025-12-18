@@ -10,6 +10,7 @@ interface ModalWrapperProps {
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '4xl' | '7xl';
   actions?: React.ReactNode;
   className?: string;
+  hideCloseButton?: boolean;
 }
 
 const ModalWrapper: React.FC<ModalWrapperProps> = ({
@@ -19,7 +20,8 @@ const ModalWrapper: React.FC<ModalWrapperProps> = ({
   children,
   maxWidth = '7xl',
   actions,
-  className = ''
+  className = '',
+  hideCloseButton = false
 }) => {
   const maxWidthClasses = {
     sm: 'max-w-sm',
@@ -46,14 +48,16 @@ const ModalWrapper: React.FC<ModalWrapperProps> = ({
           </div>
           <div className="flex items-center gap-2 ml-4">
             {actions}
-            <Button
-              variant="text"
-              onClick={onClose}
-              icon={<X className="h-4 w-4" />}
-              className="flex-shrink-0"
-            >
-              Close
-            </Button>
+            {!hideCloseButton && (
+              <Button
+                variant="text"
+                onClick={onClose}
+                icon={<X className="h-4 w-4" />}
+                className="flex-shrink-0"
+              >
+                Close
+              </Button>
+            )}
           </div>
         </div>
 

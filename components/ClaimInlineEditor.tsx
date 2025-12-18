@@ -853,7 +853,11 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     <div className="text-xl font-medium text-surface-on dark:text-gray-100">
                       {new Date(scheduledDate.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </div>
-                    <p className="text-sm text-surface-on-variant dark:text-gray-200 mt-1">{scheduledDate.timeSlot}</p>
+                    <div className="mt-2">
+                      <span className="inline-block rounded-full border border-primary bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-4 py-2 text-sm font-medium min-h-[2.5rem] whitespace-nowrap flex items-center">
+                        {scheduledDate.timeSlot}
+                      </span>
+                    </div>
                   </div>
                 </div>
                 {isAdmin && (
