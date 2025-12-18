@@ -3,10 +3,9 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import HTMLFlipBook from 'react-pageflip';
 import { HomeownerDocument } from '../types';
 
-// Set up PDF.js worker - import worker using Vite's ?url syntax
-// @ts-ignore - Vite handles ?url imports
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
-pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+// Set up PDF.js worker - use the version that matches react-pdf's internal pdfjs
+// react-pdf 10.2.0 uses pdfjs-dist 5.4.296, so we use that version's worker
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface PDFViewerProps {
   document: HomeownerDocument;
