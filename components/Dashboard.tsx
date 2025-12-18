@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
+import HTMLFlipBook from 'react-pageflip';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { motion, AnimatePresence, type Transition, type Variants } from 'framer-motion';
@@ -17,6 +18,113 @@ import ClaimInlineEditor from './ClaimInlineEditor';
 import NewClaimForm from './NewClaimForm';
 import PunchListApp from './PunchListApp';
 import { HOMEOWNER_MANUAL_IMAGES } from '../lib/bluetag/constants';
+
+// Image page component for flipbook (wrapped in forwardRef as required by react-pageflip)
+interface ManualImagePageProps {
+  imageUrl: string;
+  pageNumber: number;
+  width: number;
+  height: number;
+}
+
+const ManualImagePage = forwardRef<HTMLDivElement, ManualImagePageProps>(({ imageUrl, pageNumber, width, height }, ref) => {
+  return (
+    <div 
+      ref={ref} 
+      className="manual-image-page" 
+      style={{ 
+        width, 
+        height, 
+        padding: 0, 
+        margin: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#fff',
+        overflow: 'hidden'
+      }}
+    >
+      <img
+        src={imageUrl}
+        alt={`Manual Page ${pageNumber}`}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          display: 'block'
+        }}
+        loading="eager"
+        decoding="async"
+      />
+    </div>
+  );
+});
+
+ManualImagePage.displayName = 'ManualImagePage';
+
+// Flipbook component for manual images
+interface ManualImageFlipBookProps {
+  images: string[];
+  width: number;
+  height: number;
+  flipBookRef: React.RefObject<any>;
+  onDimensionsChange: (dims: { width: number; height: number }) => void;
+}
+
+const ManualImageFlipBook: React.FC<ManualImageFlipBookProps> = ({ images, width, height, flipBookRef, onDimensionsChange }) => {
+  // Calculate dimensions that fit within viewport
+  useEffect(() => {
+    const updateDimensions = () => {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const padding = 200; // Padding for header/footer and margins
+      const maxWidth = Math.min(800, viewportWidth - padding);
+      const maxHeight = Math.min(1200, viewportHeight - padding);
+
+      // Maintain 2:3 aspect ratio (common for manual pages)
+      const aspectRatio = 2 / 3;
+      
+      let calcWidth = maxWidth;
+      let calcHeight = calcWidth / aspectRatio;
+
+      // If height is too large, scale down based on height
+      if (calcHeight > maxHeight) {
+        calcHeight = maxHeight;
+        calcWidth = calcHeight * aspectRatio;
+      }
+
+      onDimensionsChange({ width: Math.round(calcWidth), height: Math.round(calcHeight) });
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, [onDimensionsChange]);
+
+  return (
+    <div style={{ maxWidth: '100%', maxHeight: '100%', overflow: 'hidden' }}>
+      <HTMLFlipBook
+        ref={flipBookRef}
+        width={width}
+        height={height}
+        size="fixed"
+        showCover={false}
+        className="manual-flipbook"
+        {...({} as any)}
+      >
+        {images.map((imageUrl, index) => (
+          <ManualImagePage
+            key={`manual-page-${index}`}
+            imageUrl={imageUrl}
+            pageNumber={index + 1}
+            width={width}
+            height={height}
+          />
+        ))}
+      </HTMLFlipBook>
+    </div>
+  );
+};
 
 interface DashboardProps {
   claims: Claim[];
@@ -121,8 +229,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false);
   
   // Manual page viewer state
-  const [manualCurrentPage, setManualCurrentPage] = useState(0);
-  const [manualIsFlipping, setManualIsFlipping] = useState(false);
+  const [manualPageDimensions, setManualPageDimensions] = useState({ width: 800, height: 1200 });
+  const manualFlipBookRef = useRef<any>(null);
   
   // Description expand popup state
   const [expandedDescription, setExpandedDescription] = useState<Claim | null>(null);
@@ -1535,15 +1643,10 @@ const Dashboard: React.FC<DashboardProps> = ({
           className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
           onClick={() => {
             setShowManualModal(false);
-            setManualCurrentPage(0);
           }}
         >
-          {(() => {
-            console.log('Homeowner Manual Modal opened. Images:', HOMEOWNER_MANUAL_IMAGES);
-            return null;
-          })()}
           <div 
-            className="bg-surface dark:bg-gray-800 w-full max-w-4xl max-h-[90vh] rounded-3xl shadow-xl flex flex-col overflow-hidden"
+            className="bg-surface dark:bg-gray-800 w-full max-w-6xl max-h-[95vh] rounded-3xl shadow-xl flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -1557,98 +1660,22 @@ const Dashboard: React.FC<DashboardProps> = ({
               </button>
             </div>
             
-            {/* Content - Manual Images */}
-            <div className="flex-1 overflow-y-auto p-6 bg-gray-100 dark:bg-gray-900">
+            {/* Content - Manual Images with Flipbook */}
+            <div className="flex-1 flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4" style={{ overflow: 'hidden' }}>
               {HOMEOWNER_MANUAL_IMAGES && HOMEOWNER_MANUAL_IMAGES.length > 0 ? (
-                <div className="flex flex-col items-center relative" style={{ perspective: '1000px' }}>
-                  {/* Navigation Controls */}
-                  <div className="flex items-center gap-4 mb-4">
-                    <button
-                      onClick={() => {
-                        if (manualCurrentPage > 0 && !manualIsFlipping) {
-                          setManualIsFlipping(true);
-                          setTimeout(() => {
-                            setManualCurrentPage(prev => prev - 1);
-                            setManualIsFlipping(false);
-                          }, 300);
-                        }
-                      }}
-                      disabled={manualCurrentPage === 0 || manualIsFlipping}
-                      className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Previous Page"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </button>
-                    <span className="text-sm text-surface-on-variant dark:text-gray-400 min-w-[4rem] text-center">
-                      {manualCurrentPage + 1} / {HOMEOWNER_MANUAL_IMAGES.length}
-                    </span>
-                    <button
-                      onClick={() => {
-                        if (manualCurrentPage < HOMEOWNER_MANUAL_IMAGES.length - 1 && !manualIsFlipping) {
-                          setManualIsFlipping(true);
-                          setTimeout(() => {
-                            setManualCurrentPage(prev => prev + 1);
-                            setManualIsFlipping(false);
-                          }, 300);
-                        }
-                      }}
-                      disabled={manualCurrentPage === HOMEOWNER_MANUAL_IMAGES.length - 1 || manualIsFlipping}
-                      className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Next Page"
-                    >
-                      <ChevronRight className="h-5 w-5" />
-                    </button>
-                  </div>
-                  
-                  {/* Current Page with Flip Animation */}
-                  <div
-                    key={manualCurrentPage}
-                    className={`w-full flex justify-center ${manualIsFlipping ? 'animate-[page-flip_0.6s_ease-in-out]' : 'animate-[page-flip-in_0.6s_ease-in-out]'}`}
-                    style={{
-                      transformStyle: 'preserve-3d',
-                      backfaceVisibility: 'hidden'
-                    }}
-                  >
-                    <div className="w-full">
-                      <img
-                        src={HOMEOWNER_MANUAL_IMAGES[manualCurrentPage]}
-                        loading="eager"
-                        decoding="async"
-                        alt={`Homeowner Manual Page ${manualCurrentPage + 1}`}
-                        className="w-full h-auto rounded-lg shadow-lg"
-                        onError={(e) => {
-                          console.error(`Failed to load manual image: ${HOMEOWNER_MANUAL_IMAGES[manualCurrentPage]}`);
-                          const target = e.target as HTMLImageElement;
-                          const parent = target.parentElement;
-                          if (parent) {
-                            parent.innerHTML = `
-                              <div class="w-full p-8 bg-surface-container dark:bg-gray-700 rounded-lg shadow-lg text-center">
-                                <p class="text-surface-on-variant dark:text-gray-400 mb-2">Failed to load page ${manualCurrentPage + 1}</p>
-                                <p class="text-xs text-surface-on-variant dark:text-gray-500">Path: ${HOMEOWNER_MANUAL_IMAGES[manualCurrentPage]}</p>
-                              </div>
-                            `;
-                          }
-                        }}
-                        onLoad={() => {
-                          console.log(`Successfully loaded manual image: ${HOMEOWNER_MANUAL_IMAGES[manualCurrentPage]}`);
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
+                <ManualImageFlipBook
+                  images={HOMEOWNER_MANUAL_IMAGES}
+                  width={manualPageDimensions.width}
+                  height={manualPageDimensions.height}
+                  flipBookRef={manualFlipBookRef}
+                  onDimensionsChange={setManualPageDimensions}
+                />
               ) : (
                 <div className="w-full p-8 bg-surface-container dark:bg-gray-700 rounded-lg shadow-lg text-center">
                   <p className="text-surface-on-variant dark:text-gray-400">No manual pages available</p>
                   <p className="text-xs text-surface-on-variant dark:text-gray-500 mt-2">HOMEOWNER_MANUAL_IMAGES is empty or undefined</p>
                 </div>
               )}
-            </div>
-            
-            {/* Footer */}
-            <div className="p-4 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end shrink-0">
-              <Button variant="filled" onClick={() => setShowManualModal(false)}>
-                Close
-              </Button>
             </div>
           </div>
         </div>,
