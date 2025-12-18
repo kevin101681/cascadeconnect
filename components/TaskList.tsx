@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Task, InternalEmployee, Claim, Homeowner, ClaimStatus } from '../types';
 import Button from './Button';
-import { Check, Plus, User, Calendar, Trash2, Home, CheckCircle, Square, CheckSquare, HardHat } from 'lucide-react';
+import { Check, Plus, User, Calendar, Trash2, Home, CheckCircle, Square, CheckSquare, HardHat, ChevronDown } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 
 interface TaskListProps {
@@ -30,6 +31,7 @@ const TaskList: React.FC<TaskListProps> = ({
   onClose
 }) => {
   const [showForm, setShowForm] = useState(false);
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   
   // Form State
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -216,105 +218,142 @@ const TaskList: React.FC<TaskListProps> = ({
                 ? claims.filter(c => task.relatedClaimIds?.includes(c.id))
                 : [];
 
+            const isExpanded = expandedTaskId === task.id;
+
             return (
               <div 
                 key={task.id} 
-                className={`group flex flex-col gap-4 p-5 rounded-2xl border transition-all ${
+                className={`group flex flex-col rounded-2xl border transition-all ${
                   task.isCompleted 
                     ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75' 
                     : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
                 }`}
               >
-                <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 flex-1">
-                        <button 
-                            onClick={() => onToggleTask(task.id)}
-                            className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors mt-0.5 ${
-                                task.isCompleted 
-                                ? 'bg-primary border-primary text-white' 
-                                : 'border-surface-outline dark:border-gray-600 hover:border-primary'
-                            }`}
-                        >
-                            {task.isCompleted && <Check className="h-3.5 w-3.5" />}
-                        </button>
-
-                        <div className="flex-1">
-                            {/* Title Pill */}
-                            <span className={`inline-block px-3 py-1 rounded-full font-bold text-sm mb-2 ${
-                                task.isCompleted 
-                                ? 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 line-through' 
-                                : 'bg-primary text-primary-on'
-                            }`}>
-                                {task.title}
-                            </span>
-                            
-                            {/* Meta Data Row */}
-                            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-surface-on-variant dark:text-gray-400 ml-1">
-                                <span className="flex items-center gap-1.5">
-                                    <User className="h-3 w-3" />
-                                    Assigned to: <span className="font-medium text-surface-on dark:text-gray-100">{assignee?.name || 'Unknown'}</span>
-                                </span>
-                                <span className="flex items-center gap-1.5">
-                                    <Calendar className="h-3 w-3" />
-                                    Assigned: {task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString() : 'N/A'}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    
+                {/* Collapsed Header - Clickable */}
+                <div 
+                  className="flex items-center justify-between gap-4 p-4 cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-700/50 transition-colors"
+                  onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
+                >
+                  <div className="flex items-center gap-3 flex-1">
                     <button 
-                        onClick={() => onDeleteTask(task.id)}
-                        className="p-2 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/10 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                        title="Delete Task"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleTask(task.id);
+                      }}
+                      className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        task.isCompleted 
+                          ? 'bg-primary border-primary text-white' 
+                          : 'border-surface-outline dark:border-gray-600 hover:border-primary'
+                      }`}
                     >
-                        <Trash2 className="h-4 w-4" />
+                      {task.isCompleted && <Check className="h-3.5 w-3.5" />}
                     </button>
+
+                    {/* Title Pill */}
+                    <span className={`inline-block px-3 py-1 rounded-full font-bold text-sm ${
+                      task.isCompleted 
+                        ? 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 line-through' 
+                        : 'bg-primary text-primary-on'
+                    }`}>
+                      {task.title}
+                    </span>
+
+                    {/* Subs to Schedule Count */}
+                    {taskClaims.length > 0 && (
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                        {taskClaims.length}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <ChevronDown 
+                      className={`h-4 w-4 text-surface-on-variant dark:text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                    />
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteTask(task.id);
+                      }}
+                      className="p-2 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/10 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                      title="Delete Task"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
-                {/* Notes Section - Pill Style */}
-                {task.description && (
-                    <div className="ml-9 mt-1">
-                        <div className="inline-block bg-surface-container-high/60 dark:bg-gray-700/60 px-4 py-2 rounded-2xl text-sm text-surface-on dark:text-gray-100">
-                            <p className="whitespace-pre-wrap">{task.description}</p>
-                        </div>
+                {/* Expanded Content */}
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-4 pb-4 pt-0 space-y-4 border-t border-surface-outline-variant dark:border-gray-700">
+                    {/* Meta Data Row */}
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-surface-on-variant dark:text-gray-400">
+                      <span className="flex items-center gap-1.5">
+                        <User className="h-3 w-3" />
+                        Assigned to: <span className="font-medium text-surface-on dark:text-gray-100">{assignee?.name || 'Unknown'}</span>
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="h-3 w-3" />
+                        Assigned: {task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString() : 'N/A'}
+                      </span>
                     </div>
-                )}
 
-                {/* Checklist of Claims */}
-                {taskClaims.length > 0 && (
-                     <div className="ml-9 mt-2">
+                    {/* Notes Section - Pill Style */}
+                    {task.description && (
+                      <div>
+                        <div className="inline-block bg-surface-container-high/60 dark:bg-gray-700/60 px-4 py-2 rounded-2xl text-sm text-surface-on dark:text-gray-100">
+                          <p className="whitespace-pre-wrap">{task.description}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Checklist of Claims */}
+                    {taskClaims.length > 0 && (
+                      <div>
                         <p className="text-xs font-bold text-surface-on-variant dark:text-gray-400 mb-2 uppercase tracking-wider flex items-center gap-1">
-                            <CheckSquare className="h-3 w-3" />
-                            Subs to Schedule
+                          <CheckSquare className="h-3 w-3" />
+                          Subs to Schedule
                         </p>
                         <div className="space-y-2">
-                            {taskClaims.map(claim => (
-                                <div key={claim.id} className="flex items-center justify-between p-2.5 rounded-lg border border-surface-outline-variant dark:border-gray-600 bg-surface dark:bg-gray-700 text-sm">
-                                    <div className="flex items-center gap-3">
-                                        <Square className="h-4 w-4 text-primary flex-shrink-0" />
-                                        <div>
-                                            <span className="font-medium text-surface-on dark:text-gray-100 block">{claim.title}</span>
-                                            <div className="flex items-center flex-wrap gap-1 text-xs text-surface-on-variant dark:text-gray-400">
-                                                <span>{claim.id}</span>
-                                                <span>•</span>
-                                                <span>{claim.classification}</span>
-                                                {claim.contractorName && (
-                                                    <>
-                                                         <span className="mx-1 text-surface-outline-variant dark:text-gray-600">|</span>
-                                                         <span className="font-medium text-surface-on-variant dark:text-gray-400 flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-1.5 py-0.5 rounded">
-                                                            <HardHat className="h-3 w-3" />
-                                                            {claim.contractorName}
-                                                         </span>
-                                                    </>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
+                          {taskClaims.map(claim => (
+                            <div key={claim.id} className="flex items-center justify-between p-2.5 rounded-lg border border-surface-outline-variant dark:border-gray-600 bg-surface dark:bg-gray-700 text-sm">
+                              <div className="flex items-center gap-3">
+                                <Square className="h-4 w-4 text-primary flex-shrink-0" />
+                                <div>
+                                  <span className="font-medium text-surface-on dark:text-gray-100 block">{claim.title}</span>
+                                  <div className="flex items-center flex-wrap gap-1 text-xs text-surface-on-variant dark:text-gray-400">
+                                    <span>{claim.id}</span>
+                                    <span>•</span>
+                                    <span>{claim.classification}</span>
+                                    {claim.contractorName && (
+                                      <>
+                                        <span className="mx-1 text-surface-outline-variant dark:text-gray-600">|</span>
+                                        <span className="font-medium text-surface-on-variant dark:text-gray-400 flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-1.5 py-0.5 rounded">
+                                          <HardHat className="h-3 w-3" />
+                                          {claim.contractorName}
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
                                 </div>
-                            ))}
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                     </div>
-                )}
+                      </div>
+                    )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             );
           })
