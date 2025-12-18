@@ -1556,8 +1556,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="space-y-4">
                   {HOMEOWNER_MANUAL_IMAGES.map((imagePath: string, index: number) => (
                     <div key={index} className="w-full">
-                      <img 
-                        src={imagePath} 
+                      <img
+                        src={imagePath}
+                        loading="lazy"
+                        decoding="async"
                         alt={`Homeowner Manual Page ${index + 1}`}
                         className="w-full h-auto rounded-lg shadow-lg"
                         onError={(e) => {

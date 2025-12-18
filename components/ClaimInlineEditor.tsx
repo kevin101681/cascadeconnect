@@ -413,6 +413,8 @@ If this repair work is billable, please let me know prior to scheduling.`);
                               src={attachmentUrl} 
                               alt={attachmentName} 
                               className="w-full h-full object-cover"
+                              loading="lazy"
+                              decoding="async"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 target.style.display = 'none';

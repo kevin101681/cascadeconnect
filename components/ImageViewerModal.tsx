@@ -281,6 +281,23 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
     };
 
     loadImage();
+    
+    // Preload adjacent images for faster navigation on mobile
+    const preloadAdjacentImages = () => {
+      if (imageAttachments.length <= 1) return;
+      
+      const preloadIndexes = [];
+      if (currentIndex > 0) preloadIndexes.push(currentIndex - 1);
+      if (currentIndex < imageAttachments.length - 1) preloadIndexes.push(currentIndex + 1);
+      
+      preloadIndexes.forEach(index => {
+        const img = new Image();
+        img.src = imageAttachments[index].url;
+        img.loading = 'lazy';
+      });
+    };
+    
+    preloadAdjacentImages();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex, fabricLoaded, canvasInitialized, isOpen]);
 
