@@ -161,8 +161,24 @@ html.dark .cl-userButtonPopoverHeaderTitle span,
 html.dark .cl-userButtonPopoverHeaderTitle p,
 .dark .cl-userButtonPopoverHeaderTitle div,
 html.dark .cl-userButtonPopoverHeaderTitle div {
-    color: #f9fafb !important; /* dark:text-gray-100 */
+    color: #ffffff !important; /* white for dark mode */
     background-color: #1f2937 !important; /* dark:bg-gray-800 */
+}
+
+/* Header Title Text Color - Additional specificity for dark mode */
+.dark .cl-userButtonPopoverHeaderTitle,
+html.dark .cl-userButtonPopoverHeaderTitle,
+.dark .cl-userButtonPopoverCard .cl-userButtonPopoverHeaderTitle,
+html.dark .cl-userButtonPopoverCard .cl-userButtonPopoverHeaderTitle {
+    color: #ffffff !important; /* white for dark mode */
+}
+
+/* Header Subtitle Text Color - Additional specificity for dark mode */
+.dark .cl-userButtonPopoverHeaderSubtitle,
+html.dark .cl-userButtonPopoverHeaderSubtitle,
+.dark .cl-userButtonPopoverCard .cl-userButtonPopoverHeaderSubtitle,
+html.dark .cl-userButtonPopoverCard .cl-userButtonPopoverHeaderSubtitle {
+    color: #ffffff !important; /* white for dark mode */
 }
 
 /* Header Subtitle - Light Mode */
@@ -187,7 +203,7 @@ html.dark .cl-userButtonPopoverHeaderSubtitle span,
 html.dark .cl-userButtonPopoverHeaderSubtitle p,
 .dark .cl-userButtonPopoverHeaderSubtitle div,
 html.dark .cl-userButtonPopoverHeaderSubtitle div {
-    color: #9ca3af !important; /* dark:text-gray-400 */
+    color: #ffffff !important; /* white for dark mode */
     background-color: #1f2937 !important; /* dark:bg-gray-800 */
 }
 

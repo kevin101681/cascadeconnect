@@ -237,8 +237,8 @@ const Layout: React.FC<LayoutProps> = ({
                       
                       // User info section
                       userButtonPopoverHeader: '!px-3 !py-2 !border-b !border-surface-outline-variant/50 dark:!border-gray-700/50 !bg-transparent',
-                      userButtonPopoverHeaderTitle: '!text-sm !font-medium !text-surface-on dark:!text-gray-100',
-                      userButtonPopoverHeaderSubtitle: '!text-xs !text-surface-on-variant dark:!text-gray-400',
+                      userButtonPopoverHeaderTitle: '!text-sm !font-medium !text-surface-on dark:!text-white',
+                      userButtonPopoverHeaderSubtitle: '!text-xs !text-surface-on-variant dark:!text-white',
                       
                       // Action buttons styling
                       userButtonPopoverActions: '!py-1 !bg-transparent',
