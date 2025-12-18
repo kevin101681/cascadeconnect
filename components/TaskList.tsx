@@ -309,7 +309,7 @@ const TaskList: React.FC<TaskListProps> = ({
                       transition={{ duration: 0.2 }}
                       className="overflow-hidden"
                     >
-                      <div className="px-4 pb-4 pt-0 space-y-4 border-t border-surface-outline-variant dark:border-gray-700">
+                      <div className="px-4 pb-4 pt-4 space-y-4 border-t border-surface-outline-variant dark:border-gray-700">
                     {/* Meta Data Row */}
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-surface-on-variant dark:text-gray-400">
                       <span className="flex items-center gap-1.5">
