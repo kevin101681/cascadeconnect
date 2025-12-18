@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Task, InternalEmployee, Claim, Homeowner, ClaimStatus } from '../types';
 import Button from './Button';
-import ModalWrapper from './ModalWrapper';
-import { Check, Plus, User, Calendar, Trash2, Home, CheckCircle, Square, CheckSquare, HardHat } from 'lucide-react';
+import { Check, Plus, User, Calendar, Trash2, Home, CheckCircle, Square, CheckSquare, HardHat, X } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 
 interface TaskListProps {
@@ -79,15 +79,41 @@ const TaskList: React.FC<TaskListProps> = ({
     );
   };
 
-  return (
-    <ModalWrapper
-      title="My Tasks"
-      subtitle={`${filteredTasks.length} ${filteredTasks.length === 1 ? 'task' : 'tasks'}`}
-      onClose={onClose || (() => {})}
-      maxWidth="4xl"
-      hideCloseButton={true}
+  return createPortal(
+    <div 
+      className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-[backdrop-fade-in_0.2s_ease-out]"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && onClose) {
+          onClose();
+        }
+      }}
     >
-      <div className="space-y-6">
+      <div 
+        className="bg-surface dark:bg-gray-800 w-full max-w-4xl rounded-3xl shadow-elevation-3 overflow-hidden flex flex-col max-h-[90vh]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex justify-between items-start p-6 border-b border-surface-outline-variant dark:border-gray-700 shrink-0">
+          <div className="flex-1">
+            <h1 className="text-2xl font-normal text-surface-on dark:text-gray-100">My Tasks</h1>
+            <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
+              {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
+            </p>
+          </div>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-2 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors"
+              title="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto flex-1">
+          <div className="space-y-6">
         {showForm && (
           <div className="bg-surface dark:bg-gray-800 rounded-2xl border border-surface-outline-variant dark:border-gray-700 p-5 animate-in slide-in-from-top-2">
             <h3 className="font-medium text-surface-on dark:text-gray-100 mb-4">New Task</h3>
@@ -209,8 +235,8 @@ const TaskList: React.FC<TaskListProps> = ({
                 key={task.id} 
                 className={`group flex flex-col gap-4 p-5 rounded-2xl border transition-all ${
                   task.isCompleted 
-                    ? 'bg-surface-container/30 dark:bg-gray-700/30 border-surface-container-high dark:border-gray-600 opacity-75' 
-                    : 'bg-surface-container dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
+                    ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75' 
+                    : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
                 }`}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -277,7 +303,7 @@ const TaskList: React.FC<TaskListProps> = ({
                         </p>
                         <div className="space-y-2">
                             {taskClaims.map(claim => (
-                                <div key={claim.id} className="flex items-center justify-between p-2.5 rounded-lg border border-surface-outline-variant dark:border-gray-600 bg-surface dark:bg-gray-800 text-sm">
+                                <div key={claim.id} className="flex items-center justify-between p-2.5 rounded-lg border border-surface-outline-variant dark:border-gray-600 bg-surface dark:bg-gray-700 text-sm">
                                     <div className="flex items-center gap-3">
                                         <Square className="h-4 w-4 text-primary flex-shrink-0" />
                                         <div>
@@ -308,8 +334,11 @@ const TaskList: React.FC<TaskListProps> = ({
           })
           )}
         </div>
+          </div>
+        </div>
       </div>
-    </ModalWrapper>
+    </div>,
+    document.body
   );
 };
 
