@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Download, ZoomIn, ZoomOut, RotateCw, FileText } from 'lucide-react';
+import { X, Download, ZoomIn, ZoomOut, RotateCw, FileText, AlertCircle } from 'lucide-react';
 import { HomeownerDocument } from '../types';
 
 interface PDFViewerProps {
@@ -8,11 +8,56 @@ interface PDFViewerProps {
   onClose: () => void;
 }
 
+interface PDFPageCanvasProps {
+  page: any;
+  pageIndex: number;
+  scale: number;
+  rotation: number;
+}
+
+const PDFPageCanvas: React.FC<PDFPageCanvasProps> = ({ page, pageIndex, scale, rotation }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (canvasRef.current && page) {
+      const viewport = page.getViewport({ scale });
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+      
+      if (!context) return;
+      
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+      
+      canvas.style.width = '100%';
+      canvas.style.height = 'auto';
+      canvas.style.maxWidth = `${viewport.width}px`;
+      canvas.style.transform = rotation !== 0 ? `rotate(${rotation}deg)` : 'none';
+
+      const renderContext = {
+        canvasContext: context,
+        viewport: viewport,
+      };
+      page.render(renderContext).promise.catch((err: any) => {
+        console.error('Error rendering page:', err);
+      });
+    }
+  }, [page, scale, rotation]);
+
+  return (
+    <div className="relative mb-4 w-full flex justify-center">
+      <canvas 
+        ref={canvasRef} 
+        className="shadow-lg rounded-sm bg-white dark:bg-gray-800 pdf-page-canvas block" 
+      />
+    </div>
+  );
+};
+
 const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose }) => {
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState(1.5);
   const [rotation, setRotation] = useState(0);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [pages, setPages] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -25,6 +70,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
   const handleZoomOut = () => {
     setScale(prev => Math.max(prev - 0.25, 0.5));
   };
+  
+  const totalPages = pages.length;
 
   const handleRotate = () => {
     setRotation(prev => (prev + 90) % 360);
@@ -54,75 +101,72 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
 
   useEffect(() => {
     if (isOpen && doc.url) {
-      console.log('PDFViewer rendering:', doc.name, 'isOpen:', isOpen, 'url type:', doc.url.substring(0, 20));
-      setIsLoading(true);
-      setError(null);
-      
-      // Cleanup previous blob URL if it exists
-      if (blobUrlRef.current) {
-        URL.revokeObjectURL(blobUrlRef.current);
-        blobUrlRef.current = null;
-      }
-      
-      // For data URLs, create a blob URL for better compatibility
-      if (doc.url.startsWith('data:')) {
+      const loadPdf = async () => {
+        setIsLoading(true);
+        setError(null);
+        setPages([]);
+        
+        // Cleanup previous blob URL if it exists
+        if (blobUrlRef.current) {
+          URL.revokeObjectURL(blobUrlRef.current);
+          blobUrlRef.current = null;
+        }
+        
         try {
-          // Extract the base64 part (everything after the comma)
-          const base64Data = doc.url.split(',')[1];
-          if (!base64Data) {
-            console.error('Invalid data URL format - no base64 data found');
-            setError('Invalid PDF data format');
-            setIsLoading(false);
-            return;
-          }
+          let finalUrl = doc.url;
           
-          console.log('Converting data URL to blob, base64 length:', base64Data.length);
-          const byteCharacters = atob(base64Data);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], { type: 'application/pdf' });
-          console.log('Created blob, size:', blob.size, 'type:', blob.type);
-          
-          if (blob.size === 0) {
-            console.error('Blob size is 0 - invalid PDF data');
-            setError('Invalid PDF data - file appears to be empty');
-            setIsLoading(false);
-            return;
-          }
-          
-          const blobUrl = URL.createObjectURL(blob);
-          blobUrlRef.current = blobUrl;
-          console.log('Created blob URL:', blobUrl.substring(0, 50), 'for document:', doc.name);
-          
-          // Set a timeout to check if PDF loads
-          const loadTimeout = setTimeout(() => {
-            console.log('PDF load timeout - checking if still loading');
-            if (isLoading) {
-              console.warn('PDF may not have loaded properly');
+          // For data URLs, create a blob URL for better compatibility with pdf.js
+          if (doc.url.startsWith('data:')) {
+            const base64Data = doc.url.split(',')[1];
+            if (!base64Data) {
+              throw new Error('Invalid data URL format');
             }
-          }, 3000);
+            
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+            
+            if (blob.size === 0) {
+              throw new Error('Invalid PDF data - file appears to be empty');
+            }
+            
+            const blobUrl = URL.createObjectURL(blob);
+            blobUrlRef.current = blobUrl;
+            finalUrl = blobUrl;
+          }
           
-          setPdfUrl(blobUrl);
+          setPdfUrl(finalUrl);
+          
+          // Load PDF using pdf.js (same as ReportPreviewModal)
+          const pdfjsLib = (window as any).pdfjsLib;
+          if (!pdfjsLib) {
+            throw new Error("PDF Library not loaded");
+          }
+
+          const loadingTask = pdfjsLib.getDocument(finalUrl);
+          const pdf = await loadingTask.promise;
+          
+          const pagePromises = [];
+          for (let i = 1; i <= pdf.numPages; i++) {
+            pagePromises.push(pdf.getPage(i));
+          }
+          const loadedPages = await Promise.all(pagePromises);
+          setPages(loadedPages);
           setIsLoading(false);
-          
-          return () => {
-            clearTimeout(loadTimeout);
-          };
-        } catch (err) {
-          console.error('Error creating blob URL:', err);
-          setError(`Failed to process PDF: ${err instanceof Error ? err.message : 'Unknown error'}`);
+        } catch (err: any) {
+          console.error("PDF Load Error", err);
+          setError(err.message || "Failed to load PDF");
           setIsLoading(false);
         }
-      } else {
-        // For non-data URLs, use directly
-        console.log('Using non-data URL directly:', doc.url.substring(0, 100));
-        setPdfUrl(doc.url);
-        setIsLoading(false);
-      }
+      };
+      
+      loadPdf();
     } else {
+      setPages([]);
       setPdfUrl(null);
       setIsLoading(false);
     }
@@ -220,106 +264,47 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
         </div>
 
         {/* PDF Content */}
-        <div className="flex-1 overflow-hidden bg-gray-100 dark:bg-gray-900 flex items-center justify-center" style={{ minHeight: 0, height: '100%' }}>
+        <div className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-900" style={{ minHeight: 0, height: '100%' }}>
           {error ? (
-            <div className="text-center p-8">
+            <div className="flex flex-col items-center justify-center h-full w-full bg-surface-container dark:bg-gray-800 p-4 text-center">
+              <AlertCircle size={48} className="text-red-500 mb-4" />
               <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
-              <div className="flex gap-3 justify-center">
-                {pdfUrl && (
-                  <button
-                    onClick={() => window.open(pdfUrl, '_blank')}
-                    className="px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors"
-                  >
-                    Open in New Tab
-                  </button>
-                )}
-                <button
-                  onClick={handleDownload}
-                  className="px-4 py-2 bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 rounded-lg hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
-                >
-                  Download
-                </button>
-              </div>
+              <button
+                onClick={handleDownload}
+                className="px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                Download PDF
+              </button>
             </div>
           ) : isLoading ? (
-            <div className="text-center p-8">
-              <p className="text-surface-on-variant dark:text-gray-400 mb-4">Loading PDF...</p>
-              {pdfUrl && (
-                <button
-                  onClick={() => window.open(pdfUrl, '_blank')}
-                  className="px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  Open in New Tab
-                </button>
-              )}
+            <div className="flex items-center justify-center h-full w-full bg-surface-container dark:bg-gray-800">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
-          ) : isPDF ? (
-            doc.url && doc.url !== '#' && pdfUrl ? (
-              <div 
-                className="bg-white dark:bg-gray-800 shadow-lg w-full h-full flex items-center justify-center overflow-auto relative"
-                style={{ minHeight: '600px' }}
-              >
-                <div
-                  style={{
-                    transform: scale !== 1 || rotation !== 0 ? `scale(${scale}) rotate(${rotation}deg)` : 'none',
-                    transformOrigin: 'center',
-                    transition: 'transform 0.2s ease',
-                    width: '100%',
-                    height: '100%',
-                    minHeight: '600px',
-                    position: 'relative'
-                  }}
-                >
-                  {/* Try multiple approaches for better compatibility */}
-                  {/* Approach 1: Direct iframe with blob URL */}
-                  <iframe
-                    key={`iframe-${pdfUrl}`}
-                    src={pdfUrl}
-                    width="100%"
-                    height="100%"
-                    className="border-0"
-                    title={doc.name}
-                    style={{
-                      minHeight: '600px',
-                      display: 'block',
-                      width: '100%',
-                      height: '100%'
-                    }}
-                    onError={(e) => {
-                      console.error('PDF iframe failed to load:', e);
-                      // Try fallback approach
-                      setError('PDF viewer not available. Click download to view the file.');
-                    }}
-                    onLoad={() => {
-                      console.log('PDF iframe loaded successfully');
-                      setIsLoading(false);
-                    }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="text-center p-8">
-                <p className="text-surface-on-variant dark:text-gray-400 mb-4">
-                  PDF file not available. This is a placeholder document.
-                </p>
-                <p className="text-sm text-surface-on-variant dark:text-gray-400 mb-4">
-                  In a real application, this would display the uploaded PDF file.
-                </p>
-              </div>
-            )
-          ) : (
+          ) : isPDF && pages.length > 0 ? (
+            <div className="p-4 flex flex-col items-center">
+              {pages.map((page, index) => (
+                <PDFPageCanvas 
+                  key={index} 
+                  page={page} 
+                  pageIndex={index}
+                  scale={scale}
+                  rotation={rotation}
+                />
+              ))}
+            </div>
+          ) : !isPDF ? (
             <div className="text-center p-8">
               <p className="text-surface-on-variant dark:text-gray-400 mb-4">
                 Preview not available for this file type. Please download to view.
               </p>
               <button
                 onClick={handleDownload}
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+                className="px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors"
               >
                 Download File
               </button>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
