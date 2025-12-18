@@ -2220,13 +2220,17 @@ const Dashboard: React.FC<DashboardProps> = ({
                                  setIsPDFViewerOpen(true);
                                }
                              }}
+                             style={{ overflow: 'hidden' }}
                            >
                              {isPDF ? (
                                <iframe
-                                 src={doc.url}
+                                 src={doc.url + '#toolbar=0&navpanes=0&scrollbar=0'}
                                  className="w-full h-full border-0"
                                  title={doc.name}
-                                 style={{ pointerEvents: 'none' }}
+                                 style={{ 
+                                   pointerEvents: 'none',
+                                   overflow: 'hidden'
+                                 }}
                                />
                              ) : (
                                <div className="p-8 flex flex-col items-center justify-center text-center">
