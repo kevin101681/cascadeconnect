@@ -235,10 +235,10 @@ const Layout: React.FC<LayoutProps> = ({
                       // Popover card styling - CSS will handle dark mode
                       userButtonPopoverCard: '!bg-surface dark:!bg-gray-800 !rounded-xl !border !border-surface-outline-variant dark:!border-gray-700 !shadow-elevation-2 !p-2',
                       
-                      // User info section
-                      userButtonPopoverHeader: '!px-3 !py-2 !border-b !border-surface-outline-variant/50 dark:!border-gray-700/50 !bg-transparent',
-                      userButtonPopoverHeaderTitle: '!text-sm !font-medium !text-surface-on dark:!text-white',
-                      userButtonPopoverHeaderSubtitle: '!text-xs !text-surface-on-variant dark:!text-white',
+                      // User info section - Hidden
+                      userButtonPopoverHeader: '!hidden',
+                      userButtonPopoverHeaderTitle: '!hidden',
+                      userButtonPopoverHeaderSubtitle: '!hidden',
                       
                       // Action buttons styling
                       userButtonPopoverActions: '!py-1 !bg-transparent',

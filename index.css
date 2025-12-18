@@ -86,11 +86,9 @@ html.dark .cl-userButtonPopoverCard {
     border-color: #374151 !important; /* dark:border-gray-700 */
 }
 
-/* Header Section - Light Mode */
+/* Header Section - Hidden */
 .cl-userButtonPopoverHeader {
-    padding: 12px !important;
-    border-bottom: 1px solid #c0c8cc !important; /* surface-outline-variant */
-    background-color: #ffffff !important; /* surface */
+    display: none !important;
 }
 
 .cl-userButtonPopoverHeader > *,
