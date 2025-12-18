@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, forwardRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import HTMLFlipBook from 'react-pageflip';
+import { X } from 'lucide-react';
 import { HomeownerDocument } from '../types';
 
 // Set up PDF.js worker - use the version that matches react-pdf's internal pdfjs
@@ -201,6 +202,16 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
       onClick={onClose}
       style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
     >
+      {/* Close FAB */}
+      <button
+        onClick={onClose}
+        className="fixed top-6 right-6 z-[1001] bg-primary hover:bg-primary/90 text-primary-on rounded-full p-3 shadow-elevation-3 transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+        title="Close"
+        aria-label="Close PDF viewer"
+      >
+        <X className="h-6 w-6" />
+      </button>
+
       <div
         className="flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
