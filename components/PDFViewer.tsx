@@ -59,7 +59,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
   const [rotation, setRotation] = useState(0);
   const [pages, setPages] = useState<any[]>([]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
-  const [isFlipping, setIsFlipping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -101,22 +100,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
   };
   
   const handlePreviousPage = () => {
-    if (currentPageIndex > 0 && !isFlipping) {
-      setIsFlipping(true);
-      setTimeout(() => {
-        setCurrentPageIndex(prev => prev - 1);
-        setIsFlipping(false);
-      }, 300);
+    if (currentPageIndex > 0) {
+      setCurrentPageIndex(prev => prev - 1);
     }
   };
   
   const handleNextPage = () => {
-    if (currentPageIndex < pages.length - 1 && !isFlipping) {
-      setIsFlipping(true);
-      setTimeout(() => {
-        setCurrentPageIndex(prev => prev + 1);
-        setIsFlipping(false);
-      }, 300);
+    if (currentPageIndex < pages.length - 1) {
+      setCurrentPageIndex(prev => prev + 1);
     }
   };
 
@@ -255,7 +246,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
               <>
                 <button
                   onClick={handlePreviousPage}
-                  disabled={currentPageIndex === 0 || isFlipping}
+                  disabled={currentPageIndex === 0}
                   className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Previous Page"
                 >
@@ -266,7 +257,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                 </span>
                 <button
                   onClick={handleNextPage}
-                  disabled={currentPageIndex === pages.length - 1 || isFlipping}
+                  disabled={currentPageIndex === pages.length - 1}
                   className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Next Page"
                 >
@@ -340,15 +331,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
           ) : isPDF && pages.length > 0 ? (
-            <div className="p-4 flex flex-col items-center relative" style={{ perspective: '1000px' }}>
-              <div
-                key={currentPageIndex}
-                className={`w-full flex justify-center ${isFlipping ? 'animate-[page-flip_0.6s_ease-in-out]' : 'animate-[page-flip-in_0.6s_ease-in-out]'}`}
-                style={{
-                  transformStyle: 'preserve-3d',
-                  backfaceVisibility: 'hidden'
-                }}
-              >
+            <div className="p-4 flex flex-col items-center relative">
+              <div key={currentPageIndex} className="w-full flex justify-center">
                 <div className="w-full">
                   <PDFPageCanvas 
                     page={pages[currentPageIndex]} 
