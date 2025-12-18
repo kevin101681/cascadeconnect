@@ -2160,7 +2160,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         )}
 
         {/* DOCUMENTS MODAL */}
-        {showDocsModal && (
+        {showDocsModal && createPortal(
           <div 
             className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
             onClick={(e) => {
@@ -2274,7 +2274,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                  </div>
                </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         {/* INVITE MODAL */}
