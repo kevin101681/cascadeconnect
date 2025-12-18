@@ -262,6 +262,15 @@ export default {
           '0%': { transform: 'translateX(-50px)', opacity: '0' },
           '100%': { transform: 'translateX(0)', opacity: '1' },
         },
+        'page-flip': {
+          '0%': { transform: 'perspective(1000px) rotateY(0deg)', opacity: '1' },
+          '50%': { transform: 'perspective(1000px) rotateY(-90deg)', opacity: '0.5' },
+          '100%': { transform: 'perspective(1000px) rotateY(0deg)', opacity: '1' },
+        },
+        'page-flip-in': {
+          '0%': { transform: 'perspective(1000px) rotateY(90deg)', opacity: '0' },
+          '100%': { transform: 'perspective(1000px) rotateY(0deg)', opacity: '1' },
+        },
       },
       animation: {
         // Cascade Connect animations
@@ -287,6 +296,8 @@ export default {
         'expand-sections': 'expandSections 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards 1.0s',
         'slide-up': 'slideUp 0.8s cubic-bezier(0.2, 0.0, 0, 1.0) both',
         'slide-down': 'slideDown 1s cubic-bezier(0.2, 0.0, 0, 1.0) forwards',
+        'page-flip': 'page-flip 0.6s ease-in-out',
+        'page-flip-in': 'page-flip-in 0.6s ease-in-out',
         'slide-down-exit': 'slideDownExit 0.6s cubic-bezier(0.2, 0.0, 0, 1.0) forwards',
         'dialog-enter': 'dialogEnter 0.4s cubic-bezier(0.05, 0.7, 0.1, 1.0) forwards',
         'dialog-exit': 'dialogExit 0.3s cubic-bezier(0.3, 0.0, 0.8, 0.15) forwards',

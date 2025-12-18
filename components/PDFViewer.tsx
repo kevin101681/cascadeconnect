@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Download, ZoomIn, ZoomOut, RotateCw, FileText, AlertCircle } from 'lucide-react';
+import { X, Download, ZoomIn, ZoomOut, RotateCw, FileText, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { HomeownerDocument } from '../types';
 
 interface PDFViewerProps {
@@ -58,6 +58,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
   const [scale, setScale] = useState(1.5);
   const [rotation, setRotation] = useState(0);
   const [pages, setPages] = useState<any[]>([]);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  const [isFlipping, setIsFlipping] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,6 +77,26 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
 
   const handleRotate = () => {
     setRotation(prev => (prev + 90) % 360);
+  };
+  
+  const handlePreviousPage = () => {
+    if (currentPageIndex > 0 && !isFlipping) {
+      setIsFlipping(true);
+      setTimeout(() => {
+        setCurrentPageIndex(prev => prev - 1);
+        setIsFlipping(false);
+      }, 300);
+    }
+  };
+  
+  const handleNextPage = () => {
+    if (currentPageIndex < pages.length - 1 && !isFlipping) {
+      setIsFlipping(true);
+      setTimeout(() => {
+        setCurrentPageIndex(prev => prev + 1);
+        setIsFlipping(false);
+      }, 300);
+    }
   };
 
   const handleDownload = () => {
@@ -156,6 +178,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
           }
           const loadedPages = await Promise.all(pagePromises);
           setPages(loadedPages);
+          setCurrentPageIndex(0);
           setIsLoading(false);
         } catch (err: any) {
           console.error("PDF Load Error", err);
@@ -212,8 +235,28 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
           
           {/* Controls */}
           <div className="flex items-center gap-2">
-            {isPDF && (
+            {isPDF && pages.length > 0 && (
               <>
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={currentPageIndex === 0 || isFlipping}
+                  className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Previous Page"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <span className="text-sm text-surface-on-variant dark:text-gray-400 min-w-[4rem] text-center">
+                  {currentPageIndex + 1} / {totalPages}
+                </span>
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPageIndex === pages.length - 1 || isFlipping}
+                  className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Next Page"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+                <div className="w-px h-6 bg-surface-outline-variant dark:bg-gray-600 mx-1" />
                 <button
                   onClick={handleZoomOut}
                   className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
@@ -281,16 +324,22 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             </div>
           ) : isPDF && pages.length > 0 ? (
-            <div className="p-4 flex flex-col items-center">
-              {pages.map((page, index) => (
+            <div className="p-4 flex flex-col items-center relative" style={{ perspective: '1000px' }}>
+              <div
+                key={currentPageIndex}
+                className={`w-full flex justify-center ${isFlipping ? 'animate-[page-flip_0.6s_ease-in-out]' : 'animate-[page-flip-in_0.6s_ease-in-out]'}`}
+                style={{
+                  transformStyle: 'preserve-3d',
+                  backfaceVisibility: 'hidden'
+                }}
+              >
                 <PDFPageCanvas 
-                  key={index} 
-                  page={page} 
-                  pageIndex={index}
+                  page={pages[currentPageIndex]} 
+                  pageIndex={currentPageIndex}
                   scale={scale}
                   rotation={rotation}
                 />
-              ))}
+              </div>
             </div>
           ) : !isPDF ? (
             <div className="text-center p-8">

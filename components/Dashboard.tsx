@@ -120,6 +120,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [selectedDocument, setSelectedDocument] = useState<HomeownerDocument | null>(null);
   const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false);
   
+  // Manual page viewer state
+  const [manualCurrentPage, setManualCurrentPage] = useState(0);
+  const [manualIsFlipping, setManualIsFlipping] = useState(false);
+  
   // Description expand popup state
   const [expandedDescription, setExpandedDescription] = useState<Claim | null>(null);
   
@@ -199,6 +203,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Punch List App State
   const [showPunchListApp, setShowPunchListApp] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
+  const [manualCurrentPage, setManualCurrentPage] = useState(0);
+  const [manualIsFlipping, setManualIsFlipping] = useState(false);
 
   // Debug: Log modal state changes
   useEffect(() => {
@@ -1529,7 +1535,10 @@ const Dashboard: React.FC<DashboardProps> = ({
       {showManualModal && createPortal(
         <div 
           className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
-          onClick={() => setShowManualModal(false)}
+          onClick={() => {
+            setShowManualModal(false);
+            setManualCurrentPage(0);
+          }}
         >
           {(() => {
             console.log('Homeowner Manual Modal opened. Images:', HOMEOWNER_MANUAL_IMAGES);
@@ -1553,34 +1562,81 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Content - Manual Images */}
             <div className="flex-1 overflow-y-auto p-6 bg-gray-100 dark:bg-gray-900">
               {HOMEOWNER_MANUAL_IMAGES && HOMEOWNER_MANUAL_IMAGES.length > 0 ? (
-                <div className="space-y-4">
-                  {HOMEOWNER_MANUAL_IMAGES.map((imagePath: string, index: number) => (
-                    <div key={index} className="w-full">
+                <div className="flex flex-col items-center relative" style={{ perspective: '1000px' }}>
+                  {/* Navigation Controls */}
+                  <div className="flex items-center gap-4 mb-4">
+                    <button
+                      onClick={() => {
+                        if (manualCurrentPage > 0 && !manualIsFlipping) {
+                          setManualIsFlipping(true);
+                          setTimeout(() => {
+                            setManualCurrentPage(prev => prev - 1);
+                            setManualIsFlipping(false);
+                          }, 300);
+                        }
+                      }}
+                      disabled={manualCurrentPage === 0 || manualIsFlipping}
+                      className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Previous Page"
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </button>
+                    <span className="text-sm text-surface-on-variant dark:text-gray-400 min-w-[4rem] text-center">
+                      {manualCurrentPage + 1} / {HOMEOWNER_MANUAL_IMAGES.length}
+                    </span>
+                    <button
+                      onClick={() => {
+                        if (manualCurrentPage < HOMEOWNER_MANUAL_IMAGES.length - 1 && !manualIsFlipping) {
+                          setManualIsFlipping(true);
+                          setTimeout(() => {
+                            setManualCurrentPage(prev => prev + 1);
+                            setManualIsFlipping(false);
+                          }, 300);
+                        }
+                      }}
+                      disabled={manualCurrentPage === HOMEOWNER_MANUAL_IMAGES.length - 1 || manualIsFlipping}
+                      className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Next Page"
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </button>
+                  </div>
+                  
+                  {/* Current Page with Flip Animation */}
+                  <div
+                    key={manualCurrentPage}
+                    className={`w-full flex justify-center ${manualIsFlipping ? 'animate-[page-flip_0.6s_ease-in-out]' : 'animate-[page-flip-in_0.6s_ease-in-out]'}`}
+                    style={{
+                      transformStyle: 'preserve-3d',
+                      backfaceVisibility: 'hidden'
+                    }}
+                  >
+                    <div className="w-full">
                       <img
-                        src={imagePath}
-                        loading="lazy"
+                        src={HOMEOWNER_MANUAL_IMAGES[manualCurrentPage]}
+                        loading="eager"
                         decoding="async"
-                        alt={`Homeowner Manual Page ${index + 1}`}
+                        alt={`Homeowner Manual Page ${manualCurrentPage + 1}`}
                         className="w-full h-auto rounded-lg shadow-lg"
                         onError={(e) => {
-                          console.error(`Failed to load manual image: ${imagePath}`);
+                          console.error(`Failed to load manual image: ${HOMEOWNER_MANUAL_IMAGES[manualCurrentPage]}`);
                           const target = e.target as HTMLImageElement;
                           const parent = target.parentElement;
                           if (parent) {
                             parent.innerHTML = `
                               <div class="w-full p-8 bg-surface-container dark:bg-gray-700 rounded-lg shadow-lg text-center">
-                                <p class="text-surface-on-variant dark:text-gray-400 mb-2">Failed to load page ${index + 1}</p>
-                                <p class="text-xs text-surface-on-variant dark:text-gray-500">Path: ${imagePath}</p>
+                                <p class="text-surface-on-variant dark:text-gray-400 mb-2">Failed to load page ${manualCurrentPage + 1}</p>
+                                <p class="text-xs text-surface-on-variant dark:text-gray-500">Path: ${HOMEOWNER_MANUAL_IMAGES[manualCurrentPage]}</p>
                               </div>
                             `;
                           }
                         }}
                         onLoad={() => {
-                          console.log(`Successfully loaded manual image: ${imagePath}`);
+                          console.log(`Successfully loaded manual image: ${HOMEOWNER_MANUAL_IMAGES[manualCurrentPage]}`);
                         }}
                       />
                     </div>
-                  ))}
+                  </div>
                 </div>
               ) : (
                 <div className="w-full p-8 bg-surface-container dark:bg-gray-700 rounded-lg shadow-lg text-center">

@@ -1527,6 +1527,175 @@ export const Dashboard = React.memo<DashboardProps>(({
                     onClose={() => setIsAllItemsOpen(false)}
                 />
             )}
+
+            {/* Email Both Docs Modal */}
+            {showEmailBothModal && createPortal(
+                <div 
+                    className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+                    onClick={() => setShowEmailBothModal(false)}
+                >
+                    <div 
+                        className="bg-surface dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden flex flex-col animate-dialog-enter"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
+                            <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">Email Both Documents</h2>
+                            <button 
+                                onClick={() => setShowEmailBothModal(false)} 
+                                className="p-2 rounded-full hover:bg-surface-container dark:hover:bg-gray-600 transition-colors"
+                            >
+                                <X className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
+                            </button>
+                        </div>
+                        <div className="p-6 flex-1 overflow-y-auto space-y-4 bg-surface dark:bg-gray-800">
+                            <div>
+                                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Subject</label>
+                                <input
+                                    type="text"
+                                    className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                                    value={emailBothSubject}
+                                    onChange={e => setEmailBothSubject(e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Message</label>
+                                <textarea 
+                                    rows={6}
+                                    className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
+                                    value={emailBothBody}
+                                    onChange={e => setEmailBothBody(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-2 bg-surface-container dark:bg-gray-700">
+                            <button
+                                onClick={() => setShowEmailBothModal(false)}
+                                className="px-4 py-2 rounded-lg bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-500 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    if (!emailBothSubject || !emailBothBody) {
+                                        alert('Please fill in both subject and message.');
+                                        return;
+                                    }
+                                    
+                                    setIsSendingEmailBoth(true);
+                                    try {
+                                        const { sendEmail } = await import('../../../services/emailService');
+                                        const { UserRole } = await import('../../../types');
+                                        
+                                        const getSafeName = () => {
+                                            const name = project.fields?.[0]?.value || "Project";
+                                            return name.replace(/[^a-z0-9]/gi, '_');
+                                        };
+                                        
+                                        // Generate PDFs
+                                        const reportRes = await generatePDFWithMetadata({ project, locations }, companyLogo, project.reportMarks);
+                                        const reportBlob = reportRes.doc.output('blob');
+                                        const reportFilename = `${getSafeName()} - New Home Completion List.pdf`;
+                                        
+                                        const signOffBlobUrl = await generateSignOffPDF(project, SIGN_OFF_TITLE, signOffTemplates[0], companyLogo, project.signOffImage, project.signOffStrokes, 800, undefined, 16);
+                                        const signOffBlob = await fetch(signOffBlobUrl).then(r => r.blob());
+                                        const signOffFilename = `${getSafeName()} - Sign Off Sheet.pdf`;
+                                        
+                                        // Convert blobs to base64 for email attachments
+                                        const reportBase64 = await new Promise<string>((resolve) => {
+                                            const reader = new FileReader();
+                                            reader.onloadend = () => {
+                                                const base64 = (reader.result as string).split(',')[1];
+                                                resolve(base64);
+                                            };
+                                            reader.readAsDataURL(reportBlob);
+                                        });
+                                        
+                                        const signOffBase64 = await new Promise<string>((resolve) => {
+                                            const reader = new FileReader();
+                                            reader.onloadend = () => {
+                                                const base64 = (reader.result as string).split(',')[1];
+                                                resolve(base64);
+                                            };
+                                            reader.readAsDataURL(signOffBlob);
+                                        });
+                                        
+                                        // Get homeowner email from project fields
+                                        const homeownerEmailField = project.fields?.find(f => f.label === 'Email Address' || f.icon === 'Mail');
+                                        const homeownerEmail = homeownerEmailField?.value || '';
+                                        
+                                        if (!homeownerEmail) {
+                                            alert('Homeowner email not found. Please ensure the email address is set in the project fields.');
+                                            setIsSendingEmailBoth(false);
+                                            return;
+                                        }
+                                        
+                                        const attachments = [
+                                            {
+                                                filename: reportFilename,
+                                                content: reportBase64,
+                                                contentType: 'application/pdf'
+                                            },
+                                            {
+                                                filename: signOffFilename,
+                                                content: signOffBase64,
+                                                contentType: 'application/pdf'
+                                            }
+                                        ];
+                                        
+                                        // Send email via SendGrid
+                                        await sendEmail({
+                                            to: homeownerEmail,
+                                            subject: emailBothSubject,
+                                            body: emailBothBody,
+                                            fromName: 'Cascade Builder Services',
+                                            fromRole: UserRole.ADMIN,
+                                            attachments: attachments
+                                        });
+                                        
+                                        // Create message in app if callback is provided
+                                        if (onCreateMessage) {
+                                            const homeownerIdField = project.fields?.find(f => f.id === 'homeownerId');
+                                            const homeownerId = homeownerIdField?.value || '';
+                                            
+                                            if (homeownerId) {
+                                                await onCreateMessage(homeownerId, emailBothSubject, emailBothBody, attachments);
+                                            } else {
+                                                console.warn('Homeowner ID not found in project fields');
+                                            }
+                                        }
+                                        
+                                        console.log('✅ Email sent successfully via SendGrid');
+                                        alert('Email sent successfully!');
+                                        setShowEmailBothModal(false);
+                                        setEmailBothSubject('');
+                                        setEmailBothBody('');
+                                    } catch (error) {
+                                        console.error("Failed to email both docs:", error);
+                                        alert('Failed to send email. Please try again or contact support.');
+                                    } finally {
+                                        setIsSendingEmailBoth(false);
+                                    }
+                                }}
+                                disabled={isSendingEmailBoth || !emailBothSubject || !emailBothBody}
+                                className="px-4 py-2 rounded-lg bg-primary text-primary-on hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                                {isSendingEmailBoth ? (
+                                    <>
+                                        <div className="animate-spin h-4 w-4 border-2 border-primary-on border-t-transparent rounded-full" />
+                                        Sending...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send size={16} />
+                                        Send
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
         </div>
     );
 });
