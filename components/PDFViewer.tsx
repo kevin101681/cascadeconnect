@@ -3,8 +3,8 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import HTMLFlipBook from 'react-pageflip';
 import { HomeownerDocument } from '../types';
 
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Set up PDF.js worker - use CDN for compatibility
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface PDFViewerProps {
   document: HomeownerDocument;
@@ -75,7 +75,7 @@ PDFPage.displayName = 'PDFPage';
 
 const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose }) => {
   const [numPages, setNumPages] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
+  const [documentLoading, setDocumentLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const flipBookRef = useRef<any>(null);
@@ -92,8 +92,9 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
 
     const preparePdfUrl = async () => {
       try {
-        setLoading(true);
+        setDocumentLoading(true);
         setError(null);
+        setNumPages(0);
 
         // Cleanup previous blob URL if exists
         if (blobUrlRef.current) {
@@ -131,7 +132,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
       } catch (err: any) {
         console.error('PDF preparation error:', err);
         setError(err.message || 'Failed to prepare PDF');
-        setLoading(false);
+        setDocumentLoading(false);
       }
     };
 
@@ -147,15 +148,16 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
   }, [isOpen, doc.url]);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+    console.log('PDF loaded successfully, numPages:', numPages);
     setNumPages(numPages);
-    setLoading(false);
+    setDocumentLoading(false);
     setError(null);
   };
 
   const onDocumentLoadError = (error: Error) => {
     console.error('PDF load error:', error);
     setError(error.message || 'Failed to load PDF');
-    setLoading(false);
+    setDocumentLoading(false);
   };
 
   if (!isOpen) {
@@ -173,19 +175,13 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
         onClick={(e) => e.stopPropagation()}
         style={{ width: '100%', height: '100%' }}
       >
-        {loading && (
-          <div className="text-white">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-          </div>
-        )}
-
         {error && (
           <div className="bg-red-500 text-white p-4 rounded-lg">
             <p>{error}</p>
           </div>
         )}
 
-        {pdfUrl && !loading && !error && (
+        {pdfUrl && !error && (
           <Document
             file={pdfUrl}
             onLoadSuccess={onDocumentLoadSuccess}
@@ -193,27 +189,30 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
             loading={
               <div className="text-white">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                <p className="mt-4">Loading PDF...</p>
               </div>
             }
           >
-            <HTMLFlipBook
-              ref={flipBookRef}
-              width={PAGE_WIDTH}
-              height={PAGE_HEIGHT}
-              size="fixed"
-              showCover={false}
-              className="pdf-flipbook"
-              {...({} as any)}
-            >
-              {Array.from(new Array(numPages), (el, index) => (
-                <PDFPage
-                  key={`page_${index + 1}`}
-                  pageNumber={index + 1}
-                  width={PAGE_WIDTH}
-                  height={PAGE_HEIGHT}
-                />
-              ))}
-            </HTMLFlipBook>
+            {!documentLoading && numPages > 0 && (
+              <HTMLFlipBook
+                ref={flipBookRef}
+                width={PAGE_WIDTH}
+                height={PAGE_HEIGHT}
+                size="fixed"
+                showCover={false}
+                className="pdf-flipbook"
+                {...({} as any)}
+              >
+                {Array.from(new Array(numPages), (el, index) => (
+                  <PDFPage
+                    key={`page_${index + 1}`}
+                    pageNumber={index + 1}
+                    width={PAGE_WIDTH}
+                    height={PAGE_HEIGHT}
+                  />
+                ))}
+              </HTMLFlipBook>
+            )}
           </Document>
         )}
       </div>
