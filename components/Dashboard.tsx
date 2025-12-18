@@ -2280,7 +2280,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                </>
                              )}
                              
-                             {/* Delete */}
+                             {/* Delete - Show for all document types when admin */}
                              {isAdminAccount && onDeleteDocument && (
                                <button
                                  type="button"

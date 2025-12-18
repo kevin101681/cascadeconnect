@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, forwardRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import HTMLFlipBook from 'react-pageflip';
-import { X } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { HomeownerDocument } from '../types';
 
 // Set up PDF.js worker - use the version that matches react-pdf's internal pdfjs
@@ -83,6 +83,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
   const [error, setError] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pageDimensions, setPageDimensions] = useState({ width: 800, height: 1200 });
+  const [currentPage, setCurrentPage] = useState(1);
   const flipBookRef = useRef<any>(null);
   const blobUrlRef = useRef<string | null>(null);
 
@@ -184,7 +185,50 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
     setNumPages(numPages);
     setDocumentLoading(false);
     setError(null);
+    setCurrentPage(1);
   };
+
+  const handlePrevPage = () => {
+    if (flipBookRef.current && currentPage > 1) {
+      flipBookRef.current.pageFlip().flipPrev();
+      setCurrentPage(prev => prev - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (flipBookRef.current && currentPage < numPages) {
+      flipBookRef.current.pageFlip().flipNext();
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  // Listen for page changes from the flipbook
+  useEffect(() => {
+    if (!flipBookRef.current || numPages === 0) return;
+
+    const flipBook = flipBookRef.current.pageFlip();
+    if (!flipBook) return;
+
+    const handleFlip = (e: any) => {
+      // The flip event provides the new page index (0-based)
+      const newPage = (e?.data ?? flipBook.getCurrentPageIndex()) + 1;
+      setCurrentPage(newPage);
+    };
+
+    try {
+      flipBook.on('flip', handleFlip);
+    } catch (err) {
+      console.warn('Could not attach flip event listener:', err);
+    }
+
+    return () => {
+      try {
+        flipBook.off('flip', handleFlip);
+      } catch (err) {
+        // Ignore cleanup errors
+      }
+    };
+  }, [numPages]);
 
   const onDocumentLoadError = (error: Error) => {
     console.error('PDF load error:', error);
@@ -236,7 +280,37 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
             }
           >
             {!documentLoading && numPages > 0 && (
-              <div style={{ maxWidth: '100%', maxHeight: '100%', overflow: 'hidden' }}>
+              <div style={{ maxWidth: '100%', maxHeight: '100%', overflow: 'hidden', position: 'relative' }}>
+                {/* Left Arrow Indicator */}
+                {numPages > 1 && currentPage > 1 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePrevPage();
+                    }}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-[1002] bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 text-surface-on dark:text-gray-100 rounded-full p-3 shadow-elevation-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center backdrop-blur-sm"
+                    title="Previous page"
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                )}
+                
+                {/* Right Arrow Indicator */}
+                {numPages > 1 && currentPage < numPages && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNextPage();
+                    }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-[1002] bg-white/90 dark:bg-gray-800/90 hover:bg-white dark:hover:bg-gray-800 text-surface-on dark:text-gray-100 rounded-full p-3 shadow-elevation-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center backdrop-blur-sm"
+                    title="Next page"
+                    aria-label="Next page"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                )}
+
                 <HTMLFlipBook
                   ref={flipBookRef}
                   width={pageDimensions.width}
