@@ -935,7 +935,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate w-full">Description</span>
             </div>
             <div className="flex justify-start items-center flex-shrink-0 w-fit min-w-0">
-              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Classification</span>
+              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Class</span>
             </div>
             {(isAdmin || isBuilder) && !effectiveHomeowner && (
               <div className="flex justify-start items-center flex-shrink-0">
@@ -998,7 +998,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   }}
                 >
                   <div 
-                    className={`flex flex-wrap items-center gap-2 ${isClosed ? 'opacity-70' : ''}`}
+                    className={`flex flex-nowrap items-center gap-2 overflow-x-auto ${isClosed ? 'opacity-70' : ''}`}
                   >
                     {/* Claim # */}
                     <div className="flex justify-start items-center flex-shrink-0">
