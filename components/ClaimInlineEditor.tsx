@@ -1069,6 +1069,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
         attachments={claim.attachments || []}
         initialIndex={imageViewerIndex}
         onClose={() => setImageViewerOpen(false)}
+        readOnly={isReadOnly}
         onUpdateAttachment={(index, updatedUrl) => {
           const updatedAttachments = [...(claim.attachments || [])];
           const imageAttachments = updatedAttachments.filter(a => a.type === 'IMAGE' && a.url);

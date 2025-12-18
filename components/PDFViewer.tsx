@@ -71,14 +71,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-surface-outline-variant">
+        <div className="flex items-center justify-between p-4 border-b border-surface-outline-variant dark:border-gray-700">
           <div className="flex items-center gap-3 min-w-0 flex-1">
-            <div className="p-2 bg-red-50 text-red-600 rounded">
+            <div className="p-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded">
               <FileText className="h-5 w-5" />
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-medium text-surface-on truncate">{doc.name}</h2>
-              <p className="text-sm text-surface-on-variant">
+              <h2 className="text-lg font-medium text-surface-on dark:text-gray-100 truncate">{doc.name}</h2>
+              <p className="text-sm text-surface-on-variant dark:text-gray-400">
                 Uploaded by {doc.uploadedBy} • {new Date(doc.uploadDate).toLocaleDateString()}
               </p>
             </div>
@@ -90,24 +90,24 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
               <>
                 <button
                   onClick={handleZoomOut}
-                  className="p-2 rounded-lg hover:bg-surface-container text-surface-on-variant hover:text-surface-on transition-colors"
+                  className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
                   title="Zoom Out"
                 >
                   <ZoomOut className="h-5 w-5" />
                 </button>
-                <span className="text-sm text-surface-on-variant min-w-[3rem] text-center">
+                <span className="text-sm text-surface-on-variant dark:text-gray-400 min-w-[3rem] text-center">
                   {Math.round(scale * 100)}%
                 </span>
                 <button
                   onClick={handleZoomIn}
-                  className="p-2 rounded-lg hover:bg-surface-container text-surface-on-variant hover:text-surface-on transition-colors"
+                  className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
                   title="Zoom In"
                 >
                   <ZoomIn className="h-5 w-5" />
                 </button>
                 <button
                   onClick={handleRotate}
-                  className="p-2 rounded-lg hover:bg-surface-container text-surface-on-variant hover:text-surface-on transition-colors"
+                  className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
                   title="Rotate"
                 >
                   <RotateCw className="h-5 w-5" />
@@ -116,14 +116,14 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
             )}
             <button
               onClick={handleDownload}
-              className="p-2 rounded-lg hover:bg-surface-container text-surface-on-variant hover:text-surface-on transition-colors"
+              className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
               title="Download"
             >
               <Download className="h-5 w-5" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-surface-container text-surface-on-variant hover:text-surface-on transition-colors"
+              className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
               title="Close"
             >
               <X className="h-5 w-5" />
@@ -132,10 +132,10 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
         </div>
 
         {/* PDF Content */}
-        <div className="flex-1 overflow-auto bg-gray-100 p-4 flex items-center justify-center">
+        <div className="flex-1 overflow-auto bg-gray-100 dark:bg-gray-900 p-4 flex items-center justify-center">
           {error ? (
             <div className="text-center p-8">
-              <p className="text-red-600 mb-4">{error}</p>
+              <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
               <button
                 onClick={handleDownload}
                 className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
@@ -146,7 +146,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
           ) : isPDF ? (
             doc.url && doc.url !== '#' ? (
               <div 
-                className="bg-white dark:bg-gray-800 shadow-lg w-full h-full flex items-center justify-center overflow-hidden"
+                className="bg-white dark:bg-gray-800 shadow-lg w-full h-full flex items-center justify-center overflow-auto"
                 style={{
                   transform: `scale(${scale}) rotate(${rotation}deg)`,
                   transformOrigin: 'center',
@@ -156,49 +156,41 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                 {doc.url.startsWith('data:') ? (
                   <iframe
                     src={doc.url}
-                    className="w-full h-full min-h-[600px] border-0"
+                    className="w-full h-full min-h-[600px] border-0 bg-white dark:bg-gray-800"
                     title={doc.name}
                     onError={() => setError('Failed to load PDF. Please try downloading instead.')}
+                    onLoad={() => {
+                      console.log('PDF iframe loaded successfully');
+                    }}
                   />
                 ) : (
-                  <object
-                    data={doc.url}
-                    type="application/pdf"
-                    className="w-full h-full min-h-[600px]"
-                    onError={() => setError('Failed to load PDF. Please try downloading instead.')}
-                  >
-                    <embed
-                      src={doc.url}
-                      type="application/pdf"
-                      className="w-full h-full min-h-[600px]"
-                    />
-                    <div className="text-center p-8">
-                      <p className="text-surface-on-variant mb-4">
-                        Your browser doesn't support PDF preview. Please download the file to view it.
-                      </p>
-                      <button
-                        onClick={handleDownload}
-                        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
-                      >
-                        Download PDF
-                      </button>
-                    </div>
-                  </object>
+                  <iframe
+                    src={doc.url}
+                    className="w-full h-full min-h-[600px] border-0 bg-white dark:bg-gray-800"
+                    title={doc.name}
+                    onError={() => {
+                      console.error('PDF iframe failed to load');
+                      setError('Failed to load PDF. Please try downloading instead.');
+                    }}
+                    onLoad={() => {
+                      console.log('PDF iframe loaded successfully');
+                    }}
+                  />
                 )}
               </div>
             ) : (
               <div className="text-center p-8">
-                <p className="text-surface-on-variant mb-4">
+                <p className="text-surface-on-variant dark:text-gray-400 mb-4">
                   PDF file not available. This is a placeholder document.
                 </p>
-                <p className="text-sm text-surface-on-variant mb-4">
+                <p className="text-sm text-surface-on-variant dark:text-gray-400 mb-4">
                   In a real application, this would display the uploaded PDF file.
                 </p>
               </div>
             )
           ) : (
             <div className="text-center p-8">
-              <p className="text-surface-on-variant mb-4">
+              <p className="text-surface-on-variant dark:text-gray-400 mb-4">
                 Preview not available for this file type. Please download to view.
               </p>
               <button

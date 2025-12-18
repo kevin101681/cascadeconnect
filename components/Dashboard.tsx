@@ -800,16 +800,15 @@ const Dashboard: React.FC<DashboardProps> = ({
           {title}
         </h3>
         {showNewClaimButton && (
-          <Button
+          <button
             onClick={() => {
               setShowNewClaimModal(true);
             }}
-            variant="outlined"
-            icon={<Plus className="h-4 w-4" />}
-            className="!h-9 !px-4"
+            className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-primary text-primary-on text-sm font-medium transition-all hover:bg-primary/90 dark:hover:bg-primary/80"
           >
+            <Plus className="h-4 w-4" />
             New Claim
-          </Button>
+          </button>
         )}
       </div>
       <motion.ul 

@@ -17,7 +17,8 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   attachments,
   initialIndex,
   onClose,
-  onUpdateAttachment
+  onUpdateAttachment,
+  readOnly = false
 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -753,7 +754,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
         </div>
 
         {/* Toolbar */}
-        {fabricLoaded && (
+        {fabricLoaded && !readOnly && (
           <div className="flex items-center justify-center gap-2 p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50">
             <div className="flex items-center gap-2">
               <button
@@ -986,16 +987,18 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
           )}
           
           {/* Save Button */}
-          <div className="ml-auto">
-            <Button 
-              variant="filled" 
-              onClick={handleSave} 
-              icon={<Save className="h-4 w-4" />}
-              disabled={!fabricCanvasRef.current || !onUpdateAttachment}
-            >
-              Save Changes
-            </Button>
-          </div>
+          {!readOnly && (
+            <div className="ml-auto">
+              <Button 
+                variant="filled" 
+                onClick={handleSave} 
+                icon={<Save className="h-4 w-4" />}
+                disabled={!fabricCanvasRef.current || !onUpdateAttachment}
+              >
+                Save Changes
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </div>,
