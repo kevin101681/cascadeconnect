@@ -145,6 +145,7 @@ interface DashboardProps {
   // Documents
   documents: HomeownerDocument[];
   onUploadDocument: (doc: Partial<HomeownerDocument>) => void;
+  onDeleteDocument?: (docId: string) => void;
 
   // Messaging
   messages: MessageThread[];
@@ -199,6 +200,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   onUpdateHomeowner,
   documents,
   onUploadDocument,
+  onDeleteDocument,
   messages,
   onSendMessage,
   onCreateThread,
@@ -1828,7 +1830,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           icon={<ClipboardList className="h-4 w-4" />}
                           className="!h-9 !px-4"
                         >
-                          {hasReport ? 'View Punch List' : '+ Punch List'}
+                          {hasReport ? 'BlueTag' : '+ Punch List'}
                         </Button>
                       );
                     })()}
@@ -2165,8 +2167,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               if (e.target === e.currentTarget) setShowDocsModal(false);
             }}
           >
-            <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
-               <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center">
+            <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] max-h-[90vh] flex flex-col">
+               <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center shrink-0">
                   <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                     <FileText className="h-5 w-5 text-primary" />
                     Account Documents
@@ -2176,87 +2178,130 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </button>
                </div>
                
-               <div className="p-6 bg-surface dark:bg-gray-800">
-                 {/* List */}
-                 <div className="mb-6 space-y-2 max-h-60 overflow-y-auto pr-1">
-                    {displayDocuments.length === 0 ? (
-                      <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-8 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
-                        No documents uploaded for this account.
-                      </div>
-                    ) : (
-                      displayDocuments.map(doc => {
-                        const isPDF = doc.type === 'PDF' || doc.name.toLowerCase().endsWith('.pdf') || 
-                                     doc.url.startsWith('data:application/pdf') || 
-                                     doc.url.includes('pdf');
-                        
-                        return (
-                          <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 group transition-all">
-                            <div 
-                              className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
-                              onClick={() => {
-                                if (isPDF) {
-                                  setSelectedDocument(doc);
-                                  setIsPDFViewerOpen(true);
-                                }
-                              }}
-                            >
-                              <div className="p-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded">
-                                <FileText className="h-5 w-5" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{doc.name}</p>
-                                <p className="text-xs text-surface-on-variant dark:text-gray-400">
-                                  Uploaded by {doc.uploadedBy} • {new Date(doc.uploadDate).toLocaleDateString()}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              {isPDF && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    console.log('PDF View button clicked:', doc.name);
-                                    console.log('Document URL:', doc.url.substring(0, 100));
-                                    setSelectedDocument(doc);
-                                    setIsPDFViewerOpen(true);
-                                    console.log('State updated - selectedDocument:', doc.id, 'isPDFViewerOpen: true');
-                                  }}
-                                  className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all z-10 relative"
-                                  title="View PDF"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </button>
-                              )}
-                              {doc.url.startsWith('data:') ? (
-                                <a 
-                                  href={doc.url} 
-                                  download={doc.name} 
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all"
-                                  title="Download"
-                                >
-                                  <Download className="h-4 w-4" />
-                                </a>
-                              ) : (
-                                <button 
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all"
-                                  title="Download"
-                                >
-                                  <Download className="h-4 w-4" />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                 </div>
+               <div className="p-6 bg-surface dark:bg-gray-800 flex-1 overflow-y-auto">
+                 {/* Thumbnail Grid */}
+                 {displayDocuments.length === 0 ? (
+                   <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-12 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
+                     No documents uploaded for this account.
+                   </div>
+                 ) : (
+                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                     {displayDocuments.map(doc => {
+                       const isPDF = doc.type === 'PDF' || doc.name.toLowerCase().endsWith('.pdf') || 
+                                    doc.url.startsWith('data:application/pdf') || 
+                                    doc.url.includes('pdf');
+                       
+                       return (
+                         <div key={doc.id} className="flex flex-col bg-surface-container dark:bg-gray-700 rounded-xl overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-lg transition-all">
+                           {/* Thumbnail */}
+                           <div 
+                             className="w-full aspect-[3/4] bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden cursor-pointer relative group"
+                             onClick={() => {
+                               if (isPDF) {
+                                 setSelectedDocument(doc);
+                                 setIsPDFViewerOpen(true);
+                               }
+                             }}
+                           >
+                             {isPDF ? (
+                               <iframe
+                                 src={doc.url}
+                                 className="w-full h-full border-0"
+                                 title={doc.name}
+                                 style={{ pointerEvents: 'none' }}
+                               />
+                             ) : (
+                               <div className="p-8 flex flex-col items-center justify-center text-center">
+                                 <FileText className="h-12 w-12 text-surface-outline-variant dark:text-gray-500 mb-2" />
+                                 <span className="text-xs text-surface-on-variant dark:text-gray-400">{doc.type || 'FILE'}</span>
+                               </div>
+                             )}
+                             {isPDF && (
+                               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                 <Eye className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                               </div>
+                             )}
+                           </div>
+                           
+                           {/* Document Info & Actions */}
+                           <div className="p-3 flex flex-col gap-2">
+                             <div className="min-w-0">
+                               <p className="text-xs font-medium text-surface-on dark:text-gray-100 truncate" title={doc.name}>
+                                 {doc.name}
+                               </p>
+                               <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-1">
+                                 {new Date(doc.uploadDate).toLocaleDateString()}
+                               </p>
+                             </div>
+                             
+                             {/* Action Buttons */}
+                             <div className="flex items-center gap-1 justify-center">
+                               {isPDF && (
+                                 <button
+                                   type="button"
+                                   onClick={(e) => {
+                                     e.preventDefault();
+                                     e.stopPropagation();
+                                     setSelectedDocument(doc);
+                                     setIsPDFViewerOpen(true);
+                                   }}
+                                   className="flex-1 px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition-all flex items-center justify-center gap-1"
+                                   title="View PDF"
+                                 >
+                                   <Eye className="h-3.5 w-3.5" />
+                                   <span>View</span>
+                                 </button>
+                               )}
+                               {doc.url.startsWith('data:') ? (
+                                 <a 
+                                   href={doc.url} 
+                                   download={doc.name} 
+                                   onClick={(e) => e.stopPropagation()}
+                                   className="flex-1 px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition-all flex items-center justify-center gap-1"
+                                   title="Download"
+                                 >
+                                   <Download className="h-3.5 w-3.5" />
+                                   <span>Download</span>
+                                 </a>
+                               ) : (
+                                 <button 
+                                   onClick={(e) => {
+                                     e.stopPropagation();
+                                     window.open(doc.url, '_blank');
+                                   }}
+                                   className="flex-1 px-2 py-1.5 text-xs font-medium text-primary hover:bg-primary/10 dark:hover:bg-primary/20 rounded-lg transition-all flex items-center justify-center gap-1"
+                                   title="Download"
+                                 >
+                                   <Download className="h-3.5 w-3.5" />
+                                   <span>Download</span>
+                                 </button>
+                               )}
+                               {isAdminAccount && onDeleteDocument && (
+                                 <button
+                                   type="button"
+                                   onClick={(e) => {
+                                     e.preventDefault();
+                                     e.stopPropagation();
+                                     if (confirm(`Are you sure you want to delete "${doc.name}"?`)) {
+                                       onDeleteDocument(doc.id);
+                                     }
+                                   }}
+                                   className="px-2 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all flex items-center justify-center"
+                                   title="Delete"
+                                 >
+                                   <Trash2 className="h-3.5 w-3.5" />
+                                 </button>
+                               )}
+                             </div>
+                           </div>
+                         </div>
+                       );
+                     })}
+                   </div>
+                 )}
                  
                  {/* Upload Action */}
-                 <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 flex justify-center">
+                 <div className="pt-6 mt-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-center shrink-0">
                    <label className={`cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full transition-colors ${isDocUploading ? 'bg-primary/50 border-primary/30 cursor-wait' : 'bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80'} text-sm font-medium`}>
                      {isDocUploading ? (
                        <Loader2 className="h-4 w-4 animate-spin" />
