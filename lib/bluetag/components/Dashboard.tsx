@@ -179,7 +179,7 @@ export const ReportCard: React.FC<ReportCardProps> = ({
             )}
             
             {/* Footer Row - Unified Group, Centered, Equal Spacing */}
-            <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-auto w-full overflow-x-auto">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 mt-auto w-full">
                 {/* Actions */}
                 {actions && (
                     <>
@@ -1135,11 +1135,15 @@ export const Dashboard = React.memo<DashboardProps>(({
     const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
     const [isEmailOptionsOpen, setIsEmailOptionsOpen] = useState(false);
     const [isAllItemsOpen, setIsAllItemsOpen] = useState(false);
+    const [showEmailBothModal, setShowEmailBothModal] = useState(false);
+    const [emailBothSubject, setEmailBothSubject] = useState('');
+    const [emailBothBody, setEmailBothBody] = useState('');
+    const [isSendingEmailBoth, setIsSendingEmailBoth] = useState(false);
 
     useEffect(() => {
-        const anyModalOpen = isManageLocationsOpen || showReportPreview || showSignOff || showGlobalAddIssue || isEditClientInfoOpen || isEmailOptionsOpen || isAllItemsOpen;
+        const anyModalOpen = isManageLocationsOpen || showReportPreview || showSignOff || showGlobalAddIssue || isEditClientInfoOpen || isEmailOptionsOpen || isAllItemsOpen || showEmailBothModal;
         onModalStateChange(anyModalOpen);
-    }, [isManageLocationsOpen, showReportPreview, showSignOff, showGlobalAddIssue, isEditClientInfoOpen, isEmailOptionsOpen, isAllItemsOpen, onModalStateChange]);
+    }, [isManageLocationsOpen, showReportPreview, showSignOff, showGlobalAddIssue, isEditClientInfoOpen, isEmailOptionsOpen, isAllItemsOpen, showEmailBothModal, onModalStateChange]);
 
     // Lifted State handling for Client Info Collapse
     const [localDetailsCollapsed, setLocalDetailsCollapsed] = useState(false);
@@ -1294,100 +1298,20 @@ export const Dashboard = React.memo<DashboardProps>(({
                             },
                             onEmailBoth: async () => {
                                 console.log('Email Both Docs button clicked');
-                                try {
-                                    // Dynamically import sendEmail to avoid circular dependencies
-                                    const { sendEmail } = await import('../../../services/emailService');
-                                    const { UserRole } = await import('../../../types');
-                                    
-                                    const getSafeName = () => {
-                                        const name = project.fields?.[0]?.value || "Project";
-                                        return name.replace(/[^a-z0-9]/gi, '_');
-                                    };
-                                    
-                                    // Generate PDFs
-                                    const reportRes = await generatePDFWithMetadata({ project, locations }, companyLogo, project.reportMarks);
-                                    const reportBlob = reportRes.doc.output('blob');
-                                    const reportFilename = `${getSafeName()} - New Home Completion List.pdf`;
-                                    
-                                    const signOffBlobUrl = await generateSignOffPDF(project, SIGN_OFF_TITLE, signOffTemplates[0], companyLogo, project.signOffImage, project.signOffStrokes, 800, undefined, 16);
-                                    const signOffBlob = await fetch(signOffBlobUrl).then(r => r.blob());
-                                    const signOffFilename = `${getSafeName()} - Sign Off Sheet.pdf`;
-                                    
-                                    // Convert blobs to base64 for email attachments
-                                    const reportBase64 = await new Promise<string>((resolve) => {
-                                        const reader = new FileReader();
-                                        reader.onloadend = () => {
-                                            const base64 = (reader.result as string).split(',')[1];
-                                            resolve(base64);
-                                        };
-                                        reader.readAsDataURL(reportBlob);
-                                    });
-                                    
-                                    const signOffBase64 = await new Promise<string>((resolve) => {
-                                        const reader = new FileReader();
-                                        reader.onloadend = () => {
-                                            const base64 = (reader.result as string).split(',')[1];
-                                            resolve(base64);
-                                        };
-                                        reader.readAsDataURL(signOffBlob);
-                                    });
-                                    
-                                    // Get homeowner email from project fields
-                                    const homeownerEmailField = project.fields?.find(f => f.label === 'Email Address' || f.icon === 'Mail');
-                                    const homeownerEmail = homeownerEmailField?.value || '';
-                                    const homeownerName = project.fields?.[0]?.value || 'Homeowner';
-                                    
-                                    if (!homeownerEmail) {
-                                        alert('Homeowner email not found. Please ensure the email address is set in the project fields.');
-                                        return;
-                                    }
-                                    
-                                    const safeProjectName = project.fields?.[0]?.value || "Project";
-                                    const subject = `${safeProjectName} - Walk through docs`;
-                                    const body = "Here's the punch list and sign off sheet. The rewalk is scheduled for";
-                                    
-                                    const attachments = [
-                                        {
-                                            filename: reportFilename,
-                                            content: reportBase64,
-                                            contentType: 'application/pdf'
-                                        },
-                                        {
-                                            filename: signOffFilename,
-                                            content: signOffBase64,
-                                            contentType: 'application/pdf'
-                                        }
-                                    ];
-                                    
-                                    // Send email via SendGrid
-                                    await sendEmail({
-                                        to: homeownerEmail,
-                                        subject: subject,
-                                        body: body,
-                                        fromName: 'Cascade Builder Services',
-                                        fromRole: UserRole.ADMIN,
-                                        attachments: attachments
-                                    });
-                                    
-                                    // Create message in app if callback is provided
-                                    if (onCreateMessage) {
-                                        // Get homeowner ID from project fields
-                                        const homeownerIdField = project.fields?.find(f => f.id === 'homeownerId');
-                                        const homeownerId = homeownerIdField?.value || '';
-                                        
-                                        if (homeownerId) {
-                                            await onCreateMessage(homeownerId, subject, body, attachments);
-                                        } else {
-                                            console.warn('Homeowner ID not found in project fields');
-                                        }
-                                    }
-                                    
-                                    console.log('✅ Email sent successfully via SendGrid');
-                                    alert('Email sent successfully!');
-                                } catch (error) {
-                                    console.error("Failed to email both docs:", error);
-                                    alert('Failed to send email. Please try again or contact support.');
+                                // Get homeowner email from project fields
+                                const homeownerEmailField = project.fields?.find(f => f.label === 'Email Address' || f.icon === 'Mail');
+                                const homeownerEmail = homeownerEmailField?.value || '';
+                                
+                                if (!homeownerEmail) {
+                                    alert('Homeowner email not found. Please ensure the email address is set in the project fields.');
+                                    return;
                                 }
+                                
+                                // Set default subject and body
+                                const safeProjectName = project.fields?.[0]?.value || "Project";
+                                setEmailBothSubject(`${safeProjectName} - Walk through docs`);
+                                setEmailBothBody("Here's the punch list and sign off sheet. The rewalk is scheduled for");
+                                setShowEmailBothModal(true);
                             },
                             onHomeownerManual: () => {
                                 console.log('Homeowner Manual button clicked');
