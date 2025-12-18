@@ -1915,7 +1915,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         setShowNewClaimModal(true);
                         console.log('showNewClaimModal should now be true');
                       }}
-                      variant="outlined"
+                      variant="filled"
                       icon={<Plus className="h-4 w-4" />}
                       className="!h-9 !px-4"
                     >
@@ -1931,7 +1931,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         setShowNewTaskModal(true);
                         console.log('showNewTaskModal should now be true');
                       }}
-                      variant="outlined"
+                      variant="filled"
                       icon={<CheckSquare className="h-4 w-4" />}
                       className="!h-9 !px-4"
                     >
