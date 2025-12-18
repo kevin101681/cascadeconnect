@@ -203,8 +203,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Punch List App State
   const [showPunchListApp, setShowPunchListApp] = useState(false);
   const [showManualModal, setShowManualModal] = useState(false);
-  const [manualCurrentPage, setManualCurrentPage] = useState(0);
-  const [manualIsFlipping, setManualIsFlipping] = useState(false);
 
   // Debug: Log modal state changes
   useEffect(() => {

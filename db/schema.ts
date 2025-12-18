@@ -176,13 +176,3 @@ export const messageThreads = pgTable('message_threads', {
   lastMessageAt: timestamp('last_message_at').defaultNow(),
   messages: json('messages').$type<any[]>().default([]),
 });
-
-// --- 9. BlueTag Reports (Punch List) ---
-export const bluetagReports = pgTable('bluetag_reports', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  homeownerId: uuid('homeowner_id').notNull().references(() => homeowners.id, { onDelete: 'cascade' }),
-  project: json('project').$type<any>().notNull(), // ProjectDetails
-  locations: json('locations').$type<any[]>().default([]), // LocationGroup[]
-  lastModified: timestamp('last_modified').defaultNow(),
-  createdAt: timestamp('created_at').defaultNow(),
-});

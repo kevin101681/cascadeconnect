@@ -12,10 +12,8 @@ import React, { useState, useEffect } from 'react';
 import { Homeowner } from '../types';
 import { X, ClipboardList } from 'lucide-react';
 
-// Import BlueTag types and components directly (no dynamic import)
+// Import BlueTag types from copied files
 import type { ProjectDetails, LocationGroup, SignOffTemplate } from '../lib/bluetag/types';
-import { DatabaseDataProvider, IDataProvider, LocalStorageDataProvider } from '../lib/bluetag/services/dataProvider';
-import { Dashboard as BlueTagDashboard } from '../lib/bluetag/components/Dashboard';
 
 interface PunchListAppProps {
   homeowner: Homeowner;
@@ -45,7 +43,34 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
   onCreateMessage,
   onShowManual
 }) => {
-  // BlueTag Dashboard is now directly imported (no dynamic loading needed)
+  const [BlueTagDashboard, setBlueTagDashboard] = useState<React.ComponentType<any> | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load existing report if it exists, otherwise create new one
+  const loadReportData = (): { project: ProjectDetails; locations: LocationGroup[] } => {
+    const reportKey = `bluetag_report_${homeowner.id}`;
+    const savedReport = localStorage.getItem(reportKey);
+    
+    if (savedReport) {
+      try {
+        const reportData = JSON.parse(savedReport);
+        console.log('✅ Loaded existing punch list report for homeowner:', homeowner.id);
+        return {
+          project: reportData.project || createInitialProject(),
+          locations: reportData.locations || createInitialLocations()
+        };
+      } catch (e) {
+        console.error('Error loading saved report, creating new one:', e);
+      }
+    }
+    
+    // Create new report if none exists
+    console.log('Creating new punch list report for homeowner:', homeowner.id);
+    return {
+      project: createInitialProject(),
+      locations: createInitialLocations()
+    };
+  };
 
   const createInitialProject = (): ProjectDetails => ({
     fields: [
@@ -65,78 +90,9 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
       issues: []
     }));
 
-  // Data provider - will be set to use database when integrated
-  const [dataProvider, setDataProvider] = useState<IDataProvider | null>(null);
-  const [reportData, setReportData] = useState<{ project: ProjectDetails; locations: LocationGroup[] } | null>(null);
-  const [isLoadingReport, setIsLoadingReport] = useState(true);
-
-  // Initialize data provider and load report
-  useEffect(() => {
-    const initializeDataProvider = async () => {
-      try {
-        // Try to use database provider if available, fallback to localStorage
-        const { db, isDbConfigured } = await import('../db');
-        const { bluetagReports } = await import('../db/schema');
-        const { DatabaseDataProvider, LocalStorageDataProvider } = await import('../lib/bluetag/services/dataProvider');
-        
-        let provider: IDataProvider;
-        
-        if (isDbConfigured && db) {
-          console.log('Using database provider for BlueTag reports');
-          provider = new DatabaseDataProvider(db, bluetagReports);
-        } else {
-          console.log('Database not configured, using localStorage provider for BlueTag reports');
-          provider = new LocalStorageDataProvider();
-        }
-        
-        setDataProvider(provider);
-
-        // Load existing report
-        const loaded = await provider.loadReport(homeowner.id);
-        if (loaded) {
-          console.log('✅ Loaded existing punch list report for homeowner:', homeowner.id);
-          setReportData(loaded);
-        } else {
-          console.log('Creating new punch list report for homeowner:', homeowner.id);
-          setReportData({
-            project: createInitialProject(),
-            locations: createInitialLocations()
-          });
-        }
-        setIsLoadingReport(false);
-      } catch (error) {
-        console.error('Error initializing data provider, falling back to localStorage:', error);
-        // Fallback to localStorage
-        const { LocalStorageDataProvider } = await import('../lib/bluetag/services/dataProvider');
-        const provider = new LocalStorageDataProvider();
-        setDataProvider(provider);
-        
-        const loaded = await provider.loadReport(homeowner.id);
-        if (loaded) {
-          setReportData(loaded);
-        } else {
-          setReportData({
-            project: createInitialProject(),
-            locations: createInitialLocations()
-          });
-        }
-        setIsLoadingReport(false);
-      }
-    };
-
-    initializeDataProvider();
-  }, [homeowner.id]);
-
-  const [project, setProject] = useState<ProjectDetails | null>(null);
-  const [locations, setLocations] = useState<LocationGroup[]>([]);
-  
-  // Initialize project and locations from loaded data
-  useEffect(() => {
-    if (reportData) {
-      setProject(reportData.project);
-      setLocations(reportData.locations);
-    }
-  }, [reportData]);
+  const initialData = loadReportData();
+  const [project, setProject] = useState<ProjectDetails>(initialData.project);
+  const [locations, setLocations] = useState<LocationGroup[]>(initialData.locations);
   const [activeLocationId, setActiveLocationId] = useState<string | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [signOffTemplates, setSignOffTemplates] = useState<SignOffTemplate[]>([
@@ -192,24 +148,52 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
     };
   }, [onSavePDF]);
 
-  // BlueTag Dashboard is now directly imported (no dynamic loading needed)
+  // Dynamically import BlueTag Dashboard
+  useEffect(() => {
+    const loadBlueTag = async () => {
+      try {
+        console.log('Attempting to import Dashboard...');
+        const module = await import('../lib/bluetag/components/Dashboard');
+        console.log('Dashboard module loaded:', module);
+        
+        if (module && module.Dashboard) {
+          console.log('Dashboard component found, setting it...');
+          setBlueTagDashboard(() => module.Dashboard);
+          setIsLoading(false);
+        } else {
+          console.error('Dashboard component not found in module. Available exports:', Object.keys(module || {}));
+          setIsLoading(false);
+        }
+      } catch (error: any) {
+        console.error('Failed to load BlueTag Dashboard:', error);
+        console.error('Error details:', error);
+        if (error instanceof Error) {
+          console.error('Error stack:', error.stack);
+        }
+        // If it's a 404 error, suggest clearing cache
+        if (error?.message?.includes('404') || error?.message?.includes('Failed to fetch')) {
+          console.warn('Asset file not found. This may be a caching issue. Please try a hard refresh (Ctrl+Shift+R or Cmd+Shift+R)');
+        }
+        setIsLoading(false);
+      }
+    };
+    loadBlueTag();
+  }, []);
 
   // Sync project fields when homeowner changes (update values but preserve IDs and structure)
   useEffect(() => {
-    if (project) {
-      setProject(prev => ({
-        ...prev,
-        fields: [
-          { id: prev.fields[0]?.id || generateUUID(), label: 'Name(s)', value: homeowner.name, icon: 'User' },
-          { id: prev.fields[1]?.id || generateUUID(), label: 'Project Lot/Unit Number', value: homeowner.jobName || '', icon: 'Hash' },
-          { id: prev.fields[2]?.id || generateUUID(), label: 'Address', value: homeowner.address, icon: 'MapPin' },
-          { id: prev.fields[3]?.id || generateUUID(), label: 'Phone Number', value: homeowner.phone || '', icon: 'Phone' },
-          { id: prev.fields[4]?.id || generateUUID(), label: 'Email Address', value: homeowner.email, icon: 'Mail' },
-          { id: 'homeownerId', label: 'Homeowner ID', value: homeowner.id, icon: 'User' } // Hidden field for homeowner ID
-        ]
-      }));
-    }
-  }, [homeowner.name, homeowner.jobName, homeowner.address, homeowner.phone, homeowner.email, homeowner.id, project]);
+    setProject(prev => ({
+      ...prev,
+      fields: [
+        { id: prev.fields[0]?.id || generateUUID(), label: 'Name(s)', value: homeowner.name, icon: 'User' },
+        { id: prev.fields[1]?.id || generateUUID(), label: 'Project Lot/Unit Number', value: homeowner.jobName || '', icon: 'Hash' },
+        { id: prev.fields[2]?.id || generateUUID(), label: 'Address', value: homeowner.address, icon: 'MapPin' },
+        { id: prev.fields[3]?.id || generateUUID(), label: 'Phone Number', value: homeowner.phone || '', icon: 'Phone' },
+        { id: prev.fields[4]?.id || generateUUID(), label: 'Email Address', value: homeowner.email, icon: 'Mail' },
+        { id: 'homeownerId', label: 'Homeowner ID', value: homeowner.id, icon: 'User' } // Hidden field for homeowner ID
+      ]
+    }));
+  }, [homeowner.name, homeowner.jobName, homeowner.address, homeowner.phone, homeowner.email, homeowner.id]);
 
   const handleSelectLocation = (id: string) => {
     setActiveLocationId(id);
@@ -238,16 +222,18 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
 
   // Save report data whenever project or locations change
   useEffect(() => {
-    if (dataProvider && project && locations.length >= 0) {
-      dataProvider.saveReport(homeowner.id, project, locations).catch(error => {
-        console.error('Error saving report:', error);
-      });
-    }
-  }, [project, locations, homeowner.id, dataProvider]);
+    const reportKey = `bluetag_report_${homeowner.id}`;
+    const reportData = {
+      project,
+      locations,
+      lastModified: Date.now()
+    };
+    localStorage.setItem(reportKey, JSON.stringify(reportData));
+  }, [project, locations, homeowner.id]);
 
   // Debug: Log when Dashboard is about to render (must be before any early returns)
   useEffect(() => {
-    if (project) {
+    if (BlueTagDashboard) {
       console.log('Rendering BlueTag Dashboard with props:', {
         projectFields: project.fields?.length,
         locationsCount: locations.length,
@@ -256,9 +242,9 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
         initialExpand: false
       });
     }
-  }, [project, locations, isDarkMode]);
+  }, [BlueTagDashboard, project, locations, isDarkMode]);
 
-  if (isLoadingReport || !project) {
+  if (isLoading || !BlueTagDashboard) {
     return (
       <div className="h-full w-full flex items-center justify-center">
         <div className="text-center">
@@ -271,8 +257,9 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
 
   return (
     <div className="h-full w-full flex flex-col overflow-auto bg-gray-200 dark:bg-gray-950" style={{ minHeight: '100%', pointerEvents: 'auto' }}>
-      <div className="h-full w-full" style={{ isolation: 'isolate', pointerEvents: 'auto' }}>
-        <BlueTagDashboard
+      {BlueTagDashboard ? (
+        <div className="h-full w-full" style={{ isolation: 'isolate', pointerEvents: 'auto' }}>
+          <BlueTagDashboard
           project={project}
           locations={locations}
           onSelectLocation={handleSelectLocation}
@@ -291,7 +278,10 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
           onCreateMessage={onCreateMessage}
           onShowManual={onShowManual}
         />
-      </div>
+        </div>
+      ) : (
+        <div className="p-4 text-red-500">Dashboard component not loaded</div>
+      )}
     </div>
   );
 };
