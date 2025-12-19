@@ -86,18 +86,38 @@ html.dark .cl-userButtonPopoverCard {
     border-color: #374151 !important; /* dark:border-gray-700 */
 }
 
-/* Header Section - Hidden */
-.cl-userButtonPopoverHeader {
+/* Header Section - Completely Hidden */
+.cl-userButtonPopoverHeader,
+.cl-userButtonPopoverHeader *,
+.cl-userButtonPopoverHeaderTitle,
+.cl-userButtonPopoverHeaderTitle *,
+.cl-userButtonPopoverHeaderSubtitle,
+.cl-userButtonPopoverHeaderSubtitle *,
+.cl-userButtonPopoverHeaderAvatar,
+.cl-userButtonPopoverHeaderAvatar *,
+.cl-userButtonPopoverHeaderName,
+.cl-userButtonPopoverHeaderEmail,
+.cl-userButtonPopoverHeaderEmailAddress,
+.cl-userButtonPopoverHeaderPrimaryIdentifier,
+.cl-userButtonPopoverHeaderSecondaryIdentifier {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
-.cl-userButtonPopoverHeader > *,
-.cl-userButtonPopoverHeader p,
-.cl-userButtonPopoverHeader span,
-.cl-userButtonPopoverHeader div {
-    background-color: #ffffff !important; /* surface */
-    border: none !important;
-    box-shadow: none !important;
+/* Hide any user preview elements in the popover */
+.cl-userButtonPopoverCard .cl-userPreview,
+.cl-userButtonPopoverCard .cl-userPreview *,
+.cl-userButtonPopoverCard .cl-avatarBox:not(.cl-userButtonAvatarBox),
+.cl-userButtonPopoverCard [class*="userPreview"],
+.cl-userButtonPopoverCard [class*="PrimaryIdentifier"],
+.cl-userButtonPopoverCard [class*="SecondaryIdentifier"] {
+    display: none !important;
+    visibility: hidden !important;
 }
 
 .cl-userButtonPopoverHeaderTitle,
