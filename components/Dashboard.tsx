@@ -900,7 +900,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       animate="visible"
     >
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30">
-        <h3 className={`text-lg font-bold flex items-center gap-2 ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
+        <h3 className={`text-xl font-normal flex items-center gap-2 ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
             {groupClaims.length}
           </span>
@@ -1140,7 +1140,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div>
         {/* Main List */}
         <div>
-          {renderClaimGroup('Active Claims', openClaims, 'No active claims.', false, isHomeownerView)}
+          {renderClaimGroup('Warranty Claims', openClaims, 'No active claims.', false, isHomeownerView)}
           {renderClaimGroup('Closed Claims', closedClaims, 'No closed claims history.', true, false)}
         </div>
       </div>
@@ -1245,9 +1245,13 @@ const Dashboard: React.FC<DashboardProps> = ({
        {/* Left Column: Inbox List (Gmail Style) */}
        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-between items-center h-16 shrink-0">
-            <h3 className="text-lg font-bold text-surface-on dark:text-gray-100 flex items-center gap-2">
+            <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               Inbox
-              <span className="text-xs font-normal text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700 px-2 py-0.5 rounded-full">{displayThreads.filter(t => !t.isRead).length} new</span>
+              {displayThreads.filter(t => !t.isRead).length > 0 && (
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                  {displayThreads.filter(t => !t.isRead).length}
+                </span>
+              )}
             </h3>
             <Button
               variant="filled"

@@ -228,30 +228,29 @@ const Layout: React.FC<LayoutProps> = ({
                 <UserButton 
                   appearance={{
                     elements: {
-                      // Avatar styling - primary color background (only for the button itself)
+                      // Avatar styling - primary color background
                       avatarBox: 'h-10 w-10 bg-primary',
                       avatarImage: 'rounded-full',
                       
                       // Popover card styling - CSS will handle dark mode
                       userButtonPopoverCard: '!bg-surface dark:!bg-gray-800 !rounded-xl !border !border-surface-outline-variant dark:!border-gray-700 !shadow-elevation-2 !p-2',
                       
-                      // User info section - Completely hidden
-                      userButtonPopoverHeader: '!hidden !display-none',
-                      userButtonPopoverHeaderTitle: '!hidden !display-none',
-                      userButtonPopoverHeaderSubtitle: '!hidden !display-none',
-                      userButtonPopoverHeaderAvatar: '!hidden !display-none',
+                      // User info section - Hidden
+                      userButtonPopoverHeader: '!hidden',
+                      userButtonPopoverHeaderTitle: '!hidden',
+                      userButtonPopoverHeaderSubtitle: '!hidden',
                       
                       // Action buttons styling
-                      userButtonPopoverActions: '!py-1 !bg-transparent !mt-0',
+                      userButtonPopoverActions: '!py-1 !bg-transparent',
                       userButtonPopoverActionButton: '!text-surface-on dark:!text-gray-100 hover:!bg-surface-container dark:hover:!bg-gray-700 !rounded-lg !px-3 !py-2 !text-sm !transition-colors !bg-transparent',
                       userButtonPopoverActionButtonText: '!text-surface-on dark:!text-gray-100',
-                      userButtonPopoverActionButtonIcon: '!text-surface-outline-variant dark:!text-gray-500',
+                      userButtonPopoverActionButtonIcon: '!hidden',
                       
                       // Hide account management
-                      userButtonPopoverFooter: '!hidden !display-none',
-                      userButtonPopoverActionButton__manageAccount: '!hidden !display-none',
+                      userButtonPopoverFooter: '!hidden',
+                      userButtonPopoverActionButton__manageAccount: '!hidden',
                       
-                      // Sign out button styling
+                      // Sign out button styling - hide icon
                       userButtonPopoverActionButton__signOut: '!text-error hover:!bg-error/5 dark:hover:!bg-error/10',
                     }
                   }}

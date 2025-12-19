@@ -45,100 +45,6 @@ body {
     display: none; /* Chrome, Safari and Opera */
 }
 
-/* PDF Flipbook - ensure pages stay white during flip animation */
-.pdf-flipbook .st-page,
-.pdf-flipbook .pdf-page,
-.pdf-flipbook .st-page > div,
-.pdf-flipbook .st-page__hard,
-.pdf-flipbook .st-page__hard > div {
-    background-color: #fff !important;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-}
-
-.pdf-flipbook .st-page.flipping,
-.pdf-flipbook .st-page.flipped,
-.pdf-flipbook .st-page__hard.flipping,
-.pdf-flipbook .st-page__hard.flipped {
-    background-color: #fff !important;
-}
-
-/* Ensure all page surfaces stay white during any flip state */
-.pdf-flipbook [class*="st-page"] {
-    background-color: #fff !important;
-}
-
-/* Target the back face of pages during flip - ensure white background */
-.pdf-flipbook .st-page__hard .st-page__hard-inner,
-.pdf-flipbook .st-page__hard .st-page__hard-back,
-.pdf-flipbook .st-page .st-page__back,
-.pdf-flipbook .st-page__hard .st-page__back {
-    background-color: #fff !important;
-}
-
-/* Target any element that might be the back of a page */
-.pdf-flipbook * {
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-}
-
-/* Ensure the page content wrapper also has white background */
-.pdf-flipbook .st-page__content,
-.pdf-flipbook .st-page__hard-content {
-    background-color: #fff !important;
-}
-
-/* Claim editor scrollbar - hidden */
-.claim-editor-scroll {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE and Edge */
-}
-
-.claim-editor-scroll::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
-}
-
-/* Claims table scrollbar - match card background, no frame */
-.claims-table-scroll {
-    scrollbar-width: thin; /* Firefox */
-}
-
-.claims-table-scroll::-webkit-scrollbar {
-    display: block; /* Show scrollbar for claims table */
-    height: 8px; /* Horizontal scrollbar height */
-}
-
-.claims-table-scroll::-webkit-scrollbar-track {
-    background: #ffffff; /* Surface color (light mode) - matches card bg-surface */
-    border: none; /* Remove frame */
-    border-radius: 0;
-    margin: 0;
-}
-
-.dark .claims-table-scroll::-webkit-scrollbar-track {
-    background: #1f2937; /* gray-800 (dark mode) - matches card dark:bg-gray-800 */
-}
-
-.claims-table-scroll::-webkit-scrollbar-thumb {
-    background: rgba(192, 200, 204, 0.5); /* surface-outline-variant with opacity for subtle visibility */
-    border: none; /* Remove frame */
-    border-radius: 4px;
-}
-
-.claims-table-scroll::-webkit-scrollbar-thumb:hover {
-    background: rgba(112, 120, 125, 0.7); /* outline color on hover */
-}
-
-/* Firefox scrollbar styling - transparent track to match background */
-.claims-table-scroll {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(192, 200, 204, 0.5) transparent; /* thumb color, transparent track to match card background */
-}
-
-.dark .claims-table-scroll {
-    scrollbar-color: rgba(192, 200, 204, 0.3) transparent; /* subtle thumb for dark mode, transparent track */
-}
-
 /* Fix for CBS Books FAB positioning - ensure fixed elements position relative to viewport */
 [data-cbs-books] [class*="fixed"] {
     position: fixed !important;
@@ -163,9 +69,6 @@ body {
     background-color: #ffffff !important; /* surface */
     border: 1px solid #c0c8cc !important; /* surface-outline-variant */
     box-shadow: 0px 2px 6px 2px rgba(0,0,0,0.15), 0px 1px 2px 0px rgba(0,0,0,0.3) !important;
-    width: fit-content !important;
-    min-width: fit-content !important;
-    max-width: fit-content !important;
 }
 
 /* Popover Card - Dark Mode */
@@ -183,38 +86,32 @@ html.dark .cl-userButtonPopoverCard {
     border-color: #374151 !important; /* dark:border-gray-700 */
 }
 
-/* Header Section - Completely Hidden */
-.cl-userButtonPopoverHeader,
-.cl-userButtonPopoverHeader *,
-.cl-userButtonPopoverHeaderTitle,
-.cl-userButtonPopoverHeaderTitle *,
-.cl-userButtonPopoverHeaderSubtitle,
-.cl-userButtonPopoverHeaderSubtitle *,
-.cl-userButtonPopoverHeaderAvatar,
-.cl-userButtonPopoverHeaderAvatar *,
-.cl-userButtonPopoverHeaderName,
-.cl-userButtonPopoverHeaderEmail,
-.cl-userButtonPopoverHeaderEmailAddress,
-.cl-userButtonPopoverHeaderPrimaryIdentifier,
-.cl-userButtonPopoverHeaderSecondaryIdentifier {
+/* Header Section - Hidden */
+.cl-userButtonPopoverHeader {
     display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    height: 0 !important;
-    width: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
 }
 
-/* Hide any user preview elements in the popover */
-.cl-userButtonPopoverCard .cl-userPreview,
-.cl-userButtonPopoverCard .cl-userPreview *,
-.cl-userButtonPopoverCard .cl-avatarBox:not(.cl-userButtonAvatarBox),
-.cl-userButtonPopoverCard [class*="userPreview"],
-.cl-userButtonPopoverCard [class*="PrimaryIdentifier"],
-.cl-userButtonPopoverCard [class*="SecondaryIdentifier"] {
+.cl-userButtonPopoverHeader > *,
+.cl-userButtonPopoverHeader p,
+.cl-userButtonPopoverHeader span,
+.cl-userButtonPopoverHeader div {
+    background-color: #ffffff !important; /* surface */
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Hide avatar in popover */
+.cl-userButtonPopoverAvatarBox {
     display: none !important;
-    visibility: hidden !important;
+}
+
+/* Hide icons in action buttons */
+.cl-userButtonPopoverActionButtonIcon {
+    display: none !important;
+}
+
+.cl-userButtonPopoverActionButton__signOut .cl-userButtonPopoverActionButtonIcon {
+    display: none !important;
 }
 
 .cl-userButtonPopoverHeaderTitle,
@@ -427,7 +324,6 @@ html.dark .cl-userButtonPopoverActionButtonIcon {
 /* Sign Out Button - Light Mode */
 .cl-userButtonPopoverActionButton__signOut {
     color: #ba1a1a !important; /* error color */
-    gap: 0.5rem !important; /* Reduce spacing between icon and text */
 }
 
 .cl-userButtonPopoverActionButton__signOut:hover {
@@ -438,15 +334,6 @@ html.dark .cl-userButtonPopoverActionButtonIcon {
 .dark .cl-userButtonPopoverActionButton__signOut:hover,
 html.dark .cl-userButtonPopoverActionButton__signOut:hover {
     background-color: rgba(186, 26, 26, 0.1) !important; /* error/10 */
-}
-
-/* Reduce spacing between icon and text in sign out button */
-.cl-userButtonPopoverActionButton__signOut .cl-userButtonPopoverActionButtonIcon {
-    margin-right: 0.5rem !important;
-}
-
-.cl-userButtonPopoverActionButton__signOut .cl-userButtonPopoverActionButtonText {
-    margin-left: 0 !important;
 }
 
 /* Hide account management button */
@@ -516,20 +403,6 @@ html.dark [class*="cl-userButtonPopover"] {
 .cl-userButtonPopoverCard {
     border: 1px solid #c0c8cc !important;
     box-shadow: 0px 2px 6px 2px rgba(0,0,0,0.15), 0px 1px 2px 0px rgba(0,0,0,0.3) !important;
-    width: fit-content !important;
-    min-width: fit-content !important;
-    max-width: fit-content !important;
-}
-
-/* Ensure actions container also fits content */
-.cl-userButtonPopoverActions {
-    width: fit-content !important;
-    min-width: fit-content !important;
-}
-
-.cl-userButtonPopoverActions .cl-userButtonPopoverActionButton {
-    width: 100% !important;
-    min-width: fit-content !important;
 }
 
 .dark .cl-userButtonPopoverCard,
