@@ -48,14 +48,22 @@ body {
 /* PDF Flipbook - ensure pages stay white during flip animation */
 .pdf-flipbook .st-page,
 .pdf-flipbook .pdf-page,
-.pdf-flipbook .st-page > div {
+.pdf-flipbook .st-page > div,
+.pdf-flipbook .st-page__hard {
     background-color: #fff !important;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
 }
 
 .pdf-flipbook .st-page.flipping,
-.pdf-flipbook .st-page.flipped {
+.pdf-flipbook .st-page.flipped,
+.pdf-flipbook .st-page__hard.flipping,
+.pdf-flipbook .st-page__hard.flipped {
+    background-color: #fff !important;
+}
+
+/* Ensure all page surfaces stay white during any flip state */
+.pdf-flipbook [class*="st-page"] {
     background-color: #fff !important;
 }
 

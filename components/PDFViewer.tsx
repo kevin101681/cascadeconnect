@@ -310,6 +310,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                   size="fixed"
                   showCover={false}
                   className="pdf-flipbook"
+                  useMouseEvents={false}
+                  disableFlipByClick={false}
                   {...({} as any)}
                 >
                   {Array.from(new Array(numPages), (el, index) => (
