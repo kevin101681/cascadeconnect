@@ -1658,26 +1658,21 @@ const Dashboard: React.FC<DashboardProps> = ({
           }}
         >
           <div className="bg-surface dark:bg-gray-800 w-full max-w-4xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 max-h-[calc(100vh-4rem)] flex flex-col">
-            <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700 flex-shrink-0 sticky top-0 z-10">
-              <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                <Plus className="h-5 w-5 text-primary" />
-                New Claim
-              </h2>
-              <button onClick={() => setShowNewClaimModal(false)} className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
             <div className="p-6 bg-surface dark:bg-gray-800 overflow-y-auto flex-1">
               {onCreateClaim ? (
-                <NewClaimForm 
+                <NewClaimForm
                   onSubmit={(data) => {
                     onCreateClaim(data);
                     setShowNewClaimModal(false);
-                  }} 
-                  onCancel={() => setShowNewClaimModal(false)} 
-                  contractors={contractors} 
-                  activeHomeowner={targetHomeowner || activeHomeowner} 
-                  userRole={userRole} 
+                  }}
+                  onCancel={() => setShowNewClaimModal(false)}
+                  onSendMessage={() => {
+                    setShowNewClaimModal(false);
+                    setCurrentTab('MESSAGES');
+                  }}
+                  contractors={contractors}
+                  activeHomeowner={targetHomeowner || activeHomeowner}
+                  userRole={userRole}
                 />
               ) : (
                 <div className="text-center py-8">

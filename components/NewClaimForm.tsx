@@ -4,17 +4,19 @@ import { CLAIM_CLASSIFICATIONS } from '../constants';
 import { Contractor, ClaimClassification, Attachment, Homeowner, ClaimStatus, UserRole } from '../types';
 import Button from './Button';
 import ImageViewerModal from './ImageViewerModal';
-import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip } from 'lucide-react';
+import CalendarPicker from './CalendarPicker';
+import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar } from 'lucide-react';
 
 interface NewClaimFormProps {
   onSubmit: (data: any) => void;
   onCancel: () => void;
+  onSendMessage?: () => void;
   contractors: Contractor[];
   activeHomeowner: Homeowner;
   userRole: UserRole;
 }
 
-const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contractors, activeHomeowner, userRole }) => {
+const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendMessage, contractors, activeHomeowner, userRole }) => {
   const isAdmin = userRole === UserRole.ADMIN;
 
   // Form State
@@ -32,6 +34,11 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
   
   // Internal (Admin Only)
   const [internalNotes, setInternalNotes] = useState('');
+  
+  // Scheduling state
+  const [proposeDate, setProposeDate] = useState('');
+  const [proposeTime, setProposeTime] = useState<'AM' | 'PM' | 'All Day'>('AM');
+  const [showCalendarPicker, setShowCalendarPicker] = useState(false);
 
   // Attachments State
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -71,7 +78,12 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
       contractorName: isAdmin ? contractor?.companyName : undefined,
       contractorEmail: isAdmin ? contractor?.email : undefined,
       status: shouldClose ? ClaimStatus.COMPLETED : ClaimStatus.SUBMITTED,
-      attachments
+      attachments,
+      proposedDates: proposeDate ? [{
+        date: new Date(proposeDate).toISOString(),
+        timeSlot: proposeTime,
+        status: 'PENDING' as const
+      }] : []
     };
     
     onSubmit(payload);
@@ -85,6 +97,37 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Header with buttons */}
+      <div className="flex justify-between items-center pb-4 border-b border-surface-outline-variant dark:border-gray-700">
+        <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+          <Building2 className="h-5 w-5 text-primary" />
+          New Claim
+        </h2>
+        <div className="flex items-center gap-2">
+          {onSendMessage && (
+            <Button 
+              type="button" 
+              variant="text"
+              onClick={onSendMessage}
+              className="bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Send Message
+            </Button>
+          )}
+          <Button 
+            type="button" 
+            variant="text" 
+            onClick={onCancel}
+            className="bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600"
+          >
+            Cancel
+          </Button>
+          <Button type="submit" variant="filled">
+            Save
+          </Button>
+        </div>
+      </div>
       
       {/* Job Name Pill */}
       <div className="flex justify-end">
@@ -121,10 +164,112 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
             />
           </div>
 
-           {/* Classification Section (Admin Only) */}
+        </div>
+
+        {/* Right Column: Sub Assignment, Scheduling, Warranty Assessment */}
+        <div className="space-y-6">
+           {/* Sub Assignment (Admin Only) */}
            {isAdmin && (
              <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Classification & Evaluation</h4>
+                <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Sub Assignment</h4>
+                
+                <div className="relative">
+                  <input 
+                    type="text"
+                    placeholder="Type to search subs..."
+                    className="w-full rounded-md border border-surface-outline dark:border-gray-600 bg-surface dark:bg-gray-700 px-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                    value={contractorSearch}
+                    onChange={(e) => setContractorSearch(e.target.value)}
+                  />
+                </div>
+
+                {contractorSearch.trim().length > 0 && (
+                  <div className="mt-2 max-h-40 overflow-y-auto border border-surface-outline-variant dark:border-gray-600 rounded-md bg-surface dark:bg-gray-700 shadow-elevation-1">
+                    {filteredContractors.length === 0 ? (
+                      <div className="px-3 py-2 text-xs text-surface-on-variant dark:text-gray-400">No subs found.</div>
+                    ) : (
+                      filteredContractors.map(c => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => { setSelectedContractorId(c.id); setContractorSearch(c.companyName); }}
+                          className={`w-full text-left px-3 py-2 text-sm flex justify-between hover:bg-surface-container dark:hover:bg-gray-600 ${selectedContractorId === c.id ? 'bg-primary-container text-primary-on-container' : 'text-surface-on dark:text-gray-100'}`}
+                        >
+                          <span>{c.companyName}</span>
+                          <span className="text-xs opacity-70">{c.specialty}</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+                
+                {selectedContractorId && !contractorSearch.trim() && (
+                  <div className="mt-2 text-xs text-primary font-medium flex items-center justify-between">
+                    <span className="dark:text-gray-100">Selected: {contractors.find(c => c.id === selectedContractorId)?.companyName}</span>
+                    <button type="button" onClick={() => { setSelectedContractorId(''); setContractorSearch(''); }} className="text-surface-on-variant dark:text-gray-400 hover:text-error"><X className="h-3 w-3" /></button>
+                  </div>
+                )}
+                
+                <Button
+                  type="button"
+                  variant="filled"
+                  className="mt-3 w-full"
+                  onClick={() => {
+                    // Handle add sub assignment
+                  }}
+                >
+                  Add
+                </Button>
+             </div>
+           )}
+
+           {/* Scheduling */}
+           <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+             <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Scheduling</h4>
+             <div className="space-y-3">
+               <div>
+                 <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Scheduled Date</label>
+                 <button
+                   type="button"
+                   onClick={() => setShowCalendarPicker(true)}
+                   className="w-full rounded-md border border-surface-outline dark:border-gray-600 bg-surface dark:bg-gray-700 px-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-left"
+                 >
+                   {proposeDate ? new Date(proposeDate).toLocaleDateString() : 'Add'}
+                 </button>
+               </div>
+               <div>
+                 <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Time Slot</label>
+                 <select
+                   className={selectClass + " dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"}
+                   value={proposeTime}
+                   onChange={(e) => setProposeTime(e.target.value as 'AM' | 'PM' | 'All Day')}
+                 >
+                   <option value="AM">AM (8am-12pm)</option>
+                   <option value="PM">PM (12pm-4pm)</option>
+                   <option value="All Day">All Day</option>
+                 </select>
+               </div>
+             </div>
+           </div>
+           
+           {showCalendarPicker && (
+             <CalendarPicker
+               isOpen={showCalendarPicker}
+               selectedDate={proposeDate ? new Date(proposeDate) : undefined}
+               onSelectDate={(date) => {
+                 if (date) {
+                   setProposeDate(date.toISOString().split('T')[0]);
+                 }
+                 setShowCalendarPicker(false);
+               }}
+               onClose={() => setShowCalendarPicker(false)}
+             />
+           )}
+
+           {/* Warranty Assessment (Admin Only) */}
+           {isAdmin && (
+             <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Warranty Assessment</h4>
               <div className="space-y-4">
                 <div>
                   <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Classification</label>
@@ -161,54 +306,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
                 )}
               </div>
             </div>
-           )}
-        </div>
-
-        {/* Right Column: Assignment & Admin */}
-        <div className="space-y-6">
-           {/* Assignment (Admin Only) */}
-           {isAdmin && (
-             <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-                <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Sub Assignment</h4>
-                
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-surface-outline-variant dark:text-gray-400" />
-                  <input 
-                    type="text"
-                    placeholder="Type to search subs..."
-                    className="w-full rounded-md border border-surface-outline dark:border-gray-600 bg-surface dark:bg-gray-700 pl-10 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                    value={contractorSearch}
-                    onChange={(e) => setContractorSearch(e.target.value)}
-                  />
-                </div>
-
-                {contractorSearch.trim().length > 0 && (
-                  <div className="mt-2 max-h-40 overflow-y-auto border border-surface-outline-variant dark:border-gray-600 rounded-md bg-surface dark:bg-gray-700 shadow-elevation-1">
-                    {filteredContractors.length === 0 ? (
-                      <div className="px-3 py-2 text-xs text-surface-on-variant dark:text-gray-400">No subs found.</div>
-                    ) : (
-                      filteredContractors.map(c => (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => { setSelectedContractorId(c.id); setContractorSearch(c.companyName); }}
-                          className={`w-full text-left px-3 py-2 text-sm flex justify-between hover:bg-surface-container dark:hover:bg-gray-600 ${selectedContractorId === c.id ? 'bg-primary-container text-primary-on-container' : 'text-surface-on dark:text-gray-100'}`}
-                        >
-                          <span>{c.companyName}</span>
-                          <span className="text-xs opacity-70">{c.specialty}</span>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                )}
-                
-                {selectedContractorId && !contractorSearch.trim() && (
-                  <div className="mt-2 text-xs text-primary font-medium flex items-center justify-between">
-                    <span className="dark:text-gray-100">Selected: {contractors.find(c => c.id === selectedContractorId)?.companyName}</span>
-                    <button type="button" onClick={() => { setSelectedContractorId(''); setContractorSearch(''); }} className="text-surface-on-variant dark:text-gray-400 hover:text-error"><X className="h-3 w-3" /></button>
-                  </div>
-                )}
-             </div>
            )}
 
            {/* Internal Notes (Admin Only) */}
@@ -396,19 +493,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
         </div>
       </div>
 
-      <div className="flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700">
-        <Button 
-          type="button" 
-          variant="text" 
-          onClick={onCancel}
-          className="bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600"
-        >
-          Cancel
-        </Button>
-        <Button type="submit" variant="filled">
-          Create Claim
-        </Button>
-      </div>
 
       {/* Image Viewer Modal */}
       <ImageViewerModal
