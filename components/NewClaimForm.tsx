@@ -135,7 +135,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
         <div className="space-y-6">
           {/* Title and Description Card */}
           <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-            <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Claim Details</h4>
             <div className="space-y-4">
               <div>
                 <label htmlFor="title" className={labelClass}>Claim Title</label>
@@ -143,7 +142,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                   id="title"
                   type="text"
                   required
-                  className={inputClass}
+                  className={`${inputClass} bg-secondary-container/20 dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
@@ -155,7 +154,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                   id="description"
                   rows={4}
                   required
-                  className={inputClass}
+                  className={`${inputClass} bg-secondary-container/20 dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
