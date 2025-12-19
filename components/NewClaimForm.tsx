@@ -138,7 +138,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
           <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
             <div className="space-y-4">
               <div>
-                <label htmlFor="title" className={labelClass}>Claim Title</label>
+                <label htmlFor="title" className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Claim Title</label>
                 <input
                   id="title"
                   type="text"
@@ -150,7 +150,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
               </div>
 
               <div>
-                <label htmlFor="description" className={labelClass}>Description</label>
+                <label htmlFor="description" className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Description</label>
                 <textarea
                   id="description"
                   rows={4}
