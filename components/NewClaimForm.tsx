@@ -99,8 +99,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Header with buttons */}
       <div className="flex justify-between items-center pb-4 border-b border-surface-outline-variant dark:border-gray-700">
-        <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-          <Building2 className="h-5 w-5 text-primary" />
+        <h2 className="text-lg font-normal text-surface-on dark:text-gray-100">
           New Claim
         </h2>
         <div className="flex items-center gap-2">
@@ -140,29 +139,49 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left Column: Basic Info */}
         <div className="space-y-6">
-           <div>
-            <label htmlFor="title" className={labelClass}>Claim Title</label>
-            <input
-              id="title"
-              type="text"
-              required
-              className={inputClass}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
+          {/* Title and Description Card */}
+          <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+            <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Claim Details</h4>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="title" className={labelClass}>Claim Title</label>
+                <input
+                  id="title"
+                  type="text"
+                  required
+                  className={inputClass}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
 
-          <div>
-            <label htmlFor="description" className={labelClass}>Description</label>
-            <textarea
-              id="description"
-              rows={4}
-              required
-              className={inputClass}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+              <div>
+                <label htmlFor="description" className={labelClass}>Description</label>
+                <textarea
+                  id="description"
+                  rows={4}
+                  required
+                  className={inputClass}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
+          
+          {/* Internal Notes (Admin Only) */}
+          {isAdmin && (
+            <div>
+              <label htmlFor="internalNotes" className={labelClass}>Internal Notes (Admin Only)</label>
+              <textarea
+                id="internalNotes"
+                rows={4}
+                className={`${inputClass} bg-secondary-container/20 dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
+                value={internalNotes}
+                onChange={(e) => setInternalNotes(e.target.value)}
+              />
+            </div>
+          )}
 
         </div>
 
@@ -213,7 +232,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                 <Button
                   type="button"
                   variant="filled"
-                  className="mt-3 w-full"
+                  className="mt-3"
                   onClick={() => {
                     // Handle add sub assignment
                   }}
@@ -305,20 +324,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                    </div>
                 )}
               </div>
-            </div>
-           )}
-
-           {/* Internal Notes (Admin Only) */}
-           {isAdmin && (
-             <div>
-              <label htmlFor="internalNotes" className={labelClass}>Internal Notes (Admin Only)</label>
-              <textarea
-                id="internalNotes"
-                rows={4}
-                className={`${inputClass} bg-secondary-container/20 dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
-                value={internalNotes}
-                onChange={(e) => setInternalNotes(e.target.value)}
-              />
             </div>
            )}
 
