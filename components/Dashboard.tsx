@@ -244,6 +244,18 @@ const Dashboard: React.FC<DashboardProps> = ({
   const headerScrollRef = useRef<HTMLDivElement>(null);
   const cardScrollRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (selectedClaimForModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [selectedClaimForModal]);
+  
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Documents)
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'DOCUMENTS'>(initialTab || 'CLAIMS');
@@ -1582,36 +1594,39 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* CLAIM DETAIL MODAL */}
       {selectedClaimForModal && onUpdateClaim && createPortal(
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out] overflow-y-auto"
+          style={{ overscrollBehavior: 'contain' }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedClaimForModal(null);
           }}
         >
-          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] max-h-[90vh] flex flex-col">
-            <div className="p-4">
-              <ClaimInlineEditor
-                claim={selectedClaimForModal}
-                onUpdateClaim={(updatedClaim) => {
-                  if (onUpdateClaim) {
-                    onUpdateClaim(updatedClaim);
-                  }
-                  setSelectedClaimForModal(updatedClaim);
-                }}
-                contractors={contractors}
-                currentUser={currentUser}
-                userRole={userRole}
-                onAddInternalNote={onAddInternalNote}
-                claimMessages={claimMessages.filter(m => m.claimId === selectedClaimForModal.id)}
-                onTrackClaimMessage={onTrackClaimMessage}
-                onSendMessage={() => {
-                  if (onSelectClaim) {
-                    onSelectClaim(selectedClaimForModal, false);
-                  }
-                  setSelectedClaimForModal(null);
-                  setCurrentTab('MESSAGES');
-                }}
-                onNavigate={onNavigate}
-              />
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-auto flex flex-col max-h-[90vh]">
+            <div className="overflow-y-auto flex-1">
+              <div className="p-4">
+                <ClaimInlineEditor
+                  claim={selectedClaimForModal}
+                  onUpdateClaim={(updatedClaim) => {
+                    if (onUpdateClaim) {
+                      onUpdateClaim(updatedClaim);
+                    }
+                    setSelectedClaimForModal(updatedClaim);
+                  }}
+                  contractors={contractors}
+                  currentUser={currentUser}
+                  userRole={userRole}
+                  onAddInternalNote={onAddInternalNote}
+                  claimMessages={claimMessages.filter(m => m.claimId === selectedClaimForModal.id)}
+                  onTrackClaimMessage={onTrackClaimMessage}
+                  onSendMessage={() => {
+                    if (onSelectClaim) {
+                      onSelectClaim(selectedClaimForModal, false);
+                    }
+                    setSelectedClaimForModal(null);
+                    setCurrentTab('MESSAGES');
+                  }}
+                  onNavigate={onNavigate}
+                />
+              </div>
             </div>
           </div>
         </div>,
