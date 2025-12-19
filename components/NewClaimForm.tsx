@@ -98,18 +98,15 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
   return (
     <form onSubmit={handleSubmit} className="space-y-6 flex flex-col h-full">
       {/* Header */}
-      <div className="pb-4 border-b border-surface-outline-variant dark:border-gray-700">
+      <div className="pb-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center">
         <h2 className="text-lg font-normal text-surface-on dark:text-gray-100">
           New Claim
         </h2>
-      </div>
-      
-      {/* Job Name Pill */}
-      <div className="flex justify-end">
-         <span className="bg-primary-container text-primary-on-container text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
-            <Building2 className="h-3 w-3" />
-            {activeHomeowner.jobName}
-         </span>
+        {/* Job Name Pill */}
+        <span className="bg-primary-container text-primary-on-container text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+          <Building2 className="h-3 w-3" />
+          {activeHomeowner.jobName}
+        </span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
