@@ -333,6 +333,7 @@ html.dark .cl-userButtonPopoverActionButtonIcon {
 /* Sign Out Button - Light Mode */
 .cl-userButtonPopoverActionButton__signOut {
     color: #ba1a1a !important; /* error color */
+    gap: 0.5rem !important; /* Reduce spacing between icon and text */
 }
 
 .cl-userButtonPopoverActionButton__signOut:hover {
@@ -343,6 +344,15 @@ html.dark .cl-userButtonPopoverActionButtonIcon {
 .dark .cl-userButtonPopoverActionButton__signOut:hover,
 html.dark .cl-userButtonPopoverActionButton__signOut:hover {
     background-color: rgba(186, 26, 26, 0.1) !important; /* error/10 */
+}
+
+/* Reduce spacing between icon and text in sign out button */
+.cl-userButtonPopoverActionButton__signOut .cl-userButtonPopoverActionButtonIcon {
+    margin-right: 0.5rem !important;
+}
+
+.cl-userButtonPopoverActionButton__signOut .cl-userButtonPopoverActionButtonText {
+    margin-left: 0 !important;
 }
 
 /* Hide account management button */
