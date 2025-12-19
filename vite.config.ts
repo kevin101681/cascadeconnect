@@ -97,7 +97,21 @@ export default defineConfig(({ mode }) => {
       exclude: ['@neondatabase/serverless', 'drizzle-orm'],
     },
     build: {
-      target: 'esnext'
+      target: 'esnext',
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            // Create a separate chunk for CBS Books app
+            if (id.includes('lib/cbsbooks/App')) {
+              return 'cbsbooks-app';
+            }
+            // Create a separate chunk for node_modules
+            if (id.includes('node_modules')) {
+              return 'vendor';
+            }
+          }
+        }
+      }
     },
     resolve: {
       alias: {
