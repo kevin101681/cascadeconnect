@@ -899,7 +899,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       initial="hidden"
       animate="visible"
     >
-      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 sticky top-0 z-10">
+      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30">
         <h3 className={`text-lg font-bold flex items-center gap-2 ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
             {groupClaims.length}
@@ -923,46 +923,46 @@ const Dashboard: React.FC<DashboardProps> = ({
           {emptyMsg}
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
-            <thead className="sticky top-[73px] z-10">
-              <tr className="border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50">
-                <th className="px-3 py-3 text-left">
+        <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}>
+          <table className="border-collapse" style={{ minWidth: '1400px' }}>
+            <thead className="sticky top-0 z-20">
+              <tr className="border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50 backdrop-blur-sm">
+                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
                   <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Claim #</span>
                 </th>
-                <th className="px-3 py-3 text-left">
+                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
                   <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Status</span>
                 </th>
-                <th className="px-3 py-3 text-left min-w-[200px]">
+                <th className="px-3 py-3 text-left min-w-[200px] bg-surface-container/50 dark:bg-gray-700/50">
                   <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Title</span>
                 </th>
-                <th className="px-3 py-3 text-left min-w-[300px]">
+                <th className="px-3 py-3 text-left min-w-[300px] bg-surface-container/50 dark:bg-gray-700/50">
                   <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Description</span>
                 </th>
-                <th className="px-3 py-3 text-left">
+                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
                   <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Class</span>
                 </th>
                 {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                  <th className="px-3 py-3 text-left">
+                  <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
                     <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Homeowner</span>
                   </th>
                 )}
-                <th className="px-3 py-3 text-left">
+                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
                   <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Sub</span>
                 </th>
-                <th className="px-3 py-3 text-left">
+                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
                   <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Scheduled</span>
                 </th>
-                <th className="px-3 py-3 text-left">
+                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
                   <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Submitted</span>
                 </th>
-                <th className="px-3 py-3 text-left">
+                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
                   <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Evaluated</span>
                 </th>
-                <th className="px-3 py-3 text-left">
+                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
                   <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Service Order</span>
                 </th>
-                <th className="px-3 py-3 text-left">
+                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
                   <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Attachments</span>
                 </th>
               </tr>
@@ -988,40 +988,40 @@ const Dashboard: React.FC<DashboardProps> = ({
                         setExpandedClaimId(expandedClaimId === claim.id ? null : claim.id);
                       }}
                     >
-                    <td className="px-3 py-3">
+                      <td className="px-3 py-3 whitespace-nowrap">
                       <span className="text-xs font-bold text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap inline-block">
                         #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
                       </span>
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       <StatusBadge status={claim.status} />
                     </td>
                     <td className="px-3 py-3 min-w-[200px]">
-                      <span className="text-xs font-medium text-surface-on dark:text-gray-100 truncate bg-surface-container-high dark:bg-gray-700 px-3 py-1 rounded-full inline-block max-w-full border border-surface-outline-variant/50 dark:border-gray-600">
+                      <span className="text-xs font-medium text-surface-on dark:text-gray-100 truncate bg-surface-container-high dark:bg-gray-700 px-3 py-1 rounded-full inline-block w-full border border-surface-outline-variant/50 dark:border-gray-600">
                         {claim.title}
                       </span>
                     </td>
                     <td className="px-3 py-3 min-w-[300px]">
                       {claim.description ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-400 truncate bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full inline-block max-w-full">
+                        <span className="text-xs text-surface-on-variant dark:text-gray-400 truncate bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full inline-block w-full">
                           {claim.description}
                         </span>
                       ) : null}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
                         {claim.classification}
                       </span>
                     </td>
                     {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                      <td className="px-3 py-3">
+                      <td className="px-3 py-3 whitespace-nowrap">
                         <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
                           <Building2 className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">{claim.homeownerName}</span>
                         </span>
                       </td>
                     )}
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       {claim.contractorName ? (
                         <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
                           <HardHat className="h-3 w-3 flex-shrink-0" />
@@ -1034,7 +1034,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </span>
                       )}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       {scheduledDate ? (
                         <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap">
                           <Calendar className="h-3 w-3 flex-shrink-0" />
@@ -1042,19 +1042,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </span>
                       ) : null}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
                         {new Date(claim.dateSubmitted).toLocaleDateString()}
                       </span>
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       {claim.dateEvaluated ? (
                         <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
                           Eval: {new Date(claim.dateEvaluated).toLocaleDateString()}
                         </span>
                       ) : null}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       {serviceOrderDate ? (
                         <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
                           <Mail className="h-3 w-3 flex-shrink-0" />
@@ -1067,14 +1067,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </span>
                       )}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-3 whitespace-nowrap">
                       {claim.attachments && claim.attachments.length > 0 ? (
                         <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
                           <Paperclip className="h-3 w-3 flex-shrink-0" />
                           {claim.attachments.length}
                         </span>
                       ) : null}
-                      </td>
+                    </td>
                     </motion.tr>
                     {/* Inline Expandable Editor */}
                     <AnimatePresence>
