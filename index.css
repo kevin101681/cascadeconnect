@@ -45,6 +45,20 @@ body {
     display: none; /* Chrome, Safari and Opera */
 }
 
+/* PDF Flipbook - ensure pages stay white during flip animation */
+.pdf-flipbook .st-page,
+.pdf-flipbook .pdf-page,
+.pdf-flipbook .st-page > div {
+    background-color: #fff !important;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.pdf-flipbook .st-page.flipping,
+.pdf-flipbook .st-page.flipped {
+    background-color: #fff !important;
+}
+
 /* Claims table scrollbar - match card background, no frame */
 .claims-table-scroll {
     scrollbar-width: thin; /* Firefox */

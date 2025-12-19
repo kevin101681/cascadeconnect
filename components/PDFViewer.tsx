@@ -34,10 +34,17 @@ const PDFPage = forwardRef<HTMLDivElement, PDFPageProps>(({ pageNumber, width, h
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#fff'
+        backgroundColor: '#fff',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden'
       }}
     >
-      <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+      <div style={{ 
+        width: '100%', 
+        height: '100%', 
+        overflow: 'hidden',
+        backgroundColor: '#fff'
+      }}>
         <Page
           pageNumber={pageNumber}
           width={width}
@@ -60,7 +67,7 @@ const PDFPage = forwardRef<HTMLDivElement, PDFPageProps>(({ pageNumber, width, h
             <div style={{ 
               width, 
               height, 
-              display: 'flex', 
+              display: 'flex',
               alignItems: 'center', 
               justifyContent: 'center', 
               backgroundColor: '#fee', 
@@ -280,37 +287,22 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
             }
           >
             {!documentLoading && numPages > 0 && (
-              <div style={{ maxWidth: '100%', maxHeight: '100%', overflow: 'hidden', position: 'relative' }}>
-                {/* Left Arrow Indicator */}
+              <div style={{ maxWidth: '100%', maxHeight: '100%', overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
+                {/* Left Arrow Indicator - Outside document */}
                 {numPages > 1 && currentPage > 1 && (
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handlePrevPage();
                     }}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 z-[1002] p-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+                    className="z-[1002] p-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
                     title="Previous page"
                     aria-label="Previous page"
                   >
-                    <ChevronLeft className="h-6 w-6 text-gray-700" style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))' }} />
+                    <ChevronLeft className="h-6 w-6 text-white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))' }} />
                   </button>
                 )}
                 
-                {/* Right Arrow Indicator */}
-                {numPages > 1 && currentPage < numPages && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleNextPage();
-                    }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 z-[1002] p-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-                    title="Next page"
-                    aria-label="Next page"
-                  >
-                    <ChevronRight className="h-6 w-6 text-gray-700" style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))' }} />
-                  </button>
-                )}
-
                 <HTMLFlipBook
                   ref={flipBookRef}
                   width={pageDimensions.width}
@@ -329,6 +321,21 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                     />
                   ))}
                 </HTMLFlipBook>
+
+                {/* Right Arrow Indicator - Outside document */}
+                {numPages > 1 && currentPage < numPages && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNextPage();
+                    }}
+                    className="z-[1002] p-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+                    title="Next page"
+                    aria-label="Next page"
+                  >
+                    <ChevronRight className="h-6 w-6 text-white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))' }} />
+                  </button>
+                )}
               </div>
             )}
           </Document>
