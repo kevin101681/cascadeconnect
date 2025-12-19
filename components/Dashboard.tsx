@@ -1006,7 +1006,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       ) : (
         <div 
-          className="overflow-x-auto relative" 
+          className="overflow-x-auto relative claims-table-scroll"
           style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}
         >
           <table className="border-collapse" style={{ minWidth: '1400px' }}>

@@ -45,6 +45,47 @@ body {
     display: none; /* Chrome, Safari and Opera */
 }
 
+/* Claims table scrollbar - match card background, no frame */
+.claims-table-scroll {
+    scrollbar-width: thin; /* Firefox */
+}
+
+.claims-table-scroll::-webkit-scrollbar {
+    display: block; /* Show scrollbar for claims table */
+    height: 8px; /* Horizontal scrollbar height */
+}
+
+.claims-table-scroll::-webkit-scrollbar-track {
+    background: #ffffff; /* Surface color (light mode) - matches card bg-surface */
+    border: none; /* Remove frame */
+    border-radius: 0;
+    margin: 0;
+}
+
+.dark .claims-table-scroll::-webkit-scrollbar-track {
+    background: #1f2937; /* gray-800 (dark mode) - matches card dark:bg-gray-800 */
+}
+
+.claims-table-scroll::-webkit-scrollbar-thumb {
+    background: rgba(192, 200, 204, 0.5); /* surface-outline-variant with opacity for subtle visibility */
+    border: none; /* Remove frame */
+    border-radius: 4px;
+}
+
+.claims-table-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(112, 120, 125, 0.7); /* outline color on hover */
+}
+
+/* Firefox scrollbar styling - transparent track to match background */
+.claims-table-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(192, 200, 204, 0.5) transparent; /* thumb color, transparent track to match card background */
+}
+
+.dark .claims-table-scroll {
+    scrollbar-color: rgba(192, 200, 204, 0.3) transparent; /* subtle thumb for dark mode, transparent track */
+}
+
 /* Fix for CBS Books FAB positioning - ensure fixed elements position relative to viewport */
 [data-cbs-books] [class*="fixed"] {
     position: fixed !important;
