@@ -8,7 +8,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor } from '../types';
 import { ClaimMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, ArrowUp, ArrowDown } from 'lucide-react';
 import Button from './Button';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
@@ -244,6 +244,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [claimsFilter, setClaimsFilter] = useState<'Open' | 'Closed' | 'All'>('All');
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const filterDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Claims sorting state
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   // Close filter dropdown when clicking outside
   useEffect(() => {
@@ -914,7 +918,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // --- Render Helpers ---
 
-  const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, showFilter: boolean = false, filterValue: 'Open' | 'Closed' | 'All' = 'All', onFilterChange?: (filter: 'Open' | 'Closed' | 'All') => void, onExportExcel?: () => void) => (
+  const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, showFilter: boolean = false, filterValue: 'Open' | 'Closed' | 'All' = 'All', onFilterChange?: (filter: 'Open' | 'Closed' | 'All') => void, onExportExcel?: () => void, sortColumn?: string | null, sortDirection?: 'asc' | 'desc', onSort?: (column: string) => void) => (
     <motion.div 
       className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0"
       variants={cardVariants}
@@ -1012,37 +1016,117 @@ const Dashboard: React.FC<DashboardProps> = ({
           <table className="border-collapse" style={{ minWidth: '1400px' }}>
             <thead className="sticky top-0 z-20">
               <tr className="border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50 backdrop-blur-sm">
-                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Claim #</span>
+                <th 
+                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
+                  onClick={() => onSort?.('claimNumber')}
+                >
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
+                    Claim #
+                    {sortColumn === 'claimNumber' && (
+                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    )}
+                  </span>
                 </th>
-                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Status</span>
+                <th 
+                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
+                  onClick={() => onSort?.('status')}
+                >
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
+                    Status
+                    {sortColumn === 'status' && (
+                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    )}
+                  </span>
                 </th>
-                <th className="px-3 py-3 text-left min-w-[200px] bg-surface-container/50 dark:bg-gray-700/50">
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Title</span>
+                <th 
+                  className="px-3 py-3 text-left min-w-[200px] bg-surface-container/50 dark:bg-gray-700/50 cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
+                  onClick={() => onSort?.('title')}
+                >
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
+                    Title
+                    {sortColumn === 'title' && (
+                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    )}
+                  </span>
                 </th>
-                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Class</span>
+                <th 
+                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
+                  onClick={() => onSort?.('classification')}
+                >
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
+                    Class
+                    {sortColumn === 'classification' && (
+                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    )}
+                  </span>
                 </th>
                 {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                  <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
-                    <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Homeowner</span>
+                  <th 
+                    className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
+                    onClick={() => onSort?.('homeowner')}
+                  >
+                    <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
+                      Homeowner
+                      {sortColumn === 'homeowner' && (
+                        sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                      )}
+                    </span>
                   </th>
                 )}
-                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Sub</span>
+                <th 
+                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
+                  onClick={() => onSort?.('contractor')}
+                >
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
+                    Sub
+                    {sortColumn === 'contractor' && (
+                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    )}
+                  </span>
                 </th>
-                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Scheduled</span>
+                <th 
+                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
+                  onClick={() => onSort?.('scheduled')}
+                >
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
+                    Scheduled
+                    {sortColumn === 'scheduled' && (
+                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    )}
+                  </span>
                 </th>
-                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Submitted</span>
+                <th 
+                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
+                  onClick={() => onSort?.('submitted')}
+                >
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
+                    Submitted
+                    {sortColumn === 'submitted' && (
+                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    )}
+                  </span>
                 </th>
-                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Evaluated</span>
+                <th 
+                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
+                  onClick={() => onSort?.('evaluated')}
+                >
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
+                    Evaluated
+                    {sortColumn === 'evaluated' && (
+                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    )}
+                  </span>
                 </th>
-                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Service Order</span>
+                <th 
+                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
+                  onClick={() => onSort?.('serviceOrder')}
+                >
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
+                    Service Order
+                    {sortColumn === 'serviceOrder' && (
+                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                    )}
+                  </span>
                 </th>
               </tr>
             </thead>
@@ -1218,10 +1302,87 @@ const Dashboard: React.FC<DashboardProps> = ({
       return true; // 'All'
     });
 
+    // Sort claims based on selected column and direction
+    const sortedClaims = [...filteredClaims].sort((a, b) => {
+      if (!sortColumn) return 0;
+
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortColumn) {
+        case 'claimNumber':
+          aValue = a.claimNumber || a.id.substring(0, 8).toUpperCase();
+          bValue = b.claimNumber || b.id.substring(0, 8).toUpperCase();
+          break;
+        case 'status':
+          aValue = a.status;
+          bValue = b.status;
+          break;
+        case 'title':
+          aValue = a.title || '';
+          bValue = b.title || '';
+          break;
+        case 'classification':
+          aValue = a.classification || '';
+          bValue = b.classification || '';
+          break;
+        case 'homeowner':
+          aValue = a.homeownerName || '';
+          bValue = b.homeownerName || '';
+          break;
+        case 'contractor':
+          aValue = a.contractorName || '';
+          bValue = b.contractorName || '';
+          break;
+        case 'scheduled':
+          const aAcceptedDate = a.proposedDates?.find(d => d.status === 'ACCEPTED');
+          const bAcceptedDate = b.proposedDates?.find(d => d.status === 'ACCEPTED');
+          aValue = aAcceptedDate ? new Date(aAcceptedDate.date).getTime() : 0;
+          bValue = bAcceptedDate ? new Date(bAcceptedDate.date).getTime() : 0;
+          break;
+        case 'submitted':
+          aValue = new Date(a.dateSubmitted).getTime();
+          bValue = new Date(b.dateSubmitted).getTime();
+          break;
+        case 'evaluated':
+          aValue = a.dateEvaluated ? new Date(a.dateEvaluated).getTime() : 0;
+          bValue = b.dateEvaluated ? new Date(b.dateEvaluated).getTime() : 0;
+          break;
+        case 'serviceOrder':
+          // Service order date logic would go here if available
+          aValue = 0;
+          bValue = 0;
+          break;
+        default:
+          return 0;
+      }
+
+      // Compare values
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        const comparison = aValue.localeCompare(bValue);
+        return sortDirection === 'asc' ? comparison : -comparison;
+      } else {
+        // Numeric comparison
+        const comparison = (aValue || 0) - (bValue || 0);
+        return sortDirection === 'asc' ? comparison : -comparison;
+      }
+    });
+
+    const handleSort = (column: string) => {
+      if (sortColumn === column) {
+        // Toggle direction if same column
+        setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      } else {
+        // Set new column and default to ascending
+        setSortColumn(column);
+        setSortDirection('asc');
+      }
+    };
+
     const handleExportToExcel = () => {
       try {
         // Prepare data for export
-        const excelData = filteredClaims.map(claim => ({
+        const excelData = sortedClaims.map(claim => ({
           'Claim #': claim.claimNumber || claim.id.substring(0, 8).toUpperCase(),
           'Status': claim.status,
           'Title': claim.title,
@@ -1263,14 +1424,17 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div>
         {renderClaimGroup(
           'Warranty Claims', 
-          filteredClaims, 
+          sortedClaims, 
           emptyMessage, 
           false, 
           isHomeownerView,
           true,
           claimsFilter,
           setClaimsFilter,
-          handleExportToExcel
+          handleExportToExcel,
+          sortColumn,
+          sortDirection,
+          handleSort
         )}
       </div>
     );
