@@ -34,17 +34,10 @@ const PDFPage = forwardRef<HTMLDivElement, PDFPageProps>(({ pageNumber, width, h
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#fff',
-        backfaceVisibility: 'hidden',
-        WebkitBackfaceVisibility: 'hidden'
+        backgroundColor: '#fff'
       }}
     >
-      <div style={{ 
-        width: '100%', 
-        height: '100%', 
-        overflow: 'hidden',
-        backgroundColor: '#fff'
-      }}>
+      <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
         <Page
           pageNumber={pageNumber}
           width={width}
@@ -67,7 +60,7 @@ const PDFPage = forwardRef<HTMLDivElement, PDFPageProps>(({ pageNumber, width, h
             <div style={{ 
               width, 
               height, 
-              display: 'flex',
+              display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center', 
               backgroundColor: '#fee', 
@@ -135,49 +128,49 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
         setDocumentLoading(true);
         setError(null);
         setNumPages(0);
-
+        
         // Cleanup previous blob URL if exists
         if (blobUrlRef.current) {
           URL.revokeObjectURL(blobUrlRef.current);
           blobUrlRef.current = null;
         }
-
-        let finalUrl = doc.url;
-
+        
+          let finalUrl = doc.url;
+          
         // Convert data URL to blob URL for better compatibility
-        if (doc.url.startsWith('data:')) {
-          const base64Data = doc.url.split(',')[1];
-          if (!base64Data) {
-            throw new Error('Invalid data URL format');
+          if (doc.url.startsWith('data:')) {
+            const base64Data = doc.url.split(',')[1];
+            if (!base64Data) {
+              throw new Error('Invalid data URL format');
+            }
+            
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+              byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+            
+            if (blob.size === 0) {
+              throw new Error('Invalid PDF data - file appears to be empty');
+            }
+            
+            const blobUrl = URL.createObjectURL(blob);
+            blobUrlRef.current = blobUrl;
+            finalUrl = blobUrl;
           }
-
-          const byteCharacters = atob(base64Data);
-          const byteNumbers = new Array(byteCharacters.length);
-          for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-          }
-          const byteArray = new Uint8Array(byteNumbers);
-          const blob = new Blob([byteArray], { type: 'application/pdf' });
-
-          if (blob.size === 0) {
-            throw new Error('Invalid PDF data - file appears to be empty');
-          }
-
-          const blobUrl = URL.createObjectURL(blob);
-          blobUrlRef.current = blobUrl;
-          finalUrl = blobUrl;
-        }
-
-        setPdfUrl(finalUrl);
-      } catch (err: any) {
+          
+          setPdfUrl(finalUrl);
+        } catch (err: any) {
         console.error('PDF preparation error:', err);
         setError(err.message || 'Failed to prepare PDF');
         setDocumentLoading(false);
-      }
-    };
-
+        }
+      };
+      
     preparePdfUrl();
-
+    
     // Cleanup on unmount or close
     return () => {
       if (blobUrlRef.current) {
@@ -197,22 +190,15 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
 
   const handlePrevPage = () => {
     if (flipBookRef.current && currentPage > 1) {
-      const pageFlip = flipBookRef.current.pageFlip();
-      // Use flipPrev with 'top' to ensure consistent animation from left side
-      // This creates the reverse of the forward animation
-      pageFlip.flipPrev('top');
-      // Update currentPage immediately as fallback in case flip event doesn't fire
-      setCurrentPage(prev => Math.max(1, prev - 1));
+      flipBookRef.current.pageFlip().flipPrev();
+      setCurrentPage(prev => prev - 1);
     }
   };
 
   const handleNextPage = () => {
     if (flipBookRef.current && currentPage < numPages) {
-      const pageFlip = flipBookRef.current.pageFlip();
-      // Use flipNext with 'top' to ensure consistent animation from right side
-      pageFlip.flipNext('top');
-      // Update currentPage immediately as fallback in case flip event doesn't fire
-      setCurrentPage(prev => Math.min(numPages, prev + 1));
+      flipBookRef.current.pageFlip().flipNext();
+      setCurrentPage(prev => prev + 1);
     }
   };
 
@@ -229,16 +215,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
       setCurrentPage(newPage);
     };
 
-    // Also listen for flipStart to catch page changes earlier
-    const handleFlipStart = (e: any) => {
-      // Update page immediately when flip starts
-      const newPage = (e?.data ?? flipBook.getCurrentPageIndex()) + 1;
-      setCurrentPage(newPage);
-    };
-
     try {
       flipBook.on('flip', handleFlip);
-      flipBook.on('flipStart', handleFlipStart);
     } catch (err) {
       console.warn('Could not attach flip event listener:', err);
     }
@@ -246,7 +224,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
     return () => {
       try {
         flipBook.off('flip', handleFlip);
-        flipBook.off('flipStart', handleFlipStart);
       } catch (err) {
         // Ignore cleanup errors
       }
@@ -264,7 +241,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
   }
 
   return (
-    <div
+    <div 
       className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 backdrop-blur-sm"
       onClick={onClose}
       style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
@@ -303,27 +280,37 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
             }
           >
             {!documentLoading && numPages > 0 && (
-              <div style={{ maxWidth: '100%', maxHeight: '100%', overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
-                {/* Left Arrow Indicator - Outside document - Always visible */}
+              <div style={{ maxWidth: '100%', maxHeight: '100%', overflow: 'hidden', position: 'relative' }}>
+                {/* Left Arrow Indicator */}
+                {numPages > 1 && currentPage > 1 && (
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (numPages > 1 && currentPage > 1) {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       handlePrevPage();
-                    }
-                  }}
-                  disabled={numPages <= 1 || currentPage <= 1}
-                  className={`z-[1002] p-3 transition-all flex items-center justify-center ${
-                    numPages > 1 && currentPage > 1
-                      ? 'hover:scale-110 active:scale-95 cursor-pointer opacity-100'
-                      : 'cursor-not-allowed opacity-30'
-                  }`}
-                  title="Previous page"
-                  aria-label="Previous page"
+                    }}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-[1002] p-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+                    title="Previous page"
+                    aria-label="Previous page"
                 >
-                  <ChevronLeft className="h-6 w-6 text-white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))' }} />
+                    <ChevronLeft className="h-6 w-6 text-gray-700" style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))' }} />
                 </button>
+                )}
                 
+                {/* Right Arrow Indicator */}
+                {numPages > 1 && currentPage < numPages && (
+                <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNextPage();
+                    }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-[1002] p-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+                    title="Next page"
+                    aria-label="Next page"
+                >
+                    <ChevronRight className="h-6 w-6 text-gray-700" style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))' }} />
+                </button>
+                )}
+
                 <HTMLFlipBook
                   ref={flipBookRef}
                   width={pageDimensions.width}
@@ -331,9 +318,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                   size="fixed"
                   showCover={false}
                   className="pdf-flipbook"
-                  useMouseEvents={false}
-                  disableFlipByClick={false}
-                  flippingTime={600}
                   {...({} as any)}
                 >
                   {Array.from(new Array(numPages), (el, index) => (
@@ -345,26 +329,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                     />
                   ))}
                 </HTMLFlipBook>
-
-                {/* Right Arrow Indicator - Outside document - Always visible */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (numPages > 1 && currentPage < numPages) {
-                      handleNextPage();
-                    }
-                  }}
-                  disabled={numPages <= 1 || currentPage >= numPages}
-                  className={`z-[1002] p-3 transition-all flex items-center justify-center ${
-                    numPages > 1 && currentPage < numPages
-                      ? 'hover:scale-110 active:scale-95 cursor-pointer opacity-100'
-                      : 'cursor-not-allowed opacity-30'
-                  }`}
-                  title="Next page"
-                  aria-label="Next page"
-                >
-                  <ChevronRight className="h-6 w-6 text-white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))' }} />
-                </button>
               </div>
             )}
           </Document>

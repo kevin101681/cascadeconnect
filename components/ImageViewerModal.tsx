@@ -84,7 +84,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
     if (!container) return { width: 1000, height: 700 };
     
     const containerRect = container.getBoundingClientRect();
-    const padding = 16; // 1rem = 16px (p-4)
+    const padding = 32; // 2rem = 32px (p-8)
     const maxWidth = Math.min(1200, containerRect.width - padding * 2);
     const maxHeight = containerRect.height - padding * 2;
     
@@ -749,8 +749,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
       tabIndex={0}
     >
       <div
-        className="relative bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-5 max-w-7xl w-full mx-4 overflow-hidden animate-[scale-in_0.2s_ease-out] flex flex-col"
-        style={{ height: 'calc(100vh - 2rem)', maxHeight: 'calc(100vh - 2rem)' }}
+        className="relative bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-5 max-w-7xl max-h-[90vh] w-full mx-4 overflow-hidden animate-[scale-in_0.2s_ease-out] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -939,7 +938,7 @@ const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
           )}
 
           {/* Canvas */}
-          <div className="flex items-center justify-center p-4 h-full relative overflow-hidden">
+          <div className="flex items-center justify-center p-8 h-full relative overflow-hidden">
             {/* Always render canvas so ref exists */}
             <canvas
               ref={canvasRef}

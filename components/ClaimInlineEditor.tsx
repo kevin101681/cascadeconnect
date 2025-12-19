@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Claim, UserRole, ClaimStatus, ProposedDate, Contractor, InternalEmployee, ClaimClassification, Attachment } from '../types';
 import Button from './Button';
 import StatusBadge from './StatusBadge';
@@ -29,6 +29,7 @@ interface ClaimInlineEditorProps {
     senderName: string;
   }) => void;
   onSendMessage: (claim: Claim) => void;
+  onCancel?: () => void;
   onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND', config?: { initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS'; initialThreadId?: string | null }) => void;
 }
 
@@ -42,6 +43,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   claimMessages = [],
   onTrackClaimMessage,
   onSendMessage,
+  onCancel,
   onNavigate
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
@@ -65,6 +67,10 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : ''
   );
   const [newNote, setNewNote] = useState('');
+  const [contractorSearch, setContractorSearch] = useState('');
+  const [selectedContractorId, setSelectedContractorId] = useState<string>(claim.contractorId || '');
+  const [showClassificationSelect, setShowClassificationSelect] = useState(false);
+  const classificationSelectRef = useRef<HTMLDivElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [imageViewerIndex, setImageViewerIndex] = useState(0);
@@ -136,12 +142,16 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   };
   
   const handleCancelEdit = () => {
-    setEditTitle(claim.title);
-    setEditDescription(claim.description);
-    setEditClassification(claim.classification);
-    setEditInternalNotes(claim.internalNotes || '');
-    setEditDateEvaluated(claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : '');
-    setIsEditing(false);
+    if (onCancel) {
+      onCancel();
+    } else {
+      setEditTitle(claim.title);
+      setEditDescription(claim.description);
+      setEditClassification(claim.classification);
+      setEditInternalNotes(claim.internalNotes || '');
+      setEditDateEvaluated(claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : '');
+      setIsEditing(false);
+    }
   };
   
   const handleAddNote = async () => {
@@ -193,8 +203,31 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
         contractorName: contractor.companyName,
         contractorEmail: contractor.email
       });
+      setSelectedContractorId(contractor.id);
     }
   };
+  
+  // Filter contractors for search
+  const filteredContractors = contractorSearch.trim() 
+    ? contractors.filter(c => c.companyName.toLowerCase().includes(contractorSearch.toLowerCase()) || c.specialty.toLowerCase().includes(contractorSearch.toLowerCase()))
+    : [];
+  
+  // Close classification dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (classificationSelectRef.current && !classificationSelectRef.current.contains(event.target as Node)) {
+        setShowClassificationSelect(false);
+      }
+    };
+    
+    if (showClassificationSelect) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showClassificationSelect]);
   
   const handlePrepareServiceOrder = async () => {
     if (!claim.contractorId || !claim.contractorName) {
@@ -346,37 +379,68 @@ If this repair work is billable, please let me know prior to scheduling.`);
   };
   
   return (
-    <div className="space-y-6 claim-editor-scroll" style={{ maxWidth: '100%', overflowX: 'auto', padding: '1.5rem', boxSizing: 'border-box' }}>
+    <div className="space-y-6 flex flex-col h-full">
+      {/* Header */}
+      <div className="pb-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center">
+        <h2 className="text-lg font-normal text-surface-on dark:text-gray-100">
+          Edit Claim
+        </h2>
+        <div className="flex items-center gap-2">
+          <Button 
+            type="button" 
+            variant="filled"
+            onClick={() => onSendMessage(claim)}
+          >
+            <Send className="h-4 w-4 mr-2" />
+            Send Message
+          </Button>
+          {onCancel && (
+            <Button 
+              type="button" 
+              variant="filled" 
+              onClick={onCancel}
+            >
+              Cancel
+            </Button>
+          )}
+          <Button 
+            type="button" 
+            variant="filled" 
+            onClick={handleSaveDetails}
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+      
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" style={{ minWidth: 'max-content' }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Left Column */}
         <div className="space-y-6">
-          {/* Title and Description Combined */}
-          <div className="bg-surface dark:bg-gray-800 px-6 pt-6 pb-4 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
-            <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4">Claim Details</h3>
-            <div className="space-y-3">
+          {/* Title and Description Card */}
+          <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+            <div className="space-y-4">
               <div>
-                <label className="block text-xs text-surface-on-variant dark:text-gray-400 mb-1 font-medium">Title</label>
+                <label className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Claim Title</label>
                 {isEditing && !isReadOnly ? (
                   <input 
                     type="text" 
                     value={editTitle}
                     onChange={e => setEditTitle(e.target.value)}
-                    className="w-full bg-surface-container dark:bg-gray-700 border border-primary rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 focus:outline-none"
+                    className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-secondary-container/20 dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors"
                   />
                 ) : (
                   <p className="text-surface-on dark:text-gray-100 font-medium">{claim.title}</p>
                 )}
               </div>
               <div>
-                <label className="block text-xs text-surface-on-variant dark:text-gray-400 mb-1 font-medium">Description</label>
+                <label className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Description</label>
                 {isEditing && !isReadOnly ? (
                   <textarea
                     value={editDescription}
                     onChange={e => setEditDescription(e.target.value)}
-                    rows={3}
-                    className="w-full bg-surface-container dark:bg-gray-700 border border-primary rounded-lg p-3 text-surface-on dark:text-gray-100 focus:outline-none resize-y min-h-[4rem]"
-                    style={{ maxHeight: '20rem' }}
+                    rows={4}
+                    className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-secondary-container/20 dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-y"
                   />
                 ) : (
                   <p className="text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
@@ -388,10 +452,11 @@ If this repair work is billable, please let me know prior to scheduling.`);
           </div>
 
           {/* Attachments Section */}
-          <div className="bg-surface dark:bg-gray-800 px-6 pt-6 pb-4 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
-            <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4">
+          <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+            <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3 flex items-center gap-2">
+              <Paperclip className="h-4 w-4 text-primary" />
               Attachments
-            </h3>
+            </h4>
             <div className="space-y-4">
               {/* Existing Attachments */}
               {claim.attachments && claim.attachments.length > 0 && (
@@ -460,7 +525,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
               
               {/* Upload Section - Always visible */}
               {!isReadOnly && (
-                <div className="border-t border-surface-outline-variant dark:border-gray-700 pt-4">
+                <div className="border-t border-surface-outline-variant dark:border-gray-600 pt-4 mt-4">
                   <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-2">
                     Upload Images or Documents
                   </label>
@@ -551,136 +616,39 @@ If this repair work is billable, please let me know prior to scheduling.`);
             </div>
           </div>
 
-          {/* Internal Notes and Message Summary - Moved below Claim Details */}
           {/* Internal Notes - Admin Only */}
           {isAdmin && (
-            <div className="bg-secondary-container dark:bg-gray-800 p-6 rounded-3xl border border-secondary-container dark:border-gray-700">
-              <button
-                onClick={() => setIsInternalNotesExpanded(!isInternalNotesExpanded)}
-                className="w-full flex items-center justify-between mb-4 text-left"
-              >
-                <h3 className="text-lg font-normal text-secondary-on-container dark:text-gray-100">
-                  Internal Notes <span className="text-xs font-normal opacity-70">(Not visible to Homeowner)</span>
-                </h3>
-                {isInternalNotesExpanded ? (
-                  <ChevronUp className="h-5 w-5 text-secondary-on-container dark:text-gray-100" />
-                ) : (
-                  <ChevronDown className="h-5 w-5 text-secondary-on-container dark:text-gray-100" />
-                )}
-              </button>
-              
-              {isInternalNotesExpanded && (
-                <div className="mb-4 overflow-hidden">
-                  {isEditing && !isReadOnly ? (
-                    <div className="mb-4">
-                      <textarea
-                        value={editInternalNotes}
-                        onChange={e => setEditInternalNotes(e.target.value)}
-                        rows={6}
-                        placeholder="Add internal notes here..."
-                        className="w-full bg-surface dark:bg-gray-700 border border-primary rounded-lg p-3 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary resize-none overflow-hidden"
-                      />
-                      <div className="mt-2 text-xs text-secondary-on-container dark:text-gray-400">
-                        <p>Note: When you add a new note, it will be formatted with a timestamp pill automatically.</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="mb-4 overflow-hidden">
-                      <div className="text-sm text-secondary-on-container dark:text-gray-300 whitespace-pre-wrap leading-relaxed bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600 overflow-hidden">
-                        {claim.internalNotes ? (
-                          <div className="space-y-3">
-                            {claim.internalNotes.split('\n\n').map((noteBlock, idx) => {
-                              // Parse note blocks - format: "timestamp\nnote content" or "[timestamp] note content" (legacy)
-                              const lines = noteBlock.split('\n');
-                              const firstLine = lines[0] || '';
-                              const isLegacyFormat = firstLine.startsWith('[') && firstLine.includes(']');
-                              
-                              let timestamp = '';
-                              let noteContent = '';
-                              
-                              if (isLegacyFormat) {
-                                // Legacy format: [timestamp] note content
-                                const match = firstLine.match(/^\[(.+?)\]\s*(.*)$/);
-                                if (match) {
-                                  timestamp = match[1];
-                                  noteContent = match[2] + (lines.slice(1).length > 0 ? '\n' + lines.slice(1).join('\n') : '');
-                                } else {
-                                  noteContent = noteBlock;
-                                }
-                              } else {
-                                // New format: timestamp\nnote content
-                                timestamp = firstLine;
-                                noteContent = lines.slice(1).join('\n');
-                              }
-                              
-                              return (
-                                <div key={idx} className="pb-3 border-b border-secondary-container-high dark:border-gray-600 last:border-b-0 last:pb-0">
-                                  {timestamp && (
-                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary-container text-primary-on-container mb-2">
-                                      {timestamp}
-                                    </span>
-                                  )}
-                                  <p className="mt-2 whitespace-pre-wrap">{noteContent || noteBlock}</p>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <p>No internal notes.</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                
-                  {!isReadOnly && (
-                    <div className="border-t border-secondary-container-high dark:border-gray-600 pt-4">
-                      <label className="block text-xs font-medium text-secondary-on-container dark:text-gray-300 mb-2">
-                        Add New Note
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={newNote}
-                          onChange={e => setNewNote(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && !e.shiftKey) {
-                              e.preventDefault();
-                              handleAddNote();
-                            }
-                          }}
-                          className="flex-1 bg-surface dark:bg-gray-700 border border-secondary-container-high dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                        />
-                        <Button
-                          variant="filled"
-                          onClick={handleAddNote}
-                          disabled={!newNote.trim()}
-                          icon={<Plus className="h-4 w-4" />}
-                          className="!h-9 !px-4"
-                        >
-                          Add
-                        </Button>
-                      </div>
-                    </div>
-                  )}
+            <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Internal Notes (Admin Only)</h4>
+              {isEditing && !isReadOnly ? (
+                <textarea
+                  value={editInternalNotes}
+                  onChange={e => setEditInternalNotes(e.target.value)}
+                  rows={4}
+                  className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-secondary-container/20 dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors"
+                />
+              ) : (
+                <div className="text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
+                  {claim.internalNotes || 'No internal notes.'}
                 </div>
               )}
             </div>
           )}
           
           {/* Message Summary - Visible to All Users */}
-          <div className="bg-secondary-container dark:bg-gray-800 p-6 rounded-3xl border border-secondary-container dark:border-gray-700">
+          <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
             <button
               onClick={() => setIsMessageSummaryExpanded(!isMessageSummaryExpanded)}
-              className="w-full flex items-center justify-between mb-4 text-left"
+              className="w-full flex items-center justify-between mb-3 text-left"
             >
-              <h3 className="text-lg font-normal text-secondary-on-container dark:text-gray-100 flex items-center gap-2">
-                <MessageSquare className="h-4 w-4" />
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-primary" />
                 Message Summary
-              </h3>
+              </h4>
               {isMessageSummaryExpanded ? (
-                <ChevronUp className="h-5 w-5 text-secondary-on-container dark:text-gray-100" />
+                <ChevronUp className="h-4 w-4 text-surface-on dark:text-gray-100" />
               ) : (
-                <ChevronDown className="h-5 w-5 text-secondary-on-container dark:text-gray-100" />
+                <ChevronDown className="h-4 w-4 text-surface-on dark:text-gray-100" />
               )}
             </button>
             
@@ -749,238 +717,179 @@ If this repair work is billable, please let me know prior to scheduling.`);
             )}
           </div>
         </div>
-        {/* Right Column */}
+        {/* Right Column: Sub Assignment, Scheduling, Warranty Assessment */}
         <div className="space-y-6">
-          {/* Warranty Assessment */}
-          <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
-            <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4">
-              Warranty Assessment
-            </h3>
-            <div className="flex flex-col sm:flex-row gap-4 items-start">
-              <div className="flex-1 sm:flex-initial sm:min-w-[200px]">
-                <p className="text-xs text-surface-on-variant dark:text-gray-400 mb-1">Classification</p>
-                {isEditing && !isReadOnly ? (
-                  <div className="relative w-full">
-                    <select
-                      value={editClassification}
-                      onChange={e => setEditClassification(e.target.value as ClaimClassification)}
-                      className="w-full bg-surface-container-high dark:bg-gray-700 rounded-full pl-3 pr-12 py-2 text-sm text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all h-[2.5rem] appearance-none"
-                    >
-                      {CLAIM_CLASSIFICATIONS.map(classification => (
-                        <option key={classification} value={classification}>{classification}</option>
-                      ))}
-                    </select>
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                      <div className="w-6 h-6 rounded-full bg-surface-container-high dark:bg-gray-600 flex items-center justify-center">
-                        <ChevronDown className="h-4 w-4 text-surface-on dark:text-gray-300" />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium h-[2.5rem] ${
-                    claim.classification === 'Non-Warranty' ? 'bg-error-container text-error-on-container' : 'bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100'
-                  }`}>
-                    {claim.classification}
-                  </span>
-                )}
+          {/* Sub Assignment (Admin Only) */}
+          {isAdmin && (
+            <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Sub Assignment</h4>
+              
+              <div className="relative">
+                <input 
+                  type="text"
+                  placeholder="Type to search subs..."
+                  className="w-full rounded-md border border-surface-outline dark:border-gray-600 bg-surface dark:bg-gray-700 px-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                  value={contractorSearch}
+                  onChange={(e) => setContractorSearch(e.target.value)}
+                />
               </div>
-              <div className="flex-1 sm:flex-initial">
-                <p className="text-xs text-surface-on-variant dark:text-gray-400 mb-1 text-left">Date Evaluated</p>
-                {isEditing && !isReadOnly && isAdmin ? (
-                  <button
+
+              {contractorSearch.trim().length > 0 && (
+                <div className="mt-2 max-h-40 overflow-y-auto border border-surface-outline-variant dark:border-gray-600 rounded-md bg-surface dark:bg-gray-700 shadow-elevation-1">
+                  {filteredContractors.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-surface-on-variant dark:text-gray-400">No subs found.</div>
+                  ) : (
+                    filteredContractors.map(c => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => { 
+                          handleAssignContractor(c.id);
+                          setContractorSearch(c.companyName);
+                        }}
+                        className={`w-full text-left px-3 py-2 text-sm flex justify-between hover:bg-surface-container dark:hover:bg-gray-600 ${selectedContractorId === c.id ? 'bg-primary-container text-primary-on-container' : 'text-surface-on dark:text-gray-100'}`}
+                      >
+                        <span>{c.companyName}</span>
+                        <span className="text-xs opacity-70">{c.specialty}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+              
+              {selectedContractorId && !contractorSearch.trim() && (
+                <div className="mt-2 text-xs text-primary font-medium flex items-center justify-between">
+                  <span className="dark:text-gray-100">Selected: {contractors.find(c => c.id === selectedContractorId)?.companyName}</span>
+                  <button type="button" onClick={() => { 
+                    onUpdateClaim({ ...claim, contractorId: undefined, contractorName: undefined, contractorEmail: undefined });
+                    setSelectedContractorId('');
+                    setContractorSearch('');
+                  }} className="text-surface-on-variant dark:text-gray-400 hover:text-error"><X className="h-3 w-3" /></button>
+                </div>
+              )}
+              
+              <Button
+                type="button"
+                variant="filled"
+                className="mt-3"
+                onClick={() => setShowSubModal(true)}
+              >
+                Add
+              </Button>
+            </div>
+          )}
+
+          {/* Scheduling */}
+          <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+            <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Scheduling</h4>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Scheduled Date</label>
+                {isAdmin && isEditing && !isReadOnly ? (
+                  <Button
                     type="button"
-                    onClick={() => setShowDateEvaluatedPicker(true)}
-                    className="w-full rounded-full border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-700 hover:border-primary hover:bg-surface-container-high dark:hover:bg-gray-600 transition-all cursor-pointer px-4 py-2 text-left flex items-center gap-3 text-sm text-surface-on dark:text-gray-100 min-h-[2.5rem]"
+                    variant="filled"
+                    onClick={() => setShowCalendarPicker(true)}
                   >
-                    <Calendar className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
-                    <span className={`truncate flex-1 ${editDateEvaluated ? 'text-surface-on dark:text-gray-100' : 'text-surface-on-variant dark:text-gray-400'}`}>
-                      {editDateEvaluated
-                        ? new Date(editDateEvaluated).toLocaleDateString('en-US', {
-                            month: '2-digit',
-                            day: '2-digit',
-                            year: 'numeric'
-                          })
-                        : 'Select date'}
-                    </span>
-                  </button>
+                    {proposeDate || scheduledDate ? (proposeDate ? new Date(proposeDate).toLocaleDateString() : scheduledDate ? new Date(scheduledDate.date).toLocaleDateString() : 'Add') : 'Add'}
+                  </Button>
+                ) : scheduledDate ? (
+                  <span className="text-sm text-surface-on dark:text-gray-100">{new Date(scheduledDate.date).toLocaleDateString()}</span>
                 ) : (
-                  <span className="inline-flex items-center justify-start px-3 py-1 rounded-full text-sm font-medium bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 h-[2.5rem] w-full">
-                    {claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString() : 'Pending Evaluation'}
-                  </span>
+                  <span className="text-sm text-surface-on-variant dark:text-gray-400">No appointment scheduled</span>
                 )}
               </div>
+              <div>
+                <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Time Slot</label>
+                {isAdmin && isEditing && !isReadOnly ? (
+                  <MaterialSelect
+                    value={proposeTime || scheduledDate?.timeSlot || 'AM'}
+                    onChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
+                    options={[
+                      { value: 'AM', label: 'AM (8am-12pm)' },
+                      { value: 'PM', label: 'PM (12pm-4pm)' },
+                      { value: 'All Day', label: 'All Day' }
+                    ]}
+                  />
+                ) : scheduledDate?.timeSlot ? (
+                  <span className="text-sm text-surface-on dark:text-gray-100">{scheduledDate.timeSlot === 'AM' ? 'AM (8am-12pm)' : scheduledDate.timeSlot === 'PM' ? 'PM (12pm-4pm)' : 'All Day'}</span>
+                ) : null}
+              </div>
+              {isAdmin && isEditing && !isReadOnly && (proposeDate || scheduledDate) && (
+                <Button
+                  type="button"
+                  variant="filled"
+                  onClick={handleConfirmSchedule}
+                  disabled={!proposeDate && !scheduledDate}
+                >
+                  {scheduledDate ? 'Update' : 'Confirm'}
+                </Button>
+              )}
             </div>
           </div>
-          
-          {/* Sub Assignment */}
+
+          {/* Warranty Assessment (Admin Only) */}
           {isAdmin && (
-            <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
-              <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4 flex items-center gap-2">
-                <HardHat className="h-5 w-5 text-primary" />
-                Sub Assignment
-              </h3>
-              <div className="flex flex-col sm:flex-row gap-4 items-center">
-                {claim.contractorId ? (
-                  <>
-                    <div className="flex items-center gap-3 bg-surface-container dark:bg-gray-700 px-4 h-12 rounded-full text-surface-on dark:text-gray-100 flex-1 w-full sm:w-auto">
-                      <Briefcase className="h-5 w-5 flex-shrink-0" />
-                      <div className="text-sm overflow-hidden min-w-0">
-                        <p className="font-bold truncate">{claim.contractorName}</p>
-                        <p className="opacity-80 text-xs truncate">{claim.contractorEmail}</p>
-                      </div>
-                    </div>
-                    <Button 
-                      variant="filled" 
-                      onClick={handlePrepareServiceOrder} 
-                      icon={<FileText className="h-4 w-4" />}
-                      className="!h-12 w-full sm:w-auto whitespace-nowrap"
+            <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Warranty Assessment</h4>
+              <div className="space-y-4">
+                <div className="relative" ref={classificationSelectRef}>
+                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Classification</label>
+                  {isEditing && !isReadOnly ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="filled"
+                        onClick={() => setShowClassificationSelect(!showClassificationSelect)}
+                      >
+                        {editClassification || 'Add'}
+                      </Button>
+                      {showClassificationSelect && (
+                        <div className="absolute top-full left-0 mt-2 z-50 bg-surface dark:bg-gray-800 rounded-xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-2 min-w-[200px]">
+                          {CLAIM_CLASSIFICATIONS.map(c => (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => {
+                                setEditClassification(c);
+                                setShowClassificationSelect(false);
+                              }}
+                              className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                                editClassification === c
+                                  ? 'bg-primary-container dark:bg-primary/20 text-primary dark:text-primary'
+                                  : 'text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'
+                              } ${c === CLAIM_CLASSIFICATIONS[0] ? 'rounded-t-xl' : ''} ${c === CLAIM_CLASSIFICATIONS[CLAIM_CLASSIFICATIONS.length - 1] ? 'rounded-b-xl' : ''}`}
+                            >
+                              {c}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-sm text-surface-on dark:text-gray-100">{claim.classification}</span>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Date Evaluated</label>
+                  {isEditing && !isReadOnly && isAdmin ? (
+                    <Button
+                      type="button"
+                      variant="filled"
+                      onClick={() => setShowDateEvaluatedPicker(true)}
                     >
-                      Service Order
+                      {editDateEvaluated ? new Date(editDateEvaluated).toLocaleDateString() : 'Add'}
                     </Button>
-                  </>
-                ) : (
-                  <Button 
-                    variant="outlined" 
-                    onClick={() => setShowSubModal(true)} 
-                    icon={<Plus className="h-4 w-4" />}
-                    className="!h-12 w-full sm:w-auto whitespace-nowrap"
-                  >
-                    + Sub
-                  </Button>
-                )}
+                  ) : (
+                    <span className="text-sm text-surface-on dark:text-gray-100">
+                      {claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString() : 'Not evaluated'}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           )}
-          
-          {/* Scheduling */}
-          <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
-            <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4">
-              Scheduling
-            </h3>
-            {isScheduled && scheduledDate ? (
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-6">
-                <div className="flex items-center gap-5 mb-4">
-                  <div className="w-14 h-14 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center text-green-700 dark:text-green-400">
-                    <CheckCircle className="h-8 w-8" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-green-800 dark:text-green-400 uppercase tracking-wide mb-1">Appointment Confirmed</p>
-                    <div className="text-xl font-medium text-surface-on dark:text-gray-100">
-                      {new Date(scheduledDate.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                    </div>
-                    {scheduledDate.timeSlot !== 'All Day' && (
-                      <div className="mt-2">
-                        <span className="inline-block rounded-full border border-primary bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-4 py-2 text-sm font-medium whitespace-nowrap">
-                          {scheduledDate.timeSlot === 'AM' ? '8am-12pm' : '12pm-4pm'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {isAdmin && (
-                  <div className="flex flex-col md:flex-row gap-4 items-end pt-4 border-t border-green-200 dark:border-green-800">
-                    <div className="w-full flex-1 min-w-0">
-                      <label className="block text-xs text-surface-on-variant dark:text-gray-400 mb-1 ml-1 font-medium">Edit Scheduled Date</label>
-                      <button
-                        type="button"
-                        onClick={() => setShowCalendarPicker(true)}
-                        className="w-full rounded-full border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-700 hover:border-primary hover:bg-surface-container-high dark:hover:bg-gray-600 transition-all cursor-pointer px-4 py-2 text-left flex items-center gap-3 text-sm text-surface-on dark:text-gray-100 min-h-[2.5rem]"
-                      >
-                        <Calendar className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
-                        <span className={`truncate ${proposeDate ? 'text-surface-on dark:text-gray-100' : 'text-surface-on-variant dark:text-gray-400'}`}>
-                          {proposeDate
-                            ? new Date(proposeDate).toLocaleDateString('en-US', {
-                                month: '2-digit',
-                                day: '2-digit',
-                                year: '2-digit'
-                              })
-                            : 'Pick a new date'}
-                        </span>
-                      </button>
-                    </div>
-                    <div className="w-full md:w-auto md:min-w-[200px]">
-                      <label className="block text-xs text-surface-on dark:text-gray-100 mb-1 ml-1 font-medium">Time Slot</label>
-                      <MaterialSelect
-                        options={[
-                          { value: 'AM', label: 'AM (8am - 12pm)' },
-                          { value: 'PM', label: 'PM (12pm - 4pm)' },
-                          { value: 'All Day', label: 'All Day' },
-                        ]}
-                        value={proposeTime}
-                        onChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
-                      />
-                    </div>
-                    <Button
-                      variant="filled"
-                      onClick={handleConfirmSchedule}
-                      disabled={!proposeDate}
-                      icon={<CheckCircle className="h-4 w-4" />}
-                      className="w-full md:w-auto whitespace-nowrap"
-                    >
-                      Update
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ) : isAdmin ? (
-              <div className="bg-surface-container/30 dark:bg-gray-700/30 p-6 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-600/50">
-                <div className="mb-4">
-                  <h4 className="text-sm font-bold text-surface-on dark:text-gray-100">Confirm Appointment Details</h4>
-                </div>
-                <div className="flex flex-col md:flex-row gap-4 items-end">
-                  <div className="w-full flex-1 min-w-0">
-                    <label className="block text-xs text-surface-on dark:text-gray-100 mb-1 ml-1 font-medium">Scheduled Date</label>
-                    <button
-                      type="button"
-                      onClick={() => setShowCalendarPicker(true)}
-                      className="w-full rounded-full border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-700 hover:border-primary hover:bg-surface-container-high dark:hover:bg-gray-600 transition-all cursor-pointer px-4 py-2 text-left flex items-center gap-3 text-sm text-surface-on dark:text-gray-100 min-h-[2.5rem]"
-                    >
-                      <Calendar className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
-                      <span className={`truncate ${proposeDate ? 'text-surface-on dark:text-gray-100' : 'text-surface-on-variant dark:text-gray-400'}`}>
-                        {proposeDate
-                          ? new Date(proposeDate).toLocaleDateString('en-US', {
-                              month: '2-digit',
-                              day: '2-digit',
-                              year: '2-digit'
-                            })
-                          : 'Add'}
-                      </span>
-                    </button>
-                  </div>
-                  <div className="w-full md:w-auto">
-                    <label className="block text-xs text-surface-on dark:text-gray-100 mb-1 ml-1 font-medium">Time Slot</label>
-                    <div className="flex gap-2">
-                      {(['AM', 'PM', 'All Day'] as const).map((slot) => (
-                        <button
-                          key={slot}
-                          type="button"
-                          onClick={() => setProposeTime(slot)}
-                          className={`rounded-full border transition-all cursor-pointer px-4 py-2 text-sm text-surface-on dark:text-gray-100 min-h-[2.5rem] whitespace-nowrap ${
-                            proposeTime === slot
-                              ? 'border-primary bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary'
-                              : 'border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-700 hover:border-primary hover:bg-surface-container-high dark:hover:bg-gray-600'
-                          }`}
-                        >
-                          {slot}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <Button
-                    variant="filled"
-                    onClick={handleConfirmSchedule}
-                    disabled={!proposeDate}
-                    icon={<CheckCircle className="h-4 w-4" />}
-                    className="w-full md:w-auto whitespace-nowrap"
-                  >
-                    Confirm
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <p className="text-surface-on-variant dark:text-gray-400">No appointment scheduled yet.</p>
-            )}
-          </div>
         </div>
       </div>
       
@@ -1093,26 +1002,32 @@ If this repair work is billable, please let me know prior to scheduling.`);
         </div>
       )}
       
-      {/* Bottom Action Buttons */}
-      <div className="flex justify-end gap-2 pt-4 border-t border-surface-outline-variant dark:border-gray-700">
+      {/* Footer with buttons */}
+      <div className="flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700 mt-auto">
         <Button 
-          variant="filled" 
-          onClick={() => onSendMessage(claim)} 
-          icon={<MessageSquare className="h-4 w-4" />}
-          className="!h-10"
+          type="button" 
+          variant="filled"
+          onClick={() => onSendMessage(claim)}
         >
+          <Send className="h-4 w-4 mr-2" />
           Send Message
         </Button>
-        {!isReadOnly && (
-          isEditing ? (
-            <>
-              <Button variant="filled" onClick={handleCancelEdit} className="!h-10">Cancel</Button>
-              <Button variant="filled" onClick={handleSaveDetails} icon={<Save className="h-4 w-4" />} className="!h-10">Save</Button>
-            </>
-          ) : (
-            <Button variant="outlined" onClick={() => setIsEditing(true)} icon={<Edit2 className="h-4 w-4" />} className="!h-10">Edit</Button>
-          )
+        {onCancel && (
+          <Button 
+            type="button" 
+            variant="filled" 
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
         )}
+        <Button 
+          type="button" 
+          variant="filled" 
+          onClick={handleSaveDetails}
+        >
+          Save
+        </Button>
       </div>
 
       {/* Image Viewer Modal */}

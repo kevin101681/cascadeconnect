@@ -241,8 +241,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [selectedClaimForModal, setSelectedClaimForModal] = useState<Claim | null>(null);
   
   // Header scroll sync refs
-  const headerScrollRef = useRef<HTMLDivElement>(null);
-  const cardScrollRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -912,12 +910,12 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, filter?: 'All' | 'Open' | 'Closed', setFilter?: (filter: 'All' | 'Open' | 'Closed') => void, onExportExcel?: () => void) => (
     <motion.div 
-      className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0"
+      className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col max-h-[calc(100vh-300px)]"
       variants={cardVariants}
       initial="hidden"
       animate="visible"
     >
-      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30">
+      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
         <h3 className={`text-xl font-normal flex items-center gap-2 ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
             {groupClaims.length}
@@ -1015,35 +1013,12 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
       {groupClaims.length === 0 ? (
-        <div className="p-8 text-center text-surface-on-variant dark:text-gray-400 text-sm italic">
+        <div className="p-8 text-center text-surface-on-variant dark:text-gray-400 text-sm italic flex-shrink-0">
           {emptyMsg}
         </div>
       ) : (
-        <div className="flex flex-col h-full">
-          {/* Column Headers - Scrollable horizontally to sync with cards */}
-          <div 
-            ref={headerScrollRef}
-            className="px-6 py-3 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50 flex-shrink-0 overflow-x-auto [&::-webkit-scrollbar]:hidden" 
-            style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            <div className="flex flex-nowrap items-center gap-2 min-w-max">
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '120px', flexShrink: 0 }}>Claim #</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '100px', flexShrink: 0 }}>Status</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate" style={{ width: '200px', flexShrink: 0 }}>Title</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate" style={{ width: '300px', flexShrink: 0 }}>Description</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '120px', flexShrink: 0 }}>Class</div>
-              {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '150px', flexShrink: 0 }}>Homeowner</div>
-              )}
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '150px', flexShrink: 0 }}>Sub</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '130px', flexShrink: 0 }}>Scheduled</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '110px', flexShrink: 0 }}>Submitted</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '120px', flexShrink: 0 }}>Evaluated</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '140px', flexShrink: 0 }}>Service Order</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '110px', flexShrink: 0 }}>Attachments</div>
-            </div>
-          </div>
-          <div className="flex-1 overflow-y-auto divide-y divide-surface-outline-variant dark:divide-gray-700">
+        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 overflow-y-auto divide-y divide-surface-outline-variant dark:divide-gray-700 min-h-0">
               {groupClaims.map((claim, index) => {
                 const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
                 
@@ -1064,118 +1039,85 @@ const Dashboard: React.FC<DashboardProps> = ({
                         setSelectedClaimForModal(claim);
                       }}
                     >
-                      <div 
-                        ref={(el) => {
-                          if (el) cardScrollRefs.current.set(claim.id, el);
-                        }}
-                        className="px-6 py-3 overflow-x-auto [&::-webkit-scrollbar]:hidden" 
-                        style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-                        onScroll={(e) => {
-                          if (headerScrollRef.current) {
-                            headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
-                          }
-                        }}
-                      >
-                        <div className="flex flex-nowrap items-center gap-2 min-w-max">
+                      <div className="px-6 py-3">
+                        <div className="flex flex-wrap items-center gap-2">
                             {/* Claim # */}
-                          <div style={{ width: '120px', flexShrink: 0 }}>
-                            <span className="text-xs font-bold text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap inline-block">
-                              #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
-                            </span>
-                          </div>
+                          <span className="text-xs font-bold text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap inline-block">
+                            #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
+                          </span>
                           {/* Status */}
-                          <div style={{ width: '100px', flexShrink: 0 }}>
-                            <StatusBadge status={claim.status} />
-                          </div>
+                          <StatusBadge status={claim.status} />
                           {/* Title */}
-                          <div style={{ width: '200px', flexShrink: 0 }}>
-                            <span className="text-xs font-medium text-surface-on dark:text-gray-100 truncate bg-surface-container-high dark:bg-gray-700 px-3 py-1 rounded-full inline-block w-full border border-surface-outline-variant/50 dark:border-gray-600">
+                          {claim.title && (
+                            <span className="text-xs font-medium text-surface-on dark:text-gray-100 truncate bg-surface-container-high dark:bg-gray-700 px-3 py-1 rounded-full inline-block border border-surface-outline-variant/50 dark:border-gray-600 max-w-xs">
                               {claim.title}
                             </span>
-                          </div>
+                          )}
                           {/* Description */}
-                          <div style={{ width: '300px', flexShrink: 0 }}>
-                            {claim.description ? (
-                              <span className="text-xs text-surface-on-variant dark:text-gray-400 truncate bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full inline-block w-full">
-                                {claim.description}
-                              </span>
-                            ) : null}
-                          </div>
-                          {/* Classification */}
-                          <div style={{ width: '120px', flexShrink: 0 }}>
-                            <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
-                              {claim.classification}
+                          {claim.description && (
+                            <span className="text-xs text-surface-on-variant dark:text-gray-400 truncate bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full inline-block max-w-xs">
+                              {claim.description}
                             </span>
-                          </div>
+                          )}
+                          {/* Classification */}
+                          <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
+                            {claim.classification}
+                          </span>
                           {/* Homeowner Name */}
                           {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                            <div style={{ width: '150px', flexShrink: 0 }}>
-                              <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
-                                <Building2 className="h-3 w-3 flex-shrink-0" />
-                                <span className="truncate">{claim.homeownerName}</span>
-                              </span>
-                            </div>
+                            <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
+                              <Building2 className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{claim.homeownerName}</span>
+                            </span>
                           )}
                           {/* Contractor */}
-                          <div style={{ width: '150px', flexShrink: 0 }}>
-                            {claim.contractorName ? (
-                              <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
-                                <HardHat className="h-3 w-3 flex-shrink-0" />
-                                <span className="truncate">{claim.contractorName}</span>
-                              </span>
-                            ) : (
-                              <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600">
-                                <HardHat className="h-3 w-3 flex-shrink-0 opacity-50" />
-                                <span className="truncate">No Sub Assigned</span>
-                              </span>
-                            )}
-                          </div>
-                          {/* Scheduled Date */}
-                          <div style={{ width: '130px', flexShrink: 0 }}>
-                            {scheduledDate ? (
-                              <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap">
-                                <Calendar className="h-3 w-3 flex-shrink-0" />
-                                <span>{new Date(scheduledDate.date).toLocaleDateString()}</span>
-                              </span>
-                            ) : null}
-                          </div>
-                          {/* Date Submitted */}
-                          <div style={{ width: '110px', flexShrink: 0 }}>
-                            <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
-                              {new Date(claim.dateSubmitted).toLocaleDateString()}
+                          {claim.contractorName ? (
+                            <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
+                              <HardHat className="h-3 w-3 flex-shrink-0" />
+                              <span className="truncate">{claim.contractorName}</span>
                             </span>
-                          </div>
-                          {/* Date Evaluated */}
-                          <div style={{ width: '120px', flexShrink: 0 }}>
-                            {claim.dateEvaluated ? (
-                              <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
-                                Eval: {new Date(claim.dateEvaluated).toLocaleDateString()}
-                              </span>
-                            ) : null}
-                          </div>
+                          ) : (
+                            <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600">
+                              <HardHat className="h-3 w-3 flex-shrink-0 opacity-50" />
+                              <span className="truncate">No Sub Assigned</span>
+                            </span>
+                          )}
+                          {/* Date Submitted (Created) */}
+                          <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
+                            Created: {new Date(claim.dateSubmitted).toLocaleDateString()}
+                          </span>
+                          {/* Scheduled Date */}
+                          {scheduledDate && (
+                            <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap">
+                              <Calendar className="h-3 w-3 flex-shrink-0" />
+                              <span>Scheduled: {new Date(scheduledDate.date).toLocaleDateString()}</span>
+                            </span>
+                          )}
                           {/* Service Order Date */}
-                          <div style={{ width: '140px', flexShrink: 0 }}>
-                            {serviceOrderDate ? (
-                              <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
-                                <Mail className="h-3 w-3 flex-shrink-0" />
-                                <span>SO: {new Date(serviceOrderDate).toLocaleDateString()}</span>
-                              </span>
-                            ) : (
-                              <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600">
-                                <Mail className="h-3 w-3 flex-shrink-0 opacity-50" />
-                                <span>No SO Sent</span>
-                              </span>
-                            )}
-                          </div>
+                          {serviceOrderDate ? (
+                            <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
+                              <Mail className="h-3 w-3 flex-shrink-0" />
+                              <span>S.O. Sent: {new Date(serviceOrderDate).toLocaleDateString()}</span>
+                            </span>
+                          ) : (
+                            <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600">
+                              <Mail className="h-3 w-3 flex-shrink-0 opacity-50" />
+                              <span>No SO Sent</span>
+                            </span>
+                          )}
+                          {/* Date Evaluated */}
+                          {claim.dateEvaluated && (
+                            <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
+                              Eval: {new Date(claim.dateEvaluated).toLocaleDateString()}
+                            </span>
+                          )}
                           {/* Attachments count */}
-                          <div style={{ width: '110px', flexShrink: 0 }}>
-                            {claim.attachments && claim.attachments.length > 0 ? (
-                              <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
-                                <Paperclip className="h-3 w-3 flex-shrink-0" />
-                                {claim.attachments.length}
-                              </span>
-                            ) : null}
-                          </div>
+                          {claim.attachments && claim.attachments.length > 0 && (
+                            <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
+                              <Paperclip className="h-3 w-3 flex-shrink-0" />
+                              {claim.attachments.length}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </motion.div>
@@ -1624,6 +1566,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     setSelectedClaimForModal(null);
                     setCurrentTab('MESSAGES');
                   }}
+                  onCancel={() => setSelectedClaimForModal(null)}
                   onNavigate={onNavigate}
                 />
               </div>
@@ -2239,7 +2182,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Content Area */}
         {currentTab === 'CLAIMS' && (
           <motion.div 
-            key={`claims-content-${displayClaims.length}`}
             className="max-w-7xl mx-auto"
             variants={cardVariants}
             initial="hidden"
@@ -2248,7 +2190,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               ...springTransition,
               delay: 0.3
             }}
-            layout
           >
             {renderClaimsList(displayClaims, isHomeownerView)}
           </motion.div>
