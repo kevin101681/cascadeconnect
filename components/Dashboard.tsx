@@ -1010,11 +1010,11 @@ const Dashboard: React.FC<DashboardProps> = ({
           {emptyMsg}
         </div>
       ) : (
-        <div 
+        <div
           className="overflow-x-auto relative claims-table-scroll"
-          style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}
+          style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin', paddingLeft: '0.5rem', paddingRight: '0.5rem' }}
         >
-          <table className="border-collapse" style={{ minWidth: '1400px' }}>
+          <table className="border-collapse" style={{ minWidth: '1400px', marginLeft: '0', marginRight: '0' }}>
             <thead className="sticky top-0 z-20">
               <tr className="border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50 backdrop-blur-sm">
                 <th 
@@ -1153,26 +1153,26 @@ const Dashboard: React.FC<DashboardProps> = ({
                       }}
                     >
                       <td className="px-3 py-3 whitespace-nowrap align-middle">
-                      <span className="text-xs font-bold text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap inline-block">
+                      <span className="text-xs font-bold text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-2.5 py-1 rounded-full whitespace-nowrap inline-block">
                         #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
                       </span>
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap align-middle">
                       <StatusBadge status={claim.status} />
                     </td>
-                    <td className="px-3 py-3 min-w-[200px] align-middle">
-                      <span className="text-xs font-medium text-surface-on dark:text-gray-100 truncate bg-surface-container-high dark:bg-gray-700 px-3 py-1 rounded-full inline-block w-full border border-surface-outline-variant/50 dark:border-gray-600">
+                    <td className="px-3 py-3 min-w-[200px] align-middle overflow-visible">
+                      <span className="text-xs font-medium text-surface-on dark:text-gray-100 truncate bg-surface-container-high dark:bg-gray-700 px-2.5 py-1 rounded-full inline-block max-w-[calc(100%-0.5rem)] border border-surface-outline-variant/50 dark:border-gray-600 box-border">
                         {claim.title}
                       </span>
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap align-middle">
-                      <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
+                      <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-2.5 py-1 rounded-full whitespace-nowrap inline-block">
                         {claim.classification}
                       </span>
                     </td>
                     {(isAdmin || isBuilder) && !effectiveHomeowner && (
                       <td className="px-3 py-3 whitespace-nowrap align-middle">
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-2.5 py-1 rounded-full whitespace-nowrap">
                           <Building2 className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">{claim.homeownerName}</span>
                         </span>
@@ -1180,12 +1180,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                     )}
                     <td className="px-3 py-3 whitespace-nowrap align-middle">
                       {claim.contractorName ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-2.5 py-1 rounded-full whitespace-nowrap">
                           <HardHat className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">{claim.contractorName}</span>
                         </span>
                       ) : (
-                        <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600">
+                        <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-2.5 py-1 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600">
                           <HardHat className="h-3 w-3 flex-shrink-0 opacity-50" />
                           <span className="truncate">No Sub Assigned</span>
                         </span>
@@ -1193,32 +1193,32 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap align-middle">
                       {scheduledDate ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap">
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-2.5 py-1 rounded-full whitespace-nowrap">
                           <Calendar className="h-3 w-3 flex-shrink-0" />
                           <span>{new Date(scheduledDate.date).toLocaleDateString()}</span>
                         </span>
                       ) : null}
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap align-middle">
-                      <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
+                      <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-2.5 py-1 rounded-full whitespace-nowrap inline-block">
                         {new Date(claim.dateSubmitted).toLocaleDateString()}
                       </span>
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap align-middle">
                       {claim.dateEvaluated ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-2.5 py-1 rounded-full whitespace-nowrap inline-block">
                           Eval: {new Date(claim.dateEvaluated).toLocaleDateString()}
                         </span>
                       ) : null}
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap align-middle">
                       {serviceOrderDate ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-2.5 py-1 rounded-full whitespace-nowrap">
                           <Mail className="h-3 w-3 flex-shrink-0" />
                           <span>SO: {new Date(serviceOrderDate).toLocaleDateString()}</span>
                         </span>
                       ) : (
-                        <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600">
+                        <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-2.5 py-1 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600">
                           <Mail className="h-3 w-3 flex-shrink-0 opacity-50" />
                           <span>No SO Sent</span>
                         </span>
@@ -2254,27 +2254,17 @@ const Dashboard: React.FC<DashboardProps> = ({
             }}
             layout
           >
-            <button
-              onClick={() => setIsScheduleExpanded(!isScheduleExpanded)}
-              className="p-6 w-full text-left flex-shrink-0 z-10 relative"
-            >
-              <h3 className="font-medium text-lg mb-0 flex items-center justify-between text-secondary-on-container dark:text-gray-100">
+            <div className="p-6 w-full flex-shrink-0 z-10 relative">
+              <h3 className="font-medium text-lg mb-0 flex items-center text-secondary-on-container dark:text-gray-100">
                 <span className="flex items-center">
                   <Calendar className="h-5 w-5 mr-3" />
-                  Upcoming Schedule
+                  Next Appointment
                 </span>
-                <div className="w-8 h-8 rounded-full bg-black/20 dark:bg-white/20 flex items-center justify-center ml-4 flex-shrink-0">
-                  {isScheduleExpanded ? (
-                    <ChevronUp className="h-5 w-5 text-secondary-on-container dark:text-gray-200" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-secondary-on-container dark:text-gray-200" />
-                  )}
-                </div>
               </h3>
-            </button>
+            </div>
             
-            {/* Collapsed State - Show First Appointment */}
-            {!isScheduleExpanded && scheduledClaims.length > 0 && (
+            {/* Show Next Scheduled Appointment Only */}
+            {scheduledClaims.length > 0 && (
               <motion.div 
                 className="px-6 pb-6 pt-0"
                 variants={cardVariants}
@@ -2306,7 +2296,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </motion.div>
             )}
             
-            {!isScheduleExpanded && scheduledClaims.length === 0 && (
+            {scheduledClaims.length === 0 && (
               <motion.div 
                 className="px-6 pb-6 pt-0"
                 variants={cardVariants}
@@ -2314,43 +2304,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 animate="visible"
               >
                 <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No confirmed appointments.</p>
-              </motion.div>
-            )}
-            
-            {/* Expanded State - Show all appointments */}
-            {isScheduleExpanded && (
-              <motion.div 
-                className="px-6 pb-6 pt-0 space-y-3 max-h-96 overflow-y-auto"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {scheduledClaims.length > 0 ? (
-                  scheduledClaims.map((c, index) => {
-                    const acceptedDate = c.proposedDates.find(d => d.status === 'ACCEPTED');
-                    return (
-                      <motion.div 
-                        key={c.id} 
-                        className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-xl text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors"
-                        onClick={() => onSelectClaim(c, true)}
-                        variants={cardVariants}
-                        layout
-                      >
-                        <p className="font-medium text-secondary-on-container dark:text-gray-200 text-center">{c.title}</p>
-                        <p className="opacity-80 dark:opacity-70 mt-1 text-secondary-on-container dark:text-gray-300 text-center">
-                          {acceptedDate ? new Date(acceptedDate.date).toLocaleDateString() : 'N/A'} - {acceptedDate?.timeSlot}
-                        </p>
-                        {c.contractorName && (
-                          <p className="opacity-70 dark:opacity-60 mt-1 text-secondary-on-container dark:text-gray-400 text-center text-xs">
-                            {c.contractorName}
-                          </p>
-                        )}
-                      </motion.div>
-                    );
-                  })
-                ) : (
-                  <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No confirmed appointments.</p>
-                )}
               </motion.div>
             )}
           </motion.div>
