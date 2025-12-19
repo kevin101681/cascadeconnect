@@ -93,6 +93,7 @@ export const contractors = pgTable('contractors', {
   companyName: text('company_name').notNull(),
   contactName: text('contact_name'),
   email: text('email').notNull(),
+  phone: text('phone'),
   specialty: text('specialty').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });

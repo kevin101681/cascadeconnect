@@ -565,7 +565,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     if (targetHomeowner && onUpdateHomeowner) {
         // Find builder name from ID
         const selectedGroup = builderGroups.find(g => g.id === editBuilderId);
-        
+
         onUpdateHomeowner({
             ...targetHomeowner,
             name: editName,
@@ -582,6 +582,54 @@ const Dashboard: React.FC<DashboardProps> = ({
             closingDate: editClosingDate ? new Date(editClosingDate) : targetHomeowner.closingDate,
             subcontractorList: editParsedSubs.length > 0 ? editParsedSubs : targetHomeowner.subcontractorList
         });
+        setShowEditHomeownerModal(false);
+    }
+  };
+
+  const handleSaveAndInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (targetHomeowner && onUpdateHomeowner) {
+        // Find builder name from ID
+        const selectedGroup = builderGroups.find(g => g.id === editBuilderId);
+
+        // Save the homeowner updates
+        onUpdateHomeowner({
+            ...targetHomeowner,
+            name: editName,
+            email: editEmail,
+            phone: editPhone,
+            street: editStreet,
+            city: editCity,
+            state: editState,
+            zip: editZip,
+            address: `${editStreet}, ${editCity}, ${editState} ${editZip}`,
+            builder: selectedGroup ? selectedGroup.name : targetHomeowner.builder,
+            builderId: editBuilderId,
+            jobName: editJobName,
+            closingDate: editClosingDate ? new Date(editClosingDate) : targetHomeowner.closingDate,
+            subcontractorList: editParsedSubs.length > 0 ? editParsedSubs : targetHomeowner.subcontractorList
+        });
+
+        // Send invite email
+        setIsDrafting(true);
+        try {
+          const inviteBody = await draftInviteEmail(editName);
+          const subject = `A Warm Welcome to Your New Home, ${editName}! Important Information from Cascade Builder Services`;
+          await sendEmail({
+            to: editEmail,
+            subject: subject,
+            body: inviteBody,
+            fromName: 'Cascade Admin',
+            fromRole: UserRole.ADMIN
+          });
+          alert(`Homeowner information saved and invite sent to ${editEmail} via Internal Mail System!`);
+        } catch (error) {
+          console.error('Failed to send invite:', error);
+          alert(`Homeowner information saved, but failed to send invite email. Please try sending the invite manually.`);
+        } finally {
+          setIsDrafting(false);
+        }
+
         setShowEditHomeownerModal(false);
     }
   };
@@ -910,7 +958,8 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, filter?: 'All' | 'Open' | 'Closed', setFilter?: (filter: 'All' | 'Open' | 'Closed') => void, onExportExcel?: () => void) => (
     <motion.div 
-      className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col max-h-[calc(100vh-300px)]"
+      className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col"
+      style={{ height: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)', maxHeight: 'calc(100vh - 300px)' }}
       variants={cardVariants}
       initial="hidden"
       animate="visible"
@@ -1736,12 +1785,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                 </div>
               )}
-              <div className="p-4 bg-surface-container dark:bg-gray-700 flex justify-end gap-3 -mx-6 -mb-6 mt-6 shrink-0">
+              <div className="p-4 flex justify-end gap-3 -mx-6 -mb-6 mt-6 shrink-0">
                 <Button 
-                  variant="text" 
+                  variant="filled" 
                   type="button" 
                   onClick={() => setShowNewTaskModal(false)}
-                  className="bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600"
                 >
                   Cancel
                 </Button>
@@ -2279,7 +2327,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                        return (
                          <div key={doc.id} className="flex flex-col bg-surface-container dark:bg-gray-700 rounded-xl overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-lg transition-all relative group">
                            {/* Header with Action Buttons */}
-                           <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent p-2 flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                           <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent p-2 flex items-center justify-end gap-1">
                              {isPDF && (
                                <>
                                  {/* Save to Google Drive */}
@@ -2405,22 +2453,47 @@ const Dashboard: React.FC<DashboardProps> = ({
                                      style={{ 
                                        pointerEvents: 'none',
                                        width: '100%',
-                                       height: '100%'
+                                       height: '100%',
+                                       display: 'block'
+                                     }}
+                                     onError={(e) => {
+                                       // Fallback to object tag if thumbnail fails to load
+                                       const target = e.currentTarget;
+                                       const parent = target.parentElement;
+                                       if (parent) {
+                                         const object = document.createElement('object');
+                                         object.data = doc.url + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1';
+                                         object.type = 'application/pdf';
+                                         object.className = 'w-full h-full';
+                                         object.style.pointerEvents = 'none';
+                                         object.style.overflow = 'hidden';
+                                         object.style.width = '100%';
+                                         object.style.height = '100%';
+                                         object.style.display = 'block';
+                                         object.style.border = 'none';
+                                         parent.innerHTML = '';
+                                         parent.appendChild(object);
+                                       }
                                      }}
                                    />
                                  ) : (
-                                   <iframe
-                                     src={doc.url + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1'}
-                                     className="w-full h-full border-0"
-                                     title={doc.name}
-                                     scrolling="no"
+                                   <object
+                                     data={doc.url + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1'}
+                                     type="application/pdf"
+                                     className="w-full h-full"
                                      style={{ 
                                        pointerEvents: 'none',
                                        overflow: 'hidden',
                                        width: '100%',
-                                       height: '100%'
+                                       height: '100%',
+                                       display: 'block',
+                                       border: 'none'
                                      }}
-                                   />
+                                   >
+                                     <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700">
+                                       <FileText className="h-12 w-12 text-surface-outline-variant dark:text-gray-500" />
+                                     </div>
+                                   </object>
                                  )}
                                </div>
                              ) : (
@@ -2566,7 +2639,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <PunchListApp
                   homeowner={effectiveHomeowner}
                   onClose={() => setShowPunchListApp(false)}
+                  onUpdateHomeowner={onUpdateHomeowner}
                   onSavePDF={async (pdfBlob: Blob, filename: string) => {
+                    // Delete existing documents with the same name for this homeowner
+                    if (onDeleteDocument && effectiveHomeowner) {
+                      const existingDocs = documents.filter(
+                        doc => doc.homeownerId === effectiveHomeowner.id && doc.name === filename
+                      );
+                      for (const doc of existingDocs) {
+                        await onDeleteDocument(doc.id);
+                      }
+                    }
+                    
                     // Convert blob to base64 for storage
                     const reader = new FileReader();
                     reader.onloadend = () => {
@@ -2605,14 +2689,15 @@ const Dashboard: React.FC<DashboardProps> = ({
         )}
 
         {showInviteModal && (
-          <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+          <div
+            className="fixed top-0 left-0 right-0 bottom-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+            style={{ minHeight: '100vh', minWidth: '100vw' }}
             onClick={(e) => {
               if (e.target === e.currentTarget) setShowInviteModal(false);
             }}
           >
-             <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
-                <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
+             <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] max-h-[85vh] flex flex-col">
+                <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700 flex-shrink-0">
                   <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                     <Mail className="h-5 w-5 text-primary" />
                     Invite Homeowner
@@ -2621,8 +2706,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <X className="h-5 w-5" />
                   </button>
                 </div>
-                
-                <div className="p-6 space-y-4 bg-surface dark:bg-gray-800">
+
+                <div className="p-6 space-y-4 bg-surface dark:bg-gray-800 overflow-y-auto flex-1 min-h-0">
                   <div>
                     <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-300 mb-1">Full Name</label>
                     <input 
@@ -2661,7 +2746,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                 </div>
 
-                <div className="p-4 bg-surface-container dark:bg-gray-700 flex justify-end gap-3">
+                <div className="p-4 flex justify-end gap-3 flex-shrink-0">
                   <Button variant="text" onClick={() => setShowInviteModal(false)}>Cancel</Button>
                   <Button variant="filled" onClick={handleSendInvite} disabled={!inviteEmail || !inviteBody || isDrafting} icon={<Send className="h-4 w-4" />}>
                     Send Invitation
@@ -2673,8 +2758,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* EDIT HOMEOWNER MODAL */}
         {showEditHomeownerModal && (
-          <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+          <div
+            className="fixed top-0 left-0 right-0 bottom-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, minHeight: '100vh', minWidth: '100vw', width: '100vw', height: '100vh' }}
             onClick={(e) => {
               if (e.target === e.currentTarget) setShowEditHomeownerModal(false);
             }}
@@ -2867,14 +2953,27 @@ const Dashboard: React.FC<DashboardProps> = ({
                      )}
                    </div>
 
-                   <div className="p-4 bg-surface-container dark:bg-gray-700 flex justify-end gap-3 -mx-6 -mb-6 mt-6">
-                      <Button variant="text" onClick={() => setShowEditHomeownerModal(false)}>Cancel</Button>
+                   <div className="p-4 flex justify-end gap-3 -mx-6 -mb-6 mt-6">
+                      <Button 
+                        variant="filled" 
+                        onClick={() => setShowEditHomeownerModal(false)}
+                      >
+                        Cancel
+                      </Button>
                       <Button 
                         variant="filled" 
                         type="submit"
                         icon={<Edit2 className="h-4 w-4" />}
                       >
                         Save Changes
+                      </Button>
+                      <Button 
+                        variant="filled" 
+                        onClick={handleSaveAndInvite}
+                        disabled={isDrafting}
+                        icon={isDrafting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                      >
+                        Save + Invite
                       </Button>
                    </div>
                 </form>
@@ -2939,18 +3038,17 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                 </div>
 
-                <div className="p-4 bg-surface-container dark:bg-gray-700 flex justify-end gap-3">
-                  <Button 
-                    variant="text" 
+                <div className="p-4 flex justify-end gap-3">
+                  <Button
+                    variant="filled"
                     onClick={() => setShowNewMessageModal(false)}
-                    className="bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600"
                   >
                     Cancel
                   </Button>
-                  <Button 
-                    variant="filled" 
-                    onClick={handleCreateNewThread} 
-                    disabled={!newMessageSubject || !newMessageContent || isSendingMessage} 
+                  <Button
+                    variant="filled"
+                    onClick={handleCreateNewThread}
+                    disabled={!newMessageSubject || !newMessageContent || isSendingMessage}
                     icon={isSendingMessage ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"/> : <Send className="h-4 w-4" />}
                   >
                     Send Message

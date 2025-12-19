@@ -114,15 +114,6 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
         
         {/* Content */}
         <div className="flex-1 overflow-auto" style={{ transform: 'none', isolation: 'auto' }}>
-          {isLoading && (
-            <div className="h-full w-full flex items-center justify-center">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-surface-on dark:text-gray-100">Loading CBS Books...</p>
-              </div>
-            </div>
-          )}
-          
           {error && (
             <div className="h-full w-full flex items-center justify-center">
               <div className="text-center max-w-md mx-auto p-8">
@@ -134,7 +125,7 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
             </div>
           )}
           
-          {!isLoading && !error && CBSBooksComponent && (
+          {!error && CBSBooksComponent && (
             <div className="h-full w-full" data-cbs-books style={{ pointerEvents: 'auto', transform: 'none', isolation: 'auto' }}>
               <CBSBooksComponent prefillInvoice={prefillData} />
             </div>
@@ -147,3 +138,5 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
 };
 
 export default InvoicesModal;
+
+

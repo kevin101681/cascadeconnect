@@ -15,7 +15,6 @@
     "db:studio": "drizzle-kit studio",
     "create-admin": "tsx scripts/create-admin.ts",
     "check-admin-users": "tsx scripts/check-admin-users.ts",
-    "check-better-auth-user": "tsx scripts/check-better-auth-user.ts",
     "add-email-preferences": "tsx scripts/add-email-preferences.ts",
     "create-contractors-table": "tsx scripts/create-contractors-table.ts",
     "create-message-threads-table": "tsx scripts/create-message-threads-table.ts",

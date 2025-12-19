@@ -34,6 +34,7 @@ export interface DashboardProps {
   onToggleClientInfo?: (collapsed: boolean) => void;
   onCreateMessage?: (homeownerId: string, subject: string, content: string, attachments?: Array<{ filename: string; content: string; contentType: string }>) => Promise<void>;
   onShowManual?: () => void;
+  onSavePDF?: (pdfBlob: Blob, filename: string) => Promise<void>;
 }
 
 // Map strings to Icon components for display
@@ -68,6 +69,7 @@ export interface ReportCardProps {
         onViewSignOff?: () => void;
         onDownloadReportPDF?: () => void;
         onDownloadSignOffPDF?: () => void;
+        onEditClientInfo?: () => void;
     };
     hasDocs?: boolean;
     onViewAllItems?: () => void;
@@ -142,6 +144,9 @@ export const ReportCard: React.FC<ReportCardProps> = ({
                 <div className="mb-6 pb-6 border-b border-surface-outline-variant dark:border-gray-700">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {fields.map((field, idx) => {
+                            // Skip the homeowner ID field
+                            if (field.id === 'homeownerId') return null;
+                            
                             const IconComponent = getIconComponent(field.icon);
                             const linkProps = getLinkProps(field);
                             const hasValue = field.value && field.value.trim() !== '';
@@ -183,6 +188,20 @@ export const ReportCard: React.FC<ReportCardProps> = ({
                 {/* Actions */}
                 {actions && (
                     <>
+                        {actions.onEditClientInfo && (
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    actions.onEditClientInfo();
+                                }}
+                                className="h-12 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center transition-colors active:scale-95 shadow-sm shrink-0 border px-3 sm:px-4 bg-surface-container dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 text-surface-on-variant dark:text-gray-300 hover:bg-surface-container-high dark:hover:bg-gray-600 hover:text-primary border-solid"
+                                title="Edit Client Info"
+                                type="button"
+                            >
+                                <Edit2 size={18} className="sm:w-[20px] sm:h-[20px]" />
+                            </button>
+                        )}
                         <button 
                             onClick={(e) => { 
                                 e.preventDefault();
@@ -844,14 +863,31 @@ export const ClientInfoEditModal = ({ project, onUpdate, onClose }: { project: P
                     <button onClick={onClose} className="p-2 bg-surface-container dark:bg-gray-700 rounded-full text-surface-on-variant hover:text-surface-on dark:text-gray-400 dark:hover:text-gray-100 transition-colors"><X size={20} /></button>
                 </div>
                 <div className="p-4 space-y-2 max-h-[60vh] overflow-y-auto">
-                    {fields.map((field, i) => (
-                        <div key={field.id} className="flex gap-2 items-center">
-                             <div className="p-2 bg-surface-container dark:bg-gray-700 rounded-lg text-surface-on-variant dark:text-gray-400"><Hash size={16}/></div>
-                             <input value={field.label} onChange={e => { const newF = [...fields]; newF[i] = { ...field, label: e.target.value }; setFields(newF); }} className="flex-1 p-2 bg-surface-container dark:bg-gray-700 rounded-lg border border-surface-outline-variant dark:border-gray-600 dark:text-gray-200" />
-                             <button onClick={() => setFields(fields.filter((_, idx) => idx !== i))} className="text-red-500 p-2"><Trash2 size={16}/></button>
-                        </div>
-                    ))}
-                    <button onClick={() => setFields([...fields, { id: generateUUID(), label: 'New Field', value: '', icon: 'FileText' }])} className="w-full p-3 bg-surface-container dark:bg-gray-700 rounded-xl font-bold text-surface-on dark:text-gray-300 mt-2">+ Add Field</button>
+                    {fields.map((field, i) => {
+                        // Skip the hidden homeowner ID field
+                        if (field.id === 'homeownerId') return null;
+                        
+                        return (
+                            <div key={field.id} className="flex flex-col gap-2">
+                                <div className="text-xs text-surface-on-variant dark:text-gray-400 font-medium">{field.label}</div>
+                                <div className="flex gap-2 items-center">
+                                    <div className="p-2 bg-surface-container dark:bg-gray-700 rounded-lg text-surface-on-variant dark:text-gray-400">
+                                        {getIconComponent(field.icon)({ size: 16 })}
+                                    </div>
+                                    <input 
+                                        value={field.value} 
+                                        onChange={e => { 
+                                            const newF = [...fields]; 
+                                            newF[i] = { ...field, value: e.target.value }; 
+                                            setFields(newF); 
+                                        }} 
+                                        className="flex-1 p-2 bg-surface-container dark:bg-gray-700 rounded-lg border border-surface-outline-variant dark:border-gray-600 text-surface-on dark:text-gray-200 focus:ring-2 focus:ring-primary outline-none" 
+                                        placeholder={`Enter ${field.label.toLowerCase()}`}
+                                    />
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
                 <div className="p-4 border-t border-surface-outline-variant dark:border-gray-700">
                     <button onClick={handleSave} className="w-full bg-primary text-primary-on dark:text-primary-on py-3.5 rounded-[20px] font-bold shadow-sm hover:shadow-md transition-all active:scale-95">Save Changes</button>
@@ -1119,7 +1155,8 @@ export const Dashboard = React.memo<DashboardProps>(({
   isClientInfoCollapsed,
   onToggleClientInfo,
   onCreateMessage,
-  onShowManual
+  onShowManual,
+  onSavePDF
 }) => {
     const [shouldInitialExpand] = useState(initialExpand);
 
@@ -1215,7 +1252,7 @@ export const Dashboard = React.memo<DashboardProps>(({
     
     return (
         <div 
-            className={`min-h-screen animate-fade-in ${embedded ? 'bg-gray-200 dark:bg-gray-950 pb-6 pt-6' : 'bg-gray-200 dark:bg-gray-950 pb-32'}`}
+            className={`min-h-screen animate-fade-in ${embedded ? 'bg-gray-100 dark:bg-gray-900 pb-6 pt-6' : 'bg-gray-100 dark:bg-gray-900 pb-32'}`}
             style={{ pointerEvents: 'auto' }}
         >
             <div className={`max-w-3xl mx-auto ${embedded ? 'space-y-4 p-0 pt-8 pb-8' : 'p-6 space-y-8'} relative ${shouldInitialExpand ? 'animate-expand-sections origin-top overflow-hidden opacity-0' : ''}`} style={{ pointerEvents: 'auto' }}>
@@ -1235,6 +1272,10 @@ export const Dashboard = React.memo<DashboardProps>(({
                         onDelete={onDelete}
                         hasDocs={hasDocs}
                         actions={{
+                            onEditClientInfo: () => {
+                                console.log('Edit client info button clicked');
+                                setIsEditClientInfoOpen(true);
+                            },
                             onEmail: () => {
                                 console.log('Email button clicked');
                                 setIsEmailOptionsOpen(true);
@@ -1537,14 +1578,8 @@ export const Dashboard = React.memo<DashboardProps>(({
                         className="bg-surface dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden flex flex-col animate-dialog-enter"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
+                        <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-center items-center bg-surface-container dark:bg-gray-700">
                             <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">Email Both Documents</h2>
-                            <button 
-                                onClick={() => setShowEmailBothModal(false)} 
-                                className="p-2 rounded-full hover:bg-surface-container dark:hover:bg-gray-600 transition-colors"
-                            >
-                                <X className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
-                            </button>
                         </div>
                         <div className="p-6 flex-1 overflow-y-auto space-y-4 bg-surface dark:bg-gray-800">
                             <div>
@@ -1566,10 +1601,10 @@ export const Dashboard = React.memo<DashboardProps>(({
                                 />
                             </div>
                         </div>
-                        <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-2 bg-surface-container dark:bg-gray-700">
+                        <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-3">
                             <button
                                 onClick={() => setShowEmailBothModal(false)}
-                                className="px-4 py-2 rounded-lg bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-500 transition-colors"
+                                className="px-6 py-3 rounded-[20px] font-bold text-surface-on dark:text-gray-300 bg-surface-container dark:bg-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
                             >
                                 Cancel
                             </button>
@@ -1663,6 +1698,22 @@ export const Dashboard = React.memo<DashboardProps>(({
                                             }
                                         }
                                         
+                                        // Save PDFs to homeowner's documents (overwrite if exists)
+                                        if (onSavePDF) {
+                                            try {
+                                                // Save report PDF (will overwrite existing document with same name)
+                                                await onSavePDF(reportBlob, reportFilename);
+                                                
+                                                // Save sign off PDF (will overwrite existing document with same name)
+                                                await onSavePDF(signOffBlob, signOffFilename);
+                                                
+                                                console.log('✅ PDFs saved to homeowner documents');
+                                            } catch (error) {
+                                                console.error('Failed to save PDFs to documents:', error);
+                                                // Don't fail the entire operation if saving fails
+                                            }
+                                        }
+                                        
                                         console.log('✅ Email sent successfully via SendGrid');
                                         alert('Email sent successfully!');
                                         setShowEmailBothModal(false);
@@ -1676,19 +1727,9 @@ export const Dashboard = React.memo<DashboardProps>(({
                                     }
                                 }}
                                 disabled={isSendingEmailBoth || !emailBothSubject || !emailBothBody}
-                                className="px-4 py-2 rounded-lg bg-primary text-primary-on hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                className="px-6 py-3 rounded-[20px] font-bold bg-primary text-white hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                {isSendingEmailBoth ? (
-                                    <>
-                                        <div className="animate-spin h-4 w-4 border-2 border-primary-on border-t-transparent rounded-full" />
-                                        Sending...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Send size={16} />
-                                        Send
-                                    </>
-                                )}
+                                {isSendingEmailBoth ? 'Sending...' : 'Send'}
                             </button>
                         </div>
                     </div>

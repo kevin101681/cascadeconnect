@@ -145,12 +145,12 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     if (onCancel) {
       onCancel();
     } else {
-      setEditTitle(claim.title);
-      setEditDescription(claim.description);
-      setEditClassification(claim.classification);
-      setEditInternalNotes(claim.internalNotes || '');
-      setEditDateEvaluated(claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : '');
-      setIsEditing(false);
+    setEditTitle(claim.title);
+    setEditDescription(claim.description);
+    setEditClassification(claim.classification);
+    setEditInternalNotes(claim.internalNotes || '');
+    setEditDateEvaluated(claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : '');
+    setIsEditing(false);
     }
   };
   
@@ -620,17 +620,17 @@ If this repair work is billable, please let me know prior to scheduling.`);
           {isAdmin && (
             <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Internal Notes (Admin Only)</h4>
-              {isEditing && !isReadOnly ? (
-                <textarea
-                  value={editInternalNotes}
-                  onChange={e => setEditInternalNotes(e.target.value)}
+                  {isEditing && !isReadOnly ? (
+                      <textarea
+                        value={editInternalNotes}
+                        onChange={e => setEditInternalNotes(e.target.value)}
                   rows={4}
                   className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-secondary-container/20 dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors"
                 />
               ) : (
                 <div className="text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
                   {claim.internalNotes || 'No internal notes.'}
-                </div>
+                                </div>
               )}
             </div>
           )}
@@ -732,7 +732,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   value={contractorSearch}
                   onChange={(e) => setContractorSearch(e.target.value)}
                 />
-              </div>
+                      </div>
 
               {contractorSearch.trim().length > 0 && (
                 <div className="mt-2 max-h-40 overflow-y-auto border border-surface-outline-variant dark:border-gray-600 rounded-md bg-surface dark:bg-gray-700 shadow-elevation-1">
@@ -740,21 +740,21 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     <div className="px-3 py-2 text-xs text-surface-on-variant dark:text-gray-400">No subs found.</div>
                   ) : (
                     filteredContractors.map(c => (
-                      <button
+                  <button
                         key={c.id}
-                        type="button"
+                    type="button"
                         onClick={() => { 
                           handleAssignContractor(c.id);
                           setContractorSearch(c.companyName);
                         }}
                         className={`w-full text-left px-3 py-2 text-sm flex justify-between hover:bg-surface-container dark:hover:bg-gray-600 ${selectedContractorId === c.id ? 'bg-primary-container text-primary-on-container' : 'text-surface-on dark:text-gray-100'}`}
-                      >
+                  >
                         <span>{c.companyName}</span>
                         <span className="text-xs opacity-70">{c.specialty}</span>
-                      </button>
+                  </button>
                     ))
-                  )}
-                </div>
+                )}
+              </div>
               )}
               
               {selectedContractorId && !contractorSearch.trim() && (
@@ -765,20 +765,20 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     setSelectedContractorId('');
                     setContractorSearch('');
                   }} className="text-surface-on-variant dark:text-gray-400 hover:text-error"><X className="h-3 w-3" /></button>
-                </div>
+                      </div>
               )}
               
-              <Button
+                    <Button 
                 type="button"
-                variant="filled"
+                      variant="filled" 
                 className="mt-3"
-                onClick={() => setShowSubModal(true)}
-              >
+                    onClick={() => setShowSubModal(true)} 
+                  >
                 Add
-              </Button>
+                  </Button>
             </div>
           )}
-
+          
           {/* Scheduling */}
           <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
             <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Scheduling</h4>
@@ -787,9 +787,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Scheduled Date</label>
                 {isAdmin && isEditing && !isReadOnly ? (
                   <Button
-                    type="button"
+                        type="button"
                     variant="filled"
-                    onClick={() => setShowCalendarPicker(true)}
+                        onClick={() => setShowCalendarPicker(true)}
                   >
                     {proposeDate || scheduledDate ? (proposeDate ? new Date(proposeDate).toLocaleDateString() : scheduledDate ? new Date(scheduledDate.date).toLocaleDateString() : 'Add') : 'Add'}
                   </Button>
@@ -798,14 +798,14 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 ) : (
                   <span className="text-sm text-surface-on-variant dark:text-gray-400">No appointment scheduled</span>
                 )}
-              </div>
+                    </div>
               <div>
                 <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Time Slot</label>
                 {isAdmin && isEditing && !isReadOnly ? (
-                  <MaterialSelect
+                      <MaterialSelect
                     value={proposeTime || scheduledDate?.timeSlot || 'AM'}
                     onChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
-                    options={[
+                        options={[
                       { value: 'AM', label: 'AM (8am-12pm)' },
                       { value: 'PM', label: 'PM (12pm-4pm)' },
                       { value: 'All Day', label: 'All Day' }
@@ -814,19 +814,19 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 ) : scheduledDate?.timeSlot ? (
                   <span className="text-sm text-surface-on dark:text-gray-100">{scheduledDate.timeSlot === 'AM' ? 'AM (8am-12pm)' : scheduledDate.timeSlot === 'PM' ? 'PM (12pm-4pm)' : 'All Day'}</span>
                 ) : null}
-              </div>
+                    </div>
               {isAdmin && isEditing && !isReadOnly && (proposeDate || scheduledDate) && (
-                <Button
+                    <Button
                   type="button"
-                  variant="filled"
-                  onClick={handleConfirmSchedule}
+                      variant="filled"
+                      onClick={handleConfirmSchedule}
                   disabled={!proposeDate && !scheduledDate}
-                >
+                    >
                   {scheduledDate ? 'Update' : 'Confirm'}
-                </Button>
-              )}
-            </div>
-          </div>
+                    </Button>
+                )}
+              </div>
+                </div>
 
           {/* Warranty Assessment (Admin Only) */}
           {isAdmin && (
@@ -838,7 +838,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   {isEditing && !isReadOnly ? (
                     <>
                       <Button
-                        type="button"
+                      type="button"
                         variant="filled"
                         onClick={() => setShowClassificationSelect(!showClassificationSelect)}
                       >
@@ -847,9 +847,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
                       {showClassificationSelect && (
                         <div className="absolute top-full left-0 mt-2 z-50 bg-surface dark:bg-gray-800 rounded-xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-2 min-w-[200px]">
                           {CLAIM_CLASSIFICATIONS.map(c => (
-                            <button
+                        <button
                               key={c}
-                              type="button"
+                          type="button"
                               onClick={() => {
                                 setEditClassification(c);
                                 setShowClassificationSelect(false);
@@ -859,34 +859,34 @@ If this repair work is billable, please let me know prior to scheduling.`);
                                   ? 'bg-primary-container dark:bg-primary/20 text-primary dark:text-primary'
                                   : 'text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'
                               } ${c === CLAIM_CLASSIFICATIONS[0] ? 'rounded-t-xl' : ''} ${c === CLAIM_CLASSIFICATIONS[CLAIM_CLASSIFICATIONS.length - 1] ? 'rounded-b-xl' : ''}`}
-                            >
+                        >
                               {c}
-                            </button>
-                          ))}
-                        </div>
+                        </button>
+                      ))}
+                    </div>
                       )}
                     </>
                   ) : (
                     <span className="text-sm text-surface-on dark:text-gray-100">{claim.classification}</span>
                   )}
-                </div>
+                  </div>
 
                 <div>
                   <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Date Evaluated</label>
                   {isEditing && !isReadOnly && isAdmin ? (
-                    <Button
+                  <Button
                       type="button"
-                      variant="filled"
+                    variant="filled"
                       onClick={() => setShowDateEvaluatedPicker(true)}
-                    >
+                  >
                       {editDateEvaluated ? new Date(editDateEvaluated).toLocaleDateString() : 'Add'}
-                    </Button>
-                  ) : (
+                  </Button>
+            ) : (
                     <span className="text-sm text-surface-on dark:text-gray-100">
                       {claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString() : 'Not evaluated'}
                     </span>
-                  )}
-                </div>
+            )}
+          </div>
               </div>
             </div>
           )}
@@ -1006,8 +1006,8 @@ If this repair work is billable, please let me know prior to scheduling.`);
       <div className="flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700 mt-auto">
         <Button 
           type="button" 
-          variant="filled"
-          onClick={() => onSendMessage(claim)}
+          variant="filled" 
+          onClick={() => onSendMessage(claim)} 
         >
           <Send className="h-4 w-4 mr-2" />
           Send Message

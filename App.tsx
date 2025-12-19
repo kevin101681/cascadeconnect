@@ -673,9 +673,9 @@ function App() {
             console.log("Successfully synced with Neon DB.");
         } 
 
-        // --- MAP STACK AUTH USER TO INTERNAL USER ---
+        // --- MAP CLERK USER TO INTERNAL USER ---
         if (isSignedIn && authUser) {
-           // Stack Auth user is mapped to authUser format in useUser hook
+           // Clerk user is mapped to authUser format in useUser hook
            const email = authUser.primaryEmailAddress?.emailAddress.toLowerCase();
            if (email) {
               // 1. Check Employees
@@ -1395,10 +1395,18 @@ Homeowner: ${newClaim.homeownerName}
         // Normalize email
         const normalizedEmail = email.toLowerCase().trim();
         
-        // Check if contractor already exists by email (check both local state and database)
-        const existingContractor = contractors.find(c => c.email.toLowerCase().trim() === normalizedEmail);
-        if (existingContractor) {
-          console.log(`✓ Contractor already exists in local state: ${normalizedEmail}`);
+        // Extract name (try multiple column name variations)
+        const name = findColumn(subRow, ['name', 'contact name', 'contact', 'company name', 'company', 'sub name', 'subcontractor name']);
+        
+        // Check if contractor already exists by email or name (check both local state and database)
+        const existingContractorByEmail = contractors.find(c => c.email.toLowerCase().trim() === normalizedEmail);
+        const existingContractorByName = name ? contractors.find(c => 
+          c.contactName?.toLowerCase().trim() === name.toLowerCase().trim() ||
+          c.companyName.toLowerCase().trim() === name.toLowerCase().trim()
+        ) : null;
+        
+        if (existingContractorByEmail || existingContractorByName) {
+          console.log(`✓ Contractor already exists in local state: ${normalizedEmail}${name ? ` or ${name}` : ''}`);
           skippedCount++;
           continue;
         }
@@ -1418,10 +1426,11 @@ Homeowner: ${newClaim.homeownerName}
           }
         }
         
-        // Extract name (try multiple column name variations)
-        const name = findColumn(subRow, ['name', 'contact name', 'contact', 'company name', 'company', 'sub name', 'subcontractor name']);
         const companyName = findColumn(subRow, ['company name', 'company', 'business name', 'firm name']) || name || 'Unknown Company';
         const contactName = name || findColumn(subRow, ['contact', 'contact person', 'rep name']) || '';
+        
+        // Extract phone (try multiple column name variations)
+        const phone = findColumn(subRow, ['phone', 'phone number', 'contact phone', 'telephone', 'mobile', 'cell phone']) || undefined;
         
         // Extract specialty if available
         const specialty = findColumn(subRow, ['specialty', 'specialty type', 'trade', 'type', 'category']) || 'General';
@@ -1432,6 +1441,7 @@ Homeowner: ${newClaim.homeownerName}
           companyName: companyName,
           contactName: contactName || null,
           email: normalizedEmail,
+          phone: phone,
           specialty: specialty
         };
         
@@ -2362,6 +2372,7 @@ Assigned By: ${assignerName}
              companyName: sub.companyName,
              contactName: sub.contactName || null,
              email: sub.email,
+             phone: sub.phone || null,
              specialty: sub.specialty
           } as any);
           console.log("✅ Contractor saved to database");
@@ -2381,6 +2392,7 @@ Assigned By: ${assignerName}
              companyName: sub.companyName,
              contactName: sub.contactName,
              email: sub.email,
+             phone: sub.phone || null,
              specialty: sub.specialty
           } as any).where(eq(contractorsTable.id, sub.id));
           console.log("✅ Contractor updated in database");
@@ -2478,6 +2490,100 @@ Assigned By: ${assignerName}
   };
   
   const handleUpdateHomeowner = async (updatedHomeowner: Homeowner) => {
+    // Scan subcontractor list and add new subs to contractors database
+    if (updatedHomeowner.subcontractorList && updatedHomeowner.subcontractorList.length > 0) {
+      console.log('📋 Scanning subcontractor list for new contractors...');
+      
+      // Normalize column names (case-insensitive lookup)
+      const findColumn = (row: any, possibleNames: string[]): string | null => {
+        const rowKeys = Object.keys(row);
+        for (const name of possibleNames) {
+          const found = rowKeys.find(key => key.toLowerCase() === name.toLowerCase());
+          if (found && row[found]) {
+            return String(row[found]).trim();
+          }
+        }
+        return null;
+      };
+      
+      let addedCount = 0;
+      let skippedCount = 0;
+      
+      for (const subRow of updatedHomeowner.subcontractorList) {
+        // Extract email (try multiple column name variations)
+        const email = findColumn(subRow, ['email', 'e-mail', 'email address', 'contact email', 'sub email']);
+        if (!email) {
+          console.log('⚠️ Skipping sub row - no email found:', subRow);
+          skippedCount++;
+          continue;
+        }
+        
+        // Normalize email
+        const normalizedEmail = email.toLowerCase().trim();
+        
+        // Extract name (try multiple column name variations)
+        const name = findColumn(subRow, ['name', 'contact name', 'contact', 'company name', 'company', 'sub name', 'subcontractor name']);
+        
+        // Check if contractor already exists by email or name (check both local state and database)
+        const existingContractorByEmail = contractors.find(c => c.email.toLowerCase().trim() === normalizedEmail);
+        const existingContractorByName = name ? contractors.find(c => 
+          c.contactName?.toLowerCase().trim() === name.toLowerCase().trim() ||
+          c.companyName.toLowerCase().trim() === name.toLowerCase().trim()
+        ) : null;
+        
+        if (existingContractorByEmail || existingContractorByName) {
+          console.log(`✓ Contractor already exists: ${normalizedEmail}${name ? ` or ${name}` : ''}`);
+          skippedCount++;
+          continue;
+        }
+        
+        // Also check database if configured
+        if (isDbConfigured) {
+          try {
+            const dbContractors = await db.select().from(contractorsTable).where(eq(contractorsTable.email, normalizedEmail));
+            if (dbContractors.length > 0) {
+              console.log(`✓ Contractor already exists in database: ${normalizedEmail}`);
+              skippedCount++;
+              continue;
+            }
+          } catch (error) {
+            // If contractors table doesn't exist, continue with adding
+            console.log('⚠️ Could not check database for existing contractors, continuing...');
+          }
+        }
+        
+        const companyName = findColumn(subRow, ['company name', 'company', 'business name', 'firm name']) || name || 'Unknown Company';
+        const contactName = name || findColumn(subRow, ['contact', 'contact person', 'rep name']) || '';
+        
+        // Extract phone (try multiple column name variations)
+        const phone = findColumn(subRow, ['phone', 'phone number', 'contact phone', 'telephone', 'mobile', 'cell phone']) || undefined;
+        
+        // Extract specialty if available
+        const specialty = findColumn(subRow, ['specialty', 'specialty type', 'trade', 'type', 'category']) || 'General';
+        
+        // Create new contractor
+        const newContractor: Contractor = {
+          id: crypto.randomUUID(),
+          companyName: companyName,
+          contactName: contactName || null,
+          email: normalizedEmail,
+          phone: phone,
+          specialty: specialty
+        };
+        
+        // Add to contractors database
+        try {
+          await handleAddContractor(newContractor);
+          addedCount++;
+          console.log(`✅ Added new contractor: ${companyName} (${normalizedEmail})`);
+        } catch (error) {
+          console.error(`❌ Failed to add contractor ${normalizedEmail}:`, error);
+        }
+      }
+      
+      console.log(`📊 Sub contractor scan complete: ${addedCount} added, ${skippedCount} skipped`);
+    }
+
     setHomeowners(prev => prev.map(h => h.id === updatedHomeowner.id ? updatedHomeowner : h));
 
     if (isDbConfigured) {

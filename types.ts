@@ -106,6 +106,7 @@ export interface Contractor {
   companyName: string;
   contactName: string;
   email: string;
+  phone?: string;
   specialty: string;
 }
 
@@ -214,3 +215,217 @@ export interface DashboardStats {
   scheduled: number;
   avgDaysOpen: number;
 }
+
+
+
+
+export interface Task {
+
+  id: string;
+
+  title: string;
+
+  description?: string; // Used for Notes
+
+  assignedToId: string;
+
+  assignedById: string;
+
+  isCompleted: boolean;
+
+  dateAssigned: Date; // New field
+
+  dueDate: Date;
+
+  relatedClaimIds?: string[];
+
+}
+
+
+
+export interface Comment {
+
+  id: string;
+
+  author: string;
+
+  role: UserRole;
+
+  text: string;
+
+  timestamp: Date;
+
+}
+
+
+
+export interface Message {
+
+  id: string;
+
+  senderId: string;
+
+  senderName: string;
+
+  senderRole: UserRole;
+
+  content: string;
+
+  timestamp: Date;
+
+  attachments?: Attachment[];
+
+}
+
+
+
+export interface MessageThread {
+
+  id: string;
+
+  subject: string;
+
+  homeownerId: string;
+
+  participants: string[]; // Names
+
+  lastMessageAt: Date;
+
+  isRead: boolean;
+
+  messages: Message[];
+
+}
+
+
+
+export interface ProposedDate {
+
+  date: string; // ISO string
+
+  timeSlot: 'AM' | 'PM' | 'All Day';
+
+  status: 'PROPOSED' | 'ACCEPTED' | 'REJECTED';
+
+}
+
+
+
+export interface Attachment {
+
+  id: string;
+
+  type: 'IMAGE' | 'VIDEO' | 'DOCUMENT';
+
+  url: string; // Base64 or URL
+
+  name: string;
+
+}
+
+
+
+export interface HomeownerDocument {
+
+  id: string;
+
+  homeownerId: string;
+
+  name: string;
+
+  uploadedBy: string; // 'Admin' or 'System'
+
+  uploadDate: Date;
+
+  url: string;
+
+  type: string; // 'PDF', 'DOCX', etc.
+
+  thumbnailUrl?: string; // Pre-rendered thumbnail image URL (data URL or URL)
+}
+
+
+
+export interface Claim {
+
+  id: string;
+
+  claimNumber?: string; // Human-readable claim number (e.g., "CLM-2024-001")
+
+  title: string;
+
+  description: string;
+
+  category: string;
+
+  
+
+  // Homeowner / Location Data
+
+  address: string;
+
+  homeownerName: string;
+
+  homeownerEmail: string;
+
+  builderName?: string;
+
+  jobName?: string; // Replaces projectName/Lot
+
+  closingDate?: Date;
+
+
+
+  // Assignment
+
+  contractorId?: string;
+
+  contractorName?: string;
+
+  contractorEmail?: string;
+
+
+
+  // Status & Classification
+
+  status: ClaimStatus;
+
+  classification: ClaimClassification;
+
+  dateEvaluated?: Date;
+
+  nonWarrantyExplanation?: string;
+
+  
+
+  dateSubmitted: Date;
+
+  proposedDates: ProposedDate[];
+
+  comments: Comment[];
+
+  internalNotes?: string; // Admin only
+
+
+
+  summary?: string; 
+
+  attachments: Attachment[];
+
+}
+
+
+
+export interface DashboardStats {
+
+  total: number;
+
+  open: number;
+
+  scheduled: number;
+
+  avgDaysOpen: number;
+
+}
+
+

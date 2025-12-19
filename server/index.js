@@ -4,10 +4,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
-import { toNodeHandler } from "better-auth/node";
 import cbsbooksRouter from "./cbsbooks.js";
 import { uploadMiddleware, uploadToCloudinary } from "./cloudinary.js";
-import { auth } from "./auth.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -600,16 +598,6 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Email endpoint active at http://localhost:${PORT}/api/email/send`);
   console.log(`Email analytics endpoint active at http://localhost:${PORT}/api/email/analytics`);
-  console.log(`Better Auth endpoint active at http://localhost:${PORT}/api/auth`);
-  
-  // Check if database is configured for Better Auth
-  const databaseUrl = process.env.VITE_DATABASE_URL || process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    console.warn("⚠️  WARNING: Database URL not set!");
-    console.warn("   Better Auth requires a database connection. Set VITE_DATABASE_URL or DATABASE_URL in your .env.local file.");
-  } else {
-    console.log("✅ Database configured for Better Auth");
-  }
   
   // Check if SMTP credentials are set
   if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {

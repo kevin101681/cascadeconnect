@@ -21,6 +21,7 @@ interface PunchListAppProps {
   onSavePDF?: (pdfBlob: Blob, filename: string) => void;
   onCreateMessage?: (homeownerId: string, subject: string, content: string, attachments?: Array<{ filename: string; content: string; contentType: string }>) => Promise<void>;
   onShowManual?: () => void;
+  onUpdateHomeowner?: (homeowner: Homeowner) => void;
 }
 
 // Helper to generate UUID
@@ -41,7 +42,8 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
   onClose,
   onSavePDF,
   onCreateMessage,
-  onShowManual
+  onShowManual,
+  onUpdateHomeowner
 }) => {
   const [BlueTagDashboard, setBlueTagDashboard] = useState<React.ComponentType<any> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -195,6 +197,71 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
     }));
   }, [homeowner.name, homeowner.jobName, homeowner.address, homeowner.phone, homeowner.email, homeowner.id]);
 
+  // Handler to sync project field changes back to homeowner data
+  const handleProjectUpdate = (updatedProject: ProjectDetails) => {
+    setProject(updatedProject);
+    
+    // If onUpdateHomeowner is provided, sync field changes back to Cascade Connect
+    if (onUpdateHomeowner && updatedProject.fields) {
+      const fields = updatedProject.fields;
+      
+      // Find fields by label (more reliable than index)
+      const nameField = fields.find(f => f.label === 'Name(s)' || f.label.toLowerCase().includes('name'));
+      const jobNameField = fields.find(f => f.label === 'Project Lot/Unit Number' || f.label.toLowerCase().includes('lot') || f.label.toLowerCase().includes('unit'));
+      const addressField = fields.find(f => f.label === 'Address' || f.label.toLowerCase().includes('address'));
+      const phoneField = fields.find(f => f.label === 'Phone Number' || f.label.toLowerCase().includes('phone'));
+      const emailField = fields.find(f => f.label === 'Email Address' || f.label.toLowerCase().includes('email'));
+      
+      // Parse address into components if needed
+      let street = homeowner.street || '';
+      let city = homeowner.city || '';
+      let state = homeowner.state || '';
+      let zip = homeowner.zip || '';
+      
+      if (addressField?.value) {
+        // Try to parse address if it's in format "Street, City, State ZIP"
+        const addressParts = addressField.value.split(',').map(s => s.trim());
+        if (addressParts.length >= 3) {
+          street = addressParts[0] || '';
+          city = addressParts[1] || '';
+          const stateZip = addressParts[2] || '';
+          const stateZipMatch = stateZip.match(/^([A-Z]{2})\s+(\d{5}(-\d{4})?)$/);
+          if (stateZipMatch) {
+            state = stateZipMatch[1];
+            zip = stateZipMatch[2];
+          } else {
+            // Fallback: try to split by space
+            const parts = stateZip.split(/\s+/);
+            if (parts.length >= 2) {
+              state = parts[0];
+              zip = parts.slice(1).join(' ');
+            }
+          }
+        } else if (addressParts.length === 1) {
+          // Single line address, keep as is
+          street = addressParts[0];
+        }
+      }
+      
+      // Build updated homeowner object
+      const updatedHomeowner: Homeowner = {
+        ...homeowner,
+        name: nameField?.value || homeowner.name,
+        jobName: jobNameField?.value || homeowner.jobName,
+        address: addressField?.value || homeowner.address,
+        street: street,
+        city: city,
+        state: state,
+        zip: zip,
+        phone: phoneField?.value || homeowner.phone,
+        email: emailField?.value || homeowner.email,
+      };
+      
+      // Update homeowner in Cascade Connect
+      onUpdateHomeowner(updatedHomeowner);
+    }
+  };
+
   const handleSelectLocation = (id: string) => {
     setActiveLocationId(id);
   };
@@ -256,14 +323,14 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
   }
 
   return (
-    <div className="h-full w-full flex flex-col overflow-auto bg-gray-200 dark:bg-gray-950" style={{ minHeight: '100%', pointerEvents: 'auto' }}>
+    <div className="h-full w-full flex flex-col overflow-auto bg-gray-100 dark:bg-gray-900" style={{ minHeight: '100%', pointerEvents: 'auto' }}>
       {BlueTagDashboard ? (
         <div className="h-full w-full" style={{ isolation: 'isolate', pointerEvents: 'auto' }}>
           <BlueTagDashboard
           project={project}
           locations={locations}
           onSelectLocation={handleSelectLocation}
-          onUpdateProject={setProject}
+          onUpdateProject={handleProjectUpdate}
           onUpdateLocations={setLocations}
           onBack={handleBackFromLocation}
           onAddIssueGlobal={handleAddIssueGlobal}
@@ -277,6 +344,7 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
           initialExpand={false}
           onCreateMessage={onCreateMessage}
           onShowManual={onShowManual}
+          onSavePDF={onSavePDF}
         />
         </div>
       ) : (

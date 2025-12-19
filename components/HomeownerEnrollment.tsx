@@ -552,7 +552,7 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700">
-            <Button type="button" variant="text" onClick={onClose}>Cancel</Button>
+            <Button type="button" variant="filled" onClick={onClose}>Cancel</Button>
             <Button type="submit" variant="filled" icon={<UserPlus className="h-4 w-4" />}>
               Submit Enrollment
             </Button>

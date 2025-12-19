@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { InternalEmployee, Contractor, BuilderUser, BuilderGroup, UserRole } from '../types';
 import Button from './Button';
-import { Plus, Edit2, Mail, Trash2, UserCheck, Shield, X, HardHat, Briefcase, Phone, User, Lock, Bell } from 'lucide-react';
+import { Plus, Edit2, Mail, Trash2, UserCheck, Shield, X, HardHat, Briefcase, Phone, User, Lock, Bell, Send } from 'lucide-react';
+import { sendEmail } from '../services/emailService';
 
 interface InternalUserManagementProps {
   employees: InternalEmployee[];
@@ -66,7 +67,14 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
   const [subCompany, setSubCompany] = useState('');
   const [subContact, setSubContact] = useState('');
   const [subEmail, setSubEmail] = useState('');
+  const [subPhone, setSubPhone] = useState('');
   const [subSpecialty, setSubSpecialty] = useState('');
+
+  // Invite Sub Modal State
+  const [showInviteSubModal, setShowInviteSubModal] = useState(false);
+  const [inviteSubName, setInviteSubName] = useState('');
+  const [inviteSubEmail, setInviteSubEmail] = useState('');
+  const [inviteSubBody, setInviteSubBody] = useState('');
 
   // Builder User Form State
   const [showBuilderUserModal, setShowBuilderUserModal] = useState(false);
@@ -133,6 +141,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     setSubCompany('');
     setSubContact('');
     setSubEmail('');
+    setSubPhone('');
     setSubSpecialty('General');
     setShowSubModal(true);
   };
@@ -142,6 +151,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     setSubCompany(sub.companyName);
     setSubContact(sub.contactName);
     setSubEmail(sub.email);
+    setSubPhone(sub.phone || '');
     setSubSpecialty(sub.specialty);
     setShowSubModal(true);
   };
@@ -149,11 +159,39 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
   const handleSubmitSub = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingSubId) {
-      onUpdateContractor({ id: editingSubId, companyName: subCompany, contactName: subContact, email: subEmail, specialty: subSpecialty });
+      onUpdateContractor({ id: editingSubId, companyName: subCompany, contactName: subContact, email: subEmail, phone: subPhone || undefined, specialty: subSpecialty });
     } else {
-      onAddContractor({ id: crypto.randomUUID(), companyName: subCompany, contactName: subContact, email: subEmail, specialty: subSpecialty });
+      onAddContractor({ id: crypto.randomUUID(), companyName: subCompany, contactName: subContact, email: subEmail, phone: subPhone || undefined, specialty: subSpecialty });
     }
     setShowSubModal(false);
+  };
+
+  const handleOpenInviteSub = (sub: Contractor) => {
+    setInviteSubName(sub.contactName || sub.companyName);
+    setInviteSubEmail(sub.email);
+    setInviteSubBody(`Cascade Builder Services has partnered with a builder you work with. We've created an online account for you that we use for scheduling and sending service orders. Please click the "Activate" button below and create a new username and password. Don't hesitate to contact us with any questions: info@cascadebuilderservices.com or 888-429-5468.`);
+    setShowInviteSubModal(true);
+  };
+
+  const handleSendInviteSub = async () => {
+    try {
+      const subject = `Welcome to Cascade Builder Services - Activate Your Account`;
+      await sendEmail({
+        to: inviteSubEmail,
+        subject: subject,
+        body: inviteSubBody,
+        fromName: 'Cascade Builder Services',
+        fromRole: UserRole.ADMIN
+      });
+      alert(`Invite sent to ${inviteSubEmail} via Internal Mail System!`);
+      setShowInviteSubModal(false);
+      setInviteSubName('');
+      setInviteSubEmail('');
+      setInviteSubBody('');
+    } catch (error) {
+      console.error('Failed to send invite:', error);
+      alert(`Failed to send invite email. Please try again.`);
+    }
   };
 
   // --- Builder User Handlers ---
@@ -203,8 +241,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]">
-      <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 min-h-[600px] flex flex-col">
-        <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center">
+      <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 max-h-[85vh] flex flex-col">
+        <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center flex-shrink-0">
           <div>
             <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               <Shield className="h-5 w-5 text-primary" />
@@ -220,7 +258,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
           </button>
         </div>
 
-        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto flex-1">
+        <div className="p-6 space-y-6 overflow-y-auto flex-1 min-h-0">
       {/* Tabs */}
       <div className="flex border-b border-surface-outline-variant dark:border-gray-700">
         <button
@@ -358,6 +396,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => handleOpenInviteSub(sub)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full" title="Invite Sub"><Mail className="h-4 w-4" /></button>
                         <button onClick={() => handleOpenEditSub(sub)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
                         <button onClick={() => onDeleteContractor(sub.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
                       </div>
@@ -570,8 +609,12 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                 <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Email Address</label>
                 <input type="email" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={subEmail} onChange={(e) => setSubEmail(e.target.value)} />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Phone Number</label>
+                <input type="tel" className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={subPhone} onChange={(e) => setSubPhone(e.target.value)} />
+              </div>
               <div className="flex justify-end gap-3 pt-4">
-                <Button type="button" variant="text" onClick={() => setShowSubModal(false)}>Cancel</Button>
+                <Button type="button" variant="filled" onClick={() => setShowSubModal(false)}>Cancel</Button>
                 <Button type="submit" variant="filled">{editingSubId ? 'Save Changes' : 'Create Sub'}</Button>
               </div>
             </form>
@@ -632,6 +675,70 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                 <Button type="submit" variant="filled">{editingBuilderUserId ? 'Save Changes' : 'Create User'}</Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* INVITE SUB MODAL */}
+      {showInviteSubModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]">
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] max-h-[85vh] flex flex-col">
+            <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700 flex-shrink-0">
+              <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                <Mail className="h-5 w-5 text-primary" />
+                Invite Sub
+              </h2>
+              <button onClick={() => setShowInviteSubModal(false)} className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 bg-surface dark:bg-gray-800 overflow-y-auto flex-1 min-h-0">
+              <div>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-300 mb-1">Contact Name</label>
+                <input 
+                  type="text" 
+                  className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                  value={inviteSubName}
+                  onChange={(e) => setInviteSubName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-300 mb-1">Email Address</label>
+                <input 
+                  type="email" 
+                  className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                  value={inviteSubEmail}
+                  onChange={(e) => setInviteSubEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-300 mb-1">Invitation Message</label>
+                <textarea
+                  rows={8}
+                  className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none text-sm leading-relaxed"
+                  value={inviteSubBody}
+                  onChange={(e) => setInviteSubBody(e.target.value)}
+                />
+              </div>
+              <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700">
+                <a
+                  href="https://cascadebuilderservices.com/register?account_id=new"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center w-full bg-primary hover:bg-primary/90 text-primary-on dark:text-white font-medium py-3 px-4 rounded-lg transition-colors shadow-sm"
+                >
+                  Activate
+                </a>
+              </div>
+            </div>
+
+            <div className="p-4 flex justify-end gap-3 flex-shrink-0">
+              <Button variant="filled" onClick={() => setShowInviteSubModal(false)}>Cancel</Button>
+              <Button variant="filled" onClick={handleSendInviteSub} disabled={!inviteSubEmail || !inviteSubBody} icon={<Send className="h-4 w-4" />}>
+                Send Invitation
+              </Button>
+            </div>
           </div>
         </div>
       )}

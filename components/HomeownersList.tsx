@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Homeowner, BuilderGroup } from '../types';
 import Button from './Button';
+import MaterialSelect from './MaterialSelect';
 import { Edit2, Trash2, X, Search, Building2, MapPin, Phone, Mail, Calendar, Filter, Users } from 'lucide-react';
 
 interface HomeownersListProps {
@@ -139,24 +140,16 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
           </div>
 
           {/* Builder Filter */}
-          <div className="relative">
-            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" />
-            <select
-              className="bg-surface-container-high dark:bg-gray-700 rounded-lg pl-10 pr-10 py-2 text-sm text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none"
-              value={selectedBuilderId}
-              onChange={(e) => setSelectedBuilderId(e.target.value)}
-            >
-              <option value="all">All Builders</option>
-              {builderGroups.map(bg => (
-                <option key={bg.id} value={bg.id}>{bg.name}</option>
-              ))}
-            </select>
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-              <div className="w-6 h-6 rounded-full bg-surface-container dark:bg-gray-600 flex items-center justify-center">
-                <Building2 className="h-3.5 w-3.5 text-surface-on-variant dark:text-gray-400" />
-              </div>
-            </div>
-          </div>
+          <MaterialSelect
+            label="Builder"
+            value={selectedBuilderId}
+            onChange={(value) => setSelectedBuilderId(value)}
+            options={[
+              { value: 'all', label: 'All Builders' },
+              ...builderGroups.map(bg => ({ value: bg.id, label: bg.name }))
+            ]}
+            className="min-w-[200px]"
+          />
       </div>
 
         {/* Homeowners List */}
@@ -228,18 +221,18 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
 
                     <div className="flex items-center gap-2 ml-4">
                       <Button
-                        variant="text"
+                        variant="outlined"
                         onClick={() => handleOpenEdit(homeowner)}
                         icon={<Edit2 className="h-4 w-4" />}
-                        className="bg-surface-container-high dark:bg-gray-600 hover:bg-surface-container dark:hover:bg-gray-500"
+                        className="text-primary border-primary hover:bg-primary/10"
                       >
                         Edit
                       </Button>
                       <Button
-                        variant="text"
+                        variant="outlined"
                         onClick={() => setShowDeleteConfirm(homeowner.id)}
                         icon={<Trash2 className="h-4 w-4" />}
-                        className="text-error hover:bg-error/10 dark:hover:bg-error/20"
+                        className="text-error border-error hover:bg-error/10 dark:hover:bg-error/20"
                       >
                         Delete
                       </Button>
