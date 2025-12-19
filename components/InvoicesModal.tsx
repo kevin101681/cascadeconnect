@@ -23,14 +23,43 @@ interface InvoicesModalProps {
 const CBSBooksApp = lazy(() => import('../lib/cbsbooks/App'));
 
 const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillData }) => {
-
   if (!isOpen) return null;
+
+  // Prevent scroll and other events from propagating to parent
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    // Don't close on backdrop click, but prevent event propagation
+    e.stopPropagation();
+  };
+
+  const handleBackdropWheel = (e: React.WheelEvent) => {
+    // Prevent scroll events from bubbling to parent
+    e.stopPropagation();
+  };
+
+  const handleBackdropTouchMove = (e: React.TouchEvent) => {
+    // Prevent touch events from bubbling to parent
+    e.stopPropagation();
+  };
+
+  const handleContentWheel = (e: React.WheelEvent) => {
+    // Stop scroll events from reaching backdrop
+    e.stopPropagation();
+  };
 
   return createPortal(
     <div 
-      className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
+      className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+      onClick={handleBackdropClick}
+      onWheel={handleBackdropWheel}
+      onTouchMove={handleBackdropTouchMove}
+      style={{ overscrollBehavior: 'contain', overflow: 'hidden' }}
     >
-      <div className="bg-surface dark:bg-gray-800 w-full h-full rounded-none shadow-elevation-3 overflow-hidden flex flex-col" style={{ transform: 'none' }}>
+      <div 
+        className="bg-surface dark:bg-gray-800 w-full h-full rounded-none shadow-elevation-3 overflow-hidden flex flex-col" 
+        style={{ transform: 'none', overscrollBehavior: 'contain' }}
+        onClick={(e) => e.stopPropagation()}
+        onWheel={(e) => e.stopPropagation()}
+      >
         {/* Close FAB */}
         <button
           onClick={onClose}
@@ -42,9 +71,22 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
         </button>
         
         {/* Content */}
-        <div className="flex-1 overflow-auto" style={{ transform: 'none', isolation: 'auto' }}>
+        <div 
+          className="flex-1 overflow-auto" 
+          style={{ transform: 'none', isolation: 'auto', overscrollBehavior: 'contain' }}
+          onWheel={handleContentWheel}
+          onTouchMove={(e) => e.stopPropagation()}
+          onScroll={(e) => e.stopPropagation()}
+        >
           {isOpen && (
-            <div className="h-full w-full" data-cbs-books style={{ pointerEvents: 'auto', transform: 'none', isolation: 'auto' }}>
+            <div 
+              className="h-full w-full" 
+              data-cbs-books 
+              style={{ pointerEvents: 'auto', transform: 'none', isolation: 'auto' }}
+              onWheel={(e) => e.stopPropagation()}
+              onTouchMove={(e) => e.stopPropagation()}
+              onScroll={(e) => e.stopPropagation()}
+            >
               <Suspense fallback={
                 <div className="h-full w-full flex items-center justify-center">
                   <div className="text-center">
