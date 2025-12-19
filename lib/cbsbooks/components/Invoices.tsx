@@ -975,7 +975,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                             placeholder="Qty" 
                             value={item.quantity} 
                             onChange={(e) => updateItem(item.id, 'quantity', Number(e.target.value))} 
-                                className="w-auto min-w-[3rem] bg-surface-container dark:bg-gray-700 px-3 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-12 bg-surface-container dark:bg-gray-700 px-2 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                         <div className="relative flex-1 md:w-28">
                             <input 
@@ -1378,24 +1378,24 @@ export const Invoices: React.FC<InvoicesProps> = ({
 
       {/* Email Modal */}
       {emailingInvoice && (
-        <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-surface rounded-3xl p-6 w-full max-w-md shadow-2xl animate-slide-up">
+        <div className="fixed inset-0 z-[70] bg-black/50 dark:bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+            <div className="bg-surface dark:bg-gray-800 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-surface-outline-variant dark:border-gray-700 animate-slide-up">
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold flex items-center gap-2">
+                    <h3 className="text-xl font-bold flex items-center gap-2 text-surface-on dark:text-gray-100">
                         <Mail className="text-primary" />
                         Email Invoice
                     </h3>
-                    <button onClick={() => setEmailingInvoice(null)} className="p-2 hover:bg-surface-container dark:bg-gray-700 rounded-full">
+                    <button onClick={() => setEmailingInvoice(null)} className="p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
                         <X size={20} />
                     </button>
                 </div>
-                
+
                 <div className="space-y-4">
                     <div>
                         <label className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider ml-1 mb-1 block">To</label>
-                        <input 
-                            type="email" 
-                            className="w-full bg-surface-container dark:bg-gray-700 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary"
+                        <input
+                            type="email"
+                            className="w-full bg-surface-container dark:bg-gray-700 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400"
                             placeholder="client@example.com"
                             value={emailTo}
                             onChange={(e) => setEmailTo(e.target.value)}
@@ -1403,30 +1403,30 @@ export const Invoices: React.FC<InvoicesProps> = ({
                     </div>
                     <div>
                         <label className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider ml-1 mb-1 block">Subject</label>
-                        <input 
-                            type="text" 
-                            className="w-full bg-surface-container dark:bg-gray-700 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary"
+                        <input
+                            type="text"
+                            className="w-full bg-surface-container dark:bg-gray-700 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400"
                             value={emailSubject}
                             onChange={(e) => setEmailSubject(e.target.value)}
                         />
                     </div>
                     <div>
                         <label className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider ml-1 mb-1 block">Message</label>
-                        <textarea 
-                            className="w-full bg-surface-container dark:bg-gray-700 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary h-32 resize-none"
+                        <textarea
+                            className="w-full bg-surface-container dark:bg-gray-700 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary h-32 resize-none text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400"
                             value={emailBody}
                             onChange={(e) => setEmailBody(e.target.value)}
                         />
                     </div>
-                    
-                    <div className="flex items-center gap-2 text-sm text-surface-outline dark:text-gray-400 bg-surface-container dark:bg-gray-700/50 p-3 rounded-xl">
+
+                    <div className="flex items-center gap-2 text-sm text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700/50 p-3 rounded-xl">
                         <Download size={16} />
                         <span>Invoice #{emailingInvoice.invoiceNumber}.pdf will be attached.</span>
                     </div>
                 </div>
 
                 <div className="mt-6 flex justify-end gap-3">
-                    <Button variant="text" onClick={() => setEmailingInvoice(null)} disabled={isSendingEmail}>Cancel</Button>
+                    <Button variant="text" onClick={() => setEmailingInvoice(null)} disabled={isSendingEmail} className="text-surface-on dark:text-gray-100">Cancel</Button>
                     <Button onClick={handleSendEmail} disabled={isSendingEmail} icon={isSendingEmail ? <Loader2 className="animate-spin" /> : <Send size={16} />}>
                         {isSendingEmail ? 'Sending...' : 'Send Email'}
                     </Button>

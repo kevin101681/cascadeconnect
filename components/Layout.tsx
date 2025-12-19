@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, Homeowner } from '../types';
 import { UserCircle, Users, ChevronDown, Search, ArrowRight, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin } from 'lucide-react';
 import { useDarkMode } from './DarkModeProvider';
-import { UserButton } from '@clerk/clerk-react';
+import { useClerk } from '@clerk/clerk-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -31,6 +31,40 @@ interface LayoutProps {
   // Admin account indicator (to show menu even when viewing as homeowner)
   isAdminAccount?: boolean;
 }
+
+// Simple Sign Out button component
+const SignOutButton: React.FC = () => {
+  const { signOut } = useClerk();
+  
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      if (typeof window !== 'undefined') {
+        // Clear any cached session data
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('cascade_')) {
+            localStorage.removeItem(key);
+          }
+        });
+        window.location.href = '/';
+      }
+    } catch (err) {
+      console.error("Sign out error:", err);
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
+    }
+  };
+
+  return (
+    <button
+      onClick={handleSignOut}
+      className="text-sm font-medium text-surface-on dark:text-gray-100 hover:text-primary dark:hover:text-primary transition-colors cursor-pointer"
+    >
+      Sign out
+    </button>
+  );
+};
 
 const Layout: React.FC<LayoutProps> = ({ 
   children, 
@@ -223,40 +257,8 @@ const Layout: React.FC<LayoutProps> = ({
                 );
               })()}
 
-              {/* Clerk User Avatar - Shows email and logout */}
-              <div className="flex items-center">
-                <UserButton 
-                  appearance={{
-                    elements: {
-                      // Avatar styling - primary color background
-                      avatarBox: 'h-10 w-10 bg-primary',
-                      avatarImage: 'rounded-full',
-                      
-                      // Popover card styling - CSS will handle dark mode
-                      userButtonPopoverCard: '!bg-surface dark:!bg-gray-800 !rounded-xl !border !border-surface-outline-variant dark:!border-gray-700 !shadow-elevation-2 !p-2',
-                      
-                      // User info section - Hidden
-                      userButtonPopoverHeader: '!hidden',
-                      userButtonPopoverHeaderTitle: '!hidden',
-                      userButtonPopoverHeaderSubtitle: '!hidden',
-                      
-                      // Action buttons styling
-                      userButtonPopoverActions: '!py-1 !bg-transparent',
-                      userButtonPopoverActionButton: '!text-surface-on dark:!text-gray-100 hover:!bg-surface-container dark:hover:!bg-gray-700 !rounded-lg !px-3 !py-2 !text-sm !transition-colors !bg-transparent',
-                      userButtonPopoverActionButtonText: '!text-surface-on dark:!text-gray-100',
-                      userButtonPopoverActionButtonIcon: '!hidden',
-                      
-                      // Hide account management
-                      userButtonPopoverFooter: '!hidden',
-                      userButtonPopoverActionButton__manageAccount: '!hidden',
-                      
-                      // Sign out button styling - hide icon
-                      userButtonPopoverActionButton__signOut: '!text-error hover:!bg-error/5 dark:hover:!bg-error/10',
-                    }
-                  }}
-                  afterSignOutUrl="/"
-                />
-              </div>
+              {/* Clerk Sign Out - Shows only Sign Out text */}
+              <SignOutButton />
 
               {/* Main Menu Dropdown - Show for Admin/Builder accounts (even when viewing as homeowner) */}
               {(isAdmin || isBuilder || isAdminAccount) && (
