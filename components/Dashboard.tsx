@@ -15,6 +15,7 @@ import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
 import PDFViewer from './PDFViewer';
 import ClaimInlineEditor from './ClaimInlineEditor';
+import ClaimDetail from './ClaimDetail';
 import NewClaimForm from './NewClaimForm';
 import PunchListApp from './PunchListApp';
 import { HOMEOWNER_MANUAL_IMAGES } from '../lib/bluetag/constants';
@@ -237,8 +238,12 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Description expand popup state
   const [expandedDescription, setExpandedDescription] = useState<Claim | null>(null);
   
-  // Expanded claim editor state
-  const [expandedClaimId, setExpandedClaimId] = useState<string | null>(null);
+  // Selected claim for modal
+  const [selectedClaimForModal, setSelectedClaimForModal] = useState<Claim | null>(null);
+  
+  // Header scroll sync refs
+  const headerScrollRef = useRef<HTMLDivElement>(null);
+  const cardScrollRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Documents)
@@ -246,6 +251,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Claims filter state
   const [claimsFilter, setClaimsFilter] = useState<'All' | 'Open' | 'Closed'>('All');
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   
   // Invite Modal State
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -910,20 +916,65 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="flex items-center gap-2">
           {/* Filter Dropdown */}
           {setFilter && (
-            <div className="relative">
+            <div className="relative" data-filter-dropdown>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  // Cycle through filter options
-                  const nextFilter = filter === 'All' ? 'Open' : filter === 'Open' ? 'Closed' : 'All';
-                  setFilter(nextFilter);
+                  setIsFilterDropdownOpen(!isFilterDropdownOpen);
                 }}
                 className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 text-sm font-medium transition-all hover:bg-surface-container-high dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600"
                 title={`Filter: ${filter || 'All'}`}
               >
                 <Filter className="h-4 w-4" />
                 {filter || 'All'}
+                <ChevronDown className={`h-4 w-4 transition-transform ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
+              {isFilterDropdownOpen && (
+                <div className="absolute right-0 top-full mt-2 bg-surface dark:bg-gray-800 rounded-xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-2 z-20 min-w-[120px] overflow-hidden">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFilter('All');
+                      setIsFilterDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                      filter === 'All' 
+                        ? 'bg-primary-container dark:bg-primary/20 text-primary dark:text-primary' 
+                        : 'text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFilter('Open');
+                      setIsFilterDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                      filter === 'Open' 
+                        ? 'bg-primary-container dark:bg-primary/20 text-primary dark:text-primary' 
+                        : 'text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    Open
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFilter('Closed');
+                      setIsFilterDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-sm transition-colors rounded-b-xl ${
+                      filter === 'Closed' 
+                        ? 'bg-primary-container dark:bg-primary/20 text-primary dark:text-primary' 
+                        : 'text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    Closed
+                  </button>
+                </div>
+              )}
             </div>
           )}
           {/* Export to Excel Button */}
@@ -957,31 +1008,31 @@ const Dashboard: React.FC<DashboardProps> = ({
           {emptyMsg}
         </div>
       ) : (
-        <div>
-          {/* Column Headers */}
-          <div className="px-6 py-3 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50">
-            <div className="grid gap-2" style={{ 
-              gridTemplateColumns: (isAdmin || isBuilder) && !effectiveHomeowner 
-                ? 'auto auto 200px 300px auto auto auto auto auto auto auto auto' 
-                : 'auto auto 200px 300px auto auto auto auto auto auto auto'
-            }}>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Claim #</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Status</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate">Title</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate">Description</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Class</div>
+        <div className="flex flex-col h-full">
+          {/* Column Headers - Scrollable horizontally to sync with cards */}
+          <div 
+            ref={headerScrollRef}
+            className="px-6 py-3 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50 flex-shrink-0 overflow-x-auto [&::-webkit-scrollbar]:hidden" 
+            style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+          >
+            <div className="flex flex-nowrap items-center gap-2 min-w-max">
+              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '120px', flexShrink: 0 }}>Claim #</div>
+              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '100px', flexShrink: 0 }}>Status</div>
+              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate" style={{ width: '200px', flexShrink: 0 }}>Title</div>
+              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate" style={{ width: '300px', flexShrink: 0 }}>Description</div>
+              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '120px', flexShrink: 0 }}>Class</div>
               {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Homeowner</div>
+                <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '150px', flexShrink: 0 }}>Homeowner</div>
               )}
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Sub</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Scheduled</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Submitted</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Evaluated</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Service Order</div>
-              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Attachments</div>
+              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '150px', flexShrink: 0 }}>Sub</div>
+              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '130px', flexShrink: 0 }}>Scheduled</div>
+              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '110px', flexShrink: 0 }}>Submitted</div>
+              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '120px', flexShrink: 0 }}>Evaluated</div>
+              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '140px', flexShrink: 0 }}>Service Order</div>
+              <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap" style={{ width: '110px', flexShrink: 0 }}>Attachments</div>
             </div>
           </div>
-          <div className="divide-y divide-surface-outline-variant dark:divide-gray-700">
+          <div className="flex-1 overflow-y-auto divide-y divide-surface-outline-variant dark:divide-gray-700">
               {groupClaims.map((claim, index) => {
                 const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
                 
@@ -999,33 +1050,44 @@ const Dashboard: React.FC<DashboardProps> = ({
                       className={`hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors cursor-pointer ${isClosed ? 'opacity-70' : ''}`}
                       variants={cardVariants}
                       onClick={(e) => {
-                        setExpandedClaimId(expandedClaimId === claim.id ? null : claim.id);
+                        if (onSelectClaim) {
+                          onSelectClaim(claim, false);
+                        } else {
+                          setSelectedClaimForModal(claim);
+                        }
                       }}
                     >
-                      <div className="px-6 py-3">
-                        <div className="grid gap-2 items-center" style={{ 
-                          gridTemplateColumns: (isAdmin || isBuilder) && !effectiveHomeowner 
-                            ? 'auto auto 200px 300px auto auto auto auto auto auto auto auto' 
-                            : 'auto auto 200px 300px auto auto auto auto auto auto auto'
-                        }}>
+                      <div 
+                        ref={(el) => {
+                          if (el) cardScrollRefs.current.set(claim.id, el);
+                        }}
+                        className="px-6 py-3 overflow-x-auto [&::-webkit-scrollbar]:hidden" 
+                        style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                        onScroll={(e) => {
+                          if (headerScrollRef.current) {
+                            headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+                          }
+                        }}
+                      >
+                        <div className="flex flex-nowrap items-center gap-2 min-w-max">
                             {/* Claim # */}
-                          <div>
+                          <div style={{ width: '120px', flexShrink: 0 }}>
                             <span className="text-xs font-bold text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap inline-block">
                               #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
                             </span>
                           </div>
                           {/* Status */}
-                          <div>
+                          <div style={{ width: '100px', flexShrink: 0 }}>
                             <StatusBadge status={claim.status} />
                           </div>
                           {/* Title */}
-                          <div>
+                          <div style={{ width: '200px', flexShrink: 0 }}>
                             <span className="text-xs font-medium text-surface-on dark:text-gray-100 truncate bg-surface-container-high dark:bg-gray-700 px-3 py-1 rounded-full inline-block w-full border border-surface-outline-variant/50 dark:border-gray-600">
                               {claim.title}
                             </span>
                           </div>
                           {/* Description */}
-                          <div>
+                          <div style={{ width: '300px', flexShrink: 0 }}>
                             {claim.description ? (
                               <span className="text-xs text-surface-on-variant dark:text-gray-400 truncate bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full inline-block w-full">
                                 {claim.description}
@@ -1033,14 +1095,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                             ) : null}
                           </div>
                           {/* Classification */}
-                          <div>
+                          <div style={{ width: '120px', flexShrink: 0 }}>
                             <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
                               {claim.classification}
                             </span>
                           </div>
                           {/* Homeowner Name */}
                           {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                            <div>
+                            <div style={{ width: '150px', flexShrink: 0 }}>
                               <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
                                 <Building2 className="h-3 w-3 flex-shrink-0" />
                                 <span className="truncate">{claim.homeownerName}</span>
@@ -1048,7 +1110,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             </div>
                           )}
                           {/* Contractor */}
-                          <div>
+                          <div style={{ width: '150px', flexShrink: 0 }}>
                             {claim.contractorName ? (
                               <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
                                 <HardHat className="h-3 w-3 flex-shrink-0" />
@@ -1062,7 +1124,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             )}
                           </div>
                           {/* Scheduled Date */}
-                          <div>
+                          <div style={{ width: '130px', flexShrink: 0 }}>
                             {scheduledDate ? (
                               <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap">
                                 <Calendar className="h-3 w-3 flex-shrink-0" />
@@ -1071,13 +1133,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                             ) : null}
                           </div>
                           {/* Date Submitted */}
-                          <div>
+                          <div style={{ width: '110px', flexShrink: 0 }}>
                             <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
                               {new Date(claim.dateSubmitted).toLocaleDateString()}
                             </span>
                           </div>
                           {/* Date Evaluated */}
-                          <div>
+                          <div style={{ width: '120px', flexShrink: 0 }}>
                             {claim.dateEvaluated ? (
                               <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
                                 Eval: {new Date(claim.dateEvaluated).toLocaleDateString()}
@@ -1085,7 +1147,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             ) : null}
                           </div>
                           {/* Service Order Date */}
-                          <div>
+                          <div style={{ width: '140px', flexShrink: 0 }}>
                             {serviceOrderDate ? (
                               <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
                                 <Mail className="h-3 w-3 flex-shrink-0" />
@@ -1099,7 +1161,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             )}
                           </div>
                           {/* Attachments count */}
-                          <div>
+                          <div style={{ width: '110px', flexShrink: 0 }}>
                             {claim.attachments && claim.attachments.length > 0 ? (
                               <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
                                 <Paperclip className="h-3 w-3 flex-shrink-0" />
@@ -1110,37 +1172,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                       </div>
                     </motion.div>
-                    {/* Inline Expandable Editor */}
-                    <AnimatePresence>
-                      {expandedClaimId === claim.id && onUpdateClaim && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2, ease: 'easeInOut' }}
-                          className="overflow-hidden border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30"
-                        >
-                          <div className="p-4">
-                          <ClaimInlineEditor
-                            claim={claim}
-                            onUpdateClaim={onUpdateClaim}
-                            contractors={contractors}
-                            currentUser={currentUser}
-                            userRole={userRole}
-                            onAddInternalNote={onAddInternalNote}
-                            claimMessages={claimMessages.filter(m => m.claimId === claim.id)}
-                            onTrackClaimMessage={onTrackClaimMessage}
-                            onSendMessage={() => {
-                              if (onSelectClaim) {
-                                onSelectClaim(claim, false);
-                              }
-                            }}
-                            onNavigate={onNavigate}
-                            />
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
                   </React.Fragment>
                 );
               })}
@@ -1308,12 +1339,12 @@ const Dashboard: React.FC<DashboardProps> = ({
        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-between items-center h-16 shrink-0">
             <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-              Inbox
               {displayThreads.filter(t => !t.isRead).length > 0 && (
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
                   {displayThreads.filter(t => !t.isRead).length}
                 </span>
               )}
+              Inbox
             </h3>
             <Button
               variant="filled"
@@ -1553,6 +1584,44 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Helper function to render modals using Portal
   const renderModals = () => (
     <>
+      {/* CLAIM DETAIL MODAL */}
+      {selectedClaimForModal && onSelectClaim && createPortal(
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedClaimForModal(null);
+          }}
+        >
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] max-h-[90vh] flex flex-col">
+            <ClaimDetail
+              claim={selectedClaimForModal}
+              currentUserRole={userRole}
+              onUpdateClaim={(updatedClaim) => {
+                if (onUpdateClaim) {
+                  onUpdateClaim(updatedClaim);
+                }
+                setSelectedClaimForModal(updatedClaim);
+              }}
+              onBack={() => setSelectedClaimForModal(null)}
+              contractors={contractors}
+              onSendMessage={(claim) => {
+                if (onSelectClaim) {
+                  onSelectClaim(claim, false);
+                }
+                setSelectedClaimForModal(null);
+                setCurrentTab('MESSAGES');
+              }}
+              currentUser={currentUser}
+              onAddInternalNote={onAddInternalNote}
+              claimMessages={claimMessages.filter(m => m.claimId === selectedClaimForModal.id)}
+              onTrackClaimMessage={onTrackClaimMessage}
+              onNavigate={onNavigate}
+            />
+          </div>
+        </div>,
+        document.body
+      )}
+      
       {/* PDF VIEWER MODAL */}
       {selectedDocument && isPDFViewerOpen && createPortal(
         <PDFViewer

@@ -86,12 +86,12 @@ const TaskList: React.FC<TaskListProps> = ({
       <div className="flex justify-between items-start mb-6">
         <div className="flex-1">
           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-            My Tasks
             {filteredTasks.length > 0 && (
               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
                 {filteredTasks.length}
               </span>
             )}
+            My Tasks
           </h2>
         </div>
         <Button
