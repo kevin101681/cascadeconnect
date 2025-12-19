@@ -346,9 +346,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
   };
   
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6" style={{ maxWidth: '100%', overflowX: 'hidden', padding: '1rem', boxSizing: 'border-box' }}>
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ maxWidth: '100%', width: '100%', boxSizing: 'border-box' }}>
         {/* Left Column */}
         <div className="space-y-6">
           {/* Title and Description Combined */}

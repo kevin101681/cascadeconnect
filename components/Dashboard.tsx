@@ -1255,10 +1255,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                               }}
                             >
                               <div style={{ 
-                                maxWidth: 'calc(100vw - 2rem)', 
+                                maxWidth: 'calc(100vw - 3rem)', 
                                 margin: '0 auto',
                                 overflowX: 'hidden',
-                                width: '100%'
+                                width: '100%',
+                                paddingLeft: '1.5rem',
+                                paddingRight: '1.5rem',
+                                boxSizing: 'border-box'
                               }}>
                                 <ClaimInlineEditor
                                 claim={claim}
