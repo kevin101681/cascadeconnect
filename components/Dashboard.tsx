@@ -1145,7 +1145,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 return (
                   <React.Fragment key={claim.id}>
                     <motion.tr 
-                      className={`border-b border-surface-outline-variant dark:border-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors cursor-pointer ${isClosed ? 'opacity-70' : ''}`}
+                      className={`border-b border-surface-outline-variant dark:border-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-700/50 hover:shadow-[0px_1px_2px_0px_rgba(0,0,0,0.3),0px_1px_3px_1px_rgba(0,0,0,0.15)] transition-all cursor-pointer ${isClosed ? 'opacity-70' : ''}`}
                       variants={cardVariants}
                       onClick={(e) => {
                         setExpandedClaimId(expandedClaimId === claim.id ? null : claim.id);
