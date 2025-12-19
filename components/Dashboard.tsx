@@ -8,13 +8,12 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor } from '../types';
 import { ClaimMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, ArrowUp, ArrowDown } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2 } from 'lucide-react';
 import Button from './Button';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
 import PDFViewer from './PDFViewer';
-import PDFThumbnail from './PDFThumbnail';
 import ClaimInlineEditor from './ClaimInlineEditor';
 import NewClaimForm from './NewClaimForm';
 import PunchListApp from './PunchListApp';
@@ -240,32 +239,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Expanded claim editor state
   const [expandedClaimId, setExpandedClaimId] = useState<string | null>(null);
-
-  // Claims filter state
-  const [claimsFilter, setClaimsFilter] = useState<'Open' | 'Closed' | 'All'>('All');
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const filterDropdownRef = useRef<HTMLDivElement>(null);
-
-  // Claims sorting state
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-
-  // Close filter dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
-        setShowFilterDropdown(false);
-      }
-    };
-
-    if (showFilterDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showFilterDropdown]);
   
   // Schedule expansion state
   const [isScheduleExpanded, setIsScheduleExpanded] = useState(false);
@@ -919,7 +892,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // --- Render Helpers ---
 
-  const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, showFilter: boolean = false, filterValue: 'Open' | 'Closed' | 'All' = 'All', onFilterChange?: (filter: 'Open' | 'Closed' | 'All') => void, onExportExcel?: () => void, sortColumn?: string | null, sortDirection?: 'asc' | 'desc', onSort?: (column: string) => void) => (
+  const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false) => (
     <motion.div 
       className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0"
       variants={cardVariants}
@@ -927,211 +900,74 @@ const Dashboard: React.FC<DashboardProps> = ({
       animate="visible"
     >
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30">
-        <h3 className={`text-xl font-normal flex items-center gap-2 ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
+        <h3 className={`text-lg font-bold flex items-center gap-2 ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
             {groupClaims.length}
           </span>
           {title}
         </h3>
-        <div className="flex items-center gap-2">
-          {showNewClaimButton && (
-            <button
-              onClick={() => {
-                setShowNewClaimModal(true);
-              }}
-              className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-primary text-primary-on text-sm font-medium transition-all hover:bg-primary/90 dark:hover:bg-primary/80"
-            >
-              <Plus className="h-4 w-4" />
-              New Claim
-            </button>
-          )}
-          {showFilter && (
-            <>
-              {/* Filter Dropdown */}
-              <div className="relative" ref={filterDropdownRef}>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowFilterDropdown(!showFilterDropdown);
-                  }}
-                  className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 text-sm font-medium transition-all hover:bg-surface-container-high dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600 min-w-[100px]"
-                >
-                  <Filter className="h-4 w-4" />
-                  <span className="whitespace-nowrap">{filterValue}</span>
-                  <ChevronDown className={`h-4 w-4 transition-transform flex-shrink-0 ${showFilterDropdown ? 'rotate-180' : ''}`} />
-                </button>
-                {showFilterDropdown && (
-                  <div className="absolute right-0 top-full mt-1 w-32 bg-surface dark:bg-gray-800 rounded-xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden z-50">
-                    {(['All', 'Open', 'Closed'] as const).map((option) => (
-                      <button
-                        key={option}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onFilterChange?.(option);
-                          setShowFilterDropdown(false);
-                        }}
-                        className={`w-full px-4 py-2 text-sm text-left transition-colors ${
-                          filterValue === option
-                            ? 'bg-primary-container dark:bg-primary/20 text-primary dark:text-primary'
-                            : 'text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'
-                        }`}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-              {/* Excel Export Button */}
-              {onExportExcel && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onExportExcel();
-                  }}
-                  className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 transition-all hover:bg-surface-container-high dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600"
-                  title="Export to Excel"
-                >
-                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                    <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                    <line x1="8" y1="13" x2="16" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    <line x1="8" y1="17" x2="16" y2="17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    <line x1="8" y1="9" x2="13" y2="9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  </svg>
-                </button>
-              )}
-            </>
-          )}
-        </div>
+        {showNewClaimButton && (
+          <button
+            onClick={() => {
+              setShowNewClaimModal(true);
+            }}
+            className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-primary text-primary-on text-sm font-medium transition-all hover:bg-primary/90 dark:hover:bg-primary/80"
+          >
+            <Plus className="h-4 w-4" />
+            New Claim
+          </button>
+        )}
       </div>
       {groupClaims.length === 0 ? (
         <div className="p-8 text-center text-surface-on-variant dark:text-gray-400 text-sm italic">
           {emptyMsg}
         </div>
       ) : (
-        <div
-          className="overflow-x-auto relative claims-table-scroll"
-          style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin', paddingLeft: '0.5rem', paddingRight: '0.5rem' }}
-        >
-          <table className="border-collapse" style={{ minWidth: '1400px', marginLeft: '0', marginRight: '0' }}>
-            <thead className="sticky top-0 z-20">
-              <tr className="border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50 backdrop-blur-sm">
-                <th 
-                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
-                  onClick={() => onSort?.('claimNumber')}
-                >
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
-                    Claim #
-                    {sortColumn === 'claimNumber' && (
-                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    )}
-                  </span>
-                </th>
-                <th 
-                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
-                  onClick={() => onSort?.('status')}
-                >
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
-                    Status
-                    {sortColumn === 'status' && (
-                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    )}
-                  </span>
-                </th>
-                <th 
-                  className="px-3 py-3 text-left min-w-[200px] bg-surface-container/50 dark:bg-gray-700/50 cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
-                  onClick={() => onSort?.('title')}
-                >
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
-                    Title
-                    {sortColumn === 'title' && (
-                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    )}
-                  </span>
-                </th>
-                <th 
-                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
-                  onClick={() => onSort?.('classification')}
-                >
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
-                    Class
-                    {sortColumn === 'classification' && (
-                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    )}
-                  </span>
-                </th>
-                {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                  <th 
-                    className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
-                    onClick={() => onSort?.('homeowner')}
-                  >
-                    <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
-                      Homeowner
-                      {sortColumn === 'homeowner' && (
-                        sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                      )}
-                    </span>
-                  </th>
-                )}
-                <th 
-                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
-                  onClick={() => onSort?.('contractor')}
-                >
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
-                    Sub
-                    {sortColumn === 'contractor' && (
-                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    )}
-                  </span>
-                </th>
-                <th 
-                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
-                  onClick={() => onSort?.('scheduled')}
-                >
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
-                    Scheduled
-                    {sortColumn === 'scheduled' && (
-                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    )}
-                  </span>
-                </th>
-                <th 
-                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
-                  onClick={() => onSort?.('submitted')}
-                >
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
-                    Submitted
-                    {sortColumn === 'submitted' && (
-                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    )}
-                  </span>
-                </th>
-                <th 
-                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
-                  onClick={() => onSort?.('evaluated')}
-                >
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
-                    Evaluated
-                    {sortColumn === 'evaluated' && (
-                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    )}
-                  </span>
-                </th>
-                <th 
-                  className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
-                  onClick={() => onSort?.('serviceOrder')}
-                >
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 flex items-center gap-1">
-                    Service Order
-                    {sortColumn === 'serviceOrder' && (
-                      sortDirection === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    )}
-                  </span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
+        <div>
+          {/* Column Headers */}
+          <div className="px-6 py-3 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50">
+            <div className="flex flex-nowrap items-center gap-2 min-w-max">
+              <div className="flex justify-start items-center flex-shrink-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Claim #</span>
+              </div>
+              <div className="flex-shrink-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Status</span>
+              </div>
+              <div className="flex items-center justify-start flex-shrink-0 min-w-[200px] max-w-[200px]">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate w-full">Title</span>
+              </div>
+              <div className="flex items-center justify-start flex-shrink-0 min-w-[300px] max-w-[300px]">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate w-full">Description</span>
+              </div>
+              <div className="flex justify-start items-center flex-shrink-0 w-fit min-w-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Class</span>
+              </div>
+              {(isAdmin || isBuilder) && !effectiveHomeowner && (
+                <div className="flex justify-start items-center flex-shrink-0">
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Homeowner</span>
+                </div>
+              )}
+              <div className="flex justify-start items-center flex-shrink-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Sub</span>
+              </div>
+              <div className="flex justify-start items-center flex-shrink-0 min-w-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Scheduled</span>
+              </div>
+              <div className="flex justify-start items-center flex-shrink-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Submitted</span>
+              </div>
+              <div className="flex justify-start items-center flex-shrink-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Evaluated</span>
+              </div>
+              <div className="flex justify-start items-center flex-shrink-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Service Order</span>
+              </div>
+              <div className="flex justify-start items-center flex-shrink-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Attachments</span>
+              </div>
+            </div>
+          </div>
+          <div className="divide-y divide-surface-outline-variant dark:divide-gray-700">
               {groupClaims.map((claim, index) => {
                 const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
                 
@@ -1145,298 +981,168 @@ const Dashboard: React.FC<DashboardProps> = ({
                 
                 return (
                   <React.Fragment key={claim.id}>
-                    <motion.tr 
-                      className={`border-b border-surface-outline-variant dark:border-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-700/50 hover:shadow-[0px_1px_2px_0px_rgba(0,0,0,0.3),0px_1px_3px_1px_rgba(0,0,0,0.15)] transition-all cursor-pointer ${isClosed ? 'opacity-70' : ''}`}
+                    <motion.div 
+                      className={`hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors cursor-pointer ${isClosed ? 'opacity-70' : ''}`}
                       variants={cardVariants}
                       onClick={(e) => {
                         setExpandedClaimId(expandedClaimId === claim.id ? null : claim.id);
                       }}
                     >
-                      <td className="px-3 py-3 whitespace-nowrap align-middle">
-                      <span className="text-xs font-bold text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-2.5 py-1 rounded-full whitespace-nowrap inline-block">
-                        #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap align-middle">
-                      <StatusBadge status={claim.status} />
-                    </td>
-                    <td className="px-3 py-3 min-w-[200px] align-middle overflow-visible">
-                      <span className="text-xs font-medium text-surface-on dark:text-gray-100 truncate bg-surface-container-high dark:bg-gray-700 px-2.5 py-1 rounded-full inline-block max-w-[calc(100%-0.5rem)] border border-surface-outline-variant/50 dark:border-gray-600 box-border">
-                        {claim.title}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap align-middle">
-                      <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-2.5 py-1 rounded-full whitespace-nowrap inline-block">
-                        {claim.classification}
-                      </span>
-                    </td>
-                    {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                      <td className="px-3 py-3 whitespace-nowrap align-middle">
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-2.5 py-1 rounded-full whitespace-nowrap">
-                          <Building2 className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">{claim.homeownerName}</span>
-                        </span>
-                      </td>
-                    )}
-                    <td className="px-3 py-3 whitespace-nowrap align-middle">
-                      {claim.contractorName ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-2.5 py-1 rounded-full whitespace-nowrap">
-                          <HardHat className="h-3 w-3 flex-shrink-0" />
-                          <span className="truncate">{claim.contractorName}</span>
-                        </span>
-                      ) : (
-                        <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-2.5 py-1 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600">
-                          <HardHat className="h-3 w-3 flex-shrink-0 opacity-50" />
-                          <span className="truncate">No Sub Assigned</span>
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap align-middle">
-                      {scheduledDate ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-2.5 py-1 rounded-full whitespace-nowrap">
-                          <Calendar className="h-3 w-3 flex-shrink-0" />
-                          <span>{new Date(scheduledDate.date).toLocaleDateString()}</span>
-                        </span>
-                      ) : null}
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap align-middle">
-                      <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-2.5 py-1 rounded-full whitespace-nowrap inline-block">
-                        {new Date(claim.dateSubmitted).toLocaleDateString()}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap align-middle">
-                      {claim.dateEvaluated ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-2.5 py-1 rounded-full whitespace-nowrap inline-block">
-                          Eval: {new Date(claim.dateEvaluated).toLocaleDateString()}
-                        </span>
-                      ) : null}
-                    </td>
-                    <td className="px-3 py-3 whitespace-nowrap align-middle">
-                      {serviceOrderDate ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-2.5 py-1 rounded-full whitespace-nowrap">
-                          <Mail className="h-3 w-3 flex-shrink-0" />
-                          <span>SO: {new Date(serviceOrderDate).toLocaleDateString()}</span>
-                        </span>
-                      ) : (
-                        <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-2.5 py-1 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600">
-                          <Mail className="h-3 w-3 flex-shrink-0 opacity-50" />
-                          <span>No SO Sent</span>
-                        </span>
-                      )}
-                    </td>
-                    </motion.tr>
+                      <div className="overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                        <div className="flex flex-nowrap items-center gap-2 px-6 py-3 min-w-max">
+                              {/* Claim # */}
+                            <div className="flex justify-start items-center flex-shrink-0">
+                              <span className="text-xs font-bold text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap text-left">
+                                #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
+                              </span>
+                            </div>
+                            {/* Status */}
+                            <div className="flex-shrink-0">
+                              <StatusBadge status={claim.status} />
+                            </div>
+                            {/* Title */}
+                            <div className="flex items-center justify-start flex-shrink-0 min-w-[200px] max-w-[200px]">
+                              <span className="text-xs font-medium text-surface-on dark:text-gray-100 truncate bg-surface-container-high dark:bg-gray-700 px-3 py-1 rounded-full text-left w-full border border-surface-outline-variant/50 dark:border-gray-600">
+                                {claim.title}
+                              </span>
+                            </div>
+                            {/* Description */}
+                            <div className="flex items-center justify-start flex-shrink-0 min-w-[300px] max-w-[300px]">
+                              {claim.description ? (
+                                <span className="text-xs text-surface-on-variant dark:text-gray-400 truncate bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full text-left w-full">
+                                  {claim.description}
+                                </span>
+                              ) : null}
+                            </div>
+                            {/* Classification */}
+                            <div className="flex justify-start items-center flex-shrink-0 w-fit min-w-0">
+                              <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                                {claim.classification}
+                              </span>
+                            </div>
+                            {/* Homeowner Name */}
+                            {(isAdmin || isBuilder) && !effectiveHomeowner && (
+                              <div className="flex justify-start items-center flex-shrink-0">
+                                <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                                  <Building2 className="h-3 w-3 flex-shrink-0" />
+                                  <span className="truncate">{claim.homeownerName}</span>
+                                </span>
+                              </div>
+                            )}
+                            {/* Contractor */}
+                            <div className="flex justify-start items-center flex-shrink-0">
+                              {claim.contractorName ? (
+                                <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                                  <HardHat className="h-3 w-3 flex-shrink-0" />
+                                  <span className="truncate">{claim.contractorName}</span>
+                                </span>
+                              ) : (
+                                <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap text-left border border-dashed border-surface-outline-variant dark:border-gray-600">
+                                  <HardHat className="h-3 w-3 flex-shrink-0 opacity-50" />
+                                  <span className="truncate">No Sub Assigned</span>
+                                </span>
+                              )}
+                            </div>
+                            {/* Scheduled Date */}
+                            <div className="flex justify-start items-center flex-shrink-0 min-w-0">
+                              {scheduledDate ? (
+                                <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap text-left">
+                                  <Calendar className="h-3 w-3 flex-shrink-0" />
+                                  <span>{new Date(scheduledDate.date).toLocaleDateString()}</span>
+                                </span>
+                              ) : null}
+                            </div>
+                            {/* Date Submitted */}
+                            <div className="flex justify-start items-center flex-shrink-0">
+                              <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                                {new Date(claim.dateSubmitted).toLocaleDateString()}
+                              </span>
+                            </div>
+                            {/* Date Evaluated */}
+                            <div className="flex justify-start items-center flex-shrink-0">
+                              {claim.dateEvaluated ? (
+                                <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                                  Eval: {new Date(claim.dateEvaluated).toLocaleDateString()}
+                                </span>
+                              ) : null}
+                            </div>
+                            {/* Service Order Date */}
+                            <div className="flex justify-start items-center flex-shrink-0">
+                              {serviceOrderDate ? (
+                                <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                                  <Mail className="h-3 w-3 flex-shrink-0" />
+                                  <span>SO: {new Date(serviceOrderDate).toLocaleDateString()}</span>
+                                </span>
+                              ) : (
+                                <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap text-left border border-dashed border-surface-outline-variant dark:border-gray-600">
+                                  <Mail className="h-3 w-3 flex-shrink-0 opacity-50" />
+                                  <span>No SO Sent</span>
+                                </span>
+                              )}
+                            </div>
+                            {/* Attachments count */}
+                            <div className="flex justify-start items-center flex-shrink-0">
+                              {claim.attachments && claim.attachments.length > 0 ? (
+                                <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                                  <Paperclip className="h-3 w-3 flex-shrink-0" />
+                                  {claim.attachments.length}
+                                </span>
+                              ) : null}
+                            </div>
+                        </div>
+                      </div>
+                    </motion.div>
                     {/* Inline Expandable Editor */}
                     <AnimatePresence>
                       {expandedClaimId === claim.id && onUpdateClaim && (
-                        <motion.tr
+                        <motion.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.2, ease: 'easeInOut' }}
-                          className="overflow-visible"
+                          className="overflow-hidden border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30"
                         >
-                          <td 
-                            colSpan={(isAdmin || isBuilder) && !effectiveHomeowner ? 9 : 8} // Adjusted colSpan after removing Description and Attachments columns
-                            className="p-0 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30"
-                          >
-                            {/* Breakout container for narrow screens - spans full viewport width */}
-                            <div 
-                              className="p-4"
-                              style={{
-                                position: 'relative',
-                                left: '50%',
-                                right: '50%',
-                                marginLeft: '-50vw',
-                                marginRight: '-50vw',
-                                width: '100vw',
-                                maxWidth: '100vw',
-                                boxSizing: 'border-box',
-                                overflowX: 'hidden'
-                              }}
-                            >
-                              <div style={{ 
-                                maxWidth: 'calc(100vw - 2rem)', 
-                                margin: '0 auto',
-                                overflowX: 'hidden',
-                                width: '100%'
-                              }}>
-                                <ClaimInlineEditor
-                                claim={claim}
-                                onUpdateClaim={onUpdateClaim}
-                                contractors={contractors}
-                                currentUser={currentUser}
-                                userRole={userRole}
-                                onAddInternalNote={onAddInternalNote}
-                                claimMessages={claimMessages.filter(m => m.claimId === claim.id)}
-                                onTrackClaimMessage={onTrackClaimMessage}
-                                onSendMessage={() => {
-                                  if (onSelectClaim) {
-                                    onSelectClaim(claim, false);
-                                  }
-                                }}
-                                onNavigate={onNavigate}
-                              />
-                              </div>
-                            </div>
-                          </td>
-                        </motion.tr>
+                          <div className="p-4">
+                          <ClaimInlineEditor
+                            claim={claim}
+                            onUpdateClaim={onUpdateClaim}
+                            contractors={contractors}
+                            currentUser={currentUser}
+                            userRole={userRole}
+                            onAddInternalNote={onAddInternalNote}
+                            claimMessages={claimMessages.filter(m => m.claimId === claim.id)}
+                            onTrackClaimMessage={onTrackClaimMessage}
+                            onSendMessage={() => {
+                              if (onSelectClaim) {
+                                onSelectClaim(claim, false);
+                              }
+                            }}
+                            onNavigate={onNavigate}
+                            />
+                          </div>
+                        </motion.div>
                       )}
                     </AnimatePresence>
                   </React.Fragment>
                 );
               })}
-            </tbody>
-          </table>
+          </div>
         </div>
       )}
     </motion.div>
     );
 
   const renderClaimsList = (claimsList: Claim[], isHomeownerView: boolean = false) => {
-    // Filter claims based on selected filter
-    const filteredClaims = claimsList.filter(claim => {
-      if (claimsFilter === 'Open') {
-        return claim.status !== ClaimStatus.COMPLETED;
-      } else if (claimsFilter === 'Closed') {
-        return claim.status === ClaimStatus.COMPLETED;
-      }
-      return true; // 'All'
-    });
-
-    // Sort claims based on selected column and direction
-    const sortedClaims = [...filteredClaims].sort((a, b) => {
-      if (!sortColumn) return 0;
-
-      let aValue: any;
-      let bValue: any;
-
-      switch (sortColumn) {
-        case 'claimNumber':
-          aValue = a.claimNumber || a.id.substring(0, 8).toUpperCase();
-          bValue = b.claimNumber || b.id.substring(0, 8).toUpperCase();
-          break;
-        case 'status':
-          aValue = a.status;
-          bValue = b.status;
-          break;
-        case 'title':
-          aValue = a.title || '';
-          bValue = b.title || '';
-          break;
-        case 'classification':
-          aValue = a.classification || '';
-          bValue = b.classification || '';
-          break;
-        case 'homeowner':
-          aValue = a.homeownerName || '';
-          bValue = b.homeownerName || '';
-          break;
-        case 'contractor':
-          aValue = a.contractorName || '';
-          bValue = b.contractorName || '';
-          break;
-        case 'scheduled':
-          const aAcceptedDate = a.proposedDates?.find(d => d.status === 'ACCEPTED');
-          const bAcceptedDate = b.proposedDates?.find(d => d.status === 'ACCEPTED');
-          aValue = aAcceptedDate ? new Date(aAcceptedDate.date).getTime() : 0;
-          bValue = bAcceptedDate ? new Date(bAcceptedDate.date).getTime() : 0;
-          break;
-        case 'submitted':
-          aValue = new Date(a.dateSubmitted).getTime();
-          bValue = new Date(b.dateSubmitted).getTime();
-          break;
-        case 'evaluated':
-          aValue = a.dateEvaluated ? new Date(a.dateEvaluated).getTime() : 0;
-          bValue = b.dateEvaluated ? new Date(b.dateEvaluated).getTime() : 0;
-          break;
-        case 'serviceOrder':
-          // Service order date logic would go here if available
-          aValue = 0;
-          bValue = 0;
-          break;
-        default:
-          return 0;
-      }
-
-      // Compare values
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        const comparison = aValue.localeCompare(bValue);
-        return sortDirection === 'asc' ? comparison : -comparison;
-      } else {
-        // Numeric comparison
-        const comparison = (aValue || 0) - (bValue || 0);
-        return sortDirection === 'asc' ? comparison : -comparison;
-      }
-    });
-
-    const handleSort = (column: string) => {
-      if (sortColumn === column) {
-        // Toggle direction if same column
-        setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-      } else {
-        // Set new column and default to ascending
-        setSortColumn(column);
-        setSortDirection('asc');
-      }
-    };
-
-    const handleExportToExcel = () => {
-      try {
-        // Prepare data for export
-        const excelData = sortedClaims.map(claim => ({
-          'Claim #': claim.claimNumber || claim.id.substring(0, 8).toUpperCase(),
-          'Status': claim.status,
-          'Title': claim.title,
-          'Classification': claim.classification,
-          'Homeowner': claim.homeownerName || '',
-          'Contractor': claim.contractorName || '',
-          'Scheduled Date': claim.proposedDates?.find(d => d.status === 'ACCEPTED') 
-            ? new Date(claim.proposedDates.find(d => d.status === 'ACCEPTED')!.date).toLocaleDateString() 
-            : '',
-          'Date Submitted': new Date(claim.dateSubmitted).toLocaleDateString(),
-          'Date Evaluated': claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString() : '',
-          'Service Order Date': '' // Would need to calculate this if needed
-        }));
-
-        // Create workbook and worksheet
-        const worksheet = XLSX.utils.json_to_sheet(excelData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Warranty Claims');
-
-        // Generate filename with current date
-        const dateStr = new Date().toISOString().split('T')[0];
-        const filename = `Warranty_Claims_${dateStr}.xlsx`;
-
-        // Write and download
-        XLSX.writeFile(workbook, filename);
-      } catch (error) {
-        console.error('Error exporting to Excel:', error);
-        alert('Failed to export claims to Excel. Please try again.');
-      }
-    };
-
-    const emptyMessage = claimsFilter === 'Open' 
-      ? 'No open claims.' 
-      : claimsFilter === 'Closed' 
-      ? 'No closed claims.' 
-      : 'No claims found.';
+    const openClaims = claimsList.filter(c => c.status !== ClaimStatus.COMPLETED);
+    const closedClaims = claimsList.filter(c => c.status === ClaimStatus.COMPLETED);
 
     return (
       <div>
-        {renderClaimGroup(
-          'Warranty Claims', 
-          sortedClaims, 
-          emptyMessage, 
-          false, 
-          isHomeownerView,
-          true,
-          claimsFilter,
-          setClaimsFilter,
-          handleExportToExcel,
-          sortColumn,
-          sortDirection,
-          handleSort
-        )}
+        {/* Main List */}
+        <div>
+          {renderClaimGroup('Active Claims', openClaims, 'No active claims.', false, isHomeownerView)}
+          {renderClaimGroup('Closed Claims', closedClaims, 'No closed claims history.', true, false)}
+        </div>
       </div>
     );
   };
@@ -1539,11 +1245,9 @@ const Dashboard: React.FC<DashboardProps> = ({
        {/* Left Column: Inbox List (Gmail Style) */}
        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-between items-center h-16 shrink-0">
-            <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-                {displayThreads.filter(t => !t.isRead).length}
-              </span>
+            <h3 className="text-lg font-bold text-surface-on dark:text-gray-100 flex items-center gap-2">
               Inbox
+              <span className="text-xs font-normal text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700 px-2 py-0.5 rounded-full">{displayThreads.filter(t => !t.isRead).length} new</span>
             </h3>
             <Button
               variant="filled"
@@ -2254,17 +1958,27 @@ const Dashboard: React.FC<DashboardProps> = ({
             }}
             layout
           >
-            <div className="p-6 w-full flex-shrink-0 z-10 relative">
-              <h3 className="font-medium text-lg mb-0 flex items-center text-secondary-on-container dark:text-gray-100">
+            <button
+              onClick={() => setIsScheduleExpanded(!isScheduleExpanded)}
+              className="p-6 w-full text-left flex-shrink-0 z-10 relative"
+            >
+              <h3 className="font-medium text-lg mb-0 flex items-center justify-between text-secondary-on-container dark:text-gray-100">
                 <span className="flex items-center">
                   <Calendar className="h-5 w-5 mr-3" />
-                  Next Appointment
+                  Upcoming Schedule
                 </span>
+                <div className="w-8 h-8 rounded-full bg-black/20 dark:bg-white/20 flex items-center justify-center ml-4 flex-shrink-0">
+                  {isScheduleExpanded ? (
+                    <ChevronUp className="h-5 w-5 text-secondary-on-container dark:text-gray-200" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-secondary-on-container dark:text-gray-200" />
+                  )}
+                </div>
               </h3>
-            </div>
+            </button>
             
-            {/* Show Next Scheduled Appointment Only */}
-            {scheduledClaims.length > 0 && (
+            {/* Collapsed State - Show First Appointment */}
+            {!isScheduleExpanded && scheduledClaims.length > 0 && (
               <motion.div 
                 className="px-6 pb-6 pt-0"
                 variants={cardVariants}
@@ -2296,7 +2010,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </motion.div>
             )}
             
-            {scheduledClaims.length === 0 && (
+            {!isScheduleExpanded && scheduledClaims.length === 0 && (
               <motion.div 
                 className="px-6 pb-6 pt-0"
                 variants={cardVariants}
@@ -2304,6 +2018,43 @@ const Dashboard: React.FC<DashboardProps> = ({
                 animate="visible"
               >
                 <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No confirmed appointments.</p>
+              </motion.div>
+            )}
+            
+            {/* Expanded State - Show all appointments */}
+            {isScheduleExpanded && (
+              <motion.div 
+                className="px-6 pb-6 pt-0 space-y-3 max-h-96 overflow-y-auto"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {scheduledClaims.length > 0 ? (
+                  scheduledClaims.map((c, index) => {
+                    const acceptedDate = c.proposedDates.find(d => d.status === 'ACCEPTED');
+                    return (
+                      <motion.div 
+                        key={c.id} 
+                        className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-xl text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors"
+                        onClick={() => onSelectClaim(c, true)}
+                        variants={cardVariants}
+                        layout
+                      >
+                        <p className="font-medium text-secondary-on-container dark:text-gray-200 text-center">{c.title}</p>
+                        <p className="opacity-80 dark:opacity-70 mt-1 text-secondary-on-container dark:text-gray-300 text-center">
+                          {acceptedDate ? new Date(acceptedDate.date).toLocaleDateString() : 'N/A'} - {acceptedDate?.timeSlot}
+                        </p>
+                        {c.contractorName && (
+                          <p className="opacity-70 dark:opacity-60 mt-1 text-secondary-on-container dark:text-gray-400 text-center text-xs">
+                            {c.contractorName}
+                          </p>
+                        )}
+                      </motion.div>
+                    );
+                  })
+                ) : (
+                  <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No confirmed appointments.</p>
+                )}
               </motion.div>
             )}
           </motion.div>
@@ -2607,25 +2358,16 @@ const Dashboard: React.FC<DashboardProps> = ({
                                        width: '100%',
                                        height: '100%'
                                      }}
-                                     onError={(e) => {
-                                       // Fallback to PDFThumbnail if image fails to load
-                                       const target = e.target as HTMLImageElement;
-                                       target.style.display = 'none';
-                                       const container = target.parentElement;
-                                       if (container) {
-                                         const thumbnail = document.createElement('div');
-                                         thumbnail.className = 'w-full h-full';
-                                         container.appendChild(thumbnail);
-                                         // We'll use PDFThumbnail as fallback in render
-                                       }
-                                     }}
                                    />
                                  ) : (
-                                   <PDFThumbnail
-                                     url={doc.url}
-                                     className="w-full h-full object-contain"
+                                   <iframe
+                                     src={doc.url + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1'}
+                                     className="w-full h-full border-0"
+                                     title={doc.name}
+                                     scrolling="no"
                                      style={{ 
                                        pointerEvents: 'none',
+                                       overflow: 'hidden',
                                        width: '100%',
                                        height: '100%'
                                      }}
