@@ -8,7 +8,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor } from '../types';
 import { ClaimMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2 } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet } from 'lucide-react';
 import Button from './Button';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
@@ -245,6 +245,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Documents)
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'DOCUMENTS'>(initialTab || 'CLAIMS');
+  
+  // Claims filter state
+  const [claimsFilter, setClaimsFilter] = useState<'All' | 'Open' | 'Closed'>('All');
   
   // Invite Modal State
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -892,7 +895,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // --- Render Helpers ---
 
-  const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false) => (
+  const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, filter?: 'All' | 'Open' | 'Closed', setFilter?: (filter: 'All' | 'Open' | 'Closed') => void, onExportExcel?: () => void) => (
     <motion.div 
       className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0"
       variants={cardVariants}
@@ -906,17 +909,50 @@ const Dashboard: React.FC<DashboardProps> = ({
           </span>
           {title}
         </h3>
-        {showNewClaimButton && (
-          <button
-            onClick={() => {
-              setShowNewClaimModal(true);
-            }}
-            className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-primary text-primary-on text-sm font-medium transition-all hover:bg-primary/90 dark:hover:bg-primary/80"
-          >
-            <Plus className="h-4 w-4" />
-            New Claim
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {/* Filter Dropdown */}
+          {setFilter && (
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Cycle through filter options
+                  const nextFilter = filter === 'All' ? 'Open' : filter === 'Open' ? 'Closed' : 'All';
+                  setFilter(nextFilter);
+                }}
+                className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 text-sm font-medium transition-all hover:bg-surface-container-high dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600"
+                title={`Filter: ${filter || 'All'}`}
+              >
+                <Filter className="h-4 w-4" />
+                {filter || 'All'}
+              </button>
+            </div>
+          )}
+          {/* Export to Excel Button */}
+          {onExportExcel && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onExportExcel();
+              }}
+              className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-surface-container dark:bg-gray-700 text-sm font-medium transition-all hover:bg-surface-container-high dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600"
+              title="Export to Excel"
+            >
+              <FileSpreadsheet className="h-4 w-4" style={{ color: '#ffffff' }} />
+            </button>
+          )}
+          {showNewClaimButton && (
+            <button
+              onClick={() => {
+                setShowNewClaimModal(true);
+              }}
+              className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-primary text-primary-on text-sm font-medium transition-all hover:bg-primary/90 dark:hover:bg-primary/80"
+            >
+              <Plus className="h-4 w-4" />
+              New Claim
+            </button>
+          )}
+        </div>
       </div>
       {groupClaims.length === 0 ? (
         <div className="p-8 text-center text-surface-on-variant dark:text-gray-400 text-sm italic">
@@ -1132,17 +1168,61 @@ const Dashboard: React.FC<DashboardProps> = ({
     </motion.div>
     );
 
+  const handleExportToExcel = (claimsList: Claim[]) => {
+    // Filter claims based on current filter
+    let filteredClaims = claimsList;
+    if (claimsFilter === 'Open') {
+      filteredClaims = claimsList.filter(c => c.status !== ClaimStatus.COMPLETED);
+    } else if (claimsFilter === 'Closed') {
+      filteredClaims = claimsList.filter(c => c.status === ClaimStatus.COMPLETED);
+    }
+
+    // Prepare data for Excel
+    const excelData = filteredClaims.map(claim => {
+      const scheduledDate = claim.proposedDates?.find(d => d.status === 'ACCEPTED');
+      return {
+        'Claim #': claim.claimNumber || claim.id.substring(0, 8).toUpperCase(),
+        'Status': claim.status,
+        'Title': claim.title,
+        'Description': claim.description || '',
+        'Classification': claim.classification || '',
+        'Homeowner': claim.homeownerName || '',
+        'Contractor': claim.contractorName || '',
+        'Scheduled Date': scheduledDate ? new Date(scheduledDate.date).toLocaleDateString() : '',
+        'Date Submitted': new Date(claim.dateSubmitted).toLocaleDateString(),
+        'Date Evaluated': claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString() : '',
+        'Attachments': claim.attachments?.length || 0
+      };
+    });
+
+    // Create workbook and worksheet
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Claims');
+
+    // Generate Excel file and download
+    const fileName = `Warranty_Claims_${claimsFilter}_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+  };
+
   const renderClaimsList = (claimsList: Claim[], isHomeownerView: boolean = false) => {
-    const openClaims = claimsList.filter(c => c.status !== ClaimStatus.COMPLETED);
-    const closedClaims = claimsList.filter(c => c.status === ClaimStatus.COMPLETED);
+    // Filter claims based on current filter
+    let filteredClaims = claimsList;
+    if (claimsFilter === 'Open') {
+      filteredClaims = claimsList.filter(c => c.status !== ClaimStatus.COMPLETED);
+    } else if (claimsFilter === 'Closed') {
+      filteredClaims = claimsList.filter(c => c.status === ClaimStatus.COMPLETED);
+    }
+
+    const emptyMsg = claimsFilter === 'Open' 
+      ? 'No open claims.' 
+      : claimsFilter === 'Closed' 
+      ? 'No closed claims.' 
+      : 'No claims found.';
 
     return (
       <div>
-        {/* Main List */}
-        <div>
-          {renderClaimGroup('Warranty Claims', openClaims, 'No active claims.', false, isHomeownerView)}
-          {renderClaimGroup('Closed Claims', closedClaims, 'No closed claims history.', true, false)}
-        </div>
+        {renderClaimGroup('Warranty Claims', filteredClaims, emptyMsg, false, isHomeownerView, claimsFilter, setClaimsFilter, () => handleExportToExcel(claimsList))}
       </div>
     );
   };
