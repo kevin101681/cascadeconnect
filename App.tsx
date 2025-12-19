@@ -2075,6 +2075,71 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
       }
   };
 
+  const handleClearClaims = async () => {
+      setClaims([]);
+      if (isDbConfigured) {
+         try {
+           await db.delete(claimsTable);
+         } catch (e) {
+           console.error("Failed to clear claims from DB", e);
+         }
+      }
+  };
+
+  const handleClearContractors = async () => {
+      setContractors([]);
+      if (isDbConfigured) {
+         try {
+           await db.delete(contractorsTable);
+         } catch (e) {
+           console.error("Failed to clear contractors from DB", e);
+         }
+      }
+  };
+
+  const handleClearTasks = async () => {
+      setTasks([]);
+      if (isDbConfigured) {
+         try {
+           await db.delete(tasksTable);
+         } catch (e) {
+           console.error("Failed to clear tasks from DB", e);
+         }
+      }
+  };
+
+  const handleClearMessages = async () => {
+      setMessages([]);
+      if (isDbConfigured) {
+         try {
+           await db.delete(messageThreadsTable);
+         } catch (e) {
+           console.error("Failed to clear messages from DB", e);
+         }
+      }
+  };
+
+  const handleClearBuilders = async () => {
+      setBuilderGroups([]);
+      setBuilderUsers([]);
+      if (isDbConfigured) {
+         try {
+           await db.delete(builderGroupsTable);
+           // Builder users are in usersTable, so we need to delete them separately
+           // Note: This will delete ALL builder users, not just those associated with builder groups
+           // For a more precise deletion, we'd need to filter by role or builderGroupId
+           const builderUserIds = builderUsers.map(u => u.id);
+           if (builderUserIds.length > 0) {
+             for (const userId of builderUserIds) {
+               await db.delete(usersTable).where(eq(usersTable.id, userId));
+             }
+           }
+         } catch (e) {
+           console.error("Failed to clear builders from DB", e);
+         }
+      }
+  };
+
   const handleDeleteHomeowner = async (id: string) => {
     // Get homeowner before deletion for cleanup
     const homeownerToDelete = homeowners.find(h => h.id === id);
@@ -3018,16 +3083,21 @@ Assigned By: ${assignerName}
         <BackendDashboard onClose={() => setCurrentView('DASHBOARD')} />
       )}
       {currentView === 'DATA' && (
-        <DataImport 
-          onImportClaims={handleImportClaims} 
-          onImportHomeowners={handleImportHomeowners} 
-          onClearHomeowners={handleClearHomeowners} 
-          existingBuilderGroups={builderGroups} 
+        <DataImport
+          onImportClaims={handleImportClaims}
+          onImportHomeowners={handleImportHomeowners}
+          onClearHomeowners={handleClearHomeowners}
+          onClearClaims={handleClearClaims}
+          onClearContractors={handleClearContractors}
+          onClearTasks={handleClearTasks}
+          onClearMessages={handleClearMessages}
+          onClearBuilders={handleClearBuilders}
+          existingBuilderGroups={builderGroups}
           onImportBuilderGroups={handleImportBuilderGroups}
           onImportTasks={handleImportTasks}
           onImportMessages={handleImportMessages}
           onImportBuilderUsers={handleImportBuilderUsers}
-          onClose={() => setCurrentView('DASHBOARD')} 
+          onClose={() => setCurrentView('DASHBOARD')}
         />
       )}
       {currentView === 'NEW' && (

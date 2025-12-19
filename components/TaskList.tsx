@@ -83,7 +83,7 @@ const TaskList: React.FC<TaskListProps> = ({
   return (
     <div className="w-full">
       {/* Header */}
-      <div className="flex justify-between items-start mb-6">
+      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 mb-6">
         <div className="flex-1">
           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
             {filteredTasks.length > 0 && (

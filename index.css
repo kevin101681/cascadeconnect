@@ -86,8 +86,27 @@ html.dark .cl-userButtonPopoverCard {
     border-color: #374151 !important; /* dark:border-gray-700 */
 }
 
-/* Header Section - Hidden */
+/* Header Section - Hidden (includes avatar, name, email) */
 .cl-userButtonPopoverHeader {
+    display: none !important;
+}
+
+.cl-userButtonPopoverHeader * {
+    display: none !important;
+}
+
+/* Hide any remaining avatar elements */
+.cl-userButtonPopoverAvatarBox,
+.cl-userButtonPopoverAvatar,
+[class*="cl-userButtonPopoverAvatar"] {
+    display: none !important;
+}
+
+/* Hide name and email text */
+.cl-userButtonPopoverHeaderTitle,
+.cl-userButtonPopoverHeaderSubtitle,
+[class*="cl-userButtonPopoverHeaderTitle"],
+[class*="cl-userButtonPopoverHeaderSubtitle"] {
     display: none !important;
 }
 

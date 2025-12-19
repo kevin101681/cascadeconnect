@@ -9,6 +9,11 @@ interface DataImportProps {
   onImportClaims: (claims: Claim[]) => Promise<void>;
   onImportHomeowners: (homeowners: Homeowner[]) => Promise<void>;
   onClearHomeowners: () => void;
+  onClearClaims?: () => void;
+  onClearContractors?: () => void;
+  onClearTasks?: () => void;
+  onClearMessages?: () => void;
+  onClearBuilders?: () => void;
   existingBuilderGroups: BuilderGroup[];
   onImportBuilderGroups: (groups: BuilderGroup[]) => Promise<void>;
   onImportTasks?: (tasks: Task[]) => Promise<void>;
@@ -23,6 +28,11 @@ const DataImport: React.FC<DataImportProps> = ({
   onImportClaims, 
   onImportHomeowners, 
   onClearHomeowners,
+  onClearClaims,
+  onClearContractors,
+  onClearTasks,
+  onClearMessages,
+  onClearBuilders,
   existingBuilderGroups,
   onImportBuilderGroups,
   onImportTasks,
@@ -299,9 +309,53 @@ const DataImport: React.FC<DataImportProps> = ({
   };
 
   const handleClearData = () => {
-    if (window.confirm('Are you sure you want to delete ALL homeowners? This action cannot be undone.')) {
-      onClearHomeowners();
-      addLog('System: All homeowners cleared from database.');
+    const typeLabels: Record<ImportType, string> = {
+      'CLAIMS': 'claims',
+      'HOMEOWNERS': 'homeowners',
+      'CONTRACTORS': 'contractors',
+      'TASKS': 'tasks',
+      'MESSAGES': 'messages',
+      'BUILDERS': 'builders'
+    };
+
+    const label = typeLabels[importType];
+    if (window.confirm(`Are you sure you want to delete ALL ${label}? This action cannot be undone.`)) {
+      switch (importType) {
+        case 'CLAIMS':
+          if (onClearClaims) {
+            onClearClaims();
+            addLog('System: All claims cleared from database.');
+          }
+          break;
+        case 'HOMEOWNERS':
+          onClearHomeowners();
+          addLog('System: All homeowners cleared from database.');
+          break;
+        case 'CONTRACTORS':
+          if (onClearContractors) {
+            onClearContractors();
+            addLog('System: All contractors cleared from database.');
+          }
+          break;
+        case 'TASKS':
+          if (onClearTasks) {
+            onClearTasks();
+            addLog('System: All tasks cleared from database.');
+          }
+          break;
+        case 'MESSAGES':
+          if (onClearMessages) {
+            onClearMessages();
+            addLog('System: All messages cleared from database.');
+          }
+          break;
+        case 'BUILDERS':
+          if (onClearBuilders) {
+            onClearBuilders();
+            addLog('System: All builders cleared from database.');
+          }
+          break;
+      }
     }
   };
 
@@ -441,28 +495,31 @@ const DataImport: React.FC<DataImportProps> = ({
           </div>
         )}
 
-        {/* Danger Zone - Homeowners Only */}
-        {importType === 'HOMEOWNERS' && (
-           <div className="bg-error/5 dark:bg-error/10 p-6 rounded-3xl border border-error/20 dark:border-error/30">
-              <h3 className="text-sm font-bold text-error flex items-center gap-2 mb-2">
-                <AlertCircle className="h-4 w-4" />
-                Danger Zone
-              </h3>
-              <div className="flex items-center justify-between gap-4">
-                 <p className="text-xs text-error/80 dark:text-error/70">
-                    Need to restart? This will permanently delete all homeowner records from the database.
-                 </p>
-                 <Button 
-                    variant="danger" 
-                    onClick={handleClearData} 
-                    icon={<Trash2 className="h-4 w-4" />}
-                    className="!h-8 !text-xs !px-3"
-                 >
-                    Clear All Homeowners
-                 </Button>
-              </div>
-           </div>
-        )}
+        {/* Danger Zone - All Tabs */}
+        <div className="bg-error/5 dark:bg-error/10 p-6 rounded-3xl border border-error/20 dark:border-error/30">
+          <h3 className="text-sm font-bold text-error flex items-center gap-2 mb-2">
+            <AlertCircle className="h-4 w-4" />
+            Danger Zone
+          </h3>
+          <div className="flex items-center justify-between gap-4">
+            <p className="text-xs text-error/80 dark:text-error/70">
+              Need to reset after a failed import? This will permanently delete all {importType === 'CLAIMS' ? 'claims' : importType === 'HOMEOWNERS' ? 'homeowners' : importType === 'CONTRACTORS' ? 'contractors' : importType === 'TASKS' ? 'tasks' : importType === 'MESSAGES' ? 'messages' : 'builders'} records from the database.
+            </p>
+            <Button 
+              variant="danger" 
+              onClick={handleClearData} 
+              icon={<Trash2 className="h-4 w-4" />}
+              className="!h-8 !text-xs !px-3"
+              disabled={importType === 'CLAIMS' && !onClearClaims || 
+                       importType === 'CONTRACTORS' && !onClearContractors ||
+                       importType === 'TASKS' && !onClearTasks ||
+                       importType === 'MESSAGES' && !onClearMessages ||
+                       importType === 'BUILDERS' && !onClearBuilders}
+            >
+              Clear All {importType === 'CONTRACTORS' ? 'Subs' : importType.charAt(0) + importType.slice(1).toLowerCase()}
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Right Column: Logs & Preview */}

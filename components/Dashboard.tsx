@@ -2180,78 +2180,69 @@ const Dashboard: React.FC<DashboardProps> = ({
         </motion.div>
 
         {/* Content Area */}
-        {currentTab === 'CLAIMS' && (
-          <motion.div 
-            className="max-w-7xl mx-auto"
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            transition={{
-              ...springTransition,
-              delay: 0.3
-            }}
-          >
-            {renderClaimsList(displayClaims, isHomeownerView)}
-          </motion.div>
-        )}
+        <AnimatePresence mode="wait">
+          {currentTab === 'CLAIMS' && (
+            <motion.div 
+              key="claims"
+              className="max-w-7xl mx-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {renderClaimsList(displayClaims, isHomeownerView)}
+            </motion.div>
+          )}
 
-        {currentTab === 'TASKS' && isAdmin && (
-          <motion.div 
-            className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 p-6 shadow-elevation-1"
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            transition={{
-              ...springTransition,
-              delay: 0.3
-            }}
-            layout
-          >
-            <TaskList 
-              tasks={tasks}
-              employees={employees}
-              currentUser={currentUser}
-              claims={claims}
-              homeowners={homeowners}
-              onAddTask={onAddTask}
-              onToggleTask={onToggleTask}
-              onDeleteTask={onDeleteTask}
-              preSelectedHomeowner={targetHomeowner}
-            />
-          </motion.div>
-        )}
+          {currentTab === 'TASKS' && isAdmin && (
+            <motion.div 
+              key="tasks"
+              className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 p-6 shadow-elevation-1"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <TaskList 
+                tasks={tasks}
+                employees={employees}
+                currentUser={currentUser}
+                claims={claims}
+                homeowners={homeowners}
+                onAddTask={onAddTask}
+                onToggleTask={onToggleTask}
+                onDeleteTask={onDeleteTask}
+                preSelectedHomeowner={targetHomeowner}
+              />
+            </motion.div>
+          )}
 
-        {currentTab === 'MESSAGES' && (
-          <motion.div 
-            className=""
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            transition={{
-              ...springTransition,
-              delay: 0.3
-            }}
-            layout
-          >
-            {renderMessagesTab()}
-          </motion.div>
-        )}
+          {currentTab === 'MESSAGES' && (
+            <motion.div 
+              key="messages"
+              className=""
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {renderMessagesTab()}
+            </motion.div>
+          )}
 
-        {currentTab === 'DOCUMENTS' && isHomeownerView && (
-          <motion.div 
-            className=""
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            transition={{
-              ...springTransition,
-              delay: 0.3
-            }}
-            layout
-          >
-            {renderDocumentsTab()}
-          </motion.div>
-        )}
+          {currentTab === 'DOCUMENTS' && isHomeownerView && (
+            <motion.div 
+              key="documents"
+              className=""
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {renderDocumentsTab()}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* DOCUMENTS MODAL */}
         {showDocsModal && createPortal(
