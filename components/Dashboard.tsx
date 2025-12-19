@@ -923,7 +923,10 @@ const Dashboard: React.FC<DashboardProps> = ({
           {emptyMsg}
         </div>
       ) : (
-        <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}>
+        <div 
+          className="overflow-x-auto relative" 
+          style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'thin' }}
+        >
           <table className="border-collapse" style={{ minWidth: '1400px' }}>
             <thead className="sticky top-0 z-20">
               <tr className="border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50 backdrop-blur-sm">
@@ -1084,26 +1087,41 @@ const Dashboard: React.FC<DashboardProps> = ({
                           animate={{ height: 'auto', opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.2, ease: 'easeInOut' }}
-                          className="overflow-hidden"
+                          className="overflow-visible"
                         >
-                          <td colSpan={(isAdmin || isBuilder) && !effectiveHomeowner ? 11 : 10} className="p-0 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
-                            <div className="p-4">
-                          <ClaimInlineEditor
-                            claim={claim}
-                            onUpdateClaim={onUpdateClaim}
-                            contractors={contractors}
-                            currentUser={currentUser}
-                            userRole={userRole}
-                            onAddInternalNote={onAddInternalNote}
-                            claimMessages={claimMessages.filter(m => m.claimId === claim.id)}
-                            onTrackClaimMessage={onTrackClaimMessage}
-                            onSendMessage={() => {
-                              if (onSelectClaim) {
-                                onSelectClaim(claim, false);
-                              }
-                            }}
-                            onNavigate={onNavigate}
-                          />
+                          <td 
+                            colSpan={(isAdmin || isBuilder) && !effectiveHomeowner ? 11 : 10} 
+                            className="p-0 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30"
+                          >
+                            {/* Breakout container for narrow screens - spans full viewport width */}
+                            <div 
+                              className="p-4"
+                              style={{
+                                marginLeft: 'calc(-50vw + 50%)',
+                                marginRight: 'calc(-50vw + 50%)',
+                                paddingLeft: 'calc(50vw - 50% + 1rem)',
+                                paddingRight: 'calc(50vw - 50% + 1rem)',
+                                width: '100vw',
+                                maxWidth: '100vw',
+                                boxSizing: 'border-box'
+                              }}
+                            >
+                              <ClaimInlineEditor
+                                claim={claim}
+                                onUpdateClaim={onUpdateClaim}
+                                contractors={contractors}
+                                currentUser={currentUser}
+                                userRole={userRole}
+                                onAddInternalNote={onAddInternalNote}
+                                claimMessages={claimMessages.filter(m => m.claimId === claim.id)}
+                                onTrackClaimMessage={onTrackClaimMessage}
+                                onSendMessage={() => {
+                                  if (onSelectClaim) {
+                                    onSelectClaim(claim, false);
+                                  }
+                                }}
+                                onNavigate={onNavigate}
+                              />
                             </div>
                           </td>
                         </motion.tr>
