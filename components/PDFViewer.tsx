@@ -201,7 +201,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
       // Use flipPrev with 'top' to ensure consistent animation from left side
       // This creates the reverse of the forward animation
       pageFlip.flipPrev('top');
-      // Don't update currentPage here - let the flip event handle it
+      // Update currentPage immediately as fallback in case flip event doesn't fire
+      setCurrentPage(prev => Math.max(1, prev - 1));
     }
   };
 
@@ -210,7 +211,8 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
       const pageFlip = flipBookRef.current.pageFlip();
       // Use flipNext with 'top' to ensure consistent animation from right side
       pageFlip.flipNext('top');
-      // Don't update currentPage here - let the flip event handle it
+      // Update currentPage immediately as fallback in case flip event doesn't fire
+      setCurrentPage(prev => Math.min(numPages, prev + 1));
     }
   };
 
@@ -227,8 +229,16 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
       setCurrentPage(newPage);
     };
 
+    // Also listen for flipStart to catch page changes earlier
+    const handleFlipStart = (e: any) => {
+      // Update page immediately when flip starts
+      const newPage = (e?.data ?? flipBook.getCurrentPageIndex()) + 1;
+      setCurrentPage(newPage);
+    };
+
     try {
       flipBook.on('flip', handleFlip);
+      flipBook.on('flipStart', handleFlipStart);
     } catch (err) {
       console.warn('Could not attach flip event listener:', err);
     }
@@ -236,6 +246,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
     return () => {
       try {
         flipBook.off('flip', handleFlip);
+        flipBook.off('flipStart', handleFlipStart);
       } catch (err) {
         // Ignore cleanup errors
       }
