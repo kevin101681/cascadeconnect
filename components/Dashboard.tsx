@@ -1538,7 +1538,7 @@ const Dashboard: React.FC<DashboardProps> = ({
        {/* Left Column: Inbox List (Gmail Style) */}
        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-between items-center h-16 shrink-0">
-            <h3 className="text-lg font-bold text-surface-on dark:text-gray-100 flex items-center gap-2">
+            <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               Inbox
               <span className="text-xs font-normal text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700 px-2 py-0.5 rounded-full">{displayThreads.filter(t => !t.isRead).length} new</span>
             </h3>
