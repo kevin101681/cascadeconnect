@@ -14,6 +14,7 @@ import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
 import PDFViewer from './PDFViewer';
+import PDFThumbnail from './PDFThumbnail';
 import ClaimInlineEditor from './ClaimInlineEditor';
 import NewClaimForm from './NewClaimForm';
 import PunchListApp from './PunchListApp';
@@ -1151,20 +1152,20 @@ const Dashboard: React.FC<DashboardProps> = ({
                         setExpandedClaimId(expandedClaimId === claim.id ? null : claim.id);
                       }}
                     >
-                      <td className="px-3 py-3 whitespace-nowrap">
+                      <td className="px-3 py-3 whitespace-nowrap align-middle">
                       <span className="text-xs font-bold text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap inline-block">
                         #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
                       </span>
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap align-middle">
                       <StatusBadge status={claim.status} />
                     </td>
-                    <td className="px-3 py-3 min-w-[200px]">
+                    <td className="px-3 py-3 min-w-[200px] align-middle">
                       <span className="text-xs font-medium text-surface-on dark:text-gray-100 truncate bg-surface-container-high dark:bg-gray-700 px-3 py-1 rounded-full inline-block w-full border border-surface-outline-variant/50 dark:border-gray-600">
                         {claim.title}
                       </span>
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap align-middle">
                       <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
                         {claim.classification}
                       </span>
@@ -2653,16 +2654,25 @@ const Dashboard: React.FC<DashboardProps> = ({
                                        width: '100%',
                                        height: '100%'
                                      }}
+                                     onError={(e) => {
+                                       // Fallback to PDFThumbnail if image fails to load
+                                       const target = e.target as HTMLImageElement;
+                                       target.style.display = 'none';
+                                       const container = target.parentElement;
+                                       if (container) {
+                                         const thumbnail = document.createElement('div');
+                                         thumbnail.className = 'w-full h-full';
+                                         container.appendChild(thumbnail);
+                                         // We'll use PDFThumbnail as fallback in render
+                                       }
+                                     }}
                                    />
                                  ) : (
-                                   <iframe
-                                     src={doc.url + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1'}
-                                     className="w-full h-full border-0"
-                                     title={doc.name}
-                                     scrolling="no"
+                                   <PDFThumbnail
+                                     url={doc.url}
+                                     className="w-full h-full object-contain"
                                      style={{ 
                                        pointerEvents: 'none',
-                                       overflow: 'hidden',
                                        width: '100%',
                                        height: '100%'
                                      }}

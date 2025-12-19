@@ -288,20 +288,25 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
           >
             {!documentLoading && numPages > 0 && (
               <div style={{ maxWidth: '100%', maxHeight: '100%', overflow: 'hidden', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '20px' }}>
-                {/* Left Arrow Indicator - Outside document */}
-                {numPages > 1 && currentPage > 1 && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
+                {/* Left Arrow Indicator - Outside document - Always visible */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (numPages > 1 && currentPage > 1) {
                       handlePrevPage();
-                    }}
-                    className="z-[1002] p-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-                    title="Previous page"
-                    aria-label="Previous page"
-                  >
-                    <ChevronLeft className="h-6 w-6 text-white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))' }} />
-                  </button>
-                )}
+                    }
+                  }}
+                  disabled={numPages <= 1 || currentPage <= 1}
+                  className={`z-[1002] p-3 transition-all flex items-center justify-center ${
+                    numPages > 1 && currentPage > 1
+                      ? 'hover:scale-110 active:scale-95 cursor-pointer opacity-100'
+                      : 'cursor-not-allowed opacity-30'
+                  }`}
+                  title="Previous page"
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="h-6 w-6 text-white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))' }} />
+                </button>
                 
                 <HTMLFlipBook
                   ref={flipBookRef}
@@ -324,20 +329,25 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                   ))}
                 </HTMLFlipBook>
 
-                {/* Right Arrow Indicator - Outside document */}
-                {numPages > 1 && currentPage < numPages && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
+                {/* Right Arrow Indicator - Outside document - Always visible */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (numPages > 1 && currentPage < numPages) {
                       handleNextPage();
-                    }}
-                    className="z-[1002] p-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-                    title="Next page"
-                    aria-label="Next page"
-                  >
-                    <ChevronRight className="h-6 w-6 text-white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))' }} />
-                  </button>
-                )}
+                    }
+                  }}
+                  disabled={numPages <= 1 || currentPage >= numPages}
+                  className={`z-[1002] p-3 transition-all flex items-center justify-center ${
+                    numPages > 1 && currentPage < numPages
+                      ? 'hover:scale-110 active:scale-95 cursor-pointer opacity-100'
+                      : 'cursor-not-allowed opacity-30'
+                  }`}
+                  title="Next page"
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="h-6 w-6 text-white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))' }} />
+                </button>
               </div>
             )}
           </Document>
