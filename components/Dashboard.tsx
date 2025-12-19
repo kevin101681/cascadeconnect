@@ -240,8 +240,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Expanded claim editor state
   const [expandedClaimId, setExpandedClaimId] = useState<string | null>(null);
   
-  // Schedule expansion state
-  const [isScheduleExpanded, setIsScheduleExpanded] = useState(false);
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Documents)
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'DOCUMENTS'>(initialTab || 'CLAIMS');
@@ -2014,7 +2012,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
           </motion.div>
 
-          {/* Upcoming Schedule Card - Right of Homeowner Info */}
+          {/* Next Appointment Card - Right of Homeowner Info */}
           <motion.div 
             className="w-full lg:w-[300px] lg:flex-shrink-0 bg-secondary-container dark:bg-gray-800 rounded-3xl text-secondary-on-container dark:text-gray-100 flex flex-col relative border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden"
             variants={cardVariants}
@@ -2026,105 +2024,81 @@ const Dashboard: React.FC<DashboardProps> = ({
             }}
             layout
           >
-            <button
-              onClick={() => setIsScheduleExpanded(!isScheduleExpanded)}
-              className="p-6 w-full text-left flex-shrink-0 z-10 relative"
-            >
+            <div className="p-6 w-full text-left flex-shrink-0 z-10 relative">
               <h3 className="font-medium text-lg mb-0 flex items-center justify-between text-secondary-on-container dark:text-gray-100">
                 <span className="flex items-center">
                   <Calendar className="h-5 w-5 mr-3" />
-                  Upcoming Schedule
+                  Next Appointment
                 </span>
-                <div className="w-8 h-8 rounded-full bg-black/20 dark:bg-white/20 flex items-center justify-center ml-4 flex-shrink-0">
-                  {isScheduleExpanded ? (
-                    <ChevronUp className="h-5 w-5 text-secondary-on-container dark:text-gray-200" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5 text-secondary-on-container dark:text-gray-200" />
-                  )}
-                </div>
               </h3>
-            </button>
+            </div>
             
-            {/* Collapsed State - Show First Appointment */}
-            {!isScheduleExpanded && scheduledClaims.length > 0 && (
-              <motion.div 
-                className="px-6 pb-6 pt-0"
-                variants={cardVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {(() => {
-                  const firstClaim = scheduledClaims[0];
-                  const acceptedDate = firstClaim.proposedDates.find(d => d.status === 'ACCEPTED');
-                  return (
-                    <motion.div 
-                      className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-xl text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors"
-                      onClick={() => onSelectClaim(firstClaim, true)}
-                      variants={cardVariants}
-                      layout
-                    >
+            {(() => {
+              // Get the next upcoming appointment date
+              const now = new Date();
+              now.setHours(0, 0, 0, 0);
+              
+              const upcomingClaims = scheduledClaims
+                .map(c => {
+                  const acceptedDate = c.proposedDates.find(d => d.status === 'ACCEPTED');
+                  if (!acceptedDate) return null;
+                  const appointmentDate = new Date(acceptedDate.date);
+                  appointmentDate.setHours(0, 0, 0, 0);
+                  if (appointmentDate < now) return null;
+                  return { claim: c, date: appointmentDate, acceptedDate };
+                })
+                .filter(Boolean) as Array<{ claim: Claim; date: Date; acceptedDate: any }>;
+              
+              if (upcomingClaims.length === 0) {
+                return (
+                  <div className="px-6 pb-6 pt-0">
+                    <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No upcoming appointments.</p>
+                  </div>
+                );
+              }
+              
+              // Sort by date
+              upcomingClaims.sort((a, b) => a.date.getTime() - b.date.getTime());
+              
+              // Get the next date
+              const nextDate = upcomingClaims[0].date;
+              const nextDateStr = nextDate.toISOString().split('T')[0];
+              
+              // Count how many claims have this same date
+              const claimsOnNextDate = upcomingClaims.filter(item => {
+                const itemDateStr = item.date.toISOString().split('T')[0];
+                return itemDateStr === nextDateStr;
+              });
+              
+              const firstClaim = claimsOnNextDate[0].claim;
+              const acceptedDate = claimsOnNextDate[0].acceptedDate;
+              
+              return (
+                <div className="px-6 pb-6 pt-0">
+                  <div 
+                    className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-xl text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors"
+                    onClick={() => onSelectClaim(firstClaim, true)}
+                  >
+                    <div className="flex items-center justify-center gap-2 mb-2">
                       <p className="font-medium text-secondary-on-container dark:text-gray-200 text-center">{firstClaim.title}</p>
-                      <p className="opacity-80 dark:opacity-70 mt-1 text-secondary-on-container dark:text-gray-300 text-center">
-                        {acceptedDate ? new Date(acceptedDate.date).toLocaleDateString() : 'N/A'} - {acceptedDate?.timeSlot}
-                      </p>
-                      {firstClaim.contractorName && (
-                        <p className="opacity-70 dark:opacity-60 mt-1 text-secondary-on-container dark:text-gray-400 text-center text-xs">
-                          {firstClaim.contractorName}
-                        </p>
+                      {claimsOnNextDate.length > 1 && (
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                          {claimsOnNextDate.length}
+                        </span>
                       )}
-                    </motion.div>
-                  );
-                })()}
-              </motion.div>
-            )}
-            
-            {!isScheduleExpanded && scheduledClaims.length === 0 && (
-              <motion.div 
-                className="px-6 pb-6 pt-0"
-                variants={cardVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No confirmed appointments.</p>
-              </motion.div>
-            )}
-            
-            {/* Expanded State - Show all appointments */}
-            {isScheduleExpanded && (
-              <motion.div 
-                className="px-6 pb-6 pt-0 space-y-3 max-h-96 overflow-y-auto"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {scheduledClaims.length > 0 ? (
-                  scheduledClaims.map((c, index) => {
-                    const acceptedDate = c.proposedDates.find(d => d.status === 'ACCEPTED');
-                    return (
-                      <motion.div 
-                        key={c.id} 
-                        className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-xl text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors"
-                        onClick={() => onSelectClaim(c, true)}
-                        variants={cardVariants}
-                        layout
-                      >
-                        <p className="font-medium text-secondary-on-container dark:text-gray-200 text-center">{c.title}</p>
-                        <p className="opacity-80 dark:opacity-70 mt-1 text-secondary-on-container dark:text-gray-300 text-center">
-                          {acceptedDate ? new Date(acceptedDate.date).toLocaleDateString() : 'N/A'} - {acceptedDate?.timeSlot}
-                        </p>
-                        {c.contractorName && (
-                          <p className="opacity-70 dark:opacity-60 mt-1 text-secondary-on-container dark:text-gray-400 text-center text-xs">
-                            {c.contractorName}
-                          </p>
-                        )}
-                      </motion.div>
-                    );
-                  })
-                ) : (
-                  <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No confirmed appointments.</p>
-                )}
-              </motion.div>
-            )}
+                    </div>
+                    <p className="opacity-80 dark:opacity-70 mt-1 text-secondary-on-container dark:text-gray-300 text-center">
+                      {new Date(acceptedDate.date).toLocaleDateString()} - {acceptedDate?.timeSlot}
+                    </p>
+                    {firstClaim.contractorName && (
+                      <p className="opacity-70 dark:opacity-60 mt-1 text-secondary-on-container dark:text-gray-400 text-center text-xs">
+                        {firstClaim.contractorName}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </motion.div>
         </div>
 
