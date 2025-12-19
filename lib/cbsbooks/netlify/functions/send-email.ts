@@ -1,6 +1,5 @@
 
 import { Handler } from '@netlify/functions';
-import nodemailer from 'nodemailer';
 
 export const handler: Handler = async (event, context) => {
   const headers = {
@@ -17,18 +16,6 @@ export const handler: Handler = async (event, context) => {
     return { statusCode: 405, headers, body: 'Method Not Allowed' };
   }
 
-  // check for SMTP credentials
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.error('Missing SMTP credentials in environment variables.');
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ 
-        error: "Server Email Configuration Missing. Please set SMTP_HOST, SMTP_USER, and SMTP_PASS in Netlify settings." 
-      })
-    };
-  }
-
   try {
     const { to, subject, text, html, attachment } = JSON.parse(event.body || '{}');
 
@@ -40,41 +27,89 @@ export const handler: Handler = async (event, context) => {
       };
     }
 
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-
-    // attachment.data is expected to be the base64 string (without data URI prefix ideally, or we strip it)
+    // Strip data URI prefix from attachment data if present
     const base64Content = attachment.data.replace(/^data:application\/pdf;base64,/, "");
+    const fromEmail = process.env.SENDGRID_REPLY_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER || 'info@cascadebuilderservices.com';
 
-    const info = await transporter.sendMail({
-      from: `"${process.env.SMTP_FROM_NAME || 'Cascade Builder Services'}" <${process.env.SMTP_USER}>`,
-      to: to,
-      subject: subject || "Invoice from Cascade Builder Services",
-      text: text || "Please find the attached invoice.",
-      html: html, // Allow HTML content for buttons/styling
-      attachments: [
-        {
-          filename: attachment.filename || 'invoice.pdf',
+    // Prefer SendGrid if API key is available
+    if (process.env.SENDGRID_API_KEY) {
+      const sgMail = (await import('@sendgrid/mail')).default;
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+      const msg = {
+        to: to,
+        from: {
+          email: fromEmail,
+          name: 'Cascade Builder Services'
+        },
+        subject: subject || 'Invoice from Cascade Builder Services',
+        text: text || '',
+        html: html || text || '',
+        attachments: [{
           content: base64Content,
-          encoding: 'base64',
-          contentType: 'application/pdf'
-        }
-      ]
-    });
+          filename: attachment.filename || 'invoice.pdf',
+          type: 'application/pdf',
+          disposition: 'attachment'
+        }]
+      };
 
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ message: "Email sent successfully", messageId: info.messageId }),
-    };
+      const [response] = await sgMail.send(msg);
+      console.log('✅ Email sent via SendGrid:', response.statusCode);
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ 
+          message: "Email sent successfully",
+          messageId: response.headers['x-message-id']
+        }),
+      };
+    } else if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      // Fallback to SMTP if SendGrid not configured
+      const nodemailerModule = await import('nodemailer');
+      const transporter = nodemailerModule.default.createTransport({
+        host: process.env.SMTP_HOST,
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        secure: process.env.SMTP_SECURE === 'true',
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
 
+      const info = await transporter.sendMail({
+        from: `"${process.env.SMTP_FROM_NAME || 'Cascade Builder Services'}" <${fromEmail}>`,
+        to: to,
+        subject: subject || "Invoice from Cascade Builder Services",
+        text: text || "Please find the attached invoice.",
+        html: html,
+        attachments: [
+          {
+            filename: attachment.filename || 'invoice.pdf',
+            content: base64Content,
+            encoding: 'base64',
+            contentType: 'application/pdf'
+          }
+        ]
+      });
+
+      console.log('✅ Email sent via SMTP:', info.messageId);
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ 
+          message: "Email sent successfully",
+          messageId: info.messageId
+        }),
+      };
+    } else {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: "Email configuration missing. Please set SENDGRID_API_KEY or SMTP credentials in Netlify settings." 
+        })
+      };
+    }
   } catch (error: any) {
     console.error("Email Sending Error:", error);
     return {

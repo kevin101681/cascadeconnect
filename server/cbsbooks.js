@@ -462,45 +462,83 @@ router.post('/create-payment-link', async (req, res) => {
 
 // --- SEND EMAIL ROUTE ---
 router.post('/send-email', async (req, res) => {
-  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    return res.status(500).json({ 
-      error: "Server Email Configuration Missing. Please set SMTP_HOST, SMTP_USER, and SMTP_PASS." 
-    });
-  }
-
   try {
-    const nodemailer = await import('nodemailer');
     const { to, subject, text, html, attachment } = req.body;
 
     if (!to || !attachment) {
       return res.status(400).json({ error: "Missing 'to' address or attachment data." });
     }
 
-    const transporter = nodemailer.default.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
+    // Strip data URI prefix from attachment data if present
+    const base64Content = attachment.data.replace(/^data:application\/pdf;base64,/, "");
+    const fromEmail = process.env.SENDGRID_REPLY_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER || 'info@cascadebuilderservices.com';
 
-    const mailOptions = {
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
-      to: to,
-      subject: subject || 'Invoice',
-      text: text || '',
-      html: html || text || '',
-      attachments: [{
-        filename: attachment.filename,
-        content: attachment.data,
-        encoding: 'base64'
-      }]
-    };
+    // Prefer SendGrid if API key is available
+    if (process.env.SENDGRID_API_KEY) {
+      const sgMail = (await import('@sendgrid/mail')).default;
+      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-    await transporter.sendMail(mailOptions);
-    res.json({ message: 'Email sent successfully' });
+      const msg = {
+        to: to,
+        from: {
+          email: fromEmail,
+          name: 'Cascade Builder Services'
+        },
+        subject: subject || 'Invoice from Cascade Builder Services',
+        text: text || '',
+        html: html || text || '',
+        attachments: [{
+          content: base64Content,
+          filename: attachment.filename || 'invoice.pdf',
+          type: 'application/pdf',
+          disposition: 'attachment'
+        }]
+      };
+
+      const [response] = await sgMail.send(msg);
+      console.log('✅ Email sent via SendGrid:', response.statusCode);
+      res.json({ 
+        message: 'Email sent successfully',
+        messageId: response.headers['x-message-id']
+      });
+    } else if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+      // Fallback to SMTP if SendGrid not configured
+      const nodemailer = await import('nodemailer');
+      const transporter = nodemailer.default.createTransport({
+        host: process.env.SMTP_HOST,
+        port: parseInt(process.env.SMTP_PORT || '587'),
+        secure: process.env.SMTP_SECURE === 'true',
+        auth: {
+          user: process.env.SMTP_USER,
+          pass: process.env.SMTP_PASS,
+        },
+      });
+
+      const mailOptions = {
+        from: `"${process.env.SMTP_FROM_NAME || 'Cascade Builder Services'}" <${fromEmail}>`,
+        to: to,
+        subject: subject || 'Invoice from Cascade Builder Services',
+        text: text || '',
+        html: html || text || '',
+        attachments: [{
+          filename: attachment.filename || 'invoice.pdf',
+          content: base64Content,
+          encoding: 'base64',
+          contentType: 'application/pdf'
+        }]
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ Email sent via SMTP:', info.messageId);
+      res.json({ 
+        message: 'Email sent successfully',
+        messageId: info.messageId
+      });
+    } else {
+      return res.status(500).json({ 
+        error: "Email configuration missing. Please set SENDGRID_API_KEY or SMTP credentials." 
+      });
+    }
   } catch (error) {
     console.error("SEND EMAIL ERROR:", error);
     res.status(500).json({ error: error.message || "Failed to send email" });

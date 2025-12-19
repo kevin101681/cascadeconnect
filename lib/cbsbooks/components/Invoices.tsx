@@ -980,15 +980,11 @@ export const Invoices: React.FC<InvoicesProps> = ({
                         <div className="relative flex-1 md:w-28">
                             <input 
                                 type="number" 
-                                list={`rates-${item.id}`}
                                 placeholder="Rate" 
-                                value={item.rate} 
+                                value={item.rate}
                                 onChange={(e) => updateItem(item.id, 'rate', Number(e.target.value))} 
-                                className="w-full bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                className="w-full bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-calendar-picker-indicator]:hidden"
                             />
-                            <datalist id={`rates-${item.id}`}>
-                                {rateOptions.map(r => <option key={r} value={r} />)}
-                            </datalist>
                         </div>
                         <button onClick={() => deleteItem(item.id)} className="p-2 h-[42px] w-[42px] flex items-center justify-center bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 border border-red-200 dark:border-red-800/30 rounded-full transition-colors shrink-0"><Trash2 size={18} className="text-red-950 dark:text-red-50" style={{ color: 'rgb(127, 29, 29)' }} /></button>
                     </div>

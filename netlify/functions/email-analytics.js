@@ -77,7 +77,8 @@ exports.handler = async (event, context) => {
     let activityData = [];
     try {
       const activityUrl = new URL('https://api.sendgrid.com/v3/messages');
-      activityUrl.searchParams.set('limit', '1000');
+      const limit = event.queryStringParameters?.limit ? parseInt(event.queryStringParameters.limit) : 500; // Increased default limit
+      activityUrl.searchParams.set('limit', limit.toString());
       activityUrl.searchParams.set('query', `last_event_time BETWEEN "${startDate}T00:00:00Z" AND "${endDate}T23:59:59Z"`);
 
       const activityResponse = await fetch(activityUrl.toString(), {
@@ -93,7 +94,9 @@ exports.handler = async (event, context) => {
         const messages = activityResult.messages || [];
         
         // Process messages and fetch detailed activity for each
-        for (const msg of messages.slice(0, 50)) { // Limit to 50 to avoid too many API calls
+        // Note: SendGrid API rate limit is 6 requests per minute, so we process in batches
+        const messagesToProcess = messages.slice(0, Math.min(limit, 200)); // Limit to 200 max to avoid too many API calls
+        for (const msg of messagesToProcess) {
           try {
             // Get opens for this message
             let opens = [];
