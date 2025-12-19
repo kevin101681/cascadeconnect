@@ -939,9 +939,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <th className="px-3 py-3 text-left min-w-[200px] bg-surface-container/50 dark:bg-gray-700/50">
                   <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Title</span>
                 </th>
-                <th className="px-3 py-3 text-left min-w-[300px] bg-surface-container/50 dark:bg-gray-700/50">
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Description</span>
-                </th>
                 <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
                   <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Class</span>
                 </th>
@@ -1003,13 +1000,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <span className="text-xs font-medium text-surface-on dark:text-gray-100 truncate bg-surface-container-high dark:bg-gray-700 px-3 py-1 rounded-full inline-block w-full border border-surface-outline-variant/50 dark:border-gray-600">
                         {claim.title}
                       </span>
-                    </td>
-                    <td className="px-3 py-3 min-w-[300px]">
-                      {claim.description ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-400 truncate bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full inline-block w-full">
-                          {claim.description}
-                        </span>
-                      ) : null}
                     </td>
                     <td className="px-3 py-3 whitespace-nowrap">
                       <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
@@ -1090,23 +1080,31 @@ const Dashboard: React.FC<DashboardProps> = ({
                           className="overflow-visible"
                         >
                           <td 
-                            colSpan={(isAdmin || isBuilder) && !effectiveHomeowner ? 11 : 10} 
+                            colSpan={(isAdmin || isBuilder) && !effectiveHomeowner ? 10 : 9} 
                             className="p-0 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30"
                           >
                             {/* Breakout container for narrow screens - spans full viewport width */}
                             <div 
                               className="p-4"
                               style={{
-                                marginLeft: 'calc(-50vw + 50%)',
-                                marginRight: 'calc(-50vw + 50%)',
-                                paddingLeft: 'calc(50vw - 50% + 1rem)',
-                                paddingRight: 'calc(50vw - 50% + 1rem)',
+                                position: 'relative',
+                                left: '50%',
+                                right: '50%',
+                                marginLeft: '-50vw',
+                                marginRight: '-50vw',
                                 width: '100vw',
                                 maxWidth: '100vw',
-                                boxSizing: 'border-box'
+                                boxSizing: 'border-box',
+                                overflowX: 'hidden'
                               }}
                             >
-                              <ClaimInlineEditor
+                              <div style={{ 
+                                maxWidth: 'calc(100vw - 2rem)', 
+                                margin: '0 auto',
+                                overflowX: 'hidden',
+                                width: '100%'
+                              }}>
+                                <ClaimInlineEditor
                                 claim={claim}
                                 onUpdateClaim={onUpdateClaim}
                                 contractors={contractors}
@@ -1122,6 +1120,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                 }}
                                 onNavigate={onNavigate}
                               />
+                              </div>
                             </div>
                           </td>
                         </motion.tr>
