@@ -96,36 +96,12 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
   const selectClass = "block w-full rounded-md border border-surface-outline dark:border-gray-600 bg-transparent dark:bg-gray-700 px-3 py-3 text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Header with buttons */}
-      <div className="flex justify-between items-center pb-4 border-b border-surface-outline-variant dark:border-gray-700">
+    <form onSubmit={handleSubmit} className="space-y-6 flex flex-col h-full">
+      {/* Header */}
+      <div className="pb-4 border-b border-surface-outline-variant dark:border-gray-700">
         <h2 className="text-lg font-normal text-surface-on dark:text-gray-100">
           New Claim
         </h2>
-        <div className="flex items-center gap-2">
-          {onSendMessage && (
-            <Button 
-              type="button" 
-              variant="text"
-              onClick={onSendMessage}
-              className="bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600"
-            >
-              <Send className="h-4 w-4 mr-2" />
-              Send Message
-            </Button>
-          )}
-          <Button 
-            type="button" 
-            variant="text" 
-            onClick={onCancel}
-            className="bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600"
-          >
-            Cancel
-          </Button>
-          <Button type="submit" variant="filled">
-            Save
-          </Button>
-        </div>
       </div>
       
       {/* Job Name Pill */}
@@ -518,6 +494,21 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
           }
         }}
       />
+      
+      {/* Footer with buttons */}
+      <div className="flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700 mt-auto">
+        <Button 
+          type="button" 
+          variant="text" 
+          onClick={onCancel}
+          className="bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600"
+        >
+          Cancel
+        </Button>
+        <Button type="submit" variant="filled">
+          Save
+        </Button>
+      </div>
     </form>
   );
 };
