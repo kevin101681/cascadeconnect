@@ -243,7 +243,6 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
   return (
     <div 
       className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 backdrop-blur-sm"
-      onClick={onClose}
       style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
     >
       {/* Close FAB */}

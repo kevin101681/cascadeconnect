@@ -11,6 +11,8 @@ import { CheckScanner } from './CheckScanner';
 import { InvoiceScanner } from './InvoiceScanner';
 import { Dropdown } from './ui/Dropdown';
 import { parseInvoiceFromText } from '../services/geminiService';
+import { Calendar } from 'lucide-react';
+import CalendarPicker from './CalendarPicker';
 
 interface InvoicesProps {
   invoices: Invoice[];
@@ -128,6 +130,11 @@ export const Invoices: React.FC<InvoicesProps> = ({
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
   const [showManualLinkInput, setShowManualLinkInput] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Date picker state
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showDueDatePicker, setShowDueDatePicker] = useState(false);
+  const [showDatePaidPicker, setShowDatePaidPicker] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -178,7 +185,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
         clientName: prefillData.clientName,
         clientEmail: prefillData.clientEmail || '',
         projectDetails: prefillData.projectDetails || '',
-        items: [],
+        items: [{ id: crypto.randomUUID(), description: 'Walk through and warranty management services', quantity: 1, rate: 0, amount: 0 }],
         status: 'draft',
         total: 0
       });
@@ -322,7 +329,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
       invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
       date: getLocalTodayDate(),
       dueDate: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
-      items: [],
+      items: [{ id: crypto.randomUUID(), description: 'Walk through and warranty management services', quantity: 1, rate: 0, amount: 0 }],
       status: 'draft',
       total: 0,
       clientName: ''
@@ -917,17 +924,38 @@ export const Invoices: React.FC<InvoicesProps> = ({
                 </div>
                 <div>
                     <label className="text-xs text-surface-outline dark:text-gray-400 font-medium ml-1">Date</label>
-                    <input type="date" value={currentInvoice.date} onChange={e => setCurrentInvoice({...currentInvoice, date: e.target.value})} className="w-full bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary"/>
+                    <button
+                      type="button"
+                      onClick={() => setShowDatePicker(true)}
+                      className="w-full bg-transparent dark:bg-transparent rounded-lg px-3 py-2.5 text-sm text-surface-on dark:text-gray-100 border-2 border-surface-outline-variant dark:border-gray-600 hover:border-surface-on dark:hover:border-gray-500 focus-within:border-primary dark:focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 dark:focus-within:ring-primary/20 outline-none transition-all cursor-pointer flex items-center justify-between"
+                    >
+                      <span>{currentInvoice.date ? new Date(currentInvoice.date).toLocaleDateString() : 'Select date'}</span>
+                      <Calendar className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
+                    </button>
                 </div>
                 <div>
                     <label className="text-xs text-surface-outline dark:text-gray-400 font-medium ml-1">Due Date</label>
-                    <input type="date" value={currentInvoice.dueDate} onChange={e => setCurrentInvoice({...currentInvoice, dueDate: e.target.value})} className="w-full bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary"/>
+                    <button
+                      type="button"
+                      onClick={() => setShowDueDatePicker(true)}
+                      className="w-full bg-transparent dark:bg-transparent rounded-lg px-3 py-2.5 text-sm text-surface-on dark:text-gray-100 border-2 border-surface-outline-variant dark:border-gray-600 hover:border-surface-on dark:hover:border-gray-500 focus-within:border-primary dark:focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 dark:focus-within:ring-primary/20 outline-none transition-all cursor-pointer flex items-center justify-between"
+                    >
+                      <span>{currentInvoice.dueDate ? new Date(currentInvoice.dueDate).toLocaleDateString() : 'Select date'}</span>
+                      <Calendar className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
+                    </button>
                 </div>
                 {/* Date Paid - Visible only if Paid */}
                 {currentInvoice.status === 'paid' && (
                     <div>
                         <label className="text-xs text-surface-outline dark:text-gray-400 font-medium ml-1">Date Paid</label>
-                        <input type="date" value={currentInvoice.datePaid || ''} onChange={e => setCurrentInvoice({...currentInvoice, datePaid: e.target.value})} className="w-full bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary"/>
+                        <button
+                          type="button"
+                          onClick={() => setShowDatePaidPicker(true)}
+                          className="w-full bg-transparent dark:bg-transparent rounded-lg px-3 py-2.5 text-sm text-surface-on dark:text-gray-100 border-2 border-surface-outline-variant dark:border-gray-600 hover:border-surface-on dark:hover:border-gray-500 focus-within:border-primary dark:focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 dark:focus-within:ring-primary/20 outline-none transition-all cursor-pointer flex items-center justify-between"
+                        >
+                          <span>{currentInvoice.datePaid ? new Date(currentInvoice.datePaid).toLocaleDateString() : 'Select date'}</span>
+                          <Calendar className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
+                        </button>
                     </div>
                 )}
                 <div>
@@ -941,8 +969,14 @@ export const Invoices: React.FC<InvoicesProps> = ({
                 {items.map((item) => (
                     <div key={item.id} className="flex flex-col md:flex-row gap-2 mb-2 items-start border-b border-surfaceContainerHigh/30 pb-4 md:pb-0 md:border-none last:border-none">
                     <input placeholder="Description" value={item.description} onChange={(e) => updateItem(item.id, 'description', e.target.value)} className="w-full md:flex-grow bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary"/>
-                    <div className="flex gap-2 w-full md:w-auto">
-                        <input type="number" placeholder="Qty" value={item.quantity} onChange={(e) => updateItem(item.id, 'quantity', Number(e.target.value))} className="flex-1 md:w-20 bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary"/>
+                    <div className="flex gap-2 w-full md:w-auto items-center">
+                        <input 
+                            type="number" 
+                            placeholder="Qty" 
+                            value={item.quantity} 
+                            onChange={(e) => updateItem(item.id, 'quantity', Number(e.target.value))} 
+                                className="w-auto min-w-[3rem] bg-surface-container dark:bg-gray-700 px-3 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
                         <div className="relative flex-1 md:w-28">
                             <input 
                                 type="number" 
@@ -950,7 +984,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                                 placeholder="Rate" 
                                 value={item.rate} 
                                 onChange={(e) => updateItem(item.id, 'rate', Number(e.target.value))} 
-                                className="w-full bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary"
+                                className="w-full bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             />
                             <datalist id={`rates-${item.id}`}>
                                 {rateOptions.map(r => <option key={r} value={r} />)}
@@ -1014,19 +1048,57 @@ export const Invoices: React.FC<InvoicesProps> = ({
             </div>
 
             <div className="flex flex-col md:flex-row justify-between items-center pt-2 gap-4">
-                <div className="bg-surface-container-high dark:bg-gray-600 px-2 py-1 rounded-full text-xs font-bold flex items-center h-6 text-gray-900 dark:text-gray-100" style={{ color: 'rgb(17, 24, 39)' }}>Total: ${total.toFixed(0)}</div>
+                <div className="h-9 px-6 rounded-full bg-primary text-primary-on text-sm font-medium flex items-center justify-center">Total: ${total.toFixed(0)}</div>
                 <div className="flex gap-2 w-full md:w-auto">
-                    <Button variant="tonal" onClick={() => isInline ? setExpandedId(null) : setIsCreating(false)} disabled={isSaving} className="flex-1 md:flex-none rounded-full">Cancel</Button>
-                    <Button 
+                    <button 
+                        onClick={() => isInline ? setExpandedId(null) : setIsCreating(false)} 
+                        disabled={isSaving} 
+                        className="flex-1 md:flex-none h-9 px-6 rounded-full bg-primary text-primary-on hover:bg-primary/90 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                    >
+                        Cancel
+                    </button>
+                    <button 
                         onClick={handleSave} 
                         disabled={isSaving}
-                        className="flex-1 md:flex-none rounded-full bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary hover:opacity-90"
-                        icon={isSaving ? <Loader2 className="animate-spin" /> : undefined}
+                        className="flex-1 md:flex-none h-9 px-6 rounded-full bg-primary text-primary-on hover:bg-primary/90 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
+                        {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : null}
                         {isSaving ? 'Saving...' : 'Save'}
-                    </Button>
+                    </button>
                 </div>
             </div>
+            
+            {/* Calendar Pickers */}
+            {showDatePicker && (
+              <CalendarPicker
+                isOpen={showDatePicker}
+                onClose={() => setShowDatePicker(false)}
+                selectedDate={currentInvoice.date ? new Date(currentInvoice.date) : null}
+                onSelectDate={(date) => {
+                  setCurrentInvoice({...currentInvoice, date: date.toISOString().split('T')[0]});
+                }}
+              />
+            )}
+            {showDueDatePicker && (
+              <CalendarPicker
+                isOpen={showDueDatePicker}
+                onClose={() => setShowDueDatePicker(false)}
+                selectedDate={currentInvoice.dueDate ? new Date(currentInvoice.dueDate) : null}
+                onSelectDate={(date) => {
+                  setCurrentInvoice({...currentInvoice, dueDate: date.toISOString().split('T')[0]});
+                }}
+              />
+            )}
+            {showDatePaidPicker && (
+              <CalendarPicker
+                isOpen={showDatePaidPicker}
+                onClose={() => setShowDatePaidPicker(false)}
+                selectedDate={currentInvoice.datePaid ? new Date(currentInvoice.datePaid) : null}
+                onSelectDate={(date) => {
+                  setCurrentInvoice({...currentInvoice, datePaid: date.toISOString().split('T')[0]});
+                }}
+              />
+            )}
         </div>
       );
   };
@@ -1121,17 +1193,17 @@ export const Invoices: React.FC<InvoicesProps> = ({
                 <div className="shrink-0 flex items-center gap-1">
                     <div className="hidden md:flex gap-1">
                         {inv.status !== 'paid' && (
-                            <button onClick={() => handleMarkAsPaid(inv)} className={`${commonBtnClass} bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-500`} title="Mark as Paid">
+                            <button onClick={() => handleMarkAsPaid(inv)} className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} title="Mark as Paid">
                                 <Check size={16} />
                             </button>
                         )}
-                        <button onClick={() => handlePrepareEmail(inv)} className={`${commonBtnClass} bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-500`} title="Email Invoice">
+                        <button onClick={() => handlePrepareEmail(inv)} className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} title="Email Invoice">
                             <Mail size={16} />
                         </button>
-                        <button onClick={() => window.innerWidth > 768 ? handleDownloadPDF(inv) : handleShare(inv)} className={`${commonBtnClass} bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-500`} title="Download PDF">
+                        <button onClick={() => window.innerWidth > 768 ? handleDownloadPDF(inv) : handleShare(inv)} className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} title="Download PDF">
                             <Download size={16} />
                         </button>
-                         <button className={`${commonBtnClass} bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-500`} onClick={() => handleDeleteInvoice(inv.id)} title="Delete">
+                         <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={() => handleDeleteInvoice(inv.id)} title="Delete">
                             <Trash2 size={16} />
                         </button>
                     </div>
@@ -1139,7 +1211,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                     {/* Expand Chevron */}
                     <button 
                         onClick={onExpand}
-                        className={`${commonBtnClass} ml-1 ${expanded ? 'bg-primary text-primary-on hover:bg-primary/90' : 'bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-500'}`}
+                        className={`${commonBtnClass} ml-1 bg-primary text-primary-on hover:bg-primary/90`}
                     >
                         <ArrowUpDown size={16} className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
                     </button>

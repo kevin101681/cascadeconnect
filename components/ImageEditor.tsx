@@ -548,12 +548,7 @@ const ImageEditor: React.FC<ImageEditorProps> = ({ imageUrl, imageName, onSave, 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={(e) => {
-      // Only close if clicking the backdrop, not the modal content
-      if (e.target === e.currentTarget) {
-        onClose();
-      }
-    }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-surface dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-6xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-surface-outline-variant dark:border-gray-700">

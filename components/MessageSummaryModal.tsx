@@ -31,8 +31,7 @@ const MessageSummaryModal: React.FC<MessageSummaryModalProps> = ({ isOpen, onClo
 
   return (
     <div 
-      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm" 
-      onClick={onClose}
+      className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm"
     >
       <div 
         className="bg-surface rounded-3xl shadow-elevation-3 w-full max-w-3xl mx-4 max-h-[80vh] overflow-hidden flex flex-col"

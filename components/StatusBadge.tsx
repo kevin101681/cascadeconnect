@@ -6,8 +6,8 @@ interface StatusBadgeProps {
 }
 
 const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
-  // Match pill style: rounded-full, px-3 py-1, text-xs
-  const baseStyle = "inline-flex items-center px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap text-left";
+  // Match pill style: rounded-full, px-3, text-xs font-medium, h-6
+  const baseStyle = "inline-flex items-center h-6 px-3 rounded-full text-xs font-medium whitespace-nowrap";
 
   const styles = {
     [ClaimStatus.SUBMITTED]: "bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-300",

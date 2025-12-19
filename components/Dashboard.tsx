@@ -1089,80 +1089,74 @@ const Dashboard: React.FC<DashboardProps> = ({
                       }}
                     >
                       <div className="px-6 py-3">
-                        <div className="flex flex-wrap items-center gap-2">
+                        <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(11, max-content)' }}>
                             {/* Claim # */}
-                          <span className="text-xs font-bold text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap inline-block">
+                          <span className="inline-flex items-center h-6 text-xs font-medium text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 rounded-full whitespace-nowrap w-fit">
                             #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
                           </span>
                           {/* Status */}
-                          <StatusBadge status={claim.status} />
+                          <div className="w-fit h-6 flex items-center"><StatusBadge status={claim.status} /></div>
                           {/* Title */}
                           {claim.title && (
-                            <span className="text-xs font-medium text-surface-on dark:text-gray-100 truncate bg-surface-container-high dark:bg-gray-700 px-3 py-1 rounded-full inline-block border border-surface-outline-variant/50 dark:border-gray-600 max-w-xs">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on dark:text-gray-100 bg-surface-container-high dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant/50 dark:border-gray-600 whitespace-nowrap w-fit">
                               {claim.title}
                             </span>
                           )}
-                          {/* Description */}
-                          {claim.description && (
-                            <span className="text-xs text-surface-on-variant dark:text-gray-400 truncate bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full inline-block max-w-xs">
-                              {claim.description}
-                            </span>
-                          )}
                           {/* Classification */}
-                          <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
+                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
                             {claim.classification}
                           </span>
                           {/* Homeowner Name */}
                           {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                            <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
                               <Building2 className="h-3 w-3 flex-shrink-0" />
-                              <span className="truncate">{claim.homeownerName}</span>
+                              <span>{claim.homeownerName}</span>
                             </span>
                           )}
                           {/* Contractor */}
                           {claim.contractorName ? (
-                            <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
                               <HardHat className="h-3 w-3 flex-shrink-0" />
-                              <span className="truncate">{claim.contractorName}</span>
+                              <span>{claim.contractorName}</span>
                             </span>
                           ) : (
-                            <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant/60 dark:text-gray-400 gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600 w-fit">
                               <HardHat className="h-3 w-3 flex-shrink-0 opacity-50" />
-                              <span className="truncate">No Sub Assigned</span>
+                              <span>No Sub Assigned</span>
                             </span>
                           )}
                           {/* Date Submitted (Created) */}
-                          <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
+                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
                             Created: {new Date(claim.dateSubmitted).toLocaleDateString()}
                           </span>
                           {/* Scheduled Date */}
                           {scheduledDate && (
-                            <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 rounded-full whitespace-nowrap w-fit">
                               <Calendar className="h-3 w-3 flex-shrink-0" />
                               <span>Scheduled: {new Date(scheduledDate.date).toLocaleDateString()}</span>
                             </span>
                           )}
                           {/* Service Order Date */}
                           {serviceOrderDate ? (
-                            <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
                               <Mail className="h-3 w-3 flex-shrink-0" />
                               <span>S.O. Sent: {new Date(serviceOrderDate).toLocaleDateString()}</span>
                             </span>
                           ) : (
-                            <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant/60 dark:text-gray-400 gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600 w-fit">
                               <Mail className="h-3 w-3 flex-shrink-0 opacity-50" />
                               <span>No SO Sent</span>
                             </span>
                           )}
                           {/* Date Evaluated */}
                           {claim.dateEvaluated && (
-                            <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
                               Eval: {new Date(claim.dateEvaluated).toLocaleDateString()}
                             </span>
                           )}
                           {/* Attachments count */}
                           {claim.attachments && claim.attachments.length > 0 && (
-                            <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
                               <Paperclip className="h-3 w-3 flex-shrink-0" />
                               {claim.attachments.length}
                             </span>
@@ -1587,9 +1581,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out] overflow-y-auto"
           style={{ overscrollBehavior: 'contain' }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setSelectedClaimForModal(null);
-          }}
         >
           <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-auto flex flex-col max-h-[90vh]">
             <div className="overflow-y-auto flex-1">

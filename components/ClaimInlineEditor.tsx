@@ -139,6 +139,11 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
       dateEvaluated: editDateEvaluated ? new Date(editDateEvaluated) : undefined
     });
     setIsEditing(false); // Collapse editor after saving
+    
+    // Close the modal if onCancel is provided (when used in modal context)
+    if (onCancel) {
+      onCancel();
+    }
   };
   
   const handleCancelEdit = () => {
@@ -964,7 +969,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
 
       {/* Service Order Modal */}
       {showSOModal && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]" onClick={() => setShowSOModal(false)}>
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]">
           <div className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-3 w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden flex flex-col animate-[scale-in_0.2s_ease-out]" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
               <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">Send Service Order</h2>

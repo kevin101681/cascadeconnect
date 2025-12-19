@@ -636,7 +636,7 @@ export const LocationManagerModal = ({ locations, onUpdate, onClose }: { locatio
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
+        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-xl overflow-hidden flex flex-col max-h-[80vh]" onClick={e => e.stopPropagation()}>
                 <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-center items-center bg-surface dark:bg-gray-800 shrink-0">
                     <div className="bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-full">
@@ -856,7 +856,7 @@ export const ClientInfoEditModal = ({ project, onUpdate, onClose }: { project: P
     const [fields, setFields] = useState(project.fields || []);
     const handleSave = () => { onUpdate({ ...project, fields }); onClose(); };
     return createPortal(
-        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
+        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-xl overflow-hidden" onClick={e => e.stopPropagation()}>
                 <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center">
                     <div className="bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-full"><h3 className="font-bold text-surface-on dark:text-gray-100">Edit Client Info</h3></div>
@@ -976,7 +976,7 @@ export const TemplateEditorModal = ({ templates, onUpdate, onClose }: any) => {
     const [temp, setTemp] = useState(templates);
     const handleSave = () => { onUpdate(temp); onClose(); };
     return createPortal(
-        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
+        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
              <div className="bg-surface dark:bg-gray-800 w-full max-w-2xl h-[80vh] rounded-3xl shadow-xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
                  <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center">
                     <h3 className="font-bold text-surface-on dark:text-gray-100">Edit Templates</h3>
@@ -1114,7 +1114,7 @@ const EmailOptionsModal = ({ onClose, project, locations, companyLogo, signOffTe
     const handleEmailReport = async () => { setIsGenerating(true); try { const reportFile = await generateReportFile(); await handleShare([reportFile]); } catch (e) { console.error("Failed to generate report", e); } finally { setIsGenerating(false); } };
     const handleEmailSignOff = async () => { setIsGenerating(true); try { const signOffFile = await generateSignOffFile(); await handleShare([signOffFile]); } catch (e) { console.error("Failed to generate sign off", e); } finally { setIsGenerating(false); } };
     return createPortal(
-    <div className="fixed inset-0 z-[160] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-[160] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
         <div onClick={(e) => e.stopPropagation()} className="bg-surface dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-sm p-6 animate-dialog-enter border border-surface-outline-variant dark:border-gray-700">
             <h3 className="text-xl font-bold text-surface-on dark:text-gray-100 mb-6 text-center">Share Documents</h3>
             {isGenerating ? ( <div className="flex flex-col items-center justify-center py-8"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div><p className="text-surface-on-variant dark:text-gray-400 font-medium">Generating PDFs...</p></div> ) : (
@@ -1570,9 +1570,8 @@ export const Dashboard = React.memo<DashboardProps>(({
 
             {/* Email Both Docs Modal */}
             {showEmailBothModal && createPortal(
-                <div 
+                <div
                     className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
-                    onClick={() => setShowEmailBothModal(false)}
                 >
                     <div 
                         className="bg-surface dark:bg-gray-800 rounded-3xl shadow-2xl w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden flex flex-col animate-dialog-enter"
