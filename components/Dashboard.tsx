@@ -918,230 +918,204 @@ const Dashboard: React.FC<DashboardProps> = ({
           </button>
         )}
       </div>
-      <div className="overflow-x-auto">
-        {/* Column Headers */}
-        {groupClaims.length > 0 && (
-          <div className="px-6 py-3 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50 sticky top-[73px] z-10">
-            <div className="flex flex-nowrap items-center gap-2 min-w-max">
-              <div className="flex justify-start items-center flex-shrink-0">
-                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Claim #</span>
-              </div>
-              <div className="flex-shrink-0">
-                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Status</span>
-              </div>
-              <div className="flex items-center justify-start flex-shrink-0 min-w-[200px] max-w-[200px]">
-                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate w-full">Title</span>
-              </div>
-              <div className="flex items-center justify-start flex-shrink-0 min-w-[300px] max-w-[300px]">
-                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate w-full">Description</span>
-              </div>
-              <div className="flex justify-start items-center flex-shrink-0 w-fit min-w-0">
-                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Class</span>
-              </div>
-              {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                <div className="flex justify-start items-center flex-shrink-0">
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Homeowner</span>
-                </div>
-              )}
-              <div className="flex justify-start items-center flex-shrink-0">
-                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Sub</span>
-              </div>
-              <div className="flex justify-start items-center flex-shrink-0 min-w-0">
-                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Scheduled</span>
-              </div>
-              <div className="flex justify-start items-center flex-shrink-0">
-                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Submitted</span>
-              </div>
-              <div className="flex justify-start items-center flex-shrink-0">
-                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Evaluated</span>
-              </div>
-              <div className="flex justify-start items-center flex-shrink-0">
-                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Service Order</span>
-              </div>
-              <div className="flex justify-start items-center flex-shrink-0">
-                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Attachments</span>
-              </div>
-            </div>
-          </div>
-        )}
-        <motion.ul 
-          className="divide-y divide-surface-outline-variant dark:divide-gray-700"
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-        {groupClaims.length === 0 ? (
-          <li className="p-8 text-center text-surface-on-variant dark:text-gray-400 text-sm italic">
-            {emptyMsg}
-          </li>
-        ) : (
-          groupClaims.map((claim, index) => {
-            const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
-            
-            // Find the most recent service order message (SUBCONTRACTOR type with "Service Order" in subject)
-            const serviceOrderMessages = claimMessages
-              .filter(m => m.claimId === claim.id && 
-                           m.type === 'SUBCONTRACTOR' && 
-                           m.subject.toLowerCase().includes('service order'))
-              .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-            const serviceOrderDate = serviceOrderMessages.length > 0 ? serviceOrderMessages[0].timestamp : null;
-            
-            return (
-              <motion.li 
-                key={claim.id} 
-                className="hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors"
-                variants={cardVariants}
-              >
-                <div 
-                  className="px-6 py-3 group relative cursor-pointer"
-                  onClick={(e) => {
-                    setExpandedClaimId(expandedClaimId === claim.id ? null : claim.id);
-                  }}
-                >
-                  <div 
-                    className={`flex flex-nowrap items-center gap-2 min-w-max ${isClosed ? 'opacity-70' : ''}`}
-                  >
-                    {/* Claim # */}
-                    <div className="flex justify-start items-center flex-shrink-0">
-                      <span className="text-xs font-bold text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap text-left">
+      {groupClaims.length === 0 ? (
+        <div className="p-8 text-center text-surface-on-variant dark:text-gray-400 text-sm italic">
+          {emptyMsg}
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead className="sticky top-[73px] z-10">
+              <tr className="border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50">
+                <th className="px-3 py-3 text-left">
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Claim #</span>
+                </th>
+                <th className="px-3 py-3 text-left">
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Status</span>
+                </th>
+                <th className="px-3 py-3 text-left min-w-[200px]">
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Title</span>
+                </th>
+                <th className="px-3 py-3 text-left min-w-[300px]">
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Description</span>
+                </th>
+                <th className="px-3 py-3 text-left">
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Class</span>
+                </th>
+                {(isAdmin || isBuilder) && !effectiveHomeowner && (
+                  <th className="px-3 py-3 text-left">
+                    <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Homeowner</span>
+                  </th>
+                )}
+                <th className="px-3 py-3 text-left">
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Sub</span>
+                </th>
+                <th className="px-3 py-3 text-left">
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Scheduled</span>
+                </th>
+                <th className="px-3 py-3 text-left">
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Submitted</span>
+                </th>
+                <th className="px-3 py-3 text-left">
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Evaluated</span>
+                </th>
+                <th className="px-3 py-3 text-left">
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Service Order</span>
+                </th>
+                <th className="px-3 py-3 text-left">
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Attachments</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {groupClaims.map((claim, index) => {
+                const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
+                
+                // Find the most recent service order message (SUBCONTRACTOR type with "Service Order" in subject)
+                const serviceOrderMessages = claimMessages
+                  .filter(m => m.claimId === claim.id && 
+                               m.type === 'SUBCONTRACTOR' && 
+                               m.subject.toLowerCase().includes('service order'))
+                  .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                const serviceOrderDate = serviceOrderMessages.length > 0 ? serviceOrderMessages[0].timestamp : null;
+                
+                return (
+                  <React.Fragment key={claim.id}>
+                    <motion.tr 
+                      className={`border-b border-surface-outline-variant dark:border-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors cursor-pointer ${isClosed ? 'opacity-70' : ''}`}
+                      variants={cardVariants}
+                      onClick={(e) => {
+                        setExpandedClaimId(expandedClaimId === claim.id ? null : claim.id);
+                      }}
+                    >
+                    <td className="px-3 py-3">
+                      <span className="text-xs font-bold text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap inline-block">
                         #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
                       </span>
-                    </div>
-                    {/* Status */}
-                    <div className="flex-shrink-0">
+                    </td>
+                    <td className="px-3 py-3">
                       <StatusBadge status={claim.status} />
-                    </div>
-                    {/* Title */}
-                    <div className="flex items-center justify-start flex-shrink-0 min-w-[200px] max-w-[200px]">
-                      <h4 className="text-xs font-medium text-surface-on dark:text-gray-100 truncate bg-surface-container-high dark:bg-gray-700 px-3 py-1 rounded-full text-left w-full border border-surface-outline-variant/50 dark:border-gray-600">
+                    </td>
+                    <td className="px-3 py-3 min-w-[200px]">
+                      <span className="text-xs font-medium text-surface-on dark:text-gray-100 truncate bg-surface-container-high dark:bg-gray-700 px-3 py-1 rounded-full inline-block max-w-full border border-surface-outline-variant/50 dark:border-gray-600">
                         {claim.title}
-                      </h4>
-                    </div>
-                    {/* Description */}
-                    <div className="flex items-center justify-start flex-shrink-0 min-w-[300px] max-w-[300px]">
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 min-w-[300px]">
                       {claim.description ? (
-                        <p className="text-xs text-surface-on-variant dark:text-gray-400 truncate bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full text-left w-full">
+                        <span className="text-xs text-surface-on-variant dark:text-gray-400 truncate bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full inline-block max-w-full">
                           {claim.description}
-                        </p>
-                      ) : (
-                        <span className="text-xs text-surface-on-variant/40 dark:text-gray-500 px-3 py-1 text-left w-full"></span>
-                      )}
-                    </div>
-                    {/* Classification */}
-                    <div className="flex justify-start items-center flex-shrink-0 w-fit min-w-0">
-                      <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-3">
+                      <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
                         {claim.classification}
                       </span>
-                    </div>
-                    {/* Homeowner Name */}
+                    </td>
                     {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                      <div className="flex justify-start items-center flex-shrink-0">
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                      <td className="px-3 py-3">
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
                           <Building2 className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">{claim.homeownerName}</span>
                         </span>
-                      </div>
+                      </td>
                     )}
-                    {/* Contractor */}
-                    <div className="flex justify-start items-center flex-shrink-0">
+                    <td className="px-3 py-3">
                       {claim.contractorName ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
                           <HardHat className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">{claim.contractorName}</span>
                         </span>
                       ) : (
-                        <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap text-left border border-dashed border-surface-outline-variant dark:border-gray-600">
+                        <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600">
                           <HardHat className="h-3 w-3 flex-shrink-0 opacity-50" />
                           <span className="truncate">No Sub Assigned</span>
                         </span>
                       )}
-                    </div>
-                    {/* Scheduled Date */}
-                    <div className="flex justify-start items-center flex-shrink-0 min-w-0">
+                    </td>
+                    <td className="px-3 py-3">
                       {scheduledDate ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap text-left">
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap">
                           <Calendar className="h-3 w-3 flex-shrink-0" />
                           <span>{new Date(scheduledDate.date).toLocaleDateString()}</span>
                         </span>
                       ) : null}
-                    </div>
-                    {/* Date Submitted */}
-                    <div className="flex justify-start items-center flex-shrink-0">
-                      <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                    </td>
+                    <td className="px-3 py-3">
+                      <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
                         {new Date(claim.dateSubmitted).toLocaleDateString()}
                       </span>
-                    </div>
-                    {/* Date Evaluated */}
-                    <div className="flex justify-start items-center flex-shrink-0">
+                    </td>
+                    <td className="px-3 py-3">
                       {claim.dateEvaluated ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
                           Eval: {new Date(claim.dateEvaluated).toLocaleDateString()}
                         </span>
                       ) : null}
-                    </div>
-                    {/* Service Order Date */}
-                    <div className="flex justify-start items-center flex-shrink-0">
+                    </td>
+                    <td className="px-3 py-3">
                       {serviceOrderDate ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
                           <Mail className="h-3 w-3 flex-shrink-0" />
                           <span>SO: {new Date(serviceOrderDate).toLocaleDateString()}</span>
                         </span>
                       ) : (
-                        <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap text-left border border-dashed border-surface-outline-variant dark:border-gray-600">
+                        <span className="text-xs text-surface-on-variant/60 dark:text-gray-400 inline-flex items-center gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600">
                           <Mail className="h-3 w-3 flex-shrink-0 opacity-50" />
                           <span>No SO Sent</span>
                         </span>
                       )}
-                    </div>
-                    {/* Attachments count */}
-                    <div className="flex justify-start items-center flex-shrink-0">
+                    </td>
+                    <td className="px-3 py-3">
                       {claim.attachments && claim.attachments.length > 0 ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
+                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
                           <Paperclip className="h-3 w-3 flex-shrink-0" />
                           {claim.attachments.length}
                         </span>
                       ) : null}
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Inline Expandable Editor */}
-                <AnimatePresence>
-                  {expandedClaimId === claim.id && onUpdateClaim && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2, ease: 'easeInOut' }}
-                      className="overflow-hidden"
-                    >
-                      <div className="border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
-                        <ClaimInlineEditor
-                          claim={claim}
-                          onUpdateClaim={onUpdateClaim}
-                          contractors={contractors}
-                          currentUser={currentUser}
-                          userRole={userRole}
-                          onAddInternalNote={onAddInternalNote}
-                          claimMessages={claimMessages.filter(m => m.claimId === claim.id)}
-                          onTrackClaimMessage={onTrackClaimMessage}
-                          onSendMessage={() => {
-                            if (onSelectClaim) {
-                              onSelectClaim(claim, false);
-                            }
-                          }}
-                          onNavigate={onNavigate}
-                        />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.li>
-            );
-          })
-        )}
-        </motion.ul>
-      </div>
+                      </td>
+                    </motion.tr>
+                    {/* Inline Expandable Editor */}
+                    <AnimatePresence>
+                      {expandedClaimId === claim.id && onUpdateClaim && (
+                        <motion.tr
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2, ease: 'easeInOut' }}
+                          className="overflow-hidden"
+                        >
+                          <td colSpan={(isAdmin || isBuilder) && !effectiveHomeowner ? 11 : 10} className="p-0 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
+                            <div className="p-4">
+                          <ClaimInlineEditor
+                            claim={claim}
+                            onUpdateClaim={onUpdateClaim}
+                            contractors={contractors}
+                            currentUser={currentUser}
+                            userRole={userRole}
+                            onAddInternalNote={onAddInternalNote}
+                            claimMessages={claimMessages.filter(m => m.claimId === claim.id)}
+                            onTrackClaimMessage={onTrackClaimMessage}
+                            onSendMessage={() => {
+                              if (onSelectClaim) {
+                                onSelectClaim(claim, false);
+                              }
+                            }}
+                            onNavigate={onNavigate}
+                          />
+                            </div>
+                          </td>
+                        </motion.tr>
+                      )}
+                    </AnimatePresence>
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </motion.div>
     );
 
