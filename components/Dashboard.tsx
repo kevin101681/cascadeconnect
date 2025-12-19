@@ -918,57 +918,58 @@ const Dashboard: React.FC<DashboardProps> = ({
           </button>
         )}
       </div>
-      {/* Column Headers */}
-      {groupClaims.length > 0 && (
-        <div className="px-6 py-3 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50 sticky top-[73px] z-10 overflow-x-auto">
-          <div className="flex flex-nowrap items-center gap-2 min-w-max">
-            <div className="flex justify-start items-center flex-shrink-0">
-              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Claim #</span>
-            </div>
-            <div className="flex-shrink-0">
-              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Status</span>
-            </div>
-            <div className="flex items-center justify-start flex-shrink-0 min-w-[200px] max-w-[200px]">
-              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate w-full">Title</span>
-            </div>
-            <div className="flex items-center justify-start flex-shrink-0 min-w-[300px] max-w-[300px]">
-              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate w-full">Description</span>
-            </div>
-            <div className="flex justify-start items-center flex-shrink-0 w-fit min-w-0">
-              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Class</span>
-            </div>
-            {(isAdmin || isBuilder) && !effectiveHomeowner && (
+      <div className="overflow-x-auto">
+        {/* Column Headers */}
+        {groupClaims.length > 0 && (
+          <div className="px-6 py-3 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/50 dark:bg-gray-700/50 sticky top-[73px] z-10">
+            <div className="flex flex-nowrap items-center gap-2 min-w-max">
               <div className="flex justify-start items-center flex-shrink-0">
-                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Homeowner</span>
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Claim #</span>
               </div>
-            )}
-            <div className="flex justify-start items-center flex-shrink-0">
-              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Sub</span>
-            </div>
-            <div className="flex justify-start items-center flex-shrink-0 min-w-0">
-              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Scheduled</span>
-            </div>
-            <div className="flex justify-start items-center flex-shrink-0">
-              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Submitted</span>
-            </div>
-            <div className="flex justify-start items-center flex-shrink-0">
-              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Evaluated</span>
-            </div>
-            <div className="flex justify-start items-center flex-shrink-0">
-              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Service Order</span>
-            </div>
-            <div className="flex justify-start items-center flex-shrink-0">
-              <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Attachments</span>
+              <div className="flex-shrink-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Status</span>
+              </div>
+              <div className="flex items-center justify-start flex-shrink-0 min-w-[200px] max-w-[200px]">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate w-full">Title</span>
+              </div>
+              <div className="flex items-center justify-start flex-shrink-0 min-w-[300px] max-w-[300px]">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 truncate w-full">Description</span>
+              </div>
+              <div className="flex justify-start items-center flex-shrink-0 w-fit min-w-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Class</span>
+              </div>
+              {(isAdmin || isBuilder) && !effectiveHomeowner && (
+                <div className="flex justify-start items-center flex-shrink-0">
+                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Homeowner</span>
+                </div>
+              )}
+              <div className="flex justify-start items-center flex-shrink-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Sub</span>
+              </div>
+              <div className="flex justify-start items-center flex-shrink-0 min-w-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Scheduled</span>
+              </div>
+              <div className="flex justify-start items-center flex-shrink-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Submitted</span>
+              </div>
+              <div className="flex justify-start items-center flex-shrink-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Evaluated</span>
+              </div>
+              <div className="flex justify-start items-center flex-shrink-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Service Order</span>
+              </div>
+              <div className="flex justify-start items-center flex-shrink-0">
+                <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 px-3 py-1 whitespace-nowrap">Attachments</span>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-      <motion.ul 
-        className="divide-y divide-surface-outline-variant dark:divide-gray-700"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
+        )}
+        <motion.ul 
+          className="divide-y divide-surface-outline-variant dark:divide-gray-700"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
         {groupClaims.length === 0 ? (
           <li className="p-8 text-center text-surface-on-variant dark:text-gray-400 text-sm italic">
             {emptyMsg}
@@ -992,13 +993,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                 variants={cardVariants}
               >
                 <div 
-                  className="w-full px-6 py-3 group relative cursor-pointer"
+                  className="px-6 py-3 group relative cursor-pointer"
                   onClick={(e) => {
                     setExpandedClaimId(expandedClaimId === claim.id ? null : claim.id);
                   }}
                 >
                   <div 
-                    className={`flex flex-nowrap items-center gap-2 overflow-x-auto ${isClosed ? 'opacity-70' : ''}`}
+                    className={`flex flex-nowrap items-center gap-2 min-w-max ${isClosed ? 'opacity-70' : ''}`}
                   >
                     {/* Claim # */}
                     <div className="flex justify-start items-center flex-shrink-0">
@@ -1017,13 +1018,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                       </h4>
                     </div>
                     {/* Description */}
-                    {claim.description && (
-                      <div className="flex items-center justify-start flex-shrink-0 min-w-[300px] max-w-[300px]">
+                    <div className="flex items-center justify-start flex-shrink-0 min-w-[300px] max-w-[300px]">
+                      {claim.description ? (
                         <p className="text-xs text-surface-on-variant dark:text-gray-400 truncate bg-surface-container/50 dark:bg-gray-700/50 px-3 py-1 rounded-full text-left w-full">
                           {claim.description}
                         </p>
-                      </div>
-                    )}
+                      ) : (
+                        <span className="text-xs text-surface-on-variant/40 dark:text-gray-500 px-3 py-1 text-left w-full"></span>
+                      )}
+                    </div>
                     {/* Classification */}
                     <div className="flex justify-start items-center flex-shrink-0 w-fit min-w-0">
                       <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap text-left">
@@ -1137,9 +1140,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             );
           })
         )}
-      </motion.ul>
+        </motion.ul>
+      </div>
     </motion.div>
-  );
+    );
 
   const renderClaimsList = (claimsList: Claim[], isHomeownerView: boolean = false) => {
     const openClaims = claimsList.filter(c => c.status !== ClaimStatus.COMPLETED);
