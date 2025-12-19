@@ -15,7 +15,6 @@ import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
 import PDFViewer from './PDFViewer';
 import ClaimInlineEditor from './ClaimInlineEditor';
-import ClaimDetail from './ClaimDetail';
 import NewClaimForm from './NewClaimForm';
 import PunchListApp from './PunchListApp';
 import { HOMEOWNER_MANUAL_IMAGES } from '../lib/bluetag/constants';
@@ -1050,11 +1049,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       className={`hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors cursor-pointer ${isClosed ? 'opacity-70' : ''}`}
                       variants={cardVariants}
                       onClick={(e) => {
-                        if (onSelectClaim) {
-                          onSelectClaim(claim, false);
-                        } else {
-                          setSelectedClaimForModal(claim);
-                        }
+                        setSelectedClaimForModal(claim);
                       }}
                     >
                       <div 
@@ -1585,7 +1580,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const renderModals = () => (
     <>
       {/* CLAIM DETAIL MODAL */}
-      {selectedClaimForModal && onSelectClaim && createPortal(
+      {selectedClaimForModal && onUpdateClaim && createPortal(
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
           onClick={(e) => {
@@ -1593,30 +1588,31 @@ const Dashboard: React.FC<DashboardProps> = ({
           }}
         >
           <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] max-h-[90vh] flex flex-col">
-            <ClaimDetail
-              claim={selectedClaimForModal}
-              currentUserRole={userRole}
-              onUpdateClaim={(updatedClaim) => {
-                if (onUpdateClaim) {
-                  onUpdateClaim(updatedClaim);
-                }
-                setSelectedClaimForModal(updatedClaim);
-              }}
-              onBack={() => setSelectedClaimForModal(null)}
-              contractors={contractors}
-              onSendMessage={(claim) => {
-                if (onSelectClaim) {
-                  onSelectClaim(claim, false);
-                }
-                setSelectedClaimForModal(null);
-                setCurrentTab('MESSAGES');
-              }}
-              currentUser={currentUser}
-              onAddInternalNote={onAddInternalNote}
-              claimMessages={claimMessages.filter(m => m.claimId === selectedClaimForModal.id)}
-              onTrackClaimMessage={onTrackClaimMessage}
-              onNavigate={onNavigate}
-            />
+            <div className="p-4">
+              <ClaimInlineEditor
+                claim={selectedClaimForModal}
+                onUpdateClaim={(updatedClaim) => {
+                  if (onUpdateClaim) {
+                    onUpdateClaim(updatedClaim);
+                  }
+                  setSelectedClaimForModal(updatedClaim);
+                }}
+                contractors={contractors}
+                currentUser={currentUser}
+                userRole={userRole}
+                onAddInternalNote={onAddInternalNote}
+                claimMessages={claimMessages.filter(m => m.claimId === selectedClaimForModal.id)}
+                onTrackClaimMessage={onTrackClaimMessage}
+                onSendMessage={() => {
+                  if (onSelectClaim) {
+                    onSelectClaim(selectedClaimForModal, false);
+                  }
+                  setSelectedClaimForModal(null);
+                  setCurrentTab('MESSAGES');
+                }}
+                onNavigate={onNavigate}
+              />
+            </div>
           </div>
         </div>,
         document.body
