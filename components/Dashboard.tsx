@@ -1044,9 +1044,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
                   <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Service Order</span>
                 </th>
-                <th className="px-3 py-3 text-left bg-surface-container/50 dark:bg-gray-700/50 whitespace-nowrap">
-                  <span className="text-xs font-semibold text-surface-on-variant dark:text-gray-400">Attachments</span>
-                </th>
               </tr>
             </thead>
             <tbody>
@@ -1142,14 +1139,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </span>
                       )}
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
-                      {claim.attachments && claim.attachments.length > 0 ? (
-                        <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
-                          <Paperclip className="h-3 w-3 flex-shrink-0" />
-                          {claim.attachments.length}
-                        </span>
-                      ) : null}
-                    </td>
                     </motion.tr>
                     {/* Inline Expandable Editor */}
                     <AnimatePresence>
@@ -1162,7 +1151,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           className="overflow-visible"
                         >
                           <td 
-                            colSpan={(isAdmin || isBuilder) && !effectiveHomeowner ? 10 : 9} 
+                            colSpan={(isAdmin || isBuilder) && !effectiveHomeowner ? 9 : 8} // Adjusted colSpan after removing Description and Attachments columns
                             className="p-0 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30"
                           >
                             {/* Breakout container for narrow screens - spans full viewport width */}
@@ -1244,8 +1233,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             : '',
           'Date Submitted': new Date(claim.dateSubmitted).toLocaleDateString(),
           'Date Evaluated': claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString() : '',
-          'Service Order Date': '', // Would need to calculate this if needed
-          'Attachments': claim.attachments?.length || 0
+          'Service Order Date': '' // Would need to calculate this if needed
         }));
 
         // Create workbook and worksheet
