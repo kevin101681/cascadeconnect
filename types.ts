@@ -22,6 +22,7 @@ export type ClaimClassification =
   | 'Needs Attention'
   | 'Other' 
   | 'Service Complete'
+  | 'Duplicate'
   | 'Unclassified';
 
 export interface BuilderGroup {

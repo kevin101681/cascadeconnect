@@ -49,6 +49,15 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
     
     const contractor = contractors.find(c => c.id === selectedContractorId);
 
+    // Classifications that automatically close the claim
+    const closingClassifications: ClaimClassification[] = [
+      'Non-Warranty',
+      'Service Complete',
+      'Courtesy Repair (Non-Warranty)',
+      'Duplicate'
+    ];
+    const shouldClose = isAdmin && closingClassifications.includes(classification);
+    
     const payload = {
       title,
       description,
@@ -61,7 +70,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, contrac
       contractorId: isAdmin ? contractor?.id : undefined,
       contractorName: isAdmin ? contractor?.companyName : undefined,
       contractorEmail: isAdmin ? contractor?.email : undefined,
-      status: (isAdmin && classification === 'Non-Warranty') ? ClaimStatus.COMPLETED : ClaimStatus.SUBMITTED,
+      status: shouldClose ? ClaimStatus.COMPLETED : ClaimStatus.SUBMITTED,
       attachments
     };
     

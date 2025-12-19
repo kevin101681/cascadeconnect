@@ -111,11 +111,24 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   }, [claim, scheduledDate]);
   
   const handleSaveDetails = () => {
+    // Classifications that automatically close the claim
+    const closingClassifications: ClaimClassification[] = [
+      'Non-Warranty',
+      'Service Complete',
+      'Courtesy Repair (Non-Warranty)',
+      'Duplicate'
+    ];
+    
+    // Automatically set status to COMPLETED if classification is a closing classification
+    const shouldClose = closingClassifications.includes(editClassification);
+    const newStatus = shouldClose ? ClaimStatus.COMPLETED : claim.status;
+    
     onUpdateClaim({
       ...claim,
       title: editTitle,
       description: editDescription,
       classification: editClassification,
+      status: newStatus,
       internalNotes: editInternalNotes,
       dateEvaluated: editDateEvaluated ? new Date(editDateEvaluated) : undefined
     });

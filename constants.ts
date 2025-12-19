@@ -23,6 +23,7 @@ export const CLAIM_CLASSIFICATIONS: ClaimClassification[] = [
   'Hold for 11 Month',
   'Needs Attention',
   'Service Complete',
+  'Duplicate',
   'Other'
 ];
 
