@@ -949,14 +949,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                     e.stopPropagation();
                     setShowFilterDropdown(!showFilterDropdown);
                   }}
-                  className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 text-sm font-medium transition-all hover:bg-surface-container-high dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600"
+                  className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 text-sm font-medium transition-all hover:bg-surface-container-high dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600 min-w-[100px]"
                 >
                   <Filter className="h-4 w-4" />
-                  {filterValue}
-                  <ChevronDown className={`h-4 w-4 transition-transform ${showFilterDropdown ? 'rotate-180' : ''}`} />
+                  <span className="whitespace-nowrap">{filterValue}</span>
+                  <ChevronDown className={`h-4 w-4 transition-transform flex-shrink-0 ${showFilterDropdown ? 'rotate-180' : ''}`} />
                 </button>
                 {showFilterDropdown && (
-                  <div className="absolute right-0 top-full mt-2 w-32 bg-surface dark:bg-gray-800 rounded-xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden z-50">
+                  <div className="absolute right-0 top-full mt-1 w-32 bg-surface dark:bg-gray-800 rounded-xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden z-50">
                     {(['All', 'Open', 'Closed'] as const).map((option) => (
                       <button
                         key={option}
@@ -988,10 +988,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                   title="Export to Excel"
                 >
                   <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="3" y="3" width="18" height="18" rx="1" fill="#217346"/>
-                    <path d="M14 3v5h5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M8 12h8M8 16h8M8 8h5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-                    <path d="M8 8h5M8 12h8M8 16h8" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                    <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                    <line x1="8" y1="13" x2="16" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    <line x1="8" y1="17" x2="16" y2="17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                    <line x1="8" y1="9" x2="13" y2="9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                   </svg>
                 </button>
               )}
