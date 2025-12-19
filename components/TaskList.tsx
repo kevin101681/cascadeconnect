@@ -85,10 +85,12 @@ const TaskList: React.FC<TaskListProps> = ({
       {/* Header */}
       <div className="flex justify-between items-start mb-6">
         <div className="flex-1">
-          <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">My Tasks</h2>
-          <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
-            {filteredTasks.length} {filteredTasks.length === 1 ? 'task' : 'tasks'}
-          </p>
+          <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+              {filteredTasks.length}
+            </span>
+            My Tasks
+          </h2>
         </div>
         <Button
           onClick={() => setShowForm(!showForm)}
