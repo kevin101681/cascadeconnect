@@ -114,6 +114,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
   // M3 Input Styles
   const inputClass = "block w-full rounded-md border border-surface-outline dark:border-gray-600 bg-transparent dark:bg-gray-700 px-3 py-3 text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors";
   const labelClass = "block text-xs text-surface-on dark:text-gray-100 mb-1 ml-1 font-medium";
+  const internalNotesLabelClass = "block text-xs text-surface-on dark:text-gray-100 mb-1 ml-1 font-medium";
   const selectClass = "block w-full rounded-md border border-surface-outline dark:border-gray-600 bg-transparent dark:bg-gray-700 px-3 py-3 text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors";
 
   return (
@@ -124,7 +125,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
           New Claim
         </h2>
         {/* Job Name Pill */}
-        <span className="bg-primary-container text-primary-on-container text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+        <span className="bg-primary text-primary-on text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
           <Building2 className="h-3 w-3" />
           {activeHomeowner.jobName}
         </span>
@@ -552,9 +553,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
       <div className="flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700 mt-auto">
         <Button 
           type="button" 
-          variant="text" 
+          variant="filled" 
           onClick={onCancel}
-          className="bg-surface-container-high dark:bg-gray-700 hover:bg-surface-container dark:hover:bg-gray-600"
         >
           Cancel
         </Button>
