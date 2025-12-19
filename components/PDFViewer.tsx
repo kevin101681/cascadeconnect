@@ -197,15 +197,20 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
 
   const handlePrevPage = () => {
     if (flipBookRef.current && currentPage > 1) {
-      flipBookRef.current.pageFlip().flipPrev();
-      setCurrentPage(prev => prev - 1);
+      const pageFlip = flipBookRef.current.pageFlip();
+      // Use flipPrev with 'top' to ensure consistent animation from left side
+      // This creates the reverse of the forward animation
+      pageFlip.flipPrev('top');
+      // Don't update currentPage here - let the flip event handle it
     }
   };
 
   const handleNextPage = () => {
     if (flipBookRef.current && currentPage < numPages) {
-      flipBookRef.current.pageFlip().flipNext();
-      setCurrentPage(prev => prev + 1);
+      const pageFlip = flipBookRef.current.pageFlip();
+      // Use flipNext with 'top' to ensure consistent animation from right side
+      pageFlip.flipNext('top');
+      // Don't update currentPage here - let the flip event handle it
     }
   };
 
@@ -317,6 +322,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                   className="pdf-flipbook"
                   useMouseEvents={false}
                   disableFlipByClick={false}
+                  flippingTime={600}
                   {...({} as any)}
                 >
                   {Array.from(new Array(numPages), (el, index) => (

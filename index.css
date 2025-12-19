@@ -49,7 +49,8 @@ body {
 .pdf-flipbook .st-page,
 .pdf-flipbook .pdf-page,
 .pdf-flipbook .st-page > div,
-.pdf-flipbook .st-page__hard {
+.pdf-flipbook .st-page__hard,
+.pdf-flipbook .st-page__hard > div {
     background-color: #fff !important;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
@@ -64,6 +65,26 @@ body {
 
 /* Ensure all page surfaces stay white during any flip state */
 .pdf-flipbook [class*="st-page"] {
+    background-color: #fff !important;
+}
+
+/* Target the back face of pages during flip - ensure white background */
+.pdf-flipbook .st-page__hard .st-page__hard-inner,
+.pdf-flipbook .st-page__hard .st-page__hard-back,
+.pdf-flipbook .st-page .st-page__back,
+.pdf-flipbook .st-page__hard .st-page__back {
+    background-color: #fff !important;
+}
+
+/* Target any element that might be the back of a page */
+.pdf-flipbook * {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+/* Ensure the page content wrapper also has white background */
+.pdf-flipbook .st-page__content,
+.pdf-flipbook .st-page__hard-content {
     background-color: #fff !important;
 }
 
