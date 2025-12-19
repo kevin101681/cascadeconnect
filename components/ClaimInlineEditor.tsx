@@ -346,13 +346,13 @@ If this repair work is billable, please let me know prior to scheduling.`);
   };
   
   return (
-    <div className="space-y-6" style={{ maxWidth: '100%', overflowX: 'hidden', padding: '1rem', boxSizing: 'border-box' }}>
+    <div className="space-y-6 claim-editor-scroll" style={{ maxWidth: '100%', overflowX: 'auto', padding: '1.5rem', boxSizing: 'border-box' }}>
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4" style={{ maxWidth: '100%', width: '100%', boxSizing: 'border-box' }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" style={{ minWidth: 'max-content' }}>
         {/* Left Column */}
-        <div className="space-y-6" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+        <div className="space-y-6">
           {/* Title and Description Combined */}
-          <div className="bg-surface dark:bg-gray-800 px-6 pt-6 pb-4 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+          <div className="bg-surface dark:bg-gray-800 px-6 pt-6 pb-4 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
             <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4">Claim Details</h3>
             <div className="space-y-3">
               <div>
@@ -388,7 +388,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           </div>
 
           {/* Attachments Section */}
-          <div className="bg-surface dark:bg-gray-800 px-6 pt-6 pb-4 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+          <div className="bg-surface dark:bg-gray-800 px-6 pt-6 pb-4 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
             <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4">
               Attachments
             </h3>
@@ -750,9 +750,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
           </div>
         </div>
         {/* Right Column */}
-        <div className="space-y-6" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+        <div className="space-y-6">
           {/* Warranty Assessment */}
-          <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+          <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
             <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4">
               Warranty Assessment
             </h3>
@@ -814,7 +814,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           
           {/* Sub Assignment */}
           {isAdmin && (
-            <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+            <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
               <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4 flex items-center gap-2">
                 <HardHat className="h-5 w-5 text-primary" />
                 Sub Assignment
@@ -853,7 +853,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           )}
           
           {/* Scheduling */}
-          <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm" style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }}>
+          <div className="bg-surface dark:bg-gray-800 p-6 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
             <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4">
               Scheduling
             </h3>

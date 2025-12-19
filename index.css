@@ -88,6 +88,16 @@ body {
     background-color: #fff !important;
 }
 
+/* Claim editor scrollbar - hidden */
+.claim-editor-scroll {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+.claim-editor-scroll::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
 /* Claims table scrollbar - match card background, no frame */
 .claims-table-scroll {
     scrollbar-width: thin; /* Firefox */
