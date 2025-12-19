@@ -1,10 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
 import { Contractor, ClaimClassification, Attachment, Homeowner, ClaimStatus, UserRole } from '../types';
 import Button from './Button';
 import ImageViewerModal from './ImageViewerModal';
 import CalendarPicker from './CalendarPicker';
+import MaterialSelect from './MaterialSelect';
 import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar } from 'lucide-react';
 
 interface NewClaimFormProps {
@@ -39,6 +40,26 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
   const [proposeDate, setProposeDate] = useState('');
   const [proposeTime, setProposeTime] = useState<'AM' | 'PM' | 'All Day'>('AM');
   const [showCalendarPicker, setShowCalendarPicker] = useState(false);
+  const [showDateEvaluatedPicker, setShowDateEvaluatedPicker] = useState(false);
+  const [showClassificationSelect, setShowClassificationSelect] = useState(false);
+  const classificationSelectRef = useRef<HTMLDivElement>(null);
+  
+  // Close classification dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (classificationSelectRef.current && !classificationSelectRef.current.contains(event.target as Node)) {
+        setShowClassificationSelect(false);
+      }
+    };
+    
+    if (showClassificationSelect) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showClassificationSelect]);
 
   // Attachments State
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -389,25 +410,25 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
              <div className="space-y-3">
                <div>
                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Scheduled Date</label>
-                 <button
+                 <Button
                    type="button"
+                   variant="filled"
                    onClick={() => setShowCalendarPicker(true)}
-                   className="w-full rounded-md border border-surface-outline dark:border-gray-600 bg-surface dark:bg-gray-700 px-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none text-left"
                  >
                    {proposeDate ? new Date(proposeDate).toLocaleDateString() : 'Add'}
-                 </button>
+                 </Button>
                </div>
                <div>
                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Time Slot</label>
-                 <select
-                   className={selectClass + " dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"}
+                 <MaterialSelect
                    value={proposeTime}
-                   onChange={(e) => setProposeTime(e.target.value as 'AM' | 'PM' | 'All Day')}
-                 >
-                   <option value="AM">AM (8am-12pm)</option>
-                   <option value="PM">PM (12pm-4pm)</option>
-                   <option value="All Day">All Day</option>
-                 </select>
+                   onChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
+                   options={[
+                     { value: 'AM', label: 'AM (8am-12pm)' },
+                     { value: 'PM', label: 'PM (12pm-4pm)' },
+                     { value: 'All Day', label: 'All Day' }
+                   ]}
+                 />
                </div>
              </div>
            </div>
@@ -425,31 +446,67 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                onClose={() => setShowCalendarPicker(false)}
              />
            )}
+           
+           {showDateEvaluatedPicker && (
+             <CalendarPicker
+               isOpen={showDateEvaluatedPicker}
+               selectedDate={dateEvaluated ? new Date(dateEvaluated) : undefined}
+               onSelectDate={(date) => {
+                 if (date) {
+                   setDateEvaluated(date.toISOString().split('T')[0]);
+                 }
+                 setShowDateEvaluatedPicker(false);
+               }}
+               onClose={() => setShowDateEvaluatedPicker(false)}
+             />
+           )}
 
            {/* Warranty Assessment (Admin Only) */}
            {isAdmin && (
              <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Warranty Assessment</h4>
               <div className="space-y-4">
-                <div>
+                <div className="relative" ref={classificationSelectRef}>
                   <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Classification</label>
-                  <select
-                    className={selectClass + " dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"}
-                    value={classification}
-                    onChange={(e) => setClassification(e.target.value as ClaimClassification)}
+                  <Button
+                    type="button"
+                    variant="filled"
+                    onClick={() => setShowClassificationSelect(!showClassificationSelect)}
                   >
-                    {CLAIM_CLASSIFICATIONS.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                    {classification || 'Add'}
+                  </Button>
+                  {showClassificationSelect && (
+                    <div className="absolute top-full left-0 mt-2 z-50 bg-surface dark:bg-gray-800 rounded-xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-2 min-w-[200px]">
+                      {CLAIM_CLASSIFICATIONS.map(c => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => {
+                            setClassification(c);
+                            setShowClassificationSelect(false);
+                          }}
+                          className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                            classification === c
+                              ? 'bg-primary-container dark:bg-primary/20 text-primary dark:text-primary'
+                              : 'text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'
+                          } ${c === CLAIM_CLASSIFICATIONS[0] ? 'rounded-t-xl' : ''} ${c === CLAIM_CLASSIFICATIONS[CLAIM_CLASSIFICATIONS.length - 1] ? 'rounded-b-xl' : ''}`}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div>
                   <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Date Evaluated</label>
-                  <input 
-                    type="date"
-                    className={selectClass + " dark:bg-gray-700 dark:text-gray-100 dark:border-gray-600"}
-                    value={dateEvaluated}
-                    onChange={(e) => setDateEvaluated(e.target.value)}
-                  />
+                  <Button
+                    type="button"
+                    variant="filled"
+                    onClick={() => setShowDateEvaluatedPicker(true)}
+                  >
+                    {dateEvaluated ? new Date(dateEvaluated).toLocaleDateString() : 'Add'}
+                  </Button>
                 </div>
 
                 {classification === 'Non-Warranty' && (
