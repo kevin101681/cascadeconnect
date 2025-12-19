@@ -144,8 +144,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
           
           {/* Internal Notes (Admin Only) */}
           {isAdmin && (
-            <div>
-              <label htmlFor="internalNotes" className={labelClass}>Internal Notes (Admin Only)</label>
+            <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Internal Notes (Admin Only)</h4>
               <textarea
                 id="internalNotes"
                 rows={4}
