@@ -1171,14 +1171,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                       </span>
                     </td>
                     {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                      <td className="px-3 py-3 whitespace-nowrap">
+                      <td className="px-3 py-3 whitespace-nowrap align-middle">
                         <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
                           <Building2 className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">{claim.homeownerName}</span>
                         </span>
                       </td>
                     )}
-                    <td className="px-3 py-3 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap align-middle">
                       {claim.contractorName ? (
                         <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
                           <HardHat className="h-3 w-3 flex-shrink-0" />
@@ -1191,7 +1191,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </span>
                       )}
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap align-middle">
                       {scheduledDate ? (
                         <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 py-1 rounded-full whitespace-nowrap">
                           <Calendar className="h-3 w-3 flex-shrink-0" />
@@ -1199,19 +1199,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </span>
                       ) : null}
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap align-middle">
                       <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
                         {new Date(claim.dateSubmitted).toLocaleDateString()}
                       </span>
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap align-middle">
                       {claim.dateEvaluated ? (
                         <span className="text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap inline-block">
                           Eval: {new Date(claim.dateEvaluated).toLocaleDateString()}
                         </span>
                       ) : null}
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap">
+                    <td className="px-3 py-3 whitespace-nowrap align-middle">
                       {serviceOrderDate ? (
                         <span className="text-xs text-surface-on-variant dark:text-gray-300 inline-flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-3 py-1 rounded-full whitespace-nowrap">
                           <Mail className="h-3 w-3 flex-shrink-0" />
