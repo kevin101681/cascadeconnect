@@ -1062,7 +1062,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
 
                  {/* Total (Moved next to status as requested previously for desktop too) */}
                  <div className="shrink-0 flex-initial w-auto">
-                    <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded-full text-xs font-bold block text-center" style={{ color: 'rgb(22, 101, 52)' }}>${inv.total.toFixed(0)}</span>
+                    <span className="bg-green-100 dark:bg-green-900 text-white px-2 py-1 rounded-full text-xs font-bold block text-center">${inv.total.toFixed(0)}</span>
                 </div>
 
                 {/* Invoice # */}
@@ -1172,7 +1172,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                         )}
 
                         {/* Total (Moved Here) */}
-                        <span className={`${commonPillClass} bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 shrink-0`} style={{ color: 'rgb(22, 101, 52)' }}>${inv.total.toFixed(0)}</span>
+                        <span className={`${commonPillClass} bg-green-100 dark:bg-green-900 text-white shrink-0`}>${inv.total.toFixed(0)}</span>
                     </div>
 
                     {/* Checkbox (Right Side) */}
@@ -1224,12 +1224,12 @@ export const Invoices: React.FC<InvoicesProps> = ({
                  {/* Row 3: Paid, Email, Download, Delete, Expand (Centered) */}
                  <div className="flex items-center justify-center mt-1 gap-2">
                     {inv.status !== 'paid' && (
-                        <button className={`${commonBtnClass} bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-500`} onClick={() => handleMarkAsPaid(inv)}><Check size={16} /></button>
+                        <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={() => handleMarkAsPaid(inv)}><Check size={16} /></button>
                     )}
-                    <button className={`${commonBtnClass} bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-500`} onClick={() => handlePrepareEmail(inv)}><Mail size={16} /></button>
-                    <button className={`${commonBtnClass} bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-500`} onClick={() => handleDownloadPDF(inv)}><Download size={16} /></button>
-                    <button className={`${commonBtnClass} bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-500`} onClick={() => handleDeleteInvoice(inv.id)}><Trash2 size={16} /></button>
-                    <button className={`${commonBtnClass} ${expanded ? 'bg-primary text-primary-on' : 'bg-blue-500 dark:bg-blue-600 text-white hover:bg-blue-600 dark:hover:bg-blue-500'}`} onClick={onExpand}><ArrowUpDown size={16} /></button>
+                    <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={() => handlePrepareEmail(inv)}><Mail size={16} /></button>
+                    <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={() => handleDownloadPDF(inv)}><Download size={16} /></button>
+                    <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={() => handleDeleteInvoice(inv.id)}><Trash2 size={16} /></button>
+                    <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={onExpand}><ArrowUpDown size={16} /></button>
                  </div>
             </div>
 

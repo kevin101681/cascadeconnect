@@ -19,41 +19,75 @@ interface InvoicesModalProps {
   };
 }
 
+// Cache the component outside the component to persist across renders
+let cachedCBSBooksComponent: React.ComponentType<any> | null = null;
+let loadPromise: Promise<React.ComponentType<any> | null> | null = null;
+
 const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillData }) => {
-  const [CBSBooksComponent, setCBSBooksComponent] = useState<React.ComponentType<any> | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [CBSBooksComponent, setCBSBooksComponent] = useState<React.ComponentType<any> | null>(cachedCBSBooksComponent);
+  const [isLoading, setIsLoading] = useState(!cachedCBSBooksComponent && isOpen);
   const [error, setError] = useState<string | null>(null);
 
-  // Dynamically import CBS Books component
+  // Dynamically import CBS Books component (only once, then cache it)
   useEffect(() => {
     if (!isOpen) return;
+    
+    // If already cached, use it immediately - no loading needed
+    if (cachedCBSBooksComponent) {
+      setCBSBooksComponent(() => cachedCBSBooksComponent);
+      setIsLoading(false);
+      return;
+    }
 
-    const loadCBSBooks = async () => {
+    // If already loading, wait for the existing promise
+    if (loadPromise) {
+      loadPromise.then((component) => {
+        if (component) {
+          setCBSBooksComponent(() => component);
+          setIsLoading(false);
+        }
+      }).catch((err) => {
+        console.error('Failed to load CBS Books:', err);
+        setError(`Failed to load CBS Books: ${err.message || 'Please check the integration.'}`);
+        setIsLoading(false);
+      });
+      return;
+    }
+
+    // Start loading if not cached and not already loading
+    setIsLoading(true);
+    setError(null);
+    
+    loadPromise = (async () => {
       try {
-        setIsLoading(true);
-        setError(null);
-        
         console.log('Attempting to import CBS Books App...');
         // Direct dynamic import - same pattern as PunchListApp
         const module = await import('../lib/cbsbooks/App');
         console.log('CBS Books module loaded:', module);
         
         if (module && module.default) {
-          console.log('CBS Books component found, setting it...');
-          setCBSBooksComponent(() => module.default);
+          console.log('CBS Books component found, caching it...');
+          cachedCBSBooksComponent = module.default;
+          setCBSBooksComponent(() => cachedCBSBooksComponent);
+          setIsLoading(false);
+          return cachedCBSBooksComponent;
         } else {
           console.error('CBS Books component not found in module:', module);
-          setError('CBS Books component not found in module. Ensure it has a default export.');
+          const errorMsg = 'CBS Books component not found in module. Ensure it has a default export.';
+          setError(errorMsg);
+          setIsLoading(false);
+          return null;
         }
+      } catch (err: any) {
+        console.error('Failed to load CBS Books:', err);
+        const errorMsg = `Failed to load CBS Books: ${err.message || 'Please check the integration.'}`;
+        setError(errorMsg);
         setIsLoading(false);
-      } catch (error: any) {
-        console.error('Failed to load CBS Books:', error);
-        setError(`Failed to load CBS Books: ${error.message || 'Please check the integration.'}`);
-        setIsLoading(false);
+        return null;
+      } finally {
+        loadPromise = null;
       }
-    };
-
-    loadCBSBooks();
+    })();
   }, [isOpen]);
 
   if (!isOpen) return null;
