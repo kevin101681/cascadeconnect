@@ -666,7 +666,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
         {/* Left Column */}
         <div className="space-y-6">
           {/* Title and Description Card */}
-          <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+          <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Claim Title</label>
@@ -700,7 +700,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           </div>
 
           {/* Attachments Section */}
-          <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+          <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
             <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">
               Attachments
             </h4>
@@ -865,7 +865,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
 
           {/* Internal Notes - Admin Only */}
           {isAdmin && (
-            <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Internal Notes (Admin Only)</h4>
                   {isEditing && !isReadOnly ? (
                       <textarea
@@ -967,7 +967,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
         <div className="space-y-6">
           {/* Sub Assignment (Admin Only) */}
           {isAdmin && (
-            <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Sub Assignment</h4>
               
               <div className="relative">
@@ -1078,7 +1078,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
 
           {/* Warranty Assessment (Admin Only) */}
           {isAdmin && (
-            <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Warranty Assessment</h4>
               <div className="space-y-4">
                 <div className="relative" ref={classificationSelectRef}>
