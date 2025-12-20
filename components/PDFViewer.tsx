@@ -55,24 +55,24 @@ const PDFPage = forwardRef<HTMLDivElement, PDFPageProps>(({ pageNumber, width, h
         display: 'block',
         position: 'relative'
       }}>
-        <Page
-          pageNumber={pageNumber}
-          width={width}
-          height={height}
-          renderTextLayer={false}
-          renderAnnotationLayer={false}
-          className="pdf-page-content"
-          style={{ 
-            margin: 0, 
-            padding: 0, 
-            display: 'block',
-            height: '100%',
-            width: '100%',
-            lineHeight: 0,
-            fontSize: 0,
-            overflow: 'hidden'
-          }}
-          canvasBackground="transparent"
+        <div style={{ 
+          margin: 0, 
+          padding: 0, 
+          display: 'block',
+          height: '100%',
+          width: '100%',
+          lineHeight: 0,
+          fontSize: 0,
+          overflow: 'hidden'
+        }}>
+          <Page
+            pageNumber={pageNumber}
+            width={width}
+            height={height}
+            renderTextLayer={false}
+            renderAnnotationLayer={false}
+            className="pdf-page-content"
+            canvasBackground="transparent"
           loading={
             <div style={{ 
               width, 
@@ -99,6 +99,7 @@ const PDFPage = forwardRef<HTMLDivElement, PDFPageProps>(({ pageNumber, width, h
             </div>
           }
         />
+        </div>
       </div>
     </div>
   );

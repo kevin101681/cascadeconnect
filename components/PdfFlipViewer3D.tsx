@@ -52,13 +52,14 @@ const PDFPage = forwardRef<HTMLDivElement, PDFPageProps>(({ pageNumber, width, h
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        <Page
-          pageNumber={pageNumber}
-          width={width}
-          renderTextLayer={false}
-          renderAnnotationLayer={false}
-          style={{ margin: 0, padding: 0 }}
-        />
+        <div style={{ margin: 0, padding: 0 }}>
+          <Page
+            pageNumber={pageNumber}
+            width={width}
+            renderTextLayer={false}
+            renderAnnotationLayer={false}
+          />
+        </div>
       </div>
     </div>
   );
@@ -295,6 +296,17 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
                     maxWidth={pageDimensions.width}
                     maxHeight={pageDimensions.height}
                     startPage={currentPage - 1}
+                    style={{ margin: 0, padding: 0 }}
+                    minWidth={0}
+                    minHeight={0}
+                    startZIndex={0}
+                    autoSize={false}
+                    showPageCorners={true}
+                    swipeDistance={30}
+                    clickEventForward={true}
+                    useMouseEvents={true}
+                    disableFlipByClick={false}
+                    mobileScrollSupport={true}
                   >
                     {Array.from(new Array(numPages), (el, index) => (
                       <PDFPage
