@@ -79,8 +79,19 @@ exports.handler = async (event, context) => {
       const activityUrl = new URL('https://api.sendgrid.com/v3/messages');
       const limit = event.queryStringParameters?.limit ? parseInt(event.queryStringParameters.limit) : 500; // Increased default limit
       activityUrl.searchParams.set('limit', limit.toString());
-      activityUrl.searchParams.set('query', `last_event_time BETWEEN "${startDate}T00:00:00Z" AND "${endDate}T23:59:59Z"`);
-
+      
+      // Try fetching recent messages - SendGrid Messages API query syntax may vary
+      // Attempt query with date range first
+      try {
+        const queryValue = `last_event_time BETWEEN "${startDate}T00:00:00Z" AND "${endDate}T23:59:59Z"`;
+        activityUrl.searchParams.set('query', queryValue);
+        console.log('Fetching SendGrid messages with query:', queryValue);
+      } catch (e) {
+        console.warn('Could not set query parameter, fetching all recent messages');
+      }
+      
+      console.log('Full URL:', activityUrl.toString());
+      
       const activityResponse = await fetch(activityUrl.toString(), {
         method: 'GET',
         headers: {
@@ -89,14 +100,32 @@ exports.handler = async (event, context) => {
         }
       });
 
+      console.log('SendGrid Messages API response status:', activityResponse.status);
+
       if (activityResponse.ok) {
         const activityResult = await activityResponse.json();
+        console.log(`SendGrid Messages API returned ${activityResult.messages?.length || 0} messages`);
+        console.log('Activity result keys:', Object.keys(activityResult));
         const messages = activityResult.messages || [];
+        
+        // Filter messages by date range if query didn't work
+        const filteredMessages = messages.filter(msg => {
+          const msgDate = msg.last_event_time || msg.sent_at;
+          if (!msgDate) return false;
+          const msgTimestamp = new Date(msgDate).getTime();
+          const startTimestamp = new Date(`${startDate}T00:00:00Z`).getTime();
+          const endTimestamp = new Date(`${endDate}T23:59:59Z`).getTime();
+          return msgTimestamp >= startTimestamp && msgTimestamp <= endTimestamp;
+        });
+        
+        console.log(`Filtered to ${filteredMessages.length} messages within date range`);
+        const messagesToProcess = filteredMessages;
         
         // Process messages and fetch detailed activity for each
         // Note: SendGrid API rate limit is 6 requests per minute, so we process in batches
-        const messagesToProcess = messages.slice(0, Math.min(limit, 200)); // Limit to 200 max to avoid too many API calls
-        for (const msg of messagesToProcess) {
+        const finalMessagesToProcess = messagesToProcess.slice(0, Math.min(limit, 200)); // Limit to 200 max to avoid too many API calls
+        console.log(`Processing ${finalMessagesToProcess.length} messages in detail`);
+        for (const msg of finalMessagesToProcess) {
           try {
             // Get opens for this message
             let opens = [];
@@ -190,8 +219,10 @@ exports.handler = async (event, context) => {
             });
           }
         }
+        console.log(`Processed ${activityData.length} activity records`);
       } else {
-        console.warn('Could not fetch email activity:', activityResponse.status, await activityResponse.text());
+        const errorText = await activityResponse.text();
+        console.warn('Could not fetch email activity:', activityResponse.status, errorText);
       }
     } catch (activityError) {
       console.warn('Could not fetch email activity:', activityError.message);
