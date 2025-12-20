@@ -196,7 +196,7 @@ const TaskList: React.FC<TaskListProps> = ({
   };
 
   return (
-    <div className="w-full h-full flex flex-col">
+    <div className="w-full flex flex-col">
       {/* Header - matches warranty claims modal structure */}
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
         <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
@@ -262,7 +262,7 @@ const TaskList: React.FC<TaskListProps> = ({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+      <div className="overflow-y-auto px-6 py-6 space-y-6">
         {/* Task Templates */}
         {showTemplates && (
           <div className="bg-surface dark:bg-gray-800 rounded-2xl border border-surface-outline-variant dark:border-gray-700 p-5 animate-in slide-in-from-top-2">

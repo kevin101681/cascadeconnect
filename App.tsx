@@ -533,7 +533,7 @@ function App() {
               const mappedClaims: Claim[] = dbClaims.map(c => {
                 const claim: any = {
                   id: c.id,
-                  claimNumber: (c as any).claimNumber || undefined, // Optional field, may not exist in DB
+                  claimNumber: c.claimNumber || undefined,
                   title: c.title,
                   description: c.description,
                   category: c.category || 'General',
@@ -1303,6 +1303,7 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
           title: newClaim.title,
           description: newClaim.description,
           category: newClaim.category,
+          claimNumber: newClaim.claimNumber || null,
           address: newClaim.address,
           homeownerName: newClaim.homeownerName,
           homeownerEmail: newClaim.homeownerEmail,

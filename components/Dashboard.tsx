@@ -1191,7 +1191,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, filter?: 'All' | 'Open' | 'Closed', setFilter?: (filter: 'All' | 'Open' | 'Closed') => void, onExportExcel?: () => void, allClaims?: Claim[]) => (
     <motion.div 
       className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col"
-      style={{ height: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)', maxHeight: 'calc(100vh - 300px)' }}
+      style={{ maxHeight: 'calc(100vh - 300px)' }}
       variants={cardVariants}
       initial="hidden"
       animate="visible"
@@ -1279,8 +1279,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           {emptyMsg}
         </div>
       ) : (
-        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          <div className="flex-1 overflow-y-auto divide-y divide-surface-outline-variant dark:divide-gray-700 min-h-0">
+        <div className="flex flex-col overflow-hidden">
+          <div className="overflow-y-auto">
               {groupClaims.map((claim, index) => {
                 const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
                 
@@ -1295,7 +1295,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 return (
                   <React.Fragment key={claim.id}>
                     <motion.div 
-                      className={`hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors cursor-pointer ${isClosed ? 'opacity-70' : ''}`}
+                      className={`hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors cursor-pointer border-b border-surface-outline-variant dark:border-gray-700 ${isClosed ? 'opacity-70' : ''}`}
                       variants={cardVariants}
                       onClick={(e) => {
                         setSelectedClaimForModal(claim);
@@ -2477,7 +2477,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <motion.div 
               key="tasks"
               className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1"
-              style={{ height: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)', maxHeight: 'calc(100vh - 300px)' }}
+              style={{ maxHeight: 'calc(100vh - 300px)' }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
