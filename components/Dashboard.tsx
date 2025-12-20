@@ -1666,12 +1666,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                      <button onClick={() => setSelectedThreadId(null)} className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full">
                         <ChevronLeft className="h-5 w-5" />
                      </button>
-                     <div className="flex gap-2">
-                        <button className="p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full" title="Archive"><Archive className="h-4 w-4"/></button>
-                        <button className="p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full" title="Delete"><Trash2 className="h-4 w-4"/></button>
-                        <div className="w-px h-6 bg-surface-outline-variant/50 dark:bg-gray-600/50 mx-1 self-center"></div>
-                        <button className="p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full" title="Mark as unread"><Mail className="h-4 w-4"/></button>
-                     </div>
                   </div>
                   <div className="flex gap-2 text-surface-on-variant dark:text-gray-400">
                      <button className="p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"><ChevronLeft className="h-4 w-4"/></button>
