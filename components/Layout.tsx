@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, Homeowner } from '../types';
-import { UserCircle, Users, ChevronDown, Search, ArrowRight, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin } from 'lucide-react';
+import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin } from 'lucide-react';
 import { useDarkMode } from './DarkModeProvider';
 import { useClerk } from '@clerk/clerk-react';
 
@@ -184,7 +184,6 @@ const Layout: React.FC<LayoutProps> = ({
                               {h.address}
                             </p>
                           </div>
-                          <ArrowRight className="h-3 w-3 text-surface-outline-variant group-hover:text-primary" />
                         </button>
                       ))
                     ) : (
