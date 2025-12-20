@@ -4,6 +4,8 @@ import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import { DarkModeProvider } from './components/DarkModeProvider';
 import { ClerkProvider } from '@clerk/clerk-react';
+// Import PDF worker setup early to ensure it's configured before any PDF operations
+import './lib/pdfWorker';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

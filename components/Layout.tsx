@@ -114,10 +114,40 @@ const Layout: React.FC<LayoutProps> = ({
   
   // Debug: Log user data when it loads
   useEffect(() => {
-    if (clerkLoaded && user) {
-      console.log('Clerk user loaded:', { id: user.id, imageUrl: user.imageUrl, hasImage: !!user.imageUrl });
+    if (clerkLoaded) {
+      if (user) {
+        console.log('Clerk user loaded:', { id: user.id, imageUrl: user.imageUrl, hasImage: !!user.imageUrl, firstName: user.firstName });
+      } else {
+        console.warn('Clerk loaded but no user found');
+      }
     }
   }, [clerkLoaded, user]);
+  
+  // Additional effect to ensure UserButton renders
+  useEffect(() => {
+    if (clerkLoaded) {
+      // Force a re-check of the avatar after a short delay
+      const timer = setTimeout(() => {
+        const triggerButtons = document.querySelectorAll('.cl-userButtonTrigger, [class*="cl-userButtonTrigger"]');
+        console.log('UserButton elements found:', triggerButtons.length);
+        if (triggerButtons.length === 0) {
+          console.warn('UserButton not found in DOM');
+        } else {
+          triggerButtons.forEach((el) => {
+            const htmlEl = el as HTMLElement;
+            console.log('UserButton element:', {
+              display: window.getComputedStyle(htmlEl).display,
+              visibility: window.getComputedStyle(htmlEl).visibility,
+              opacity: window.getComputedStyle(htmlEl).opacity,
+              width: window.getComputedStyle(htmlEl).width,
+              height: window.getComputedStyle(htmlEl).height
+            });
+          });
+        }
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [clerkLoaded]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -286,24 +316,26 @@ const Layout: React.FC<LayoutProps> = ({
               })()}
 
               {/* Clerk UserButton - Avatar visible, dropdown shows only Sign Out text */}
-              <UserButton
-                appearance={{
-                  elements: {
-                    userButtonTrigger: "!flex !items-center !justify-center !w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px]",
-                    userButtonAvatarBox: "!w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !block !visible !opacity-100",
-                    userButtonAvatar: "!w-full !h-full",
-                    userButtonPopoverCard: "shadow-elevation-2",
-                    userButtonPopoverHeader: "hidden",
-                    userButtonPopoverHeaderTitle: "hidden",
-                    userButtonPopoverHeaderSubtitle: "hidden",
-                    userButtonPopoverAvatarBox: "hidden",
-                    userButtonPopoverActions: "p-2",
-                    userButtonPopoverActionButtonIcon: "hidden",
-                    userButtonPopoverActionButton__manageAccount: "hidden",
-                    userButtonPopoverFooter: "hidden",
-                  }
-                }}
-              />
+              {clerkLoaded && (
+                <UserButton
+                  appearance={{
+                    elements: {
+                      userButtonTrigger: "!flex !items-center !justify-center !w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !visible !opacity-100",
+                      userButtonAvatarBox: "!w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !block !visible !opacity-100 !flex !items-center !justify-center",
+                      userButtonAvatar: "!w-full !h-full !block !visible !opacity-100",
+                      userButtonPopoverCard: "shadow-elevation-2",
+                      userButtonPopoverHeader: "hidden",
+                      userButtonPopoverHeaderTitle: "hidden",
+                      userButtonPopoverHeaderSubtitle: "hidden",
+                      userButtonPopoverAvatarBox: "hidden",
+                      userButtonPopoverActions: "p-2",
+                      userButtonPopoverActionButtonIcon: "hidden",
+                      userButtonPopoverActionButton__manageAccount: "hidden",
+                      userButtonPopoverFooter: "hidden",
+                    }
+                  }}
+                />
+              )}
 
               {/* Main Menu Dropdown - Show for Admin/Builder accounts (even when viewing as homeowner) */}
               {(isAdmin || isBuilder || isAdminAccount) && (

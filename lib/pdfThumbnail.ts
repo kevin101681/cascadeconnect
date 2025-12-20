@@ -15,6 +15,15 @@ export async function generatePDFThumbnail(
   maxHeight: number = 400
 ): Promise<string> {
   try {
+    // Ensure worker is set to CDN URL before loading PDF
+    const workerUrl = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+    if (!pdfjs.GlobalWorkerOptions.workerSrc || 
+        pdfjs.GlobalWorkerOptions.workerSrc.includes('fake') ||
+        pdfjs.GlobalWorkerOptions.workerSrc.includes('pdf.worker.mjs') ||
+        !pdfjs.GlobalWorkerOptions.workerSrc.startsWith('http')) {
+      pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+    }
+    
     // Load the PDF document
     const loadingTask = pdfjs.getDocument(pdfUrl);
     const pdf = await loadingTask.promise;
