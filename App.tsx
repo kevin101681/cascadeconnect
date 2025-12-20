@@ -2309,6 +2309,33 @@ Assigned By: ${assignerName}
       }
   };
   
+  const handleUpdateTask = async (taskId: string, updates: Partial<Task>) => {
+    try {
+      if (isDbConfigured) {
+        // Update task in database
+        await db.update(tasksTable)
+          .set({
+            ...updates,
+            // Ensure date fields are properly handled
+            dateAssigned: updates.dateAssigned ? new Date(updates.dateAssigned) : undefined,
+            dueDate: updates.dueDate ? new Date(updates.dueDate) : undefined,
+          })
+          .where(eq(tasksTable.id, taskId));
+      } else {
+        // Update task in local state
+        setTasks(prevTasks => 
+          prevTasks.map(task => 
+            task.id === taskId 
+              ? { ...task, ...updates }
+              : task
+          )
+        );
+      }
+    } catch (error) {
+      console.error('Error updating task:', error);
+    }
+  };
+
   const handleDeleteTask = async (taskId: string) => { 
       setTasks(prev => prev.filter(t => t.id !== taskId));
       if (isDbConfigured) {
@@ -3104,6 +3131,7 @@ Assigned By: ${assignerName}
           onAddTask={handleAddTask}
           onToggleTask={handleToggleTask}
           onDeleteTask={handleDeleteTask}
+          onUpdateTask={handleUpdateTask}
           onNavigate={setCurrentView}
         />
       )}
@@ -3147,6 +3175,7 @@ Assigned By: ${assignerName}
           onAddTask={handleAddTask}
           onToggleTask={handleToggleTask}
           onDeleteTask={handleDeleteTask}
+          onUpdateTask={handleUpdateTask}
           onNavigate={setCurrentView}
         />
       )}

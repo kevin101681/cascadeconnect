@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Task, InternalEmployee, Claim, Homeowner, ClaimStatus } from '../types';
 import Button from './Button';
-import { Check, Plus, User, Calendar, Trash2, Home, CheckCircle, Square, CheckSquare, HardHat, ChevronDown, FileText } from 'lucide-react';
+import { Check, Plus, User, Calendar, Trash2, Home, CheckCircle, Square, CheckSquare, HardHat, ChevronDown, FileText, Edit2, X } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import TaskTemplateManager, { TaskTemplate } from './TaskTemplateManager';
+
+type TaskFilter = 'all' | 'open' | 'closed';
 
 interface TaskListProps {
   tasks: Task[];
@@ -15,6 +17,7 @@ interface TaskListProps {
   onAddTask: (task: Partial<Task>) => void;
   onToggleTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
+  onUpdateTask?: (taskId: string, updates: Partial<Task>) => void;
   preSelectedHomeowner?: Homeowner | null;
   onClose?: () => void;
 }
@@ -28,23 +31,37 @@ const TaskList: React.FC<TaskListProps> = ({
   onAddTask, 
   onToggleTask,
   onDeleteTask,
+  onUpdateTask,
   preSelectedHomeowner,
   onClose
 }) => {
   const [showForm, setShowForm] = useState(false);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [taskFilter, setTaskFilter] = useState<TaskFilter>('all');
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   
   // Form State
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskAssignee, setNewTaskAssignee] = useState(currentUser.id);
   const [newTaskNotes, setNewTaskNotes] = useState('');
   
+  // Edit Form State
+  const [editTaskTitle, setEditTaskTitle] = useState('');
+  const [editTaskAssignee, setEditTaskAssignee] = useState('');
+  const [editTaskNotes, setEditTaskNotes] = useState('');
+  const [editSelectedClaimIds, setEditSelectedClaimIds] = useState<string[]>([]);
+  
   // New State for Linking Claims
   const [selectedClaimIds, setSelectedClaimIds] = useState<string[]>([]);
 
-  // Filter to only show tasks assigned to the current user
-  const filteredTasks = tasks.filter(t => t.assignedToId === currentUser.id);
+  // Filter to only show tasks assigned to the current user, then apply status filter
+  const userTasks = tasks.filter(t => t.assignedToId === currentUser.id);
+  const filteredTasks = userTasks.filter(task => {
+    if (taskFilter === 'open') return !task.isCompleted;
+    if (taskFilter === 'closed') return task.isCompleted;
+    return true; // 'all'
+  });
 
   // Get open claims for selected homeowner (only if context exists)
   const openClaims = preSelectedHomeowner 
@@ -119,11 +136,61 @@ const TaskList: React.FC<TaskListProps> = ({
 
   const handleSelectTemplate = (template: TaskTemplate) => {
     const processed = processTemplate(template);
-    setNewTaskTitle(processed.title);
-    if (processed.description) {
-      setNewTaskNotes(processed.description);
+    if (editingTaskId) {
+      setEditTaskTitle(processed.title);
+      if (processed.description) {
+        setEditTaskNotes(processed.description);
+      }
+    } else {
+      setNewTaskTitle(processed.title);
+      if (processed.description) {
+        setNewTaskNotes(processed.description);
+      }
     }
     setShowTemplates(false);
+  };
+
+  const handleToggleTask = (taskId: string) => {
+    const task = tasks.find(t => t.id === taskId);
+    const willBeCompleted = task && !task.isCompleted;
+    
+    onToggleTask(taskId);
+    
+    // If task is being marked as complete and we're on 'open' filter, switch to 'closed'
+    if (willBeCompleted && taskFilter === 'open') {
+      setTaskFilter('closed');
+    }
+  };
+
+  const handleStartEdit = (task: Task) => {
+    setEditingTaskId(task.id);
+    setEditTaskTitle(task.title);
+    setEditTaskAssignee(task.assignedToId);
+    setEditTaskNotes(task.description || '');
+    setEditSelectedClaimIds(task.relatedClaimIds || []);
+    setExpandedTaskId(task.id); // Expand the task when editing
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTaskId(null);
+    setEditTaskTitle('');
+    setEditTaskAssignee('');
+    setEditTaskNotes('');
+    setEditSelectedClaimIds([]);
+  };
+
+  const handleSaveEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTaskId || !onUpdateTask) return;
+    
+    onUpdateTask(editingTaskId, {
+      title: editTaskTitle,
+      assignedToId: editTaskAssignee,
+      description: editTaskNotes,
+      relatedClaimIds: editSelectedClaimIds
+    });
+    
+    handleCancelEdit();
   };
 
   return (
@@ -157,6 +224,40 @@ const TaskList: React.FC<TaskListProps> = ({
             New Task
           </Button>
         </div>
+      </div>
+
+      {/* Filter Buttons */}
+      <div className="px-6 py-3 border-b border-surface-outline-variant dark:border-gray-700 flex items-center gap-2 bg-surface-container/20 dark:bg-gray-700/20 flex-shrink-0">
+        <button
+          onClick={() => setTaskFilter('all')}
+          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+            taskFilter === 'all'
+              ? 'bg-primary text-primary-on'
+              : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+          }`}
+        >
+          All ({userTasks.length})
+        </button>
+        <button
+          onClick={() => setTaskFilter('open')}
+          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+            taskFilter === 'open'
+              ? 'bg-primary text-primary-on'
+              : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+          }`}
+        >
+          Open ({userTasks.filter(t => !t.isCompleted).length})
+        </button>
+        <button
+          onClick={() => setTaskFilter('closed')}
+          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+            taskFilter === 'closed'
+              ? 'bg-primary text-primary-on'
+              : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+          }`}
+        >
+          Closed ({userTasks.filter(t => t.isCompleted).length})
+        </button>
       </div>
 
       {/* Content */}
@@ -335,7 +436,7 @@ const TaskList: React.FC<TaskListProps> = ({
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        onToggleTask(task.id);
+                        handleToggleTask(task.id);
                       }}
                       className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
                         task.isCompleted 
@@ -367,6 +468,18 @@ const TaskList: React.FC<TaskListProps> = ({
                     <ChevronDown 
                       className={`h-4 w-4 text-surface-on-variant dark:text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                     />
+                    {onUpdateTask && !task.isCompleted && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStartEdit(task);
+                        }}
+                        className="p-2 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/10 rounded-full transition-colors opacity-0 group-hover:opacity-100"
+                        title="Edit Task"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                    )}
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();

@@ -276,6 +276,7 @@ interface DashboardProps {
   onAddTask: (task: Partial<Task>) => Promise<void> | void;
   onToggleTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
+  onUpdateTask?: (taskId: string, updates: Partial<Task>) => void;
   onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND') => void;
 }
 
@@ -313,6 +314,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   onAddTask,
   onToggleTask,
   onDeleteTask,
+  onUpdateTask,
   onNavigate
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
@@ -2508,6 +2510,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onAddTask={onAddTask}
                 onToggleTask={onToggleTask}
                 onDeleteTask={onDeleteTask}
+                onUpdateTask={onUpdateTask}
                 preSelectedHomeowner={targetHomeowner}
               />
             </motion.div>
