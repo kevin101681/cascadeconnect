@@ -282,7 +282,7 @@ body {
     font-size: 0 !important;
     height: 100% !important;
     width: 100% !important;
-    overflow: hidden !important;
+    overflow: visible !important;
 }
 
 .pdf-page-3d > div {
@@ -292,7 +292,7 @@ body {
     font-size: 0 !important;
     height: 100% !important;
     width: 100% !important;
-    overflow: hidden !important;
+    overflow: visible !important;
 }
 
 .pdf-page-3d .react-pdf__Page {
