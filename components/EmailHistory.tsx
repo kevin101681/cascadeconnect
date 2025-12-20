@@ -85,6 +85,20 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEmail, setSelectedEmail] = useState<EmailActivity | null>(null);
 
+  // Filter emails based on search query - MUST be before any early returns
+  const filteredActivity = useMemo(() => {
+    if (!data?.activity) return [];
+    if (!searchQuery.trim()) return data.activity;
+    
+    const query = searchQuery.toLowerCase();
+    return data.activity.filter(email => 
+      email.from?.toLowerCase().includes(query) ||
+      email.subject?.toLowerCase().includes(query) ||
+      email.to?.some(to => typeof to === 'string' ? to.toLowerCase().includes(query) : false) ||
+      email.status?.toLowerCase().includes(query)
+    );
+  }, [data, searchQuery]);
+
   const fetchAnalytics = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -236,20 +250,6 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
   }
 
   const totals = data?.totals || {};
-
-  // Filter emails based on search query
-  const filteredActivity = useMemo(() => {
-    if (!data?.activity) return [];
-    if (!searchQuery.trim()) return data.activity;
-    
-    const query = searchQuery.toLowerCase();
-    return data.activity.filter(email => 
-      email.from?.toLowerCase().includes(query) ||
-      email.subject?.toLowerCase().includes(query) ||
-      email.to?.some(to => typeof to === 'string' ? to.toLowerCase().includes(query) : false) ||
-      email.status?.toLowerCase().includes(query)
-    );
-  }, [data?.activity, searchQuery]);
 
   const formatDateTime = (dateString: string) => {
     if (!dateString) return 'N/A';
