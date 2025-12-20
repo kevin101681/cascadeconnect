@@ -151,6 +151,9 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
 
       const result = await response.json();
       console.log('Email analytics response:', result);
+      console.log('Activity array length:', result.activity?.length || 0);
+      console.log('Activity count:', result.activityCount || 0);
+      console.log('First few activity items:', result.activity?.slice(0, 3));
       setData(result);
     } catch (err: any) {
       console.error('Failed to fetch email analytics:', err);

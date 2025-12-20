@@ -78,18 +78,12 @@ exports.handler = async (event, context) => {
     try {
       const activityUrl = new URL('https://api.sendgrid.com/v3/messages');
       const limit = event.queryStringParameters?.limit ? parseInt(event.queryStringParameters.limit) : 500; // Increased default limit
-      activityUrl.searchParams.set('limit', limit.toString());
+      // Fetch more messages than we need since we'll filter by date range on our side
+      activityUrl.searchParams.set('limit', Math.min(limit * 2, 1000).toString());
       
-      // Try fetching recent messages - SendGrid Messages API query syntax may vary
-      // Attempt query with date range first
-      try {
-        const queryValue = `last_event_time BETWEEN "${startDate}T00:00:00Z" AND "${endDate}T23:59:59Z"`;
-        activityUrl.searchParams.set('query', queryValue);
-        console.log('Fetching SendGrid messages with query:', queryValue);
-      } catch (e) {
-        console.warn('Could not set query parameter, fetching all recent messages');
-      }
-      
+      // Don't use query parameter - fetch recent messages and filter on our side
+      // SendGrid's Messages API query syntax can be unreliable
+      console.log('Fetching SendGrid messages (no query, will filter by date on our side)');
       console.log('Full URL:', activityUrl.toString());
       
       const activityResponse = await fetch(activityUrl.toString(), {
@@ -105,20 +99,26 @@ exports.handler = async (event, context) => {
       if (activityResponse.ok) {
         const activityResult = await activityResponse.json();
         console.log(`SendGrid Messages API returned ${activityResult.messages?.length || 0} messages`);
-        console.log('Activity result keys:', Object.keys(activityResult));
         const messages = activityResult.messages || [];
         
-        // Filter messages by date range if query didn't work
+        // Filter messages by date range (always do this since we're not using query parameter)
         const filteredMessages = messages.filter(msg => {
           const msgDate = msg.last_event_time || msg.sent_at;
-          if (!msgDate) return false;
+          if (!msgDate) {
+            console.warn('Message missing date field:', msg.msg_id);
+            return false;
+          }
           const msgTimestamp = new Date(msgDate).getTime();
           const startTimestamp = new Date(`${startDate}T00:00:00Z`).getTime();
           const endTimestamp = new Date(`${endDate}T23:59:59Z`).getTime();
-          return msgTimestamp >= startTimestamp && msgTimestamp <= endTimestamp;
+          const inRange = msgTimestamp >= startTimestamp && msgTimestamp <= endTimestamp;
+          if (!inRange) {
+            console.log(`Message ${msg.msg_id} outside date range: ${msgDate} (range: ${startDate} to ${endDate})`);
+          }
+          return inRange;
         });
         
-        console.log(`Filtered to ${filteredMessages.length} messages within date range`);
+        console.log(`Filtered to ${filteredMessages.length} messages within date range (${startDate} to ${endDate})`);
         const messagesToProcess = filteredMessages;
         
         // Process messages and fetch detailed activity for each
