@@ -4,7 +4,7 @@
  * This component displays CBS Books in a full-screen modal
  */
 
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
@@ -23,28 +23,32 @@ interface InvoicesModalProps {
 const CBSBooksApp = lazy(() => import('../lib/cbsbooks/App'));
 
 const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillData }) => {
-  if (!isOpen) return null;
-
   // Prevent scroll and other events from propagating to parent
-  const handleBackdropClick = (e: React.MouseEvent) => {
+  const handleBackdropClick = useCallback((e: React.MouseEvent) => {
     // Don't close on backdrop click, but prevent event propagation
     e.stopPropagation();
-  };
+  }, []);
 
-  const handleBackdropWheel = (e: React.WheelEvent) => {
+  const handleBackdropWheel = useCallback((e: React.WheelEvent) => {
     // Prevent scroll events from bubbling to parent
     e.stopPropagation();
-  };
+  }, []);
 
-  const handleBackdropTouchMove = (e: React.TouchEvent) => {
+  const handleBackdropTouchMove = useCallback((e: React.TouchEvent) => {
     // Prevent touch events from bubbling to parent
     e.stopPropagation();
-  };
+  }, []);
 
-  const handleContentWheel = (e: React.WheelEvent) => {
+  const handleContentWheel = useCallback((e: React.WheelEvent) => {
     // Stop scroll events from reaching backdrop
     e.stopPropagation();
-  };
+  }, []);
+
+  const handleStopPropagation = useCallback((e: React.SyntheticEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  if (!isOpen) return null;
 
   return createPortal(
     <div 
@@ -57,8 +61,8 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
       <div 
         className="bg-surface dark:bg-gray-800 w-full h-full rounded-none shadow-elevation-3 overflow-hidden flex flex-col" 
         style={{ transform: 'none', overscrollBehavior: 'contain' }}
-        onClick={(e) => e.stopPropagation()}
-        onWheel={(e) => e.stopPropagation()}
+        onClick={handleStopPropagation}
+        onWheel={handleStopPropagation}
       >
         {/* Close FAB */}
         <button
@@ -75,30 +79,28 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
           className="flex-1 overflow-auto" 
           style={{ transform: 'none', isolation: 'auto', overscrollBehavior: 'contain' }}
           onWheel={handleContentWheel}
-          onTouchMove={(e) => e.stopPropagation()}
-          onScroll={(e) => e.stopPropagation()}
+          onTouchMove={handleStopPropagation}
+          onScroll={handleStopPropagation}
         >
-          {isOpen && (
-            <div 
-              className="h-full w-full" 
-              data-cbs-books 
-              style={{ pointerEvents: 'auto', transform: 'none', isolation: 'auto' }}
-              onWheel={(e) => e.stopPropagation()}
-              onTouchMove={(e) => e.stopPropagation()}
-              onScroll={(e) => e.stopPropagation()}
-            >
-              <Suspense fallback={
-                <div className="h-full w-full flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-surface-on-variant dark:text-gray-400">Loading CBS Books...</p>
-                  </div>
+          <div 
+            className="h-full w-full" 
+            data-cbs-books 
+            style={{ pointerEvents: 'auto', transform: 'none', isolation: 'auto' }}
+            onWheel={handleStopPropagation}
+            onTouchMove={handleStopPropagation}
+            onScroll={handleStopPropagation}
+          >
+            <Suspense fallback={
+              <div className="h-full w-full flex items-center justify-center">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                  <p className="text-surface-on-variant dark:text-gray-400">Loading CBS Books...</p>
                 </div>
-              }>
-                <CBSBooksApp prefillInvoice={prefillData} />
-              </Suspense>
-            </div>
-          )}
+              </div>
+            }>
+              <CBSBooksApp prefillInvoice={prefillData} />
+            </Suspense>
+          </div>
         </div>
       </div>
     </div>,
