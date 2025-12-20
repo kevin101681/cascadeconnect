@@ -421,6 +421,13 @@ body {
     overflow: hidden !important;
 }
 
+/* Ensure all avatar-related elements inside trigger are visible */
+.cl-userButtonTrigger *,
+[class*="cl-userButtonTrigger"] * {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
 .cl-userButtonTrigger .cl-userButtonAvatarBox,
 [class*="cl-userButtonTrigger"] [class*="cl-userButtonAvatarBox"],
 .cl-userButtonAvatarBox:not(.cl-userButtonPopoverCard .cl-userButtonAvatarBox) {
@@ -443,6 +450,28 @@ body {
     width: 40px !important;
     height: 40px !important;
     object-fit: cover !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Ensure SVG fallback avatars are visible */
+.cl-userButtonTrigger svg,
+[class*="cl-userButtonTrigger"] svg,
+.cl-userButtonAvatarBox svg:not(.cl-userButtonPopoverCard .cl-userButtonAvatarBox svg) {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 40px !important;
+    height: 40px !important;
+}
+
+/* Ensure initials/text fallback is visible */
+.cl-userButtonTrigger .cl-userButtonAvatarBox::before,
+[class*="cl-userButtonTrigger"] [class*="cl-userButtonAvatarBox"]::before {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 /* Popover Card - Light Mode */

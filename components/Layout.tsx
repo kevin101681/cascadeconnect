@@ -279,6 +279,8 @@ const Layout: React.FC<LayoutProps> = ({
               <UserButton
                 appearance={{
                   elements: {
+                    userButtonTrigger: "!flex !items-center !justify-center !w-10 !h-10",
+                    userButtonAvatarBox: "!w-10 !h-10 !block",
                     userButtonPopoverCard: "shadow-elevation-2",
                     userButtonPopoverHeader: "hidden",
                     userButtonPopoverHeaderTitle: "hidden",
