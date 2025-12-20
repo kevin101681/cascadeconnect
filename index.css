@@ -73,9 +73,235 @@ body {
     margin: 0 !important;
     padding: 0 !important;
     line-height: 0 !important;
+    font-size: 0 !important;
     background-color: transparent !important;
     display: block !important;
     vertical-align: top !important;
+    height: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important;
+}
+
+/* Remove spacing from all flipbook internal elements */
+.pdf-flipbook > div,
+.pdf-flipbook > * {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    vertical-align: top !important;
+}
+
+/* Target all stf-* classes (flipbook library internal classes) */
+.pdf-flipbook [class*="stf-"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    vertical-align: top !important;
+}
+
+.pdf-flipbook [class*="stf-"] > * {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    vertical-align: top !important;
+}
+
+/* Target the flipbook's main container div */
+.pdf-flipbook > div:first-child {
+    height: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Remove any bottom spacing from flipbook wrapper */
+.pdf-flipbook > div {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Remove spacing from react-pdf Page component and canvas */
+.pdf-flipbook .react-pdf__Page {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    display: block !important;
+    height: 100% !important;
+    width: 100% !important;
+}
+
+.pdf-flipbook .react-pdf__Page__canvas {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    vertical-align: top !important;
+    height: 100% !important;
+    width: 100% !important;
+    max-height: 100% !important;
+    max-width: 100% !important;
+    object-fit: contain !important;
+    box-sizing: border-box !important;
+    border: none !important;
+    outline: none !important;
+}
+
+/* Remove any wrapper divs from react-pdf */
+.pdf-flipbook .react-pdf__Page > div {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+}
+
+/* Remove any spacing from PDF page wrapper */
+.pdf-page {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+.pdf-page > div {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important;
+}
+
+/* Target flipbook page elements specifically */
+.pdf-flipbook [class*="stf-page"] {
+    height: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.pdf-flipbook [class*="stf-page"] > div {
+    height: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+/* Ensure no extra space at bottom of flipbook pages */
+.pdf-flipbook [class*="stf-page"]::after,
+.pdf-flipbook [class*="stf-page"]::before {
+    display: none !important;
+    content: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 0 !important;
+}
+
+/* Remove any spacing from the flipbook's shadow or animation containers */
+.pdf-flipbook [class*="shadow"],
+.pdf-flipbook [class*="animation"],
+.pdf-flipbook [class*="wrapper"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+/* Ensure the back side of pages doesn't add extra height */
+.pdf-flipbook [class*="stf-page-back"] {
+    height: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+/* Target any container that might be adding extra height */
+.pdf-flipbook > * {
+    max-height: 100% !important;
+}
+
+/* Remove any bottom margin/padding from the entire flipbook structure */
+.pdf-flipbook,
+.pdf-flipbook * {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* 3D Flipbook Viewer - Remove all spacing */
+.pdf-flipbook-3d {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    background-color: transparent !important;
+    display: block !important;
+    vertical-align: top !important;
+    height: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important;
+}
+
+.pdf-flipbook-3d [class*="stf-page"] {
+    height: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.pdf-page-3d {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important;
+}
+
+.pdf-page-3d > div {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    font-size: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important;
+}
+
+.pdf-page-3d .react-pdf__Page {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100% !important;
+    width: 100% !important;
+    display: block !important;
+}
+
+.pdf-page-3d .react-pdf__Page__canvas {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+    height: 100% !important;
+    width: 100% !important;
+    max-height: 100% !important;
+    max-width: 100% !important;
 }
 
 .pdf-flipbook > div,

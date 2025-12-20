@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Task, InternalEmployee, Claim, Homeowner, ClaimStatus } from '../types';
 import Button from './Button';
-import { Check, Plus, User, Calendar, Trash2, Home, CheckCircle, Square, CheckSquare, HardHat, ChevronDown } from 'lucide-react';
+import { Check, Plus, User, Calendar, Trash2, Home, CheckCircle, Square, CheckSquare, HardHat, ChevronDown, FileText } from 'lucide-react';
 import StatusBadge from './StatusBadge';
+import TaskTemplateManager, { TaskTemplate } from './TaskTemplateManager';
 
 interface TaskListProps {
   tasks: Task[];
@@ -32,6 +33,7 @@ const TaskList: React.FC<TaskListProps> = ({
 }) => {
   const [showForm, setShowForm] = useState(false);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const [showTemplates, setShowTemplates] = useState(false);
   
   // Form State
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -80,6 +82,50 @@ const TaskList: React.FC<TaskListProps> = ({
     );
   };
 
+  // Process template with placeholders
+  const processTemplate = (template: TaskTemplate): { title: string; description: string } => {
+    let title = template.title;
+    let description = template.description || '';
+
+    // Replace placeholders with actual values
+    if (preSelectedHomeowner) {
+      title = title.replace(/{homeownerName}/g, preSelectedHomeowner.name || 'Homeowner');
+      title = title.replace(/{homeownerEmail}/g, preSelectedHomeowner.email || '');
+    }
+
+    // Replace claim placeholders if claims are selected
+    if (selectedClaimIds.length > 0) {
+      const selectedClaims = claims.filter(c => selectedClaimIds.includes(c.id));
+      if (selectedClaims.length > 0) {
+        const claimTitles = selectedClaims.map(c => c.title).join(', ');
+        title = title.replace(/{claimTitle}/g, claimTitles);
+        title = title.replace(/{claimTitles}/g, claimTitles);
+      }
+    }
+
+    // Replace date placeholder
+    const today = new Date().toLocaleDateString();
+    title = title.replace(/{date}/g, today);
+    title = title.replace(/{today}/g, today);
+
+    // Process description similarly
+    if (preSelectedHomeowner) {
+      description = description.replace(/{homeownerName}/g, preSelectedHomeowner.name || 'Homeowner');
+      description = description.replace(/{homeownerEmail}/g, preSelectedHomeowner.email || '');
+    }
+
+    return { title, description };
+  };
+
+  const handleSelectTemplate = (template: TaskTemplate) => {
+    const processed = processTemplate(template);
+    setNewTaskTitle(processed.title);
+    if (processed.description) {
+      setNewTaskNotes(processed.description);
+    }
+    setShowTemplates(false);
+  };
+
   return (
     <div className="w-full h-full flex flex-col">
       {/* Header - matches warranty claims modal structure */}
@@ -92,18 +138,39 @@ const TaskList: React.FC<TaskListProps> = ({
           )}
           My Tasks
         </h2>
-        <Button
-          onClick={() => setShowForm(!showForm)}
-          variant="filled"
-          icon={<Plus className="h-4 w-4" />}
-          className="!h-9 !px-4"
-        >
-          New Task
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setShowTemplates(!showTemplates)}
+            variant="text"
+            icon={<FileText className="h-4 w-4" />}
+            className="!h-9 !px-3"
+            title="Task Templates"
+          >
+            Templates
+          </Button>
+          <Button
+            onClick={() => setShowForm(!showForm)}
+            variant="filled"
+            icon={<Plus className="h-4 w-4" />}
+            className="!h-9 !px-4"
+          >
+            New Task
+          </Button>
+        </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+        {/* Task Templates */}
+        {showTemplates && (
+          <div className="bg-surface dark:bg-gray-800 rounded-2xl border border-surface-outline-variant dark:border-gray-700 p-5 animate-in slide-in-from-top-2">
+            <TaskTemplateManager
+              onSelectTemplate={handleSelectTemplate}
+              onClose={() => setShowTemplates(false)}
+            />
+          </div>
+        )}
+
         {showForm && (
           <div className="bg-surface dark:bg-gray-800 rounded-2xl border border-surface-outline-variant dark:border-gray-700 p-5 animate-in slide-in-from-top-2">
             <h3 className="font-medium text-surface-on dark:text-gray-100 mb-4">New Task</h3>
@@ -111,14 +178,26 @@ const TaskList: React.FC<TaskListProps> = ({
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="col-span-2">
-                <label className="text-xs text-surface-on-variant dark:text-gray-400 mb-1 block">Task Title</label>
-                    <input
-                        type="text"
-                        className="w-full bg-surface-container dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 focus:border-primary focus:outline-none"
-                        value={newTaskTitle}
-                        onChange={e => setNewTaskTitle(e.target.value)}
-                        required
-                    />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs text-surface-on-variant dark:text-gray-400">Task Title</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowTemplates(!showTemplates)}
+                    className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"
+                    title="Use Template"
+                  >
+                    <FileText className="h-3 w-3" />
+                    Templates
+                  </button>
+                </div>
+                <input
+                    type="text"
+                    className="w-full bg-surface-container dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 focus:border-primary focus:outline-none"
+                    value={newTaskTitle}
+                    onChange={e => setNewTaskTitle(e.target.value)}
+                    placeholder="Enter task title or use a template"
+                    required
+                />
               </div>
               
               <div>

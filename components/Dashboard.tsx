@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect, useRef, forwardRef } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import HTMLFlipBook from 'react-pageflip';
-import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
+// Lazy load heavy libraries - only load when needed
+// import Papa from 'papaparse';
+// import * as XLSX from 'xlsx';
 import { motion, AnimatePresence, type Transition, type Variants } from 'framer-motion';
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor } from '../types';
 import { ClaimMessage } from './MessageSummaryModal';
@@ -13,10 +14,11 @@ import Button from './Button';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
-import PDFViewer from './PDFViewer';
-import ClaimInlineEditor from './ClaimInlineEditor';
-import NewClaimForm from './NewClaimForm';
-import PunchListApp from './PunchListApp';
+// Lazy load heavy components to improve initial load time
+const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D'));
+const ClaimInlineEditor = React.lazy(() => import('./ClaimInlineEditor'));
+const NewClaimForm = React.lazy(() => import('./NewClaimForm'));
+const PunchListApp = React.lazy(() => import('./PunchListApp'));
 import { HOMEOWNER_MANUAL_IMAGES } from '../lib/bluetag/constants';
 
 // PDF Thumbnail Component - Generates thumbnail on-the-fly if missing
@@ -588,12 +590,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                     file.name.toLowerCase().endsWith('.xls');
 
     if (isCSV) {
-      // Parse CSV file directly
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        dynamicTyping: false,
-        complete: (results) => {
+      // Parse CSV file directly - lazy load Papa
+      import('papaparse').then((Papa) => {
+        Papa.default.parse(file, {
+          header: true,
+          skipEmptyLines: true,
+          dynamicTyping: false,
+          complete: (results) => {
           if (results.errors.length > 0) {
             console.error('CSV parsing errors:', results.errors);
             const criticalErrors = results.errors.filter(e => e.type !== 'Quotes' && e.type !== 'Delimiter');
@@ -617,20 +620,26 @@ const Dashboard: React.FC<DashboardProps> = ({
           setIsParsingSubs(false);
         }
       });
+      }).catch((err) => {
+        console.error('Failed to load papaparse:', err);
+        alert('Failed to load CSV parser. Please refresh the page.');
+        setIsParsingSubs(false);
+      });
     } else if (isExcel) {
-      // Parse Excel file using xlsx library
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = e.target?.result;
-          if (!data) {
-            alert('Error reading Excel file. Please try again.');
-            setIsParsingSubs(false);
-            return;
-          }
+      // Parse Excel file using xlsx library - lazy load XLSX
+      import('xlsx').then((XLSX) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const data = e.target?.result;
+            if (!data) {
+              alert('Error reading Excel file. Please try again.');
+              setIsParsingSubs(false);
+              return;
+            }
 
-          // Read the workbook
-          const workbook = XLSX.read(data, { type: 'binary' });
+            // Read the workbook
+            const workbook = XLSX.read(data, { type: 'binary' });
           
           // Get the first sheet
           const firstSheetName = workbook.SheetNames[0];
@@ -683,14 +692,20 @@ const Dashboard: React.FC<DashboardProps> = ({
           setIsParsingSubs(false);
         }
       };
-      reader.onerror = () => {
-        alert('Error reading Excel file. Please try again.');
+        reader.onerror = () => {
+          alert('Error reading Excel file. Please try again.');
+          setIsParsingSubs(false);
+        };
+        reader.readAsBinaryString(file);
+      }).catch((err) => {
+        console.error('Failed to load xlsx:', err);
+        alert('Failed to load Excel parser. Please refresh the page.');
         setIsParsingSubs(false);
-      };
-      reader.readAsBinaryString(file);
+      });
     } else {
-      // Try to parse as CSV anyway
-      Papa.parse(file, {
+      // Try to parse as CSV anyway - lazy load Papa
+      import('papaparse').then((Papa) => {
+        Papa.default.parse(file, {
         header: true,
         skipEmptyLines: true,
         dynamicTyping: false,
@@ -717,6 +732,11 @@ const Dashboard: React.FC<DashboardProps> = ({
           alert(`Error reading file: ${error.message || 'Please ensure the file is a valid CSV or Excel file.'}`);
           setIsParsingSubs(false);
         }
+      });
+      }).catch((err) => {
+        console.error('Failed to load papaparse:', err);
+        alert('Failed to load CSV parser. Please refresh the page.');
+        setIsParsingSubs(false);
       });
     }
   };
@@ -1364,7 +1384,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     </motion.div>
     );
 
-  const handleExportToExcel = (claimsList: Claim[]) => {
+  const handleExportToExcel = async (claimsList: Claim[]) => {
     // Filter claims based on current filter
     let filteredClaims = claimsList;
     if (claimsFilter === 'Open') {
@@ -1391,14 +1411,21 @@ const Dashboard: React.FC<DashboardProps> = ({
       };
     });
 
-    // Create workbook and worksheet
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Claims');
+    // Lazy load XLSX library
+    try {
+      const XLSX = await import('xlsx');
+      // Create workbook and worksheet
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Claims');
 
-    // Generate Excel file and download
-    const fileName = `Warranty_Claims_${claimsFilter}_${new Date().toISOString().split('T')[0]}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
+      // Generate Excel file and download
+      const fileName = `Warranty_Claims_${claimsFilter}_${new Date().toISOString().split('T')[0]}.xlsx`;
+      XLSX.writeFile(workbook, fileName);
+    } catch (err) {
+      console.error('Failed to load xlsx library:', err);
+      alert('Failed to load Excel export library. Please refresh the page.');
+    }
   };
 
   const renderClaimsList = (claimsList: Claim[], isHomeownerView: boolean = false) => {
@@ -1776,7 +1803,12 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] my-auto flex flex-col max-h-[90vh]">
             <div className="overflow-y-auto overflow-x-hidden flex-1">
               <div className="p-4">
-                <ClaimInlineEditor
+                <Suspense fallback={
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                }>
+                  <ClaimInlineEditor
                   claim={selectedClaimForModal}
                   onUpdateClaim={(updatedClaim) => {
                     if (onUpdateClaim) {
@@ -1800,6 +1832,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   onCancel={() => setSelectedClaimForModal(null)}
                   onNavigate={onNavigate}
                 />
+                </Suspense>
               </div>
             </div>
           </div>
@@ -1809,15 +1842,27 @@ const Dashboard: React.FC<DashboardProps> = ({
       
       {/* PDF VIEWER MODAL */}
       {selectedDocument && isPDFViewerOpen && createPortal(
-        <PDFViewer
-          document={selectedDocument}
-          isOpen={isPDFViewerOpen}
-          onClose={() => {
-            console.log('Closing PDF viewer');
-            setIsPDFViewerOpen(false);
-            setSelectedDocument(null);
-          }}
-        />,
+        <Suspense fallback={
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
+              <p className="text-white">Loading PDF viewer...</p>
+            </div>
+          </div>
+        }>
+          <PdfFlipViewer3D
+            document={{
+              url: selectedDocument.url,
+              name: selectedDocument.name
+            }}
+            isOpen={isPDFViewerOpen}
+            onClose={() => {
+              console.log('Closing PDF viewer');
+              setIsPDFViewerOpen(false);
+              setSelectedDocument(null);
+            }}
+          />
+        </Suspense>,
         document.body
       )}
 
@@ -1834,20 +1879,26 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="bg-surface dark:bg-gray-800 w-full max-w-4xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 max-h-[calc(100vh-4rem)] flex flex-col">
             <div className="p-6 bg-surface dark:bg-gray-800 overflow-y-auto flex-1">
               {onCreateClaim ? (
-                <NewClaimForm
-                  onSubmit={(data) => {
-                    onCreateClaim(data);
-                    setShowNewClaimModal(false);
-                  }}
-                  onCancel={() => setShowNewClaimModal(false)}
-                  onSendMessage={() => {
-                    setShowNewClaimModal(false);
-                    setCurrentTab('MESSAGES');
-                  }}
-                  contractors={contractors}
-                  activeHomeowner={targetHomeowner || activeHomeowner}
-                  userRole={userRole}
-                />
+                <Suspense fallback={
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                }>
+                  <NewClaimForm
+                    onSubmit={(data) => {
+                      onCreateClaim(data);
+                      setShowNewClaimModal(false);
+                    }}
+                    onCancel={() => setShowNewClaimModal(false)}
+                    onSendMessage={() => {
+                      setShowNewClaimModal(false);
+                      setCurrentTab('MESSAGES');
+                    }}
+                    contractors={contractors}
+                    activeHomeowner={targetHomeowner || activeHomeowner}
+                    userRole={userRole}
+                  />
+                </Suspense>
               ) : (
                 <div className="text-center py-8">
                   <p className="text-surface-on-variant dark:text-gray-400 mb-4">Claim creation handler not available.</p>
@@ -2781,11 +2832,16 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div className="bg-surface dark:bg-gray-800 w-full h-full rounded-none shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] flex flex-col relative">
               {/* Content - BlueTag Punch List App embedded here */}
               <div className="flex-1 overflow-hidden relative" style={{ isolation: 'isolate', pointerEvents: 'auto' }}>
-                <PunchListApp
-                  homeowner={effectiveHomeowner}
-                  onClose={() => setShowPunchListApp(false)}
-                  onUpdateHomeowner={onUpdateHomeowner}
-                  onSavePDF={async (pdfBlob: Blob, filename: string) => {
+                <Suspense fallback={
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                }>
+                  <PunchListApp
+                    homeowner={effectiveHomeowner}
+                    onClose={() => setShowPunchListApp(false)}
+                    onUpdateHomeowner={onUpdateHomeowner}
+                    onSavePDF={async (pdfBlob: Blob, filename: string) => {
                     // Delete existing documents with the same name for this homeowner
                     if (onDeleteDocument && effectiveHomeowner) {
                       const existingDocs = documents.filter(
@@ -2817,7 +2873,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                     // The message thread will show the email was sent
                   }}
                   onShowManual={() => setShowManualModal(true)}
-                />
+                  />
+                </Suspense>
               </div>
               
               {/* Close button at bottom right */}

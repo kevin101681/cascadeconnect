@@ -8,6 +8,7 @@ export default {
     "./services/**/*.{js,ts,jsx,tsx}",
     "./lib/bluetag/**/*.{js,ts,jsx,tsx}",
     "./lib/cbsbooks/**/*.{js,ts,jsx,tsx}",
+    "./node_modules/react-pdf-flipbook-viewer/**/*.{js,ts,jsx,tsx}",
   ],
   safelist: [
     // BlueTag critical classes that might be dynamically generated

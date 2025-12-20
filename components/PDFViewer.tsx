@@ -36,16 +36,43 @@ const PDFPage = forwardRef<HTMLDivElement, PDFPageProps>(({ pageNumber, width, h
         justifyContent: 'center',
         backgroundColor: '#fff',
         backfaceVisibility: 'hidden',
-        WebkitBackfaceVisibility: 'hidden'
+        WebkitBackfaceVisibility: 'hidden',
+        lineHeight: 0,
+        fontSize: 0,
+        overflow: 'hidden',
+        position: 'relative'
       }}
     >
-      <div style={{ width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#fff' }}>
+      <div style={{ 
+        width: '100%', 
+        height: '100%', 
+        overflow: 'hidden', 
+        backgroundColor: '#fff',
+        margin: 0,
+        padding: 0,
+        lineHeight: 0,
+        fontSize: 0,
+        display: 'block',
+        position: 'relative'
+      }}>
         <Page
           pageNumber={pageNumber}
           width={width}
           height={height}
           renderTextLayer={false}
           renderAnnotationLayer={false}
+          className="pdf-page-content"
+          style={{ 
+            margin: 0, 
+            padding: 0, 
+            display: 'block',
+            height: '100%',
+            width: '100%',
+            lineHeight: 0,
+            fontSize: 0,
+            overflow: 'hidden'
+          }}
+          canvasBackground="transparent"
           loading={
             <div style={{ 
               width, 
@@ -521,7 +548,19 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
               }
             >
               {!documentLoading && numPages > 0 && (
-                <div style={{ width: pageDimensions.width, height: pageDimensions.height, overflow: 'hidden', position: 'relative', lineHeight: 0, fontSize: 0, margin: 0, padding: 0, backgroundColor: 'transparent', display: 'block' }}>
+                <div style={{ 
+                  width: pageDimensions.width, 
+                  height: pageDimensions.height, 
+                  overflow: 'hidden', 
+                  position: 'relative', 
+                  lineHeight: 0, 
+                  fontSize: 0, 
+                  margin: 0, 
+                  padding: 0, 
+                  backgroundColor: 'transparent', 
+                  display: 'block',
+                  boxSizing: 'border-box'
+                }}>
                   <HTMLFlipBook
                     ref={flipBookRef}
                     width={pageDimensions.width}
@@ -536,7 +575,17 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                     maxWidth={pageDimensions.width}
                     maxHeight={pageDimensions.height}
                     startPage={currentPage - 1}
-                    style={{ margin: 0, padding: 0, lineHeight: 0, fontSize: 0, display: 'block', width: pageDimensions.width, height: pageDimensions.height }}
+                    style={{ 
+                      margin: 0, 
+                      padding: 0, 
+                      lineHeight: 0, 
+                      fontSize: 0, 
+                      display: 'block', 
+                      width: pageDimensions.width, 
+                      height: pageDimensions.height,
+                      boxSizing: 'border-box',
+                      overflow: 'hidden'
+                    }}
                     {...({} as any)}
                   >
                     {Array.from(new Array(numPages), (el, index) => (
