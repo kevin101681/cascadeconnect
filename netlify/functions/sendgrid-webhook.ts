@@ -69,7 +69,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     if (webhookVerificationKey) {
       try {
         const ew = new EventWebhook();
-        const publicKey = EventWebhook.convertPublicKeyToECDSA(webhookVerificationKey);
+        const publicKey = ew.convertPublicKeyToECDSA(webhookVerificationKey);
         
         // Get signature and timestamp from headers
         // SendGrid uses these header names (case-insensitive)
