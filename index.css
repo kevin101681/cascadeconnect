@@ -281,9 +281,11 @@ body {
     margin: 0 !important;
     padding: 0 !important;
     display: block !important;
+    left: 0 !important;
+    right: 0 !important;
 }
 
-/* Ensure pages are aligned to the right edge */
+/* Ensure pages are aligned to the right edge - pages should fill container exactly */
 .pdf-flipbook-3d [class*="stf-wrapper"],
 .pdf-flipbook-3d [class*="stf-container"] {
     position: relative !important;
@@ -292,6 +294,14 @@ body {
     margin: 0 !important;
     padding: 0 !important;
     display: block !important;
+    left: 0 !important;
+    right: 0 !important;
+}
+
+/* Ensure individual page elements are positioned correctly */
+.pdf-flipbook-3d [class*="stf-page"]:not([class*="stf-page-back"]) {
+    left: 0 !important;
+    right: 0 !important;
 }
 
 /* Allow flipbook wrapper to show animation overflow */
