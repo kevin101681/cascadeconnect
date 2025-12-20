@@ -1275,10 +1275,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                 e.stopPropagation();
                 onExportExcel();
               }}
-              className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-surface-container dark:bg-gray-700 text-sm font-medium transition-all hover:bg-surface-container-high dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600"
+              className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 text-sm font-medium transition-all hover:bg-surface-container-high dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600"
               title="Export to Excel"
             >
-              <FileSpreadsheet className="h-4 w-4" style={{ color: '#ffffff' }} />
+              <FileSpreadsheet className="h-4 w-4" />
             </button>
           )}
           {showNewClaimButton && (
