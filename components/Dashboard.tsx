@@ -1282,7 +1282,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <div className="px-6 py-3">
                         <div className="flex flex-wrap gap-2">
                             {/* Claim # */}
-                          <span className="inline-flex items-center h-6 text-xs font-medium text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 rounded-full whitespace-nowrap w-fit">
+                          <span className="inline-flex items-center h-6 text-xs font-medium tracking-wide bg-primary/10 dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 rounded-full whitespace-nowrap w-fit">
                             #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
                           </span>
                           {/* Status */}
@@ -2262,7 +2262,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* Next Appointment Card - Right of Homeowner Info */}
           <motion.div 
-            className="w-full lg:w-[300px] lg:flex-shrink-0 bg-secondary-container dark:bg-gray-800 rounded-3xl text-secondary-on-container dark:text-gray-100 flex flex-col relative border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden"
+            className="w-full lg:w-[300px] lg:flex-shrink-0 bg-primary/10 dark:bg-gray-800 rounded-3xl text-secondary-on-container dark:text-gray-100 flex flex-col relative border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden"
             variants={cardVariants}
             initial="hidden"
             animate="visible"
@@ -2395,8 +2395,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Documents Tab - Homeowner View Only */}
             {isHomeownerView && (
               <button 
-                onClick={() => setCurrentTab('DOCUMENTS')}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                onClick={() => setShowDocsModal(true)}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700`}
               >
                 <FileText className="h-4 w-4" />
                 Documents
@@ -2461,18 +2461,6 @@ const Dashboard: React.FC<DashboardProps> = ({
             </motion.div>
           )}
 
-          {currentTab === 'DOCUMENTS' && isHomeownerView && (
-            <motion.div 
-              key="documents"
-              className=""
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              {renderDocumentsTab()}
-            </motion.div>
-          )}
         </AnimatePresence>
 
         {/* DOCUMENTS MODAL */}
@@ -2596,8 +2584,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                                </>
                              )}
                              
-                             {/* Delete - Show for all document types when admin */}
-                             {isAdminAccount && onDeleteDocument && (
+                             {/* Delete - Show for all document types when admin (not shown for homeowners) */}
+                             {isAdminAccount && userRole !== UserRole.HOMEOWNER && onDeleteDocument && (
                                <button
                                  type="button"
                                  onClick={(e) => {
