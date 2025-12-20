@@ -356,7 +356,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Claims filter state
   const [claimsFilter, setClaimsFilter] = useState<'All' | 'Open' | 'Closed'>('All');
-  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   
   // Invite Modal State
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -1189,7 +1188,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // --- Render Helpers ---
 
-  const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, filter?: 'All' | 'Open' | 'Closed', setFilter?: (filter: 'All' | 'Open' | 'Closed') => void, onExportExcel?: () => void) => (
+  const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, filter?: 'All' | 'Open' | 'Closed', setFilter?: (filter: 'All' | 'Open' | 'Closed') => void, onExportExcel?: () => void, allClaims?: Claim[]) => (
     <motion.div 
       className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col"
       style={{ height: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)', maxHeight: 'calc(100vh - 300px)' }}
@@ -1205,67 +1204,48 @@ const Dashboard: React.FC<DashboardProps> = ({
           {title}
         </h3>
         <div className="flex items-center gap-2">
-          {/* Filter Dropdown */}
-          {setFilter && (
-            <div className="relative" data-filter-dropdown>
+          {/* Filter Buttons - Matching TaskList style */}
+          {setFilter && allClaims && (
+            <div className="flex rounded-full bg-surface-container dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 overflow-hidden">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setIsFilterDropdownOpen(!isFilterDropdownOpen);
+                  setFilter('All');
                 }}
-                className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 text-sm font-medium transition-all hover:bg-surface-container-high dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600"
-                title={`Filter: ${filter || 'All'}`}
+                className={`px-3 py-1 text-sm font-medium transition-colors ${
+                  filter === 'All'
+                    ? 'bg-primary text-primary-on'
+                    : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                }`}
               >
-                <Filter className="h-4 w-4" />
-                {filter || 'All'}
-                <ChevronDown className={`h-4 w-4 transition-transform ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
+                All ({allClaims.length})
               </button>
-              {isFilterDropdownOpen && (
-                <div className="absolute right-0 top-full mt-2 bg-surface dark:bg-gray-800 rounded-xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-2 z-20 min-w-[120px] overflow-hidden">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFilter('All');
-                      setIsFilterDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                      filter === 'All' 
-                        ? 'bg-primary-container dark:bg-primary/20 text-primary dark:text-primary' 
-                        : 'text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    All
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFilter('Open');
-                      setIsFilterDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                      filter === 'Open' 
-                        ? 'bg-primary-container dark:bg-primary/20 text-primary dark:text-primary' 
-                        : 'text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    Open
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFilter('Closed');
-                      setIsFilterDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2 text-sm transition-colors rounded-b-xl ${
-                      filter === 'Closed' 
-                        ? 'bg-primary-container dark:bg-primary/20 text-primary dark:text-primary' 
-                        : 'text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    Closed
-                  </button>
-                </div>
-              )}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFilter('Open');
+                }}
+                className={`px-3 py-1 text-sm font-medium transition-colors ${
+                  filter === 'Open'
+                    ? 'bg-primary text-primary-on'
+                    : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                }`}
+              >
+                Open ({allClaims.filter(c => c.status !== ClaimStatus.COMPLETED).length})
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFilter('Closed');
+                }}
+                className={`px-3 py-1 text-sm font-medium transition-colors ${
+                  filter === 'Closed'
+                    ? 'bg-primary text-primary-on'
+                    : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                }`}
+              >
+                Closed ({allClaims.filter(c => c.status === ClaimStatus.COMPLETED).length})
+              </button>
             </div>
           )}
           {/* Export to Excel Button */}
@@ -1467,7 +1447,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     return (
       <div>
-        {renderClaimGroup('Warranty Claims', filteredClaims, emptyMsg, false, isHomeownerView, claimsFilter, setClaimsFilter, () => handleExportToExcel(claimsList))}
+        {renderClaimGroup('Warranty Claims', filteredClaims, emptyMsg, false, isHomeownerView, claimsFilter, setClaimsFilter, () => handleExportToExcel(claimsList), claimsList)}
       </div>
     );
   };
