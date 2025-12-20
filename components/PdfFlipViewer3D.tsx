@@ -95,7 +95,8 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
     const updateDimensions = () => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      const padding = 80;
+      // Reduced padding to allow more space for page flip animation
+      const padding = 120; // Increased to account for animation overflow
       const maxWidth = viewportWidth - padding;
       const maxHeight = viewportHeight - padding;
 
@@ -317,7 +318,7 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
       <div
         className="flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
-        style={{ width: '100%', padding: '40px', boxSizing: 'border-box' }}
+        style={{ width: '100%', padding: '20px', boxSizing: 'border-box', overflow: 'visible' }}
       >
         {error && (
           <div className="bg-red-500 text-white p-4 rounded-lg">
@@ -326,7 +327,7 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
         )}
 
         {pdfUrl && !error && (
-          <div className="relative" style={{ width: pageDimensions.width, height: pageDimensions.height }}>
+          <div className="relative" style={{ width: pageDimensions.width, height: pageDimensions.height, overflow: 'visible' }}>
             <Document
               file={pdfUrl}
               onLoadSuccess={onDocumentLoadSuccess}
@@ -344,7 +345,7 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
               }
             >
               {numPages > 0 ? (
-                <div style={{ width: pageDimensions.width, height: pageDimensions.height, overflow: 'hidden', position: 'relative' }}>
+                <div style={{ width: pageDimensions.width, height: pageDimensions.height, overflow: 'visible', position: 'relative' }}>
                   <HTMLFlipBook
                     ref={flipBookRef}
                     width={pageDimensions.width}
