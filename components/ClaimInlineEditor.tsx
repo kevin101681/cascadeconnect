@@ -872,7 +872,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                         value={editInternalNotes}
                         onChange={e => setEditInternalNotes(e.target.value)}
                   rows={4}
-                  className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-secondary-container/20 dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors"
+                  className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors"
                 />
               ) : (
                 <div className="text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
