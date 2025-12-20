@@ -267,6 +267,30 @@ body {
     overflow: visible !important;
     box-sizing: border-box !important;
     transform-style: preserve-3d !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+}
+
+/* Ensure the flipbook container positions pages correctly */
+.pdf-flipbook-3d > div:first-child {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+}
+
+/* Ensure pages are aligned to the right edge */
+.pdf-flipbook-3d [class*="stf-wrapper"],
+.pdf-flipbook-3d [class*="stf-container"] {
+    position: relative !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
 }
 
 /* Allow flipbook wrapper to show animation overflow */
