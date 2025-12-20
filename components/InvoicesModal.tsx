@@ -65,14 +65,7 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
             onTouchMove={(e) => e.stopPropagation()}
             onScroll={(e) => e.stopPropagation()}
           >
-            <Suspense fallback={
-              <div className="h-full w-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                  <p className="text-surface-on-variant dark:text-gray-400">Loading CBS Books...</p>
-                </div>
-              </div>
-            }>
+            <Suspense fallback={null}>
               <CBSBooksApp prefillInvoice={prefillData} />
             </Suspense>
           </div>

@@ -233,7 +233,26 @@ const App: React.FC<CBSBooksAppProps> = ({ prefillInvoice }) => {
     document.body.removeChild(link);
   };
 
-  if (isLoading) return <div className="flex items-center justify-center min-h-screen bg-surface"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+  // Show UI immediately with a discrete loading indicator
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+        {/* Small discrete loading indicator in top-right corner */}
+        <div className="fixed top-4 right-4 z-50 pointer-events-none">
+          <div className="bg-surface dark:bg-gray-800 rounded-full p-2 shadow-lg border border-surface-outline dark:border-gray-700">
+            <Loader2 className="w-4 h-4 animate-spin text-primary" />
+          </div>
+        </div>
+        {/* Show UI structure immediately - no blank page */}
+        <main className="p-4 md:p-8 max-w-7xl mx-auto w-full pb-32">
+          {view === 'invoices' && <Invoices invoices={[]} clients={[]} onAdd={handleAddInvoice} onUpdate={handleUpdateInvoice} onDelete={handleDeleteInvoice} onBulkAdd={handleBulkAddInvoices} onBulkDelete={handleBulkDeleteInvoices} onNavigate={setView} onBackup={handleFullBackup} prefillInvoice={prefillInvoice} />}
+          {view === 'expenses' && <Expenses expenses={[]} onAdd={handleAddExpense} onDelete={handleDeleteExpense} onBulkAdd={handleBulkAddExpenses} onBulkDelete={handleBulkDeleteExpenses} onNavigate={setView} onBackup={handleFullBackup} />}
+          {view === 'clients' && <Clients clients={[]} invoices={[]} onAdd={handleAddClient} onUpdate={handleUpdateClient} onDelete={handleDeleteClient} onBulkAdd={handleBulkAddClients} onNavigate={setView} onBackup={handleFullBackup} />}
+          {view === 'reports' && <Reports invoices={[]} expenses={[]} onNavigate={setView} onBackup={handleFullBackup} />}
+        </main>
+      </div>
+    );
+  }
 
   if (error) {
     return (
