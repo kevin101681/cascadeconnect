@@ -1106,7 +1106,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           {isAdmin && (
             <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Warranty Assessment</h4>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="relative" ref={classificationSelectRef}>
                   <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Classification</label>
                   {isEditing && !isReadOnly ? (
