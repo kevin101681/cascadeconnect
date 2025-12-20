@@ -1191,7 +1191,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, filter?: 'All' | 'Open' | 'Closed', setFilter?: (filter: 'All' | 'Open' | 'Closed') => void, onExportExcel?: () => void) => (
     <motion.div 
-      className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col"
+      className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col"
       style={{ height: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)', maxHeight: 'calc(100vh - 300px)' }}
       variants={cardVariants}
       initial="hidden"
@@ -2494,7 +2494,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'TASKS' && isAdmin && (
             <motion.div 
               key="tasks"
-              className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1"
+              className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1"
               style={{ height: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)', maxHeight: 'calc(100vh - 300px)' }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
