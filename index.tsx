@@ -14,10 +14,17 @@ console.log('✅ Root element found, creating React root...');
 const root = ReactDOM.createRoot(rootElement);
 console.log('✅ React root created');
 
+// Get Clerk publishable key from environment variables
+// Vite automatically loads .env.local with highest priority
+// This will use the production key from .env.local if present
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+
 if (!PUBLISHABLE_KEY) {
   throw new Error("Missing Clerk Publishable Key. Please set VITE_CLERK_PUBLISHABLE_KEY in your .env.local file.");
 }
+
+// Log that we're using Clerk (without exposing the key)
+console.log('✅ Clerk configured with publishable key from environment');
 
 console.log('✅ Starting app render...');
 root.render(

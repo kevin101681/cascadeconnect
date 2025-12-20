@@ -68,6 +68,102 @@ body {
     will-change: transform !important;
 }
 
+/* Remove all spacing from flipbook container */
+.pdf-flipbook {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    background-color: transparent !important;
+    display: block !important;
+    vertical-align: top !important;
+}
+
+.pdf-flipbook > div,
+.pdf-flipbook > * {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    background-color: transparent !important;
+    display: block !important;
+    vertical-align: top !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+}
+
+/* Remove spacing from all flipbook internal elements */
+.pdf-flipbook [class*="stf-"] {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+}
+
+.pdf-flipbook [class*="stf-"] > * {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+}
+
+/* Target the flipbook's main container div */
+.pdf-flipbook > div:first-child {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+    height: 100% !important;
+}
+
+/* Remove any bottom spacing from flipbook wrapper */
+.pdf-flipbook > div {
+    margin-bottom: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Remove extra white space from react-pdf Document component */
+.react-pdf__Document {
+    display: block !important;
+    line-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: transparent !important;
+    width: auto !important;
+    height: auto !important;
+    font-size: 0 !important;
+}
+
+.react-pdf__Document > div,
+.react-pdf__Document > * {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 0 !important;
+    background-color: transparent !important;
+    font-size: 0 !important;
+    display: block !important;
+}
+
+.react-pdf__Page {
+    display: block !important;
+    line-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background-color: transparent !important;
+}
+
+.react-pdf__Page__canvas {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    vertical-align: top !important;
+}
+
+.react-pdf__Page__textContent {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.react-pdf__Page__annotations {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
 /* Fix for CBS Books FAB positioning - ensure fixed elements position relative to viewport */
 [data-cbs-books] [class*="fixed"] {
     position: fixed !important;

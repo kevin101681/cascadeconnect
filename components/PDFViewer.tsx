@@ -499,7 +499,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
       <div
         className="flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
-        style={{ width: '100%', height: '100%', padding: '40px', boxSizing: 'border-box', overflow: 'hidden' }}
+        style={{ width: '100%', padding: '40px', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', lineHeight: 0, fontSize: 0 }}
       >
         {error && (
           <div className="bg-red-500 text-white p-4 rounded-lg">
@@ -508,7 +508,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
         )}
 
         {pdfUrl && !error && (
-          <div className="relative w-full h-full flex items-center justify-center">
+          <div className="relative" style={{ width: pageDimensions.width, height: pageDimensions.height, lineHeight: 0, fontSize: 0, backgroundColor: 'transparent', margin: 0, padding: 0, display: 'block', overflow: 'visible' }}>
             <Document
               file={pdfUrl}
               onLoadSuccess={onDocumentLoadSuccess}
@@ -521,7 +521,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
               }
             >
               {!documentLoading && numPages > 0 && (
-                <div style={{ maxWidth: '100%', maxHeight: '100%', overflow: 'hidden', position: 'relative' }}>
+                <div style={{ width: pageDimensions.width, height: pageDimensions.height, overflow: 'hidden', position: 'relative', lineHeight: 0, fontSize: 0, margin: 0, padding: 0, backgroundColor: 'transparent', display: 'block' }}>
                   <HTMLFlipBook
                     ref={flipBookRef}
                     width={pageDimensions.width}
@@ -536,6 +536,7 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
                     maxWidth={pageDimensions.width}
                     maxHeight={pageDimensions.height}
                     startPage={currentPage - 1}
+                    style={{ margin: 0, padding: 0, lineHeight: 0, fontSize: 0, display: 'block', width: pageDimensions.width, height: pageDimensions.height }}
                     {...({} as any)}
                   >
                     {Array.from(new Array(numPages), (el, index) => (

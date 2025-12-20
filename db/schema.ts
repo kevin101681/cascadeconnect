@@ -177,3 +177,15 @@ export const messageThreads = pgTable('message_threads', {
   lastMessageAt: timestamp('last_message_at').defaultNow(),
   messages: json('messages').$type<any[]>().default([]),
 });
+
+// --- 9. Email Logs (SendGrid Webhook Events) ---
+export const emailLogs = pgTable('email_logs', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  sgMessageId: text('sg_message_id').notNull(), // SendGrid message ID
+  email: text('email').notNull(), // Recipient email address
+  event: text('event').notNull(), // Event type: processed, delivered, open, click, bounce, etc.
+  timestamp: timestamp('timestamp').notNull(), // Event timestamp
+  createdAt: timestamp('created_at').defaultNow(), // When we received the webhook
+  // Additional event data stored as JSON
+  eventData: json('event_data').$type<any>().default({}),
+});

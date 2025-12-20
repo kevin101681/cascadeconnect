@@ -1129,6 +1129,79 @@ export const Invoices: React.FC<InvoicesProps> = ({
   const InvoiceRow: React.FC<{ inv: Invoice, expanded: boolean, onExpand: () => void, children?: React.ReactNode }> = ({ inv, expanded, onExpand, children }) => {
     const commonPillClass = "h-8 px-3 rounded-full text-xs font-medium flex items-center justify-center whitespace-nowrap";
     const commonBtnClass = "h-8 w-8 rounded-full flex items-center justify-center transition-colors shadow-sm border-0";
+    
+    // Long-press state for mobile
+    const longPressTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+    const touchStartPosRef = React.useRef<{ x: number; y: number } | null>(null);
+    const longPressOccurredRef = React.useRef<boolean>(false);
+    
+    const handleTouchStart = (e: React.TouchEvent) => {
+      const touch = e.touches[0];
+      touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+      longPressOccurredRef.current = false;
+      
+      longPressTimerRef.current = setTimeout(() => {
+        // Long-press detected - enter multiselect mode and select this invoice
+        longPressOccurredRef.current = true;
+        toggleSelect(inv.id);
+        // Provide haptic feedback if available
+        if ('vibrate' in navigator) {
+          navigator.vibrate(50);
+        }
+      }, 500); // 500ms for long-press
+    };
+    
+    const handleTouchMove = (e: React.TouchEvent) => {
+      // Cancel long-press if user moves finger too much
+      if (touchStartPosRef.current) {
+        const touch = e.touches[0];
+        const deltaX = Math.abs(touch.clientX - touchStartPosRef.current.x);
+        const deltaY = Math.abs(touch.clientY - touchStartPosRef.current.y);
+        
+        if (deltaX > 10 || deltaY > 10) {
+          if (longPressTimerRef.current) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+          }
+        }
+      }
+    };
+    
+    const handleTouchEnd = (e: React.TouchEvent) => {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+      
+      // If it was a long-press, prevent the default click behavior
+      if (longPressOccurredRef.current) {
+        e.preventDefault();
+        e.stopPropagation();
+        longPressOccurredRef.current = false;
+      }
+      
+      touchStartPosRef.current = null;
+    };
+    
+    const handleMobileClick = (e: React.MouseEvent) => {
+      // If in multiselect mode, toggle selection on click
+      if (selectedIds.size > 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleSelect(inv.id);
+      } else {
+        // Otherwise, expand the invoice
+        onExpand();
+      }
+    };
+    
+    React.useEffect(() => {
+      return () => {
+        if (longPressTimerRef.current) {
+          clearTimeout(longPressTimerRef.current);
+        }
+      };
+    }, []);
 
     return (
         <div className={`transition-all duration-300 ${expanded ? 'my-4' : 'my-1'}`}>
@@ -1242,7 +1315,13 @@ export const Invoices: React.FC<InvoicesProps> = ({
             </div>
 
             {/* MOBILE CARD (Hidden on Desktop) - 3 ROW LAYOUT */}
-            <div className={`md:hidden flex flex-col gap-2 p-3 bg-surface dark:bg-gray-800 border border-surface-outline-variant dark:border-gray-700 shadow-sm ${expanded ? '!rounded-t-3xl !rounded-b-none border-b-0 shadow-none mb-0' : 'rounded-3xl'}`}>
+            <div 
+              className={`md:hidden flex flex-col gap-2 p-3 bg-surface dark:bg-gray-800 border border-surface-outline-variant dark:border-gray-700 shadow-sm ${expanded ? '!rounded-t-3xl !rounded-b-none border-b-0 shadow-none mb-0' : 'rounded-3xl'} ${selectedIds.has(inv.id) ? 'ring-2 ring-primary' : ''}`}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+              onClick={handleMobileClick}
+            >
                  {/* Row 1: Status, Invoice#, Date, Due, Total ... Checkbox */}
                  <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 overflow-x-auto no-scrollbar min-w-0 flex-1" style={{ paddingRight: '8px', WebkitOverflowScrolling: 'touch' }}>
@@ -1270,12 +1349,21 @@ export const Invoices: React.FC<InvoicesProps> = ({
                         <span className={`${commonPillClass} bg-green-100 dark:bg-green-900 text-white`} style={{ flexShrink: 0, minWidth: 'max-content' }}>${inv.total.toFixed(0)}</span>
                     </div>
 
-                    {/* Checkbox (Right Side) */}
-                    <div onClick={(e) => {e.stopPropagation(); toggleSelect(inv.id)}} className="h-8 w-8 shrink-0 flex items-center justify-center pl-1">
+                    {/* Checkbox (Right Side) - Hidden on mobile, shown on desktop */}
+                    <div onClick={(e) => {e.stopPropagation(); toggleSelect(inv.id)}} className="h-8 w-8 shrink-0 hidden md:flex items-center justify-center pl-1">
                          <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${selectedIds.has(inv.id) ? 'bg-primary border-primary' : 'border-surface-outline/50 dark:border-gray-600'}`}>
                             {selectedIds.has(inv.id) && <X size={12} className="text-white rotate-45" strokeWidth={4} />}
                         </div>
                     </div>
+                    
+                    {/* Selection indicator for mobile (when in multiselect mode) */}
+                    {selectedIds.has(inv.id) && (
+                      <div className="h-8 w-8 shrink-0 md:hidden flex items-center justify-center">
+                        <div className="w-5 h-5 rounded-full bg-primary border-2 border-primary flex items-center justify-center">
+                          <X size={12} className="text-white rotate-45" strokeWidth={4} />
+                        </div>
+                      </div>
+                    )}
                  </div>
 
                  {/* Row 2: Builder, Check #, Project */}

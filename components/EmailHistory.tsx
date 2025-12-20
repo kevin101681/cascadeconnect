@@ -104,32 +104,105 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
     setError(null);
     
     try {
-      // Use the same endpoint pattern as email-send to avoid CORS issues
+      // In development, try Express server first (runs with 'npm run dev')
+      // Then try Netlify function (requires 'netlify dev')
+      // In production, use the redirect path
       const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      let apiEndpoint: string;
+      
+      // Build URL - try Express server endpoint first in dev, then Netlify function
+      let url: URL;
       if (isLocalDev) {
-        apiEndpoint = 'http://localhost:3000/api/email/analytics';
+        // Try Express server first (runs on port 3000 with 'npm run dev')
+        url = new URL('http://localhost:3000/api/email/analytics');
       } else {
-        // Always use www subdomain to avoid redirect issues
-        const protocol = window.location.protocol;
-        apiEndpoint = `${protocol}//www.cascadeconnect.app/api/email/analytics`;
+        // Use redirect path in production
+        url = new URL('/api/email/analytics', window.location.origin);
       }
-
-      const url = new URL(apiEndpoint);
+      
       url.searchParams.set('start_date', startDate);
       url.searchParams.set('end_date', endDate);
       url.searchParams.set('aggregated_by', aggregatedBy);
       url.searchParams.set('limit', '500'); // Request more emails
 
       console.log('Fetching email analytics from:', url.toString());
+      console.log('Is local dev:', isLocalDev);
+      console.log('Current origin:', window.location.origin);
       
       // Add timeout to prevent hanging
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
       
-      const response = await fetch(url.toString(), {
-        signal: controller.signal
-      });
+      let response: Response | null = null;
+      try {
+        // Don't set Content-Type header for GET requests - it can cause CORS preflight issues
+        response = await fetch(url.toString(), {
+          signal: controller.signal,
+          method: 'GET',
+          // Explicitly set mode to handle CORS
+          mode: 'cors',
+          credentials: 'omit',
+        });
+      } catch (fetchError: any) {
+        clearTimeout(timeoutId);
+        // Handle network errors
+        if (fetchError.name === 'AbortError') {
+          throw new Error('Request timed out. Please try again.');
+        }
+        console.error('Network error fetching email analytics:', {
+          error: fetchError,
+          message: fetchError.message,
+          name: fetchError.name,
+          url: url.toString()
+        });
+        
+        // Try fallback paths
+        if (isLocalDev) {
+          // Try Netlify function path (requires 'netlify dev')
+          console.log('Attempting fallback to Netlify function path...');
+          const fallbackUrl = new URL('/.netlify/functions/email-analytics', window.location.origin);
+          fallbackUrl.search = url.search; // Copy query parameters
+          
+          try {
+            response = await fetch(fallbackUrl.toString(), {
+              signal: controller.signal,
+              method: 'GET',
+              mode: 'cors',
+              credentials: 'omit',
+            });
+            
+            // Check if we got HTML (means function not available)
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('text/html')) {
+              throw new Error('Netlify function returned HTML - functions not available. Are you running "netlify dev"?');
+            }
+            
+            console.log('✅ Fallback to Netlify function succeeded');
+          } catch (fallbackError: any) {
+            throw new Error(`Failed to connect to email analytics service. Please ensure you're running 'npm run dev' (for Express server) or 'netlify dev' (for Netlify functions). Original error: ${fetchError.message}`);
+          }
+        } else {
+          // In production, try direct Netlify function path as fallback
+          console.log('Attempting fallback to direct Netlify function path...');
+          const fallbackUrl = new URL('/.netlify/functions/email-analytics', window.location.origin);
+          fallbackUrl.search = url.search; // Copy query parameters
+          
+          try {
+            response = await fetch(fallbackUrl.toString(), {
+              signal: controller.signal,
+              method: 'GET',
+              mode: 'cors',
+              credentials: 'omit',
+            });
+            console.log('✅ Fallback request succeeded');
+          } catch (fallbackError: any) {
+            throw new Error(`Failed to connect to email analytics service: ${fetchError.message}. Fallback also failed: ${fallbackError.message}`);
+          }
+        }
+      }
+      
+      if (!response) {
+        throw new Error('No response received from email analytics service');
+      }
       
       clearTimeout(timeoutId);
       
@@ -139,14 +212,41 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
         try {
           errorData = JSON.parse(errorText);
         } catch {
-          errorData = { error: errorText || `HTTP ${response.status}: ${response.statusText}` };
+          // If we got HTML instead of JSON, it's likely an error page
+          if (errorText.trim().startsWith('<!DOCTYPE') || errorText.trim().startsWith('<html')) {
+            // Try to extract error message from HTML if possible
+            const titleMatch = errorText.match(/<title[^>]*>([^<]+)<\/title>/i);
+            const h1Match = errorText.match(/<h1[^>]*>([^<]+)<\/h1>/i);
+            const errorMsg = titleMatch?.[1] || h1Match?.[1] || `Error ${response.status}`;
+            
+            errorData = { 
+              error: `Server returned HTML error page (${errorMsg}). The Netlify function may not be available. Please ensure you're running 'netlify dev' and the function exists at netlify/functions/email-analytics.js` 
+            };
+          } else {
+            errorData = { error: errorText || `HTTP ${response.status}: ${response.statusText}` };
+          }
         }
         console.error('Email analytics API error:', {
           status: response.status,
           statusText: response.statusText,
-          error: errorData
+          contentType: response.headers.get('content-type'),
+          error: errorData,
+          url: url.toString(),
+          responsePreview: errorText.substring(0, 200)
         });
         throw new Error(errorData.error || `Failed to fetch email analytics (${response.status})`);
+      }
+
+      // Check content type before parsing JSON
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Unexpected content type:', {
+          contentType,
+          responsePreview: text.substring(0, 200),
+          url: url.toString()
+        });
+        throw new Error(`Server returned ${contentType} instead of JSON. The endpoint may not be configured correctly.`);
       }
 
       const result = await response.json();
