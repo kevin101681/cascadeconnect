@@ -1206,16 +1206,16 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="flex items-center gap-2">
           {/* Filter Buttons - Matching TaskList style */}
           {setFilter && allClaims && (
-            <div className="flex rounded-full bg-surface-container dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 overflow-hidden">
+            <div className="flex items-center gap-2">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setFilter('All');
                 }}
-                className={`px-3 py-1 text-sm font-medium transition-colors ${
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   filter === 'All'
                     ? 'bg-primary text-primary-on'
-                    : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
                 All ({allClaims.length})
@@ -1225,10 +1225,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.stopPropagation();
                   setFilter('Open');
                 }}
-                className={`px-3 py-1 text-sm font-medium transition-colors ${
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   filter === 'Open'
                     ? 'bg-primary text-primary-on'
-                    : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
                 Open ({allClaims.filter(c => c.status !== ClaimStatus.COMPLETED).length})
@@ -1238,10 +1238,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.stopPropagation();
                   setFilter('Closed');
                 }}
-                className={`px-3 py-1 text-sm font-medium transition-colors ${
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   filter === 'Closed'
                     ? 'bg-primary text-primary-on'
-                    : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
                 Closed ({allClaims.filter(c => c.status === ClaimStatus.COMPLETED).length})

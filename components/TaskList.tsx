@@ -208,6 +208,39 @@ const TaskList: React.FC<TaskListProps> = ({
           My Tasks
         </h2>
         <div className="flex items-center gap-2">
+          {/* Filter Pills */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setTaskFilter('all')}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                taskFilter === 'all'
+                  ? 'bg-primary text-primary-on'
+                  : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+              }`}
+            >
+              All ({userTasks.length})
+            </button>
+            <button
+              onClick={() => setTaskFilter('open')}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                taskFilter === 'open'
+                  ? 'bg-primary text-primary-on'
+                  : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+              }`}
+            >
+              Open ({userTasks.filter(t => !t.isCompleted).length})
+            </button>
+            <button
+              onClick={() => setTaskFilter('closed')}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                taskFilter === 'closed'
+                  ? 'bg-primary text-primary-on'
+                  : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+              }`}
+            >
+              Closed ({userTasks.filter(t => t.isCompleted).length})
+            </button>
+          </div>
           <Button
             onClick={() => setShowTemplates(!showTemplates)}
             variant="text"
@@ -226,40 +259,6 @@ const TaskList: React.FC<TaskListProps> = ({
             New Task
           </Button>
         </div>
-      </div>
-
-      {/* Filter Buttons */}
-      <div className="px-6 py-3 border-b border-surface-outline-variant dark:border-gray-700 flex items-center gap-2 bg-surface-container/20 dark:bg-gray-700/20 flex-shrink-0">
-        <button
-          onClick={() => setTaskFilter('all')}
-          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-            taskFilter === 'all'
-              ? 'bg-primary text-primary-on'
-              : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
-          }`}
-        >
-          All ({userTasks.length})
-        </button>
-        <button
-          onClick={() => setTaskFilter('open')}
-          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-            taskFilter === 'open'
-              ? 'bg-primary text-primary-on'
-              : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
-          }`}
-        >
-          Open ({userTasks.filter(t => !t.isCompleted).length})
-        </button>
-        <button
-          onClick={() => setTaskFilter('closed')}
-          className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-            taskFilter === 'closed'
-              ? 'bg-primary text-primary-on'
-              : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
-          }`}
-        >
-          Closed ({userTasks.filter(t => t.isCompleted).length})
-        </button>
       </div>
 
       {/* Content */}
