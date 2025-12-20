@@ -540,8 +540,6 @@ const TaskList: React.FC<TaskListProps> = ({
                                 <div>
                                   <span className="font-medium text-surface-on dark:text-gray-100 block">{claim.title}</span>
                                   <div className="flex items-center flex-wrap gap-1 text-xs text-surface-on-variant dark:text-gray-400">
-                                    <span>{claim.id}</span>
-                                    <span>•</span>
                                     <span>{claim.classification}</span>
                                     {claim.contractorName && (
                                       <>
