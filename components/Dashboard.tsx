@@ -8,7 +8,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor } from '../types';
 import { ClaimMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save } from 'lucide-react';
 import Button from './Button';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
@@ -304,6 +304,127 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [newMessageContent, setNewMessageContent] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [replyExpanded, setReplyExpanded] = useState(false);
+  
+  // Message Email Templates state
+  interface MessageEmailTemplate {
+    id: string;
+    name: string;
+    subject: string;
+    body: string;
+  }
+  const [messageEmailTemplates, setMessageEmailTemplates] = useState<MessageEmailTemplate[]>(() => {
+    try {
+      const saved = localStorage.getItem('cascade_message_templates');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [showMessageTemplateModal, setShowMessageTemplateModal] = useState(false);
+  const [editingMessageTemplateId, setEditingMessageTemplateId] = useState<string | null>(null);
+  const [messageTemplateName, setMessageTemplateName] = useState('');
+  const [selectedMessageTemplateId, setSelectedMessageTemplateId] = useState<string>('');
+  const [messageTemplateEditSubject, setMessageTemplateEditSubject] = useState('');
+  const [messageTemplateEditBody, setMessageTemplateEditBody] = useState('');
+  
+  // Load message templates from localStorage
+  const loadMessageTemplates = () => {
+    try {
+      const saved = localStorage.getItem('cascade_message_templates');
+      if (saved) {
+        const templates = JSON.parse(saved);
+        setMessageEmailTemplates(templates);
+        return templates;
+      }
+    } catch (e) {
+      console.error('Failed to load message templates:', e);
+    }
+    return [];
+  };
+  
+  // Save message templates to localStorage
+  const saveMessageTemplates = (templates: MessageEmailTemplate[]) => {
+    try {
+      localStorage.setItem('cascade_message_templates', JSON.stringify(templates));
+      setMessageEmailTemplates(templates);
+    } catch (e) {
+      console.error('Failed to save message templates:', e);
+    }
+  };
+  
+  // Handle message template selection
+  const handleMessageTemplateSelect = (templateId: string) => {
+    const template = messageEmailTemplates.find(t => t.id === templateId);
+    if (template) {
+      setNewMessageSubject(template.subject);
+      setNewMessageContent(template.body);
+      setSelectedMessageTemplateId(templateId);
+    }
+  };
+  
+  // Open message template creator
+  const handleOpenMessageTemplateCreator = (template?: MessageEmailTemplate) => {
+    if (template) {
+      setEditingMessageTemplateId(template.id);
+      setMessageTemplateName(template.name);
+      setMessageTemplateEditSubject(template.subject);
+      setMessageTemplateEditBody(template.body);
+    } else {
+      setEditingMessageTemplateId(null);
+      setMessageTemplateName('');
+      setMessageTemplateEditSubject(newMessageSubject);
+      setMessageTemplateEditBody(newMessageContent);
+    }
+    setShowMessageTemplateModal(true);
+  };
+  
+  // Save message template
+  const handleSaveMessageTemplate = () => {
+    const subjectToSave = editingMessageTemplateId ? messageTemplateEditSubject : newMessageSubject;
+    const bodyToSave = editingMessageTemplateId ? messageTemplateEditBody : newMessageContent;
+    
+    if (!messageTemplateName.trim() || !subjectToSave.trim() || !bodyToSave.trim()) {
+      alert('Please fill in template name, subject, and body.');
+      return;
+    }
+    
+    const templates = [...messageEmailTemplates];
+    if (editingMessageTemplateId) {
+      const index = templates.findIndex(t => t.id === editingMessageTemplateId);
+      if (index >= 0) {
+        templates[index] = {
+          id: editingMessageTemplateId,
+          name: messageTemplateName.trim(),
+          subject: subjectToSave,
+          body: bodyToSave
+        };
+      }
+    } else {
+      templates.push({
+        id: Date.now().toString() + Math.random().toString(36).substring(2),
+        name: messageTemplateName.trim(),
+        subject: subjectToSave,
+        body: bodyToSave
+      });
+    }
+    saveMessageTemplates(templates);
+    setShowMessageTemplateModal(false);
+    setEditingMessageTemplateId(null);
+    setMessageTemplateName('');
+    setMessageTemplateEditSubject('');
+    setMessageTemplateEditBody('');
+  };
+  
+  // Delete message template
+  const handleDeleteMessageTemplate = (templateId: string) => {
+    if (confirm('Are you sure you want to delete this template?')) {
+      const templates = messageEmailTemplates.filter(t => t.id !== templateId);
+      saveMessageTemplates(templates);
+      if (selectedMessageTemplateId === templateId) {
+        setSelectedMessageTemplateId('');
+      }
+    }
+  };
 
   // Mark thread as read when selected
   useEffect(() => {
@@ -3008,6 +3129,85 @@ const Dashboard: React.FC<DashboardProps> = ({
                      </div>
                   </div>
 
+                  {/* Template Selector */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400">Email Template</label>
+                      <button
+                        onClick={() => handleOpenMessageTemplateCreator()}
+                        className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"
+                      >
+                        <FileEdit className="h-3 w-3" />
+                        Manage Templates
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <select
+                        className="flex-1 bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-sm text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                        value={selectedMessageTemplateId}
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            handleMessageTemplateSelect(e.target.value);
+                          } else {
+                            setSelectedMessageTemplateId('');
+                          }
+                        }}
+                      >
+                        <option value="">Default Template</option>
+                        {messageEmailTemplates.map(template => (
+                          <option key={template.id} value={template.id}>{template.name}</option>
+                        ))}
+                      </select>
+                      {selectedMessageTemplateId && (
+                        <>
+                          <button
+                            onClick={() => {
+                              const template = messageEmailTemplates.find(t => t.id === selectedMessageTemplateId);
+                              if (template) handleOpenMessageTemplateCreator(template);
+                            }}
+                            className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            title="Edit template"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMessageTemplate(selectedMessageTemplateId)}
+                            className="p-2 text-error hover:bg-error/10 rounded-lg transition-colors"
+                            title="Delete template"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    {/* Template List for Management */}
+                    {messageEmailTemplates.length > 0 && (
+                      <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
+                        {messageEmailTemplates.map(template => (
+                          <div key={template.id} className="flex items-center justify-between p-2 bg-surface-container dark:bg-gray-700 rounded-lg">
+                            <span className="text-sm text-surface-on dark:text-gray-100">{template.name}</span>
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => handleOpenMessageTemplateCreator(template)}
+                                className="p-1 text-primary hover:bg-primary/10 rounded transition-colors"
+                                title="Edit"
+                              >
+                                <Edit2 className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteMessageTemplate(template.id)}
+                                className="p-1 text-error hover:bg-error/10 rounded transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <div>
                     <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Subject</label>
                     <input 
@@ -3021,11 +3221,22 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <div>
                     <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Message</label>
                     <textarea 
-                      rows={6}
+                      rows={8}
                       className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
                       value={newMessageContent}
                       onChange={(e) => setNewMessageContent(e.target.value)}
                     />
+                  </div>
+                  
+                  {/* Save as Template Button */}
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => handleOpenMessageTemplateCreator()}
+                      className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 px-3 py-1.5 hover:bg-primary/5 rounded-lg transition-colors"
+                    >
+                      <Save className="h-4 w-4" />
+                      Save as Template
+                    </button>
                   </div>
                 </div>
 
@@ -3047,6 +3258,71 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
              </div>
           </div>
+        )}
+        
+        {/* Message Email Template Creator Modal */}
+        {showMessageTemplateModal && createPortal(
+          <div className="fixed inset-0 z-[1001] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]">
+            <div className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-3 w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden flex flex-col animate-[scale-in_0.2s_ease-out]" onClick={(e) => e.stopPropagation()}>
+              <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
+                <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">
+                  {editingMessageTemplateId ? 'Edit Template' : 'Create Email Template'}
+                </h2>
+                <button onClick={() => {
+                  setShowMessageTemplateModal(false);
+                  setEditingMessageTemplateId(null);
+                  setMessageTemplateName('');
+                  setMessageTemplateEditSubject('');
+                  setMessageTemplateEditBody('');
+                }} className="p-2 rounded-full hover:bg-surface-container dark:hover:bg-gray-600 transition-colors">
+                  <X className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
+                </button>
+              </div>
+              <div className="p-6 flex-1 overflow-y-auto space-y-4 bg-surface dark:bg-gray-800">
+                <div>
+                  <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Template Name</label>
+                  <input
+                    type="text"
+                    className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                    value={messageTemplateName}
+                    onChange={e => setMessageTemplateName(e.target.value)}
+                    placeholder="e.g., Standard Message"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Subject</label>
+                  <input
+                    type="text"
+                    className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                    value={editingMessageTemplateId ? messageTemplateEditSubject : newMessageSubject}
+                    onChange={e => editingMessageTemplateId ? setMessageTemplateEditSubject(e.target.value) : setNewMessageSubject(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Message Body</label>
+                  <textarea 
+                    rows={10}
+                    className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
+                    value={editingMessageTemplateId ? messageTemplateEditBody : newMessageContent}
+                    onChange={e => editingMessageTemplateId ? setMessageTemplateEditBody(e.target.value) : setNewMessageContent(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-2 bg-surface-container dark:bg-gray-700">
+                <Button variant="text" onClick={() => {
+                  setShowMessageTemplateModal(false);
+                  setEditingMessageTemplateId(null);
+                  setMessageTemplateName('');
+                  setMessageTemplateEditSubject('');
+                  setMessageTemplateEditBody('');
+                }}>Cancel</Button>
+                <Button variant="filled" onClick={handleSaveMessageTemplate} disabled={!messageTemplateName.trim() || !(editingMessageTemplateId ? messageTemplateEditSubject : newMessageSubject).trim() || !(editingMessageTemplateId ? messageTemplateEditBody : newMessageContent).trim()} icon={<Save className="h-4 w-4" />}>
+                  {editingMessageTemplateId ? 'Update Template' : 'Save Template'}
+                </Button>
+              </div>
+            </div>
+          </div>,
+          document.body
         )}
         </div>
       </>
