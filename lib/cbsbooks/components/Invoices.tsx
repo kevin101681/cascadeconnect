@@ -230,7 +230,12 @@ export const Invoices: React.FC<InvoicesProps> = ({
   }, [activeFab]);
 
   const toggleFab = (fab: ActiveFab) => {
-    setActiveFab(prev => prev === fab ? 'none' : fab);
+    // If opening a new fab, close menu first
+    if (fab !== 'none' && activeFab !== fab) {
+      setActiveFab(fab);
+    } else {
+      setActiveFab(prev => prev === fab ? 'none' : fab);
+    }
     if (fab === 'filter') setFilterSelectionCount(0);
   };
 
@@ -884,6 +889,9 @@ export const Invoices: React.FC<InvoicesProps> = ({
   };
 
   const menuActions: ActionItem[] = [
+    { label: 'New Invoice', icon: <Plus size={20} />, onClick: handleCreate },
+    { label: 'Search', icon: <Search size={20} />, onClick: () => toggleFab('search') },
+    { label: 'Filter & Sort', icon: <SlidersHorizontal size={20} />, onClick: () => toggleFab('filter') },
     { label: 'Import CSV', icon: <Upload size={20} />, onClick: () => fileInputRef.current?.click() },
     { label: 'AI Import (Text)', icon: <Sparkles size={20} />, onClick: () => setShowAIImport(true) },
     { label: 'Scan Doc/Email', icon: <ScanText size={20} />, onClick: () => setShowInvoiceScanner(true) },
@@ -1237,7 +1245,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
             <div className={`md:hidden flex flex-col gap-2 p-3 bg-surface dark:bg-gray-800 border border-surface-outline-variant dark:border-gray-700 shadow-sm ${expanded ? '!rounded-t-3xl !rounded-b-none border-b-0 shadow-none mb-0' : 'rounded-3xl'}`}>
                  {/* Row 1: Status, Invoice#, Date, Due, Total ... Checkbox */}
                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar min-w-0 flex-1">
+                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar min-w-0 flex-1" style={{ paddingRight: '8px', WebkitOverflowScrolling: 'touch' }}>
                         {/* Status */}
                         <span className={`${commonPillClass} ${
                             inv.status === 'paid' ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200' :
@@ -1259,7 +1267,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                         )}
 
                         {/* Total (Moved Here) */}
-                        <span className={`${commonPillClass} bg-green-100 dark:bg-green-900 text-white shrink-0`}>${inv.total.toFixed(0)}</span>
+                        <span className={`${commonPillClass} bg-green-100 dark:bg-green-900 text-white`} style={{ flexShrink: 0, minWidth: 'max-content' }}>${inv.total.toFixed(0)}</span>
                     </div>
 
                     {/* Checkbox (Right Side) */}
@@ -1484,8 +1492,34 @@ export const Invoices: React.FC<InvoicesProps> = ({
           </div>
       )}
 
-      {/* FAB GROUP */}
-      <div className="fixed bottom-8 right-8 z-50 flex items-end gap-4" style={{ flexDirection: 'column', alignItems: 'flex-end' }}>
+      {/* Filter Modal - shown when filter action is triggered from menu */}
+      {activeFab === 'filter' && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]" onClick={() => setActiveFab('none')}>
+          <div className="w-[calc(100vw-32px)] max-w-xs flex flex-col gap-4 bg-surface-container dark:bg-gray-700 rounded-2xl p-4 shadow-xl border border-surfaceContainerHigh animate-slide-up" onClick={(e) => e.stopPropagation()}>
+            <div className="flex flex-col gap-2">
+              <p className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider mb-1">Status</p>
+              {(['all', 'draft', 'sent', 'paid'] as const).map(s => (
+                <button key={s} onClick={() => handleFilterSelection('status', s)} className={`px-4 h-10 rounded-full text-sm font-medium flex items-center justify-start border transition-all ${statusFilter === s ? 'bg-primary text-primary-on border-primary/30' : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 border-surface-outline-variant/50 dark:border-gray-600 hover:bg-surface-container-high/80 dark:hover:bg-gray-500'}`}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>
+              ))}
+            </div>
+            <div className="flex flex-col gap-2 pt-2 border-t border-surface-outline-variant/50 dark:border-gray-600">
+              <p className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider mb-1">Sort By</p>
+              {sortOptions.map(opt => (
+                <button 
+                  key={opt.value} 
+                  onClick={() => handleFilterSelection('sort', opt.value)}
+                  className={`px-4 h-10 rounded-full text-sm font-medium flex items-center justify-start border transition-all ${sortValue === opt.value ? 'bg-primary text-primary-on border-primary/30' : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 border-surface-outline-variant/50 dark:border-gray-600 hover:bg-surface-container-high/80 dark:hover:bg-gray-500'}`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FAB GROUP - Single Menu FAB */}
+      <div className="fixed bottom-8 right-8 z-50">
         <FloatingMenu 
           currentView="invoices" 
           onNavigate={onNavigate} 
@@ -1493,46 +1527,6 @@ export const Invoices: React.FC<InvoicesProps> = ({
           isOpen={activeFab === 'menu'}
           onToggle={(open) => setActiveFab(open ? 'menu' : 'none')}
         />
-        
-        <div className="relative md:hidden">
-            {activeFab === 'filter' && (
-                 <div className="
-                     fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-32px)] max-w-xs flex flex-col gap-4 bg-surface-container dark:bg-gray-700 rounded-2xl p-4 shadow-xl border border-surfaceContainerHigh animate-slide-up z-[60]
-                 ">
-                     <div className="flex flex-col gap-2">
-                        <p className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider mb-1">Status</p>
-                        {(['all', 'draft', 'sent', 'paid'] as const).map(s => (
-                            <button key={s} onClick={() => handleFilterSelection('status', s)} className={`px-4 h-10 rounded-full text-sm font-medium flex items-center justify-start border transition-all ${statusFilter === s ? 'bg-primary text-primary-on border-primary/30' : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 border-surface-outline-variant/50 dark:border-gray-600 hover:bg-surface-container-high/80 dark:hover:bg-gray-500'}`}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>
-                        ))}
-                     </div>
-                     <div className="flex flex-col gap-2 pt-2 border-t border-surface-outline-variant/50 dark:border-gray-600">
-                        <p className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider mb-1">Sort By</p>
-                         {sortOptions.map(opt => (
-                            <button 
-                                key={opt.value} 
-                                onClick={() => handleFilterSelection('sort', opt.value)}
-                                className={`px-4 h-10 rounded-full text-sm font-medium flex items-center justify-start border transition-all ${sortValue === opt.value ? 'bg-primary text-primary-on border-primary/30' : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 border-surface-outline-variant/50 dark:border-gray-600 hover:bg-surface-container-high/80 dark:hover:bg-gray-500'}`}
-                            >
-                                {opt.label}
-                            </button>
-                         ))}
-                     </div>
-                 </div>
-            )}
-            <button onClick={() => toggleFab('filter')} className="w-14 h-14 rounded-2xl shadow-lg bg-primary text-primary-on hover:bg-primary/90 flex items-center justify-center md:hidden transition-colors"><SlidersHorizontal size={24} /></button>
-        </div>
-
-        {/* Mobile Search FAB */}
-        <div className="md:hidden">
-            <button 
-                onClick={() => toggleFab('search')}
-                className="w-14 h-14 bg-primary text-primary-on rounded-2xl shadow-lg hover:shadow-xl hover:bg-primary/90 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-            >
-                {activeFab === 'search' ? <X size={24} /> : <Search size={24} />}
-            </button>
-        </div>
-
-        <button onClick={handleCreate} className="w-14 h-14 bg-primary text-primary-on rounded-2xl shadow-lg hover:shadow-xl hover:bg-primary/90 flex items-center justify-center transition-all hover:scale-105 active:scale-95"><Plus size={24} /></button>
       </div>
 
       {/* Header Stats */}
