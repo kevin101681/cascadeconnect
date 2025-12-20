@@ -5,7 +5,7 @@ import { Invoices } from './components/Invoices';
 import { Expenses } from './components/Expenses';
 import { Reports } from './components/Reports';
 import { Clients } from './components/Clients';
-import { Loader2, AlertTriangle, WifiOff } from 'lucide-react';
+import { AlertTriangle, WifiOff } from 'lucide-react';
 import { api } from './services/api';
 
 interface CBSBooksAppProps {
@@ -233,17 +233,10 @@ const App: React.FC<CBSBooksAppProps> = ({ prefillInvoice }) => {
     document.body.removeChild(link);
   };
 
-  // Show UI immediately with a discrete loading indicator
+  // Show UI immediately - no loading indicator needed for fast loads
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
-        {/* Small discrete loading indicator in top-right corner */}
-        <div className="fixed top-4 right-4 z-50 pointer-events-none">
-          <div className="bg-surface dark:bg-gray-800 rounded-full p-2 shadow-lg border border-surface-outline dark:border-gray-700">
-            <Loader2 className="w-4 h-4 animate-spin text-primary" />
-          </div>
-        </div>
-        {/* Show UI structure immediately - no blank page */}
         <main className="p-4 md:p-8 max-w-7xl mx-auto w-full pb-32">
           {view === 'invoices' && <Invoices invoices={[]} clients={[]} onAdd={handleAddInvoice} onUpdate={handleUpdateInvoice} onDelete={handleDeleteInvoice} onBulkAdd={handleBulkAddInvoices} onBulkDelete={handleBulkDeleteInvoices} onNavigate={setView} onBackup={handleFullBackup} prefillInvoice={prefillInvoice} />}
           {view === 'expenses' && <Expenses expenses={[]} onAdd={handleAddExpense} onDelete={handleDeleteExpense} onBulkAdd={handleBulkAddExpenses} onBulkDelete={handleBulkDeleteExpenses} onNavigate={setView} onBackup={handleFullBackup} />}
