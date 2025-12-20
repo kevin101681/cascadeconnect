@@ -1814,7 +1814,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out] overflow-y-auto"
           style={{ overscrollBehavior: 'contain' }}
         >
-          <div className="bg-primary/10 dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] my-auto flex flex-col max-h-[90vh]">
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] my-auto flex flex-col max-h-[90vh]">
             <div className="overflow-y-auto overflow-x-hidden flex-1">
               <div className="p-4">
                 <Suspense fallback={
@@ -1890,8 +1890,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             if (e.target === e.currentTarget) setShowNewClaimModal(false);
           }}
         >
-          <div className="bg-primary/10 dark:bg-gray-800 w-full max-w-4xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 max-h-[calc(100vh-4rem)] flex flex-col">
-            <div className="p-6 bg-primary/10 dark:bg-gray-800 overflow-y-auto flex-1">
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-4xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 max-h-[calc(100vh-4rem)] flex flex-col">
+            <div className="p-6 bg-surface dark:bg-gray-800 overflow-y-auto flex-1">
               {onCreateClaim ? (
                 <Suspense fallback={
                   <div className="flex items-center justify-center py-12">

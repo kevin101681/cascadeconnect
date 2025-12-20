@@ -51,12 +51,23 @@ const PDFPage = forwardRef<HTMLDivElement, PDFPageProps>(({ pageNumber, width, h
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        <div style={{ margin: 0, padding: 0 }}>
+        <div style={{ margin: 0, padding: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Page
             pageNumber={pageNumber}
             width={width}
+            height={height}
             renderTextLayer={false}
             renderAnnotationLayer={false}
+            loading={
+              <div style={{ width, height, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f0f0f0' }}>
+                Loading page...
+              </div>
+            }
+            error={
+              <div style={{ width, height, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fee', color: '#c00' }}>
+                Error loading page
+              </div>
+            }
           />
         </div>
       </div>
@@ -186,10 +197,16 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
   }, [isOpen, document?.url]);
 
   const onDocumentLoadSuccess = async ({ numPages }: { numPages: number }) => {
-    console.log('PDF document loaded successfully, pages:', numPages);
+    console.log('PDF document loaded successfully, pages:', numPages, 'pdfUrl:', pdfUrl?.substring(0, 50));
     setNumPages(numPages);
     setError(null);
     setCurrentPage(1);
+    
+    // Use default aspect ratio immediately so pages can render
+    if (!pdfAspectRatio) {
+      setPdfAspectRatio(2 / 3);
+    }
+    
     setDocumentLoading(false);
     
     // Get the actual PDF page dimensions to calculate aspect ratio
@@ -213,7 +230,7 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
           const viewport = firstPage.getViewport({ scale: 1.0 });
           const aspectRatio = viewport.width / viewport.height;
           setPdfAspectRatio(aspectRatio);
-          console.log('PDF aspect ratio:', aspectRatio, 'Dimensions:', viewport.width, 'x', viewport.height);
+          console.log('PDF aspect ratio calculated:', aspectRatio, 'Dimensions:', viewport.width, 'x', viewport.height);
         } catch (err) {
           console.warn('Could not get PDF dimensions, using default aspect ratio:', err);
           // Use default aspect ratio if we can't get dimensions
@@ -327,7 +344,7 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
               }
             >
               {numPages > 0 ? (
-                <div style={{ width: pageDimensions.width, height: pageDimensions.height, overflow: 'hidden' }}>
+                <div style={{ width: pageDimensions.width, height: pageDimensions.height, overflow: 'hidden', position: 'relative' }}>
                   <HTMLFlipBook
                     ref={flipBookRef}
                     width={pageDimensions.width}

@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, Homeowner } from '../types';
-import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin } from 'lucide-react';
+import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2 } from 'lucide-react';
 import { useDarkMode } from './DarkModeProvider';
 import { UserButton, useUser } from '@clerk/clerk-react';
 
@@ -123,31 +123,45 @@ const Layout: React.FC<LayoutProps> = ({
     }
   }, [clerkLoaded, user]);
   
-  // Additional effect to ensure UserButton renders
+  // Additional effect to ensure UserButton renders and is visible
   useEffect(() => {
-    if (clerkLoaded) {
+    if (clerkLoaded && user) {
       // Force a re-check of the avatar after a short delay
       const timer = setTimeout(() => {
         const triggerButtons = document.querySelectorAll('.cl-userButtonTrigger, [class*="cl-userButtonTrigger"]');
         console.log('UserButton elements found:', triggerButtons.length);
         if (triggerButtons.length === 0) {
-          console.warn('UserButton not found in DOM');
+          console.warn('UserButton not found in DOM - Clerk may not be rendering it');
         } else {
           triggerButtons.forEach((el) => {
             const htmlEl = el as HTMLElement;
+            // Force visibility
+            htmlEl.style.setProperty('display', 'flex', 'important');
+            htmlEl.style.setProperty('visibility', 'visible', 'important');
+            htmlEl.style.setProperty('opacity', '1', 'important');
+            
+            // Check for avatar image
+            const avatarImg = htmlEl.querySelector('img');
+            if (avatarImg) {
+              avatarImg.style.setProperty('display', 'block', 'important');
+              avatarImg.style.setProperty('visibility', 'visible', 'important');
+              avatarImg.style.setProperty('opacity', '1', 'important');
+            }
+            
             console.log('UserButton element:', {
               display: window.getComputedStyle(htmlEl).display,
               visibility: window.getComputedStyle(htmlEl).visibility,
               opacity: window.getComputedStyle(htmlEl).opacity,
               width: window.getComputedStyle(htmlEl).width,
-              height: window.getComputedStyle(htmlEl).height
+              height: window.getComputedStyle(htmlEl).height,
+              hasImage: !!avatarImg
             });
           });
         }
       }, 1000);
       return () => clearTimeout(timer);
     }
-  }, [clerkLoaded]);
+  }, [clerkLoaded, user]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -316,25 +330,31 @@ const Layout: React.FC<LayoutProps> = ({
               })()}
 
               {/* Clerk UserButton - Avatar visible, dropdown shows only Sign Out text */}
-              {clerkLoaded && (
-                <UserButton
-                  appearance={{
-                    elements: {
-                      userButtonTrigger: "!flex !items-center !justify-center !w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !visible !opacity-100",
-                      userButtonAvatarBox: "!w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !block !visible !opacity-100 !flex !items-center !justify-center",
-                      userButtonAvatar: "!w-full !h-full !block !visible !opacity-100",
-                      userButtonPopoverCard: "shadow-elevation-2",
-                      userButtonPopoverHeader: "hidden",
-                      userButtonPopoverHeaderTitle: "hidden",
-                      userButtonPopoverHeaderSubtitle: "hidden",
-                      userButtonPopoverAvatarBox: "hidden",
-                      userButtonPopoverActions: "p-2",
-                      userButtonPopoverActionButtonIcon: "hidden",
-                      userButtonPopoverActionButton__manageAccount: "hidden",
-                      userButtonPopoverFooter: "hidden",
-                    }
-                  }}
-                />
+              {clerkLoaded ? (
+                <div className="flex items-center justify-center w-10 h-10">
+                  <UserButton
+                    appearance={{
+                      elements: {
+                        userButtonTrigger: "!flex !items-center !justify-center !w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !visible !opacity-100 !relative",
+                        userButtonAvatarBox: "!w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !block !visible !opacity-100 !flex !items-center !justify-center !relative",
+                        userButtonAvatar: "!w-full !h-full !block !visible !opacity-100 !relative",
+                        userButtonPopoverCard: "shadow-elevation-2",
+                        userButtonPopoverHeader: "hidden",
+                        userButtonPopoverHeaderTitle: "hidden",
+                        userButtonPopoverHeaderSubtitle: "hidden",
+                        userButtonPopoverAvatarBox: "hidden",
+                        userButtonPopoverActions: "p-2",
+                        userButtonPopoverActionButtonIcon: "hidden",
+                        userButtonPopoverActionButton__manageAccount: "hidden",
+                        userButtonPopoverFooter: "hidden",
+                      }
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="w-10 h-10 bg-surface-container dark:bg-gray-700 rounded-full flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-surface-on-variant dark:text-gray-400" />
+                </div>
               )}
 
               {/* Main Menu Dropdown - Show for Admin/Builder accounts (even when viewing as homeowner) */}
