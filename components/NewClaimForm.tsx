@@ -179,8 +179,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
 
       {/* Attachments Section */}
       <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-        <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3 flex items-center gap-2">
-          <Paperclip className="h-4 w-4 text-primary" />
+        <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">
           Attachments
         </h4>
         <div className="space-y-4">
@@ -352,7 +351,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
            {/* Sub Assignment (Admin Only) */}
            {isAdmin && (
              <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-                <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Sub Assignment</h4>
+                <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Sub Assignment</h4>
                 
                 <div className="relative">
                   <input 
@@ -373,7 +372,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                         <button
                           key={c.id}
                           type="button"
-                          onClick={() => { setSelectedContractorId(c.id); setContractorSearch(c.companyName); }}
+                          onClick={() => { setSelectedContractorId(c.id); setContractorSearch(''); }}
                           className={`w-full text-left px-3 py-2 text-sm flex justify-between hover:bg-surface-container dark:hover:bg-gray-600 ${selectedContractorId === c.id ? 'bg-primary-container text-primary-on-container' : 'text-surface-on dark:text-gray-100'}`}
                         >
                           <span>{c.companyName}</span>
@@ -396,13 +395,13 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                     
                     <Button 
                       type="button"
-                      variant="outlined" 
+                      variant="filled" 
                       disabled={true}
                       icon={<FileText className="h-4 w-4" />}
                       className="!h-12 whitespace-nowrap flex-shrink-0"
                       title="Save the claim first to send a service order"
                     >
-                      Service Order
+                      Email S.O.
                     </Button>
                   </div>
                 )}
@@ -411,10 +410,10 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
 
            {/* Scheduling */}
            <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-             <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Scheduling</h4>
+             <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Scheduling</h4>
              <div className="space-y-3">
                <div>
-                 <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Scheduled Date</label>
+                 <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Scheduled Date</label>
                  <Button
                    type="button"
                    variant="filled"
@@ -424,7 +423,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                  </Button>
                </div>
                <div>
-                 <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Time Slot</label>
+                 <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Time Slot</label>
                  <MaterialSelect
                    value={proposeTime}
                    onChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
@@ -469,10 +468,10 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
            {/* Warranty Assessment (Admin Only) */}
            {isAdmin && (
              <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Warranty Assessment</h4>
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Warranty Assessment</h4>
               <div className="space-y-4">
                 <div className="relative" ref={classificationSelectRef}>
-                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Classification</label>
+                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Classification</label>
         <Button 
           type="button" 
                     variant="filled"
@@ -504,7 +503,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                 </div>
 
                 <div>
-                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Date Evaluated</label>
+                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Date Evaluated</label>
                   <Button
                     type="button"
                     variant="filled"

@@ -81,19 +81,17 @@ const TaskList: React.FC<TaskListProps> = ({
   };
 
   return (
-    <div className="w-full">
-      {/* Header */}
-      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 mb-6">
-        <div className="flex-1">
-          <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-            {filteredTasks.length > 0 && (
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-                {filteredTasks.length}
-              </span>
-            )}
-            My Tasks
-          </h2>
-        </div>
+    <div className="w-full h-full flex flex-col">
+      {/* Header - matches warranty claims modal structure */}
+      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
+        <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+          {filteredTasks.length > 0 && (
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+              {filteredTasks.length}
+            </span>
+          )}
+          My Tasks
+        </h2>
         <Button
           onClick={() => setShowForm(!showForm)}
           variant="filled"
@@ -105,7 +103,7 @@ const TaskList: React.FC<TaskListProps> = ({
       </div>
 
       {/* Content */}
-      <div className="space-y-6">
+      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
         {showForm && (
           <div className="bg-surface dark:bg-gray-800 rounded-2xl border border-surface-outline-variant dark:border-gray-700 p-5 animate-in slide-in-from-top-2">
             <h3 className="font-medium text-surface-on dark:text-gray-100 mb-4">New Task</h3>

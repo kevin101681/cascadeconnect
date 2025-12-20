@@ -10,6 +10,7 @@ import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, B
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
+import { generatePDFThumbnail } from '../lib/pdfThumbnail';
 
 interface ClaimInlineEditorProps {
   claim: Claim;
@@ -87,6 +88,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   const [soBody, setSoBody] = useState('');
   const [isSendingSO, setIsSendingSO] = useState(false);
   const [soPdfUrl, setSoPdfUrl] = useState<string | null>(null);
+  const [attachmentThumbnails, setAttachmentThumbnails] = useState<Array<{ type: 'image' | 'pdf'; url: string; name: string; thumbnail: string }>>([]);
   
   // Email Templates state
   interface EmailTemplate {
@@ -422,12 +424,82 @@ If this repair work is billable, please let me know prior to scheduling.`);
     }
     setShowSOModal(true);
     
-    // Generate PDF
+    // Generate PDF and thumbnails
     try {
       const summary = `Service Order: ${claim.title} - ${claim.address}`;
-      const pdfUrl = generateServiceOrderPDF(claim, summary, true);
+      const pdfUrl = await generateServiceOrderPDF(claim, summary, true);
       if (pdfUrl && typeof pdfUrl === 'string') {
         setSoPdfUrl(pdfUrl);
+        
+        // Generate thumbnails for attachments
+        const thumbnails: Array<{ type: 'image' | 'pdf'; url: string; name: string; thumbnail: string }> = [];
+        
+        // Generate PDF thumbnail
+        try {
+          const pdfThumbnail = await generatePDFThumbnail(pdfUrl, 200, 200);
+          const claimNumber = claim.claimNumber || claim.id.substring(0, 8).toUpperCase();
+          thumbnails.push({
+            type: 'pdf',
+            url: pdfUrl,
+            name: `ServiceOrder_${claimNumber}.pdf`,
+            thumbnail: pdfThumbnail
+          });
+        } catch (error) {
+          console.error('Failed to generate PDF thumbnail:', error);
+        }
+        
+        // Generate image thumbnails
+        const imageAttachments = (claim.attachments || []).filter(att => att.type === 'IMAGE' && att.url);
+        for (const attachment of imageAttachments) {
+          try {
+            // Create thumbnail from image URL
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            const thumbnail = await new Promise<string>((resolve, reject) => {
+              img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const maxSize = 200;
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > height) {
+                  if (width > maxSize) {
+                    height = (height * maxSize) / width;
+                    width = maxSize;
+                  }
+                } else {
+                  if (height > maxSize) {
+                    width = (width * maxSize) / height;
+                    height = maxSize;
+                  }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                  ctx.drawImage(img, 0, 0, width, height);
+                  resolve(canvas.toDataURL('image/jpeg', 0.8));
+                } else {
+                  reject(new Error('Failed to get canvas context'));
+                }
+              };
+              img.onerror = () => reject(new Error('Failed to load image'));
+              img.src = attachment.url;
+            });
+            
+            thumbnails.push({
+              type: 'image',
+              url: attachment.url,
+              name: attachment.name || 'image',
+              thumbnail
+            });
+          } catch (error) {
+            console.error(`Failed to generate thumbnail for ${attachment.name}:`, error);
+          }
+        }
+        
+        setAttachmentThumbnails(thumbnails);
       }
     } catch (error) {
       console.error('Failed to generate PDF:', error);
@@ -629,8 +701,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
 
           {/* Attachments Section */}
           <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-            <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3 flex items-center gap-2">
-              <Paperclip className="h-4 w-4 text-primary" />
+            <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">
               Attachments
             </h4>
             <div className="space-y-4">
@@ -817,8 +888,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
               onClick={() => setIsMessageSummaryExpanded(!isMessageSummaryExpanded)}
               className="w-full flex items-center justify-between mb-3 text-left"
             >
-              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-primary" />
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100">
                 Message Summary
               </h4>
               {isMessageSummaryExpanded ? (
@@ -898,7 +968,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           {/* Sub Assignment (Admin Only) */}
           {isAdmin && (
             <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Sub Assignment</h4>
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Sub Assignment</h4>
               
               <div className="relative">
                 <input 
@@ -921,7 +991,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     type="button"
                         onClick={() => { 
                           handleAssignContractor(c.id);
-                          setContractorSearch(c.companyName);
+                          setContractorSearch('');
                         }}
                         className={`w-full text-left px-3 py-2 text-sm flex justify-between hover:bg-surface-container dark:hover:bg-gray-600 ${selectedContractorId === c.id ? 'bg-primary-container text-primary-on-container' : 'text-surface-on dark:text-gray-100'}`}
                   >
@@ -945,12 +1015,12 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   
                   <Button 
                     type="button"
-                    variant="outlined" 
+                    variant="filled" 
                     onClick={handlePrepareServiceOrder} 
                     icon={<FileText className="h-4 w-4" />}
                     className="!h-12 whitespace-nowrap flex-shrink-0"
                   >
-                    Service Order
+                    Email S.O.
                   </Button>
                 </div>
               )}
@@ -959,10 +1029,10 @@ If this repair work is billable, please let me know prior to scheduling.`);
           
           {/* Scheduling */}
           <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-            <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Scheduling</h4>
+            <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Scheduling</h4>
             <div className="space-y-3">
               <div>
-                <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Scheduled Date</label>
+                <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Scheduled Date</label>
                 {isAdmin && isEditing && !isReadOnly ? (
                   <Button
                         type="button"
@@ -978,7 +1048,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 )}
                     </div>
               <div>
-                <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Time Slot</label>
+                <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Time Slot</label>
                 {isAdmin && isEditing && !isReadOnly ? (
                       <MaterialSelect
                     value={proposeTime || scheduledDate?.timeSlot || 'AM'}
@@ -1009,10 +1079,10 @@ If this repair work is billable, please let me know prior to scheduling.`);
           {/* Warranty Assessment (Admin Only) */}
           {isAdmin && (
             <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Warranty Assessment</h4>
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Warranty Assessment</h4>
               <div className="space-y-4">
                 <div className="relative" ref={classificationSelectRef}>
-                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Classification</label>
+                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Classification</label>
                   {isEditing && !isReadOnly ? (
                     <>
                       <Button
@@ -1050,7 +1120,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   </div>
 
                 <div>
-                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block">Date Evaluated</label>
+                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Date Evaluated</label>
                   {isEditing && !isReadOnly && isAdmin ? (
                   <Button
                       type="button"
@@ -1146,7 +1216,10 @@ If this repair work is billable, please let me know prior to scheduling.`);
           <div className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-3 w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden flex flex-col animate-[scale-in_0.2s_ease-out]" onClick={(e) => e.stopPropagation()}>
             <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
               <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">Send Service Order</h2>
-              <button onClick={() => setShowSOModal(false)} className="p-2 rounded-full hover:bg-surface-container dark:hover:bg-gray-600 transition-colors">
+              <button onClick={() => {
+                setShowSOModal(false);
+                setAttachmentThumbnails([]);
+              }} className="p-2 rounded-full hover:bg-surface-container dark:hover:bg-gray-600 transition-colors">
                 <X className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
               </button>
             </div>
@@ -1247,10 +1320,46 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   value={soBody}
                   onChange={e => setSoBody(e.target.value)}
                 />
-                <p className="text-xs text-surface-on-variant dark:text-gray-500 mt-1">
-                  Use placeholders: {'{senderName}'}, {'{claimTitle}'}, {'{address}'}
-                </p>
               </div>
+              
+              {/* Attachment Thumbnails */}
+              {attachmentThumbnails.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-3">Attachments ({attachmentThumbnails.length})</label>
+                  <div className="flex flex-wrap gap-4">
+                    {attachmentThumbnails.map((att, index) => (
+                      <div
+                        key={index}
+                        className="relative"
+                      >
+                        <div className="w-28 h-28 rounded-lg border-2 border-surface-outline-variant dark:border-gray-600 overflow-hidden bg-surface-container dark:bg-gray-700 flex items-center justify-center shadow-sm">
+                          {att.type === 'pdf' ? (
+                            <img
+                              src={att.thumbnail}
+                              alt={att.name}
+                              className="w-full h-full object-contain"
+                            />
+                          ) : (
+                            <img
+                              src={att.thumbnail}
+                              alt={att.name}
+                              className="w-full h-full object-cover"
+                            />
+                          )}
+                        </div>
+                        <div className="mt-2 text-xs text-surface-on-variant dark:text-gray-400 truncate text-center max-w-[112px]">
+                          {att.name.length > 18 ? att.name.substring(0, 15) + '...' : att.name}
+                        </div>
+                        {att.type === 'pdf' && (
+                          <div className="absolute top-1 right-1 bg-primary text-primary-on text-[10px] font-medium px-1.5 py-0.5 rounded">
+                            PDF
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               {/* Save as Template Button */}
               <div className="flex justify-end">
@@ -1263,8 +1372,11 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 </button>
               </div>
             </div>
-            <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-2 bg-surface-container dark:bg-gray-700">
-              <Button variant="text" onClick={() => setShowSOModal(false)}>Cancel</Button>
+            <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-2">
+              <Button variant="filled" onClick={() => {
+                setShowSOModal(false);
+                setAttachmentThumbnails([]);
+              }}>Cancel</Button>
               <Button variant="filled" onClick={handleSendServiceOrder} disabled={isSendingSO || !soSubject || !soBody} icon={<Send className="h-4 w-4" />}>
                 {isSendingSO ? 'Sending...' : 'Send'}
               </Button>

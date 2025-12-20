@@ -1520,7 +1520,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden flex flex-col md:flex-row h-[700px] shadow-elevation-1">
        {/* Left Column: Inbox List (Gmail Style) */}
        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
-          <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-between items-center h-16 shrink-0">
+          <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center h-16 shrink-0">
             <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               {displayThreads.filter(t => !t.isRead).length > 0 && (
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
@@ -2276,7 +2276,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <h3 className="font-medium text-lg mb-0 flex items-center justify-between text-secondary-on-container dark:text-gray-100">
                 <span className="flex items-center">
                   <Calendar className="h-5 w-5 mr-3" />
-                  Next Repair
+                  Next Appointment
                 </span>
               </h3>
             </div>
@@ -2427,7 +2427,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'TASKS' && isAdmin && (
             <motion.div 
               key="tasks"
-              className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 p-6 shadow-elevation-1"
+              className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1"
+              style={{ height: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)', maxHeight: 'calc(100vh - 300px)' }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
