@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, Homeowner } from '../types';
 import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin } from 'lucide-react';
 import { useDarkMode } from './DarkModeProvider';
-import { useClerk } from '@clerk/clerk-react';
+import { UserButton } from '@clerk/clerk-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -32,39 +32,6 @@ interface LayoutProps {
   isAdminAccount?: boolean;
 }
 
-// Simple Sign Out button component
-const SignOutButton: React.FC = () => {
-  const { signOut } = useClerk();
-  
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      if (typeof window !== 'undefined') {
-        // Clear any cached session data
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith('cascade_')) {
-            localStorage.removeItem(key);
-          }
-        });
-        window.location.href = '/';
-      }
-    } catch (err) {
-      console.error("Sign out error:", err);
-      if (typeof window !== 'undefined') {
-        window.location.href = '/';
-      }
-    }
-  };
-
-  return (
-    <button
-      onClick={handleSignOut}
-      className="text-sm font-medium text-surface-on dark:text-gray-100 hover:text-primary dark:hover:text-primary transition-colors cursor-pointer"
-    >
-      Sign out
-    </button>
-  );
-};
 
 const Layout: React.FC<LayoutProps> = ({ 
   children, 
@@ -256,8 +223,22 @@ const Layout: React.FC<LayoutProps> = ({
                 );
               })()}
 
-              {/* Clerk Sign Out - Shows only Sign Out text */}
-              <SignOutButton />
+              {/* Clerk UserButton - Avatar visible, dropdown shows only Sign Out text */}
+              <UserButton
+                appearance={{
+                  elements: {
+                    userButtonPopoverCard: "shadow-elevation-2",
+                    userButtonPopoverHeader: "hidden",
+                    userButtonPopoverHeaderTitle: "hidden",
+                    userButtonPopoverHeaderSubtitle: "hidden",
+                    userButtonPopoverAvatarBox: "hidden",
+                    userButtonPopoverActions: "p-2",
+                    userButtonPopoverActionButtonIcon: "hidden",
+                    userButtonPopoverActionButton__manageAccount: "hidden",
+                    userButtonPopoverFooter: "hidden",
+                  }
+                }}
+              />
 
               {/* Main Menu Dropdown - Show for Admin/Builder accounts (even when viewing as homeowner) */}
               {(isAdmin || isBuilder || isAdminAccount) && (
