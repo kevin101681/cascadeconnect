@@ -6,7 +6,7 @@ import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
 import { ClaimMessage } from './MessageSummaryModal';
 import ImageViewerModal from './ImageViewerModal';
-import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload } from 'lucide-react';
+import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload, FileEdit, Trash2 } from 'lucide-react';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
@@ -87,6 +87,138 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   const [soBody, setSoBody] = useState('');
   const [isSendingSO, setIsSendingSO] = useState(false);
   const [soPdfUrl, setSoPdfUrl] = useState<string | null>(null);
+  
+  // Email Templates state
+  interface EmailTemplate {
+    id: string;
+    name: string;
+    subject: string;
+    body: string;
+  }
+  const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>(() => {
+    try {
+      const saved = localStorage.getItem('cascade_service_order_templates');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null);
+  const [templateName, setTemplateName] = useState('');
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [templateEditSubject, setTemplateEditSubject] = useState('');
+  const [templateEditBody, setTemplateEditBody] = useState('');
+  
+  // Load templates from localStorage
+  const loadTemplates = () => {
+    try {
+      const saved = localStorage.getItem('cascade_service_order_templates');
+      if (saved) {
+        const templates = JSON.parse(saved);
+        setEmailTemplates(templates);
+        return templates;
+      }
+    } catch (e) {
+      console.error('Failed to load templates:', e);
+    }
+    return [];
+  };
+  
+  // Save templates to localStorage
+  const saveTemplates = (templates: EmailTemplate[]) => {
+    try {
+      localStorage.setItem('cascade_service_order_templates', JSON.stringify(templates));
+      setEmailTemplates(templates);
+    } catch (e) {
+      console.error('Failed to save templates:', e);
+    }
+  };
+  
+  // Handle template selection
+  const handleTemplateSelect = (templateId: string) => {
+    const template = emailTemplates.find(t => t.id === templateId);
+    if (template) {
+      setSoSubject(template.subject);
+      setSoBody(template.body);
+      setSelectedTemplateId(templateId);
+    }
+  };
+  
+  // Open template creator
+  const handleOpenTemplateCreator = (template?: EmailTemplate) => {
+    if (template) {
+      // Editing existing template - use template's values
+      setEditingTemplateId(template.id);
+      setTemplateName(template.name);
+      setTemplateEditSubject(template.subject);
+      setTemplateEditBody(template.body);
+    } else {
+      // Creating new template - use current soSubject/soBody
+      setEditingTemplateId(null);
+      setTemplateName('');
+      setTemplateEditSubject(soSubject);
+      setTemplateEditBody(soBody);
+    }
+    setShowTemplateModal(true);
+  };
+  
+  // Save template
+  const handleSaveTemplate = () => {
+    const subjectToSave = editingTemplateId ? templateEditSubject : soSubject;
+    const bodyToSave = editingTemplateId ? templateEditBody : soBody;
+    
+    if (!templateName.trim() || !subjectToSave.trim() || !bodyToSave.trim()) {
+      alert('Please fill in template name, subject, and body.');
+      return;
+    }
+    
+    const templates = [...emailTemplates];
+    if (editingTemplateId) {
+      const index = templates.findIndex(t => t.id === editingTemplateId);
+      if (index >= 0) {
+        templates[index] = {
+          id: editingTemplateId,
+          name: templateName.trim(),
+          subject: subjectToSave,
+          body: bodyToSave
+        };
+      }
+    } else {
+      templates.push({
+        id: Date.now().toString() + Math.random().toString(36).substring(2),
+        name: templateName.trim(),
+        subject: subjectToSave,
+        body: bodyToSave
+      });
+    }
+    saveTemplates(templates);
+    setShowTemplateModal(false);
+    setEditingTemplateId(null);
+    setTemplateName('');
+    setTemplateEditSubject('');
+    setTemplateEditBody('');
+  };
+  
+  // Delete template
+  const handleDeleteTemplate = (templateId: string) => {
+    if (confirm('Are you sure you want to delete this template?')) {
+      const templates = emailTemplates.filter(t => t.id !== templateId);
+      saveTemplates(templates);
+      if (selectedTemplateId === templateId) {
+        setSelectedTemplateId('');
+      }
+    }
+  };
+  
+  // Use default template if available
+  const applyDefaultTemplate = () => {
+    const templates = loadTemplates();
+    const defaultTemplate = templates.find(t => t.id === 'default') || templates[0];
+    if (defaultTemplate) {
+      handleTemplateSelect(defaultTemplate.id);
+    }
+  };
   
   // Sub Assignment Modal state
   const [showSubModal, setShowSubModal] = useState(false);
@@ -240,15 +372,31 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
       return;
     }
     
-    setSoSubject(`Service Order: ${claim.title} - ${claim.address}`);
-    const senderName = currentUser?.name || 'Admin';
-    setSoBody(`Hello,
+    // Try to use default template first
+    const templates = loadTemplates();
+    const defaultTemplate = templates.find(t => t.id === 'default') || templates[0];
+    
+    if (defaultTemplate) {
+      // Replace placeholders with actual values
+      const senderName = currentUser?.name || 'Admin';
+      let subject = defaultTemplate.subject.replace(/\{claimTitle\}/g, claim.title).replace(/\{address\}/g, claim.address);
+      let body = defaultTemplate.body.replace(/\{senderName\}/g, senderName).replace(/\{claimTitle\}/g, claim.title).replace(/\{address\}/g, claim.address);
+      setSoSubject(subject || `Service Order: ${claim.title} - ${claim.address}`);
+      setSoBody(body || '');
+      setSelectedTemplateId(defaultTemplate.id);
+    } else {
+      // Use default template
+      setSoSubject(`Service Order: ${claim.title} - ${claim.address}`);
+      const senderName = currentUser?.name || 'Admin';
+      setSoBody(`Hello,
  
 This is ${senderName} with Cascade Builder Services and I have a warranty repair that needs to be scheduled. The details are described on the attached service order which also includes the homeowner's information, builder, project and lot number.  Pictures of the claim are attached and are also on the service order PDF.  Please let me know your next availability and I'll coordinate with the homeowner.  Once we have a date and time frame set, you will receive a notification requesting to accept the appointment.  Please do so as it helps with our tracking and also makes the homeowner aware that you've committed to the confirmed appointment. 
 
 Once you've completed the assigned work, please have the homeowner sign and date the attached service order and send the signed copy back to me.
  
 If this repair work is billable, please let me know prior to scheduling.`);
+      setSelectedTemplateId('');
+    }
     setShowSOModal(true);
     
     // Generate PDF
@@ -978,6 +1126,85 @@ If this repair work is billable, please let me know prior to scheduling.`);
               </button>
             </div>
             <div className="p-6 flex-1 overflow-y-auto space-y-4 bg-surface dark:bg-gray-800">
+              {/* Template Selector */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400">Email Template</label>
+                  <button
+                    onClick={() => handleOpenTemplateCreator()}
+                    className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"
+                  >
+                    <FileEdit className="h-3 w-3" />
+                    Manage Templates
+                  </button>
+                </div>
+                  <div className="flex gap-2">
+                  <select
+                    className="flex-1 bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-sm text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                    value={selectedTemplateId}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        handleTemplateSelect(e.target.value);
+                      } else {
+                        setSelectedTemplateId('');
+                      }
+                    }}
+                  >
+                    <option value="">Default Template</option>
+                    {emailTemplates.map(template => (
+                      <option key={template.id} value={template.id}>{template.name}</option>
+                    ))}
+                  </select>
+                  {selectedTemplateId && (
+                    <>
+                      <button
+                        onClick={() => {
+                          const template = emailTemplates.find(t => t.id === selectedTemplateId);
+                          if (template) handleOpenTemplateCreator(template);
+                        }}
+                        className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                        title="Edit template"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTemplate(selectedTemplateId)}
+                        className="p-2 text-error hover:bg-error/10 rounded-lg transition-colors"
+                        title="Delete template"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </>
+                  )}
+                </div>
+                {/* Template List for Management */}
+                {emailTemplates.length > 0 && (
+                  <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
+                    {emailTemplates.map(template => (
+                      <div key={template.id} className="flex items-center justify-between p-2 bg-surface-container dark:bg-gray-700 rounded-lg">
+                        <span className="text-sm text-surface-on dark:text-gray-100">{template.name}</span>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleOpenTemplateCreator(template)}
+                            className="p-1 text-primary hover:bg-primary/10 rounded transition-colors"
+                            title="Edit"
+                          >
+                            <Edit2 className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTemplate(template.id)}
+                            className="p-1 text-error hover:bg-error/10 rounded transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
               <div>
                 <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Subject</label>
                 <input
@@ -990,17 +1217,98 @@ If this repair work is billable, please let me know prior to scheduling.`);
               <div>
                 <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Message</label>
                 <textarea 
-                  rows={6}
+                  rows={8}
                   className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
                   value={soBody}
                   onChange={e => setSoBody(e.target.value)}
                 />
+                <p className="text-xs text-surface-on-variant dark:text-gray-500 mt-1">
+                  Use placeholders: {'{senderName}'}, {'{claimTitle}'}, {'{address}'}
+                </p>
+              </div>
+              
+              {/* Save as Template Button */}
+              <div className="flex justify-end">
+                <button
+                  onClick={() => handleOpenTemplateCreator()}
+                  className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 px-3 py-1.5 hover:bg-primary/5 rounded-lg transition-colors"
+                >
+                  <Save className="h-4 w-4" />
+                  Save as Template
+                </button>
               </div>
             </div>
             <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-2 bg-surface-container dark:bg-gray-700">
               <Button variant="text" onClick={() => setShowSOModal(false)}>Cancel</Button>
               <Button variant="filled" onClick={handleSendServiceOrder} disabled={isSendingSO || !soSubject || !soBody} icon={<Send className="h-4 w-4" />}>
                 {isSendingSO ? 'Sending...' : 'Send'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Email Template Creator Modal */}
+      {showTemplateModal && (
+        <div className="fixed inset-0 z-[1001] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]">
+          <div className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-3 w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden flex flex-col animate-[scale-in_0.2s_ease-out]" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
+              <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">
+                {editingTemplateId ? 'Edit Template' : 'Create Email Template'}
+              </h2>
+              <button onClick={() => {
+                setShowTemplateModal(false);
+                setEditingTemplateId(null);
+                setTemplateName('');
+                setTemplateEditSubject('');
+                setTemplateEditBody('');
+              }} className="p-2 rounded-full hover:bg-surface-container dark:hover:bg-gray-600 transition-colors">
+                <X className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
+              </button>
+            </div>
+            <div className="p-6 flex-1 overflow-y-auto space-y-4 bg-surface dark:bg-gray-800">
+              <div>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Template Name</label>
+                <input
+                  type="text"
+                  className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                  value={templateName}
+                  onChange={e => setTemplateName(e.target.value)}
+                  placeholder="e.g., Standard Service Order"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Subject</label>
+                <input
+                  type="text"
+                  className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                  value={editingTemplateId ? templateEditSubject : soSubject}
+                  onChange={e => editingTemplateId ? setTemplateEditSubject(e.target.value) : setSoSubject(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Message Body</label>
+                <textarea 
+                  rows={10}
+                  className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
+                  value={editingTemplateId ? templateEditBody : soBody}
+                  onChange={e => editingTemplateId ? setTemplateEditBody(e.target.value) : setSoBody(e.target.value)}
+                />
+                <p className="text-xs text-surface-on-variant dark:text-gray-500 mt-1">
+                  Use placeholders: {'{senderName}'} (sender name), {'{claimTitle}'} (claim title), {'{address}'} (property address)
+                </p>
+              </div>
+            </div>
+            <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-2 bg-surface-container dark:bg-gray-700">
+              <Button variant="text" onClick={() => {
+                setShowTemplateModal(false);
+                setEditingTemplateId(null);
+                setTemplateName('');
+                setTemplateEditSubject('');
+                setTemplateEditBody('');
+              }}>Cancel</Button>
+              <Button variant="filled" onClick={handleSaveTemplate} disabled={!templateName.trim() || !(editingTemplateId ? templateEditSubject : soSubject).trim() || !(editingTemplateId ? templateEditBody : soBody).trim()} icon={<Save className="h-4 w-4" />}>
+                {editingTemplateId ? 'Update Template' : 'Save Template'}
               </Button>
             </div>
           </div>
