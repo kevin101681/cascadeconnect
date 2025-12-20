@@ -1639,7 +1639,7 @@ const Dashboard: React.FC<DashboardProps> = ({
        </div>
 
        {/* Right Column: Email Thread View */}
-       <div className={`flex-1 flex flex-col bg-white dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
+       <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           {selectedThread ? (
             <>
                {/* Thread Header Toolbar */}
