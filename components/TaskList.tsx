@@ -38,7 +38,7 @@ const TaskList: React.FC<TaskListProps> = ({
   const [showForm, setShowForm] = useState(false);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
-  const [taskFilter, setTaskFilter] = useState<TaskFilter>('all');
+  const [taskFilter, setTaskFilter] = useState<TaskFilter>('open');
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   
   // Form State

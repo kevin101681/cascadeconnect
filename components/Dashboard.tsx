@@ -355,7 +355,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'DOCUMENTS'>(initialTab || 'CLAIMS');
   
   // Claims filter state
-  const [claimsFilter, setClaimsFilter] = useState<'All' | 'Open' | 'Closed'>('All');
+  const [claimsFilter, setClaimsFilter] = useState<'All' | 'Open' | 'Closed'>('Open');
   
   // Invite Modal State
   const [showInviteModal, setShowInviteModal] = useState(false);
