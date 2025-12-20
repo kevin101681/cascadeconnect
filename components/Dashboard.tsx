@@ -2492,6 +2492,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onDeleteTask={onDeleteTask}
                 onUpdateTask={onUpdateTask}
                 preSelectedHomeowner={targetHomeowner}
+                onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
               />
             </motion.div>
           )}

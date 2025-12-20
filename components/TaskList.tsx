@@ -20,6 +20,7 @@ interface TaskListProps {
   onUpdateTask?: (taskId: string, updates: Partial<Task>) => void;
   preSelectedHomeowner?: Homeowner | null;
   onClose?: () => void;
+  onSelectClaim?: (claim: Claim) => void; // Handler to open claim in editor modal
 }
 
 const TaskList: React.FC<TaskListProps> = ({ 
@@ -33,7 +34,8 @@ const TaskList: React.FC<TaskListProps> = ({
   onDeleteTask,
   onUpdateTask,
   preSelectedHomeowner,
-  onClose
+  onClose,
+  onSelectClaim
 }) => {
   const [showForm, setShowForm] = useState(false);
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
@@ -534,7 +536,11 @@ const TaskList: React.FC<TaskListProps> = ({
                         </p>
                         <div className="space-y-2">
                           {taskClaims.map(claim => (
-                            <div key={claim.id} className="flex items-center justify-between p-2.5 rounded-lg border border-surface-outline-variant dark:border-gray-600 bg-surface dark:bg-gray-700 text-sm">
+                            <div 
+                              key={claim.id} 
+                              className="flex items-center justify-between p-2.5 rounded-lg border border-surface-outline-variant dark:border-gray-600 bg-surface dark:bg-gray-700 text-sm cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
+                              onClick={() => onSelectClaim?.(claim)}
+                            >
                               <div className="flex items-center gap-3">
                                 <Square className="h-4 w-4 text-primary flex-shrink-0" />
                                 <div>
