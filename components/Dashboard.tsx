@@ -1823,9 +1823,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                     if (selectedClaimForModal) {
                       setNewMessageSubject(selectedClaimForModal.title);
                     }
+                    setSelectedClaimForModal(null); // Close edit claim modal
                     setShowNewMessageModal(true);
                     setCurrentTab('MESSAGES');
-                    // Keep claim editor modal open so user can return to it
                   }}
                   onCancel={() => setSelectedClaimForModal(null)}
                   onNavigate={onNavigate}
@@ -3283,7 +3283,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* NEW MESSAGE MODAL */}
         {showNewMessageModal && (
           <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+            style={{ top: 0, left: 0, right: 0, bottom: 0 }}
             onClick={(e) => {
               if (e.target === e.currentTarget) setShowNewMessageModal(false);
             }}
