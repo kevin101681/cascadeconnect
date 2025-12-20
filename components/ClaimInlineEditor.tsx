@@ -675,7 +675,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     type="text" 
                     value={editTitle}
                     onChange={e => setEditTitle(e.target.value)}
-                    className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-secondary-container/20 dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors"
+                    className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors"
                   />
                 ) : (
                   <p className="text-surface-on dark:text-gray-100 font-medium">{claim.title}</p>
@@ -688,7 +688,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     value={editDescription}
                     onChange={e => setEditDescription(e.target.value)}
                     rows={4}
-                    className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-secondary-container/20 dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-y"
+                    className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-y"
                   />
                 ) : (
                   <p className="text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
@@ -883,7 +883,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           )}
           
           {/* Message Summary - Visible to All Users */}
-          <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+          <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
             <button
               onClick={() => setIsMessageSummaryExpanded(!isMessageSummaryExpanded)}
               className="w-full flex items-center justify-between mb-3 text-left"
@@ -1028,7 +1028,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           )}
           
           {/* Scheduling */}
-          <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+          <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
             <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Scheduling</h4>
             <div className="space-y-3">
               <div>

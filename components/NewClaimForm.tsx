@@ -143,7 +143,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
               id="title"
               type="text"
               required
-                  className={`${inputClass} bg-secondary-container/20 dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
+                  className={`${inputClass} bg-white dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
@@ -155,7 +155,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
               id="description"
               rows={4}
               required
-                  className={`${inputClass} bg-secondary-container/20 dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
+                  className={`${inputClass} bg-white dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -170,7 +170,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
               <textarea
                 id="internalNotes"
                 rows={4}
-                className={`${inputClass} bg-secondary-container/20 dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
+                className={`${inputClass} bg-white dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
                 value={internalNotes}
                 onChange={(e) => setInternalNotes(e.target.value)}
               />
