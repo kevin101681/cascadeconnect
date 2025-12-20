@@ -120,8 +120,14 @@ export const generateNotificationBody = (
   link: string
 ) => {
   // Generate HTML with a button for the messages link
+  // Don't include contextId if it looks like a UUID (long claim ID string)
+  const showContextId = contextId && contextId !== 'new' && contextId.length < 20;
+  const contextLine = showContextId 
+    ? `You have a new message from ${authorName} regarding ${contextType} #${contextId}.`
+    : `You have a new message from ${authorName}.`;
+  
   return `
-You have a new message from ${authorName} regarding ${contextType} #${contextId}.
+${contextLine}
 
 "${content}"
 
