@@ -152,7 +152,15 @@ export const Invoices: React.FC<InvoicesProps> = ({
   ];
 
   // Auto-create invoice with pre-filled data if provided
+  // Use a ref to track if we've already processed prefill data
+  const prefillProcessedRef = useRef(false);
+
   useEffect(() => {
+    // Skip if we've already processed prefill or if we're already creating/editing
+    if (isCreating || expandedId !== null || prefillProcessedRef.current) {
+      return;
+    }
+
     // Check both prop and sessionStorage (for URL-based prefill)
     const prefillData = prefillInvoice || (() => {
       try {
@@ -169,15 +177,18 @@ export const Invoices: React.FC<InvoicesProps> = ({
       return null;
     })();
 
-    if (prefillData && prefillData.clientName && !isCreating && expandedId === null) {
+    if (prefillData && prefillData.clientName) {
       // Check if we already created an invoice for this homeowner (avoid duplicates)
       const existingPrefillKey = `invoiceCreated_${prefillData.homeownerId}`;
       if (prefillData.homeownerId && sessionStorage.getItem(existingPrefillKey)) {
+        prefillProcessedRef.current = true;
         return; // Already created
       }
 
+      // Mark as processed before setting state to prevent re-runs
+      prefillProcessedRef.current = true;
+
       // Create invoice with pre-filled data
-      setExpandedId(null);
       setCurrentInvoice({
         invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
         date: getLocalTodayDate(),
@@ -196,8 +207,16 @@ export const Invoices: React.FC<InvoicesProps> = ({
       if (prefillData.homeownerId) {
         sessionStorage.setItem(existingPrefillKey, 'true');
       }
+    } else if (!prefillInvoice) {
+      // No prefill data, mark as processed
+      prefillProcessedRef.current = true;
     }
   }, [prefillInvoice, isCreating, expandedId]);
+
+  // Reset prefill processed flag when prefillInvoice prop changes
+  useEffect(() => {
+    prefillProcessedRef.current = false;
+  }, [prefillInvoice]);
 
   // Auto-focus search input when search FAB is activated
   useEffect(() => {
