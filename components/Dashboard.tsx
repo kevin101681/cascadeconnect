@@ -1819,11 +1819,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                   claimMessages={claimMessages.filter(m => m.claimId === selectedClaimForModal.id)}
                   onTrackClaimMessage={onTrackClaimMessage}
                   onSendMessage={() => {
-                    if (onSelectClaim) {
-                      onSelectClaim(selectedClaimForModal, false);
+                    // Pre-fill message subject with claim title and open new message modal
+                    if (selectedClaimForModal) {
+                      setNewMessageSubject(selectedClaimForModal.title);
                     }
-                    setSelectedClaimForModal(null);
+                    setShowNewMessageModal(true);
                     setCurrentTab('MESSAGES');
+                    // Keep claim editor modal open so user can return to it
                   }}
                   onCancel={() => setSelectedClaimForModal(null)}
                   onNavigate={onNavigate}
