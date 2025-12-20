@@ -241,19 +241,26 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
       // Convert date to YYYY-MM-DD format for date input
       // Handle both Date objects and ISO strings
       let dateStr: string;
-      if (scheduledDate.date instanceof Date) {
-        dateStr = scheduledDate.date.toISOString().split('T')[0];
-      } else if (typeof scheduledDate.date === 'string') {
+      // Store the date value in a variable to check its runtime type
+      const dateValue: unknown = scheduledDate.date;
+      // Type guard to check if value is a Date object
+      const isDateObject = (value: unknown): value is Date => {
+        return typeof value === 'object' && value !== null && value instanceof Date;
+      };
+      
+      if (isDateObject(dateValue)) {
+        dateStr = dateValue.toISOString().split('T')[0];
+      } else if (typeof dateValue === 'string') {
         // If it's already a string, try to parse it or use it directly
-        if (scheduledDate.date.includes('T')) {
-          dateStr = scheduledDate.date.split('T')[0];
+        if (dateValue.includes('T')) {
+          dateStr = dateValue.split('T')[0];
         } else {
           // Already in YYYY-MM-DD format
-          dateStr = scheduledDate.date;
+          dateStr = dateValue;
         }
       } else {
         // Fallback: try to create a Date from whatever it is
-        const date = new Date(scheduledDate.date);
+        const date = new Date(dateValue as any);
         dateStr = isNaN(date.getTime()) ? '' : date.toISOString().split('T')[0];
       }
       setProposeDate(dateStr);
