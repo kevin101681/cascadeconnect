@@ -2372,7 +2372,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="px-6 pb-6 pt-0">
                   <div 
                     className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-xl text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors"
-                    onClick={() => onSelectClaim(firstClaim, true)}
+                    onClick={() => setSelectedClaimForModal(firstClaim)}
                   >
                     <div className="flex items-center justify-center gap-2 mb-2">
                       <p className="font-medium text-secondary-on-container dark:text-gray-200 text-center">{firstClaim.title}</p>
