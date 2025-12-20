@@ -1074,33 +1074,32 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     </Button>
                 )}
               </div>
-                </div>
-                
-                {/* Appointment Confirmed Card - Show when scheduled date exists */}
-                {scheduledDate && (
-                  <div className="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center text-green-700 dark:text-green-300 flex-shrink-0">
-                        <CheckCircle className="h-6 w-6" />
+              
+              {/* Appointment Confirmed Card - Show when scheduled date exists */}
+              {scheduledDate && (
+                <div className="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center text-green-700 dark:text-green-300 flex-shrink-0">
+                      <CheckCircle className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-green-800 dark:text-green-300 uppercase tracking-wide mb-1">Appointment Confirmed</p>
+                      <div className="text-base font-medium text-surface-on dark:text-gray-100">
+                        {new Date(scheduledDate.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                       </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-bold text-green-800 dark:text-green-300 uppercase tracking-wide mb-1">Appointment Confirmed</p>
-                        <div className="text-base font-medium text-surface-on dark:text-gray-100">
-                          {new Date(scheduledDate.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                        </div>
-                        <p className="text-sm text-surface-on-variant dark:text-gray-300 mt-0.5 font-medium">
-                          Time Slot: {scheduledDate.timeSlot}
+                      <p className="text-sm text-surface-on-variant dark:text-gray-300 mt-0.5 font-medium">
+                        Time Slot: {scheduledDate.timeSlot}
+                      </p>
+                      {claim.contractorName && (
+                        <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-1.5 flex items-center gap-1">
+                          <HardHat className="h-3 w-3" />
+                          Sub: {claim.contractorName}
                         </p>
-                        {claim.contractorName && (
-                          <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-1.5 flex items-center gap-1">
-                            <HardHat className="h-3 w-3" />
-                            Sub: {claim.contractorName}
-                          </p>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
-                )}
+                </div>
+              )}
             </div>
 
           {/* Warranty Assessment (Admin Only) */}
