@@ -34,10 +34,12 @@ const PDFPage = forwardRef<HTMLDivElement, PDFPageProps>(({ pageNumber, width, h
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: '#fff'
+        backgroundColor: '#fff',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden'
       }}
     >
-      <div style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+      <div style={{ width: '100%', height: '100%', overflow: 'hidden', backgroundColor: '#fff' }}>
         <Page
           pageNumber={pageNumber}
           width={width}
@@ -60,7 +62,7 @@ const PDFPage = forwardRef<HTMLDivElement, PDFPageProps>(({ pageNumber, width, h
             <div style={{ 
               width, 
               height, 
-              display: 'flex', 
+              display: 'flex',
               alignItems: 'center', 
               justifyContent: 'center', 
               backgroundColor: '#fee', 
@@ -86,6 +88,20 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
   const [currentPage, setCurrentPage] = useState(1);
   const flipBookRef = useRef<any>(null);
   const blobUrlRef = useRef<string | null>(null);
+
+  // Helper to get current page directly from flipbook
+  const getCurrentPageFromFlipbook = (): number => {
+    if (!flipBookRef.current) return currentPage;
+    try {
+      const flipBook = flipBookRef.current.pageFlip();
+      if (flipBook) {
+        return flipBook.getCurrentPageIndex() + 1;
+      }
+    } catch (err) {
+      // Ignore errors
+    }
+    return currentPage;
+  };
 
   // Calculate dimensions that fit within viewport with padding
   useEffect(() => {
@@ -190,15 +206,138 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
 
   const handlePrevPage = () => {
     if (flipBookRef.current && currentPage > 1) {
-      flipBookRef.current.pageFlip().flipPrev();
-      setCurrentPage(prev => prev - 1);
+      const flipBook = flipBookRef.current.pageFlip();
+      if (!flipBook) return;
+      
+      // Find the flipbook container and try to trigger the library's internal click handler
+      // by simulating a pointer event on the left side where users click manually
+      const container = document.querySelector('.pdf-flipbook') as HTMLElement;
+      if (container) {
+        const rect = container.getBoundingClientRect();
+        // Click on the left side (15% from left edge) to trigger backward flip
+        const clickX = rect.left + rect.width * 0.15;
+        const clickY = rect.top + rect.height / 2;
+        
+        // Find the element at that point
+        const target = document.elementFromPoint(clickX, clickY) || container;
+        
+        // Try using PointerEvent which is more modern and might be what the library listens to
+        try {
+          const pointerDown = new PointerEvent('pointerdown', {
+            bubbles: true,
+            cancelable: true,
+            clientX: clickX,
+            clientY: clickY,
+            pointerId: 1,
+            pointerType: 'mouse',
+            button: 0,
+            isPrimary: true
+          });
+          
+          const pointerUp = new PointerEvent('pointerup', {
+            bubbles: true,
+            cancelable: true,
+            clientX: clickX,
+            clientY: clickY,
+            pointerId: 1,
+            pointerType: 'mouse',
+            button: 0,
+            isPrimary: true
+          });
+          
+          const clickEvent = new MouseEvent('click', {
+            bubbles: true,
+            cancelable: true,
+            clientX: clickX,
+            clientY: clickY,
+            button: 0,
+            view: window
+          });
+          
+          target.dispatchEvent(pointerDown);
+          setTimeout(() => {
+            target.dispatchEvent(pointerUp);
+            setTimeout(() => {
+              target.dispatchEvent(clickEvent);
+            }, 10);
+          }, 10);
+          
+          // Force update current page after animation
+          setTimeout(() => {
+            try {
+              const currentIndex = flipBook.getCurrentPageIndex();
+              setCurrentPage(currentIndex + 1);
+            } catch (err) {
+              // Ignore errors
+            }
+          }, 300);
+          return;
+        } catch (err) {
+          // If PointerEvent doesn't work, fall through to programmatic method
+        }
+      }
+      
+      // Fallback: Try accessing the library's internal methods directly
+      // The library might have different methods for programmatic vs user-triggered flips
+      try {
+        // Try flipPrev with 'top' corner first
+        const result = flipBook.flipPrev('top');
+        // If that returns something, it might have worked
+        if (result !== undefined) {
+          // Wait a bit to see if animation starts
+          setTimeout(() => {
+            try {
+              const currentIndex = flipBook.getCurrentPageIndex();
+              setCurrentPage(currentIndex + 1);
+            } catch (err) {
+              // Ignore errors
+            }
+          }, 150);
+          return;
+        }
+      } catch (err) {
+        // Continue to next attempt
+      }
+      
+      // Try using flip() with the target page - this might force 3D mode
+      try {
+        const targetPageIndex = currentPage - 2;
+        // Try with 'top' corner
+        flipBook.flip(targetPageIndex, 'top');
+      } catch (err) {
+        // If that fails, try without corner parameter
+        try {
+          const targetPageIndex = currentPage - 2;
+          flipBook.flip(targetPageIndex);
+        } catch (err2) {
+          console.warn('Could not trigger backward flip:', err2);
+        }
+      }
+      
+      // Force update current page after a short delay
+      setTimeout(() => {
+        try {
+          const currentIndex = flipBook.getCurrentPageIndex();
+          setCurrentPage(currentIndex + 1);
+        } catch (err) {
+          // Ignore errors
+        }
+      }, 150);
     }
   };
 
   const handleNextPage = () => {
     if (flipBookRef.current && currentPage < numPages) {
-      flipBookRef.current.pageFlip().flipNext();
-      setCurrentPage(prev => prev + 1);
+      const flipBook = flipBookRef.current.pageFlip();
+      // Use flip() with target page and 'top' corner for consistent 3D flip animation
+      // The target page is currentPage because currentPage is 1-based and equals the 0-based index of next page
+      const targetPageIndex = currentPage;
+      flipBook.flip(targetPageIndex, 'top');
+      // Force update current page after a short delay
+      setTimeout(() => {
+        const currentIndex = flipBook.getCurrentPageIndex();
+        setCurrentPage(currentIndex + 1);
+      }, 100);
     }
   };
 
@@ -211,12 +350,28 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
 
     const handleFlip = (e: any) => {
       // The flip event provides the new page index (0-based)
-      const newPage = (e?.data ?? flipBook.getCurrentPageIndex()) + 1;
+      // Try multiple ways to get the page index
+      let newPageIndex = 0;
+      if (e?.data !== undefined && e.data !== null) {
+        newPageIndex = e.data;
+      } else if (e?.target) {
+        newPageIndex = e.target;
+      } else {
+        newPageIndex = flipBook.getCurrentPageIndex();
+      }
+      const newPage = newPageIndex + 1; // Convert to 1-based
       setCurrentPage(newPage);
+    };
+
+    // Also listen for page turning events
+    const handlePageTurn = () => {
+      const currentIndex = flipBook.getCurrentPageIndex();
+      setCurrentPage(currentIndex + 1);
     };
 
     try {
       flipBook.on('flip', handleFlip);
+      flipBook.on('changeState', handlePageTurn);
     } catch (err) {
       console.warn('Could not attach flip event listener:', err);
     }
@@ -224,11 +379,44 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
     return () => {
       try {
         flipBook.off('flip', handleFlip);
+        flipBook.off('changeState', handlePageTurn);
       } catch (err) {
         // Ignore cleanup errors
       }
     };
   }, [numPages]);
+
+  // Fallback: Check current page periodically and on navigation
+  useEffect(() => {
+    if (!flipBookRef.current || numPages === 0 || documentLoading) return;
+
+    const updateCurrentPage = () => {
+      const flipBook = flipBookRef.current?.pageFlip();
+      if (flipBook) {
+        try {
+          const currentIndex = flipBook.getCurrentPageIndex();
+          const newPage = currentIndex + 1;
+          setCurrentPage(prev => {
+            // Only update if it actually changed to avoid unnecessary re-renders
+            if (prev !== newPage) {
+              return newPage;
+            }
+            return prev;
+          });
+        } catch (err) {
+          // Ignore errors
+        }
+      }
+    };
+
+    // Update immediately
+    updateCurrentPage();
+
+    // Update periodically to catch any missed events
+    const interval = setInterval(updateCurrentPage, 200);
+
+    return () => clearInterval(interval);
+  }, [numPages, documentLoading]);
 
   const onDocumentLoadError = (error: Error) => {
     console.error('PDF load error:', error);
@@ -255,6 +443,59 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
         <X className="h-6 w-6" />
       </button>
 
+      {/* Left Arrow Indicator - Outside document, positioned relative to modal */}
+      {(() => {
+        // Check both state and flipbook directly to ensure we show the arrow when needed
+        const actualPage = getCurrentPageFromFlipbook();
+        const shouldShow = pdfUrl && !error && numPages > 1 && actualPage > 1;
+        return shouldShow ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handlePrevPage();
+            }}
+            className="fixed left-4 top-1/2 -translate-y-1/2 z-[1003] p-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
+            style={{ 
+              pointerEvents: 'auto',
+              zIndex: 1003,
+              display: 'flex',
+              visibility: 'visible',
+              opacity: 1
+            }}
+            title={`Previous page (${actualPage}/${numPages})`}
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="h-8 w-8 text-white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5))' }} />
+          </button>
+        ) : null;
+      })()}
+      
+      {/* Right Arrow Indicator - Outside document, positioned relative to modal */}
+      {(() => {
+        // Check both state and flipbook directly to ensure we show the arrow when needed
+        const actualPage = getCurrentPageFromFlipbook();
+        const shouldShow = pdfUrl && !error && numPages > 1 && actualPage < numPages;
+        return shouldShow ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handleNextPage();
+            }}
+            className="fixed right-4 top-1/2 -translate-y-1/2 z-[1003] p-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center pointer-events-auto"
+            style={{ 
+              pointerEvents: 'auto',
+              zIndex: 1003
+            }}
+            title={`Next page (${actualPage}/${numPages})`}
+            aria-label="Next page"
+          >
+            <ChevronRight className="h-8 w-8 text-white" style={{ filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))' }} />
+          </button>
+        ) : null;
+      })()}
+
       <div
         className="flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
@@ -267,70 +508,49 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
         )}
 
         {pdfUrl && !error && (
-          <Document
-            file={pdfUrl}
-            onLoadSuccess={onDocumentLoadSuccess}
-            onLoadError={onDocumentLoadError}
-            loading={
-              <div className="text-white">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-                <p className="mt-4">Loading PDF...</p>
-              </div>
-            }
-          >
-            {!documentLoading && numPages > 0 && (
-              <div style={{ maxWidth: '100%', maxHeight: '100%', overflow: 'hidden', position: 'relative' }}>
-                {/* Left Arrow Indicator */}
-                {numPages > 1 && currentPage > 1 && (
-                <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePrevPage();
-                    }}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 z-[1002] p-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-                    title="Previous page"
-                    aria-label="Previous page"
-                >
-                    <ChevronLeft className="h-6 w-6 text-gray-700" style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))' }} />
-                </button>
-                )}
-                
-                {/* Right Arrow Indicator */}
-                {numPages > 1 && currentPage < numPages && (
-                <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleNextPage();
-                    }}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 z-[1002] p-3 transition-all hover:scale-110 active:scale-95 flex items-center justify-center"
-                    title="Next page"
-                    aria-label="Next page"
-                >
-                    <ChevronRight className="h-6 w-6 text-gray-700" style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1))' }} />
-                </button>
-                )}
-
-                <HTMLFlipBook
-                  ref={flipBookRef}
-                  width={pageDimensions.width}
-                  height={pageDimensions.height}
-                  size="fixed"
-                  showCover={false}
-                  className="pdf-flipbook"
-                  {...({} as any)}
-                >
-                  {Array.from(new Array(numPages), (el, index) => (
-                    <PDFPage
-                      key={`page_${index + 1}`}
-                      pageNumber={index + 1}
-                      width={pageDimensions.width}
-                      height={pageDimensions.height}
-                    />
-                  ))}
-                </HTMLFlipBook>
-              </div>
-            )}
-          </Document>
+          <div className="relative w-full h-full flex items-center justify-center">
+            <Document
+              file={pdfUrl}
+              onLoadSuccess={onDocumentLoadSuccess}
+              onLoadError={onDocumentLoadError}
+              loading={
+                <div className="text-white">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                  <p className="mt-4">Loading PDF...</p>
+                </div>
+              }
+            >
+              {!documentLoading && numPages > 0 && (
+                <div style={{ maxWidth: '100%', maxHeight: '100%', overflow: 'hidden', position: 'relative' }}>
+                  <HTMLFlipBook
+                    ref={flipBookRef}
+                    width={pageDimensions.width}
+                    height={pageDimensions.height}
+                    size="fixed"
+                    showCover={false}
+                    className="pdf-flipbook"
+                    drawShadow={true}
+                    maxShadowOpacity={0.5}
+                    usePortrait={true}
+                    flippingTime={800}
+                    maxWidth={pageDimensions.width}
+                    maxHeight={pageDimensions.height}
+                    startPage={currentPage - 1}
+                    {...({} as any)}
+                  >
+                    {Array.from(new Array(numPages), (el, index) => (
+                      <PDFPage
+                        key={`page_${index + 1}`}
+                        pageNumber={index + 1}
+                        width={pageDimensions.width}
+                        height={pageDimensions.height}
+                      />
+                    ))}
+                  </HTMLFlipBook>
+                </div>
+              )}
+            </Document>
+          </div>
         )}
       </div>
     </div>

@@ -45,15 +45,82 @@ body {
     display: none; /* Chrome, Safari and Opera */
 }
 
+/* PDF Flipbook - Make back side of pages white */
+/* Use a more specific selector that won't interfere with 3D transforms */
+.pdf-flipbook [class*="stf-page-back"] {
+    background: #ffffff !important;
+}
+
+/* Ensure the inner page div on back side is also white */
+.pdf-flipbook [class*="stf-page-back"] .pdf-page {
+    background: #ffffff !important;
+}
+
+/* Force 3D perspective for all page flips - ensure backward navigation uses 3D flip */
+.pdf-flipbook [class*="stf-page"],
+.pdf-flipbook [class*="stf-page"] > * {
+    transform-style: preserve-3d !important;
+    perspective: 1000px !important;
+}
+
+/* Ensure page flips use 3D transforms, not 2D slides */
+.pdf-flipbook [class*="stf-page"] {
+    will-change: transform !important;
+}
+
 /* Fix for CBS Books FAB positioning - ensure fixed elements position relative to viewport */
 [data-cbs-books] [class*="fixed"] {
     position: fixed !important;
 }
 
 /* Clerk UserButton Avatar Styling - Cascade Connect Theme */
-.cl-userButtonAvatarBox {
+/* UserButton root container */
+.cl-root,
+[class*="cl-root"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Trigger button avatar - MUST stay visible */
+.cl-userButtonTrigger,
+[class*="cl-userButtonTrigger"] {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    max-width: 40px !important;
+    max-height: 40px !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    overflow: hidden !important;
+}
+
+.cl-userButtonTrigger .cl-userButtonAvatarBox,
+[class*="cl-userButtonTrigger"] [class*="cl-userButtonAvatarBox"],
+.cl-userButtonAvatarBox:not(.cl-userButtonPopoverCard .cl-userButtonAvatarBox) {
     background-color: #3c6b80 !important; /* Primary color */
     border: none !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    max-width: 40px !important;
+    max-height: 40px !important;
+}
+
+.cl-userButtonTrigger .cl-userButtonAvatarBox img,
+[class*="cl-userButtonTrigger"] [class*="cl-userButtonAvatarBox"] img,
+.cl-userButtonAvatarBox:not(.cl-userButtonPopoverCard .cl-userButtonAvatarBox) img {
+    width: 40px !important;
+    height: 40px !important;
+    object-fit: cover !important;
 }
 
 /* Popover Card - Light Mode */
@@ -69,6 +136,11 @@ body {
     background-color: #ffffff !important; /* surface */
     border: 1px solid #c0c8cc !important; /* surface-outline-variant */
     box-shadow: 0px 2px 6px 2px rgba(0,0,0,0.15), 0px 1px 2px 0px rgba(0,0,0,0.3) !important;
+    min-height: 40px !important;
+    min-width: 120px !important;
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 /* Popover Card - Dark Mode */
@@ -87,27 +159,64 @@ html.dark .cl-userButtonPopoverCard {
 }
 
 /* Header Section - Hidden (includes avatar, name, email) */
-.cl-userButtonPopoverHeader {
+/* Force hide header and avatar - ONLY inside popover card, NOT the trigger button */
+.cl-userButtonPopoverCard .cl-userButtonPopoverHeader,
+.cl-userButtonPopoverCard > .cl-userButtonPopoverHeader,
+[class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverHeader"] {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
 }
 
-.cl-userButtonPopoverHeader * {
+.cl-userButtonPopoverCard .cl-userButtonPopoverHeader *,
+.cl-userButtonPopoverCard .cl-userButtonPopoverHeader > *,
+[class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverHeader"] *,
+[class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverHeader"] > * {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
 }
 
-/* Hide any remaining avatar elements */
-.cl-userButtonPopoverAvatarBox,
-.cl-userButtonPopoverAvatar,
-[class*="cl-userButtonPopoverAvatar"] {
+/* Hide avatar elements - ONLY inside popover card, NOT the trigger button */
+.cl-userButtonPopoverCard .cl-userButtonPopoverAvatarBox,
+.cl-userButtonPopoverCard > .cl-userButtonPopoverAvatarBox,
+[class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverAvatarBox"],
+.cl-userButtonPopoverCard .cl-userButtonPopoverAvatar,
+[class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverAvatar"] {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
 }
 
-/* Hide name and email text */
+/* Hide name and email text - multiple selectors */
+.cl-userButtonPopoverCard .cl-userButtonPopoverHeaderTitle,
+.cl-userButtonPopoverCard > .cl-userButtonPopoverHeaderTitle,
+.cl-userButtonPopoverCard .cl-userButtonPopoverHeaderSubtitle,
+.cl-userButtonPopoverCard > .cl-userButtonPopoverHeaderSubtitle,
+[class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverHeaderTitle"],
+[class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverHeaderSubtitle"],
 .cl-userButtonPopoverHeaderTitle,
 .cl-userButtonPopoverHeaderSubtitle,
 [class*="cl-userButtonPopoverHeaderTitle"],
 [class*="cl-userButtonPopoverHeaderSubtitle"] {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    font-size: 0 !important;
+    line-height: 0 !important;
+    overflow: hidden !important;
 }
 
 .cl-userButtonPopoverHeader > *,
@@ -119,9 +228,14 @@ html.dark .cl-userButtonPopoverCard {
     box-shadow: none !important;
 }
 
-/* Hide avatar in popover */
-.cl-userButtonPopoverAvatarBox {
+/* Additional avatar hiding rules - ONLY inside popover card */
+.cl-userButtonPopoverCard .cl-userButtonPopoverAvatarBox,
+[class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverAvatarBox"] {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
 }
 
 /* Hide icons in action buttons */
@@ -200,7 +314,11 @@ html.dark .cl-userButtonPopoverHeaderTitle div {
 .dark .cl-userButtonPopoverHeaderTitle,
 html.dark .cl-userButtonPopoverHeaderTitle,
 .dark .cl-userButtonPopoverCard .cl-userButtonPopoverHeaderTitle,
-html.dark .cl-userButtonPopoverCard .cl-userButtonPopoverHeaderTitle {
+html.dark .cl-userButtonPopoverCard .cl-userButtonPopoverHeaderTitle,
+.dark [class*="cl-userButtonPopoverHeaderTitle"],
+html.dark [class*="cl-userButtonPopoverHeaderTitle"],
+.dark [class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverHeaderTitle"],
+html.dark [class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverHeaderTitle"] {
     color: #ffffff !important; /* white for dark mode */
 }
 
@@ -208,8 +326,64 @@ html.dark .cl-userButtonPopoverCard .cl-userButtonPopoverHeaderTitle {
 .dark .cl-userButtonPopoverHeaderSubtitle,
 html.dark .cl-userButtonPopoverHeaderSubtitle,
 .dark .cl-userButtonPopoverCard .cl-userButtonPopoverHeaderSubtitle,
-html.dark .cl-userButtonPopoverCard .cl-userButtonPopoverHeaderSubtitle {
+html.dark .cl-userButtonPopoverCard .cl-userButtonPopoverHeaderSubtitle,
+.dark [class*="cl-userButtonPopoverHeaderSubtitle"],
+html.dark [class*="cl-userButtonPopoverHeaderSubtitle"],
+.dark [class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverHeaderSubtitle"],
+html.dark [class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverHeaderSubtitle"] {
     color: #ffffff !important; /* white for dark mode */
+}
+
+/* Force white text for any text elements in header that might still be visible */
+.dark .cl-userButtonPopoverHeader,
+html.dark .cl-userButtonPopoverHeader,
+.dark .cl-userButtonPopoverHeader *,
+html.dark .cl-userButtonPopoverHeader *,
+.dark [class*="cl-userButtonPopoverHeader"],
+html.dark [class*="cl-userButtonPopoverHeader"],
+.dark [class*="cl-userButtonPopoverHeader"] *,
+html.dark [class*="cl-userButtonPopoverHeader"] *,
+.dark .cl-userButtonPopoverCard *,
+html.dark .cl-userButtonPopoverCard *,
+.dark [class*="cl-userButtonPopover"] *,
+html.dark [class*="cl-userButtonPopover"] * {
+    color: #ffffff !important;
+}
+
+/* Ensure actions container is ALWAYS visible */
+.cl-userButtonPopoverActions,
+[class*="cl-userButtonPopoverActions"],
+.cl-userButtonPopoverCard .cl-userButtonPopoverActions,
+[class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverActions"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    width: auto !important;
+}
+
+/* Ensure action buttons are ALWAYS visible */
+.cl-userButtonPopoverActionButton,
+[class*="cl-userButtonPopoverActionButton"],
+.cl-userButtonPopoverCard .cl-userButtonPopoverActionButton,
+[class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverActionButton"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    width: auto !important;
+}
+
+/* Ensure sign out button is ALWAYS visible */
+.cl-userButtonPopoverActionButton__signOut,
+[class*="cl-userButtonPopoverActionButton__signOut"],
+.cl-userButtonPopoverCard .cl-userButtonPopoverActionButton__signOut,
+[class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverActionButton__signOut"] {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    height: auto !important;
+    width: auto !important;
 }
 
 /* Header Subtitle - Light Mode */
@@ -357,8 +531,21 @@ html.dark .cl-userButtonPopoverActionButton__signOut:hover {
 
 /* Hide account management button */
 .cl-userButtonPopoverActionButton__manageAccount,
-.cl-userButtonPopoverFooter {
+[class*="cl-userButtonPopoverActionButton__manageAccount"],
+.cl-userButtonPopoverCard .cl-userButtonPopoverActionButton__manageAccount,
+[class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverActionButton__manageAccount"],
+.cl-userButtonPopoverFooter,
+[class*="cl-userButtonPopoverFooter"],
+.cl-userButtonPopoverCard .cl-userButtonPopoverFooter,
+[class*="cl-userButtonPopoverCard"] [class*="cl-userButtonPopoverFooter"] {
     display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
 }
 
 /* Ensure all popover content areas use correct background */

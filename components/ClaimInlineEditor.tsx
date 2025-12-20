@@ -238,8 +238,24 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     setEditDateEvaluated(claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : '');
     // Initialize proposeDate with scheduled date if available
     if (scheduledDate) {
-      // Convert ISO string to YYYY-MM-DD format for date input
-      const dateStr = scheduledDate.date.split('T')[0];
+      // Convert date to YYYY-MM-DD format for date input
+      // Handle both Date objects and ISO strings
+      let dateStr: string;
+      if (scheduledDate.date instanceof Date) {
+        dateStr = scheduledDate.date.toISOString().split('T')[0];
+      } else if (typeof scheduledDate.date === 'string') {
+        // If it's already a string, try to parse it or use it directly
+        if (scheduledDate.date.includes('T')) {
+          dateStr = scheduledDate.date.split('T')[0];
+        } else {
+          // Already in YYYY-MM-DD format
+          dateStr = scheduledDate.date;
+        }
+      } else {
+        // Fallback: try to create a Date from whatever it is
+        const date = new Date(scheduledDate.date);
+        dateStr = isNaN(date.getTime()) ? '' : date.toISOString().split('T')[0];
+      }
       setProposeDate(dateStr);
       setProposeTime(scheduledDate.timeSlot);
     } else {
@@ -910,25 +926,27 @@ If this repair work is billable, please let me know prior to scheduling.`);
               </div>
               )}
               
-              {selectedContractorId && !contractorSearch.trim() && (
-                <div className="mt-2 text-xs text-primary font-medium flex items-center justify-between">
-                  <span className="dark:text-gray-100">Selected: {contractors.find(c => c.id === selectedContractorId)?.companyName}</span>
-                  <button type="button" onClick={() => { 
-                    onUpdateClaim({ ...claim, contractorId: undefined, contractorName: undefined, contractorEmail: undefined });
-                    setSelectedContractorId('');
-                    setContractorSearch('');
-                  }} className="text-surface-on-variant dark:text-gray-400 hover:text-error"><X className="h-3 w-3" /></button>
-                      </div>
-              )}
-              
-                    <Button 
-                type="button"
-                      variant="filled" 
-                className="mt-3"
-                    onClick={() => setShowSubModal(true)} 
+              {selectedContractorId && (
+                <div className="mt-2 flex flex-row items-center gap-3">
+                  <div className="flex items-center gap-3 bg-secondary-container px-4 py-3 rounded-xl text-secondary-on-container flex-1 min-w-0">
+                    <Briefcase className="h-5 w-5 flex-shrink-0" />
+                    <div className="text-sm overflow-hidden min-w-0">
+                      <p className="font-bold truncate">{contractors.find(c => c.id === selectedContractorId)?.companyName}</p>
+                      <p className="opacity-80 text-xs truncate">{contractors.find(c => c.id === selectedContractorId)?.email}</p>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    type="button"
+                    variant="outlined" 
+                    onClick={handlePrepareServiceOrder} 
+                    icon={<FileText className="h-4 w-4" />}
+                    className="!h-12 whitespace-nowrap flex-shrink-0"
                   >
-                Add
+                    Service Order
                   </Button>
+                </div>
+              )}
             </div>
           )}
           

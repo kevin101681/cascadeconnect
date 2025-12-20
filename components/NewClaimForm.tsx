@@ -6,7 +6,7 @@ import Button from './Button';
 import ImageViewerModal from './ImageViewerModal';
 import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
-import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar } from 'lucide-react';
+import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar, Briefcase } from 'lucide-react';
 
 interface NewClaimFormProps {
   onSubmit: (data: any) => void;
@@ -384,23 +384,28 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                   </div>
                 )}
                 
-                {selectedContractorId && !contractorSearch.trim() && (
-                  <div className="mt-2 text-xs text-primary font-medium flex items-center justify-between">
-                    <span className="dark:text-gray-100">Selected: {contractors.find(c => c.id === selectedContractorId)?.companyName}</span>
-                    <button type="button" onClick={() => { setSelectedContractorId(''); setContractorSearch(''); }} className="text-surface-on-variant dark:text-gray-400 hover:text-error"><X className="h-3 w-3" /></button>
+                {selectedContractorId && (
+                  <div className="mt-2 flex flex-row items-center gap-3">
+                    <div className="flex items-center gap-3 bg-secondary-container px-4 py-3 rounded-xl text-secondary-on-container flex-1 min-w-0">
+                      <Briefcase className="h-5 w-5 flex-shrink-0" />
+                      <div className="text-sm overflow-hidden min-w-0">
+                        <p className="font-bold truncate">{contractors.find(c => c.id === selectedContractorId)?.companyName}</p>
+                        <p className="opacity-80 text-xs truncate">{contractors.find(c => c.id === selectedContractorId)?.email}</p>
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      type="button"
+                      variant="outlined" 
+                      disabled={true}
+                      icon={<FileText className="h-4 w-4" />}
+                      className="!h-12 whitespace-nowrap flex-shrink-0"
+                      title="Save the claim first to send a service order"
+                    >
+                      Service Order
+                    </Button>
                   </div>
                 )}
-                
-                <Button
-                  type="button"
-                  variant="filled"
-                  className="mt-3"
-                  onClick={() => {
-                    // Handle add sub assignment
-                  }}
-                >
-                  Add
-                </Button>
              </div>
            )}
 

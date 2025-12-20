@@ -3188,6 +3188,17 @@ Assigned By: ${assignerName}
           builderGroups={builderGroups}
           onUpdateHomeowner={handleUpdateHomeowner}
           onDeleteHomeowner={handleDeleteHomeowner}
+          onCreateInvoice={(homeowner) => {
+            // Store prefill data in sessionStorage
+            const prefillData = {
+              clientName: homeowner.name,
+              clientEmail: homeowner.email,
+              projectDetails: homeowner.address,
+              homeownerId: homeowner.id
+            };
+            sessionStorage.setItem('invoicePrefill', JSON.stringify(prefillData));
+            setCurrentView('INVOICES');
+          }}
           onClose={() => setCurrentView('DASHBOARD')}
         />
       )}

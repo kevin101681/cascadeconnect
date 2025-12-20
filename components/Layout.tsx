@@ -51,6 +51,58 @@ const Layout: React.FC<LayoutProps> = ({
   onSignOut,
   isAdminAccount = false
 }) => {
+  // Minimal approach: Just ensure avatar is sized correctly, let CSS handle the rest
+  useEffect(() => {
+    // Only handle avatar sizing, let CSS handle visibility
+    const sizeAvatar = () => {
+      const triggerButtons = document.querySelectorAll('.cl-userButtonTrigger, [class*="cl-userButtonTrigger"]');
+      triggerButtons.forEach((el: Element) => {
+        const htmlEl = el as HTMLElement;
+        htmlEl.style.setProperty('width', '40px', 'important');
+        htmlEl.style.setProperty('height', '40px', 'important');
+        htmlEl.style.setProperty('min-width', '40px', 'important');
+        htmlEl.style.setProperty('min-height', '40px', 'important');
+        htmlEl.style.setProperty('max-width', '40px', 'important');
+        htmlEl.style.setProperty('max-height', '40px', 'important');
+        
+        const avatarBox = htmlEl.querySelector('.cl-userButtonAvatarBox, [class*="cl-userButtonAvatarBox"]');
+        if (avatarBox) {
+          const avatarEl = avatarBox as HTMLElement;
+          avatarEl.style.setProperty('width', '40px', 'important');
+          avatarEl.style.setProperty('height', '40px', 'important');
+          avatarEl.style.setProperty('min-width', '40px', 'important');
+          avatarEl.style.setProperty('min-height', '40px', 'important');
+          avatarEl.style.setProperty('max-width', '40px', 'important');
+          avatarEl.style.setProperty('max-height', '40px', 'important');
+          
+          const avatarImg = avatarEl.querySelector('img');
+          if (avatarImg) {
+            avatarImg.style.setProperty('width', '40px', 'important');
+            avatarImg.style.setProperty('height', '40px', 'important');
+            avatarImg.style.setProperty('object-fit', 'cover', 'important');
+          }
+        }
+      });
+    };
+
+    sizeAvatar();
+    
+    // Only resize avatar on mutations, don't touch popover content
+    const observer = new MutationObserver(() => {
+      sizeAvatar();
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+      attributes: false,
+      characterData: false
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
   const [isMenuOpen, setIsMenuOpen] = useState(false);

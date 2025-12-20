@@ -2,13 +2,14 @@ import React, { useState, useMemo } from 'react';
 import { Homeowner, BuilderGroup } from '../types';
 import Button from './Button';
 import MaterialSelect from './MaterialSelect';
-import { Edit2, Trash2, X, Search, Building2, MapPin, Phone, Mail, Calendar, Filter, Users } from 'lucide-react';
+import { Edit2, Trash2, X, Search, Building2, MapPin, Phone, Mail, Calendar, Filter, Users, FileText } from 'lucide-react';
 
 interface HomeownersListProps {
   homeowners: Homeowner[];
   builderGroups: BuilderGroup[];
   onUpdateHomeowner: (homeowner: Homeowner) => void;
   onDeleteHomeowner: (id: string) => void;
+  onCreateInvoice?: (homeowner: Homeowner) => void;
   onClose: () => void;
 }
 
@@ -17,12 +18,14 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
   builderGroups,
   onUpdateHomeowner,
   onDeleteHomeowner,
+  onCreateInvoice,
   onClose
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBuilderId, setSelectedBuilderId] = useState<string>('all');
   const [editingHomeowner, setEditingHomeowner] = useState<Homeowner | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [sentInvoices, setSentInvoices] = useState<Set<string>>(new Set());
 
   // Edit form state
   const [editName, setEditName] = useState('');
@@ -221,18 +224,31 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
 
                     <div className="flex items-center gap-2 ml-4">
                       <Button
-                        variant="outlined"
+                        variant="filled"
                         onClick={() => handleOpenEdit(homeowner)}
                         icon={<Edit2 className="h-4 w-4" />}
-                        className="text-primary border-primary hover:bg-primary/10"
+                        className="bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80"
                       >
                         Edit
                       </Button>
+                      {onCreateInvoice && (
+                        <Button
+                          variant="filled"
+                          onClick={() => {
+                            onCreateInvoice(homeowner);
+                            setSentInvoices(prev => new Set(prev).add(homeowner.id));
+                          }}
+                          icon={<FileText className="h-4 w-4" />}
+                          className="bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80"
+                        >
+                          {sentInvoices.has(homeowner.id) ? 'Sent' : 'Invoice'}
+                        </Button>
+                      )}
                       <Button
-                        variant="outlined"
+                        variant="filled"
                         onClick={() => setShowDeleteConfirm(homeowner.id)}
                         icon={<Trash2 className="h-4 w-4" />}
-                        className="text-error border-error hover:bg-error/10 dark:hover:bg-error/20"
+                        className="bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80"
                       >
                         Delete
                       </Button>

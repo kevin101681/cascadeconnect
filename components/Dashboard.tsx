@@ -19,6 +19,78 @@ import NewClaimForm from './NewClaimForm';
 import PunchListApp from './PunchListApp';
 import { HOMEOWNER_MANUAL_IMAGES } from '../lib/bluetag/constants';
 
+// PDF Thumbnail Component - Generates thumbnail on-the-fly if missing
+const PDFThumbnailDisplay: React.FC<{ doc: HomeownerDocument }> = ({ doc }) => {
+  const [thumbnailUrl, setThumbnailUrl] = React.useState<string | null>(doc.thumbnailUrl || null);
+  const [isGenerating, setIsGenerating] = React.useState(false);
+  const [hasError, setHasError] = React.useState(false);
+  const hasTriedGenerate = React.useRef(false);
+
+  React.useEffect(() => {
+    // Reset when doc changes
+    setThumbnailUrl(doc.thumbnailUrl || null);
+    setHasError(false);
+    hasTriedGenerate.current = false;
+  }, [doc.id, doc.url]);
+
+  React.useEffect(() => {
+    // If thumbnail doesn't exist, generate it (only try once per doc)
+    if (!thumbnailUrl && doc.url && !isGenerating && !hasError && !hasTriedGenerate.current) {
+      hasTriedGenerate.current = true;
+      setIsGenerating(true);
+      import('../lib/pdfThumbnail')
+        .then(({ generatePDFThumbnail }) => generatePDFThumbnail(doc.url))
+        .then((url) => {
+          setThumbnailUrl(url);
+          setIsGenerating(false);
+        })
+        .catch((error) => {
+          console.error('Failed to generate PDF thumbnail:', error);
+          setHasError(true);
+          setIsGenerating(false);
+        });
+    }
+  }, [doc.url, thumbnailUrl, isGenerating, hasError]);
+
+  if (thumbnailUrl) {
+    return (
+      <div className="w-full h-full overflow-hidden absolute inset-0" style={{ position: 'relative' }}>
+        <img
+          src={thumbnailUrl}
+          alt={doc.name}
+          className="w-full h-full object-contain"
+          style={{ 
+            pointerEvents: 'none',
+            width: '100%',
+            height: '100%',
+            display: 'block'
+          }}
+          onError={() => {
+            console.error('PDF thumbnail image failed to load');
+            setHasError(true);
+            setThumbnailUrl(null);
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (isGenerating) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 absolute inset-0">
+        <Loader2 className="h-8 w-8 text-surface-outline-variant dark:text-gray-500 animate-spin" />
+      </div>
+    );
+  }
+
+  // Fallback: Show PDF icon
+  return (
+    <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700 absolute inset-0">
+      <FileText className="h-12 w-12 text-surface-outline-variant dark:text-gray-500" />
+    </div>
+  );
+};
+
 // Image page component for flipbook (wrapped in forwardRef as required by react-pageflip)
 interface ManualImagePageProps {
   imageUrl: string;
@@ -1208,7 +1280,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       }}
                     >
                       <div className="px-6 py-3">
-                        <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(11, max-content)' }}>
+                        <div className="flex flex-wrap gap-2">
                             {/* Claim # */}
                           <span className="inline-flex items-center h-6 text-xs font-medium text-primary dark:text-primary-container tracking-wide bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 rounded-full whitespace-nowrap w-fit">
                             #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
@@ -2204,7 +2276,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <h3 className="font-medium text-lg mb-0 flex items-center justify-between text-secondary-on-container dark:text-gray-100">
                 <span className="flex items-center">
                   <Calendar className="h-5 w-5 mr-3" />
-                  Next Appointment
+                  Next Repair
                 </span>
               </h3>
             </div>
@@ -2549,68 +2621,42 @@ const Dashboard: React.FC<DashboardProps> = ({
                                if (isPDF) {
                                  setSelectedDocument(doc);
                                  setIsPDFViewerOpen(true);
+                               } else if (doc.type === 'IMAGE' || doc.url?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) || doc.url?.startsWith('data:image/')) {
+                                 // Open image in new tab or image viewer
+                                 window.open(doc.url, '_blank');
                                }
                              }}
                              style={{ overflow: 'hidden' }}
                            >
                              {isPDF ? (
-                               <div className="w-full h-full overflow-hidden" style={{ position: 'relative' }}>
-                                 {doc.thumbnailUrl ? (
+                               <PDFThumbnailDisplay doc={doc} />
+                             ) : (
+                               <>
+                                 {(doc.type === 'IMAGE' || doc.url?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) || doc.url?.startsWith('data:image/')) ? (
                                    <img
-                                     src={doc.thumbnailUrl}
+                                     src={doc.thumbnailUrl || doc.url}
                                      alt={doc.name}
-                                     className="w-full h-full object-contain"
+                                     className="w-full h-full object-cover absolute inset-0"
                                      style={{ 
-                                       pointerEvents: 'none',
-                                       width: '100%',
-                                       height: '100%',
-                                       display: 'block'
+                                       display: 'block',
+                                       pointerEvents: 'none'
                                      }}
                                      onError={(e) => {
-                                       // Fallback to object tag if thumbnail fails to load
-                                       const target = e.currentTarget;
-                                       const parent = target.parentElement;
-                                       if (parent) {
-                                         const object = document.createElement('object');
-                                         object.data = doc.url + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1';
-                                         object.type = 'application/pdf';
-                                         object.className = 'w-full h-full';
-                                         object.style.pointerEvents = 'none';
-                                         object.style.overflow = 'hidden';
-                                         object.style.width = '100%';
-                                         object.style.height = '100%';
-                                         object.style.display = 'block';
-                                         object.style.border = 'none';
-                                         parent.innerHTML = '';
-                                         parent.appendChild(object);
+                                       // Fallback to icon if image fails to load
+                                       const target = e.target as HTMLImageElement;
+                                       target.style.display = 'none';
+                                       const fallback = target.parentElement?.querySelector('.image-fallback');
+                                       if (fallback) {
+                                         (fallback as HTMLElement).style.display = 'flex';
                                        }
                                      }}
                                    />
-                                 ) : (
-                                   <object
-                                     data={doc.url + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH&page=1'}
-                                     type="application/pdf"
-                                     className="w-full h-full"
-                                     style={{ 
-                                       pointerEvents: 'none',
-                                       overflow: 'hidden',
-                                       width: '100%',
-                                       height: '100%',
-                                       display: 'block',
-                                       border: 'none'
-                                     }}
-                                   >
-                                     <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700">
-                                       <FileText className="h-12 w-12 text-surface-outline-variant dark:text-gray-500" />
-                                     </div>
-                                   </object>
-                                 )}
-                               </div>
-                             ) : (
-                               <div className="p-8 flex flex-col items-center justify-center text-center">
-                                 <FileText className="h-12 w-12 text-surface-outline-variant dark:text-gray-500 mb-2" />
-                                 <span className="text-xs text-surface-on-variant dark:text-gray-400">{doc.type || 'FILE'}</span>
-                               </div>
+                                 ) : null}
+                                 <div className={`p-8 flex flex-col items-center justify-center text-center image-fallback absolute inset-0 ${(doc.type === 'IMAGE' || doc.url?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) || doc.url?.startsWith('data:image/')) ? 'hidden' : ''}`}>
+                                   <FileText className="h-12 w-12 text-surface-outline-variant dark:text-gray-500 mb-2" />
+                                   <span className="text-xs text-surface-on-variant dark:text-gray-400">{doc.type || 'FILE'}</span>
+                                 </div>
+                               </>
                              )}
                              {isPDF && (
                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center pointer-events-none">
