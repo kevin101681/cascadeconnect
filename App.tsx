@@ -1222,25 +1222,34 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
     const subjectHomeowner = ((userRole === UserRole.ADMIN || userRole === UserRole.BUILDER) && targetHomeowner) ? targetHomeowner : activeHomeowner;
     if (!subjectHomeowner) return;
 
-    // Generate a readable claim number (CLM-YYYY-NNN format)
-    const year = new Date().getFullYear();
-    const existingClaimsThisYear = claims.filter(c => {
-      if (!c.claimNumber) return false;
-      return c.claimNumber.startsWith(`CLM-${year}-`);
+    // Generate claim number per homeowner (starting at 1 for each homeowner)
+    // Count existing claims for this specific homeowner
+    const existingClaimsForHomeowner = claims.filter(c => {
+      // Match by homeowner ID if available, otherwise by email
+      if (subjectHomeowner.id) {
+        return (c as any).homeownerId === subjectHomeowner.id || 
+               c.homeownerEmail === subjectHomeowner.email;
+      }
+      return c.homeownerEmail === subjectHomeowner.email;
     });
-    // Find the highest number for this year
+    
+    // Find the highest claim number for this homeowner
+    // Look for simple numeric claim numbers (1, 2, 3, etc.)
     let maxNumber = 0;
-    existingClaimsThisYear.forEach(c => {
+    existingClaimsForHomeowner.forEach(c => {
       if (c.claimNumber) {
-        const match = c.claimNumber.match(/CLM-\d{4}-(\d{3})/);
-        if (match) {
-          const num = parseInt(match[1], 10);
-          if (num > maxNumber) maxNumber = num;
+        // Try to parse as a simple number (1, 2, 3, etc.)
+        const num = parseInt(c.claimNumber, 10);
+        if (!isNaN(num) && num > maxNumber) {
+          maxNumber = num;
         }
       }
     });
-    const nextNumber = (maxNumber + 1).toString().padStart(3, '0');
-    const claimNumber = `CLM-${year}-${nextNumber}`;
+    
+    // If no simple numeric claim numbers found, check if we should start at 1
+    // Otherwise, assign the next sequential number
+    // This ensures each homeowner's claims start at 1 and increment sequentially
+    const claimNumber = (maxNumber + 1).toString();
 
     const newClaim: Claim = {
       id: crypto.randomUUID(),
