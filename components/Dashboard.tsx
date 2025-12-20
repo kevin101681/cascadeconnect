@@ -1546,7 +1546,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   );
 
   const renderMessagesTab = () => (
-    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden flex flex-col md:flex-row h-[700px] shadow-elevation-1">
+    <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden flex flex-col md:flex-row h-[700px] shadow-elevation-1">
        {/* Left Column: Inbox List (Gmail Style) */}
        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center h-16 shrink-0">
@@ -1639,7 +1639,7 @@ const Dashboard: React.FC<DashboardProps> = ({
        </div>
 
        {/* Right Column: Email Thread View */}
-       <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
+       <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           {selectedThread ? (
             <>
                {/* Thread Header Toolbar */}
@@ -2198,7 +2198,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       onClick={() => setShowDocsModal(true)}
                       variant="outlined"
                       icon={<FileText className="h-4 w-4" />}
-                      className="!h-9 !px-4"
+                      className="!h-9 !px-4 !bg-surface dark:!bg-gray-800"
                     >
                       Documents {displayDocuments.length > 0 && (
                         <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-on text-xs font-medium">
@@ -2227,7 +2227,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           onClick={() => setShowPunchListApp(true)}
                           variant="outlined"
                           icon={<ClipboardList className="h-4 w-4" />}
-                          className="!h-9 !px-4"
+                          className="!h-9 !px-4 !bg-surface dark:!bg-gray-800"
                         >
                           {hasReport ? 'BlueTag' : '+ Punch List'}
                         </Button>
@@ -2259,7 +2259,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       }}
                       variant="outlined"
                       icon={<Mail className="h-4 w-4" />}
-                      className="!h-9 !px-4"
+                      className="!h-9 !px-4 !bg-surface dark:!bg-gray-800"
                     >
                       Invite
                     </Button>
