@@ -9,7 +9,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor } from '../types';
 import { ClaimMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle } from 'lucide-react';
 import Button from './Button';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
@@ -1397,6 +1397,40 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                       </div>
                     </motion.div>
+                    
+                    {/* Appointment Confirmed Card - Show when scheduled date exists */}
+                    {scheduledDate && (
+                      <motion.div
+                        className="px-6 pb-3"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center text-green-700 dark:text-green-300 flex-shrink-0">
+                              <CheckCircle className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <p className="text-xs font-bold text-green-800 dark:text-green-300 uppercase tracking-wide mb-1">Appointment Confirmed</p>
+                              <div className="text-lg font-medium text-surface-on dark:text-gray-100">
+                                {new Date(scheduledDate.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                              </div>
+                              <p className="text-sm text-surface-on-variant dark:text-gray-300 mt-0.5 font-medium">
+                                Time Slot: {scheduledDate.timeSlot}
+                              </p>
+                              {claim.contractorName && (
+                                <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-1.5 flex items-center gap-1">
+                                  <HardHat className="h-3 w-3" />
+                                  Sub: {claim.contractorName}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
                   </React.Fragment>
                 );
               })}
