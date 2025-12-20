@@ -109,6 +109,11 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
 
   useEffect(() => {
     if (!isOpen || !document?.url) {
+      setPdfUrl(null);
+      setNumPages(0);
+      setDocumentLoading(false);
+      setError(null);
+      setPdfAspectRatio(null);
       return;
     }
 
@@ -117,6 +122,17 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
         setDocumentLoading(true);
         setError(null);
         setNumPages(0);
+        setPdfAspectRatio(null);
+        
+        // Ensure worker is configured before preparing PDF
+        const workerUrl = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+        if (!pdfjs.GlobalWorkerOptions.workerSrc || 
+            pdfjs.GlobalWorkerOptions.workerSrc.includes('fake') ||
+            pdfjs.GlobalWorkerOptions.workerSrc.includes('pdf.worker.mjs') ||
+            !pdfjs.GlobalWorkerOptions.workerSrc.startsWith('http')) {
+          pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+          console.log('PDF worker configured in PdfFlipViewer3D:', workerUrl);
+        }
         
         if (blobUrlRef.current) {
           URL.revokeObjectURL(blobUrlRef.current);
@@ -147,8 +163,10 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
           const blobUrl = URL.createObjectURL(blob);
           blobUrlRef.current = blobUrl;
           finalUrl = blobUrl;
+          console.log('PDF converted to blob URL, size:', blob.size);
         }
         
+        console.log('Setting PDF URL for viewer');
         setPdfUrl(finalUrl);
       } catch (err: any) {
         console.error('PDF preparation error:', err);
@@ -168,33 +186,57 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
   }, [isOpen, document?.url]);
 
   const onDocumentLoadSuccess = async ({ numPages }: { numPages: number }) => {
+    console.log('PDF document loaded successfully, pages:', numPages);
     setNumPages(numPages);
     setError(null);
     setCurrentPage(1);
+    setDocumentLoading(false);
     
     // Get the actual PDF page dimensions to calculate aspect ratio
-    try {
-      if (pdfUrl && numPages > 0) {
-        // Load the PDF document to get page dimensions
-        const loadingTask = pdfjs.getDocument(pdfUrl);
-        const pdfDoc = await loadingTask.promise;
-        const firstPage = await pdfDoc.getPage(1);
-        const viewport = firstPage.getViewport({ scale: 1.0 });
-        const aspectRatio = viewport.width / viewport.height;
-        setPdfAspectRatio(aspectRatio);
-        console.log('PDF aspect ratio:', aspectRatio, 'Dimensions:', viewport.width, 'x', viewport.height);
-      }
-    } catch (err) {
-      console.warn('Could not get PDF dimensions, using default aspect ratio:', err);
+    // Do this asynchronously so it doesn't block rendering
+    if (pdfUrl && numPages > 0) {
+      (async () => {
+        try {
+          // Ensure worker is set before loading
+          const workerUrl = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+          if (!pdfjs.GlobalWorkerOptions.workerSrc || 
+              pdfjs.GlobalWorkerOptions.workerSrc.includes('fake') ||
+              pdfjs.GlobalWorkerOptions.workerSrc.includes('pdf.worker.mjs') ||
+              !pdfjs.GlobalWorkerOptions.workerSrc.startsWith('http')) {
+            pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+          }
+          
+          // Load the PDF document to get page dimensions
+          const loadingTask = pdfjs.getDocument(pdfUrl);
+          const pdfDoc = await loadingTask.promise;
+          const firstPage = await pdfDoc.getPage(1);
+          const viewport = firstPage.getViewport({ scale: 1.0 });
+          const aspectRatio = viewport.width / viewport.height;
+          setPdfAspectRatio(aspectRatio);
+          console.log('PDF aspect ratio:', aspectRatio, 'Dimensions:', viewport.width, 'x', viewport.height);
+        } catch (err) {
+          console.warn('Could not get PDF dimensions, using default aspect ratio:', err);
+          // Use default aspect ratio if we can't get dimensions
+          setPdfAspectRatio(2 / 3);
+        }
+      })();
+    } else {
+      // Use default aspect ratio if no pages
+      setPdfAspectRatio(2 / 3);
     }
-    
-    setDocumentLoading(false);
   };
 
   const onDocumentLoadError = (error: Error) => {
     console.error('PDF load error:', error);
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      workerSrc: pdfjs.GlobalWorkerOptions.workerSrc
+    });
     setError(error.message || 'Failed to load PDF');
     setDocumentLoading(false);
+    setNumPages(0);
   };
 
   // Listen for page changes from the flipbook
@@ -273,13 +315,18 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
               onLoadSuccess={onDocumentLoadSuccess}
               onLoadError={onDocumentLoadError}
               loading={
-                <div className="text-white">
+                <div className="text-white flex flex-col items-center justify-center" style={{ width: pageDimensions.width, height: pageDimensions.height }}>
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
                   <p className="mt-4">Loading PDF...</p>
                 </div>
               }
+              error={
+                <div className="text-white p-4">
+                  <p>Error loading PDF. Please try again.</p>
+                </div>
+              }
             >
-              {!documentLoading && numPages > 0 && (
+              {numPages > 0 ? (
                 <div style={{ width: pageDimensions.width, height: pageDimensions.height, overflow: 'hidden' }}>
                   <HTMLFlipBook
                     ref={flipBookRef}
@@ -317,7 +364,12 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
                     ))}
                   </HTMLFlipBook>
                 </div>
-              )}
+              ) : documentLoading ? (
+                <div className="text-white flex flex-col items-center justify-center" style={{ width: pageDimensions.width, height: pageDimensions.height }}>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                  <p className="mt-4">Loading PDF pages...</p>
+                </div>
+              ) : null}
             </Document>
           </div>
         )}
