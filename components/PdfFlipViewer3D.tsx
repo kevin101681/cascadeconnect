@@ -345,7 +345,7 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
               }
             >
               {numPages > 0 ? (
-                <div style={{ width: pageDimensions.width, height: pageDimensions.height, overflow: 'visible', position: 'relative', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+                <div style={{ width: pageDimensions.width, height: pageDimensions.height, overflow: 'visible', position: 'relative' }}>
                   <HTMLFlipBook
                     ref={flipBookRef}
                     width={pageDimensions.width}
