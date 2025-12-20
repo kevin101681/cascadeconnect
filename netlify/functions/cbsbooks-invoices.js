@@ -68,6 +68,9 @@ exports.handler = async (event, context) => {
     const path = event.path || '';
     const pathParts = path.split('/').filter(p => p);
     
+    // Check if this is a migration request
+    const isMigration = path.includes('migrate-localstorage');
+    
     // Extract invoice ID if present (e.g., /api/cbsbooks/invoices/123 or /invoices/123)
     let id = null;
     const invoicesIndex = pathParts.indexOf('invoices');
@@ -84,6 +87,135 @@ exports.handler = async (event, context) => {
     const isList = !id && (path.includes('/invoices') || path.endsWith('/cbsbooks-invoices') || path.endsWith('/invoices'));
     
     client = await getDbClient();
+
+    // Handle migration endpoint
+    if (isMigration && event.httpMethod === 'POST') {
+      const { invoices = [], expenses = [], clients: clientsData = [] } = JSON.parse(event.body || '{}');
+      
+      let invoicesMigrated = 0;
+      let expensesMigrated = 0;
+      let clientsMigrated = 0;
+      let invoicesSkipped = 0;
+      let expensesSkipped = 0;
+      let clientsSkipped = 0;
+
+      // Migrate invoices
+      for (const invoice of invoices) {
+        try {
+          const exists = await client.query('SELECT id FROM invoices WHERE id = $1', [invoice.id]);
+          if (exists.rows.length > 0) {
+            invoicesSkipped++;
+            continue;
+          }
+
+          let items = invoice.items || [];
+          if (typeof items === 'string') {
+            try {
+              items = JSON.parse(items);
+            } catch {
+              items = [];
+            }
+          }
+
+          await client.query(`
+            INSERT INTO invoices (
+              id, invoice_number, client_name, client_email, project_details,
+              payment_link, check_number, date, due_date, date_paid,
+              total, status, items
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            ON CONFLICT (id) DO NOTHING
+          `, [
+            invoice.id,
+            invoice.invoiceNumber || invoice.invoice_number,
+            invoice.clientName || invoice.client_name,
+            invoice.clientEmail || invoice.client_email || null,
+            invoice.projectDetails || invoice.project_details || null,
+            invoice.paymentLink || invoice.payment_link || null,
+            invoice.checkNumber || invoice.check_number || null,
+            invoice.date,
+            invoice.dueDate || invoice.due_date,
+            invoice.datePaid || invoice.date_paid || null,
+            invoice.total,
+            invoice.status || 'draft',
+            JSON.stringify(items)
+          ]);
+          invoicesMigrated++;
+        } catch (error) {
+          console.error(`Failed to migrate invoice ${invoice.invoiceNumber || invoice.id}:`, error.message);
+        }
+      }
+
+      // Migrate expenses
+      for (const expense of expenses) {
+        try {
+          const exists = await client.query('SELECT id FROM expenses WHERE id = $1', [expense.id]);
+          if (exists.rows.length > 0) {
+            expensesSkipped++;
+            continue;
+          }
+
+          await client.query(`
+            INSERT INTO expenses (id, date, payee, category, amount, description)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            ON CONFLICT (id) DO NOTHING
+          `, [
+            expense.id,
+            expense.date,
+            expense.payee,
+            expense.category,
+            expense.amount,
+            expense.description || null
+          ]);
+          expensesMigrated++;
+        } catch (error) {
+          console.error(`Failed to migrate expense ${expense.id}:`, error.message);
+        }
+      }
+
+      // Migrate clients
+      for (const clientData of clientsData) {
+        try {
+          const exists = await client.query('SELECT id FROM clients WHERE id = $1', [clientData.id]);
+          if (exists.rows.length > 0) {
+            clientsSkipped++;
+            continue;
+          }
+
+          await client.query(`
+            INSERT INTO clients (
+              id, company_name, check_payor_name, email,
+              address_line1, address_line2, city, state, zip, address
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            ON CONFLICT (id) DO NOTHING
+          `, [
+            clientData.id,
+            clientData.companyName || clientData.company_name,
+            clientData.checkPayorName || clientData.check_payor_name || null,
+            clientData.email || null,
+            clientData.addressLine1 || clientData.address_line1 || null,
+            clientData.addressLine2 || clientData.address_line2 || null,
+            clientData.city || null,
+            clientData.state || null,
+            clientData.zip || null,
+            clientData.address || null
+          ]);
+          clientsMigrated++;
+        } catch (error) {
+          console.error(`Failed to migrate client ${clientData.companyName || clientData.id}:`, error.message);
+        }
+      }
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          invoices: { migrated: invoicesMigrated, skipped: invoicesSkipped },
+          expenses: { migrated: expensesMigrated, skipped: expensesSkipped },
+          clients: { migrated: clientsMigrated, skipped: clientsSkipped }
+        })
+      };
+    }
 
     // GET: List all invoices
     if (event.httpMethod === 'GET' && isList) {

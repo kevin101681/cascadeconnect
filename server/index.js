@@ -26,7 +26,10 @@ app.use(cors({
 
 // Better Auth API routes - MUST be before express.json() middleware
 // Using toNodeHandler for proper Express integration
-app.all("/api/auth/*", toNodeHandler(auth));
+// NOTE: Better Auth is not currently configured. Uncomment and configure if needed.
+// import { toNodeHandler } from 'better-auth/node';
+// import { auth } from './auth.js'; // Create auth.js with Better Auth configuration
+// app.all("/api/auth/*", toNodeHandler(auth));
 
 // Express JSON middleware - mount after Better Auth handler
 // This prevents Better Auth from hanging on pending requests

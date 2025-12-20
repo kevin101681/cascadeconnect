@@ -30,27 +30,112 @@ const App: React.FC<CBSBooksAppProps> = ({ prefillInvoice }) => {
     loadData();
   }, []);
 
+  // Migrate localStorage data to database if API is available
+  const migrateLocalStorageData = async () => {
+    if (typeof window === 'undefined') return;
+    
+    const STORAGE_KEYS = {
+      INVOICES: 'cbs_invoices',
+      EXPENSES: 'cbs_expenses',
+      CLIENTS: 'cbs_clients',
+    };
+
+    // Check if migration has already been done
+    const migrationKey = 'cbs_localstorage_migrated';
+    if (localStorage.getItem(migrationKey) === 'true') {
+      return; // Already migrated
+    }
+
+    // Get data from localStorage
+    const invoices = JSON.parse(localStorage.getItem(STORAGE_KEYS.INVOICES) || '[]');
+    const expenses = JSON.parse(localStorage.getItem(STORAGE_KEYS.EXPENSES) || '[]');
+    const clients = JSON.parse(localStorage.getItem(STORAGE_KEYS.CLIENTS) || '[]');
+
+    // Only migrate if there's data and API is available
+    if ((invoices.length > 0 || expenses.length > 0 || clients.length > 0) && !api.isOffline) {
+      try {
+        console.log('CBS Books: Migrating localStorage data to database...');
+        const response = await fetch('/api/cbsbooks/migrate-localstorage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ invoices, expenses, clients })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('CBS Books: Migration completed:', result);
+          
+          // Mark as migrated and optionally clear localStorage (keep as backup for now)
+          localStorage.setItem(migrationKey, 'true');
+          
+          // Optionally clear localStorage after successful migration
+          // Uncomment these lines if you want to clear localStorage after migration:
+          // localStorage.removeItem(STORAGE_KEYS.INVOICES);
+          // localStorage.removeItem(STORAGE_KEYS.EXPENSES);
+          // localStorage.removeItem(STORAGE_KEYS.CLIENTS);
+        }
+      } catch (error) {
+        console.warn('CBS Books: Failed to migrate localStorage data:', error);
+        // Don't mark as migrated if it failed - will retry next time
+      }
+    }
+  };
+
   const loadData = async () => {
     setIsLoading(true);
     setError(null);
     try {
       console.log('CBS Books: Loading data...');
+      const startTime = performance.now();
+      
+      // Start migration in background (non-blocking)
+      migrateLocalStorageData().catch(err => {
+        console.warn('Background migration failed:', err);
+      });
+      
+      // Load data in parallel (don't wait for migration)
       const [fetchedInvoices, fetchedExpenses, fetchedClients] = await Promise.all([
         api.invoices.list(),
         api.expenses.list(),
         api.clients.list()
       ]);
+      
+      const loadTime = performance.now() - startTime;
+      console.log(`CBS Books: Data loaded in ${loadTime.toFixed(0)}ms`);
       console.log('CBS Books: Data loaded:', {
         invoices: fetchedInvoices.length,
         expenses: fetchedExpenses.length,
         clients: fetchedClients.length
       });
+      
+      // Log detailed info for debugging
+      if (fetchedInvoices.length === 0) {
+        console.log('⚠️  No invoices found in database');
+        console.log('   - Check if tables exist: npm run create-cbsbooks-tables');
+        console.log('   - Check localStorage: localStorage.getItem("cbs_invoices")');
+        console.log('   - Check API: http://localhost:3000/api/cbsbooks/invoices');
+      } else {
+        console.log('✅ Invoices loaded:', fetchedInvoices.map(i => `${i.invoiceNumber} - ${i.clientName}`));
+      }
+      
       setInvoices(fetchedInvoices);
       setExpenses(fetchedExpenses);
       setClients(fetchedClients);
     } catch (err: any) {
       console.error("Failed to load data:", err);
-      setError(err.message || "Unknown error occurred");
+      const errorMessage = err.message || "Unknown error occurred";
+      
+      // Provide helpful error messages for common issues
+      let userFriendlyMessage = errorMessage;
+      if (errorMessage.includes('does not exist')) {
+        userFriendlyMessage = `Database table missing. Please run: npm run create-cbsbooks-tables\n\nOriginal error: ${errorMessage}`;
+      } else if (errorMessage.includes('Connection') || errorMessage.includes('ECONNREFUSED')) {
+        userFriendlyMessage = `Cannot connect to server. Make sure the server is running on port 3000.\n\nOriginal error: ${errorMessage}`;
+      } else if (errorMessage.includes('Database configuration')) {
+        userFriendlyMessage = `Database not configured. Please set NETLIFY_DATABASE_URL or DATABASE_URL in your .env.local file.\n\nOriginal error: ${errorMessage}`;
+      }
+      
+      setError(userFriendlyMessage);
     } finally {
       setIsLoading(false);
     }

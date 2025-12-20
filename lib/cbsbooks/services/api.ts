@@ -168,12 +168,30 @@ export const api = {
   // --- INVOICES ---
   invoices: {
     list: async (): Promise<Invoice[]> => {
+      // Check cache first (if available and recent)
+      const cacheKey = 'cbs_invoices_cache';
+      const cacheTimeKey = 'cbs_invoices_cache_time';
+      const CACHE_DURATION = 5000; // 5 seconds cache
+      
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem(cacheKey);
+        const cacheTime = localStorage.getItem(cacheTimeKey);
+        if (cached && cacheTime) {
+          const age = Date.now() - parseInt(cacheTime);
+          if (age < CACHE_DURATION) {
+            console.log('✅ Using cached invoices (age:', age, 'ms)');
+            return JSON.parse(cached);
+          }
+        }
+      }
+      
       // Always try the real API first, fall back to mock data if it fails
+      const startTime = performance.now();
       try {
-        console.log('Fetching invoices from API:', `${API_BASE}/invoices`);
         const response = await fetch(`${API_BASE}/invoices`, {
           method: 'GET',
-          headers: { 'Content-Type': 'application/json' }
+          headers: { 'Content-Type': 'application/json' },
+          cache: 'no-cache' // Always fetch fresh, but we cache the result
         });
         
         console.log('API response status:', response.status, 'ok:', response.ok);
@@ -197,11 +215,24 @@ export const api = {
           
           try {
             const data = JSON.parse(text);
-            console.log('Successfully parsed JSON, invoice count:', Array.isArray(data) ? data.length : 'not an array');
+            const count = Array.isArray(data) ? data.length : 0;
+            const fetchTime = performance.now() - startTime;
+            console.log(`✅ Fetched ${count} invoices in ${fetchTime.toFixed(0)}ms`);
+            if (count === 0) {
+              console.log('   ℹ️  Database is empty. If you have data in localStorage, it will migrate automatically.');
+            }
             // Update cache to indicate API is available
             apiAvailableCache = true;
             USE_MOCK_DATA = false;
-            return Array.isArray(data) ? data : [];
+            const result = Array.isArray(data) ? data : [];
+            
+            // Cache the result
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(cacheKey, JSON.stringify(result));
+              localStorage.setItem(cacheTimeKey, Date.now().toString());
+            }
+            
+            return result;
           } catch (parseError: any) {
             console.error('Failed to parse JSON response:', parseError.message, 'Text:', text.substring(0, 100));
             // If it's not JSON but status is 200, might be HTML
@@ -250,6 +281,13 @@ export const api = {
           const data = await response.json();
           apiAvailableCache = true;
           USE_MOCK_DATA = false;
+          
+          // Invalidate cache
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('cbs_invoices_cache');
+            localStorage.removeItem('cbs_invoices_cache_time');
+          }
+          
           return data;
         }
         throw new Error(`API returned ${response.status}`);
@@ -309,11 +347,19 @@ export const api = {
         return invoice;
       }
       try {
-        return await fetchWithErrors(`${API_BASE}/invoices/${invoice.id}`, {
+        const result = await fetchWithErrors(`${API_BASE}/invoices/${invoice.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(invoice),
         });
+        
+        // Invalidate cache
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('cbs_invoices_cache');
+          localStorage.removeItem('cbs_invoices_cache_time');
+        }
+        
+        return result;
       } catch (error) {
         // Fallback to mock data if API fails
         console.warn('API failed, using mock data:', error);
@@ -334,6 +380,12 @@ export const api = {
       }
       try {
         await fetchWithErrors(`${API_BASE}/invoices/${id}`, { method: 'DELETE' });
+        
+        // Invalidate cache
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('cbs_invoices_cache');
+          localStorage.removeItem('cbs_invoices_cache_time');
+        }
       } catch (error) {
         // Fallback to mock data if API fails
         console.warn('API failed, using mock data:', error);
@@ -424,13 +476,37 @@ export const api = {
   // --- EXPENSES ---
   expenses: {
     list: async (): Promise<Expense[]> => {
+      // Check cache first
+      const cacheKey = 'cbs_expenses_cache';
+      const cacheTimeKey = 'cbs_expenses_cache_time';
+      const CACHE_DURATION = 5000;
+      
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem(cacheKey);
+        const cacheTime = localStorage.getItem(cacheTimeKey);
+        if (cached && cacheTime) {
+          const age = Date.now() - parseInt(cacheTime);
+          if (age < CACHE_DURATION) {
+            return JSON.parse(cached);
+          }
+        }
+      }
+      
       const useMock = await shouldUseMockData();
       if (useMock) {
         await mockDelay();
         return getStorage<Expense>(STORAGE_KEYS.EXPENSES, []);
       }
       try {
-        return await fetchWithErrors(`${API_BASE}/expenses`);
+        const result = await fetchWithErrors(`${API_BASE}/expenses`);
+        
+        // Cache the result
+        if (typeof window !== 'undefined' && Array.isArray(result)) {
+          localStorage.setItem(cacheKey, JSON.stringify(result));
+          localStorage.setItem(cacheTimeKey, Date.now().toString());
+        }
+        
+        return result;
       } catch (error) {
         console.warn('API failed, using mock data:', error);
         await mockDelay();
@@ -548,6 +624,22 @@ export const api = {
   // --- CLIENTS ---
   clients: {
     list: async (): Promise<Client[]> => {
+      // Check cache first
+      const cacheKey = 'cbs_clients_cache';
+      const cacheTimeKey = 'cbs_clients_cache_time';
+      const CACHE_DURATION = 5000;
+      
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem(cacheKey);
+        const cacheTime = localStorage.getItem(cacheTimeKey);
+        if (cached && cacheTime) {
+          const age = Date.now() - parseInt(cacheTime);
+          if (age < CACHE_DURATION) {
+            return JSON.parse(cached);
+          }
+        }
+      }
+      
       try {
         const response = await fetch(`${API_BASE}/clients`, {
           method: 'GET',
@@ -560,7 +652,15 @@ export const api = {
             const data = JSON.parse(text);
             apiAvailableCache = true;
             USE_MOCK_DATA = false;
-            return Array.isArray(data) ? data : [];
+            const result = Array.isArray(data) ? data : [];
+            
+            // Cache the result
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(cacheKey, JSON.stringify(result));
+              localStorage.setItem(cacheTimeKey, Date.now().toString());
+            }
+            
+            return result;
           } catch {
             throw new Error('Invalid JSON response');
           }

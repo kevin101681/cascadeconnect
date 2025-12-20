@@ -52,6 +52,38 @@ router.get('/invoices', async (req, res) => {
   let client;
   try {
     client = await getDbClient();
+    
+    // Check if table exists, create if it doesn't
+    try {
+      await client.query('SELECT 1 FROM invoices LIMIT 1');
+    } catch (tableError) {
+      if (tableError.message && tableError.message.includes('does not exist')) {
+        console.log('Creating invoices table...');
+        await client.query(`
+          CREATE TABLE IF NOT EXISTS invoices (
+            id UUID PRIMARY KEY,
+            invoice_number TEXT NOT NULL,
+            client_name TEXT NOT NULL,
+            client_email TEXT,
+            project_details TEXT,
+            payment_link TEXT,
+            check_number TEXT,
+            date DATE NOT NULL,
+            due_date DATE NOT NULL,
+            date_paid DATE,
+            total DECIMAL(10, 2) NOT NULL,
+            status TEXT NOT NULL DEFAULT 'draft',
+            items JSONB DEFAULT '[]'::jsonb,
+            created_at TIMESTAMP DEFAULT NOW(),
+            updated_at TIMESTAMP DEFAULT NOW()
+          )
+        `);
+        console.log('✅ invoices table created');
+      } else {
+        throw tableError;
+      }
+    }
+    
     const result = await client.query('SELECT * FROM invoices ORDER BY date DESC');
     const invoices = result.rows.map(mapRowToInvoice);
     res.json(invoices);
@@ -542,6 +574,144 @@ router.post('/send-email', async (req, res) => {
   } catch (error) {
     console.error("SEND EMAIL ERROR:", error);
     res.status(500).json({ error: error.message || "Failed to send email" });
+  }
+});
+
+// --- MIGRATE LOCALSTORAGE DATA ---
+router.post('/migrate-localstorage', async (req, res) => {
+  let client;
+  try {
+    client = await getDbClient();
+    const { invoices = [], expenses = [], clients: clientsData = [] } = req.body;
+
+    let invoicesMigrated = 0;
+    let expensesMigrated = 0;
+    let clientsMigrated = 0;
+    let invoicesSkipped = 0;
+    let expensesSkipped = 0;
+    let clientsSkipped = 0;
+
+    // Migrate invoices
+    for (const invoice of invoices) {
+      try {
+        // Check if invoice already exists
+        const exists = await client.query('SELECT id FROM invoices WHERE id = $1', [invoice.id]);
+        if (exists.rows.length > 0) {
+          invoicesSkipped++;
+          continue;
+        }
+
+        // Ensure items is properly formatted
+        let items = invoice.items || [];
+        if (typeof items === 'string') {
+          try {
+            items = JSON.parse(items);
+          } catch {
+            items = [];
+          }
+        }
+
+        await client.query(`
+          INSERT INTO invoices (
+            id, invoice_number, client_name, client_email, project_details,
+            payment_link, check_number, date, due_date, date_paid,
+            total, status, items
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          ON CONFLICT (id) DO NOTHING
+        `, [
+          invoice.id,
+          invoice.invoiceNumber || invoice.invoice_number,
+          invoice.clientName || invoice.client_name,
+          invoice.clientEmail || invoice.client_email || null,
+          invoice.projectDetails || invoice.project_details || null,
+          invoice.paymentLink || invoice.payment_link || null,
+          invoice.checkNumber || invoice.check_number || null,
+          invoice.date,
+          invoice.dueDate || invoice.due_date,
+          invoice.datePaid || invoice.date_paid || null,
+          invoice.total,
+          invoice.status || 'draft',
+          JSON.stringify(items)
+        ]);
+        invoicesMigrated++;
+      } catch (error) {
+        console.error(`Failed to migrate invoice ${invoice.invoiceNumber || invoice.id}:`, error.message);
+      }
+    }
+
+    // Migrate expenses
+    for (const expense of expenses) {
+      try {
+        const exists = await client.query('SELECT id FROM expenses WHERE id = $1', [expense.id]);
+        if (exists.rows.length > 0) {
+          expensesSkipped++;
+          continue;
+        }
+
+        await client.query(`
+          INSERT INTO expenses (id, date, payee, category, amount, description)
+          VALUES ($1, $2, $3, $4, $5, $6)
+          ON CONFLICT (id) DO NOTHING
+        `, [
+          expense.id,
+          expense.date,
+          expense.payee,
+          expense.category,
+          expense.amount,
+          expense.description || null
+        ]);
+        expensesMigrated++;
+      } catch (error) {
+        console.error(`Failed to migrate expense ${expense.id}:`, error.message);
+      }
+    }
+
+    // Migrate clients
+    for (const clientData of clientsData) {
+      try {
+        const exists = await client.query('SELECT id FROM clients WHERE id = $1', [clientData.id]);
+        if (exists.rows.length > 0) {
+          clientsSkipped++;
+          continue;
+        }
+
+        await client.query(`
+          INSERT INTO clients (
+            id, company_name, check_payor_name, email,
+            address_line1, address_line2, city, state, zip, address
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          ON CONFLICT (id) DO NOTHING
+        `, [
+          clientData.id,
+          clientData.companyName || clientData.company_name,
+          clientData.checkPayorName || clientData.check_payor_name || null,
+          clientData.email || null,
+          clientData.addressLine1 || clientData.address_line1 || null,
+          clientData.addressLine2 || clientData.address_line2 || null,
+          clientData.city || null,
+          clientData.state || null,
+          clientData.zip || null,
+          clientData.address || null
+        ]);
+        clientsMigrated++;
+      } catch (error) {
+        console.error(`Failed to migrate client ${clientData.companyName || clientData.id}:`, error.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      invoices: { migrated: invoicesMigrated, skipped: invoicesSkipped },
+      expenses: { migrated: expensesMigrated, skipped: expensesSkipped },
+      clients: { migrated: clientsMigrated, skipped: clientsSkipped }
+    });
+  } catch (error) {
+    console.error("MIGRATE LOCALSTORAGE ERROR:", error);
+    res.status(500).json({ error: error.message || "Failed to migrate localStorage data" });
+  } finally {
+    if (client) {
+      try { await client.end(); } catch (e) { /* ignore */ }
+    }
   }
 });
 
