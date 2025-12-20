@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Mail, Send, CheckCircle, XCircle, Eye, MousePointerClick, AlertCircle, TrendingUp, Calendar, RefreshCw, X, Search, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import Button from './Button';
 
@@ -85,7 +85,7 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEmail, setSelectedEmail] = useState<EmailActivity | null>(null);
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -108,7 +108,16 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
       url.searchParams.set('limit', '500'); // Request more emails
 
       console.log('Fetching email analytics from:', url.toString());
-      const response = await fetch(url.toString());
+      
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      
+      const response = await fetch(url.toString(), {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -131,15 +140,19 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
       setData(result);
     } catch (err: any) {
       console.error('Failed to fetch email analytics:', err);
-      setError(err.message || 'Failed to load email analytics');
+      if (err.name === 'AbortError') {
+        setError('Request timed out. Please try again.');
+      } else {
+        setError(err.message || 'Failed to load email analytics');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [startDate, endDate, aggregatedBy]);
 
   useEffect(() => {
     fetchAnalytics();
-  }, [startDate, endDate, aggregatedBy]);
+  }, [fetchAnalytics]);
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat().format(num);
