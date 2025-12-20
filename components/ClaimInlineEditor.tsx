@@ -534,11 +534,11 @@ If this repair work is billable, please let me know prior to scheduling.`);
   return (
     <div className="space-y-6 flex flex-col h-full">
       {/* Header */}
-      <div className="pb-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center">
+      <div className="pb-4 border-b border-surface-outline-variant dark:border-gray-700 flex flex-wrap justify-between items-center gap-2">
         <h2 className="text-lg font-normal text-surface-on dark:text-gray-100">
           Edit Claim
         </h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button 
             type="button" 
             variant="filled"
@@ -821,7 +821,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                         className="bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600"
                       >
                         <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-wrap items-center gap-2">
                             {msg.type === 'HOMEOWNER' ? (
                               <User className="h-4 w-4 text-primary" />
                             ) : (
@@ -845,7 +845,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                           <p className="text-xs font-medium text-secondary-on-container dark:text-gray-400 opacity-70 mb-1">Message:</p>
                           <p className="text-sm text-secondary-on-container dark:text-gray-200 whitespace-pre-wrap">{msg.content}</p>
                         </div>
-                        <div className="mt-2 pt-2 border-t border-secondary-container-high dark:border-gray-600 flex items-center justify-between">
+                        <div className="mt-2 pt-2 border-t border-secondary-container-high dark:border-gray-600 flex flex-wrap items-center justify-between gap-2">
                           <p className="text-xs text-secondary-on-container dark:text-gray-400 opacity-70">
                             Sent by: {msg.senderName} • To: {msg.recipientEmail}
                           </p>
