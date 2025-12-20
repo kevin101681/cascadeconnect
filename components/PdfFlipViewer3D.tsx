@@ -2,9 +2,8 @@ import React, { useState, useEffect, useRef, forwardRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import HTMLFlipBook from 'react-pageflip';
 import { X } from 'lucide-react';
-
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Import centralized PDF worker setup
+import '../lib/pdfWorker';
 
 interface PdfFlipViewer3DProps {
   document?: {

@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, Homeowner } from '../types';
 import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin } from 'lucide-react';
 import { useDarkMode } from './DarkModeProvider';
-import { UserButton } from '@clerk/clerk-react';
+import { UserButton, useUser } from '@clerk/clerk-react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -108,6 +108,16 @@ const Layout: React.FC<LayoutProps> = ({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { isDarkMode, toggleDarkMode } = useDarkMode();
+  
+  // Get Clerk user data to ensure it's loaded
+  const { user, isLoaded: clerkLoaded } = useUser();
+  
+  // Debug: Log user data when it loads
+  useEffect(() => {
+    if (clerkLoaded && user) {
+      console.log('Clerk user loaded:', { id: user.id, imageUrl: user.imageUrl, hasImage: !!user.imageUrl });
+    }
+  }, [clerkLoaded, user]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -279,8 +289,9 @@ const Layout: React.FC<LayoutProps> = ({
               <UserButton
                 appearance={{
                   elements: {
-                    userButtonTrigger: "!flex !items-center !justify-center !w-10 !h-10",
-                    userButtonAvatarBox: "!w-10 !h-10 !block",
+                    userButtonTrigger: "!flex !items-center !justify-center !w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px]",
+                    userButtonAvatarBox: "!w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !block !visible !opacity-100",
+                    userButtonAvatar: "!w-full !h-full",
                     userButtonPopoverCard: "shadow-elevation-2",
                     userButtonPopoverHeader: "hidden",
                     userButtonPopoverHeaderTitle: "hidden",

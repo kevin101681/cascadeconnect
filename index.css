@@ -428,6 +428,28 @@ body {
     opacity: 1 !important;
 }
 
+/* Ensure avatar image or SVG is visible */
+.cl-userButtonTrigger img,
+.cl-userButtonTrigger svg,
+[class*="cl-userButtonTrigger"] img,
+[class*="cl-userButtonTrigger"] svg,
+.cl-userButtonAvatarBox img,
+.cl-userButtonAvatarBox svg {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Ensure initials/text fallback is visible */
+.cl-userButtonAvatarBox::after,
+.cl-userButtonAvatarBox::before {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
 .cl-userButtonTrigger .cl-userButtonAvatarBox,
 [class*="cl-userButtonTrigger"] [class*="cl-userButtonAvatarBox"],
 .cl-userButtonAvatarBox:not(.cl-userButtonPopoverCard .cl-userButtonAvatarBox) {

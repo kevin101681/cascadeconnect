@@ -3,10 +3,8 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import HTMLFlipBook from 'react-pageflip';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { HomeownerDocument } from '../types';
-
-// Set up PDF.js worker - use the version that matches react-pdf's internal pdfjs
-// react-pdf 10.2.0 uses pdfjs-dist 5.4.296, so we use that version's worker
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Import centralized PDF worker setup
+import '../lib/pdfWorker';
 
 interface PDFViewerProps {
   document: HomeownerDocument;

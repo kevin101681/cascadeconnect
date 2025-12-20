@@ -1,9 +1,6 @@
 import { pdfjs } from 'react-pdf';
-
-// Set up PDF.js worker if not already set
-if (typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerSrc) {
-  pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-}
+// Import centralized PDF worker setup
+import './pdfWorker';
 
 /**
  * Generates a thumbnail image from the first page of a PDF
