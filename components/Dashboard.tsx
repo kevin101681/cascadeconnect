@@ -1513,7 +1513,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {emptyMsg}
         </div>
       ) : (
-        <div className="flex flex-col overflow-hidden">
+        <div className="flex flex-col overflow-hidden rounded-b-3xl">
           <div className="overflow-y-auto p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {groupClaims.map((claim, index) => {
