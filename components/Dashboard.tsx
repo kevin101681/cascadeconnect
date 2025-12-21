@@ -1511,7 +1511,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       ) : (
         <div className="flex flex-col">
-          <div className="p-6">
+          <div className="p-6 rounded-b-3xl">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {groupClaims.map((claim, index) => {
                 const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
