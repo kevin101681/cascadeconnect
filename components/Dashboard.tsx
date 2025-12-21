@@ -358,15 +358,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   // View State for Dashboard (Claims vs Messages vs Tasks vs Documents)
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'DOCUMENTS'>(initialTab || 'CLAIMS');
   
-  // Carousel ref for mobile - use callback ref to set scroll immediately
+  // Carousel ref for mobile
   const carouselRef = useRef<HTMLDivElement>(null);
-  const setCarouselRef = (el: HTMLDivElement | null) => {
-    carouselRef.current = el;
-    if (el) {
-      // Immediately set scroll to 0 when element is mounted
-      el.scrollLeft = 0;
-    }
-  };
   const isUserScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -743,40 +736,44 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [currentTab]);
 
-  // Ensure initial scroll position is correct on mount - more aggressive reset
+  // Ensure initial scroll position is correct on mount
   useEffect(() => {
     if (!carouselRef.current) return;
     
-    const container = carouselRef.current;
-    
-    // Force scroll to 0 immediately
-    container.scrollLeft = 0;
-    
-    // Use multiple strategies to ensure scroll stays at 0
-    const resetScroll = () => {
+    // Use requestAnimationFrame to ensure DOM is fully laid out
+    const setInitialScroll = () => {
       if (!carouselRef.current) return;
-      carouselRef.current.scrollLeft = 0;
+      const container = carouselRef.current;
+      const availableTabs = getAvailableTabs();
+      const currentIndex = availableTabs.indexOf(currentTab);
+      
+      // Always force scroll position on initial mount
+      if (currentIndex === 0) {
+        // Force scroll to exactly 0 for the first tab (CLAIMS)
+        container.scrollLeft = 0;
+      } else if (currentIndex > 0) {
+        const viewportWidth = container.clientWidth || window.innerWidth;
+        const targetScroll = currentIndex * viewportWidth;
+        container.scrollLeft = targetScroll;
+      }
     };
     
-    // Reset multiple times to handle any layout shifts
-    resetScroll();
-    requestAnimationFrame(resetScroll);
+    // Set immediately
+    setInitialScroll();
+    
+    // Also set after layout is complete to handle any layout shifts
     requestAnimationFrame(() => {
-      requestAnimationFrame(resetScroll);
+      requestAnimationFrame(() => {
+        setInitialScroll();
+      });
     });
     
-    // Also reset after delays to catch any async rendering
-    const timeout1 = setTimeout(resetScroll, 0);
-    const timeout2 = setTimeout(resetScroll, 50);
-    const timeout3 = setTimeout(resetScroll, 150);
-    const timeout4 = setTimeout(resetScroll, 300);
+    // Also set after a brief delay to catch any async layout changes
+    const timeoutId = setTimeout(() => {
+      setInitialScroll();
+    }, 100);
     
-    return () => {
-      clearTimeout(timeout1);
-      clearTimeout(timeout2);
-      clearTimeout(timeout3);
-      clearTimeout(timeout4);
-    };
+    return () => clearTimeout(timeoutId);
   }, []); // Only run on mount
 
   // Cleanup timeout on unmount
@@ -2736,7 +2733,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Content Area */}
         {/* Mobile Carousel - All tabs pre-loaded */}
         <div
-          ref={setCarouselRef}
+          ref={carouselRef}
           className="md:hidden min-h-[calc(100vh-300px)] relative overflow-x-auto overflow-y-visible snap-x snap-mandatory"
           style={{
             scrollSnapType: 'x mandatory',
