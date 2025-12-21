@@ -1790,7 +1790,7 @@ const Dashboard: React.FC<DashboardProps> = ({
        {/* Left Column: Inbox List (Gmail Style) */}
        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 ${selectedThreadId ? 'hidden md:flex' : 'flex'} overflow-hidden`}>
           <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-16 shrink-0">
-            <div className="flex items-center justify-between w-full md:w-auto">
+            <div className="flex items-center w-full md:w-auto">
               <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                 {displayThreads.filter(t => !t.isRead).length > 0 && (
                   <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
@@ -1799,6 +1799,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 )}
                 Inbox
               </h3>
+            </div>
+            {/* Compose button - right side on desktop */}
+            <div className="flex items-center justify-end md:justify-end">
               <Button
                 variant="filled"
                 onClick={() => {
@@ -1844,7 +1847,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <span className="text-sm">No messages found.</span>
                 </div>
              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   {displayThreads.map((thread, index) => {
                     const lastMsg = thread.messages[thread.messages.length - 1];
                     const isUnread = !thread.isRead;
@@ -1913,11 +1916,11 @@ const Dashboard: React.FC<DashboardProps> = ({
        </div>
 
        {/* Right Column: Email Thread View */}
-       <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
+       <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           {selectedThread ? (
             <>
                {/* Thread Header Toolbar */}
-               <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface dark:bg-gray-800 sticky top-0 z-10">
+               <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-primary/10 dark:bg-gray-800 sticky top-0 z-10">
                   <div className="flex items-center gap-4">
                      <button onClick={() => setSelectedThreadId(null)} className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full">
                         <ChevronLeft className="h-5 w-5" />
@@ -1988,7 +1991,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                </div>
 
                {/* Reply Box (Sticky Bottom or Inline at end) */}
-               <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 sticky bottom-0 z-10">
+               <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-primary/10 dark:bg-gray-800 sticky bottom-0 z-10">
                  {/* Builders Read-Only: Cannot Reply */}
                  {isBuilder ? (
                    <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600 border-dashed">
