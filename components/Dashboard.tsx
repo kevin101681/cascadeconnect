@@ -2845,9 +2845,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
-                    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
-                      <div className="overflow-hidden rounded-3xl flex flex-col h-full">
-                      <TaskList 
+                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
+                      <TaskList
                         tasks={tasks}
                         employees={employees}
                         currentUser={currentUser}
@@ -2861,7 +2860,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                         onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
                         onSelectTask={(task) => setSelectedTaskForModal(task)}
                       />
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -2972,8 +2970,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             >
               <div className="max-w-7xl mx-auto py-4">
                 <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
-                  <div className="overflow-hidden rounded-3xl flex flex-col h-full">
-                    <TaskList 
+                      <TaskList
                       tasks={tasks}
                       employees={employees}
                       currentUser={currentUser}
@@ -3013,8 +3010,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             >
               <div className="max-w-7xl mx-auto py-4">
                 <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
-                  <div className="overflow-hidden rounded-3xl flex flex-col h-full">
-                    <TaskList 
+                      <TaskList
                       tasks={tasks}
                       employees={employees}
                       currentUser={currentUser}
