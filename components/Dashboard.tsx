@@ -1704,19 +1704,19 @@ const Dashboard: React.FC<DashboardProps> = ({
         </h2>
       </div>
       <div className="flex-1 overflow-y-auto p-6 min-h-0">
-        <div className="space-y-2">
-          {displayDocuments.length === 0 ? (
-            <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-12 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
-              No documents uploaded for this account.
-            </div>
-          ) : (
-            displayDocuments.map(doc => {
+        {displayDocuments.length === 0 ? (
+          <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-12 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
+            No documents uploaded for this account.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {displayDocuments.map(doc => {
               const isPDF = doc.type === 'PDF' || doc.name.toLowerCase().endsWith('.pdf') || 
                            doc.url.startsWith('data:application/pdf') || 
                            doc.url.includes('pdf');
               
               return (
-                <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 group transition-all">
+                <div key={doc.id} className="flex flex-col bg-surface-container dark:bg-gray-700 rounded-xl overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-lg transition-all relative group">
                   {/* Header with Action Buttons */}
                   <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent p-2 flex items-center justify-end gap-1">
                     {isPDF && (
@@ -2513,19 +2513,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {!isHomeownerView && (
                   <>
                     {/* Documents Button - Removed, now using tab */}
-                    {false && (
-                    <Button
-                      onClick={() => setCurrentTab('DOCUMENTS')}
-                      variant="outlined"
-                      icon={<FileText className="h-4 w-4" />}
-                      className="!h-9 !px-4 !bg-surface dark:!bg-gray-800"
-                    >
-                      Documents {displayDocuments.length > 0 && (
-                        <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-on text-xs font-medium">
-                          {displayDocuments.length}
-                        </span>
-                      )}
-                    </Button>
                     {/* Sub List Button - Show if subcontractor list exists */}
                     {displayHomeowner.subcontractorList && displayHomeowner.subcontractorList.length > 0 && (
                       <Button 
