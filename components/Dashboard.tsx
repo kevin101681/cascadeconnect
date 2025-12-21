@@ -3034,7 +3034,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               animate={{ opacity: 1 }}
               transition={{ duration: 0 }}
             >
-              {renderClaimsList(displayClaims, isHomeownerView)}
+              <div className="max-w-7xl mx-auto py-4">
+                {renderClaimsList(displayClaims, isHomeownerView)}
+              </div>
             </motion.div>
           )}
 
@@ -3063,19 +3065,22 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
                   <div className="overflow-hidden rounded-3xl flex flex-col h-full">
                     <TaskList 
-                tasks={tasks}
-                employees={employees}
-                currentUser={currentUser}
-                claims={claims}
-                homeowners={homeowners}
-                onAddTask={onAddTask}
-                onToggleTask={onToggleTask}
-                onDeleteTask={onDeleteTask}
-                onUpdateTask={onUpdateTask}
-                preSelectedHomeowner={targetHomeowner}
-                onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
-                onSelectTask={(task) => setSelectedTaskForModal(task)}
-              />
+                      tasks={tasks}
+                      employees={employees}
+                      currentUser={currentUser}
+                      claims={claims}
+                      homeowners={homeowners}
+                      onAddTask={onAddTask}
+                      onToggleTask={onToggleTask}
+                      onDeleteTask={onDeleteTask}
+                      onUpdateTask={onUpdateTask}
+                      preSelectedHomeowner={targetHomeowner}
+                      onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
+                      onSelectTask={(task) => setSelectedTaskForModal(task)}
+                    />
+                  </div>
+                </div>
+              </div>
             </motion.div>
           )}
           
@@ -3101,19 +3106,22 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
                   <div className="overflow-hidden rounded-3xl flex flex-col h-full">
                     <TaskList 
-                tasks={tasks}
-                employees={employees}
-                currentUser={currentUser}
-                claims={claims}
-                homeowners={homeowners}
-                onAddTask={onAddTask}
-                onToggleTask={onToggleTask}
-                onDeleteTask={onDeleteTask}
-                onUpdateTask={onUpdateTask}
-                preSelectedHomeowner={targetHomeowner}
-                onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
-                onSelectTask={(task) => setSelectedTaskForModal(task)}
-              />
+                      tasks={tasks}
+                      employees={employees}
+                      currentUser={currentUser}
+                      claims={claims}
+                      homeowners={homeowners}
+                      onAddTask={onAddTask}
+                      onToggleTask={onToggleTask}
+                      onDeleteTask={onDeleteTask}
+                      onUpdateTask={onUpdateTask}
+                      preSelectedHomeowner={targetHomeowner}
+                      onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
+                      onSelectTask={(task) => setSelectedTaskForModal(task)}
+                    />
+                  </div>
+                </div>
+              </div>
             </motion.div>
           )}
 
