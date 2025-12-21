@@ -740,17 +740,31 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, [currentTab]);
 
   // Calculate container width for carousel slides (avoids 100vw scrollbar issues)
+  // Use a ref to store the initial width and never change it to prevent shrinking
+  const carouselContainerWidthRef = useRef<number>(0);
   const [carouselContainerWidth, setCarouselContainerWidth] = useState<number>(0);
   
   useEffect(() => {
     // Use window.innerWidth for stable measurement (accounts for scrollbar)
     const updateContainerWidth = () => {
-      setCarouselContainerWidth(window.innerWidth);
+      const width = window.innerWidth;
+      // Only set the width once, never update it (prevents shrinking on scroll)
+      if (carouselContainerWidthRef.current === 0 && width > 0) {
+        carouselContainerWidthRef.current = width;
+        setCarouselContainerWidth(width);
+      }
     };
     
     updateContainerWidth();
-    window.addEventListener('resize', updateContainerWidth);
-    return () => window.removeEventListener('resize', updateContainerWidth);
+    // Only listen to resize on mount, then remove listener to prevent updates
+    const handleResize = () => {
+      // Only update if we haven't set a width yet
+      if (carouselContainerWidthRef.current === 0) {
+        updateContainerWidth();
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   // Cleanup timeout on unmount
@@ -2357,14 +2371,13 @@ const Dashboard: React.FC<DashboardProps> = ({
     return (
       <>
         {renderModals()}
-        <div className="space-y-8 animate-in fade-in slide-in-from-top-4 max-w-7xl mx-auto md:max-w-7xl" style={carouselContainerWidth > 0 ? { width: `${carouselContainerWidth - 32}px`, maxWidth: `${carouselContainerWidth - 32}px` } : {}}>
+        <div className="space-y-8 animate-in fade-in slide-in-from-top-4 max-w-7xl mx-auto">
         {/* HOMEOWNER INFO AND SCHEDULE ROW */}
         <div className="flex flex-col lg:flex-row gap-6 items-stretch relative w-full">
           {/* COMPACT HOMEOWNER HEADER CARD */}
           <motion.div 
             key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
             className="w-full lg:flex-1 lg:min-w-0 lg:flex-shrink lg:self-start bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 group relative flex flex-col"
-            style={carouselContainerWidth > 0 ? { width: `${carouselContainerWidth - 32}px`, maxWidth: `${carouselContainerWidth - 32}px` } : {}}
             variants={cardVariants}
             initial="hidden"
             animate="visible"
@@ -2562,7 +2575,6 @@ const Dashboard: React.FC<DashboardProps> = ({
           {/* Next Appointment Card - Right of Homeowner Info */}
           <motion.div 
             className="w-full lg:w-[300px] lg:flex-shrink-0 bg-primary/10 dark:bg-gray-800 rounded-3xl text-secondary-on-container dark:text-gray-100 flex flex-col relative border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden"
-            style={carouselContainerWidth > 0 ? { width: `${carouselContainerWidth - 32}px`, maxWidth: `${carouselContainerWidth - 32}px` } : {}}
             variants={cardVariants}
             initial="hidden"
             animate="visible"
