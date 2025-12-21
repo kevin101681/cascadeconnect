@@ -384,9 +384,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       tabs.push('TASKS');
     }
     tabs.push('MESSAGES');
-    if (isHomeownerViewRole) {
-      tabs.push('DOCUMENTS');
-    }
+    tabs.push('DOCUMENTS'); // Always include DOCUMENTS tab
     return tabs;
   };
   
@@ -1693,9 +1691,20 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const renderDocumentsTab = () => (
-    <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-elevation-1">
-      <div className="p-6">
-        <div className="mb-6 space-y-2 max-h-[600px] overflow-y-auto pr-1">
+    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 flex flex-col" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
+      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
+        <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+          <FileText className="h-5 w-5 text-primary" />
+          Account Documents
+          {displayDocuments.length > 0 && (
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+              {displayDocuments.length}
+            </span>
+          )}
+        </h2>
+      </div>
+      <div className="flex-1 overflow-y-auto p-6 min-h-0">
+        <div className="space-y-2">
           {displayDocuments.length === 0 ? (
             <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-12 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
               No documents uploaded for this account.
@@ -1708,8 +1717,31 @@ const Dashboard: React.FC<DashboardProps> = ({
               
               return (
                 <div key={doc.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 group transition-all">
+                  {/* Header with Action Buttons */}
+                  <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent p-2 flex items-center justify-end gap-1">
+                    {isPDF && (
+                      <>
+                        {/* View PDF */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedDocument(doc);
+                            setIsPDFViewerOpen(true);
+                          }}
+                          className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
+                          title="View PDF"
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* Thumbnail */}
                   <div 
-                    className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                    className="relative w-full aspect-[3/4] bg-surface-container-high dark:bg-gray-600 flex items-center justify-center cursor-pointer overflow-hidden"
                     onClick={() => {
                       if (isPDF) {
                         setSelectedDocument(doc);
@@ -1717,57 +1749,34 @@ const Dashboard: React.FC<DashboardProps> = ({
                       }
                     }}
                   >
-                    <div className="p-2 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded">
-                      <FileText className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{doc.name}</p>
-                      <p className="text-xs text-surface-on-variant dark:text-gray-400">
-                        Uploaded by {doc.uploadedBy} • {new Date(doc.uploadDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {isPDF && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setSelectedDocument(doc);
-                          setIsPDFViewerOpen(true);
-                        }}
-                        className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all z-10 relative"
-                        title="View PDF"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                    )}
-                    {doc.url.startsWith('data:') ? (
-                      <a 
-                        href={doc.url} 
-                        download={doc.name} 
-                        onClick={(e) => e.stopPropagation()}
-                        className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all"
-                        title="Download"
-                      >
-                        <Download className="h-4 w-4" />
-                      </a>
+                    {doc.thumbnailUrl ? (
+                      <img 
+                        src={doc.thumbnailUrl} 
+                        alt={doc.name}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      <button 
-                        onClick={(e) => e.stopPropagation()}
-                        className="p-2 text-surface-outline-variant dark:text-gray-400 hover:text-primary rounded-full hover:bg-primary/10 dark:hover:bg-primary/20 transition-all"
-                        title="Download"
-                      >
-                        <Download className="h-4 w-4" />
-                      </button>
+                      <div className="p-4 text-center">
+                        <FileText className="h-12 w-12 mx-auto text-surface-on-variant dark:text-gray-400 mb-2" />
+                        <p className="text-xs text-surface-on-variant dark:text-gray-400 truncate px-2">{doc.name}</p>
+                      </div>
                     )}
+                  </div>
+                  
+                  {/* Document Name */}
+                  <div className="p-2 bg-surface-container dark:bg-gray-700">
+                    <p className="text-xs font-medium text-surface-on dark:text-gray-100 truncate" title={doc.name}>
+                      {doc.name}
+                    </p>
+                    <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-0.5">
+                      {new Date(doc.uploadDate).toLocaleDateString()}
+                    </p>
                   </div>
                 </div>
               );
-            })
-          )}
-        </div>
+            })}
+          </div>
+        )}
         
         {/* Upload Action */}
         <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 flex justify-center">
@@ -2503,9 +2512,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {/* Buttons removed from homeowner view - now in tabs */}
                 {!isHomeownerView && (
                   <>
-                    {/* Documents Button - Admin view only */}
+                    {/* Documents Button - Removed, now using tab */}
+                    {false && (
                     <Button
-                      onClick={() => setShowDocsModal(true)}
+                      onClick={() => setCurrentTab('DOCUMENTS')}
                       variant="outlined"
                       icon={<FileText className="h-4 w-4" />}
                       className="!h-9 !px-4 !bg-surface dark:!bg-gray-800"
@@ -2752,21 +2762,19 @@ const Dashboard: React.FC<DashboardProps> = ({
               )}
             </button>
 
-            {/* Documents Tab - Homeowner View Only */}
-            {isHomeownerView && (
-              <button 
-                onClick={() => setCurrentTab('DOCUMENTS')}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
-              >
-                <FileText className="h-4 w-4" />
-                Documents
-                {displayDocuments.length > 0 && (
-                  <span className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-primary text-primary-on text-xs font-medium">
-                    {displayDocuments.length}
-                  </span>
-                )}
-              </button>
-            )}
+            {/* Documents Tab - Always show */}
+            <button 
+              onClick={() => setCurrentTab('DOCUMENTS')}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+            >
+              <FileText className="h-4 w-4" />
+              Documents
+              {displayDocuments.length > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full bg-primary text-primary-on text-xs font-medium">
+                  {displayDocuments.length}
+                </span>
+              )}
+            </button>
         </motion.div>
 
         {/* Content Area */}
@@ -2885,103 +2893,17 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             </div>
 
-            {/* DOCUMENTS Tab - Homeowner Only */}
-            {userRole === UserRole.HOMEOWNER && (
-              <div 
-                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth - 40}px` : '100%' }}
-              >
-                <div className="w-full min-h-[calc(100vh-300px)]">
-                  <div className="max-w-7xl mx-auto py-4">
-                  <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-elevation-1">
-                    <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center shrink-0">
-                      <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                        <FileText className="h-5 w-5 text-primary" />
-                        Account Documents
-                      </h2>
-                    </div>
-                    
-                    <div className="p-6 bg-surface dark:bg-gray-800 flex-1 overflow-y-auto">
-                      {/* Thumbnail Grid */}
-                      {displayDocuments.length === 0 ? (
-                        <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-12 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
-                          No documents uploaded for this account.
-                        </div>
-                      ) : (
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                          {displayDocuments.map(doc => {
-                            const isPDF = doc.type === 'PDF' || doc.name.toLowerCase().endsWith('.pdf') || 
-                                         doc.url.startsWith('data:application/pdf') || 
-                                         doc.url.includes('pdf');
-                            
-                            return (
-                              <div key={doc.id} className="flex flex-col bg-surface-container dark:bg-gray-700 rounded-xl overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-lg transition-all relative group">
-                                {/* Header with Action Buttons */}
-                                <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent p-2 flex items-center justify-end gap-1">
-                                  {isPDF && (
-                                    <>
-                                      {/* View PDF */}
-                                      <button
-                                        type="button"
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          e.stopPropagation();
-                                          setSelectedDocument(doc);
-                                          setIsPDFViewerOpen(true);
-                                        }}
-                                        className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
-                                        title="View PDF"
-                                      >
-                                        <Eye className="h-3.5 w-3.5" />
-                                      </button>
-                                    </>
-                                  )}
-                                </div>
-                                
-                                {/* Thumbnail */}
-                                <div 
-                                  className="relative w-full aspect-[3/4] bg-surface-container-high dark:bg-gray-600 flex items-center justify-center cursor-pointer overflow-hidden"
-                                  onClick={() => {
-                                    if (isPDF) {
-                                      setSelectedDocument(doc);
-                                      setIsPDFViewerOpen(true);
-                                    }
-                                  }}
-                                >
-                                  {doc.thumbnailUrl ? (
-                                    <img 
-                                      src={doc.thumbnailUrl} 
-                                      alt={doc.name}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  ) : (
-                                    <div className="p-4 text-center">
-                                      <FileText className="h-12 w-12 mx-auto text-surface-on-variant dark:text-gray-400 mb-2" />
-                                      <p className="text-xs text-surface-on-variant dark:text-gray-400 truncate px-2">{doc.name}</p>
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                {/* Document Name */}
-                                <div className="p-2 bg-surface-container dark:bg-gray-700">
-                                  <p className="text-xs font-medium text-surface-on dark:text-gray-100 truncate" title={doc.name}>
-                                    {doc.name}
-                                  </p>
-                                  <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-0.5">
-                                    {new Date(doc.uploadDate).toLocaleDateString()}
-                                  </p>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  </div>
+            {/* DOCUMENTS Tab */}
+            <div 
+              className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
+              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth - 40}px` : '100%' }}
+            >
+              <div className="w-full min-h-[calc(100vh-300px)]">
+                <div className="max-w-7xl mx-auto py-4">
+                  {renderDocumentsTab()}
                 </div>
               </div>
-            )}
+            </div>
           </div>
         </div>
 
@@ -3125,215 +3047,21 @@ const Dashboard: React.FC<DashboardProps> = ({
             </motion.div>
           )}
 
-          {currentTab === 'DOCUMENTS' && userRole === UserRole.HOMEOWNER && (
+          {currentTab === 'DOCUMENTS' && (
             <motion.div 
               key="documents"
-              className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] md:min-h-0 md:relative"
-              style={{
-                position: swipeProgress > 0 ? 'absolute' : 'relative',
-                width: '100%',
-                transform: swipeProgress > 0 && swipeDirection === 'left' 
-                  ? `translateX(${-swipeProgress * 100}%)` 
-                  : swipeProgress > 0 && swipeDirection === 'right'
-                  ? `translateX(${swipeProgress * 100}%)`
-                  : 'translateX(0)',
-                zIndex: swipeProgress > 0 ? 1 : 0,
-                willChange: swipeProgress > 0 ? 'transform' : 'auto'
-              }}
+              className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] md:min-h-0 md:relative px-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-elevation-1">
-                <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center shrink-0">
-                  <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-primary" />
-                    Account Documents
-                  </h2>
-                </div>
-                
-                <div className="p-6 bg-surface dark:bg-gray-800 flex-1 overflow-y-auto">
-                  {/* Thumbnail Grid */}
-                  {displayDocuments.length === 0 ? (
-                    <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-12 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
-                      No documents uploaded for this account.
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                      {displayDocuments.map(doc => {
-                        const isPDF = doc.type === 'PDF' || doc.name.toLowerCase().endsWith('.pdf') || 
-                                     doc.url.startsWith('data:application/pdf') || 
-                                     doc.url.includes('pdf');
-                        
-                        return (
-                          <div key={doc.id} className="flex flex-col bg-surface-container dark:bg-gray-700 rounded-xl overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-lg transition-all relative group">
-                            {/* Header with Action Buttons */}
-                            <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent p-2 flex items-center justify-end gap-1">
-                              {isPDF && (
-                                <>
-                                  {/* View PDF */}
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setSelectedDocument(doc);
-                                      setIsPDFViewerOpen(true);
-                                    }}
-                                    className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
-                                    title="View PDF"
-                                  >
-                                    <Eye className="h-3.5 w-3.5" />
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                            
-                            {/* Thumbnail */}
-                            <div 
-                              className="relative w-full aspect-[3/4] bg-surface-container-high dark:bg-gray-600 flex items-center justify-center cursor-pointer overflow-hidden"
-                              onClick={() => {
-                                if (isPDF) {
-                                  setSelectedDocument(doc);
-                                  setIsPDFViewerOpen(true);
-                                }
-                              }}
-                            >
-                              {doc.thumbnailUrl ? (
-                                <img 
-                                  src={doc.thumbnailUrl} 
-                                  alt={doc.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="p-4 text-center">
-                                  <FileText className="h-12 w-12 mx-auto text-surface-on-variant dark:text-gray-400 mb-2" />
-                                  <p className="text-xs text-surface-on-variant dark:text-gray-400 truncate px-2">{doc.name}</p>
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* Document Name */}
-                            <div className="p-2 bg-surface-container dark:bg-gray-700">
-                              <p className="text-xs font-medium text-surface-on dark:text-gray-100 truncate" title={doc.name}>
-                                {doc.name}
-                              </p>
-                              <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-0.5">
-                                {new Date(doc.uploadDate).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+              <div className="max-w-7xl mx-auto py-4">
+                {renderDocumentsTab()}
               </div>
             </motion.div>
           )}
           
-          {/* Target tab during swipe - DOCUMENTS */}
-          {swipeProgress > 0 && targetTab === 'DOCUMENTS' && currentTab !== 'DOCUMENTS' && userRole === UserRole.HOMEOWNER && (
-            <motion.div 
-              key="documents-target"
-              className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] md:min-h-0 absolute inset-0"
-              style={{
-                width: '100%',
-                transform: swipeDirection === 'left'
-                  ? `translateX(${(1 - swipeProgress) * 100}%)`
-                  : `translateX(${-(1 - swipeProgress) * 100}%)`,
-                zIndex: 2,
-                willChange: 'transform'
-              }}
-            >
-              <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-elevation-1">
-                <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center shrink-0">
-                  <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-primary" />
-                    Account Documents
-                  </h2>
-                </div>
-                
-                <div className="p-6 bg-surface dark:bg-gray-800 flex-1 overflow-y-auto">
-                  {/* Thumbnail Grid */}
-                  {displayDocuments.length === 0 ? (
-                    <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-12 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
-                      No documents uploaded for this account.
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                      {displayDocuments.map(doc => {
-                        const isPDF = doc.type === 'PDF' || doc.name.toLowerCase().endsWith('.pdf') || 
-                                     doc.url.startsWith('data:application/pdf') || 
-                                     doc.url.includes('pdf');
-                        
-                        return (
-                          <div key={doc.id} className="flex flex-col bg-surface-container dark:bg-gray-700 rounded-xl overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-lg transition-all relative group">
-                            {/* Header with Action Buttons */}
-                            <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent p-2 flex items-center justify-end gap-1">
-                              {isPDF && (
-                                <>
-                                  {/* View PDF */}
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setSelectedDocument(doc);
-                                      setIsPDFViewerOpen(true);
-                                    }}
-                                    className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
-                                    title="View PDF"
-                                  >
-                                    <Eye className="h-3.5 w-3.5" />
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                            
-                            {/* Thumbnail */}
-                            <div 
-                              className="relative w-full aspect-[3/4] bg-surface-container-high dark:bg-gray-600 flex items-center justify-center cursor-pointer overflow-hidden"
-                              onClick={() => {
-                                if (isPDF) {
-                                  setSelectedDocument(doc);
-                                  setIsPDFViewerOpen(true);
-                                }
-                              }}
-                            >
-                              {doc.thumbnailUrl ? (
-                                <img 
-                                  src={doc.thumbnailUrl} 
-                                  alt={doc.name}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="p-4 text-center">
-                                  <FileText className="h-12 w-12 mx-auto text-surface-on-variant dark:text-gray-400 mb-2" />
-                                  <p className="text-xs text-surface-on-variant dark:text-gray-400 truncate px-2">{doc.name}</p>
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* Document Name */}
-                            <div className="p-2 bg-surface-container dark:bg-gray-700">
-                              <p className="text-xs font-medium text-surface-on dark:text-gray-100 truncate" title={doc.name}>
-                                {doc.name}
-                              </p>
-                              <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-0.5">
-                                {new Date(doc.uploadDate).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
 
           {currentTab === 'MESSAGES' && (
             <motion.div 
@@ -3351,8 +3079,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         </AnimatePresence>
         </div>
 
-        {/* DOCUMENTS MODAL - Admin View Only */}
-        {showDocsModal && userRole !== UserRole.HOMEOWNER && createPortal(
+        {/* DOCUMENTS MODAL - Removed, now using tab */}
+        {false && showDocsModal && userRole !== UserRole.HOMEOWNER && createPortal(
           <div 
             className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
             onClick={(e) => {
