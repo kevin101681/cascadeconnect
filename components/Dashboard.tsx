@@ -726,7 +726,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       const container = carouselRef.current;
       const cardWidth = carouselContainerWidth > 0 ? carouselContainerWidth - 40 : container.clientWidth;
       const slideWidth = cardWidth + 16; // card width + gap
-      const targetScroll = currentIndex * slideWidth;
+      const shadowOffset = 3; // Account for card shadow clipping
+      const targetScroll = currentIndex * slideWidth + shadowOffset;
       const currentScroll = container.scrollLeft;
       // Only scroll if we're significantly off target (more than 10px)
       if (Math.abs(currentScroll - targetScroll) > 10) {
