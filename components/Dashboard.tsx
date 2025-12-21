@@ -365,7 +365,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollIndexRef = useRef<number>(0);
   const hasInitializedScrollRef = useRef(false);
-  const hasInitializedScrollRef = useRef(false);
   
   // Swipe gesture state for mobile (kept for desktop compatibility, but not used on mobile)
   const [touchStart, setTouchStart] = useState<number | null>(null);
