@@ -413,7 +413,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       }
       
       // Calculate swipe progress (0 to 1)
-      const maxDistance = window.innerWidth * 0.5; // Use 50% of screen width as max
+      const maxDistance = window.innerWidth * 0.7; // Use 70% of screen width as max (slower animation)
       const progress = Math.min(Math.abs(distance) / maxDistance, 1);
       setSwipeProgress(progress);
     }
@@ -435,21 +435,41 @@ const Dashboard: React.FC<DashboardProps> = ({
       const availableTabs = getAvailableTabs();
       const currentIndex = availableTabs.indexOf(currentTab);
       
+      // Complete the swipe with smooth animation
       if (isLeftSwipe && currentIndex < availableTabs.length - 1) {
         // Swipe left - go to next tab
-        setCurrentTab(availableTabs[currentIndex + 1]);
+        setSwipeProgress(1); // Complete the animation
+        setTimeout(() => {
+          setCurrentTab(availableTabs[currentIndex + 1]);
+          setSwipeProgress(0);
+          setSwipeDirection(null);
+          setTargetTab(null);
+        }, 100); // Small delay for smooth transition
       } else if (isRightSwipe && currentIndex > 0) {
         // Swipe right - go to previous tab
-        setCurrentTab(availableTabs[currentIndex - 1]);
+        setSwipeProgress(1); // Complete the animation
+        setTimeout(() => {
+          setCurrentTab(availableTabs[currentIndex - 1]);
+          setSwipeProgress(0);
+          setSwipeDirection(null);
+          setTargetTab(null);
+        }, 100); // Small delay for smooth transition
+      } else {
+        // Reset swipe state if not enough distance
+        setSwipeProgress(0);
+        setSwipeDirection(null);
+        setTargetTab(null);
       }
+    } else {
+      // Reset swipe state if not enough distance
+      setSwipeProgress(0);
+      setSwipeDirection(null);
+      setTargetTab(null);
     }
     
-    // Reset swipe state
+    // Reset touch state
     setTouchStart(null);
     setTouchEnd(null);
-    setSwipeProgress(0);
-    setSwipeDirection(null);
-    setTargetTab(null);
   };
   
   // Claims filter state
@@ -2583,7 +2603,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: swipeProgress > 0 ? 1 - swipeProgress * 0.5 : 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: swipeProgress > 0 ? 0 : 0.2 }}
+              transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
               {renderClaimsList(displayClaims, isHomeownerView)}
             </motion.div>
@@ -2627,7 +2647,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: swipeProgress > 0 ? 1 - swipeProgress * 0.5 : 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: swipeProgress > 0 ? 0 : 0.2 }}
+              transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
               <TaskList 
                 tasks={tasks}
@@ -2695,7 +2715,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: swipeProgress > 0 ? 1 - swipeProgress * 0.5 : 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: swipeProgress > 0 ? 0 : 0.2 }}
+              transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
               <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-elevation-1">
                 <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center shrink-0">
@@ -2905,7 +2925,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: swipeProgress > 0 ? 1 - swipeProgress * 0.5 : 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: swipeProgress > 0 ? 0 : 0.2 }}
+              transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
               {renderMessagesTab()}
             </motion.div>
