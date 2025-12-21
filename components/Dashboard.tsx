@@ -1676,7 +1676,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const renderMessagesTab = () => (
     <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden flex flex-col md:flex-row h-[calc(100vh-300px)] md:h-[700px] shadow-elevation-1">
        {/* Left Column: Inbox List (Gmail Style) */}
-       <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
+       <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 ${selectedThreadId ? 'hidden md:flex' : 'flex'} overflow-hidden`}>
           <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-16 shrink-0">
             <div className="flex items-center justify-between w-full md:w-auto">
               <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
@@ -1723,7 +1723,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           <div 
-            className="flex-1 overflow-y-auto p-6"
+            className="flex-1 overflow-y-auto p-6 min-h-0"
+            style={{ WebkitOverflowScrolling: 'touch' }}
           >
              {displayThreads.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
@@ -2698,6 +2699,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 zIndex: 2,
                 willChange: 'transform'
               }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0 }}
             >
               {renderClaimsList(displayClaims, isHomeownerView)}
             </motion.div>
@@ -2755,6 +2759,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   : `translateX(${-(1 - swipeProgress) * 100}%)`,
                 zIndex: 2
               }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0 }}
             >
               <TaskList 
                 tasks={tasks}
