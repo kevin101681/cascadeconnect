@@ -1677,28 +1677,41 @@ const Dashboard: React.FC<DashboardProps> = ({
     <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden flex flex-col md:flex-row h-[calc(100vh-300px)] md:h-[700px] shadow-elevation-1">
        {/* Left Column: Inbox List (Gmail Style) */}
        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
-          <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center md:h-16 shrink-0">
-            <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-              {displayThreads.filter(t => !t.isRead).length > 0 && (
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-                  {displayThreads.filter(t => !t.isRead).length}
-                </span>
-              )}
-              Inbox
-            </h3>
-            <Button
-              variant="filled"
-              onClick={() => {
-                setShowNewMessageModal(true);
-              }}
-              icon={<Plus className="h-4 w-4" />}
-              className="!h-9 !px-4 md:!h-8 md:!px-3 md:text-xs"
-            >
-              Compose
-            </Button>
+          <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-16 shrink-0">
+            <div className="flex items-center justify-between w-full md:w-auto">
+              <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                {displayThreads.filter(t => !t.isRead).length > 0 && (
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                    {displayThreads.filter(t => !t.isRead).length}
+                  </span>
+                )}
+                Inbox
+              </h3>
+              <Button
+                variant="filled"
+                onClick={() => {
+                  setShowNewMessageModal(true);
+                }}
+                icon={<Plus className="h-4 w-4" />}
+                className="!h-9 !px-4 md:!h-8 md:!px-3 md:text-xs"
+              >
+                Compose
+              </Button>
+            </div>
+            {/* Search box - in header on mobile, separate on desktop */}
+            <div className="md:hidden">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-500" />
+                <input 
+                  type="text" 
+                  placeholder="Search mail..." 
+                  className="w-full bg-surface-container dark:bg-gray-700 rounded-lg pl-9 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant dark:placeholder-gray-500"
+                />
+              </div>
+            </div>
           </div>
           
-          <div className="p-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
+          <div className="hidden md:block p-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
              <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-500" />
                 <input 
