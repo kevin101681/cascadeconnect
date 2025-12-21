@@ -1556,19 +1556,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                             </span>
                           )}
                           {/* Classification */}
-                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
+                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container-high dark:bg-gray-600 px-3 rounded-full whitespace-nowrap w-fit">
                             {claim.classification}
                           </span>
                           {/* Homeowner Name */}
                           {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container-high dark:bg-gray-600 px-3 rounded-full whitespace-nowrap w-fit">
                               <Building2 className="h-3 w-3 flex-shrink-0" />
                               <span>{claim.homeownerName}</span>
                             </span>
                           )}
                           {/* Contractor */}
                           {claim.contractorName ? (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container-high dark:bg-gray-600 px-3 rounded-full whitespace-nowrap w-fit">
                               <HardHat className="h-3 w-3 flex-shrink-0" />
                               <span>{claim.contractorName}</span>
                             </span>
@@ -1579,7 +1579,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             </span>
                           )}
                           {/* Date Submitted (Created) */}
-                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
+                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container-high dark:bg-gray-600 px-3 rounded-full whitespace-nowrap w-fit">
                             Created: {new Date(claim.dateSubmitted).toLocaleDateString()}
                           </span>
                           {/* Scheduled Date */}
