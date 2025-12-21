@@ -2769,8 +2769,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="flex h-full" style={{ width: `${getAvailableTabs().length * 100}vw` }}>
             {/* CLAIMS Tab */}
             <div className="w-screen flex-shrink-0 snap-start snap-center min-h-[calc(100vh-300px)]" style={{ scrollSnapAlign: 'start' }}>
-              <div className="w-full min-h-[calc(100vh-300px)] px-4 py-4">
-                <div className="max-w-7xl mx-auto">
+              <div className="w-full min-h-[calc(100vh-300px)]">
+                <div className="max-w-7xl mx-auto px-4 py-4">
                   {renderClaimsList(displayClaims, isHomeownerView)}
                 </div>
               </div>
@@ -2779,22 +2779,24 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* TASKS Tab - Admin Only */}
             {isAdmin && (
               <div className="w-screen flex-shrink-0 snap-start snap-center min-h-[calc(100vh-300px)]" style={{ scrollSnapAlign: 'start' }}>
-                <div className="w-full min-h-[calc(100vh-300px)] px-4 py-4">
-                  <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
-                    <TaskList 
-                      tasks={tasks}
-                      employees={employees}
-                      currentUser={currentUser}
-                      claims={claims}
-                      homeowners={homeowners}
-                      onAddTask={onAddTask}
-                      onToggleTask={onToggleTask}
-                      onDeleteTask={onDeleteTask}
-                      onUpdateTask={onUpdateTask}
-                      preSelectedHomeowner={targetHomeowner}
-                      onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
-                      onSelectTask={(task) => setSelectedTaskForModal(task)}
-                    />
+                <div className="w-full min-h-[calc(100vh-300px)]">
+                  <div className="max-w-7xl mx-auto px-4 py-4">
+                    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
+                      <TaskList 
+                        tasks={tasks}
+                        employees={employees}
+                        currentUser={currentUser}
+                        claims={claims}
+                        homeowners={homeowners}
+                        onAddTask={onAddTask}
+                        onToggleTask={onToggleTask}
+                        onDeleteTask={onDeleteTask}
+                        onUpdateTask={onUpdateTask}
+                        preSelectedHomeowner={targetHomeowner}
+                        onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
+                        onSelectTask={(task) => setSelectedTaskForModal(task)}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2802,16 +2804,18 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             {/* MESSAGES Tab */}
             <div className="w-screen flex-shrink-0 snap-start snap-center min-h-[calc(100vh-300px)]" style={{ scrollSnapAlign: 'start' }}>
-              <div className="w-full min-h-[calc(100vh-300px)] px-4 py-4">
-                {renderMessagesTab()}
+              <div className="w-full min-h-[calc(100vh-300px)]">
+                <div className="max-w-7xl mx-auto px-4 py-4">
+                  {renderMessagesTab()}
+                </div>
               </div>
             </div>
 
             {/* DOCUMENTS Tab - Homeowner Only */}
             {userRole === UserRole.HOMEOWNER && (
               <div className="w-screen flex-shrink-0 snap-start snap-center min-h-[calc(100vh-300px)]" style={{ scrollSnapAlign: 'start' }}>
-                <div className="w-full min-h-[calc(100vh-300px)] px-4 py-4">
-                  <div className="max-w-7xl mx-auto">
+                <div className="w-full min-h-[calc(100vh-300px)]">
+                  <div className="max-w-7xl mx-auto px-4 py-4">
                   <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-elevation-1">
                     <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center shrink-0">
                       <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
