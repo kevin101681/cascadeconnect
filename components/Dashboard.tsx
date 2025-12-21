@@ -2902,7 +2902,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'CLAIMS' && (
             <motion.div 
               key="claims"
-              className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] md:min-h-0 md:relative px-4"
+              className="max-w-7xl mx-auto md:relative px-4"
               style={{
                 position: swipeProgress > 0 ? 'absolute' : 'relative',
                 width: '100%',
@@ -2949,10 +2949,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'TASKS' && isAdmin && (
             <motion.div 
               key="tasks"
-              className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] md:min-h-0 md:relative px-4"
+              className="max-w-7xl mx-auto md:relative px-4"
               style={{ 
-                maxHeight: 'calc(100vh - 300px)', 
-                minHeight: 'calc(100vh - 300px)',
                 position: swipeProgress > 0 ? 'absolute' : 'relative',
                 width: '100%',
                 transform: swipeProgress > 0 && swipeDirection === 'left' 
@@ -3030,7 +3028,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'DOCUMENTS' && (
             <motion.div 
               key="documents"
-              className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] md:min-h-0 md:relative px-4"
+              className="max-w-7xl mx-auto md:relative px-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -3046,7 +3044,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'MESSAGES' && (
             <motion.div 
               key="messages"
-              className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] md:min-h-0 md:relative px-4"
+              className="max-w-7xl mx-auto md:relative px-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
