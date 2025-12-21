@@ -639,8 +639,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
             variant="filled"
             onClick={() => onSendMessage(claim)}
           >
-            <Send className="h-4 w-4 mr-2" />
-            Send Message
+            Message
           </Button>
           {onCancel && (
             <Button 
@@ -1485,8 +1484,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           variant="filled" 
           onClick={() => onSendMessage(claim)} 
         >
-          <Send className="h-4 w-4 mr-2" />
-          Send Message
+          Message
         </Button>
         {onCancel && (
           <Button 

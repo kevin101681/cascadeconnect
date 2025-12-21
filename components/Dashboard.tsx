@@ -354,6 +354,61 @@ const Dashboard: React.FC<DashboardProps> = ({
   // View State for Dashboard (Claims vs Messages vs Tasks vs Documents)
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'DOCUMENTS'>(initialTab || 'CLAIMS');
   
+  // Swipe gesture state for mobile
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  
+  // Minimum swipe distance (in pixels)
+  const minSwipeDistance = 50;
+  
+  // Get available tabs in order
+  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'DOCUMENTS'> => {
+    const isHomeownerViewRole = userRole === UserRole.HOMEOWNER;
+    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'DOCUMENTS'> = ['CLAIMS'];
+    if (isAdmin && !isHomeownerViewRole) {
+      tabs.push('TASKS');
+    }
+    tabs.push('MESSAGES');
+    if (isHomeownerViewRole) {
+      tabs.push('DOCUMENTS');
+    }
+    return tabs;
+  };
+  
+  // Handle swipe gestures for mobile tab navigation
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+  
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+  
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe || isRightSwipe) {
+      const availableTabs = getAvailableTabs();
+      const currentIndex = availableTabs.indexOf(currentTab);
+      
+      if (isLeftSwipe && currentIndex < availableTabs.length - 1) {
+        // Swipe left - go to next tab
+        setCurrentTab(availableTabs[currentIndex + 1]);
+      } else if (isRightSwipe && currentIndex > 0) {
+        // Swipe right - go to previous tab
+        setCurrentTab(availableTabs[currentIndex - 1]);
+      }
+    }
+    
+    setTouchStart(null);
+    setTouchEnd(null);
+  };
+  
   // Claims filter state
   const [claimsFilter, setClaimsFilter] = useState<'All' | 'Open' | 'Closed'>('Open');
   
@@ -1196,14 +1251,14 @@ const Dashboard: React.FC<DashboardProps> = ({
       initial="hidden"
       animate="visible"
     >
-      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
+      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
         <h3 className={`text-xl font-normal flex items-center gap-2 ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
           <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
             {groupClaims.length}
           </span>
           {title}
         </h3>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Filter Buttons - Matching TaskList style */}
           {setFilter && allClaims && (
             <div className="flex items-center gap-2">
@@ -1218,7 +1273,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
-                All ({allClaims.length})
+                All
               </button>
               <button
                 onClick={(e) => {
@@ -1231,7 +1286,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
-                Open ({allClaims.filter(c => c.status !== ClaimStatus.COMPLETED).length})
+                Open
               </button>
               <button
                 onClick={(e) => {
@@ -1244,7 +1299,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
-                Closed ({allClaims.filter(c => c.status === ClaimStatus.COMPLETED).length})
+                Closed
               </button>
             </div>
           )}
@@ -1255,7 +1310,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 e.stopPropagation();
                 onExportExcel();
               }}
-              className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 text-sm font-medium transition-all hover:bg-surface-container-high dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600"
+              className="hidden md:inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 text-sm font-medium transition-all hover:bg-surface-container-high dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600"
               title="Export to Excel"
             >
               <FileSpreadsheet className="h-4 w-4" />
@@ -2217,7 +2272,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         Sub List
                       </Button>
                     )}
-                    {/* Punch List Button - Shows "View Punch List" if report exists, otherwise "Create Punch List" */}
+                    {/* Punch List Button - Shows "BlueTag" on mobile, "BlueTag" or "+ Punch List" on desktop */}
                     {(() => {
                       const reportKey = `bluetag_report_${displayHomeowner.id}`;
                       const hasReport = localStorage.getItem(reportKey) !== null;
@@ -2229,7 +2284,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                           icon={<ClipboardList className="h-4 w-4" />}
                           className="!h-9 !px-4 !bg-surface dark:!bg-gray-800"
                         >
-                          {hasReport ? 'BlueTag' : '+ Punch List'}
+                          <span className="md:hidden">BlueTag</span>
+                          <span className="hidden md:inline">{hasReport ? 'BlueTag' : '+ Punch List'}</span>
                         </Button>
                       );
                     })()}
@@ -2459,6 +2515,12 @@ const Dashboard: React.FC<DashboardProps> = ({
         </motion.div>
 
         {/* Content Area */}
+        <div
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          className="md:touch-none"
+        >
         <AnimatePresence mode="wait">
           {currentTab === 'CLAIMS' && (
             <motion.div 
@@ -2610,6 +2672,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
 
         </AnimatePresence>
+        </div>
 
         {/* DOCUMENTS MODAL - Admin View Only */}
         {showDocsModal && userRole !== UserRole.HOMEOWNER && createPortal(

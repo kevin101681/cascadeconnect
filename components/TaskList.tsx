@@ -198,7 +198,7 @@ const TaskList: React.FC<TaskListProps> = ({
   return (
     <div className="w-full flex flex-col">
       {/* Header - matches warranty claims modal structure */}
-      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
+      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
         <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
           {filteredTasks.length > 0 && (
             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
@@ -207,7 +207,7 @@ const TaskList: React.FC<TaskListProps> = ({
           )}
           My Tasks
         </h2>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Filter Pills */}
           <div className="flex items-center gap-2">
             <button
@@ -218,7 +218,7 @@ const TaskList: React.FC<TaskListProps> = ({
                   : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
               }`}
             >
-              All ({userTasks.length})
+              All
             </button>
             <button
               onClick={() => setTaskFilter('open')}
@@ -228,7 +228,7 @@ const TaskList: React.FC<TaskListProps> = ({
                   : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
               }`}
             >
-              Open ({userTasks.filter(t => !t.isCompleted).length})
+              Open
             </button>
             <button
               onClick={() => setTaskFilter('closed')}
@@ -238,7 +238,7 @@ const TaskList: React.FC<TaskListProps> = ({
                   : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
               }`}
             >
-              Closed ({userTasks.filter(t => t.isCompleted).length})
+              Closed
             </button>
           </div>
           <Button
@@ -414,7 +414,7 @@ const TaskList: React.FC<TaskListProps> = ({
               >
                 {/* Collapsed Header - Clickable */}
                 <div 
-                  className={`flex items-center justify-between gap-4 p-4 cursor-pointer transition-colors ${
+                  className={`flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 p-4 cursor-pointer transition-colors ${
                     isExpanded 
                       ? 'rounded-t-2xl' 
                       : 'rounded-2xl'
@@ -433,7 +433,7 @@ const TaskList: React.FC<TaskListProps> = ({
                     });
                   }}
                 >
-                  <div className="flex items-center gap-3 flex-1">
+                  <div className="flex items-center gap-3 flex-1 flex-wrap">
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
@@ -465,7 +465,7 @@ const TaskList: React.FC<TaskListProps> = ({
                     )}
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <ChevronDown 
                       className={`h-4 w-4 text-surface-on-variant dark:text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
                     />

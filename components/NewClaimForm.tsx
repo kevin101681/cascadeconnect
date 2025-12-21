@@ -555,6 +555,15 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
       
       {/* Footer with buttons */}
       <div className="flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700 mt-auto">
+        {onSendMessage && (
+          <Button 
+            type="button" 
+            variant="filled" 
+            onClick={onSendMessage}
+          >
+            Message
+          </Button>
+        )}
         <Button 
           type="button" 
           variant="filled" 
