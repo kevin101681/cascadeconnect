@@ -1920,7 +1920,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {selectedThread ? (
             <>
                {/* Thread Header Toolbar */}
-               <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-primary/10 dark:bg-gray-800 sticky top-0 z-10">
+               <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 sticky top-0 z-10">
                   <div className="flex items-center gap-4">
                      <button onClick={() => setSelectedThreadId(null)} className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full">
                         <ChevronLeft className="h-5 w-5" />
@@ -1934,7 +1934,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                {/* Scrollable Thread Content */}
                <div className="flex-1 overflow-y-auto">
-                 <div className="px-8 py-6">
+                 <div className="px-8 py-6 bg-white dark:bg-white">
                     {/* Subject Line */}
                     <div className="flex items-start justify-between mb-8">
                        <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 leading-tight">{selectedThread.subject}</h2>
@@ -1991,7 +1991,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                </div>
 
                {/* Reply Box (Sticky Bottom or Inline at end) */}
-               <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-primary/10 dark:bg-gray-800 sticky bottom-0 z-10">
+               <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 sticky bottom-0 z-10">
                  {/* Builders Read-Only: Cannot Reply */}
                  {isBuilder ? (
                    <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600 border-dashed">
