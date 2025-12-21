@@ -2984,7 +2984,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                       onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
                       onSelectTask={(task) => setSelectedTaskForModal(task)}
                     />
-                  </div>
                 </div>
               </div>
             </motion.div>
