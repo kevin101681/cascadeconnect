@@ -720,20 +720,37 @@ const Dashboard: React.FC<DashboardProps> = ({
     const availableTabs = getAvailableTabs();
     const currentIndex = availableTabs.indexOf(currentTab);
     if (currentIndex >= 0) {
-      const viewportWidth = window.innerWidth;
+      const container = carouselRef.current;
+      const viewportWidth = container.clientWidth;
       const targetScroll = currentIndex * viewportWidth;
-      const currentScroll = carouselRef.current.scrollLeft;
+      const currentScroll = container.scrollLeft;
       // Only scroll if we're significantly off target (more than 10px)
       if (Math.abs(currentScroll - targetScroll) > 10) {
         // Use immediate scroll on initial load, smooth for tab changes
         const isInitialLoad = currentScroll === 0 && currentIndex > 0;
-        carouselRef.current.scrollTo({
+        container.scrollTo({
           left: targetScroll,
           behavior: isInitialLoad ? 'auto' : 'smooth'
         });
       }
     }
   }, [currentTab]);
+
+  // Ensure initial scroll position is correct on mount
+  useEffect(() => {
+    if (!carouselRef.current) return;
+    const availableTabs = getAvailableTabs();
+    const currentIndex = availableTabs.indexOf(currentTab);
+    if (currentIndex >= 0) {
+      const container = carouselRef.current;
+      const viewportWidth = container.clientWidth;
+      const targetScroll = currentIndex * viewportWidth;
+      // Set initial scroll position immediately without animation
+      if (Math.abs(container.scrollLeft - targetScroll) > 1) {
+        container.scrollLeft = targetScroll;
+      }
+    }
+  }, []); // Only run on mount
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -2712,7 +2729,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             // Update currentTab based on scroll position
             const container = e.currentTarget;
             const scrollLeft = container.scrollLeft;
-            const viewportWidth = window.innerWidth;
+            const viewportWidth = container.clientWidth;
             const availableTabs = getAvailableTabs();
             const currentIndex = Math.round(scrollLeft / viewportWidth);
             if (currentIndex >= 0 && currentIndex < availableTabs.length && availableTabs[currentIndex] !== currentTab) {
@@ -2727,16 +2744,18 @@ const Dashboard: React.FC<DashboardProps> = ({
         >
           <div className="flex h-full" style={{ width: `${getAvailableTabs().length * 100}vw` }}>
             {/* CLAIMS Tab */}
-            <div className="w-screen flex-shrink-0 snap-start min-h-[calc(100vh-300px)]">
-              <div className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] px-4 py-4">
-                {renderClaimsList(displayClaims, isHomeownerView)}
+            <div className="w-screen flex-shrink-0 snap-start snap-center min-h-[calc(100vh-300px)]" style={{ scrollSnapAlign: 'start' }}>
+              <div className="w-full min-h-[calc(100vh-300px)] px-4 py-4">
+                <div className="max-w-7xl mx-auto">
+                  {renderClaimsList(displayClaims, isHomeownerView)}
+                </div>
               </div>
             </div>
 
             {/* TASKS Tab - Admin Only */}
             {isAdmin && (
-              <div className="w-screen flex-shrink-0 snap-start min-h-[calc(100vh-300px)]">
-                <div className="px-4 py-4">
+              <div className="w-screen flex-shrink-0 snap-start snap-center min-h-[calc(100vh-300px)]" style={{ scrollSnapAlign: 'start' }}>
+                <div className="w-full min-h-[calc(100vh-300px)] px-4 py-4">
                   <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
                     <TaskList 
                       tasks={tasks}
@@ -2758,16 +2777,17 @@ const Dashboard: React.FC<DashboardProps> = ({
             )}
 
             {/* MESSAGES Tab */}
-            <div className="w-screen flex-shrink-0 snap-start min-h-[calc(100vh-300px)]">
-              <div className="px-4 py-4">
+            <div className="w-screen flex-shrink-0 snap-start snap-center min-h-[calc(100vh-300px)]" style={{ scrollSnapAlign: 'start' }}>
+              <div className="w-full min-h-[calc(100vh-300px)] px-4 py-4">
                 {renderMessagesTab()}
               </div>
             </div>
 
             {/* DOCUMENTS Tab - Homeowner Only */}
             {userRole === UserRole.HOMEOWNER && (
-              <div className="w-screen flex-shrink-0 snap-start min-h-[calc(100vh-300px)]">
-                <div className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] px-4 py-4">
+              <div className="w-screen flex-shrink-0 snap-start snap-center min-h-[calc(100vh-300px)]" style={{ scrollSnapAlign: 'start' }}>
+                <div className="w-full min-h-[calc(100vh-300px)] px-4 py-4">
+                  <div className="max-w-7xl mx-auto">
                   <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-elevation-1">
                     <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center shrink-0">
                       <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
@@ -2852,6 +2872,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                       )}
                     </div>
+                  </div>
                   </div>
                 </div>
               </div>
