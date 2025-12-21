@@ -1497,6 +1497,16 @@ If this repair work is billable, please let me know prior to scheduling.`);
         >
           Message
         </Button>
+        {!isHomeowner && (
+          <Button 
+            type="button" 
+            variant="filled" 
+            onClick={handleToggleReviewed}
+            className={isReviewed ? "!bg-green-600 hover:!bg-green-700 dark:!bg-green-700 dark:hover:!bg-green-800" : ""}
+          >
+            {isReviewed ? 'Reviewed' : 'Process'}
+          </Button>
+        )}
         {onCancel && (
           <Button 
             type="button" 
