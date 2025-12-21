@@ -2996,7 +2996,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'CLAIMS' && (
             <motion.div 
               key="claims"
-              className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] md:min-h-0 md:relative"
+              className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] md:min-h-0 md:relative px-4"
               style={{
                 position: swipeProgress > 0 ? 'absolute' : 'relative',
                 width: '100%',
@@ -3041,7 +3041,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'TASKS' && isAdmin && (
             <motion.div 
               key="tasks"
-              className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1 md:relative"
+              className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] md:min-h-0 md:relative px-4"
               style={{ 
                 maxHeight: 'calc(100vh - 300px)', 
                 minHeight: 'calc(100vh - 300px)',
@@ -3059,7 +3059,10 @@ const Dashboard: React.FC<DashboardProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
-              <TaskList 
+              <div className="max-w-7xl mx-auto py-4">
+                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
+                  <div className="overflow-hidden rounded-3xl flex flex-col h-full">
+                    <TaskList 
                 tasks={tasks}
                 employees={employees}
                 currentUser={currentUser}
@@ -3094,7 +3097,10 @@ const Dashboard: React.FC<DashboardProps> = ({
               animate={{ opacity: 1 }}
               transition={{ duration: 0 }}
             >
-              <TaskList 
+              <div className="max-w-7xl mx-auto py-4">
+                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
+                  <div className="overflow-hidden rounded-3xl flex flex-col h-full">
+                    <TaskList 
                 tasks={tasks}
                 employees={employees}
                 currentUser={currentUser}
@@ -3324,7 +3330,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'MESSAGES' && (
             <motion.div 
               key="messages"
-              className="min-h-[calc(100vh-300px)] md:min-h-0 md:relative"
+              className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] md:min-h-0 md:relative px-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
