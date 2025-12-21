@@ -1705,7 +1705,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <input 
                   type="text" 
                   placeholder="Search mail..." 
-                  className="w-full bg-surface-container dark:bg-gray-700 rounded-lg pl-9 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant dark:placeholder-gray-500"
+                  className="w-full bg-surface-container dark:bg-gray-700 rounded-full pl-9 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant dark:placeholder-gray-500"
                 />
               </div>
             </div>
@@ -1717,7 +1717,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <input 
                   type="text" 
                   placeholder="Search mail..." 
-                  className="w-full bg-surface-container dark:bg-gray-700 rounded-lg pl-9 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant dark:placeholder-gray-500"
+                  className="w-full bg-surface-container dark:bg-gray-700 rounded-full pl-9 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant dark:placeholder-gray-500"
                 />
              </div>
           </div>
