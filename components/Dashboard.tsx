@@ -1510,8 +1510,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           {emptyMsg}
         </div>
       ) : (
-        <div className="flex flex-col">
-          <div className="p-6 rounded-b-3xl">
+        <div className="flex flex-col overflow-hidden rounded-b-3xl">
+          <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {groupClaims.map((claim, index) => {
                 const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
@@ -1849,7 +1849,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           <div 
-            className="flex-1 overflow-y-auto p-6 pb-6 min-h-0 rounded-bl-3xl"
+            className="flex-1 overflow-y-auto p-6 min-h-0"
             style={{ WebkitOverflowScrolling: 'touch' }}
           >
              {displayThreads.length === 0 ? (
