@@ -1723,7 +1723,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           <motion.div 
-            className="flex-1 overflow-y-auto"
+            className="flex-1 overflow-y-auto p-6"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -1735,46 +1735,70 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <span className="text-sm">No messages found.</span>
                 </div>
              ) : (
-                displayThreads.map((thread, index) => {
-                  const lastMsg = thread.messages[thread.messages.length - 1];
-                  const isUnread = !thread.isRead;
-                  const isSelected = selectedThreadId === thread.id;
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {displayThreads.map((thread, index) => {
+                    const lastMsg = thread.messages[thread.messages.length - 1];
+                    const isUnread = !thread.isRead;
+                    const isSelected = selectedThreadId === thread.id;
+                    const participants = isAdmin 
+                      ? thread.participants.filter(p => p !== currentUser.name).join(', ') || 'Me'
+                      : thread.participants.filter(p => p !== activeHomeowner.name).join(', ') || 'Me';
 
-                  return (
-                    <motion.button
-                      key={thread.id}
-                      onClick={() => setSelectedThreadId(thread.id)}
-                      className={`w-full text-left p-4 border-b border-surface-outline-variant/30 dark:border-gray-700/30 hover:bg-surface-container dark:hover:bg-gray-700 transition-colors group relative ${
-                        isSelected ? 'bg-primary-container/20 dark:bg-primary/20' : isUnread ? 'bg-surface dark:bg-gray-800' : 'bg-surface-container/5 dark:bg-gray-700/5'
-                      }`}
-                      variants={cardVariants}
-                      layout
-                    >
-                       {isSelected && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary"></div>}
-                       
-                       <div className="flex justify-between items-baseline mb-1">
-                          <span className={`text-sm truncate pr-2 ${isUnread ? 'font-bold text-surface-on dark:text-gray-100' : 'font-medium text-surface-on dark:text-gray-200'}`}>
-                            {/* In a real email client, this shows the other party. Simulating roughly here. */}
-                            {isAdmin ? thread.participants.filter(p => p !== currentUser.name).join(', ') || 'Me' : thread.participants.filter(p => p !== activeHomeowner.name).join(', ') || 'Me'}
-                          </span>
-                          <span className={`text-xs whitespace-nowrap ${isUnread ? 'text-primary font-bold' : 'text-surface-on-variant dark:text-gray-400'}`}>
-                            {new Date(thread.lastMessageAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                          </span>
-                       </div>
-                       
-                       <div className={`text-sm mb-1 truncate ${isUnread ? 'font-bold text-surface-on dark:text-gray-100' : 'text-surface-on-variant dark:text-gray-400'}`}>
-                         {thread.subject}
-                       </div>
-                       
-                       <div className="text-xs text-surface-on-variant/80 dark:text-gray-500 truncate font-normal">
-                         <span className="text-surface-outline-variant dark:text-gray-600 mr-1">
-                           {lastMsg.senderName === (isAdmin ? currentUser.name : activeHomeowner.name) ? 'You:' : ''}
-                         </span>
-                         {lastMsg.content}
-                       </div>
-                    </motion.button>
-                  );
-                })
+                    return (
+                      <motion.div
+                        key={thread.id}
+                        onClick={() => setSelectedThreadId(thread.id)}
+                        className={`group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer ${
+                          isSelected
+                            ? 'bg-primary-container/20 dark:bg-primary/20 border-primary ring-1 ring-primary'
+                            : isUnread
+                            ? 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
+                            : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1 opacity-75'
+                        }`}
+                        variants={cardVariants}
+                        layout
+                      >
+                        <div className="px-4 py-4">
+                          <div className="flex flex-wrap gap-2">
+                            {/* Subject/Title */}
+                            <span className={`inline-flex items-center h-6 text-xs font-medium px-3 rounded-full whitespace-nowrap w-fit ${
+                              isUnread
+                                ? 'bg-primary text-primary-on'
+                                : 'bg-surface-container-high dark:bg-gray-700 text-surface-on dark:text-gray-100'
+                            }`}>
+                              {thread.subject}
+                            </span>
+                            
+                            {/* Participants */}
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
+                              {participants}
+                            </span>
+                            
+                            {/* Date */}
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
+                              {new Date(thread.lastMessageAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            </span>
+                            
+                            {/* Unread indicator */}
+                            {isUnread && (
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                                !
+                              </span>
+                            )}
+                            
+                            {/* Last message preview */}
+                            {lastMsg.content && (
+                              <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant/80 dark:text-gray-400 bg-surface-container/50 dark:bg-gray-700/50 px-3 rounded-full whitespace-nowrap w-fit">
+                                {lastMsg.senderName === (isAdmin ? currentUser.name : activeHomeowner.name) ? 'You: ' : ''}
+                                {lastMsg.content.substring(0, 30)}{lastMsg.content.length > 30 ? '...' : ''}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
              )}
           </motion.div>
        </div>
