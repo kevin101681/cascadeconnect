@@ -769,29 +769,27 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, []);
 
   // Ensure carousel starts at correct position on initial load
-  // The issue is that scroll position 0 allows scrolling left, meaning the inner container
-  // might be wider than expected. We need to ensure scrollLeft is exactly 0 and stays there.
+  // Account for card shadow by setting a small initial scroll offset (shadow extends ~2-3px)
   useEffect(() => {
     if (carouselRef.current && carouselContainerWidth > 0 && !hasInitializedScrollRef.current) {
       const container = carouselRef.current;
-      // Force scroll to 0 on initial load, using multiple attempts to ensure it sticks
-      const setScrollToZero = () => {
+      // Small offset to account for shadow clipping (shadow extends beyond card bounds)
+      const shadowOffset = 2;
+      
+      const setInitialScroll = () => {
         if (container) {
-          // Clamp scrollLeft to 0 minimum to prevent negative scrolling
-          if (container.scrollLeft < 0) {
-            container.scrollLeft = 0;
-          } else if (container.scrollLeft > 0 && container.scrollLeft < 5) {
-            // If it's slightly off, reset to 0
-            container.scrollLeft = 0;
+          // Set scroll to a small positive value to account for shadow, but clamp to prevent excessive scrolling
+          if (container.scrollLeft < shadowOffset || container.scrollLeft > shadowOffset + 2) {
+            container.scrollLeft = shadowOffset;
           }
         }
       };
       
       // Try multiple times to ensure it works
       requestAnimationFrame(() => {
-        setScrollToZero();
+        setInitialScroll();
         setTimeout(() => {
-          setScrollToZero();
+          setInitialScroll();
           hasInitializedScrollRef.current = true;
         }, 50);
       });
