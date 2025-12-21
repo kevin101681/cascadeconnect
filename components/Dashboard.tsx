@@ -1408,7 +1408,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, filter?: 'All' | 'Open' | 'Closed', setFilter?: (filter: 'All' | 'Open' | 'Closed') => void, onExportExcel?: () => void, allClaims?: Claim[], isAdminView: boolean = false) => (
     <motion.div 
       className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1"
-      style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}
       variants={cardVariants}
       initial="hidden"
       animate="visible"
@@ -1511,8 +1510,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           {emptyMsg}
         </div>
       ) : (
-        <div className="flex flex-col overflow-hidden rounded-b-3xl">
-          <div className="overflow-y-auto p-6">
+        <div className="flex flex-col">
+          <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {groupClaims.map((claim, index) => {
                 const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
@@ -1925,7 +1924,7 @@ const Dashboard: React.FC<DashboardProps> = ({
        </div>
 
        {/* Right Column: Email Thread View */}
-       <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'flex'} overflow-hidden rounded-r-3xl md:rounded-r-3xl md:rounded-l-none`}>
+       <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'flex'} rounded-r-3xl md:rounded-r-3xl md:rounded-l-none`}>
           {selectedThread ? (
             <>
                {/* Thread Header Toolbar */}
@@ -2845,7 +2844,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
-                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
+                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1">
                       <TaskList
                         tasks={tasks}
                         employees={employees}
@@ -2969,7 +2968,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
               <div className="max-w-7xl mx-auto py-4">
-                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
+                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1">
                       <TaskList
                       tasks={tasks}
                       employees={employees}
@@ -3008,7 +3007,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0 }}
             >
               <div className="max-w-7xl mx-auto py-4">
-                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
+                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1">
                       <TaskList
                       tasks={tasks}
                       employees={employees}
