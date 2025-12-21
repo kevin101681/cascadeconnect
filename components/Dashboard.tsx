@@ -360,6 +360,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Carousel ref for mobile
   const carouselRef = useRef<HTMLDivElement>(null);
+  const carouselInnerRef = useRef<HTMLDivElement>(null);
   const isUserScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -736,45 +737,22 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [currentTab]);
 
-  // Ensure initial scroll position is correct on mount
+  // Calculate container width for carousel slides (avoids 100vw scrollbar issues)
+  const [carouselContainerWidth, setCarouselContainerWidth] = useState<number>(0);
+  
   useEffect(() => {
     if (!carouselRef.current) return;
     
-    // Use requestAnimationFrame to ensure DOM is fully laid out
-    const setInitialScroll = () => {
-      if (!carouselRef.current) return;
-      const container = carouselRef.current;
-      const availableTabs = getAvailableTabs();
-      const currentIndex = availableTabs.indexOf(currentTab);
-      
-      // Always force scroll position on initial mount
-      if (currentIndex === 0) {
-        // Force scroll to exactly 0 for the first tab (CLAIMS)
-        container.scrollLeft = 0;
-      } else if (currentIndex > 0) {
-        const viewportWidth = container.clientWidth || window.innerWidth;
-        const targetScroll = currentIndex * viewportWidth;
-        container.scrollLeft = targetScroll;
+    const updateContainerWidth = () => {
+      if (carouselRef.current) {
+        setCarouselContainerWidth(carouselRef.current.clientWidth);
       }
     };
     
-    // Set immediately
-    setInitialScroll();
-    
-    // Also set after layout is complete to handle any layout shifts
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setInitialScroll();
-      });
-    });
-    
-    // Also set after a brief delay to catch any async layout changes
-    const timeoutId = setTimeout(() => {
-      setInitialScroll();
-    }, 100);
-    
-    return () => clearTimeout(timeoutId);
-  }, []); // Only run on mount
+    updateContainerWidth();
+    window.addEventListener('resize', updateContainerWidth);
+    return () => window.removeEventListener('resize', updateContainerWidth);
+  }, []);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -2766,9 +2744,16 @@ const Dashboard: React.FC<DashboardProps> = ({
             }, 150);
           }}
         >
-          <div className="flex h-full" style={{ width: `${getAvailableTabs().length * 100}vw` }}>
+          <div 
+            ref={carouselInnerRef} 
+            className="flex h-full"
+            style={{ width: carouselContainerWidth > 0 ? `${getAvailableTabs().length * carouselContainerWidth}px` : 'auto' }}
+          >
             {/* CLAIMS Tab */}
-            <div className="w-screen flex-shrink-0 snap-start snap-center min-h-[calc(100vh-300px)]" style={{ scrollSnapAlign: 'start' }}>
+            <div 
+              className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
+              style={{ scrollSnapAlign: 'start', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+            >
               <div className="w-full min-h-[calc(100vh-300px)]">
                 <div className="max-w-7xl mx-auto px-4 py-4">
                   {renderClaimsList(displayClaims, isHomeownerView)}
@@ -2778,7 +2763,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             {/* TASKS Tab - Admin Only */}
             {isAdmin && (
-              <div className="w-screen flex-shrink-0 snap-start snap-center min-h-[calc(100vh-300px)]" style={{ scrollSnapAlign: 'start' }}>
+              <div 
+                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
+                style={{ scrollSnapAlign: 'start', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+              >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto px-4 py-4">
                     <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
@@ -2803,7 +2791,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             )}
 
             {/* MESSAGES Tab */}
-            <div className="w-screen flex-shrink-0 snap-start snap-center min-h-[calc(100vh-300px)]" style={{ scrollSnapAlign: 'start' }}>
+            <div 
+              className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
+              style={{ scrollSnapAlign: 'start', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+            >
               <div className="w-full min-h-[calc(100vh-300px)]">
                 <div className="max-w-7xl mx-auto px-4 py-4">
                   {renderMessagesTab()}
@@ -2813,7 +2804,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             {/* DOCUMENTS Tab - Homeowner Only */}
             {userRole === UserRole.HOMEOWNER && (
-              <div className="w-screen flex-shrink-0 snap-start snap-center min-h-[calc(100vh-300px)]" style={{ scrollSnapAlign: 'start' }}>
+              <div 
+                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
+                style={{ scrollSnapAlign: 'start', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+              >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto px-4 py-4">
                   <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-elevation-1">
