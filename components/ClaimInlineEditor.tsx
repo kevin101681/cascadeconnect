@@ -67,6 +67,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   const [editDateEvaluated, setEditDateEvaluated] = useState(
     claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : ''
   );
+  const [isReviewed, setIsReviewed] = useState(claim.reviewed || false);
   const [newNote, setNewNote] = useState('');
   const [contractorSearch, setContractorSearch] = useState('');
   const [selectedContractorId, setSelectedContractorId] = useState<string>(claim.contractorId || '');
@@ -293,7 +294,8 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
       classification: editClassification,
       status: newStatus,
       internalNotes: editInternalNotes,
-      dateEvaluated: editDateEvaluated ? new Date(editDateEvaluated) : undefined
+      dateEvaluated: editDateEvaluated ? new Date(editDateEvaluated) : undefined,
+      reviewed: isReviewed
     });
     setIsEditing(false); // Collapse editor after saving
     
@@ -301,6 +303,15 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     if (onCancel) {
       onCancel();
     }
+  };
+  
+  const handleToggleReviewed = () => {
+    const newReviewedStatus = !isReviewed;
+    setIsReviewed(newReviewedStatus);
+    onUpdateClaim({
+      ...claim,
+      reviewed: newReviewedStatus
+    });
   };
   
   const handleCancelEdit = () => {

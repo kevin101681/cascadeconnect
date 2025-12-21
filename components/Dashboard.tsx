@@ -1525,12 +1525,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                   .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
                 const serviceOrderDate = serviceOrderMessages.length > 0 ? serviceOrderMessages[0].timestamp : null;
                 
+                const isReviewed = claim.reviewed || false;
                 return (
                   <motion.div 
                     key={claim.id}
                     className={`group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer ${
                       isCompleted 
                         ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75' 
+                        : isReviewed
+                        ? 'bg-green-50 dark:bg-green-950/20 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
                         : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
                     }`}
                     variants={cardVariants}

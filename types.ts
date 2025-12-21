@@ -199,6 +199,7 @@ export interface Claim {
   classification: ClaimClassification;
   dateEvaluated?: Date;
   nonWarrantyExplanation?: string;
+  reviewed?: boolean; // Marks if claim has been reviewed/processed
   
   dateSubmitted: Date;
   proposedDates: ProposedDate[];
