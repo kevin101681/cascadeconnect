@@ -176,8 +176,10 @@ function App() {
   const [tasks, setTasks] = useState<Task[]>(() => 
     FORCE_MOCK_DATA ? MOCK_TASKS : loadState('cascade_tasks', MOCK_TASKS)
   );
+  // Documents are not loaded from localStorage - they contain large base64 data URLs that exceed quota
+  // Documents are loaded from the database instead
   const [documents, setDocuments] = useState<HomeownerDocument[]>(() => 
-    FORCE_MOCK_DATA ? MOCK_DOCUMENTS : loadState('cascade_documents', MOCK_DOCUMENTS)
+    FORCE_MOCK_DATA ? MOCK_DOCUMENTS : []
   );
   const [employees, setEmployees] = useState<InternalEmployee[]>(() => 
     FORCE_MOCK_DATA ? MOCK_INTERNAL_EMPLOYEES : loadState('cascade_employees', MOCK_INTERNAL_EMPLOYEES)
@@ -263,7 +265,9 @@ function App() {
   
   useEffect(() => { saveState('cascade_claims', claims); }, [claims]);
   useEffect(() => { saveState('cascade_tasks', tasks); }, [tasks]);
-  useEffect(() => { saveState('cascade_documents', documents); }, [documents]);
+  // Documents are not saved to localStorage - they contain large base64 data URLs that exceed quota
+  // Documents are stored in the database instead
+  // useEffect(() => { saveState('cascade_documents', documents); }, [documents]);
   useEffect(() => { saveState('cascade_employees', employees); }, [employees]);
   useEffect(() => { saveState('cascade_contractors', contractors); }, [contractors]);
   useEffect(() => { saveState('cascade_messages', messages); }, [messages]);
@@ -638,6 +642,7 @@ function App() {
                   companyName: c.companyName,
                   contactName: c.contactName || '',
                   email: c.email,
+                  phone: c.phone || '',
                   specialty: c.specialty
                 }));
                 setContractors(mappedContractors);
