@@ -1799,7 +1799,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const renderMessagesTab = () => (
     <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row shadow-elevation-1">
        {/* Left Column: Inbox List (Gmail Style) */}
-       <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 ${selectedThreadId ? 'hidden md:flex' : 'flex'} ${!selectedThreadId ? 'rounded-bl-3xl' : ''}`}>
+       <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-16 shrink-0">
             <div className="flex items-center w-full md:w-auto">
               <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
@@ -1927,7 +1927,7 @@ const Dashboard: React.FC<DashboardProps> = ({
        </div>
 
        {/* Right Column: Email Thread View */}
-       <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'flex'} rounded-r-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
+       <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'flex'} rounded-r-3xl md:rounded-r-3xl md:rounded-l-none`}>
           {selectedThread ? (
             <>
                {/* Thread Header Toolbar */}
@@ -2922,7 +2922,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
-              {renderClaimsList(displayClaims, isHomeownerView)}
+              <div className="max-w-7xl mx-auto py-4">
+                {renderClaimsList(displayClaims, isHomeownerView)}
+              </div>
             </motion.div>
           )}
           
