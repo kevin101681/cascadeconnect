@@ -1230,7 +1230,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
 
                  {/* Total (Moved next to status as requested previously for desktop too) */}
                  <div className="shrink-0 flex-initial w-auto">
-                    <span className="bg-green-100 dark:bg-green-900 text-white px-2 py-1 rounded-full text-xs font-bold block text-center">${inv.total.toFixed(0)}</span>
+                    <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded-full text-xs font-bold block text-center">${inv.total.toFixed(0)}</span>
                 </div>
 
                 {/* Invoice # */}
@@ -1346,7 +1346,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                         )}
 
                         {/* Total (Moved Here) */}
-                        <span className={`${commonPillClass} bg-green-100 dark:bg-green-900 text-white`} style={{ flexShrink: 0, minWidth: 'max-content' }}>${inv.total.toFixed(0)}</span>
+                        <span className={`${commonPillClass} bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200`} style={{ flexShrink: 0, minWidth: 'max-content' }}>${inv.total.toFixed(0)}</span>
                     </div>
 
                     {/* Checkbox (Right Side) - Hidden on mobile, shown on desktop */}
