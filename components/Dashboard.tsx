@@ -769,17 +769,17 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, []);
 
   // Ensure carousel starts at correct position on initial load
-  // Account for card shadow by setting a small initial scroll offset (shadow extends ~2-3px)
+  // Account for card shadow by setting a small initial scroll offset (shadow extends ~3px)
   useEffect(() => {
     if (carouselRef.current && carouselContainerWidth > 0 && !hasInitializedScrollRef.current) {
       const container = carouselRef.current;
       // Small offset to account for shadow clipping (shadow extends beyond card bounds)
-      const shadowOffset = 2;
+      const shadowOffset = 3;
       
       const setInitialScroll = () => {
         if (container) {
           // Set scroll to a small positive value to account for shadow, but clamp to prevent excessive scrolling
-          if (container.scrollLeft < shadowOffset || container.scrollLeft > shadowOffset + 2) {
+          if (container.scrollLeft < shadowOffset - 1 || container.scrollLeft > shadowOffset + 2) {
             container.scrollLeft = shadowOffset;
           }
         }
@@ -2772,8 +2772,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           className="md:hidden min-h-[calc(100vh-300px)] relative overflow-x-auto overflow-y-visible snap-x snap-mandatory"
           style={{
             scrollSnapType: 'x mandatory',
-            scrollPaddingLeft: '0px',
-            scrollPaddingRight: '0px',
+            scrollPaddingLeft: '3px',
+            scrollPaddingRight: '3px',
             WebkitOverflowScrolling: 'touch',
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
