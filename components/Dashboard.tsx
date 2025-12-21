@@ -360,6 +360,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Carousel ref for mobile
   const carouselRef = useRef<HTMLDivElement>(null);
+  const isUserScrollingRef = useRef(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   // Swipe gesture state for mobile (kept for desktop compatibility, but not used on mobile)
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -712,22 +714,35 @@ const Dashboard: React.FC<DashboardProps> = ({
     if (initialTab) setCurrentTab(initialTab);
   }, [initialTab]);
 
-  // Sync carousel scroll position with currentTab on mobile
+  // Sync carousel scroll position with currentTab on mobile (only when not user-scrolling)
   useEffect(() => {
-    if (!carouselRef.current) return;
+    if (!carouselRef.current || isUserScrollingRef.current) return;
     const availableTabs = getAvailableTabs();
     const currentIndex = availableTabs.indexOf(currentTab);
     if (currentIndex >= 0) {
       const viewportWidth = window.innerWidth;
       const targetScroll = currentIndex * viewportWidth;
-      // Use immediate scroll on initial load, smooth for tab changes
-      const isInitialLoad = carouselRef.current.scrollLeft === 0 && currentIndex > 0;
-      carouselRef.current.scrollTo({
-        left: targetScroll,
-        behavior: isInitialLoad ? 'auto' : 'smooth'
-      });
+      const currentScroll = carouselRef.current.scrollLeft;
+      // Only scroll if we're significantly off target (more than 10px)
+      if (Math.abs(currentScroll - targetScroll) > 10) {
+        // Use immediate scroll on initial load, smooth for tab changes
+        const isInitialLoad = currentScroll === 0 && currentIndex > 0;
+        carouselRef.current.scrollTo({
+          left: targetScroll,
+          behavior: isInitialLoad ? 'auto' : 'smooth'
+        });
+      }
     }
   }, [currentTab]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (initialThreadId) setSelectedThreadId(initialThreadId);
@@ -2678,7 +2693,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Mobile Carousel - All tabs pre-loaded */}
         <div
           ref={carouselRef}
-          className="md:hidden min-h-[calc(100vh-300px)] relative overflow-x-auto overflow-y-hidden snap-x snap-mandatory"
+          className="md:hidden min-h-[calc(100vh-300px)] relative overflow-x-auto overflow-y-visible snap-x snap-mandatory"
           style={{
             scrollSnapType: 'x mandatory',
             WebkitOverflowScrolling: 'touch',
@@ -2686,6 +2701,14 @@ const Dashboard: React.FC<DashboardProps> = ({
             msOverflowStyle: 'none'
           } as React.CSSProperties}
           onScroll={(e) => {
+            // Mark that user is scrolling
+            isUserScrollingRef.current = true;
+            
+            // Clear existing timeout
+            if (scrollTimeoutRef.current) {
+              clearTimeout(scrollTimeoutRef.current);
+            }
+            
             // Update currentTab based on scroll position
             const container = e.currentTarget;
             const scrollLeft = container.scrollLeft;
@@ -2695,49 +2718,56 @@ const Dashboard: React.FC<DashboardProps> = ({
             if (currentIndex >= 0 && currentIndex < availableTabs.length && availableTabs[currentIndex] !== currentTab) {
               setCurrentTab(availableTabs[currentIndex]);
             }
+            
+            // Reset user scrolling flag after scroll ends
+            scrollTimeoutRef.current = setTimeout(() => {
+              isUserScrollingRef.current = false;
+            }, 150);
           }}
         >
           <div className="flex h-full" style={{ width: `${getAvailableTabs().length * 100}vw` }}>
             {/* CLAIMS Tab */}
-            <div className="w-screen flex-shrink-0 snap-start snap-always min-h-[calc(100vh-300px)]">
-              <div className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] px-4">
+            <div className="w-screen flex-shrink-0 snap-start min-h-[calc(100vh-300px)]">
+              <div className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] px-4 py-4">
                 {renderClaimsList(displayClaims, isHomeownerView)}
               </div>
             </div>
 
             {/* TASKS Tab - Admin Only */}
             {isAdmin && (
-              <div className="w-screen flex-shrink-0 snap-start snap-always min-h-[calc(100vh-300px)]">
-                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1 mx-4" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
-                  <TaskList 
-                    tasks={tasks}
-                    employees={employees}
-                    currentUser={currentUser}
-                    claims={claims}
-                    homeowners={homeowners}
-                    onAddTask={onAddTask}
-                    onToggleTask={onToggleTask}
-                    onDeleteTask={onDeleteTask}
-                    onUpdateTask={onUpdateTask}
-                    preSelectedHomeowner={targetHomeowner}
-                    onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
-                    onSelectTask={(task) => setSelectedTaskForModal(task)}
-                  />
+              <div className="w-screen flex-shrink-0 snap-start min-h-[calc(100vh-300px)]">
+                <div className="px-4 py-4">
+                  <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
+                    <TaskList 
+                      tasks={tasks}
+                      employees={employees}
+                      currentUser={currentUser}
+                      claims={claims}
+                      homeowners={homeowners}
+                      onAddTask={onAddTask}
+                      onToggleTask={onToggleTask}
+                      onDeleteTask={onDeleteTask}
+                      onUpdateTask={onUpdateTask}
+                      preSelectedHomeowner={targetHomeowner}
+                      onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
+                      onSelectTask={(task) => setSelectedTaskForModal(task)}
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
             {/* MESSAGES Tab */}
-            <div className="w-screen flex-shrink-0 snap-start snap-always min-h-[calc(100vh-300px)]">
-              <div className="px-4">
+            <div className="w-screen flex-shrink-0 snap-start min-h-[calc(100vh-300px)]">
+              <div className="px-4 py-4">
                 {renderMessagesTab()}
               </div>
             </div>
 
             {/* DOCUMENTS Tab - Homeowner Only */}
             {userRole === UserRole.HOMEOWNER && (
-              <div className="w-screen flex-shrink-0 snap-start snap-always min-h-[calc(100vh-300px)]">
-                <div className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] px-4">
+              <div className="w-screen flex-shrink-0 snap-start min-h-[calc(100vh-300px)]">
+                <div className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] px-4 py-4">
                   <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-elevation-1">
                     <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center shrink-0">
                       <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
