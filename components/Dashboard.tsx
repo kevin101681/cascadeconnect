@@ -739,17 +739,41 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Ensure initial scroll position is correct on mount
   useEffect(() => {
     if (!carouselRef.current) return;
-    const availableTabs = getAvailableTabs();
-    const currentIndex = availableTabs.indexOf(currentTab);
-    if (currentIndex >= 0) {
+    
+    // Use requestAnimationFrame to ensure DOM is fully laid out
+    const setInitialScroll = () => {
+      if (!carouselRef.current) return;
       const container = carouselRef.current;
-      const viewportWidth = container.clientWidth;
-      const targetScroll = currentIndex * viewportWidth;
-      // Set initial scroll position immediately without animation
-      if (Math.abs(container.scrollLeft - targetScroll) > 1) {
+      const availableTabs = getAvailableTabs();
+      const currentIndex = availableTabs.indexOf(currentTab);
+      
+      // Always force scroll position on initial mount
+      if (currentIndex === 0) {
+        // Force scroll to exactly 0 for the first tab (CLAIMS)
+        container.scrollLeft = 0;
+      } else if (currentIndex > 0) {
+        const viewportWidth = container.clientWidth || window.innerWidth;
+        const targetScroll = currentIndex * viewportWidth;
         container.scrollLeft = targetScroll;
       }
-    }
+    };
+    
+    // Set immediately
+    setInitialScroll();
+    
+    // Also set after layout is complete to handle any layout shifts
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setInitialScroll();
+      });
+    });
+    
+    // Also set after a brief delay to catch any async layout changes
+    const timeoutId = setTimeout(() => {
+      setInitialScroll();
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, []); // Only run on mount
 
   // Cleanup timeout on unmount
