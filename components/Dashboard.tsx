@@ -1934,7 +1934,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                {/* Scrollable Thread Content */}
                <div className="flex-1 overflow-y-auto">
-                 <div className="px-8 py-6 bg-white dark:bg-white">
+                 <div className="px-8 py-6 bg-white dark:bg-white rounded-2xl mx-4 my-4">
                     {/* Subject Line */}
                     <div className="flex items-start justify-between mb-8">
                        <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 leading-tight">{selectedThread.subject}</h2>
