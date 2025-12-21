@@ -2597,11 +2597,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                   : swipeProgress > 0 && swipeDirection === 'right'
                   ? `translateX(${swipeProgress * 100}%)`
                   : 'translateX(0)',
-                opacity: swipeProgress > 0 ? 1 - swipeProgress * 0.5 : 1,
-                zIndex: swipeProgress > 0 ? 1 : 0
+                zIndex: swipeProgress > 0 ? 1 : 0,
+                willChange: swipeProgress > 0 ? 'transform' : 'auto'
               }}
               initial={{ opacity: 0 }}
-              animate={{ opacity: swipeProgress > 0 ? 1 - swipeProgress * 0.5 : 1 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
@@ -2619,8 +2619,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                 transform: swipeDirection === 'left'
                   ? `translateX(${(1 - swipeProgress) * 100}%)`
                   : `translateX(${-(1 - swipeProgress) * 100}%)`,
-                opacity: swipeProgress * 0.5,
-                zIndex: 2
+                zIndex: 2,
+                willChange: 'transform'
               }}
             >
               {renderClaimsList(displayClaims, isHomeownerView)}
@@ -2641,11 +2641,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                   : swipeProgress > 0 && swipeDirection === 'right'
                   ? `translateX(${swipeProgress * 100}%)`
                   : 'translateX(0)',
-                opacity: swipeProgress > 0 ? 1 - swipeProgress * 0.5 : 1,
                 zIndex: swipeProgress > 0 ? 1 : 0
               }}
               initial={{ opacity: 0 }}
-              animate={{ opacity: swipeProgress > 0 ? 1 - swipeProgress * 0.5 : 1 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
@@ -2677,7 +2676,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 transform: swipeDirection === 'left'
                   ? `translateX(${(1 - swipeProgress) * 100}%)`
                   : `translateX(${-(1 - swipeProgress) * 100}%)`,
-                opacity: swipeProgress * 0.5,
                 zIndex: 2
               }}
             >
@@ -2709,11 +2707,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                   : swipeProgress > 0 && swipeDirection === 'right'
                   ? `translateX(${swipeProgress * 100}%)`
                   : 'translateX(0)',
-                opacity: swipeProgress > 0 ? 1 - swipeProgress * 0.5 : 1,
-                zIndex: swipeProgress > 0 ? 1 : 0
+                zIndex: swipeProgress > 0 ? 1 : 0,
+                willChange: swipeProgress > 0 ? 'transform' : 'auto'
               }}
               initial={{ opacity: 0 }}
-              animate={{ opacity: swipeProgress > 0 ? 1 - swipeProgress * 0.5 : 1 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
@@ -2815,8 +2813,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                 transform: swipeDirection === 'left'
                   ? `translateX(${(1 - swipeProgress) * 100}%)`
                   : `translateX(${-(1 - swipeProgress) * 100}%)`,
-                opacity: swipeProgress * 0.5,
-                zIndex: 2
+                zIndex: 2,
+                willChange: 'transform'
               }}
             >
               <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-elevation-1">
@@ -2919,11 +2917,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                   : swipeProgress > 0 && swipeDirection === 'right'
                   ? `translateX(${swipeProgress * 100}%)`
                   : 'translateX(0)',
-                opacity: swipeProgress > 0 ? 1 - swipeProgress * 0.5 : 1,
-                zIndex: swipeProgress > 0 ? 1 : 0
+                zIndex: swipeProgress > 0 ? 1 : 0,
+                willChange: swipeProgress > 0 ? 'transform' : 'auto'
               }}
               initial={{ opacity: 0 }}
-              animate={{ opacity: swipeProgress > 0 ? 1 - swipeProgress * 0.5 : 1 }}
+              animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
@@ -2941,8 +2939,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                 transform: swipeDirection === 'left'
                   ? `translateX(${(1 - swipeProgress) * 100}%)`
                   : `translateX(${-(1 - swipeProgress) * 100}%)`,
-                opacity: swipeProgress * 0.5,
-                zIndex: 2
+                zIndex: 2,
+                willChange: 'transform'
               }}
             >
               {renderMessagesTab()}
