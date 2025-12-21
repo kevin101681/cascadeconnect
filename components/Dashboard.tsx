@@ -363,6 +363,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const carouselInnerRef = useRef<HTMLDivElement>(null);
   const isUserScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastScrollIndexRef = useRef<number>(0);
   
   // Swipe gesture state for mobile (kept for desktop compatibility, but not used on mobile)
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -2728,14 +2729,27 @@ const Dashboard: React.FC<DashboardProps> = ({
               clearTimeout(scrollTimeoutRef.current);
             }
             
-            // Update currentTab based on scroll position
+            // Update currentTab based on scroll position, but limit to one card movement
             const container = e.currentTarget;
             const scrollLeft = container.scrollLeft;
             const viewportWidth = container.clientWidth;
             const availableTabs = getAvailableTabs();
-            const currentIndex = Math.round(scrollLeft / viewportWidth);
-            if (currentIndex >= 0 && currentIndex < availableTabs.length && availableTabs[currentIndex] !== currentTab) {
-              setCurrentTab(availableTabs[currentIndex]);
+            const currentTabIndex = availableTabs.indexOf(currentTab);
+            const calculatedIndex = Math.round(scrollLeft / viewportWidth);
+            
+            // Clamp the index to be at most ±1 from the current tab index to prevent skipping cards
+            const clampedIndex = Math.max(
+              0,
+              Math.min(
+                availableTabs.length - 1,
+                Math.max(currentTabIndex - 1, Math.min(currentTabIndex + 1, calculatedIndex))
+              )
+            );
+            
+            // Only update if the clamped index is different from current tab
+            if (clampedIndex >= 0 && clampedIndex < availableTabs.length && clampedIndex !== currentTabIndex) {
+              setCurrentTab(availableTabs[clampedIndex]);
+              lastScrollIndexRef.current = clampedIndex;
             }
             
             // Reset user scrolling flag after scroll ends
@@ -2752,7 +2766,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* CLAIMS Tab */}
             <div 
               className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-              style={{ scrollSnapAlign: 'start', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
             >
               <div className="w-full min-h-[calc(100vh-300px)]">
                 <div className="max-w-7xl mx-auto px-4 py-4">
@@ -2765,7 +2779,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto px-4 py-4">
@@ -2793,7 +2807,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* MESSAGES Tab */}
             <div 
               className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-              style={{ scrollSnapAlign: 'start', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
             >
               <div className="w-full min-h-[calc(100vh-300px)]">
                 <div className="max-w-7xl mx-auto px-4 py-4">
@@ -2806,7 +2820,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {userRole === UserRole.HOMEOWNER && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto px-4 py-4">
