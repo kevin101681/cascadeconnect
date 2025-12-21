@@ -199,14 +199,26 @@ const TaskList: React.FC<TaskListProps> = ({
     <div className="w-full flex flex-col">
       {/* Header - matches warranty claims modal structure */}
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
-        <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-          {filteredTasks.length > 0 && (
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-              {filteredTasks.length}
-            </span>
-          )}
-          My Tasks
-        </h2>
+        {/* Title row - with New Task button on mobile */}
+        <div className="flex items-center justify-between md:justify-start w-full md:w-auto">
+          <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+            {filteredTasks.length > 0 && (
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                {filteredTasks.length}
+              </span>
+            )}
+            My Tasks
+          </h2>
+          {/* New Task button - top right on mobile, hidden on desktop (shown below) */}
+          <Button
+            onClick={() => setShowForm(!showForm)}
+            variant="filled"
+            icon={<Plus className="h-4 w-4" />}
+            className="!h-9 !px-4 md:hidden"
+          >
+            New Task
+          </Button>
+        </div>
         <div className="flex items-center gap-2 flex-wrap">
           {/* Filter Pills */}
           <div className="flex items-center gap-2">
@@ -250,11 +262,12 @@ const TaskList: React.FC<TaskListProps> = ({
           >
             Templates
           </Button>
+          {/* New Task button - hidden on mobile (shown above), visible on desktop */}
           <Button
             onClick={() => setShowForm(!showForm)}
             variant="filled"
             icon={<Plus className="h-4 w-4" />}
-            className="!h-9 !px-4"
+            className="!h-9 !px-4 hidden md:flex"
           >
             New Task
           </Button>
