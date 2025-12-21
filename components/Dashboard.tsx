@@ -2769,7 +2769,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
             >
               <div className="w-full min-h-[calc(100vh-300px)]">
-                <div className="max-w-7xl mx-auto px-4 py-4">
+                <div className="max-w-7xl mx-auto py-4">
                   {renderClaimsList(displayClaims, isHomeownerView)}
                 </div>
               </div>
@@ -2782,7 +2782,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
-                  <div className="max-w-7xl mx-auto px-4 py-4">
+                  <div className="max-w-7xl mx-auto py-4">
                     <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
                       <TaskList 
                         tasks={tasks}
@@ -2810,7 +2810,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
             >
               <div className="w-full min-h-[calc(100vh-300px)]">
-                <div className="max-w-7xl mx-auto px-4 py-4">
+                <div className="max-w-7xl mx-auto py-4">
                   {renderMessagesTab()}
                 </div>
               </div>
@@ -2823,7 +2823,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
-                  <div className="max-w-7xl mx-auto px-4 py-4">
+                  <div className="max-w-7xl mx-auto py-4">
                   <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-elevation-1">
                     <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center shrink-0">
                       <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
