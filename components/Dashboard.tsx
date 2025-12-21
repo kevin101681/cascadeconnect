@@ -358,7 +358,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   // View State for Dashboard (Claims vs Messages vs Tasks vs Documents)
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'DOCUMENTS'>(initialTab || 'CLAIMS');
   
-  // Swipe gesture state for mobile
+  // Carousel ref for mobile
+  const carouselRef = useRef<HTMLDivElement>(null);
+  
+  // Swipe gesture state for mobile (kept for desktop compatibility, but not used on mobile)
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [swipeProgress, setSwipeProgress] = useState<number>(0); // 0 to 1, represents swipe completion
@@ -708,6 +711,23 @@ const Dashboard: React.FC<DashboardProps> = ({
   useEffect(() => {
     if (initialTab) setCurrentTab(initialTab);
   }, [initialTab]);
+
+  // Sync carousel scroll position with currentTab on mobile
+  useEffect(() => {
+    if (!carouselRef.current) return;
+    const availableTabs = getAvailableTabs();
+    const currentIndex = availableTabs.indexOf(currentTab);
+    if (currentIndex >= 0) {
+      const viewportWidth = window.innerWidth;
+      const targetScroll = currentIndex * viewportWidth;
+      // Use immediate scroll on initial load, smooth for tab changes
+      const isInitialLoad = carouselRef.current.scrollLeft === 0 && currentIndex > 0;
+      carouselRef.current.scrollTo({
+        left: targetScroll,
+        behavior: isInitialLoad ? 'auto' : 'smooth'
+      });
+    }
+  }, [currentTab]);
 
   useEffect(() => {
     if (initialThreadId) setSelectedThreadId(initialThreadId);
@@ -2655,11 +2675,166 @@ const Dashboard: React.FC<DashboardProps> = ({
         </motion.div>
 
         {/* Content Area */}
+        {/* Mobile Carousel - All tabs pre-loaded */}
+        <div
+          ref={carouselRef}
+          className="md:hidden min-h-[calc(100vh-300px)] relative overflow-x-auto overflow-y-hidden snap-x snap-mandatory"
+          style={{
+            scrollSnapType: 'x mandatory',
+            WebkitOverflowScrolling: 'touch',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none'
+          } as React.CSSProperties}
+          onScroll={(e) => {
+            // Update currentTab based on scroll position
+            const container = e.currentTarget;
+            const scrollLeft = container.scrollLeft;
+            const viewportWidth = window.innerWidth;
+            const availableTabs = getAvailableTabs();
+            const currentIndex = Math.round(scrollLeft / viewportWidth);
+            if (currentIndex >= 0 && currentIndex < availableTabs.length && availableTabs[currentIndex] !== currentTab) {
+              setCurrentTab(availableTabs[currentIndex]);
+            }
+          }}
+        >
+          <div className="flex h-full" style={{ width: `${getAvailableTabs().length * 100}vw` }}>
+            {/* CLAIMS Tab */}
+            <div className="w-screen flex-shrink-0 snap-start snap-always min-h-[calc(100vh-300px)]">
+              <div className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] px-4">
+                {renderClaimsList(displayClaims, isHomeownerView)}
+              </div>
+            </div>
+
+            {/* TASKS Tab - Admin Only */}
+            {isAdmin && (
+              <div className="w-screen flex-shrink-0 snap-start snap-always min-h-[calc(100vh-300px)]">
+                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1 mx-4" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
+                  <TaskList 
+                    tasks={tasks}
+                    employees={employees}
+                    currentUser={currentUser}
+                    claims={claims}
+                    homeowners={homeowners}
+                    onAddTask={onAddTask}
+                    onToggleTask={onToggleTask}
+                    onDeleteTask={onDeleteTask}
+                    onUpdateTask={onUpdateTask}
+                    preSelectedHomeowner={targetHomeowner}
+                    onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
+                    onSelectTask={(task) => setSelectedTaskForModal(task)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* MESSAGES Tab */}
+            <div className="w-screen flex-shrink-0 snap-start snap-always min-h-[calc(100vh-300px)]">
+              <div className="px-4">
+                {renderMessagesTab()}
+              </div>
+            </div>
+
+            {/* DOCUMENTS Tab - Homeowner Only */}
+            {userRole === UserRole.HOMEOWNER && (
+              <div className="w-screen flex-shrink-0 snap-start snap-always min-h-[calc(100vh-300px)]">
+                <div className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] px-4">
+                  <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-elevation-1">
+                    <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center shrink-0">
+                      <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-primary" />
+                        Account Documents
+                      </h2>
+                    </div>
+                    
+                    <div className="p-6 bg-surface dark:bg-gray-800 flex-1 overflow-y-auto">
+                      {/* Thumbnail Grid */}
+                      {displayDocuments.length === 0 ? (
+                        <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-12 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
+                          No documents uploaded for this account.
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                          {displayDocuments.map(doc => {
+                            const isPDF = doc.type === 'PDF' || doc.name.toLowerCase().endsWith('.pdf') || 
+                                         doc.url.startsWith('data:application/pdf') || 
+                                         doc.url.includes('pdf');
+                            
+                            return (
+                              <div key={doc.id} className="flex flex-col bg-surface-container dark:bg-gray-700 rounded-xl overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-lg transition-all relative group">
+                                {/* Header with Action Buttons */}
+                                <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent p-2 flex items-center justify-end gap-1">
+                                  {isPDF && (
+                                    <>
+                                      {/* View PDF */}
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          setSelectedDocument(doc);
+                                          setIsPDFViewerOpen(true);
+                                        }}
+                                        className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
+                                        title="View PDF"
+                                      >
+                                        <Eye className="h-3.5 w-3.5" />
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                                
+                                {/* Thumbnail */}
+                                <div 
+                                  className="relative w-full aspect-[3/4] bg-surface-container-high dark:bg-gray-600 flex items-center justify-center cursor-pointer overflow-hidden"
+                                  onClick={() => {
+                                    if (isPDF) {
+                                      setSelectedDocument(doc);
+                                      setIsPDFViewerOpen(true);
+                                    }
+                                  }}
+                                >
+                                  {doc.thumbnailUrl ? (
+                                    <img 
+                                      src={doc.thumbnailUrl} 
+                                      alt={doc.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="p-4 text-center">
+                                      <FileText className="h-12 w-12 mx-auto text-surface-on-variant dark:text-gray-400 mb-2" />
+                                      <p className="text-xs text-surface-on-variant dark:text-gray-400 truncate px-2">{doc.name}</p>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {/* Document Name */}
+                                <div className="p-2 bg-surface-container dark:bg-gray-700">
+                                  <p className="text-xs font-medium text-surface-on dark:text-gray-100 truncate" title={doc.name}>
+                                    {doc.name}
+                                  </p>
+                                  <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-0.5">
+                                    {new Date(doc.uploadDate).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop Content Area - Keep existing behavior */}
         <div
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
-          className="md:touch-none min-h-[calc(100vh-300px)] md:min-h-0 relative overflow-hidden"
+          className="hidden md:block md:touch-none min-h-[calc(100vh-300px)] md:min-h-0 relative overflow-hidden"
         >
         <AnimatePresence mode={swipeProgress > 0 ? undefined : "wait"} initial={false}>
           {currentTab === 'CLAIMS' && (
