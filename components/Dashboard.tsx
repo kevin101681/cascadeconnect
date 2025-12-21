@@ -1510,7 +1510,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {emptyMsg}
         </div>
       ) : (
-        <div className="flex flex-col overflow-hidden rounded-b-3xl">
+        <div className="flex flex-col">
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {groupClaims.map((claim, index) => {
@@ -1944,7 +1944,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                </div>
 
                {/* Scrollable Thread Content */}
-               <div className="flex-1 overflow-y-auto rounded-br-3xl">
+               <div className="flex-1 overflow-y-auto">
                  <div className="px-8 py-6 bg-white dark:bg-white rounded-2xl mx-4 my-4">
                     {/* Subject Line */}
                     <div className="flex items-start justify-between mb-8">
