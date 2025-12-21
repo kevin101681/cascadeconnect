@@ -1677,7 +1677,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden flex flex-col md:flex-row h-[calc(100vh-300px)] md:h-[700px] shadow-elevation-1">
        {/* Left Column: Inbox List (Gmail Style) */}
        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
-          <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center h-16 shrink-0">
+          <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center md:h-16 shrink-0">
             <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               {displayThreads.filter(t => !t.isRead).length > 0 && (
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
@@ -1692,7 +1692,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 setShowNewMessageModal(true);
               }}
               icon={<Plus className="h-4 w-4" />}
-              className="!h-8 !px-3 text-xs"
+              className="!h-9 !px-4 md:!h-8 md:!px-3 md:text-xs"
             >
               Compose
             </Button>
