@@ -1442,19 +1442,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setFilter('All');
-                }}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  filter === 'All'
-                    ? 'bg-primary text-primary-on'
-                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
-                }`}
-              >
-                All
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
                   setFilter('Open');
                 }}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
@@ -1477,6 +1464,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                 }`}
               >
                 Closed
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFilter('All');
+                }}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  filter === 'All'
+                    ? 'bg-primary text-primary-on'
+                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                }`}
+              >
+                All
               </button>
             </div>
           )}

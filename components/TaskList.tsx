@@ -171,16 +171,6 @@ const TaskList: React.FC<TaskListProps> = ({
           {/* Filter Pills */}
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setTaskFilter('all')}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                taskFilter === 'all'
-                  ? 'bg-primary text-primary-on'
-                  : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
-              }`}
-            >
-              All
-            </button>
-            <button
               onClick={() => setTaskFilter('open')}
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                 taskFilter === 'open'
@@ -199,6 +189,16 @@ const TaskList: React.FC<TaskListProps> = ({
               }`}
             >
               Closed
+            </button>
+            <button
+              onClick={() => setTaskFilter('all')}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                taskFilter === 'all'
+                  ? 'bg-primary text-primary-on'
+                  : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+              }`}
+            >
+              All
             </button>
           </div>
           <Button
