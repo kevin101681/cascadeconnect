@@ -767,6 +767,20 @@ const Dashboard: React.FC<DashboardProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Ensure carousel starts at position 0 on initial load
+  useEffect(() => {
+    if (carouselRef.current && currentTab === 'CLAIMS') {
+      const container = carouselRef.current;
+      // Set scroll position to 0 on initial load if on first tab
+      // Use requestAnimationFrame to ensure it happens after render
+      requestAnimationFrame(() => {
+        if (container && container.scrollLeft !== 0) {
+          container.scrollLeft = 0;
+        }
+      });
+    }
+  }, [carouselContainerWidth]);
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
