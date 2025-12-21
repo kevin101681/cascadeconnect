@@ -723,7 +723,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     const currentIndex = availableTabs.indexOf(currentTab);
     if (currentIndex >= 0) {
       const container = carouselRef.current;
-      const cardWidth = carouselContainerWidth > 0 ? carouselContainerWidth - 32 : container.clientWidth;
+      const cardWidth = carouselContainerWidth > 0 ? carouselContainerWidth - 40 : container.clientWidth;
       const slideWidth = cardWidth + 16; // card width + gap
       const targetScroll = currentIndex * slideWidth;
       const currentScroll = container.scrollLeft;
@@ -2740,12 +2740,16 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Mobile Carousel - All tabs pre-loaded */}
         <div
           ref={carouselRef}
-          className="md:hidden min-h-[calc(100vh-300px)] relative overflow-x-auto overflow-y-visible snap-x snap-mandatory px-4"
+          className="md:hidden min-h-[calc(100vh-300px)] relative overflow-x-auto overflow-y-visible snap-x snap-mandatory"
           style={{
             scrollSnapType: 'x mandatory',
+            scrollPaddingLeft: '20px',
+            scrollPaddingRight: '20px',
             WebkitOverflowScrolling: 'touch',
             scrollbarWidth: 'none',
-            msOverflowStyle: 'none'
+            msOverflowStyle: 'none',
+            paddingLeft: '20px',
+            paddingRight: '20px'
           } as React.CSSProperties}
           onScroll={(e) => {
             // Mark that user is scrolling
@@ -2788,12 +2792,12 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div 
             ref={carouselInnerRef} 
             className="flex h-full gap-4"
-            style={{ width: carouselContainerWidth > 0 ? `${getAvailableTabs().length * (carouselContainerWidth - 32) + (getAvailableTabs().length - 1) * 16}px` : 'auto' }}
+            style={{ width: carouselContainerWidth > 0 ? `${getAvailableTabs().length * (carouselContainerWidth - 40) + (getAvailableTabs().length - 1) * 16}px` : 'auto' }}
           >
             {/* CLAIMS Tab */}
             <div 
               className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth - 32}px` : '100%' }}
+              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth - 40}px` : '100%' }}
             >
               <div className="w-full min-h-[calc(100vh-300px)]">
                 <div className="max-w-7xl mx-auto py-4">
@@ -2806,7 +2810,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth - 32}px` : '100%' }}
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth - 40}px` : '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
@@ -2834,7 +2838,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* MESSAGES Tab */}
             <div 
               className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth - 32}px` : '100%' }}
+              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth - 40}px` : '100%' }}
             >
               <div className="w-full min-h-[calc(100vh-300px)]">
                 <div className="max-w-7xl mx-auto py-4">
@@ -2847,7 +2851,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {userRole === UserRole.HOMEOWNER && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth - 32}px` : '100%' }}
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth - 40}px` : '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
