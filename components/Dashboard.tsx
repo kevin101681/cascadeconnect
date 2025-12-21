@@ -2990,15 +2990,14 @@ const Dashboard: React.FC<DashboardProps> = ({
           {swipeProgress > 0 && targetTab === 'TASKS' && currentTab !== 'TASKS' && isAdmin && (
             <motion.div 
               key="tasks-target"
-              className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1 absolute inset-0"
-              style={{ 
-                maxHeight: 'calc(100vh - 300px)', 
-                minHeight: 'calc(100vh - 300px)',
+              className="max-w-7xl mx-auto absolute inset-0 px-4"
+              style={{
                 width: '100%',
                 transform: swipeDirection === 'left'
                   ? `translateX(${(1 - swipeProgress) * 100}%)`
                   : `translateX(${-(1 - swipeProgress) * 100}%)`,
-                zIndex: 2
+                zIndex: 2,
+                willChange: 'transform'
               }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -3006,7 +3005,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             >
               <div className="max-w-7xl mx-auto py-4">
                 <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1">
-                      <TaskList
+                    <TaskList
                       tasks={tasks}
                       employees={employees}
                       currentUser={currentUser}
