@@ -364,6 +364,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   const isUserScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollIndexRef = useRef<number>(0);
+  const hasInitializedScrollRef = useRef(false);
+  const hasInitializedScrollRef = useRef(false);
   
   // Swipe gesture state for mobile (kept for desktop compatibility, but not used on mobile)
   const [touchStart, setTouchStart] = useState<number | null>(null);
@@ -767,16 +769,32 @@ const Dashboard: React.FC<DashboardProps> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Ensure carousel starts at position 0 on initial load
+  // Ensure carousel starts at correct position on initial load
+  // The issue is that scroll position 0 allows scrolling left, meaning the inner container
+  // might be wider than expected. We need to ensure scrollLeft is exactly 0 and stays there.
   useEffect(() => {
-    if (carouselRef.current && currentTab === 'CLAIMS') {
+    if (carouselRef.current && carouselContainerWidth > 0 && !hasInitializedScrollRef.current) {
       const container = carouselRef.current;
-      // Set scroll position to 0 on initial load if on first tab
-      // Use requestAnimationFrame to ensure it happens after render
-      requestAnimationFrame(() => {
-        if (container && container.scrollLeft !== 0) {
-          container.scrollLeft = 0;
+      // Force scroll to 0 on initial load, using multiple attempts to ensure it sticks
+      const setScrollToZero = () => {
+        if (container) {
+          // Clamp scrollLeft to 0 minimum to prevent negative scrolling
+          if (container.scrollLeft < 0) {
+            container.scrollLeft = 0;
+          } else if (container.scrollLeft > 0 && container.scrollLeft < 5) {
+            // If it's slightly off, reset to 0
+            container.scrollLeft = 0;
+          }
         }
+      };
+      
+      // Try multiple times to ensure it works
+      requestAnimationFrame(() => {
+        setScrollToZero();
+        setTimeout(() => {
+          setScrollToZero();
+          hasInitializedScrollRef.current = true;
+        }, 50);
       });
     }
   }, [carouselContainerWidth]);
@@ -2757,8 +2775,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           className="md:hidden min-h-[calc(100vh-300px)] relative overflow-x-auto overflow-y-visible snap-x snap-mandatory"
           style={{
             scrollSnapType: 'x mandatory',
-            scrollPaddingLeft: '20px',
-            scrollPaddingRight: '20px',
+            scrollPaddingLeft: '0px',
+            scrollPaddingRight: '0px',
             WebkitOverflowScrolling: 'touch',
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
@@ -2806,7 +2824,10 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div 
             ref={carouselInnerRef} 
             className="flex h-full gap-4"
-            style={{ width: carouselContainerWidth > 0 ? `${getAvailableTabs().length * (carouselContainerWidth - 40) + (getAvailableTabs().length - 1) * 16}px` : 'auto' }}
+            style={{ 
+              width: carouselContainerWidth > 0 ? `${getAvailableTabs().length * (carouselContainerWidth - 40) + (getAvailableTabs().length - 1) * 16}px` : 'auto',
+              minWidth: '100%'
+            }}
           >
             {/* CLAIMS Tab */}
             <div 
