@@ -14,6 +14,7 @@ import Button from './Button';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
+import TaskDetail from './TaskDetail';
 // Lazy load heavy components to improve initial load time
 // Add error handling for failed dynamic imports
 const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err => {
@@ -336,11 +337,14 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Selected claim for modal
   const [selectedClaimForModal, setSelectedClaimForModal] = useState<Claim | null>(null);
   
+  // Selected task for modal
+  const [selectedTaskForModal, setSelectedTaskForModal] = useState<Task | null>(null);
+  
   // Header scroll sync refs
   
   // Prevent body scroll when modal is open
   useEffect(() => {
-    if (selectedClaimForModal) {
+    if (selectedClaimForModal || selectedTaskForModal) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
@@ -348,7 +352,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     return () => {
       document.body.style.overflow = '';
     };
-  }, [selectedClaimForModal]);
+  }, [selectedClaimForModal, selectedTaskForModal]);
   
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Documents)
@@ -413,7 +417,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       }
       
       // Calculate swipe progress (0 to 1)
-      const maxDistance = window.innerWidth * 0.9; // Use 90% of screen width as max (slower animation)
+      const maxDistance = window.innerWidth * 0.7; // Use 70% of screen width as max (slower animation)
       const progress = Math.min(Math.abs(distance) / maxDistance, 1);
       setSwipeProgress(progress);
     }
@@ -438,24 +442,22 @@ const Dashboard: React.FC<DashboardProps> = ({
       // Complete the swipe with smooth animation
       if (isLeftSwipe && currentIndex < availableTabs.length - 1) {
         // Swipe left - go to next tab
-        const newTab = availableTabs[currentIndex + 1];
-        setCurrentTab(newTab);
-        // Keep target tab visible during transition
+        setSwipeProgress(1); // Complete the animation
         setTimeout(() => {
+          setCurrentTab(availableTabs[currentIndex + 1]);
           setSwipeProgress(0);
           setSwipeDirection(null);
           setTargetTab(null);
-        }, 500); // Wait for animation to complete
+        }, 100); // Small delay for smooth transition
       } else if (isRightSwipe && currentIndex > 0) {
         // Swipe right - go to previous tab
-        const newTab = availableTabs[currentIndex - 1];
-        setCurrentTab(newTab);
-        // Keep target tab visible during transition
+        setSwipeProgress(1); // Complete the animation
         setTimeout(() => {
+          setCurrentTab(availableTabs[currentIndex - 1]);
           setSwipeProgress(0);
           setSwipeDirection(null);
           setTargetTab(null);
-        }, 500); // Wait for animation to complete
+        }, 100); // Small delay for smooth transition
       } else {
         // Reset swipe state if not enough distance
         setSwipeProgress(0);
@@ -1400,9 +1402,11 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
       ) : (
         <div className="flex flex-col overflow-hidden">
-          <div className="overflow-y-auto">
+          <div className="overflow-y-auto p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {groupClaims.map((claim, index) => {
                 const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
+                const isCompleted = claim.status === ClaimStatus.COMPLETED;
                 
                 // Find the most recent service order message (SUBCONTRACTOR type with "Service Order" in subject)
                 const serviceOrderMessages = claimMessages
@@ -1413,15 +1417,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                 const serviceOrderDate = serviceOrderMessages.length > 0 ? serviceOrderMessages[0].timestamp : null;
                 
                 return (
-                  <React.Fragment key={claim.id}>
-                    <motion.div 
-                      className={`hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors cursor-pointer border-b border-surface-outline-variant dark:border-gray-700 ${isClosed ? 'opacity-70' : ''}`}
-                      variants={cardVariants}
-                      onClick={(e) => {
-                        setSelectedClaimForModal(claim);
-                      }}
-                    >
-                      <div className="px-6 py-3">
+                  <motion.div 
+                    key={claim.id}
+                    className={`group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer ${
+                      isCompleted 
+                        ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75' 
+                        : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
+                    }`}
+                    variants={cardVariants}
+                    onClick={(e) => {
+                      setSelectedClaimForModal(claim);
+                    }}
+                  >
+                      <div className="px-4 py-4">
                         <div className="flex flex-wrap gap-2">
                             {/* Claim # */}
                           <span className="inline-flex items-center h-6 text-xs font-medium tracking-wide bg-primary/10 dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 rounded-full whitespace-nowrap w-fit">
@@ -1497,9 +1505,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </div>
                       </div>
                     </motion.div>
-                  </React.Fragment>
                 );
               })}
+            </div>
           </div>
         </div>
       )}
@@ -1910,6 +1918,39 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Helper function to render modals using Portal
   const renderModals = () => (
     <>
+      {/* TASK DETAIL MODAL */}
+      {selectedTaskForModal && createPortal(
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out] overflow-y-auto"
+          style={{ overscrollBehavior: 'contain' }}
+        >
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] my-auto flex flex-col max-h-[90vh]">
+            <div className="overflow-y-auto overflow-x-hidden flex-1">
+              <div className="p-4">
+                <TaskDetail
+                  task={selectedTaskForModal}
+                  employees={employees}
+                  currentUser={currentUser}
+                  claims={claims}
+                  homeowners={homeowners}
+                  preSelectedHomeowner={targetHomeowner}
+                  onUpdateTask={onUpdateTask}
+                  onDeleteTask={onDeleteTask}
+                  onToggleTask={onToggleTask}
+                  onBack={() => setSelectedTaskForModal(null)}
+                  onSelectClaim={(claim) => {
+                    setSelectedTaskForModal(null);
+                    setSelectedClaimForModal(claim);
+                  }}
+                  startInEditMode={true}
+                />
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* CLAIM DETAIL MODAL */}
       {selectedClaimForModal && onUpdateClaim && createPortal(
         <div 
@@ -2605,7 +2646,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: swipeProgress > 0 ? 0 : 0.5, ease: "easeOut" }}
+              transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
               {renderClaimsList(displayClaims, isHomeownerView)}
             </motion.div>
@@ -2629,18 +2670,26 @@ const Dashboard: React.FC<DashboardProps> = ({
             </motion.div>
           )}
 
-          {currentTab === 'TASKS' && isAdmin && swipeProgress === 0 && (
+          {currentTab === 'TASKS' && isAdmin && (
             <motion.div 
               key="tasks"
               className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1 md:relative"
               style={{ 
                 maxHeight: 'calc(100vh - 300px)', 
-                minHeight: 'calc(100vh - 300px)'
+                minHeight: 'calc(100vh - 300px)',
+                position: swipeProgress > 0 ? 'absolute' : 'relative',
+                width: '100%',
+                transform: swipeProgress > 0 && swipeDirection === 'left' 
+                  ? `translateX(${-swipeProgress * 100}%)` 
+                  : swipeProgress > 0 && swipeDirection === 'right'
+                  ? `translateX(${swipeProgress * 100}%)`
+                  : 'translateX(0)',
+                zIndex: swipeProgress > 0 ? 1 : 0
               }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
+              transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
               <TaskList 
                 tasks={tasks}
@@ -2654,12 +2703,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onUpdateTask={onUpdateTask}
                 preSelectedHomeowner={targetHomeowner}
                 onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
+                onSelectTask={(task) => setSelectedTaskForModal(task)}
               />
             </motion.div>
           )}
           
           {/* Target tab during swipe - TASKS */}
-          {((swipeProgress > 0 && targetTab === 'TASKS' && currentTab !== 'TASKS') || (swipeProgress > 0 && currentTab === 'TASKS' && swipeDirection)) && isAdmin && (
+          {swipeProgress > 0 && targetTab === 'TASKS' && currentTab !== 'TASKS' && isAdmin && (
             <motion.div 
               key="tasks-target"
               className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden mb-6 last:mb-0 flex flex-col shadow-elevation-1 absolute inset-0"
@@ -2667,14 +2717,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                 maxHeight: 'calc(100vh - 300px)', 
                 minHeight: 'calc(100vh - 300px)',
                 width: '100%',
-                transform: currentTab === 'TASKS'
-                  ? 'translateX(0)'
-                  : swipeDirection === 'left'
+                transform: swipeDirection === 'left'
                   ? `translateX(${(1 - swipeProgress) * 100}%)`
                   : `translateX(${-(1 - swipeProgress) * 100}%)`,
-                zIndex: currentTab === 'TASKS' ? 10 : 2,
-                willChange: 'transform',
-                pointerEvents: currentTab === 'TASKS' ? 'auto' : 'none'
+                zIndex: 2
               }}
             >
               <TaskList 
@@ -2689,18 +2735,30 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onUpdateTask={onUpdateTask}
                 preSelectedHomeowner={targetHomeowner}
                 onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
+                onSelectTask={(task) => setSelectedTaskForModal(task)}
               />
             </motion.div>
           )}
 
-          {currentTab === 'DOCUMENTS' && userRole === UserRole.HOMEOWNER && swipeProgress === 0 && (
+          {currentTab === 'DOCUMENTS' && userRole === UserRole.HOMEOWNER && (
             <motion.div 
               key="documents"
               className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] md:min-h-0 md:relative"
+              style={{
+                position: swipeProgress > 0 ? 'absolute' : 'relative',
+                width: '100%',
+                transform: swipeProgress > 0 && swipeDirection === 'left' 
+                  ? `translateX(${-swipeProgress * 100}%)` 
+                  : swipeProgress > 0 && swipeDirection === 'right'
+                  ? `translateX(${swipeProgress * 100}%)`
+                  : 'translateX(0)',
+                zIndex: swipeProgress > 0 ? 1 : 0,
+                willChange: swipeProgress > 0 ? 'transform' : 'auto'
+              }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
+              transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
               <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-elevation-1">
                 <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center shrink-0">
@@ -2791,20 +2849,17 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
           
           {/* Target tab during swipe - DOCUMENTS */}
-          {((swipeProgress > 0 && targetTab === 'DOCUMENTS' && currentTab !== 'DOCUMENTS') || (swipeProgress > 0 && currentTab === 'DOCUMENTS' && swipeDirection)) && userRole === UserRole.HOMEOWNER && (
+          {swipeProgress > 0 && targetTab === 'DOCUMENTS' && currentTab !== 'DOCUMENTS' && userRole === UserRole.HOMEOWNER && (
             <motion.div 
               key="documents-target"
               className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] md:min-h-0 absolute inset-0"
               style={{
                 width: '100%',
-                transform: currentTab === 'DOCUMENTS'
-                  ? 'translateX(0)'
-                  : swipeDirection === 'left'
+                transform: swipeDirection === 'left'
                   ? `translateX(${(1 - swipeProgress) * 100}%)`
                   : `translateX(${-(1 - swipeProgress) * 100}%)`,
-                zIndex: currentTab === 'DOCUMENTS' ? 10 : 2,
-                willChange: 'transform',
-                pointerEvents: currentTab === 'DOCUMENTS' ? 'auto' : 'none'
+                zIndex: 2,
+                willChange: 'transform'
               }}
             >
               <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden shadow-elevation-1">
@@ -2895,34 +2950,42 @@ const Dashboard: React.FC<DashboardProps> = ({
             </motion.div>
           )}
 
-          {currentTab === 'MESSAGES' && swipeProgress === 0 && (
+          {currentTab === 'MESSAGES' && (
             <motion.div 
               key="messages"
               className="min-h-[calc(100vh-300px)] md:min-h-0 md:relative"
+              style={{
+                position: swipeProgress > 0 ? 'absolute' : 'relative',
+                width: '100%',
+                transform: swipeProgress > 0 && swipeDirection === 'left' 
+                  ? `translateX(${-swipeProgress * 100}%)` 
+                  : swipeProgress > 0 && swipeDirection === 'right'
+                  ? `translateX(${swipeProgress * 100}%)`
+                  : 'translateX(0)',
+                zIndex: swipeProgress > 0 ? 1 : 0,
+                willChange: swipeProgress > 0 ? 'transform' : 'auto'
+              }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
+              transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
               {renderMessagesTab()}
             </motion.div>
           )}
           
           {/* Target tab during swipe - MESSAGES */}
-          {((swipeProgress > 0 && targetTab === 'MESSAGES' && currentTab !== 'MESSAGES') || (swipeProgress > 0 && currentTab === 'MESSAGES' && swipeDirection)) && (
+          {swipeProgress > 0 && targetTab === 'MESSAGES' && currentTab !== 'MESSAGES' && (
             <motion.div 
               key="messages-target"
               className="min-h-[calc(100vh-300px)] md:min-h-0 absolute inset-0"
               style={{
                 width: '100%',
-                transform: currentTab === 'MESSAGES' 
-                  ? 'translateX(0)'
-                  : swipeDirection === 'left'
+                transform: swipeDirection === 'left'
                   ? `translateX(${(1 - swipeProgress) * 100}%)`
                   : `translateX(${-(1 - swipeProgress) * 100}%)`,
-                zIndex: currentTab === 'MESSAGES' ? 10 : 2,
-                willChange: 'transform',
-                pointerEvents: currentTab === 'MESSAGES' ? 'auto' : 'none'
+                zIndex: 2,
+                willChange: 'transform'
               }}
             >
               {renderMessagesTab()}

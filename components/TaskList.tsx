@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import { Task, InternalEmployee, Claim, Homeowner, ClaimStatus } from '../types';
 import Button from './Button';
-import { Check, Plus, User, Calendar, Trash2, Home, CheckCircle, Square, CheckSquare, HardHat, ChevronDown, FileText, Edit2, X } from 'lucide-react';
+import { Check, Plus, User, Calendar, Trash2, Home, CheckCircle, Square, CheckSquare, HardHat, FileText, Edit2, X } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import TaskTemplateManager, { TaskTemplate } from './TaskTemplateManager';
 
@@ -21,6 +20,7 @@ interface TaskListProps {
   preSelectedHomeowner?: Homeowner | null;
   onClose?: () => void;
   onSelectClaim?: (claim: Claim) => void; // Handler to open claim in editor modal
+  onSelectTask?: (task: Task) => void; // Handler to open task in detail modal
 }
 
 const TaskList: React.FC<TaskListProps> = ({ 
@@ -35,24 +35,17 @@ const TaskList: React.FC<TaskListProps> = ({
   onUpdateTask,
   preSelectedHomeowner,
   onClose,
-  onSelectClaim
+  onSelectClaim,
+  onSelectTask
 }) => {
   const [showForm, setShowForm] = useState(false);
-  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [showTemplates, setShowTemplates] = useState(false);
   const [taskFilter, setTaskFilter] = useState<TaskFilter>('open');
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
   
   // Form State
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskAssignee, setNewTaskAssignee] = useState(currentUser.id);
   const [newTaskNotes, setNewTaskNotes] = useState('');
-  
-  // Edit Form State
-  const [editTaskTitle, setEditTaskTitle] = useState('');
-  const [editTaskAssignee, setEditTaskAssignee] = useState('');
-  const [editTaskNotes, setEditTaskNotes] = useState('');
-  const [editSelectedClaimIds, setEditSelectedClaimIds] = useState<string[]>([]);
   
   // New State for Linking Claims
   const [selectedClaimIds, setSelectedClaimIds] = useState<string[]>([]);
@@ -138,62 +131,17 @@ const TaskList: React.FC<TaskListProps> = ({
 
   const handleSelectTemplate = (template: TaskTemplate) => {
     const processed = processTemplate(template);
-    if (editingTaskId) {
-      setEditTaskTitle(processed.title);
-      if (processed.description) {
-        setEditTaskNotes(processed.description);
-      }
-    } else {
-      setNewTaskTitle(processed.title);
-      if (processed.description) {
-        setNewTaskNotes(processed.description);
-      }
+    setNewTaskTitle(processed.title);
+    if (processed.description) {
+      setNewTaskNotes(processed.description);
     }
     setShowTemplates(false);
   };
 
   const handleToggleTask = (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    const willBeCompleted = task && !task.isCompleted;
-    
     onToggleTask(taskId);
-    
-    // If task is being marked as complete and we're on 'open' filter, switch to 'closed'
-    if (willBeCompleted && taskFilter === 'open') {
-      setTaskFilter('closed');
-    }
   };
 
-  const handleStartEdit = (task: Task) => {
-    setEditingTaskId(task.id);
-    setEditTaskTitle(task.title);
-    setEditTaskAssignee(task.assignedToId);
-    setEditTaskNotes(task.description || '');
-    setEditSelectedClaimIds(task.relatedClaimIds || []);
-    setExpandedTaskId(task.id); // Expand the task when editing
-  };
-
-  const handleCancelEdit = () => {
-    setEditingTaskId(null);
-    setEditTaskTitle('');
-    setEditTaskAssignee('');
-    setEditTaskNotes('');
-    setEditSelectedClaimIds([]);
-  };
-
-  const handleSaveEdit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingTaskId || !onUpdateTask) return;
-    
-    onUpdateTask(editingTaskId, {
-      title: editTaskTitle,
-      assignedToId: editTaskAssignee,
-      description: editTaskNotes,
-      relatedClaimIds: editSelectedClaimIds
-    });
-    
-    handleCancelEdit();
-  };
 
   return (
     <div className="w-full flex flex-col">
@@ -400,9 +348,9 @@ const TaskList: React.FC<TaskListProps> = ({
           </div>
         )}
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {filteredTasks.length === 0 ? (
-          <div className="text-center py-10 text-surface-on-variant dark:text-gray-400 bg-surface-container/30 dark:bg-gray-700/30 rounded-2xl border border-dashed border-surface-outline-variant dark:border-gray-600">
+          <div className="col-span-2 text-center py-10 text-surface-on-variant dark:text-gray-400 bg-surface-container/30 dark:bg-gray-700/30 rounded-2xl border border-dashed border-surface-outline-variant dark:border-gray-600">
             <p>No tasks assigned to you.</p>
           </div>
         ) : (
@@ -414,37 +362,19 @@ const TaskList: React.FC<TaskListProps> = ({
                 ? claims.filter(c => task.relatedClaimIds?.includes(c.id))
                 : [];
 
-            const isExpanded = expandedTaskId === task.id;
-
             return (
               <div 
                 key={task.id}
-                className={`group flex flex-col rounded-2xl border transition-all overflow-hidden ${
+                className={`group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer ${
                   task.isCompleted 
                     ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75' 
                     : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
                 }`}
+                onClick={() => onSelectTask?.(task)}
               >
-                {/* Collapsed Header - Clickable */}
+                {/* Card Header */}
                 <div 
-                  className={`flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-4 p-4 cursor-pointer transition-colors ${
-                    isExpanded 
-                      ? 'rounded-t-2xl' 
-                      : 'rounded-2xl'
-                  } hover:bg-surface-container-high dark:hover:bg-gray-700/50`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const currentScrollY = window.scrollY || window.pageYOffset || document.documentElement.scrollTop;
-                    setExpandedTaskId(isExpanded ? null : task.id);
-                    // Maintain scroll position after state update
-                    requestAnimationFrame(() => {
-                      window.scrollTo(0, currentScrollY);
-                      requestAnimationFrame(() => {
-                        window.scrollTo(0, currentScrollY);
-                      });
-                    });
-                  }}
+                  className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 p-4 transition-colors rounded-2xl hover:bg-surface-container-high dark:hover:bg-gray-700/50"
                 >
                   <div className="flex items-center gap-3 flex-1 flex-wrap">
                     <button 
@@ -477,109 +407,19 @@ const TaskList: React.FC<TaskListProps> = ({
                       </span>
                     )}
                   </div>
-                  
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <ChevronDown 
-                      className={`h-4 w-4 text-surface-on-variant dark:text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                    />
-                    {onUpdateTask && !task.isCompleted && (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleStartEdit(task);
-                        }}
-                        className="p-2 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/10 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                        title="Edit Task"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                    )}
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteTask(task.id);
-                      }}
-                      className="p-2 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/10 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-                      title="Delete Task"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+
+                  {/* Assigned To and Date - Desktop only */}
+                  <div className="hidden md:flex items-center gap-x-4 gap-y-0 text-xs text-surface-on-variant dark:text-gray-400 flex-shrink-0">
+                    <span className="flex items-center gap-1.5 whitespace-nowrap">
+                      <User className="h-3 w-3" />
+                      {assignee?.name || 'Unknown'}
+                    </span>
+                    <span className="flex items-center gap-1.5 whitespace-nowrap">
+                      <Calendar className="h-3 w-3" />
+                      {task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString() : 'N/A'}
+                    </span>
                   </div>
                 </div>
-
-                {/* Expanded Content */}
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="px-4 pb-4 pt-4 space-y-4 border-t border-surface-outline-variant dark:border-gray-700">
-                    {/* Meta Data Row */}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-surface-on-variant dark:text-gray-400">
-                      <span className="flex items-center gap-1.5">
-                        <User className="h-3 w-3" />
-                        Assigned to: <span className="font-medium text-surface-on dark:text-gray-100">{assignee?.name || 'Unknown'}</span>
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Calendar className="h-3 w-3" />
-                        Assigned: {task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString() : 'N/A'}
-                      </span>
-                    </div>
-
-                    {/* Notes Section - Pill Style */}
-                    {task.description && (
-                      <div>
-                        <div className="inline-block bg-surface-container-high/60 dark:bg-gray-700/60 px-4 py-2 rounded-2xl text-sm text-surface-on dark:text-gray-100">
-                          <p className="whitespace-pre-wrap">{task.description}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Checklist of Claims */}
-                    {taskClaims.length > 0 && (
-                      <div>
-                        <p className="text-xs font-bold text-surface-on-variant dark:text-gray-400 mb-2 uppercase tracking-wider flex items-center gap-1">
-                          <CheckSquare className="h-3 w-3" />
-                          Subs to Schedule
-                        </p>
-                        <div className="space-y-2">
-                          {taskClaims.map(claim => (
-                            <div 
-                              key={claim.id} 
-                              className="flex items-center justify-between p-2.5 rounded-lg border border-surface-outline-variant dark:border-gray-600 bg-surface dark:bg-gray-700 text-sm cursor-pointer hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
-                              onClick={() => onSelectClaim?.(claim)}
-                            >
-                              <div className="flex items-center gap-3">
-                                <Square className="h-4 w-4 text-primary flex-shrink-0" />
-                                <div>
-                                  <span className="font-medium text-surface-on dark:text-gray-100 block">{claim.title}</span>
-                                  <div className="flex items-center flex-wrap gap-1 text-xs text-surface-on-variant dark:text-gray-400">
-                                    <span>{claim.classification}</span>
-                                    {claim.contractorName && (
-                                      <>
-                                        <span className="mx-1 text-surface-outline-variant dark:text-gray-600">|</span>
-                                        <span className="font-medium text-surface-on-variant dark:text-gray-400 flex items-center gap-1 bg-surface-container dark:bg-gray-700 px-1.5 py-0.5 rounded">
-                                          <HardHat className="h-3 w-3" />
-                                          {claim.contractorName}
-                                        </span>
-                                      </>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
             );
           })
