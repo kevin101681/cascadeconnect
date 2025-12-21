@@ -19,6 +19,10 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
 
   // Format status text (replace underscores with spaces and capitalize)
   const formatStatus = (status: ClaimStatus): string => {
+    // Special case: SUBMITTED displays as "New"
+    if (status === ClaimStatus.SUBMITTED) {
+      return 'New';
+    }
     return status.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
