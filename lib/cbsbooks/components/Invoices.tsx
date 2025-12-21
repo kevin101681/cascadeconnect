@@ -1207,7 +1207,10 @@ export const Invoices: React.FC<InvoicesProps> = ({
         <div className={`transition-all duration-300 ${expanded ? 'my-4' : 'my-1'}`}>
             
             {/* DESKTOP ROW (Hidden on Mobile) */}
-            <div className={`hidden md:flex flex-nowrap items-center gap-2 p-3 bg-surface dark:bg-gray-800 border border-surface-outline-variant dark:border-gray-700 shadow-sm hover:shadow-md transition-all ${expanded ? '!rounded-t-3xl !rounded-b-none border-b-0 shadow-none mb-0' : 'rounded-3xl'}`}>
+            <div 
+              className={`hidden md:flex flex-nowrap items-center gap-2 p-3 bg-surface dark:bg-gray-800 border border-surface-outline-variant dark:border-gray-700 shadow-sm hover:shadow-md transition-all cursor-pointer ${expanded ? '!rounded-t-3xl !rounded-b-none border-b-0 shadow-none mb-0' : 'rounded-3xl'}`}
+              onClick={onExpand}
+            >
                 
                 {/* Checkbox */}
                 <div className="shrink-0 flex items-center" onClick={(e) => e.stopPropagation()}>
@@ -1286,7 +1289,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                 </div>
 
                 {/* Actions */}
-                <div className="shrink-0 flex items-center gap-1">
+                <div className="shrink-0 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     <div className="hidden md:flex gap-1">
                         {inv.status !== 'paid' && (
                             <button onClick={() => handleMarkAsPaid(inv)} className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} title="Mark as Paid">
@@ -1303,14 +1306,6 @@ export const Invoices: React.FC<InvoicesProps> = ({
                             <Trash2 size={16} />
                         </button>
                     </div>
-                    
-                    {/* Expand Chevron */}
-                    <button 
-                        onClick={onExpand}
-                        className={`${commonBtnClass} ml-1 bg-primary text-primary-on hover:bg-primary/90`}
-                    >
-                        <ArrowUpDown size={16} className={`transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`} />
-                    </button>
                 </div>
             </div>
 
