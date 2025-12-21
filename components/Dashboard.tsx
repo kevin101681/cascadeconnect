@@ -743,12 +743,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [carouselContainerWidth, setCarouselContainerWidth] = useState<number>(0);
   
   useEffect(() => {
-    if (!carouselRef.current) return;
-    
+    // Use window.innerWidth for stable measurement (accounts for scrollbar)
     const updateContainerWidth = () => {
-      if (carouselRef.current) {
-        setCarouselContainerWidth(carouselRef.current.clientWidth);
-      }
+      setCarouselContainerWidth(window.innerWidth);
     };
     
     updateContainerWidth();
