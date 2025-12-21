@@ -10,11 +10,11 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const baseStyle = "inline-flex items-center h-6 px-3 rounded-full text-xs font-medium whitespace-nowrap";
 
   const styles = {
-    [ClaimStatus.SUBMITTED]: "bg-surface-container-high dark:bg-gray-600 text-surface-on-variant dark:text-gray-300",
-    [ClaimStatus.REVIEWING]: "bg-secondary-container dark:bg-gray-600 text-secondary-on-container dark:text-gray-300",
-    [ClaimStatus.SCHEDULING]: "bg-tertiary-container dark:bg-gray-600 text-tertiary-on-container dark:text-gray-300",
-    [ClaimStatus.SCHEDULED]: "bg-primary-container dark:bg-primary/30 text-primary-on-container dark:text-primary",
-    [ClaimStatus.COMPLETED]: "bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-100",
+    [ClaimStatus.SUBMITTED]: "bg-gray-300 dark:bg-gray-700 text-surface-on-variant dark:text-gray-300",
+    [ClaimStatus.REVIEWING]: "bg-secondary-container dark:bg-gray-700 text-secondary-on-container dark:text-gray-300",
+    [ClaimStatus.SCHEDULING]: "bg-tertiary-container dark:bg-gray-700 text-tertiary-on-container dark:text-gray-300",
+    [ClaimStatus.SCHEDULED]: "bg-primary-container dark:bg-primary/40 text-primary-on-container dark:text-primary",
+    [ClaimStatus.COMPLETED]: "bg-gray-300 dark:bg-gray-700 text-surface-on dark:text-gray-100",
   };
 
   // Format status text (replace underscores with spaces and capitalize)
