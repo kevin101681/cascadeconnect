@@ -723,8 +723,8 @@ const Dashboard: React.FC<DashboardProps> = ({
     const currentIndex = availableTabs.indexOf(currentTab);
     if (currentIndex >= 0) {
       const container = carouselRef.current;
-      const slideWidth = carouselCardWidth + CAROUSEL_GAP;
-      const targetScroll = currentIndex * slideWidth;
+      const viewportWidth = container.clientWidth;
+      const targetScroll = currentIndex * viewportWidth;
       const currentScroll = container.scrollLeft;
       // Only scroll if we're significantly off target (more than 10px)
       if (Math.abs(currentScroll - targetScroll) > 10) {
@@ -740,23 +740,13 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // Calculate container width for carousel slides (avoids 100vw scrollbar issues)
   const [carouselContainerWidth, setCarouselContainerWidth] = useState<number>(0);
-  const [carouselCardWidth, setCarouselCardWidth] = useState<number>(0);
-  const CAROUSEL_GAP = 16; // 16px gap between cards
   
   useEffect(() => {
     if (!carouselRef.current) return;
     
     const updateContainerWidth = () => {
       if (carouselRef.current) {
-        const containerWidth = carouselRef.current.clientWidth;
-        setCarouselContainerWidth(containerWidth);
-        
-        // Calculate card width accounting for gaps
-        const availableTabs = getAvailableTabs();
-        const numGaps = availableTabs.length - 1;
-        const totalGapWidth = numGaps * CAROUSEL_GAP;
-        const cardWidth = (containerWidth - totalGapWidth) / availableTabs.length;
-        setCarouselCardWidth(cardWidth);
+        setCarouselContainerWidth(carouselRef.current.clientWidth);
       }
     };
     
@@ -2369,7 +2359,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     return (
       <>
         {renderModals()}
-        <div className="space-y-8 animate-in fade-in slide-in-from-top-4 max-w-7xl mx-auto" style={carouselCardWidth > 0 ? { width: `${carouselCardWidth}px`, maxWidth: `${carouselCardWidth}px` } : {}}>
+        <div className="space-y-8 animate-in fade-in slide-in-from-top-4 max-w-7xl mx-auto">
         {/* HOMEOWNER INFO AND SCHEDULE ROW */}
         <div className="flex flex-col lg:flex-row gap-6 items-stretch relative w-full">
           {/* COMPACT HOMEOWNER HEADER CARD */}
@@ -2573,7 +2563,6 @@ const Dashboard: React.FC<DashboardProps> = ({
           {/* Next Appointment Card - Right of Homeowner Info */}
           <motion.div 
             className="w-full lg:w-[300px] lg:flex-shrink-0 bg-primary/10 dark:bg-gray-800 rounded-3xl text-secondary-on-container dark:text-gray-100 flex flex-col relative border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden"
-            style={carouselCardWidth > 0 ? { width: `${carouselCardWidth}px`, maxWidth: `${carouselCardWidth}px` } : {}}
             variants={cardVariants}
             initial="hidden"
             animate="visible"
@@ -2743,11 +2732,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             // Update currentTab based on scroll position, but limit to one card movement
             const container = e.currentTarget;
             const scrollLeft = container.scrollLeft;
+            const viewportWidth = container.clientWidth;
             const availableTabs = getAvailableTabs();
             const currentTabIndex = availableTabs.indexOf(currentTab);
-            // Calculate index accounting for gap between cards
-            const slideWidth = carouselCardWidth + CAROUSEL_GAP;
-            const calculatedIndex = slideWidth > 0 ? Math.round(scrollLeft / slideWidth) : 0;
+            const calculatedIndex = Math.round(scrollLeft / viewportWidth);
             
             // Clamp the index to be at most ±1 from the current tab index to prevent skipping cards
             const clampedIndex = Math.max(
@@ -2772,13 +2760,13 @@ const Dashboard: React.FC<DashboardProps> = ({
         >
           <div 
             ref={carouselInnerRef} 
-            className="flex h-full gap-4"
-            style={{ width: carouselContainerWidth > 0 ? `${getAvailableTabs().length * carouselCardWidth + (getAvailableTabs().length - 1) * CAROUSEL_GAP}px` : 'auto' }}
+            className="flex h-full"
+            style={{ width: carouselContainerWidth > 0 ? `${getAvailableTabs().length * carouselContainerWidth}px` : 'auto' }}
           >
             {/* CLAIMS Tab */}
             <div 
               className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselCardWidth > 0 ? `${carouselCardWidth}px` : '100%' }}
+              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
             >
               <div className="w-full min-h-[calc(100vh-300px)]">
                 <div className="max-w-7xl mx-auto py-4">
@@ -2791,7 +2779,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselCardWidth > 0 ? `${carouselCardWidth}px` : '100%' }}
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
@@ -2819,7 +2807,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* MESSAGES Tab */}
             <div 
               className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselCardWidth > 0 ? `${carouselCardWidth}px` : '100%' }}
+              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
             >
               <div className="w-full min-h-[calc(100vh-300px)]">
                 <div className="max-w-7xl mx-auto py-4">
@@ -2832,7 +2820,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {userRole === UserRole.HOMEOWNER && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselCardWidth > 0 ? `${carouselCardWidth}px` : '100%' }}
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
