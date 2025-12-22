@@ -13,14 +13,16 @@ This document lists all actions in the Cascade Connect application that trigger 
 
 ### 1.2 Appointment Scheduled by Admin/Builder
 - **Trigger**: When an admin or builder schedules an appointment date for a claim
-- **Recipients**: The homeowner associated with the claim
+- **Recipients**: The homeowner associated with the claim and assigned sub (if a subcontractor is assigned)
 - **Subject**: `Appointment Scheduled: [Claim Number] - [Claim Title]`
 - **Location**: `App.tsx` - `handleUpdateClaim()` function (lines ~1070-1096)
 - **Note**: Sent automatically when admin sets a proposed date status to 'ACCEPTED'
 
 ### 1.3 Homeowner Accepts Appointment Date
 - **Trigger**: When a homeowner accepts a proposed appointment date
-- **Recipients**: All admin users who have `emailNotifyHomeownerAcceptsAppointment` enabled (default: true)
+- **Recipients**: 
+  - All admin users who have `emailNotifyHomeownerAcceptsAppointment` enabled (default: true)
+  - The assigned sub (if a subcontractor is assigned to the claim)
 - **Subject**: `Appointment Accepted: [Claim Number] - [Claim Title]`
 - **Location**: `App.tsx` - `handleUpdateClaim()` function (lines ~1097-1125)
 - **User Preference**: `emailNotifyHomeownerAcceptsAppointment` (can be toggled in Internal User Management)

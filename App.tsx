@@ -1115,7 +1115,7 @@ function App() {
                                  currentUserEmailValue.toLowerCase().trim() === updatedClaim.contractorEmail.toLowerCase().trim();
         
         if (isAdminScheduling) {
-          // Admin/Builder scheduled an appointment - send email to homeowner
+          // Admin/Builder scheduled an appointment - send email to homeowner and assigned sub
           const homeownerEmail = updatedClaim.homeownerEmail;
           if (homeownerEmail) {
             const emailBody = `
@@ -1140,6 +1140,33 @@ ${updatedClaim.contractorName ? `Assigned Subcontractor: ${updatedClaim.contract
               });
             } catch (error) {
               console.error(`Failed to send appointment scheduled notification to homeowner ${homeownerEmail}:`, error);
+            }
+          }
+          
+          // Also send email to assigned sub if there is one
+          if (updatedClaim.contractorEmail) {
+            const subEmailBody = `
+An appointment has been scheduled for claim ${updatedClaim.claimNumber}:
+
+Claim: ${updatedClaim.title}
+Scheduled Date: ${new Date(acceptedDate.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} at ${acceptedDate.timeSlot}
+Homeowner: ${updatedClaim.homeownerName}
+
+<div style="margin: 20px 0;">
+  <a href="${claimLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Claim</a>
+</div>
+            `.trim();
+
+            try {
+              await sendEmail({
+                to: updatedClaim.contractorEmail,
+                subject: `Appointment Scheduled: ${updatedClaim.claimNumber} - ${updatedClaim.title}`,
+                body: subEmailBody,
+                fromName: 'Cascade Builder Services',
+                fromRole: UserRole.ADMIN
+              });
+            } catch (error) {
+              console.error(`Failed to send appointment scheduled notification to sub ${updatedClaim.contractorEmail}:`, error);
             }
           }
         } else if (isHomeownerAcceptance) {
@@ -1169,6 +1196,33 @@ Homeowner: ${updatedClaim.homeownerName}
               } catch (error) {
                 console.error(`Failed to send appointment acceptance notification to ${emp.email}:`, error);
               }
+            }
+          }
+          
+          // Also send email to assigned sub if there is one
+          if (updatedClaim.contractorEmail) {
+            const subEmailBody = `
+A homeowner has accepted an appointment date for claim ${updatedClaim.claimNumber}:
+
+Claim: ${updatedClaim.title}
+Scheduled Date: ${new Date(acceptedDate.date).toLocaleDateString()} at ${acceptedDate.timeSlot}
+Homeowner: ${updatedClaim.homeownerName}
+
+<div style="margin: 20px 0;">
+  <a href="${claimLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Claim</a>
+</div>
+            `.trim();
+
+            try {
+              await sendEmail({
+                to: updatedClaim.contractorEmail,
+                subject: `Appointment Accepted: ${updatedClaim.claimNumber} - ${updatedClaim.title}`,
+                body: subEmailBody,
+                fromName: 'Cascade Connect System',
+                fromRole: UserRole.ADMIN
+              });
+            } catch (error) {
+              console.error(`Failed to send appointment acceptance notification to sub ${updatedClaim.contractorEmail}:`, error);
             }
           }
           
