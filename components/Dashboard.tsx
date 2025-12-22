@@ -1305,9 +1305,10 @@ const Dashboard: React.FC<DashboardProps> = ({
       
       // Simulate sending email notification to the other party
       const thread = messages.find(m => m.id === selectedThreadId);
+      const senderName = isAdmin ? (currentUser?.name || 'Admin') : (activeHomeowner?.name || 'Homeowner');
+      
       if (thread && effectiveHomeowner) {
         const recipientEmail = isAdmin ? effectiveHomeowner.email : 'info@cascadebuilderservices.com';
-        const senderName = isAdmin ? currentUser.name : activeHomeowner.name;
         
         // Generate Cascade Connect messages link
         const baseUrl = typeof window !== 'undefined' 

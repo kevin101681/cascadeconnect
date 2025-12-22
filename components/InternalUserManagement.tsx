@@ -24,6 +24,7 @@ interface InternalUserManagementProps {
 
   onClose: () => void;
   initialTab?: 'EMPLOYEES' | 'SUBS' | 'BUILDER_USERS';
+  currentUser?: InternalEmployee;
 }
 
 const InternalUserManagement: React.FC<InternalUserManagementProps> = ({

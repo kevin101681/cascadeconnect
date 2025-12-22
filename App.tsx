@@ -479,8 +479,7 @@ function App() {
                     pushNotifyHomeownerRescheduleRequest: usersTable.pushNotifyHomeownerRescheduleRequest,
                     pushNotifyTaskAssigned: usersTable.pushNotifyTaskAssigned,
                     pushNotifyHomeownerMessage: usersTable.pushNotifyHomeownerMessage,
-                    pushNotifyHomeownerEnrollment: usersTable.pushNotifyHomeownerEnrollment,
-                    emailNotifyHomeownerEnrollment: usersTable.emailNotifyHomeownerEnrollment
+                    pushNotifyHomeownerEnrollment: usersTable.pushNotifyHomeownerEnrollment
                   }).from(usersTable);
                   
                   usersWithPrefs.forEach(u => {
@@ -2553,8 +2552,9 @@ Assigned By: ${assignerName}
              emailNotifyHomeownerAcceptsAppointment: emp.emailNotifyHomeownerAcceptsAppointment !== false,
              emailNotifySubAcceptsAppointment: emp.emailNotifySubAcceptsAppointment !== false,
              emailNotifyHomeownerRescheduleRequest: emp.emailNotifyHomeownerRescheduleRequest !== false,
-             emailNotifyTaskAssigned: emp.emailNotifyTaskAssigned !== false,
-             pushNotifyClaimSubmitted: emp.pushNotifyClaimSubmitted === true,
+            emailNotifyTaskAssigned: emp.emailNotifyTaskAssigned !== false,
+            emailNotifyHomeownerEnrollment: emp.emailNotifyHomeownerEnrollment !== false,
+            pushNotifyClaimSubmitted: emp.pushNotifyClaimSubmitted === true,
              pushNotifyHomeownerAcceptsAppointment: emp.pushNotifyHomeownerAcceptsAppointment === true,
              pushNotifySubAcceptsAppointment: emp.pushNotifySubAcceptsAppointment === true,
              pushNotifyHomeownerRescheduleRequest: emp.pushNotifyHomeownerRescheduleRequest === true,
