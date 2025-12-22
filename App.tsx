@@ -516,7 +516,12 @@ function App() {
                         emailNotifySubAcceptsAppointment: prefs?.emailNotifySubAcceptsAppointment ?? true,
                         emailNotifyHomeownerRescheduleRequest: prefs?.emailNotifyHomeownerRescheduleRequest ?? true,
                         emailNotifyTaskAssigned: prefs?.emailNotifyTaskAssigned ?? true,
-                        pushNotificationsEnabled: prefs?.pushNotificationsEnabled ?? false
+                        pushNotifyClaimSubmitted: prefs?.pushNotifyClaimSubmitted ?? false,
+                        pushNotifyHomeownerAcceptsAppointment: prefs?.pushNotifyHomeownerAcceptsAppointment ?? false,
+                        pushNotifySubAcceptsAppointment: prefs?.pushNotifySubAcceptsAppointment ?? false,
+                        pushNotifyHomeownerRescheduleRequest: prefs?.pushNotifyHomeownerRescheduleRequest ?? false,
+                        pushNotifyTaskAssigned: prefs?.pushNotifyTaskAssigned ?? false,
+                        pushNotifyHomeownerMessage: prefs?.pushNotifyHomeownerMessage ?? false
                     };
                   });
                 
