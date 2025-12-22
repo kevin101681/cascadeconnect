@@ -56,6 +56,16 @@ body {
     background: #ffffff !important;
 }
 
+/* Manual Flipbook - Make back side of pages white */
+.manual-flipbook [class*="stf-page-back"] {
+    background: #ffffff !important;
+}
+
+/* Ensure the inner page div on back side is also white */
+.manual-flipbook [class*="stf-page-back"] .manual-image-page {
+    background: #ffffff !important;
+}
+
 /* Force 3D perspective for all page flips - ensure backward navigation uses 3D flip */
 .pdf-flipbook [class*="stf-page"],
 .pdf-flipbook [class*="stf-page"] > * {
