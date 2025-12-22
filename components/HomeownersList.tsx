@@ -9,7 +9,6 @@ interface HomeownersListProps {
   builderGroups: BuilderGroup[];
   onUpdateHomeowner: (homeowner: Homeowner) => void;
   onDeleteHomeowner: (id: string) => void;
-  onCreateInvoice?: (homeowner: Homeowner) => void;
   onClose: () => void;
 }
 
@@ -18,14 +17,12 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
   builderGroups,
   onUpdateHomeowner,
   onDeleteHomeowner,
-  onCreateInvoice,
   onClose
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBuilderId, setSelectedBuilderId] = useState<string>('all');
   const [editingHomeowner, setEditingHomeowner] = useState<Homeowner | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
-  const [sentInvoices, setSentInvoices] = useState<Set<string>>(new Set());
 
   // Edit form state
   const [editName, setEditName] = useState('');
@@ -231,19 +228,6 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
                       >
                         Edit
                       </Button>
-                      {onCreateInvoice && (
-                        <Button
-                          variant="filled"
-                          onClick={() => {
-                            onCreateInvoice(homeowner);
-                            setSentInvoices(prev => new Set(prev).add(homeowner.id));
-                          }}
-                          icon={<FileText className="h-4 w-4" />}
-                          className="bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80"
-                        >
-                          {sentInvoices.has(homeowner.id) ? 'Sent' : 'Invoice'}
-                        </Button>
-                      )}
                       <Button
                         variant="filled"
                         onClick={() => setShowDeleteConfirm(homeowner.id)}
