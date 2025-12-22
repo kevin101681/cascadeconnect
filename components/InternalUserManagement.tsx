@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { InternalEmployee, Contractor, BuilderUser, BuilderGroup, UserRole } from '../types';
 import Button from './Button';
+import MaterialSelect from './MaterialSelect';
 import { Plus, Edit2, Mail, Trash2, UserCheck, Shield, X, HardHat, Briefcase, Phone, User, Lock, Bell, Send } from 'lucide-react';
 import { sendEmail } from '../services/emailService';
 
@@ -509,11 +510,15 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                 <input type="email" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={empEmail} onChange={(e) => setEmpEmail(e.target.value)} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Role</label>
-                <select className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={empRole} onChange={(e) => setEmpRole(e.target.value)}>
-                  <option>Administrator</option>
-                  <option>Employee</option>
-                </select>
+                <MaterialSelect
+                  label="Role"
+                  value={empRole}
+                  onChange={(value) => setEmpRole(value)}
+                  options={[
+                    { value: 'Administrator', label: 'Administrator' },
+                    { value: 'Employee', label: 'Employee' }
+                  ]}
+                />
               </div>
               
               {/* Email Notification Preferences */}
@@ -532,8 +537,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         onChange={(e) => setEmpEmailNotifyClaimSubmitted(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${empEmailNotifyClaimSubmitted ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empEmailNotifyClaimSubmitted ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      <div className={`w-[52px] h-8 rounded-full transition-colors duration-200 ease-out ${empEmailNotifyClaimSubmitted ? 'bg-primary' : 'bg-surface-container-high dark:bg-surface-container-high border border-surface-outline dark:border-gray-600'}`}>
+                        <div className={`w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-sm transform transition-transform duration-200 ease-out mt-1 ${empEmailNotifyClaimSubmitted ? 'translate-x-6' : 'translate-x-1'}`}></div>
                       </div>
                     </div>
                   </label>
@@ -547,8 +552,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         onChange={(e) => setEmpEmailNotifyHomeownerAcceptsAppointment(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${empEmailNotifyHomeownerAcceptsAppointment ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empEmailNotifyHomeownerAcceptsAppointment ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      <div className={`w-[52px] h-8 rounded-full transition-colors duration-200 ease-out ${empEmailNotifyHomeownerAcceptsAppointment ? 'bg-primary' : 'bg-surface-container-high dark:bg-surface-container-high border border-surface-outline dark:border-gray-600'}`}>
+                        <div className={`w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-sm transform transition-transform duration-200 ease-out mt-1 ${empEmailNotifyHomeownerAcceptsAppointment ? 'translate-x-6' : 'translate-x-1'}`}></div>
                       </div>
                     </div>
                   </label>
@@ -562,8 +567,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         onChange={(e) => setEmpEmailNotifySubAcceptsAppointment(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${empEmailNotifySubAcceptsAppointment ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empEmailNotifySubAcceptsAppointment ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      <div className={`w-[52px] h-8 rounded-full transition-colors duration-200 ease-out ${empEmailNotifySubAcceptsAppointment ? 'bg-primary' : 'bg-surface-container-high dark:bg-surface-container-high border border-surface-outline dark:border-gray-600'}`}>
+                        <div className={`w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-sm transform transition-transform duration-200 ease-out mt-1 ${empEmailNotifySubAcceptsAppointment ? 'translate-x-6' : 'translate-x-1'}`}></div>
                       </div>
                     </div>
                   </label>
@@ -577,8 +582,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         onChange={(e) => setEmpEmailNotifyHomeownerRescheduleRequest(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${empEmailNotifyHomeownerRescheduleRequest ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empEmailNotifyHomeownerRescheduleRequest ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      <div className={`w-[52px] h-8 rounded-full transition-colors duration-200 ease-out ${empEmailNotifyHomeownerRescheduleRequest ? 'bg-primary' : 'bg-surface-container-high dark:bg-surface-container-high border border-surface-outline dark:border-gray-600'}`}>
+                        <div className={`w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-sm transform transition-transform duration-200 ease-out mt-1 ${empEmailNotifyHomeownerRescheduleRequest ? 'translate-x-6' : 'translate-x-1'}`}></div>
                       </div>
                     </div>
                   </label>
@@ -592,8 +597,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         onChange={(e) => setEmpEmailNotifyTaskAssigned(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${empEmailNotifyTaskAssigned ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empEmailNotifyTaskAssigned ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      <div className={`w-[52px] h-8 rounded-full transition-colors duration-200 ease-out ${empEmailNotifyTaskAssigned ? 'bg-primary' : 'bg-surface-container-high dark:bg-surface-container-high border border-surface-outline dark:border-gray-600'}`}>
+                        <div className={`w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-sm transform transition-transform duration-200 ease-out mt-1 ${empEmailNotifyTaskAssigned ? 'translate-x-6' : 'translate-x-1'}`}></div>
                       </div>
                     </div>
                   </label>
@@ -607,8 +612,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         onChange={(e) => setEmpEmailNotifyHomeownerEnrollment(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${empEmailNotifyHomeownerEnrollment ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empEmailNotifyHomeownerEnrollment ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      <div className={`w-[52px] h-8 rounded-full transition-colors duration-200 ease-out ${empEmailNotifyHomeownerEnrollment ? 'bg-primary' : 'bg-surface-container-high dark:bg-surface-container-high border border-surface-outline dark:border-gray-600'}`}>
+                        <div className={`w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-sm transform transition-transform duration-200 ease-out mt-1 ${empEmailNotifyHomeownerEnrollment ? 'translate-x-6' : 'translate-x-1'}`}></div>
                       </div>
                     </div>
                   </label>
@@ -635,8 +640,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         onChange={(e) => setEmpPushNotifyClaimSubmitted(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotifyClaimSubmitted ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotifyClaimSubmitted ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      <div className={`w-[52px] h-8 rounded-full transition-colors duration-200 ease-out ${empPushNotifyClaimSubmitted ? 'bg-primary' : 'bg-surface-container-high dark:bg-surface-container-high border border-surface-outline dark:border-gray-600'}`}>
+                        <div className={`w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-sm transform transition-transform duration-200 ease-out mt-1 ${empPushNotifyClaimSubmitted ? 'translate-x-6' : 'translate-x-1'}`}></div>
                       </div>
                     </div>
                   </label>
@@ -650,8 +655,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         onChange={(e) => setEmpPushNotifyHomeownerAcceptsAppointment(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotifyHomeownerAcceptsAppointment ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotifyHomeownerAcceptsAppointment ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      <div className={`w-[52px] h-8 rounded-full transition-colors duration-200 ease-out ${empPushNotifyHomeownerAcceptsAppointment ? 'bg-primary' : 'bg-surface-container-high dark:bg-surface-container-high border border-surface-outline dark:border-gray-600'}`}>
+                        <div className={`w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-sm transform transition-transform duration-200 ease-out mt-1 ${empPushNotifyHomeownerAcceptsAppointment ? 'translate-x-6' : 'translate-x-1'}`}></div>
                       </div>
                     </div>
                   </label>
@@ -665,8 +670,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         onChange={(e) => setEmpPushNotifySubAcceptsAppointment(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotifySubAcceptsAppointment ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotifySubAcceptsAppointment ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      <div className={`w-[52px] h-8 rounded-full transition-colors duration-200 ease-out ${empPushNotifySubAcceptsAppointment ? 'bg-primary' : 'bg-surface-container-high dark:bg-surface-container-high border border-surface-outline dark:border-gray-600'}`}>
+                        <div className={`w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-sm transform transition-transform duration-200 ease-out mt-1 ${empPushNotifySubAcceptsAppointment ? 'translate-x-6' : 'translate-x-1'}`}></div>
                       </div>
                     </div>
                   </label>
@@ -680,8 +685,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         onChange={(e) => setEmpPushNotifyHomeownerRescheduleRequest(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotifyHomeownerRescheduleRequest ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotifyHomeownerRescheduleRequest ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      <div className={`w-[52px] h-8 rounded-full transition-colors duration-200 ease-out ${empPushNotifyHomeownerRescheduleRequest ? 'bg-primary' : 'bg-surface-container-high dark:bg-surface-container-high border border-surface-outline dark:border-gray-600'}`}>
+                        <div className={`w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-sm transform transition-transform duration-200 ease-out mt-1 ${empPushNotifyHomeownerRescheduleRequest ? 'translate-x-6' : 'translate-x-1'}`}></div>
                       </div>
                     </div>
                   </label>
@@ -695,8 +700,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         onChange={(e) => setEmpPushNotifyTaskAssigned(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotifyTaskAssigned ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotifyTaskAssigned ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      <div className={`w-[52px] h-8 rounded-full transition-colors duration-200 ease-out ${empPushNotifyTaskAssigned ? 'bg-primary' : 'bg-surface-container-high dark:bg-surface-container-high border border-surface-outline dark:border-gray-600'}`}>
+                        <div className={`w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-sm transform transition-transform duration-200 ease-out mt-1 ${empPushNotifyTaskAssigned ? 'translate-x-6' : 'translate-x-1'}`}></div>
                       </div>
                     </div>
                   </label>
@@ -710,8 +715,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         onChange={(e) => setEmpPushNotifyHomeownerMessage(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotifyHomeownerMessage ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotifyHomeownerMessage ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      <div className={`w-[52px] h-8 rounded-full transition-colors duration-200 ease-out ${empPushNotifyHomeownerMessage ? 'bg-primary' : 'bg-surface-container-high dark:bg-surface-container-high border border-surface-outline dark:border-gray-600'}`}>
+                        <div className={`w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-sm transform transition-transform duration-200 ease-out mt-1 ${empPushNotifyHomeownerMessage ? 'translate-x-6' : 'translate-x-1'}`}></div>
                       </div>
                     </div>
                   </label>
@@ -725,8 +730,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         onChange={(e) => setEmpPushNotifyHomeownerEnrollment(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotifyHomeownerEnrollment ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotifyHomeownerEnrollment ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      <div className={`w-[52px] h-8 rounded-full transition-colors duration-200 ease-out ${empPushNotifyHomeownerEnrollment ? 'bg-primary' : 'bg-surface-container-high dark:bg-surface-container-high border border-surface-outline dark:border-gray-600'}`}>
+                        <div className={`w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-sm transform transition-transform duration-200 ease-out mt-1 ${empPushNotifyHomeownerEnrollment ? 'translate-x-6' : 'translate-x-1'}`}></div>
                       </div>
                     </div>
                   </label>
@@ -763,22 +768,26 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                 <input type="text" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={subContact} onChange={(e) => setSubContact(e.target.value)} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Specialty</label>
-                <select className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={subSpecialty} onChange={(e) => setSubSpecialty(e.target.value)}>
-                  <option>General</option>
-                  <option>Plumbing</option>
-                  <option>HVAC</option>
-                  <option>Electrical</option>
-                  <option>Flooring</option>
-                  <option>Drywall</option>
-                  <option>Painting</option>
-                  <option>Roofing</option>
-                  <option>Cabinetry</option>
-                  <option>Windows</option>
-                  <option>Exterior</option>
-                  <option>Concrete</option>
-                  <option>Appliances</option>
-                </select>
+                <MaterialSelect
+                  label="Specialty"
+                  value={subSpecialty}
+                  onChange={(value) => setSubSpecialty(value)}
+                  options={[
+                    { value: 'General', label: 'General' },
+                    { value: 'Plumbing', label: 'Plumbing' },
+                    { value: 'HVAC', label: 'HVAC' },
+                    { value: 'Electrical', label: 'Electrical' },
+                    { value: 'Flooring', label: 'Flooring' },
+                    { value: 'Drywall', label: 'Drywall' },
+                    { value: 'Painting', label: 'Painting' },
+                    { value: 'Roofing', label: 'Roofing' },
+                    { value: 'Cabinetry', label: 'Cabinetry' },
+                    { value: 'Windows', label: 'Windows' },
+                    { value: 'Exterior', label: 'Exterior' },
+                    { value: 'Concrete', label: 'Concrete' },
+                    { value: 'Appliances', label: 'Appliances' }
+                  ]}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Email Address</label>
@@ -818,17 +827,12 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                 <input type="email" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={builderUserEmail} onChange={(e) => setBuilderUserEmail(e.target.value)} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Assign to Builder Group</label>
-                <select 
-                  required
-                  className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" 
-                  value={builderUserGroupId} 
-                  onChange={(e) => setBuilderUserGroupId(e.target.value)}
-                >
-                  {builderGroups.map(bg => (
-                    <option key={bg.id} value={bg.id}>{bg.name}</option>
-                  ))}
-                </select>
+                <MaterialSelect
+                  label="Assign to Builder Group"
+                  value={builderUserGroupId}
+                  onChange={(value) => setBuilderUserGroupId(value)}
+                  options={builderGroups.map(bg => ({ value: bg.id, label: bg.name }))}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">
