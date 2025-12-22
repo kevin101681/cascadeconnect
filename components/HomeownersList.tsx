@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Homeowner, BuilderGroup } from '../types';
 import Button from './Button';
 import MaterialSelect from './MaterialSelect';
-import { Edit2, Trash2, X, Search, Building2, MapPin, Phone, Mail, Calendar, Filter, Users, FileText } from 'lucide-react';
+import { Edit2, Trash2, X, Search, Building2, MapPin, Phone, Mail, Calendar, Filter, Users } from 'lucide-react';
 
 interface HomeownersListProps {
   homeowners: Homeowner[];
