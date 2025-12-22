@@ -2811,7 +2811,13 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* Navigation Tabs (Context Specific) */}
         <motion.div 
-          className="flex gap-2 max-w-7xl mx-auto"
+          ref={tabsContainerRef}
+          className="flex gap-2 max-w-7xl mx-auto overflow-x-auto scrollbar-hide"
+          style={{
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          } as React.CSSProperties}
           variants={cardVariants}
           initial="hidden"
           animate="visible"
@@ -2822,8 +2828,9 @@ const Dashboard: React.FC<DashboardProps> = ({
           layout
         >
            <button 
+              data-tab="CLAIMS"
               onClick={() => setCurrentTab('CLAIMS')}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'CLAIMS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'CLAIMS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
             >
               <ClipboardList className="h-4 w-4" />
               Warranty
@@ -2832,8 +2839,9 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* TASKS TAB - Admin Only (hidden in homeowner view) */}
             {isAdmin && !isHomeownerView && (
               <button 
+                data-tab="TASKS"
                 onClick={() => setCurrentTab('TASKS')}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'TASKS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'TASKS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
               >
                 <CheckSquare className="h-4 w-4" />
                 Tasks
@@ -2841,8 +2849,9 @@ const Dashboard: React.FC<DashboardProps> = ({
             )}
 
             <button 
+              data-tab="MESSAGES"
               onClick={() => setCurrentTab('MESSAGES')}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'MESSAGES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'MESSAGES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
             >
               <Mail className="h-4 w-4" />
               Messages
@@ -2853,8 +2862,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             {/* Documents Tab - Always show */}
             <button 
+              data-tab="DOCUMENTS"
               onClick={() => setCurrentTab('DOCUMENTS')}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
             >
               <FileText className="h-4 w-4" />
               Documents
@@ -2882,8 +2892,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             WebkitOverflowScrolling: 'touch',
             scrollbarWidth: 'none',
             msOverflowStyle: 'none',
-            paddingLeft: '0px',
-            paddingRight: '0px'
+            paddingLeft: '6px',
+            paddingRight: '6px'
           } as React.CSSProperties}
           onScroll={(e) => {
             // Mark that user is scrolling
@@ -2925,7 +2935,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         >
           <div 
             ref={carouselInnerRef} 
-            className="flex h-full gap-4 px-4"
+            className="flex h-full gap-4 px-6"
             style={{ 
               width: carouselContainerWidth > 0 ? `${getAvailableTabs().length * carouselContainerWidth + (getAvailableTabs().length - 1) * 16}px` : 'auto',
               minWidth: '100%'
