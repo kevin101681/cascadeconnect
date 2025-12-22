@@ -3043,7 +3043,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'CLAIMS' && (
             <motion.div 
               key="claims"
-              className="max-w-7xl mx-auto md:relative px-4"
+              className="max-w-7xl mx-auto md:relative"
               style={{
                 position: swipeProgress > 0 ? 'absolute' : 'relative',
                 width: '100%',
@@ -3092,7 +3092,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'TASKS' && isAdmin && (
             <motion.div 
               key="tasks"
-              className="max-w-7xl mx-auto md:relative px-4"
+              className="max-w-7xl mx-auto md:relative"
               style={{ 
                 position: swipeProgress > 0 ? 'absolute' : 'relative',
                 width: '100%',
@@ -3133,7 +3133,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {swipeProgress > 0 && targetTab === 'TASKS' && currentTab !== 'TASKS' && isAdmin && (
             <motion.div 
               key="tasks-target"
-              className="max-w-7xl mx-auto absolute inset-0 px-4"
+              className="max-w-7xl mx-auto absolute inset-0"
               style={{
                 width: '100%',
                 transform: swipeDirection === 'left'
@@ -3170,7 +3170,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'DOCUMENTS' && (
             <motion.div 
               key="documents"
-              className="max-w-7xl mx-auto md:relative px-4"
+              className="max-w-7xl mx-auto md:relative"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -3186,7 +3186,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'MESSAGES' && (
             <motion.div 
               key="messages"
-              className="max-w-7xl mx-auto md:relative px-4"
+              className="max-w-7xl mx-auto md:relative"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
