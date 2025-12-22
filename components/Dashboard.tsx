@@ -1823,7 +1823,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         )}
         
         {/* Upload Action */}
-        <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 flex justify-center">
+        <div className="pt-4 flex justify-center">
           <label className={`cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full transition-colors ${isDocUploading ? 'bg-primary/50 border-primary/30 cursor-wait' : 'bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80'} text-sm font-medium`}>
             {isDocUploading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
