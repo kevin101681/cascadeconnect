@@ -762,32 +762,28 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [currentTab]);
 
-  // Calculate container width for carousel slides (avoids 100vw scrollbar issues)
-  // Use a ref to store the initial width and never change it to prevent shrinking
-  const carouselContainerWidthRef = useRef<number>(0);
+  // Calculate container width for carousel slides to match homeowner info card
+  // Use refs to measure the actual homeowner info card container width
+  const homeownerCardContainerRef = useRef<HTMLDivElement>(null);
   const [carouselContainerWidth, setCarouselContainerWidth] = useState<number>(0);
   
   useEffect(() => {
-    // Use window.innerWidth for stable measurement (accounts for scrollbar)
+    // Measure the homeowner info card container width to match carousel cards
     const updateContainerWidth = () => {
-      const width = window.innerWidth;
-      // Only set the width once, never update it (prevents shrinking on scroll)
-      if (carouselContainerWidthRef.current === 0 && width > 0) {
-        carouselContainerWidthRef.current = width;
-        setCarouselContainerWidth(width);
+      if (homeownerCardContainerRef.current) {
+        const width = homeownerCardContainerRef.current.clientWidth;
+        if (width > 0) {
+          setCarouselContainerWidth(width);
+        }
       }
     };
     
+    // Initial measurement
     updateContainerWidth();
-    // Only listen to resize on mount, then remove listener to prevent updates
-    const handleResize = () => {
-      // Only update if we haven't set a width yet
-      if (carouselContainerWidthRef.current === 0) {
-        updateContainerWidth();
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    
+    // Update on resize to match dynamic homeowner card width
+    window.addEventListener('resize', updateContainerWidth);
+    return () => window.removeEventListener('resize', updateContainerWidth);
   }, []);
 
   // Ensure carousel starts at correct position on initial load
@@ -2534,7 +2530,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     return (
       <>
         {renderModals()}
-        <div className="space-y-8 animate-in fade-in slide-in-from-top-4 max-w-7xl mx-auto">
+        <div ref={homeownerCardContainerRef} className="space-y-8 animate-in fade-in slide-in-from-top-4 max-w-7xl mx-auto">
         {/* HOMEOWNER INFO AND SCHEDULE ROW */}
         <div className="flex flex-col lg:flex-row gap-6 items-stretch relative w-full">
           {/* COMPACT HOMEOWNER HEADER CARD */}
