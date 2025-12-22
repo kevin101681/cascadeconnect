@@ -63,6 +63,7 @@ interface EmailAnalyticsData {
   totals: Record<string, number>;
   activity: EmailActivity[];
   activityCount: number;
+  warning?: string;
 }
 
 interface EmailHistoryProps {
