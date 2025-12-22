@@ -19,13 +19,13 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
   const [documentLoading, setDocumentLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  const [pageDimensions, setPageDimensions] = useState({ width: 800, height: 1200 });
+  const [basePageDimensions, setBasePageDimensions] = useState({ width: 800, height: 1200 });
   const [pdfAspectRatio, setPdfAspectRatio] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [zoom, setZoom] = useState(1);
   const blobUrlRef = useRef<string | null>(null);
 
-  // Calculate dimensions that fit within viewport using PDF's actual aspect ratio
+  // Calculate base dimensions that fit within viewport using PDF's actual aspect ratio
   useEffect(() => {
     if (!isOpen) return;
 
@@ -47,17 +47,16 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
         baseWidth = baseHeight * aspectRatio;
       }
 
-      // Apply zoom
-      setPageDimensions({ 
-        width: Math.round(baseWidth * zoom), 
-        height: Math.round(baseHeight * zoom) 
+      setBasePageDimensions({ 
+        width: Math.round(baseWidth), 
+        height: Math.round(baseHeight) 
       });
     };
 
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
-  }, [isOpen, pdfAspectRatio, zoom]);
+  }, [isOpen, pdfAspectRatio]);
 
   useEffect(() => {
     if (!isOpen || !document?.url) {
@@ -317,40 +316,40 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
                 file={pdfUrl}
                 onLoadSuccess={onDocumentLoadSuccess}
                 onLoadError={onDocumentLoadError}
-                loading={
-                  <div className="text-white flex flex-col items-center justify-center" style={{ width: pageDimensions.width, height: pageDimensions.height }}>
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-                    <p className="mt-4">Loading PDF...</p>
-                  </div>
-                }
-                error={
-                  <div className="text-white p-4">
-                    <p>Error loading PDF. Please try again.</p>
-                  </div>
-                }
-              >
+              loading={
+                <div className="text-white flex flex-col items-center justify-center" style={{ width: basePageDimensions.width * zoom, height: basePageDimensions.height * zoom }}>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                  <p className="mt-4">Loading PDF...</p>
+                </div>
+              }
+              error={
+                <div className="text-white p-4">
+                  <p>Error loading PDF. Please try again.</p>
+                </div>
+              }
+            >
                 {numPages > 0 ? (
                   <div className="p-4">
                     <Page
                       pageNumber={currentPage}
-                      width={pageDimensions.width}
-                      height={pageDimensions.height}
+                      width={basePageDimensions.width * zoom}
+                      height={basePageDimensions.height * zoom}
                       renderTextLayer={false}
                       renderAnnotationLayer={false}
                       loading={
-                        <div className="flex items-center justify-center bg-gray-100" style={{ width: pageDimensions.width, height: pageDimensions.height }}>
+                        <div className="flex items-center justify-center bg-gray-100" style={{ width: basePageDimensions.width * zoom, height: basePageDimensions.height * zoom }}>
                           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                         </div>
                       }
                       error={
-                        <div className="flex items-center justify-center bg-red-50 text-red-600" style={{ width: pageDimensions.width, height: pageDimensions.height }}>
+                        <div className="flex items-center justify-center bg-red-50 text-red-600" style={{ width: basePageDimensions.width * zoom, height: basePageDimensions.height * zoom }}>
                           Error loading page
                         </div>
                       }
                     />
                   </div>
                 ) : documentLoading ? (
-                  <div className="text-white flex flex-col items-center justify-center" style={{ width: pageDimensions.width, height: pageDimensions.height }}>
+                  <div className="text-white flex flex-col items-center justify-center" style={{ width: basePageDimensions.width * zoom, height: basePageDimensions.height * zoom }}>
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
                     <p className="mt-4">Loading PDF pages...</p>
                   </div>
