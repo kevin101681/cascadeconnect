@@ -1761,22 +1761,74 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div key={doc.id} className="flex flex-col bg-surface-container dark:bg-gray-700 rounded-xl overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-lg transition-all relative group">
                   {/* Header with Action Buttons */}
                   <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent p-2 flex items-center justify-end gap-1">
-                    {isPDF && (
+                    {isAdmin && (
                       <>
-                        {/* View PDF */}
+                        {/* Save to Google Drive */}
                         <button
                           type="button"
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            setSelectedDocument(doc);
-                            setIsPDFViewerOpen(true);
+                            if (doc.url) {
+                              const url = doc.url.startsWith('data:') 
+                                ? doc.url 
+                                : `https://drive.google.com/drive/folders/${doc.url}`;
+                              window.open(`https://drive.google.com/drive/u/0/folders`, '_blank');
+                            }
                           }}
                           className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
-                          title="View PDF"
+                          title="Save to Google Drive"
                         >
-                          <Eye className="h-3.5 w-3.5" />
+                          <Share2 className="h-3.5 w-3.5" />
                         </button>
+                        
+                        {/* Print */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const printWindow = window.open('', '_blank');
+                            if (printWindow && doc.url) {
+                              printWindow.document.write(`
+                                <html>
+                                  <head><title>${doc.name}</title></head>
+                                  <body style="margin:0;">
+                                    <iframe src="${doc.url}" style="width:100%;height:100vh;border:none;"></iframe>
+                                  </body>
+                                </html>
+                              `);
+                              printWindow.document.close();
+                              printWindow.onload = () => {
+                                setTimeout(() => {
+                                  printWindow.print();
+                                }, 250);
+                              };
+                            }
+                          }}
+                          className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
+                          title="Print"
+                        >
+                          <Printer className="h-3.5 w-3.5" />
+                        </button>
+                        
+                        {/* Delete */}
+                        {onDeleteDocument && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (confirm(`Are you sure you want to delete "${doc.name}"?`)) {
+                                onDeleteDocument(doc.id);
+                              }
+                            }}
+                            className="p-1.5 bg-white dark:bg-gray-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg shadow-md transition-all flex items-center justify-center"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                       </>
                     )}
                   </div>
