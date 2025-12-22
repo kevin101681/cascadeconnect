@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef, forwardRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import HTMLFlipBook from 'react-pageflip';
-import { X } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
 // Import centralized PDF worker setup
 import '../lib/pdfWorker';
 
@@ -14,68 +13,6 @@ interface PdfFlipViewer3DProps {
   onClose: () => void;
 }
 
-interface PDFPageProps {
-  pageNumber: number;
-  width: number;
-  height: number;
-}
-
-// Page component wrapped in forwardRef as required by react-pageflip
-const PDFPage = forwardRef<HTMLDivElement, PDFPageProps>(({ pageNumber, width, height }, ref) => {
-  return (
-    <div 
-      ref={ref} 
-      className="pdf-page-3d" 
-      style={{ 
-        width, 
-        height, 
-        padding: 0, 
-        margin: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#fff',
-        backfaceVisibility: 'hidden',
-        WebkitBackfaceVisibility: 'hidden',
-        overflow: 'hidden'
-      }}
-    >
-      <div style={{ 
-        width: '100%', 
-        height: '100%', 
-        overflow: 'hidden', 
-        backgroundColor: '#fff',
-        margin: 0,
-        padding: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <div style={{ margin: 0, padding: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Page
-            pageNumber={pageNumber}
-            width={width}
-            height={height}
-            renderTextLayer={false}
-            renderAnnotationLayer={false}
-            loading={
-              <div style={{ width, height, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f0f0f0' }}>
-                Loading page...
-              </div>
-            }
-            error={
-              <div style={{ width, height, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#fee', color: '#c00' }}>
-                Error loading page
-              </div>
-            }
-          />
-        </div>
-      </div>
-    </div>
-  );
-});
-
-PDFPage.displayName = 'PDFPage';
 
 const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onClose }) => {
   const [numPages, setNumPages] = useState<number>(0);
@@ -85,7 +22,7 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
   const [pageDimensions, setPageDimensions] = useState({ width: 800, height: 1200 });
   const [pdfAspectRatio, setPdfAspectRatio] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const flipBookRef = useRef<any>(null);
+  const [zoom, setZoom] = useState(1);
   const blobUrlRef = useRef<string | null>(null);
 
   // Calculate dimensions that fit within viewport using PDF's actual aspect ratio
@@ -95,29 +32,32 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
     const updateDimensions = () => {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
-      // Reduced padding to allow more space for page flip animation
-      const padding = 120; // Increased to account for animation overflow
+      const padding = 200; // Padding for arrows and controls
       const maxWidth = viewportWidth - padding;
       const maxHeight = viewportHeight - padding;
 
       // Use PDF's actual aspect ratio if available, otherwise default to 2:3
       const aspectRatio = pdfAspectRatio || (2 / 3);
       
-      let width = Math.min(800, maxWidth);
-      let height = width / aspectRatio;
+      let baseWidth = Math.min(800, maxWidth);
+      let baseHeight = baseWidth / aspectRatio;
 
-      if (height > maxHeight) {
-        height = maxHeight;
-        width = height * aspectRatio;
+      if (baseHeight > maxHeight) {
+        baseHeight = maxHeight;
+        baseWidth = baseHeight * aspectRatio;
       }
 
-      setPageDimensions({ width: Math.round(width), height: Math.round(height) });
+      // Apply zoom
+      setPageDimensions({ 
+        width: Math.round(baseWidth * zoom), 
+        height: Math.round(baseHeight * zoom) 
+      });
     };
 
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
-  }, [isOpen, pdfAspectRatio]);
+  }, [isOpen, pdfAspectRatio, zoom]);
 
   useEffect(() => {
     if (!isOpen || !document?.url) {
@@ -257,40 +197,45 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
     setNumPages(0);
   };
 
-  // Listen for page changes from the flipbook
-  useEffect(() => {
-    if (!flipBookRef.current || numPages === 0) return;
-
-    const flipBook = flipBookRef.current.pageFlip();
-    if (!flipBook) return;
-
-    const handleFlip = (e: any) => {
-      let newPageIndex = 0;
-      if (e?.data !== undefined && e.data !== null) {
-        newPageIndex = e.data;
-      } else if (e?.target) {
-        newPageIndex = e.target;
-      } else {
-        newPageIndex = flipBook.getCurrentPageIndex();
-      }
-      const newPage = newPageIndex + 1;
-      setCurrentPage(newPage);
-    };
-
-    try {
-      flipBook.on('flip', handleFlip);
-    } catch (err) {
-      console.warn('Could not attach flip event listener:', err);
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
     }
+  };
 
-    return () => {
-      try {
-        flipBook.off('flip', handleFlip);
-      } catch (err) {
-        // Ignore cleanup errors
+  const handleNextPage = () => {
+    if (currentPage < numPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handleZoomIn = () => {
+    setZoom(prev => Math.min(prev + 0.25, 3));
+  };
+
+  const handleZoomOut = () => {
+    setZoom(prev => Math.max(prev - 0.25, 0.5));
+  };
+
+  // Keyboard navigation
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        handlePrevPage();
+      } else if (e.key === 'ArrowRight') {
+        handleNextPage();
+      } else if (e.key === '+' || e.key === '=') {
+        handleZoomIn();
+      } else if (e.key === '-') {
+        handleZoomOut();
       }
     };
-  }, [numPages]);
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, currentPage, numPages]);
 
   if (!isOpen) {
     return null;
@@ -315,10 +260,34 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
         <X className="h-6 w-6" />
       </button>
 
+      {/* Zoom Controls */}
+      <div className="fixed top-6 left-6 z-[1001] flex items-center gap-2 bg-primary/90 backdrop-blur-sm rounded-full p-2 shadow-elevation-3">
+        <button
+          onClick={handleZoomOut}
+          className="p-2 hover:bg-primary text-primary-on rounded-full transition-all hover:scale-105 active:scale-95"
+          title="Zoom Out"
+          disabled={zoom <= 0.5}
+        >
+          <ZoomOut className="h-5 w-5" />
+        </button>
+        <span className="text-primary-on text-sm font-medium px-2 min-w-[60px] text-center">
+          {Math.round(zoom * 100)}%
+        </span>
+        <button
+          onClick={handleZoomIn}
+          className="p-2 hover:bg-primary text-primary-on rounded-full transition-all hover:scale-105 active:scale-95"
+          title="Zoom In"
+          disabled={zoom >= 3}
+        >
+          <ZoomIn className="h-5 w-5" />
+        </button>
+      </div>
+
+      {/* Page Navigation */}
       <div
         className="flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
-        style={{ width: '100%', padding: '20px', boxSizing: 'border-box', overflow: 'visible' }}
+        style={{ width: '100%', padding: '20px', boxSizing: 'border-box' }}
       >
         {error && (
           <div className="bg-red-500 text-white p-4 rounded-lg">
@@ -327,68 +296,88 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
         )}
 
         {pdfUrl && !error && (
-          <div className="relative" style={{ width: pageDimensions.width, height: pageDimensions.height, overflow: 'visible' }}>
-            <Document
-              file={pdfUrl}
-              onLoadSuccess={onDocumentLoadSuccess}
-              onLoadError={onDocumentLoadError}
-              loading={
-                <div className="text-white flex flex-col items-center justify-center" style={{ width: pageDimensions.width, height: pageDimensions.height }}>
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-                  <p className="mt-4">Loading PDF...</p>
-                </div>
-              }
-              error={
-                <div className="text-white p-4">
-                  <p>Error loading PDF. Please try again.</p>
-                </div>
-              }
+          <div className="flex items-center gap-4">
+            {/* Previous Page Button */}
+            <button
+              onClick={handlePrevPage}
+              disabled={currentPage <= 1}
+              className={`p-4 rounded-full shadow-elevation-3 transition-all hover:scale-105 active:scale-95 flex items-center justify-center ${
+                currentPage <= 1
+                  ? 'bg-gray-600/50 text-gray-400 cursor-not-allowed'
+                  : 'bg-primary hover:bg-primary/90 text-primary-on'
+              }`}
+              title="Previous Page"
             >
-              {numPages > 0 ? (
-                <div style={{ width: pageDimensions.width, height: pageDimensions.height, overflow: 'visible', position: 'relative' }}>
-                  <HTMLFlipBook
-                    ref={flipBookRef}
-                    width={pageDimensions.width}
-                    height={pageDimensions.height}
-                    size="fixed"
-                    showCover={false}
-                    className="pdf-flipbook-3d"
-                    drawShadow={true}
-                    maxShadowOpacity={0.5}
-                    usePortrait={true}
-                    flippingTime={800}
-                    maxWidth={pageDimensions.width}
-                    maxHeight={pageDimensions.height}
-                    startPage={currentPage - 1}
-                    style={{ margin: 0, padding: 0 }}
-                    minWidth={0}
-                    minHeight={0}
-                    startZIndex={0}
-                    autoSize={false}
-                    showPageCorners={true}
-                    swipeDistance={30}
-                    clickEventForward={true}
-                    useMouseEvents={true}
-                    disableFlipByClick={false}
-                    mobileScrollSupport={true}
-                  >
-                    {Array.from(new Array(numPages), (el, index) => (
-                      <PDFPage
-                        key={`page_${index + 1}`}
-                        pageNumber={index + 1}
-                        width={pageDimensions.width}
-                        height={pageDimensions.height}
-                      />
-                    ))}
-                  </HTMLFlipBook>
+              <ChevronLeft className="h-8 w-8" />
+            </button>
+
+            {/* PDF Document */}
+            <div className="relative bg-white shadow-elevation-3 rounded-lg overflow-auto" style={{ maxHeight: '90vh', maxWidth: '90vw' }}>
+              <Document
+                file={pdfUrl}
+                onLoadSuccess={onDocumentLoadSuccess}
+                onLoadError={onDocumentLoadError}
+                loading={
+                  <div className="text-white flex flex-col items-center justify-center" style={{ width: pageDimensions.width, height: pageDimensions.height }}>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                    <p className="mt-4">Loading PDF...</p>
+                  </div>
+                }
+                error={
+                  <div className="text-white p-4">
+                    <p>Error loading PDF. Please try again.</p>
+                  </div>
+                }
+              >
+                {numPages > 0 ? (
+                  <div className="p-4">
+                    <Page
+                      pageNumber={currentPage}
+                      width={pageDimensions.width}
+                      height={pageDimensions.height}
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                      loading={
+                        <div className="flex items-center justify-center bg-gray-100" style={{ width: pageDimensions.width, height: pageDimensions.height }}>
+                          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                        </div>
+                      }
+                      error={
+                        <div className="flex items-center justify-center bg-red-50 text-red-600" style={{ width: pageDimensions.width, height: pageDimensions.height }}>
+                          Error loading page
+                        </div>
+                      }
+                    />
+                  </div>
+                ) : documentLoading ? (
+                  <div className="text-white flex flex-col items-center justify-center" style={{ width: pageDimensions.width, height: pageDimensions.height }}>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+                    <p className="mt-4">Loading PDF pages...</p>
+                  </div>
+                ) : null}
+              </Document>
+
+              {/* Page Counter */}
+              {numPages > 0 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm">
+                  Page {currentPage} of {numPages}
                 </div>
-              ) : documentLoading ? (
-                <div className="text-white flex flex-col items-center justify-center" style={{ width: pageDimensions.width, height: pageDimensions.height }}>
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-                  <p className="mt-4">Loading PDF pages...</p>
-                </div>
-              ) : null}
-            </Document>
+              )}
+            </div>
+
+            {/* Next Page Button */}
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage >= numPages}
+              className={`p-4 rounded-full shadow-elevation-3 transition-all hover:scale-105 active:scale-95 flex items-center justify-center ${
+                currentPage >= numPages
+                  ? 'bg-gray-600/50 text-gray-400 cursor-not-allowed'
+                  : 'bg-primary hover:bg-primary/90 text-primary-on'
+              }`}
+              title="Next Page"
+            >
+              <ChevronRight className="h-8 w-8" />
+            </button>
           </div>
         )}
       </div>
