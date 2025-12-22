@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React from 'react';
 import AuthScreen from './AuthScreen';
 import { AlertCircle } from 'lucide-react';
 
@@ -41,35 +41,7 @@ const AuthScreenWrapper: React.FC = () => {
   }
   
   // Clerk is configured, safe to render AuthScreen
-  // Add a button to clear logout flag if user wants to test login again
-  const handleClearLogout = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('cascade_logged_out');
-      sessionStorage.removeItem('cascade_force_login');
-      window.location.reload();
-    }
-  }, []);
-  
-  // Check if we're showing login due to logout (use useMemo to avoid re-reading on every render)
-  const isForcedLogin = useMemo(() => {
-    return typeof window !== 'undefined' && (sessionStorage.getItem('cascade_logged_out') === 'true' || sessionStorage.getItem('cascade_force_login') === 'true');
-  }, []);
-  
-  return (
-    <>
-      <AuthScreen />
-      {isForcedLogin && (
-        <div className="fixed bottom-4 right-4 z-50">
-          <button
-            onClick={handleClearLogout}
-            className="bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 px-4 py-2 rounded-lg shadow-lg text-sm hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
-          >
-            Skip Login (Testing Mode)
-          </button>
-        </div>
-      )}
-    </>
-  );
+  return <AuthScreen />;
 };
 
 export default AuthScreenWrapper;

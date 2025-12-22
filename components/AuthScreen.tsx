@@ -136,23 +136,6 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
           </SignedIn>
         </div>
       </div>
-
-      {/* TEMPORARY: Skip login button for testing - outside Clerk components */}
-      <div className="fixed bottom-4 right-4 z-50">
-        <button
-          onClick={() => {
-            if (typeof window !== 'undefined') {
-              sessionStorage.setItem('cascade_bypass_login', 'true');
-              sessionStorage.removeItem('cascade_logged_out');
-              sessionStorage.removeItem('cascade_force_login');
-              window.location.reload();
-            }
-          }}
-          className="bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-3 px-6 rounded-lg shadow-lg text-sm transition-colors"
-        >
-          Skip Login (Testing)
-        </button>
-      </div>
     </div>
   );
 };
