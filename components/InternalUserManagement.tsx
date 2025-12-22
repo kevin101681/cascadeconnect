@@ -380,7 +380,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                     </td>
                     <td className="px-6 py-4 text-right">
                       {isAdministrator && (
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-2">
                           <button onClick={() => handleOpenEditEmp(emp)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
                           <button onClick={() => onDeleteEmployee(emp.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
                         </div>
@@ -411,7 +411,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                       {sub.email}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-2">
                         <button onClick={() => handleOpenInviteSub(sub)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full" title="Invite Sub"><Mail className="h-4 w-4" /></button>
                         <button onClick={() => handleOpenEditSub(sub)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
                         {isAdministrator && (
@@ -444,7 +444,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                       </td>
                       <td className="px-6 py-4 text-right">
                         {isAdministrator && (
-                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center justify-end gap-2">
                             <button onClick={() => handleOpenEditBuilderUser(user)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
                             <button onClick={() => onDeleteBuilderUser && onDeleteBuilderUser(user.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
                           </div>
