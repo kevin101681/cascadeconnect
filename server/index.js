@@ -322,16 +322,12 @@ app.get("/api/email/analytics", async (req, res) => {
       const activityUrl = new URL('https://api.sendgrid.com/v3/messages');
       const limit = req.query.limit ? parseInt(req.query.limit) : 1000; // Increased default limit
       
-      // Use query parameter to filter by date range on SendGrid's side for better performance
-      // SendGrid Messages API query syntax: last_event_time BETWEEN TIMESTAMP 'start' AND TIMESTAMP 'end'
-      const startTimestamp = `${startDate}T00:00:00Z`;
-      const endTimestamp = `${endDate}T23:59:59Z`;
-      const query = `last_event_time BETWEEN TIMESTAMP '${startTimestamp}' AND TIMESTAMP '${endTimestamp}'`;
-      activityUrl.searchParams.set('query', query);
-      activityUrl.searchParams.set('limit', Math.min(limit, 1000).toString());
+      // Fetch all recent messages and filter by date range client-side
+      // SendGrid's Messages API doesn't reliably support query parameters for date filtering
+      activityUrl.searchParams.set('limit', '1000'); // Fetch up to 1000 most recent messages
       
-      console.log('Fetching SendGrid messages with date filter query');
-      console.log('Query:', query);
+      console.log('Fetching SendGrid messages (will filter by date range client-side)');
+      console.log('Date range:', startDate, 'to', endDate);
       console.log('Full URL:', activityUrl.toString());
       
       const activityResponse = await fetch(activityUrl.toString(), {
@@ -349,7 +345,12 @@ app.get("/api/email/analytics", async (req, res) => {
         console.log(`SendGrid Messages API returned ${activityResult.messages?.length || 0} messages`);
         const messages = activityResult.messages || [];
         
-        // Messages should already be filtered by date range via query, but do a final filter as safety check
+        // Filter messages by date range (client-side filtering)
+        const startTimestampMs = new Date(`${startDate}T00:00:00Z`).getTime();
+        const endTimestampMs = new Date(`${endDate}T23:59:59Z`).getTime();
+        
+        console.log(`Filtering messages by date range: ${startDate} (${new Date(startTimestampMs).toISOString()}) to ${endDate} (${new Date(endTimestampMs).toISOString()})`);
+        
         const filteredMessages = messages.filter(msg => {
           const msgDate = msg.last_event_time || msg.sent_at;
           if (!msgDate) {
@@ -357,12 +358,17 @@ app.get("/api/email/analytics", async (req, res) => {
             return false;
           }
           const msgTimestamp = new Date(msgDate).getTime();
-          const startTimestampMs = new Date(`${startDate}T00:00:00Z`).getTime();
-          const endTimestampMs = new Date(`${endDate}T23:59:59Z`).getTime();
-          return msgTimestamp >= startTimestampMs && msgTimestamp <= endTimestampMs;
+          const inRange = msgTimestamp >= startTimestampMs && msgTimestamp <= endTimestampMs;
+          
+          // Log first few messages for debugging
+          if (messages.indexOf(msg) < 5) {
+            console.log(`Message ${msg.msg_id}: date=${msgDate}, timestamp=${msgTimestamp}, inRange=${inRange}`);
+          }
+          
+          return inRange;
         });
         
-        console.log(`Found ${filteredMessages.length} messages within date range (${startDate} to ${endDate})`);
+        console.log(`Filtered to ${filteredMessages.length} messages within date range (${startDate} to ${endDate}) out of ${messages.length} total messages`);
         
         // Process ALL filtered messages (removed the 200 message limit)
         // Note: SendGrid API rate limit is 6 requests per minute, so we process in batches with delays
