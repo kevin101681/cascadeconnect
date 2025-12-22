@@ -706,19 +706,29 @@ const Dashboard: React.FC<DashboardProps> = ({
     if (isAnyModalOpen) {
       // Save current scroll position
       const scrollY = window.scrollY;
+      const scrollX = window.scrollX;
+      
       // Lock body scroll
       document.body.style.position = 'fixed';
       document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = `-${scrollX}px`;
       document.body.style.width = '100%';
+      document.body.style.height = '100%';
       document.body.style.overflow = 'hidden';
+      
+      // Also lock html element
+      document.documentElement.style.overflow = 'hidden';
       
       return () => {
         // Restore scroll position when modal closes
         document.body.style.position = '';
         document.body.style.top = '';
+        document.body.style.left = '';
         document.body.style.width = '';
+        document.body.style.height = '';
         document.body.style.overflow = '';
-        window.scrollTo(0, scrollY);
+        document.documentElement.style.overflow = '';
+        window.scrollTo(scrollX, scrollY);
       };
     }
   }, [showNewTaskModal, showNewMessageModal, showNewClaimModal, showDocsModal, 

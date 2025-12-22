@@ -243,10 +243,27 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
   return (
     <div 
       className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0,
+        overflow: 'hidden',
+        overscrollBehavior: 'none'
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
+      }}
+      onWheel={(e) => {
+        // Prevent scroll from propagating to background
+        e.stopPropagation();
+      }}
+      onTouchMove={(e) => {
+        // Prevent touch scroll from propagating to background
+        e.stopPropagation();
       }}
     >
       {/* Close Button */}
