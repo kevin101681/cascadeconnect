@@ -2119,7 +2119,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                </div>
 
                {/* Reply Box (Sticky Bottom or Inline at end) */}
-               <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 sticky bottom-0 z-10">
+               <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 sticky bottom-0 z-10 rounded-br-3xl">
                  {/* Builders Read-Only: Cannot Reply */}
                  {isBuilder ? (
                    <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600 border-dashed">
