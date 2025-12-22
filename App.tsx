@@ -2635,13 +2635,13 @@ Assigned By: ${assignerName}
              emailNotifyHomeownerRescheduleRequest: emp.emailNotifyHomeownerRescheduleRequest !== false,
             emailNotifyTaskAssigned: emp.emailNotifyTaskAssigned !== false,
             emailNotifyHomeownerEnrollment: emp.emailNotifyHomeownerEnrollment !== false,
-            pushNotifyClaimSubmitted: emp.pushNotifyClaimSubmitted === true,
-             pushNotifyHomeownerAcceptsAppointment: emp.pushNotifyHomeownerAcceptsAppointment === true,
-             pushNotifySubAcceptsAppointment: emp.pushNotifySubAcceptsAppointment === true,
-             pushNotifyHomeownerRescheduleRequest: emp.pushNotifyHomeownerRescheduleRequest === true,
-             pushNotifyTaskAssigned: emp.pushNotifyTaskAssigned === true,
-             pushNotifyHomeownerMessage: emp.pushNotifyHomeownerMessage === true,
-             pushNotifyHomeownerEnrollment: emp.pushNotifyHomeownerEnrollment === true
+            pushNotifyClaimSubmitted: emp.pushNotifyClaimSubmitted ?? false,
+             pushNotifyHomeownerAcceptsAppointment: emp.pushNotifyHomeownerAcceptsAppointment ?? false,
+             pushNotifySubAcceptsAppointment: emp.pushNotifySubAcceptsAppointment ?? false,
+             pushNotifyHomeownerRescheduleRequest: emp.pushNotifyHomeownerRescheduleRequest ?? false,
+             pushNotifyTaskAssigned: emp.pushNotifyTaskAssigned ?? false,
+             pushNotifyHomeownerMessage: emp.pushNotifyHomeownerMessage ?? false,
+             pushNotifyHomeownerEnrollment: emp.pushNotifyHomeownerEnrollment ?? false
            } as any);
          } catch(e) { console.error(e); }
       }
@@ -2660,13 +2660,13 @@ Assigned By: ${assignerName}
             emailNotifyHomeownerRescheduleRequest: emp.emailNotifyHomeownerRescheduleRequest !== false,
             emailNotifyTaskAssigned: emp.emailNotifyTaskAssigned !== false,
             emailNotifyHomeownerEnrollment: emp.emailNotifyHomeownerEnrollment !== false,
-            pushNotifyClaimSubmitted: emp.pushNotifyClaimSubmitted === true,
-            pushNotifyHomeownerAcceptsAppointment: emp.pushNotifyHomeownerAcceptsAppointment === true,
-            pushNotifySubAcceptsAppointment: emp.pushNotifySubAcceptsAppointment === true,
-            pushNotifyHomeownerRescheduleRequest: emp.pushNotifyHomeownerRescheduleRequest === true,
-            pushNotifyTaskAssigned: emp.pushNotifyTaskAssigned === true,
-            pushNotifyHomeownerMessage: emp.pushNotifyHomeownerMessage === true,
-            pushNotifyHomeownerEnrollment: emp.pushNotifyHomeownerEnrollment === true
+            pushNotifyClaimSubmitted: emp.pushNotifyClaimSubmitted ?? false,
+            pushNotifyHomeownerAcceptsAppointment: emp.pushNotifyHomeownerAcceptsAppointment ?? false,
+            pushNotifySubAcceptsAppointment: emp.pushNotifySubAcceptsAppointment ?? false,
+            pushNotifyHomeownerRescheduleRequest: emp.pushNotifyHomeownerRescheduleRequest ?? false,
+            pushNotifyTaskAssigned: emp.pushNotifyTaskAssigned ?? false,
+            pushNotifyHomeownerMessage: emp.pushNotifyHomeownerMessage ?? false,
+            pushNotifyHomeownerEnrollment: emp.pushNotifyHomeownerEnrollment ?? false
             // role update ignored for now to map to enum
           }).where(eq(usersTable.id, emp.id));
         } catch(e) { console.error(e); }
