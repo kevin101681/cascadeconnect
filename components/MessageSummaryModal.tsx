@@ -117,3 +117,16 @@ const MessageSummaryModal: React.FC<MessageSummaryModalProps> = ({ isOpen, onClo
 export default MessageSummaryModal;
 export type { ClaimMessage };
 
+export interface TaskMessage {
+  id: string;
+  taskId: string;
+  type: 'EMPLOYEE';
+  threadId?: string;
+  subject: string;
+  recipient: string;
+  recipientEmail: string;
+  content: string;
+  timestamp: Date;
+  senderName: string;
+}
+

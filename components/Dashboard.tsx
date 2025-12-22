@@ -7,7 +7,7 @@ import HTMLFlipBook from 'react-pageflip';
 // import * as XLSX from 'xlsx';
 import { motion, AnimatePresence, type Transition, type Variants } from 'framer-motion';
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor } from '../types';
-import { ClaimMessage } from './MessageSummaryModal';
+import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
 import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle } from 'lucide-react';
 import Button from './Button';
@@ -260,6 +260,17 @@ interface DashboardProps {
   onUpdateClaim?: (claim: Claim) => void;
   contractors?: Contractor[];
   claimMessages?: ClaimMessage[];
+  taskMessages?: TaskMessage[];
+  onTrackTaskMessage?: (taskId: string, messageData: {
+    type: 'EMPLOYEE';
+    threadId?: string;
+    subject: string;
+    recipient: string;
+    recipientEmail: string;
+    content: string;
+    senderName: string;
+  }) => void;
+  onSendTaskMessage?: (task: Task) => void;
 
   // Builder Groups for Dropdown
   builderGroups?: BuilderGroup[];
@@ -306,6 +317,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   onUpdateClaim,
   contractors = [],
   claimMessages = [],
+  taskMessages = [],
+  onTrackTaskMessage,
+  onSendTaskMessage,
   builderGroups = [],
   currentBuilderId = null,
   currentUserEmail,
@@ -2129,6 +2143,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                     setSelectedClaimForModal(claim);
                   }}
                   startInEditMode={true}
+                  taskMessages={taskMessages.filter(m => m.taskId === selectedTaskForModal.id)}
+                  onSendMessage={onSendTaskMessage}
+                  onTrackTaskMessage={onTrackTaskMessage}
+                  onNavigate={onNavigate}
                 />
               </div>
             </div>

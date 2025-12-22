@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Task, InternalEmployee, Claim, Homeowner, ClaimStatus } from '../types';
 import Button from './Button';
 import StatusBadge from './StatusBadge';
-import { ArrowLeft, Check, Calendar, User, CheckSquare, Square, HardHat, Edit2, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Check, Calendar, User, CheckSquare, Square, HardHat, Edit2, Trash2, X, MessageSquare, Send, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { TaskMessage } from './MessageSummaryModal';
 
 interface TaskDetailProps {
   task: Task;
@@ -17,6 +18,18 @@ interface TaskDetailProps {
   onBack: () => void;
   onSelectClaim?: (claim: Claim) => void;
   startInEditMode?: boolean; // Optional prop to start in edit mode
+  taskMessages?: TaskMessage[];
+  onSendMessage?: (task: Task) => void;
+  onTrackTaskMessage?: (taskId: string, messageData: {
+    type: 'EMPLOYEE';
+    threadId?: string;
+    subject: string;
+    recipient: string;
+    recipientEmail: string;
+    content: string;
+    senderName: string;
+  }) => void;
+  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND', config?: { initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS'; initialThreadId?: string | null }) => void;
 }
 
 const TaskDetail: React.FC<TaskDetailProps> = ({
@@ -31,13 +44,21 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
   onToggleTask,
   onBack,
   onSelectClaim,
-  startInEditMode = false
+  startInEditMode = false,
+  taskMessages = [],
+  onSendMessage,
+  onTrackTaskMessage,
+  onNavigate
 }) => {
   const [isEditing, setIsEditing] = useState(startInEditMode);
   const [editTaskTitle, setEditTaskTitle] = useState(task.title);
   const [editTaskAssignee, setEditTaskAssignee] = useState(task.assignedToId);
   const [editTaskNotes, setEditTaskNotes] = useState(task.description || '');
   const [editSelectedClaimIds, setEditSelectedClaimIds] = useState<string[]>(task.relatedClaimIds || []);
+  const [isMessageSummaryExpanded, setIsMessageSummaryExpanded] = useState(false);
+  
+  // Ensure taskMessages is always an array
+  const safeTaskMessages = Array.isArray(taskMessages) ? taskMessages : [];
 
   useEffect(() => {
     setIsEditing(startInEditMode);
@@ -129,6 +150,15 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
         <div className="flex items-center gap-2">
           {!isEditing && (
             <>
+              {onSendMessage && (
+                <Button 
+                  variant="tonal" 
+                  onClick={() => onSendMessage(task)} 
+                  icon={<MessageSquare className="h-4 w-4" />}
+                >
+                  Send Message
+                </Button>
+              )}
               <button
                 onClick={() => onToggleTask(task.id)}
                 className={`flex-shrink-0 w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors ${
@@ -221,6 +251,82 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
           ) : (
             <div className="text-sm text-surface-on dark:text-gray-100 whitespace-pre-wrap">
               {task.description || <span className="text-surface-on-variant dark:text-gray-400 italic">No notes provided.</span>}
+            </div>
+          )}
+        </div>
+
+        {/* Message Summary */}
+        <div className="bg-surface-container dark:bg-gray-800 p-6 rounded-2xl border border-surface-outline-variant dark:border-gray-700">
+          <button
+            onClick={() => setIsMessageSummaryExpanded(!isMessageSummaryExpanded)}
+            className="w-full flex items-center justify-between mb-4 text-left"
+          >
+            <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary" />
+              Message Summary
+            </h3>
+            {isMessageSummaryExpanded ? (
+              <ChevronUp className="h-5 w-5 text-surface-on dark:text-gray-100" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-surface-on dark:text-gray-100" />
+            )}
+          </button>
+          
+          {isMessageSummaryExpanded && (
+            <div className="mb-4">
+              {safeTaskMessages.length === 0 ? (
+                <p className="text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-surface-outline-variant dark:border-gray-600">
+                  No messages sent for this task yet. Messages sent via the "Send Message" button will appear here.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {[...safeTaskMessages].sort((a, b) => 
+                    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+                  ).map((msg) => (
+                    <div
+                      key={msg.id}
+                      className="bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-surface-outline-variant dark:border-gray-600"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-primary" />
+                          <span className="text-xs font-medium text-surface-on dark:text-gray-100">
+                            To: {msg.recipient}
+                          </span>
+                        </div>
+                        <span className="text-xs text-surface-on-variant dark:text-gray-400">
+                          {new Date(msg.timestamp).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="mb-2">
+                        <p className="text-xs font-medium text-surface-on-variant dark:text-gray-400 opacity-70 mb-1">Subject:</p>
+                        <p className="text-sm text-surface-on dark:text-gray-100">{msg.subject}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-surface-on-variant dark:text-gray-400 opacity-70 mb-1">Message:</p>
+                        <p className="text-sm text-surface-on dark:text-gray-100 whitespace-pre-wrap">{msg.content}</p>
+                      </div>
+                      <div className="mt-2 pt-2 border-t border-surface-outline-variant dark:border-gray-600 flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-xs text-surface-on-variant dark:text-gray-400 opacity-70">
+                          Sent by: {msg.senderName} • To: {msg.recipientEmail}
+                        </p>
+                        {onNavigate && msg.threadId && (
+                          <button
+                            onClick={() => {
+                              onNavigate('DASHBOARD', { initialTab: 'MESSAGES', initialThreadId: msg.threadId || null });
+                            }}
+                            className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded hover:bg-primary/10 dark:hover:bg-primary/20"
+                            title="View in Message Center"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            View in Messages
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>

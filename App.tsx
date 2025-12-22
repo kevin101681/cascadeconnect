@@ -10,7 +10,7 @@ import InternalUserManagement from './components/InternalUserManagement';
 import BuilderManagement from './components/BuilderManagement';
 import DataImport from './components/DataImport';
 import TaskList from './components/TaskList';
-import MessageSummaryModal, { ClaimMessage } from './components/MessageSummaryModal';
+import MessageSummaryModal, { ClaimMessage, TaskMessage } from './components/MessageSummaryModal';
 import InvoicesModal from './components/InvoicesModal';
 import HomeownersList from './components/HomeownersList';
 import { X, Info } from 'lucide-react';
@@ -19,7 +19,7 @@ import BackendDashboard from './components/BackendDashboard';
 import HomeownerSelector from './components/HomeownerSelector';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS, MOCK_CLAIM_MESSAGES } from './constants';
-import { sendEmail } from './services/emailService';
+import { sendEmail, generateNotificationBody } from './services/emailService';
 
 // DB Imports
 import { db, isDbConfigured } from './db';
@@ -198,6 +198,9 @@ function App() {
   );
   const [claimMessages, setClaimMessages] = useState<ClaimMessage[]>(() =>
     FORCE_MOCK_DATA ? MOCK_CLAIM_MESSAGES : loadState('cascade_claim_messages', MOCK_CLAIM_MESSAGES)
+  );
+  const [taskMessages, setTaskMessages] = useState<TaskMessage[]>(() =>
+    loadState('cascade_task_messages', [])
   );
 
   // --- LOAD MOCK DATA ON FIRST MOUNT IF LOCALSTORAGE IS EMPTY ---
@@ -986,6 +989,30 @@ function App() {
     setClaimMessages(prev => {
       const updated = [...prev, newClaimMessage];
       saveState('cascade_claim_messages', updated);
+      return updated;
+    });
+  };
+
+  // Helper function to track task-related messages
+  const trackTaskMessage = (taskId: string, messageData: {
+    type: 'EMPLOYEE';
+    threadId?: string;
+    subject: string;
+    recipient: string;
+    recipientEmail: string;
+    content: string;
+    senderName: string;
+  }) => {
+    const newTaskMessage: TaskMessage = {
+      id: crypto.randomUUID(),
+      taskId,
+      ...messageData,
+      timestamp: new Date()
+    };
+    
+    setTaskMessages(prev => {
+      const updated = [...prev, newTaskMessage];
+      saveState('cascade_task_messages', updated);
       return updated;
     });
   };
@@ -2983,6 +3010,27 @@ Assigned By: ${assignerName}
           content: content,
           senderName: activeEmployee.name
         });
+      } else {
+        // Try to find a task with matching subject (format: "Task: {task title}")
+        if (updatedThread.subject.startsWith('Task: ')) {
+          const taskTitle = updatedThread.subject.replace('Task: ', '');
+          const associatedTask = tasks.find(t => t.title === taskTitle);
+          if (associatedTask) {
+            // Find the recipient (the creator or assigned user, depending on who sent the message)
+            const recipient = employees.find(e => e.id === updatedThread!.homeownerId);
+            if (recipient) {
+              trackTaskMessage(associatedTask.id, {
+                type: 'EMPLOYEE',
+                threadId: updatedThread.id,
+                subject: updatedThread.subject,
+                recipient: recipient.name,
+                recipientEmail: recipient.email,
+                content: content,
+                senderName: activeEmployee.name
+              });
+            }
+          }
+        }
       }
     }
   };
@@ -3115,6 +3163,109 @@ Assigned By: ${assignerName}
           });
         }
     }
+    setDashboardConfig({ initialTab: 'MESSAGES', initialThreadId: threadIdToOpen });
+    setCurrentView('DASHBOARD');
+  };
+
+  const handleContactAboutTask = async (task: Task) => {
+    // Find the task creator (assignedById) and the assigned user (assignedToId)
+    const taskCreator = employees.find(e => e.id === task.assignedById);
+    const assignedUser = employees.find(e => e.id === task.assignedToId);
+    
+    if (!taskCreator || !assignedUser) {
+      console.error('Task creator or assigned user not found');
+      return;
+    }
+
+    // Create a thread from the assigned user (assignedToId) to the creator (assignedById)
+    const threadSubject = `Task: ${task.title}`;
+    
+    // Use the creator's ID as the homeownerId for thread identification
+    const existingThread = messages.find(t => 
+      t.subject === threadSubject && 
+      t.homeownerId === taskCreator.id
+    );
+    
+    let threadIdToOpen = '';
+
+    if (existingThread) {
+      threadIdToOpen = existingThread.id;
+    } else {
+      const newId = crypto.randomUUID();
+      threadIdToOpen = newId;
+      
+      const initialMessageContent = `Started a conversation about task: ${task.title}`;
+      
+      const newThread: MessageThread = {
+        id: newId,
+        subject: threadSubject,
+        homeownerId: taskCreator.id, // Using creator's ID as homeownerId for thread identification
+        participants: [assignedUser.name, taskCreator.name],
+        isRead: true,
+        lastMessageAt: new Date(),
+        messages: [{
+          id: crypto.randomUUID(),
+          senderId: assignedUser.id,
+          senderName: assignedUser.name,
+          senderRole: UserRole.ADMIN,
+          content: initialMessageContent,
+          timestamp: new Date()
+        }]
+      };
+      
+      setMessages(prev => [newThread, ...prev]);
+
+      if (isDbConfigured) {
+        db.insert(messageThreadsTable).values({
+          id: newThread.id,
+          subject: newThread.subject,
+          homeownerId: newThread.homeownerId,
+          participants: newThread.participants,
+          isRead: newThread.isRead,
+          lastMessageAt: newThread.lastMessageAt,
+          messages: newThread.messages
+        } as any).catch(e => console.error(e));
+      }
+
+      // Send email to the task creator
+      const baseUrl = typeof window !== 'undefined' 
+        ? `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`
+        : 'https://www.cascadeconnect.app';
+      const messagesLink = `${baseUrl}#messages${newThread.id ? `?threadId=${newThread.id}` : ''}`;
+
+      const emailBody = generateNotificationBody(
+        assignedUser.name,
+        initialMessageContent,
+        'MESSAGE',
+        newThread.id,
+        messagesLink
+      );
+
+      try {
+        await sendEmail({
+          to: taskCreator.email,
+          subject: `Re: ${threadSubject}`,
+          body: emailBody,
+          fromName: assignedUser.name,
+          fromRole: UserRole.ADMIN,
+          replyToId: newThread.id
+        });
+      } catch (error) {
+        console.error('Failed to send task message email:', error);
+      }
+
+      // Track task-related message
+      trackTaskMessage(task.id, {
+        type: 'EMPLOYEE',
+        threadId: newThread.id,
+        subject: threadSubject,
+        recipient: taskCreator.name,
+        recipientEmail: taskCreator.email,
+        content: initialMessageContent,
+        senderName: assignedUser.name
+      });
+    }
+    
     setDashboardConfig({ initialTab: 'MESSAGES', initialThreadId: threadIdToOpen });
     setCurrentView('DASHBOARD');
   };
@@ -3327,6 +3478,9 @@ Assigned By: ${assignerName}
           onUpdateClaim={handleUpdateClaim}
           contractors={contractors}
           claimMessages={claimMessages || []}
+          taskMessages={taskMessages || []}
+          onTrackTaskMessage={trackTaskMessage}
+          onSendTaskMessage={handleContactAboutTask}
           builderGroups={builderGroups}
           currentBuilderId={currentBuilderId}
           currentUserEmail={
@@ -3371,11 +3525,14 @@ Assigned By: ${assignerName}
           onUpdateClaim={handleUpdateClaim}
           contractors={contractors}
           claimMessages={claimMessages || []}
+          taskMessages={taskMessages || []}
+          onTrackTaskMessage={trackTaskMessage}
+          onSendTaskMessage={handleContactAboutTask}
           builderGroups={builderGroups}
           currentBuilderId={currentBuilderId}
           currentUserEmail={
             authUser?.primaryEmailAddress?.emailAddress || 
-            activeEmployee?.email || 
+            activeEmployee?.email ||
             activeHomeowner?.email || 
             undefined
           }
