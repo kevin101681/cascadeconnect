@@ -254,6 +254,17 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
       console.log('Activity array length:', result.activity?.length || 0);
       console.log('Activity count:', result.activityCount || 0);
       console.log('First few activity items:', result.activity?.slice(0, 3));
+      
+      // Check if we got stats but no activity
+      if (result.totals && result.totals.delivered > 0 && (!result.activity || result.activity.length === 0)) {
+        console.warn('⚠️ WARNING: SendGrid Stats API shows delivered emails, but Messages API returned 0 messages');
+        console.warn('This likely means:');
+        console.warn('1. Your SendGrid account needs the "Email Activity History" add-on');
+        console.warn('2. Your API key needs "messages.read" permission');
+        console.warn('3. The Messages API only tracks emails sent via Mail Send API v3');
+        console.warn('Stats show:', result.totals);
+      }
+      
       setData(result);
     } catch (err: any) {
       console.error('Failed to fetch email analytics:', err);
@@ -354,6 +365,9 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
 
   const totals = data?.totals || {};
 
+  // Show warning if stats show emails but Messages API returned none
+  const showWarning = data?.warning && totals.delivered > 0 && (!data.activity || data.activity.length === 0);
+
   const formatDateTime = (dateString: string) => {
     if (!dateString) return 'N/A';
     const date = new Date(dateString);
@@ -380,6 +394,31 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
           </Button>
         )}
         <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+          {/* Warning Banner */}
+          {showWarning && (
+            <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-1">
+                    Email Activity History Not Available
+                  </h4>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    SendGrid Stats show {totals.delivered} delivered emails, but the Messages API returned 0 messages. 
+                    This typically requires:
+                  </p>
+                  <ul className="text-sm text-yellow-700 dark:text-yellow-300 mt-2 ml-4 list-disc">
+                    <li>Email Activity History add-on enabled in SendGrid</li>
+                    <li>API key with "messages.read" permission</li>
+                  </ul>
+                  <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
+                    Contact SendGrid support or check your account settings to enable this feature.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Filters */}
           <div className="mb-6 flex flex-col sm:flex-row gap-4 p-4 bg-surface-container dark:bg-gray-700 rounded-xl">
             <div className="flex items-center gap-2">

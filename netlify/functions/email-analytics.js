@@ -357,6 +357,20 @@ exports.handler = async (event, context) => {
       last_event_time: msg.sent_at || msg.last_event_time
     }));
 
+    // Add warning if stats show emails but Messages API returned none
+    const hasDeliveredEmails = totals.delivered > 0;
+    const hasActivity = processedActivity.length > 0;
+    
+    if (hasDeliveredEmails && !hasActivity) {
+      console.warn('\n⚠️ IMPORTANT: Stats API shows delivered emails, but Messages API returned 0 messages');
+      console.warn(`Stats show ${totals.delivered} delivered emails in date range ${startDate} to ${endDate}`);
+      console.warn('Possible reasons:');
+      console.warn('1. Email Activity History add-on not enabled (required for Messages API)');
+      console.warn('2. API key missing "messages.read" permission');
+      console.warn('3. Messages API only tracks emails sent via Mail Send API v3');
+      console.warn('4. Consider using Event Webhooks to track emails in real-time\n');
+    }
+    
     return {
       statusCode: 200,
       headers: {
@@ -375,7 +389,10 @@ exports.handler = async (event, context) => {
         stats: processedStats,
         totals,
         activity: processedActivity,
-        activityCount: processedActivity.length
+        activityCount: processedActivity.length,
+        warning: hasDeliveredEmails && !hasActivity 
+          ? 'Stats show delivered emails, but Messages API returned 0 messages. This may require the Email Activity History add-on or messages.read permission.'
+          : undefined
       })
     };
   } catch (error) {
