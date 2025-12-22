@@ -1733,8 +1733,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const renderDocumentsTab = () => (
-    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 flex flex-col" style={{ maxHeight: 'calc(100vh - 300px)', minHeight: 'calc(100vh - 300px)' }}>
-      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
+    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 flex flex-col">
+      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
         <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
           Account Documents
@@ -1791,9 +1791,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                       }
                     }}
                   >
-                    {doc.thumbnailUrl ? (
+                    {isPDF ? (
+                      <PDFThumbnailDisplay doc={doc} />
+                    ) : (doc.type === 'IMAGE' || doc.url?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) || doc.url?.startsWith('data:image/')) ? (
                       <img 
-                        src={doc.thumbnailUrl} 
+                        src={doc.thumbnailUrl || doc.url} 
                         alt={doc.name}
                         className="w-full h-full object-cover"
                       />
@@ -1806,7 +1808,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                   
                   {/* Document Name */}
-                  <div className="p-2 bg-surface-container dark:bg-gray-700">
+                  <div className="p-2 bg-surface-container dark:bg-gray-700 rounded-b-xl">
                     <p className="text-xs font-medium text-surface-on dark:text-gray-100 truncate" title={doc.name}>
                       {doc.name}
                     </p>
