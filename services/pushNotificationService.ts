@@ -212,6 +212,23 @@ class PushNotificationService {
       }
     });
   }
+
+  /**
+   * Send a notification for new homeowner enrollment
+   */
+  async notifyHomeownerEnrollment(homeownerName: string, homeownerId: string): Promise<void> {
+    await this.sendNotification({
+      title: 'New Homeowner Enrolled',
+      body: `${homeownerName} has been enrolled in Cascade Connect`,
+      tag: `enrollment-${homeownerId}`,
+      requireInteraction: true,
+      data: {
+        type: 'enrollment',
+        homeownerId,
+        url: '/'
+      }
+    });
+  }
 }
 
 // Export singleton instance

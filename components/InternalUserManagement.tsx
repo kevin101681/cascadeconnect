@@ -65,6 +65,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
   const [empEmailNotifySubAcceptsAppointment, setEmpEmailNotifySubAcceptsAppointment] = useState(true);
   const [empEmailNotifyHomeownerRescheduleRequest, setEmpEmailNotifyHomeownerRescheduleRequest] = useState(true);
   const [empEmailNotifyTaskAssigned, setEmpEmailNotifyTaskAssigned] = useState(true);
+  const [empEmailNotifyHomeownerEnrollment, setEmpEmailNotifyHomeownerEnrollment] = useState(true);
   // Push Notification Preferences
   const [empPushNotifyClaimSubmitted, setEmpPushNotifyClaimSubmitted] = useState(false);
   const [empPushNotifyHomeownerAcceptsAppointment, setEmpPushNotifyHomeownerAcceptsAppointment] = useState(false);
@@ -72,6 +73,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
   const [empPushNotifyHomeownerRescheduleRequest, setEmpPushNotifyHomeownerRescheduleRequest] = useState(false);
   const [empPushNotifyTaskAssigned, setEmpPushNotifyTaskAssigned] = useState(false);
   const [empPushNotifyHomeownerMessage, setEmpPushNotifyHomeownerMessage] = useState(false);
+  const [empPushNotifyHomeownerEnrollment, setEmpPushNotifyHomeownerEnrollment] = useState(false);
 
   // Sub Form State
   const [subCompany, setSubCompany] = useState('');
@@ -106,6 +108,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     setEmpEmailNotifySubAcceptsAppointment(true);
     setEmpEmailNotifyHomeownerRescheduleRequest(true);
     setEmpEmailNotifyTaskAssigned(true);
+    setEmpEmailNotifyHomeownerEnrollment(true);
     // Push notifications default to false
     setEmpPushNotifyClaimSubmitted(false);
     setEmpPushNotifyHomeownerAcceptsAppointment(false);
@@ -113,6 +116,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     setEmpPushNotifyHomeownerRescheduleRequest(false);
     setEmpPushNotifyTaskAssigned(false);
     setEmpPushNotifyHomeownerMessage(false);
+    setEmpPushNotifyHomeownerEnrollment(false);
     setShowEmpModal(true);
   };
 
@@ -134,6 +138,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     setEmpPushNotifyHomeownerRescheduleRequest(emp.pushNotifyHomeownerRescheduleRequest === true);
     setEmpPushNotifyTaskAssigned(emp.pushNotifyTaskAssigned === true);
     setEmpPushNotifyHomeownerMessage(emp.pushNotifyHomeownerMessage === true);
+    setEmpPushNotifyHomeownerEnrollment(emp.pushNotifyHomeownerEnrollment === true);
+    setEmpEmailNotifyHomeownerEnrollment(emp.emailNotifyHomeownerEnrollment !== false);
     setShowEmpModal(true);
   };
 
@@ -149,12 +155,14 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
       emailNotifySubAcceptsAppointment: empEmailNotifySubAcceptsAppointment,
       emailNotifyHomeownerRescheduleRequest: empEmailNotifyHomeownerRescheduleRequest,
       emailNotifyTaskAssigned: empEmailNotifyTaskAssigned,
+      emailNotifyHomeownerEnrollment: empEmailNotifyHomeownerEnrollment,
       pushNotifyClaimSubmitted: empPushNotifyClaimSubmitted,
       pushNotifyHomeownerAcceptsAppointment: empPushNotifyHomeownerAcceptsAppointment,
       pushNotifySubAcceptsAppointment: empPushNotifySubAcceptsAppointment,
       pushNotifyHomeownerRescheduleRequest: empPushNotifyHomeownerRescheduleRequest,
       pushNotifyTaskAssigned: empPushNotifyTaskAssigned,
       pushNotifyHomeownerMessage: empPushNotifyHomeownerMessage,
+      pushNotifyHomeownerEnrollment: empPushNotifyHomeownerEnrollment,
     };
     
     if (editingEmpId) {
@@ -589,13 +597,28 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                     </div>
                   </label>
                   
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-sm text-surface-on dark:text-gray-100">New homeowner enrollment</span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={empEmailNotifyHomeownerEnrollment}
+                        onChange={(e) => setEmpEmailNotifyHomeownerEnrollment(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${empEmailNotifyHomeownerEnrollment ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empEmailNotifyHomeownerEnrollment ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      </div>
+                    </div>
+                  </label>
+                  
                   <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-2 pt-2 border-t border-surface-outline-variant/50 dark:border-gray-700/50">
                     Note: Users always receive email notifications when a homeowner sends a message if they are on the thread.
                   </p>
                 </div>
               </div>
 
-              {/* Push Notification Preference */}
+              {/* Push Notification Preferences */}
               <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700">
                 <div className="flex items-center gap-2 mb-4">
                   <Bell className="h-4 w-4 text-primary" />
@@ -603,19 +626,106 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                 </div>
                 <div className="space-y-3">
                   <label className="flex items-center justify-between cursor-pointer group">
-                    <div className="flex flex-col">
-                      <span className="text-sm text-surface-on dark:text-gray-100">Enable push notifications</span>
-                      <span className="text-xs text-surface-on-variant dark:text-gray-400">Receive browser notifications for new claims</span>
-                    </div>
+                    <span className="text-sm text-surface-on dark:text-gray-100">Homeowner submits a claim</span>
                     <div className="relative">
                       <input
                         type="checkbox"
-                        checked={empPushNotificationsEnabled}
-                        onChange={(e) => setEmpPushNotificationsEnabled(e.target.checked)}
+                        checked={empPushNotifyClaimSubmitted}
+                        onChange={(e) => setEmpPushNotifyClaimSubmitted(e.target.checked)}
                         className="sr-only"
                       />
-                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotificationsEnabled ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
-                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotificationsEnabled ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotifyClaimSubmitted ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotifyClaimSubmitted ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      </div>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-sm text-surface-on dark:text-gray-100">Homeowner accepts an appointment date</span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={empPushNotifyHomeownerAcceptsAppointment}
+                        onChange={(e) => setEmpPushNotifyHomeownerAcceptsAppointment(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotifyHomeownerAcceptsAppointment ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotifyHomeownerAcceptsAppointment ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      </div>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-sm text-surface-on dark:text-gray-100">Sub accepts an appointment date</span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={empPushNotifySubAcceptsAppointment}
+                        onChange={(e) => setEmpPushNotifySubAcceptsAppointment(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotifySubAcceptsAppointment ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotifySubAcceptsAppointment ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      </div>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-sm text-surface-on dark:text-gray-100">Homeowner requests a reschedule</span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={empPushNotifyHomeownerRescheduleRequest}
+                        onChange={(e) => setEmpPushNotifyHomeownerRescheduleRequest(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotifyHomeownerRescheduleRequest ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotifyHomeownerRescheduleRequest ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      </div>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-sm text-surface-on dark:text-gray-100">New task assigned to user</span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={empPushNotifyTaskAssigned}
+                        onChange={(e) => setEmpPushNotifyTaskAssigned(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotifyTaskAssigned ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotifyTaskAssigned ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      </div>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-sm text-surface-on dark:text-gray-100">Homeowner sends a message</span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={empPushNotifyHomeownerMessage}
+                        onChange={(e) => setEmpPushNotifyHomeownerMessage(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotifyHomeownerMessage ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotifyHomeownerMessage ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      </div>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-sm text-surface-on dark:text-gray-100">New homeowner enrollment</span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={empPushNotifyHomeownerEnrollment}
+                        onChange={(e) => setEmpPushNotifyHomeownerEnrollment(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotifyHomeownerEnrollment ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotifyHomeownerEnrollment ? 'translate-x-5' : 'translate-x-0'}`}></div>
                       </div>
                     </div>
                   </label>

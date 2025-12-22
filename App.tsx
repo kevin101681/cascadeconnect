@@ -472,12 +472,15 @@ function App() {
                     emailNotifySubAcceptsAppointment: usersTable.emailNotifySubAcceptsAppointment,
                     emailNotifyHomeownerRescheduleRequest: usersTable.emailNotifyHomeownerRescheduleRequest,
                     emailNotifyTaskAssigned: usersTable.emailNotifyTaskAssigned,
+                    emailNotifyHomeownerEnrollment: usersTable.emailNotifyHomeownerEnrollment,
                     pushNotifyClaimSubmitted: usersTable.pushNotifyClaimSubmitted,
                     pushNotifyHomeownerAcceptsAppointment: usersTable.pushNotifyHomeownerAcceptsAppointment,
                     pushNotifySubAcceptsAppointment: usersTable.pushNotifySubAcceptsAppointment,
                     pushNotifyHomeownerRescheduleRequest: usersTable.pushNotifyHomeownerRescheduleRequest,
                     pushNotifyTaskAssigned: usersTable.pushNotifyTaskAssigned,
-                    pushNotifyHomeownerMessage: usersTable.pushNotifyHomeownerMessage
+                    pushNotifyHomeownerMessage: usersTable.pushNotifyHomeownerMessage,
+                    pushNotifyHomeownerEnrollment: usersTable.pushNotifyHomeownerEnrollment,
+                    emailNotifyHomeownerEnrollment: usersTable.emailNotifyHomeownerEnrollment
                   }).from(usersTable);
                   
                   usersWithPrefs.forEach(u => {
@@ -492,7 +495,9 @@ function App() {
                       pushNotifySubAcceptsAppointment: u.pushNotifySubAcceptsAppointment ?? false,
                       pushNotifyHomeownerRescheduleRequest: u.pushNotifyHomeownerRescheduleRequest ?? false,
                       pushNotifyTaskAssigned: u.pushNotifyTaskAssigned ?? false,
-                      pushNotifyHomeownerMessage: u.pushNotifyHomeownerMessage ?? false
+                      pushNotifyHomeownerMessage: u.pushNotifyHomeownerMessage ?? false,
+                      pushNotifyHomeownerEnrollment: u.pushNotifyHomeownerEnrollment ?? false,
+                      emailNotifyHomeownerEnrollment: u.emailNotifyHomeownerEnrollment ?? true
                     });
                   });
                 } catch (prefsError: any) {
@@ -521,7 +526,9 @@ function App() {
                         pushNotifySubAcceptsAppointment: prefs?.pushNotifySubAcceptsAppointment ?? false,
                         pushNotifyHomeownerRescheduleRequest: prefs?.pushNotifyHomeownerRescheduleRequest ?? false,
                         pushNotifyTaskAssigned: prefs?.pushNotifyTaskAssigned ?? false,
-                        pushNotifyHomeownerMessage: prefs?.pushNotifyHomeownerMessage ?? false
+                        pushNotifyHomeownerMessage: prefs?.pushNotifyHomeownerMessage ?? false,
+                        pushNotifyHomeownerEnrollment: prefs?.pushNotifyHomeownerEnrollment ?? false,
+                        emailNotifyHomeownerEnrollment: prefs?.emailNotifyHomeownerEnrollment ?? true
                     };
                   });
                 
@@ -1917,11 +1924,8 @@ Homeowner: ${newClaim.homeownerName}
         }
       }
       
-      if (!adminEmail) {
-        console.error('❌ No valid admin email found after checking all sources!');
-      }
-      
-      if (adminEmail) {
+      // Send notifications to all employees who have preferences enabled
+      if (employees.length > 0) {
         // Create invoice link with pre-filled data
         const baseUrl = typeof window !== 'undefined' 
           ? window.location.origin 
@@ -1958,25 +1962,54 @@ ${newHomeowner.enrollmentComments ? `Comments: ${newHomeowner.enrollmentComments
 You can view and manage this homeowner in the Cascade Connect dashboard.
         `.trim();
 
-        console.log('📧 Sending enrollment notification email to:', adminEmail);
-        const emailResult = await sendEmail({
-          to: adminEmail,
-          subject: `New Homeowner Enrollment: ${newHomeowner.name}`,
-          body: emailBody,
-          fromName: 'Cascade Connect System',
-          fromRole: UserRole.ADMIN
-        });
-        
-        if (emailResult) {
-          console.log('✅ Enrollment notification email sent successfully to:', adminEmail);
-        } else {
-          console.warn('⚠️ Email service returned false - email may not have been sent');
+        // Import push notification service
+        const pushNotificationServiceModule = await import('./services/pushNotificationService');
+        const pushNotificationService = pushNotificationServiceModule.pushNotificationService;
+
+        // Send email and push notifications to all employees who have preferences enabled
+        for (const emp of employees) {
+          // Skip mock emails
+          if (isMockEmail(emp.email || '')) {
+            continue;
+          }
+
+          // Send email notification if preference is enabled
+          if (emp.emailNotifyHomeownerEnrollment !== false) {
+            try {
+              console.log('📧 Sending enrollment notification email to:', emp.email);
+              const emailResult = await sendEmail({
+                to: emp.email!,
+                subject: `New Homeowner Enrollment: ${newHomeowner.name}`,
+                body: emailBody,
+                fromName: 'Cascade Connect System',
+                fromRole: UserRole.ADMIN
+              });
+              
+              if (emailResult) {
+                console.log('✅ Enrollment notification email sent successfully to:', emp.email);
+              } else {
+                console.warn('⚠️ Email service returned false - email may not have been sent');
+              }
+            } catch (error) {
+              console.error(`Failed to send enrollment notification email to ${emp.email}:`, error);
+            }
+          }
+
+          // Send push notification if preference is enabled
+          if (emp.pushNotifyHomeownerEnrollment === true) {
+            try {
+              const permission = await pushNotificationService.requestPermission();
+              if (permission === 'granted') {
+                await pushNotificationService.notifyHomeownerEnrollment(newHomeowner.name, newHomeowner.id);
+                console.log('✅ Enrollment push notification sent to:', emp.email);
+              }
+            } catch (error) {
+              console.error(`Failed to send enrollment push notification to ${emp.email}:`, error);
+            }
+          }
         }
       } else {
-        console.warn('⚠️ No administrator email found - enrollment notification not sent');
-        console.warn('   Available employees:', employees.map(e => ({ name: e.name, email: e.email, role: e.role })));
-        console.warn('   Active employee:', activeEmployee ? { name: activeEmployee.name, email: activeEmployee.email, role: activeEmployee.role } : 'none');
-        console.warn('   User role:', userRole);
+        console.warn('⚠️ No employees found - enrollment notification not sent');
       }
     } catch (error) {
       console.error('❌ Failed to send enrollment notification email:', error);
@@ -2526,7 +2559,8 @@ Assigned By: ${assignerName}
              pushNotifySubAcceptsAppointment: emp.pushNotifySubAcceptsAppointment === true,
              pushNotifyHomeownerRescheduleRequest: emp.pushNotifyHomeownerRescheduleRequest === true,
              pushNotifyTaskAssigned: emp.pushNotifyTaskAssigned === true,
-             pushNotifyHomeownerMessage: emp.pushNotifyHomeownerMessage === true
+             pushNotifyHomeownerMessage: emp.pushNotifyHomeownerMessage === true,
+             pushNotifyHomeownerEnrollment: emp.pushNotifyHomeownerEnrollment === true
            } as any);
          } catch(e) { console.error(e); }
       }
@@ -2544,12 +2578,14 @@ Assigned By: ${assignerName}
             emailNotifySubAcceptsAppointment: emp.emailNotifySubAcceptsAppointment !== false,
             emailNotifyHomeownerRescheduleRequest: emp.emailNotifyHomeownerRescheduleRequest !== false,
             emailNotifyTaskAssigned: emp.emailNotifyTaskAssigned !== false,
+            emailNotifyHomeownerEnrollment: emp.emailNotifyHomeownerEnrollment !== false,
             pushNotifyClaimSubmitted: emp.pushNotifyClaimSubmitted === true,
             pushNotifyHomeownerAcceptsAppointment: emp.pushNotifyHomeownerAcceptsAppointment === true,
             pushNotifySubAcceptsAppointment: emp.pushNotifySubAcceptsAppointment === true,
             pushNotifyHomeownerRescheduleRequest: emp.pushNotifyHomeownerRescheduleRequest === true,
             pushNotifyTaskAssigned: emp.pushNotifyTaskAssigned === true,
-            pushNotifyHomeownerMessage: emp.pushNotifyHomeownerMessage === true
+            pushNotifyHomeownerMessage: emp.pushNotifyHomeownerMessage === true,
+            pushNotifyHomeownerEnrollment: emp.pushNotifyHomeownerEnrollment === true
             // role update ignored for now to map to enum
           }).where(eq(usersTable.id, emp.id));
         } catch(e) { console.error(e); }
