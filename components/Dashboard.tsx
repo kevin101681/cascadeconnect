@@ -375,6 +375,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Carousel ref for mobile
   const carouselRef = useRef<HTMLDivElement>(null);
   const carouselInnerRef = useRef<HTMLDivElement>(null);
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
   const isUserScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollIndexRef = useRef<number>(0);
@@ -738,6 +739,26 @@ const Dashboard: React.FC<DashboardProps> = ({
   useEffect(() => {
     if (initialTab) setCurrentTab(initialTab);
   }, [initialTab]);
+
+  // Center the active tab over its card on mobile
+  useEffect(() => {
+    if (!tabsContainerRef.current || window.innerWidth >= 768) return; // Only on mobile
+    const tabsContainer = tabsContainerRef.current;
+    const activeTabButton = tabsContainer.querySelector(`button[data-tab="${currentTab}"]`) as HTMLElement;
+    if (activeTabButton) {
+      const containerRect = tabsContainer.getBoundingClientRect();
+      const buttonRect = activeTabButton.getBoundingClientRect();
+      const scrollLeft = tabsContainer.scrollLeft;
+      const buttonCenter = scrollLeft + buttonRect.left - containerRect.left + buttonRect.width / 2;
+      const containerCenter = containerRect.width / 2;
+      const targetScroll = scrollLeft + (buttonCenter - containerCenter);
+      
+      tabsContainer.scrollTo({
+        left: targetScroll,
+        behavior: 'smooth'
+      });
+    }
+  }, [currentTab]);
 
   // Sync carousel scroll position with currentTab on mobile (only when not user-scrolling)
   useEffect(() => {
