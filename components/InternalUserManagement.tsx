@@ -127,8 +127,13 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     setEmpEmailNotifySubAcceptsAppointment(emp.emailNotifySubAcceptsAppointment !== false);
     setEmpEmailNotifyHomeownerRescheduleRequest(emp.emailNotifyHomeownerRescheduleRequest !== false);
     setEmpEmailNotifyTaskAssigned(emp.emailNotifyTaskAssigned !== false);
-    // Load push notification preference (default to false)
-    setEmpPushNotificationsEnabled(emp.pushNotificationsEnabled === true);
+    // Load push notification preferences (default to false)
+    setEmpPushNotifyClaimSubmitted(emp.pushNotifyClaimSubmitted === true);
+    setEmpPushNotifyHomeownerAcceptsAppointment(emp.pushNotifyHomeownerAcceptsAppointment === true);
+    setEmpPushNotifySubAcceptsAppointment(emp.pushNotifySubAcceptsAppointment === true);
+    setEmpPushNotifyHomeownerRescheduleRequest(emp.pushNotifyHomeownerRescheduleRequest === true);
+    setEmpPushNotifyTaskAssigned(emp.pushNotifyTaskAssigned === true);
+    setEmpPushNotifyHomeownerMessage(emp.pushNotifyHomeownerMessage === true);
     setShowEmpModal(true);
   };
 
