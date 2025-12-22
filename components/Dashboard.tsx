@@ -1470,7 +1470,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, filter?: 'All' | 'Open' | 'Closed', setFilter?: (filter: 'All' | 'Open' | 'Closed') => void, onExportExcel?: () => void, allClaims?: Claim[], isAdminView: boolean = false) => (
     <motion.div 
-      className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1"
+      className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col md:shadow-elevation-1"
       variants={cardVariants}
       initial="hidden"
       animate="visible"
@@ -1756,7 +1756,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const renderDocumentsTab = () => (
-    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 flex flex-col">
+    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 md:shadow-elevation-1 flex flex-col">
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
         <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
@@ -1914,7 +1914,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   );
 
   const renderMessagesTab = () => (
-    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row shadow-elevation-1">
+    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:shadow-elevation-1">
        {/* Left Column: Inbox List (Gmail Style) */}
        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-16 shrink-0">
