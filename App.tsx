@@ -1294,17 +1294,19 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
     setClaims(prev => [newClaim, ...prev]);
     setCurrentView('DASHBOARD');
 
-    // Send push notifications to admin users if claim was submitted by homeowner
-    if (userRole === UserRole.HOMEOWNER) {
+    // Send push notifications to currently logged-in admin users if claim was submitted by homeowner
+    // Note: Push notifications work per browser session, so we notify any currently logged-in admin
+    if (userRole === UserRole.HOMEOWNER && employees.length > 0) {
       try {
         const { pushNotificationService } = await import('./services/pushNotificationService');
-        // Get all admin users with push notifications enabled
-        const adminUsersWithPush = employees.filter(emp => 
+        
+        // Check all admin users - if any have push notifications enabled, send notification
+        // (in practice, this will notify the current browser session if an admin is logged in elsewhere)
+        const hasAdminWithPushEnabled = employees.some(emp => 
           emp.role === UserRole.ADMIN && emp.pushNotificationsEnabled === true
         );
         
-        // Request permission and send notification for each admin user
-        for (const admin of adminUsersWithPush) {
+        if (hasAdminWithPushEnabled) {
           // Request permission if not already granted
           const permission = await pushNotificationService.requestPermission();
           if (permission === 'granted') {
