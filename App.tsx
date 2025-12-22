@@ -472,7 +472,12 @@ function App() {
                     emailNotifySubAcceptsAppointment: usersTable.emailNotifySubAcceptsAppointment,
                     emailNotifyHomeownerRescheduleRequest: usersTable.emailNotifyHomeownerRescheduleRequest,
                     emailNotifyTaskAssigned: usersTable.emailNotifyTaskAssigned,
-                    pushNotificationsEnabled: usersTable.pushNotificationsEnabled
+                    pushNotifyClaimSubmitted: usersTable.pushNotifyClaimSubmitted,
+                    pushNotifyHomeownerAcceptsAppointment: usersTable.pushNotifyHomeownerAcceptsAppointment,
+                    pushNotifySubAcceptsAppointment: usersTable.pushNotifySubAcceptsAppointment,
+                    pushNotifyHomeownerRescheduleRequest: usersTable.pushNotifyHomeownerRescheduleRequest,
+                    pushNotifyTaskAssigned: usersTable.pushNotifyTaskAssigned,
+                    pushNotifyHomeownerMessage: usersTable.pushNotifyHomeownerMessage
                   }).from(usersTable);
                   
                   usersWithPrefs.forEach(u => {
@@ -482,7 +487,12 @@ function App() {
                       emailNotifySubAcceptsAppointment: u.emailNotifySubAcceptsAppointment ?? true,
                       emailNotifyHomeownerRescheduleRequest: u.emailNotifyHomeownerRescheduleRequest ?? true,
                       emailNotifyTaskAssigned: u.emailNotifyTaskAssigned ?? true,
-                      pushNotificationsEnabled: u.pushNotificationsEnabled ?? false
+                      pushNotifyClaimSubmitted: u.pushNotifyClaimSubmitted ?? false,
+                      pushNotifyHomeownerAcceptsAppointment: u.pushNotifyHomeownerAcceptsAppointment ?? false,
+                      pushNotifySubAcceptsAppointment: u.pushNotifySubAcceptsAppointment ?? false,
+                      pushNotifyHomeownerRescheduleRequest: u.pushNotifyHomeownerRescheduleRequest ?? false,
+                      pushNotifyTaskAssigned: u.pushNotifyTaskAssigned ?? false,
+                      pushNotifyHomeownerMessage: u.pushNotifyHomeownerMessage ?? false
                     });
                   });
                 } catch (prefsError: any) {
@@ -1123,6 +1133,27 @@ Homeowner: ${updatedClaim.homeownerName}
               }
             }
           }
+          
+          // Send push notifications
+          try {
+            const { pushNotificationService } = await import('./services/pushNotificationService');
+            const permission = await pushNotificationService.requestPermission();
+            if (permission === 'granted') {
+              for (const emp of employees) {
+                if (emp.pushNotifyHomeownerAcceptsAppointment === true) {
+                  await pushNotificationService.notifyAppointmentAccepted(
+                    updatedClaim.title,
+                    updatedClaim.homeownerName || 'Homeowner',
+                    updatedClaim.id,
+                    acceptedDate.date
+                  );
+                  break; // Only send one notification per browser session
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error sending push notifications:', error);
+          }
         } else if (isSubAcceptance) {
           // Sub actually accepted an appointment date from their account
           // Send email to admins
@@ -1153,6 +1184,26 @@ Homeowner: ${updatedClaim.homeownerName}
                 console.error(`Failed to send sub appointment acceptance notification to ${emp.email}:`, error);
               }
             }
+          }
+          
+          // Send push notifications
+          try {
+            const { pushNotificationService } = await import('./services/pushNotificationService');
+            const permission = await pushNotificationService.requestPermission();
+            if (permission === 'granted') {
+              for (const emp of employees) {
+                if (emp.pushNotifySubAcceptsAppointment === true) {
+                  await pushNotificationService.notifySubAcceptedAppointment(
+                    updatedClaim.title,
+                    updatedClaim.contractorName || 'Subcontractor',
+                    updatedClaim.id
+                  );
+                  break; // Only send one notification per browser session
+                }
+              }
+            }
+          } catch (error) {
+            console.error('Error sending push notifications:', error);
           }
 
           // Send email to homeowner
@@ -1216,6 +1267,26 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
               console.error(`Failed to send reschedule request notification to ${emp.email}:`, error);
             }
           }
+        }
+        
+        // Send push notifications
+        try {
+          const { pushNotificationService } = await import('./services/pushNotificationService');
+          const permission = await pushNotificationService.requestPermission();
+          if (permission === 'granted') {
+            for (const emp of employees) {
+              if (emp.pushNotifyHomeownerRescheduleRequest === true) {
+                await pushNotificationService.notifyRescheduleRequested(
+                  updatedClaim.title,
+                  updatedClaim.homeownerName || 'Homeowner',
+                  updatedClaim.id
+                );
+                break; // Only send one notification per browser session
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error sending push notifications:', error);
         }
       }
     }
@@ -1294,32 +1365,26 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
     setClaims(prev => [newClaim, ...prev]);
     setCurrentView('DASHBOARD');
 
-    // Send push notifications to currently logged-in admin users if claim was submitted by homeowner
-    // Note: Push notifications work per browser session, so we notify any currently logged-in admin
+    // Send push notifications to admin users if claim was submitted by homeowner
     if (userRole === UserRole.HOMEOWNER && employees.length > 0) {
       try {
         const { pushNotificationService } = await import('./services/pushNotificationService');
-        
-        // Check all admin users - if any have push notifications enabled, send notification
-        // (in practice, this will notify the current browser session if an admin is logged in elsewhere)
-        const hasAdminWithPushEnabled = employees.some(emp => 
-          emp.role === UserRole.ADMIN && emp.pushNotificationsEnabled === true
-        );
-        
-        if (hasAdminWithPushEnabled) {
-          // Request permission if not already granted
-          const permission = await pushNotificationService.requestPermission();
-          if (permission === 'granted') {
-            await pushNotificationService.notifyNewClaim(
-              newClaim.title,
-              subjectHomeowner.name,
-              newClaim.id
-            );
+        const permission = await pushNotificationService.requestPermission();
+        if (permission === 'granted') {
+          // Send push notification to each admin user who has this preference enabled
+          for (const emp of employees) {
+            if (emp.pushNotifyClaimSubmitted === true) {
+              await pushNotificationService.notifyNewClaim(
+                newClaim.title,
+                subjectHomeowner.name,
+                newClaim.id
+              );
+              break; // Only send one notification per browser session
+            }
           }
         }
       } catch (error) {
         console.error('Error sending push notifications:', error);
-        // Fail silently - push notifications are not critical
       }
     }
 
@@ -2397,7 +2462,13 @@ Assigned By: ${assignerName}
              emailNotifyHomeownerAcceptsAppointment: emp.emailNotifyHomeownerAcceptsAppointment !== false,
              emailNotifySubAcceptsAppointment: emp.emailNotifySubAcceptsAppointment !== false,
              emailNotifyHomeownerRescheduleRequest: emp.emailNotifyHomeownerRescheduleRequest !== false,
-             emailNotifyTaskAssigned: emp.emailNotifyTaskAssigned !== false
+             emailNotifyTaskAssigned: emp.emailNotifyTaskAssigned !== false,
+             pushNotifyClaimSubmitted: emp.pushNotifyClaimSubmitted === true,
+             pushNotifyHomeownerAcceptsAppointment: emp.pushNotifyHomeownerAcceptsAppointment === true,
+             pushNotifySubAcceptsAppointment: emp.pushNotifySubAcceptsAppointment === true,
+             pushNotifyHomeownerRescheduleRequest: emp.pushNotifyHomeownerRescheduleRequest === true,
+             pushNotifyTaskAssigned: emp.pushNotifyTaskAssigned === true,
+             pushNotifyHomeownerMessage: emp.pushNotifyHomeownerMessage === true
            } as any);
          } catch(e) { console.error(e); }
       }
@@ -2414,7 +2485,13 @@ Assigned By: ${assignerName}
             emailNotifyHomeownerAcceptsAppointment: emp.emailNotifyHomeownerAcceptsAppointment !== false,
             emailNotifySubAcceptsAppointment: emp.emailNotifySubAcceptsAppointment !== false,
             emailNotifyHomeownerRescheduleRequest: emp.emailNotifyHomeownerRescheduleRequest !== false,
-            emailNotifyTaskAssigned: emp.emailNotifyTaskAssigned !== false
+            emailNotifyTaskAssigned: emp.emailNotifyTaskAssigned !== false,
+            pushNotifyClaimSubmitted: emp.pushNotifyClaimSubmitted === true,
+            pushNotifyHomeownerAcceptsAppointment: emp.pushNotifyHomeownerAcceptsAppointment === true,
+            pushNotifySubAcceptsAppointment: emp.pushNotifySubAcceptsAppointment === true,
+            pushNotifyHomeownerRescheduleRequest: emp.pushNotifyHomeownerRescheduleRequest === true,
+            pushNotifyTaskAssigned: emp.pushNotifyTaskAssigned === true,
+            pushNotifyHomeownerMessage: emp.pushNotifyHomeownerMessage === true
             // role update ignored for now to map to enum
           }).where(eq(usersTable.id, emp.id));
         } catch(e) { console.error(e); }

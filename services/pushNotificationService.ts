@@ -127,6 +127,91 @@ class PushNotificationService {
       }
     });
   }
+
+  /**
+   * Send a notification when homeowner accepts an appointment
+   */
+  async notifyAppointmentAccepted(claimTitle: string, homeownerName: string, claimId: string, date: string): Promise<void> {
+    await this.sendNotification({
+      title: 'Appointment Accepted',
+      body: `${homeownerName} accepted appointment for: ${claimTitle}`,
+      tag: `appointment-accepted-${claimId}`,
+      requireInteraction: true,
+      data: {
+        type: 'appointment',
+        claimId,
+        url: '/'
+      }
+    });
+  }
+
+  /**
+   * Send a notification when sub accepts an appointment
+   */
+  async notifySubAcceptedAppointment(claimTitle: string, subName: string, claimId: string): Promise<void> {
+    await this.sendNotification({
+      title: 'Sub Accepted Appointment',
+      body: `${subName} accepted appointment for: ${claimTitle}`,
+      tag: `sub-accepted-${claimId}`,
+      requireInteraction: true,
+      data: {
+        type: 'appointment',
+        claimId,
+        url: '/'
+      }
+    });
+  }
+
+  /**
+   * Send a notification when homeowner requests reschedule
+   */
+  async notifyRescheduleRequested(claimTitle: string, homeownerName: string, claimId: string): Promise<void> {
+    await this.sendNotification({
+      title: 'Reschedule Requested',
+      body: `${homeownerName} requested reschedule for: ${claimTitle}`,
+      tag: `reschedule-${claimId}`,
+      requireInteraction: true,
+      data: {
+        type: 'claim',
+        claimId,
+        url: '/'
+      }
+    });
+  }
+
+  /**
+   * Send a notification for new task assignment
+   */
+  async notifyTaskAssigned(taskTitle: string, taskId: string): Promise<void> {
+    await this.sendNotification({
+      title: 'New Task Assigned',
+      body: `You have been assigned: ${taskTitle}`,
+      tag: `task-${taskId}`,
+      requireInteraction: true,
+      data: {
+        type: 'task',
+        taskId,
+        url: '/'
+      }
+    });
+  }
+
+  /**
+   * Send a notification when homeowner sends a message
+   */
+  async notifyHomeownerMessage(senderName: string, content: string, threadId: string): Promise<void> {
+    await this.sendNotification({
+      title: `New Message from ${senderName}`,
+      body: content.length > 100 ? content.substring(0, 100) + '...' : content,
+      tag: `message-${threadId}`,
+      requireInteraction: true,
+      data: {
+        type: 'message',
+        threadId,
+        url: '/'
+      }
+    });
+  }
 }
 
 // Export singleton instance

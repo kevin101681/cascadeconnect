@@ -1324,6 +1324,31 @@ const Dashboard: React.FC<DashboardProps> = ({
           replyToId: thread.id
         });
       }
+      
+      // Send push notification if homeowner sent message and recipient is admin with preference enabled
+      if (!isAdmin && employees && employees.length > 0 && thread) {
+        try {
+          const { pushNotificationService } = await import('../services/pushNotificationService');
+          const permission = await pushNotificationService.requestPermission();
+          if (permission === 'granted') {
+            // Find admin participants in the thread and send notifications
+            const adminParticipants = thread.participants || [];
+            for (const participantId of adminParticipants) {
+              const emp = employees.find(e => e.id === participantId);
+              if (emp && emp.pushNotifyHomeownerMessage === true) {
+                await pushNotificationService.notifyHomeownerMessage(
+                  senderName,
+                  replyContent,
+                  thread.id
+                );
+                break; // Only send one notification per browser session
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error sending push notification:', error);
+        }
+      }
 
       // Track claim-related message if message is from admin and thread is claim-related
       if (isAdmin && thread && onTrackClaimMessage) {

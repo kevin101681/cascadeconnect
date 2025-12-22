@@ -65,8 +65,13 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
   const [empEmailNotifySubAcceptsAppointment, setEmpEmailNotifySubAcceptsAppointment] = useState(true);
   const [empEmailNotifyHomeownerRescheduleRequest, setEmpEmailNotifyHomeownerRescheduleRequest] = useState(true);
   const [empEmailNotifyTaskAssigned, setEmpEmailNotifyTaskAssigned] = useState(true);
-  // Push Notification Preference
-  const [empPushNotificationsEnabled, setEmpPushNotificationsEnabled] = useState(false);
+  // Push Notification Preferences
+  const [empPushNotifyClaimSubmitted, setEmpPushNotifyClaimSubmitted] = useState(false);
+  const [empPushNotifyHomeownerAcceptsAppointment, setEmpPushNotifyHomeownerAcceptsAppointment] = useState(false);
+  const [empPushNotifySubAcceptsAppointment, setEmpPushNotifySubAcceptsAppointment] = useState(false);
+  const [empPushNotifyHomeownerRescheduleRequest, setEmpPushNotifyHomeownerRescheduleRequest] = useState(false);
+  const [empPushNotifyTaskAssigned, setEmpPushNotifyTaskAssigned] = useState(false);
+  const [empPushNotifyHomeownerMessage, setEmpPushNotifyHomeownerMessage] = useState(false);
 
   // Sub Form State
   const [subCompany, setSubCompany] = useState('');
@@ -102,7 +107,12 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     setEmpEmailNotifyHomeownerRescheduleRequest(true);
     setEmpEmailNotifyTaskAssigned(true);
     // Push notifications default to false
-    setEmpPushNotificationsEnabled(false);
+    setEmpPushNotifyClaimSubmitted(false);
+    setEmpPushNotifyHomeownerAcceptsAppointment(false);
+    setEmpPushNotifySubAcceptsAppointment(false);
+    setEmpPushNotifyHomeownerRescheduleRequest(false);
+    setEmpPushNotifyTaskAssigned(false);
+    setEmpPushNotifyHomeownerMessage(false);
     setShowEmpModal(true);
   };
 
@@ -134,7 +144,12 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
       emailNotifySubAcceptsAppointment: empEmailNotifySubAcceptsAppointment,
       emailNotifyHomeownerRescheduleRequest: empEmailNotifyHomeownerRescheduleRequest,
       emailNotifyTaskAssigned: empEmailNotifyTaskAssigned,
-      pushNotificationsEnabled: empPushNotificationsEnabled,
+      pushNotifyClaimSubmitted: empPushNotifyClaimSubmitted,
+      pushNotifyHomeownerAcceptsAppointment: empPushNotifyHomeownerAcceptsAppointment,
+      pushNotifySubAcceptsAppointment: empPushNotifySubAcceptsAppointment,
+      pushNotifyHomeownerRescheduleRequest: empPushNotifyHomeownerRescheduleRequest,
+      pushNotifyTaskAssigned: empPushNotifyTaskAssigned,
+      pushNotifyHomeownerMessage: empPushNotifyHomeownerMessage,
     };
     
     if (editingEmpId) {

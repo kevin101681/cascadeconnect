@@ -31,8 +31,13 @@ export const users = pgTable('users', {
   emailNotifySubAcceptsAppointment: boolean('email_notify_sub_accepts_appointment').default(true),
   emailNotifyHomeownerRescheduleRequest: boolean('email_notify_homeowner_reschedule_request').default(true),
   emailNotifyTaskAssigned: boolean('email_notify_task_assigned').default(true),
-  // Push Notification Preference
-  pushNotificationsEnabled: boolean('push_notifications_enabled').default(false),
+  // Push Notification Preferences
+  pushNotifyClaimSubmitted: boolean('push_notify_claim_submitted').default(false),
+  pushNotifyHomeownerAcceptsAppointment: boolean('push_notify_homeowner_accepts_appointment').default(false),
+  pushNotifySubAcceptsAppointment: boolean('push_notify_sub_accepts_appointment').default(false),
+  pushNotifyHomeownerRescheduleRequest: boolean('push_notify_homeowner_reschedule_request').default(false),
+  pushNotifyTaskAssigned: boolean('push_notify_task_assigned').default(false),
+  pushNotifyHomeownerMessage: boolean('push_notify_homeowner_message').default(false),
   // Note: Users always get email notifications when homeowner sends a message (if on thread)
   
   createdAt: timestamp('created_at').defaultNow(),
