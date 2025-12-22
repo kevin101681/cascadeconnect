@@ -96,11 +96,28 @@ exports.handler = async (event, context) => {
       });
 
       console.log('SendGrid Messages API response status:', activityResponse.status);
+      console.log('SendGrid Messages API response headers:', Object.fromEntries(activityResponse.headers.entries()));
 
       if (activityResponse.ok) {
         const activityResult = await activityResponse.json();
+        console.log('SendGrid Messages API full response:', JSON.stringify(activityResult, null, 2));
         console.log(`SendGrid Messages API returned ${activityResult.messages?.length || 0} messages`);
-        const messages = activityResult.messages || [];
+        
+        // Check if the response structure is different
+        if (!activityResult.messages && activityResult.results) {
+          console.log('⚠️ Response structure appears different - found "results" instead of "messages"');
+        }
+        
+        const messages = activityResult.messages || activityResult.results || [];
+        
+        if (messages.length === 0) {
+          console.log('⚠️ WARNING: SendGrid Messages API returned 0 messages');
+          console.log('This could mean:');
+          console.log('1. The Messages API feature is not enabled on your SendGrid account');
+          console.log('2. Your API key doesn\'t have "messages.read" permission');
+          console.log('3. There are actually no messages in SendGrid\'s Messages API');
+          console.log('4. The Messages API only tracks messages sent via API, not all emails');
+        }
         
         // Filter messages by date range (client-side filtering)
         // Use UTC dates to avoid timezone issues
@@ -264,7 +281,25 @@ exports.handler = async (event, context) => {
         console.log(`Processed ${activityData.length} activity records`);
       } else {
         const errorText = await activityResponse.text();
-        console.warn('Could not fetch email activity:', activityResponse.status, errorText);
+        console.error('❌ SendGrid Messages API Error:', activityResponse.status, errorText);
+        
+        // Try to parse error as JSON
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+          console.error('Error details:', JSON.stringify(errorData, null, 2));
+        } catch {
+          console.error('Error response (not JSON):', errorText);
+        }
+        
+        // Provide helpful error messages
+        if (activityResponse.status === 403) {
+          console.error('⚠️ 403 Forbidden: Your API key may not have "messages.read" permission');
+          console.error('Please check your SendGrid API key permissions in the SendGrid dashboard');
+        } else if (activityResponse.status === 404) {
+          console.error('⚠️ 404 Not Found: The Messages API endpoint may not be available');
+          console.error('The Messages API feature may need to be enabled in your SendGrid account');
+        }
       }
     } catch (activityError) {
       console.warn('Could not fetch email activity:', activityError.message);
