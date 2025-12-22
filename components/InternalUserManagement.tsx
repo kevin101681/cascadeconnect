@@ -62,6 +62,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
   const [empEmailNotifySubAcceptsAppointment, setEmpEmailNotifySubAcceptsAppointment] = useState(true);
   const [empEmailNotifyHomeownerRescheduleRequest, setEmpEmailNotifyHomeownerRescheduleRequest] = useState(true);
   const [empEmailNotifyTaskAssigned, setEmpEmailNotifyTaskAssigned] = useState(true);
+  // Push Notification Preference
+  const [empPushNotificationsEnabled, setEmpPushNotificationsEnabled] = useState(false);
 
   // Sub Form State
   const [subCompany, setSubCompany] = useState('');
@@ -96,6 +98,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     setEmpEmailNotifySubAcceptsAppointment(true);
     setEmpEmailNotifyHomeownerRescheduleRequest(true);
     setEmpEmailNotifyTaskAssigned(true);
+    // Push notifications default to false
+    setEmpPushNotificationsEnabled(false);
     setShowEmpModal(true);
   };
 
@@ -110,6 +114,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     setEmpEmailNotifySubAcceptsAppointment(emp.emailNotifySubAcceptsAppointment !== false);
     setEmpEmailNotifyHomeownerRescheduleRequest(emp.emailNotifyHomeownerRescheduleRequest !== false);
     setEmpEmailNotifyTaskAssigned(emp.emailNotifyTaskAssigned !== false);
+    // Load push notification preference (default to false)
+    setEmpPushNotificationsEnabled(emp.pushNotificationsEnabled === true);
     setShowEmpModal(true);
   };
 
@@ -125,6 +131,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
       emailNotifySubAcceptsAppointment: empEmailNotifySubAcceptsAppointment,
       emailNotifyHomeownerRescheduleRequest: empEmailNotifyHomeownerRescheduleRequest,
       emailNotifyTaskAssigned: empEmailNotifyTaskAssigned,
+      pushNotificationsEnabled: empPushNotificationsEnabled,
     };
     
     if (editingEmpId) {
@@ -555,6 +562,33 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                   <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-2 pt-2 border-t border-surface-outline-variant/50 dark:border-gray-700/50">
                     Note: Users always receive email notifications when a homeowner sends a message if they are on the thread.
                   </p>
+                </div>
+              </div>
+
+              {/* Push Notification Preference */}
+              <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-4">
+                  <Bell className="h-4 w-4 text-primary" />
+                  <label className="text-sm font-medium text-surface-on dark:text-gray-100">Push Notifications</label>
+                </div>
+                <div className="space-y-3">
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <div className="flex flex-col">
+                      <span className="text-sm text-surface-on dark:text-gray-100">Enable push notifications</span>
+                      <span className="text-xs text-surface-on-variant dark:text-gray-400">Receive browser notifications for new claims</span>
+                    </div>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={empPushNotificationsEnabled}
+                        onChange={(e) => setEmpPushNotificationsEnabled(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-11 h-6 rounded-full transition-colors ${empPushNotificationsEnabled ? 'bg-primary' : 'bg-surface-container dark:bg-gray-600'}`}>
+                        <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform mt-0.5 ml-0.5 ${empPushNotificationsEnabled ? 'translate-x-5' : 'translate-x-0'}`}></div>
+                      </div>
+                    </div>
+                  </label>
                 </div>
               </div>
               

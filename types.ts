@@ -99,6 +99,8 @@ export interface InternalEmployee {
   emailNotifySubAcceptsAppointment?: boolean;
   emailNotifyHomeownerRescheduleRequest?: boolean;
   emailNotifyTaskAssigned?: boolean;
+  // Push Notification Preference
+  pushNotificationsEnabled?: boolean;
 }
 
 export interface Contractor {

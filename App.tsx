@@ -471,7 +471,8 @@ function App() {
                     emailNotifyHomeownerAcceptsAppointment: usersTable.emailNotifyHomeownerAcceptsAppointment,
                     emailNotifySubAcceptsAppointment: usersTable.emailNotifySubAcceptsAppointment,
                     emailNotifyHomeownerRescheduleRequest: usersTable.emailNotifyHomeownerRescheduleRequest,
-                    emailNotifyTaskAssigned: usersTable.emailNotifyTaskAssigned
+                    emailNotifyTaskAssigned: usersTable.emailNotifyTaskAssigned,
+                    pushNotificationsEnabled: usersTable.pushNotificationsEnabled
                   }).from(usersTable);
                   
                   usersWithPrefs.forEach(u => {
@@ -480,7 +481,8 @@ function App() {
                       emailNotifyHomeownerAcceptsAppointment: u.emailNotifyHomeownerAcceptsAppointment ?? true,
                       emailNotifySubAcceptsAppointment: u.emailNotifySubAcceptsAppointment ?? true,
                       emailNotifyHomeownerRescheduleRequest: u.emailNotifyHomeownerRescheduleRequest ?? true,
-                      emailNotifyTaskAssigned: u.emailNotifyTaskAssigned ?? true
+                      emailNotifyTaskAssigned: u.emailNotifyTaskAssigned ?? true,
+                      pushNotificationsEnabled: u.pushNotificationsEnabled ?? false
                     });
                   });
                 } catch (prefsError: any) {
@@ -503,7 +505,8 @@ function App() {
                         emailNotifyHomeownerAcceptsAppointment: prefs?.emailNotifyHomeownerAcceptsAppointment ?? true,
                         emailNotifySubAcceptsAppointment: prefs?.emailNotifySubAcceptsAppointment ?? true,
                         emailNotifyHomeownerRescheduleRequest: prefs?.emailNotifyHomeownerRescheduleRequest ?? true,
-                        emailNotifyTaskAssigned: prefs?.emailNotifyTaskAssigned ?? true
+                        emailNotifyTaskAssigned: prefs?.emailNotifyTaskAssigned ?? true,
+                        pushNotificationsEnabled: prefs?.pushNotificationsEnabled ?? false
                     };
                   });
                 
@@ -1290,6 +1293,33 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
     // Update State (useEffect handles persistence)
     setClaims(prev => [newClaim, ...prev]);
     setCurrentView('DASHBOARD');
+
+    // Send push notifications to admin users if claim was submitted by homeowner
+    if (userRole === UserRole.HOMEOWNER) {
+      try {
+        const { pushNotificationService } = await import('./services/pushNotificationService');
+        // Get all admin users with push notifications enabled
+        const adminUsersWithPush = employees.filter(emp => 
+          emp.role === UserRole.ADMIN && emp.pushNotificationsEnabled === true
+        );
+        
+        // Request permission and send notification for each admin user
+        for (const admin of adminUsersWithPush) {
+          // Request permission if not already granted
+          const permission = await pushNotificationService.requestPermission();
+          if (permission === 'granted') {
+            await pushNotificationService.notifyNewClaim(
+              newClaim.title,
+              subjectHomeowner.name,
+              newClaim.id
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Error sending push notifications:', error);
+        // Fail silently - push notifications are not critical
+      }
+    }
 
     // DB Insert
     if (isDbConfigured) {
