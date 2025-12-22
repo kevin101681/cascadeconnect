@@ -1456,6 +1456,58 @@ Homeowner: ${newClaim.homeownerName}
 </div>
       `.trim();
 
+      // Convert image attachments to email attachments
+      const imageAttachments = (newClaim.attachments || []).filter(att => att.type === 'IMAGE' && att.url);
+      const emailAttachments = await Promise.all(
+        imageAttachments.map(async (attachment) => {
+          try {
+            let base64: string;
+            let contentType: string;
+            
+            // Check if URL is already a data URL (base64)
+            if (attachment.url.startsWith('data:')) {
+              const dataUrlParts = attachment.url.split(',');
+              base64 = dataUrlParts[1];
+              // Extract content type from data URL (e.g., "data:image/jpeg;base64,")
+              const dataUrlHeader = dataUrlParts[0];
+              const contentTypeMatch = dataUrlHeader.match(/data:([^;]+)/);
+              contentType = contentTypeMatch ? contentTypeMatch[1] : 'image/jpeg';
+            } else {
+              // Fetch the image and convert to base64
+              const response = await fetch(attachment.url);
+              const blob = await response.blob();
+              base64 = await new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                  const base64String = (reader.result as string).split(',')[1];
+                  resolve(base64String);
+                };
+                reader.readAsDataURL(blob);
+              });
+              contentType = blob.type || (attachment.url.match(/\.(jpg|jpeg)$/i) ? 'image/jpeg' : 'image/png');
+            }
+            
+            // Determine file extension and filename
+            const extension = contentType.includes('jpeg') || contentType.includes('jpg') ? 'jpg' : 
+                            contentType.includes('png') ? 'png' : 
+                            contentType.includes('gif') ? 'gif' : 'jpg';
+            const filename = attachment.name || `image_${attachment.id || Date.now()}.${extension}`;
+            
+            return {
+              filename,
+              content: base64,
+              contentType
+            };
+          } catch (error) {
+            console.error(`Failed to convert image ${attachment.name} to base64:`, error);
+            return null;
+          }
+        })
+      );
+      
+      // Filter out any failed conversions
+      const validEmailAttachments = emailAttachments.filter(att => att !== null) as Array<{ filename: string; content: string; contentType: string }>;
+
       // Send to all employees who have this preference enabled
       for (const emp of employees) {
         if (emp.emailNotifyClaimSubmitted !== false) {
@@ -1465,7 +1517,8 @@ Homeowner: ${newClaim.homeownerName}
               subject: `New Claim Submitted: ${newClaim.claimNumber} - ${newClaim.title}`,
               body: emailBody,
               fromName: 'Cascade Connect System',
-              fromRole: UserRole.ADMIN
+              fromRole: UserRole.ADMIN,
+              attachments: validEmailAttachments.length > 0 ? validEmailAttachments : undefined
             });
           } catch (error) {
             console.error(`Failed to send claim notification to ${emp.email}:`, error);
