@@ -3128,6 +3128,7 @@ Assigned By: ${assignerName}
         await signOut();
       }}
       isAdminAccount={isAdminAccount}
+      currentUser={activeEmployee}
     >
       {currentView === 'DASHBOARD' && (
         <Dashboard 
@@ -3234,6 +3235,7 @@ Assigned By: ${assignerName}
           onDeleteBuilderUser={handleDeleteBuilderUser}
           onClose={() => setCurrentView('DASHBOARD')}
           initialTab="EMPLOYEES"
+          currentUser={activeEmployee}
         />
       )}
       {currentView === 'BUILDERS' && (
@@ -3246,7 +3248,8 @@ Assigned By: ${assignerName}
           onAddUser={handleAddBuilderUser}
           onUpdateUser={handleUpdateBuilderUser}
           onDeleteUser={handleDeleteBuilderUser}
-          onClose={() => setCurrentView('DASHBOARD')} 
+          onClose={() => setCurrentView('DASHBOARD')}
+          currentUser={activeEmployee}
         />
       )}
       {currentView === 'HOMEOWNERS' && (

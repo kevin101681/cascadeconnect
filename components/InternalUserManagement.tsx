@@ -41,8 +41,11 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
   onUpdateBuilderUser,
   onDeleteBuilderUser,
   onClose,
-  initialTab = 'EMPLOYEES'
+  initialTab = 'EMPLOYEES',
+  currentUser
 }) => {
+  // Check if current user is Administrator (has full access)
+  const isAdministrator = currentUser?.role === 'Administrator';
   const [activeTab, setActiveTab] = useState<'EMPLOYEES' | 'SUBS' | 'BUILDER_USERS'>(initialTab);
   
   const [showEmpModal, setShowEmpModal] = useState(false);
@@ -91,7 +94,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     setEditingEmpId(null);
     setEmpName('');
     setEmpEmail('');
-    setEmpRole('Warranty Manager');
+    setEmpRole('Administrator');
     // Reset email preferences to defaults (all true)
     setEmpEmailNotifyClaimSubmitted(true);
     setEmpEmailNotifyHomeownerAcceptsAppointment(true);
@@ -310,17 +313,21 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
         {/* ACTION BAR */}
         <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-end">
           {activeTab === 'EMPLOYEES' ? (
-            <Button onClick={handleOpenCreateEmp} icon={<Plus className="h-4 w-4" />}>
-              Add Team Member
-            </Button>
+            isAdministrator && (
+              <Button onClick={handleOpenCreateEmp} icon={<Plus className="h-4 w-4" />}>
+                Add Team Member
+              </Button>
+            )
           ) : activeTab === 'SUBS' ? (
             <Button onClick={handleOpenCreateSub} icon={<Plus className="h-4 w-4" />}>
               Add Sub
             </Button>
           ) : (
-            <Button onClick={handleOpenCreateBuilderUser} icon={<Plus className="h-4 w-4" />} disabled={builderGroups.length === 0}>
-              Add Builder User
-            </Button>
+            isAdministrator && (
+              <Button onClick={handleOpenCreateBuilderUser} icon={<Plus className="h-4 w-4" />} disabled={builderGroups.length === 0}>
+                Add Builder User
+              </Button>
+            )
           )}
         </div>
 
@@ -372,10 +379,12 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                       {emp.email}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => handleOpenEditEmp(emp)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
-                        <button onClick={() => onDeleteEmployee(emp.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
-                      </div>
+                      {isAdministrator && (
+                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => handleOpenEditEmp(emp)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
+                          <button onClick={() => onDeleteEmployee(emp.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -405,7 +414,9 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onClick={() => handleOpenInviteSub(sub)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full" title="Invite Sub"><Mail className="h-4 w-4" /></button>
                         <button onClick={() => handleOpenEditSub(sub)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
-                        <button onClick={() => onDeleteContractor(sub.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
+                        {isAdministrator && (
+                          <button onClick={() => onDeleteContractor(sub.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -432,10 +443,12 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => handleOpenEditBuilderUser(user)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
-                          <button onClick={() => onDeleteBuilderUser && onDeleteBuilderUser(user.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
-                        </div>
+                        {isAdministrator && (
+                          <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onClick={() => handleOpenEditBuilderUser(user)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
+                            <button onClick={() => onDeleteBuilderUser && onDeleteBuilderUser(user.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
+                          </div>
+                        )}
                       </td>
                     </tr>
                   );
@@ -469,11 +482,8 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
               <div>
                 <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Role</label>
                 <select className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={empRole} onChange={(e) => setEmpRole(e.target.value)}>
-                  <option>Warranty Manager</option>
-                  <option>Field Specialist</option>
-                  <option>Admin Coordinator</option>
-                  <option>Customer Support</option>
-                  <option>Technical Lead</option>
+                  <option>Administrator</option>
+                  <option>Employee</option>
                 </select>
               </div>
               

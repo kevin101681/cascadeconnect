@@ -30,6 +30,9 @@ interface LayoutProps {
   
   // Admin account indicator (to show menu even when viewing as homeowner)
   isAdminAccount?: boolean;
+  
+  // Current user to check permissions
+  currentUser?: { role: string };
 }
 
 
@@ -49,7 +52,8 @@ const Layout: React.FC<LayoutProps> = ({
   onNavigate,
   onOpenEnrollment,
   onSignOut,
-  isAdminAccount = false
+  isAdminAccount = false,
+  currentUser
 }) => {
   // Minimal approach: Just ensure avatar is sized correctly, let CSS handle the rest
   useEffect(() => {
@@ -105,6 +109,8 @@ const Layout: React.FC<LayoutProps> = ({
   }, []);
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
+  // Check if current user is Administrator (has full access)
+  const isAdministrator = currentUser?.role === 'Administrator';
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { isDarkMode, toggleDarkMode } = useDarkMode();
@@ -404,20 +410,24 @@ const Layout: React.FC<LayoutProps> = ({
                             <Home className="h-4 w-4 text-surface-outline dark:text-gray-500" />
                             Homeowners
                           </button>
-                          <button 
-                            onClick={() => handleMenuAction(() => onNavigate('DATA'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
-                          >
-                            <Database className="h-4 w-4 text-surface-outline dark:text-gray-500" />
-                            Data Import
-                          </button>
-                          <button 
-                            onClick={() => handleMenuAction(() => onNavigate('INVOICES'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
-                          >
-                            <FileText className="h-4 w-4 text-surface-outline dark:text-gray-500" />
-                            Invoices
-                          </button>
+                          {isAdministrator && (
+                            <>
+                              <button 
+                                onClick={() => handleMenuAction(() => onNavigate('DATA'))}
+                                className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                              >
+                                <Database className="h-4 w-4 text-surface-outline dark:text-gray-500" />
+                                Data Import
+                              </button>
+                              <button 
+                                onClick={() => handleMenuAction(() => onNavigate('INVOICES'))}
+                                className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                              >
+                                <FileText className="h-4 w-4 text-surface-outline dark:text-gray-500" />
+                                Invoices
+                              </button>
+                            </>
+                          )}
                           <button 
                             onClick={() => handleMenuAction(() => onNavigate('EMAIL_HISTORY'))}
                             className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
@@ -425,13 +435,15 @@ const Layout: React.FC<LayoutProps> = ({
                             <Mail className="h-4 w-4 text-surface-outline dark:text-gray-500" />
                             Email History
                           </button>
-                          <button 
-                            onClick={() => handleMenuAction(() => onNavigate('BACKEND'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
-                          >
-                            <Server className="h-4 w-4 text-surface-outline dark:text-gray-500" />
-                            Backend
-                          </button>
+                          {isAdministrator && (
+                            <button 
+                              onClick={() => handleMenuAction(() => onNavigate('BACKEND'))}
+                              className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                            >
+                              <Server className="h-4 w-4 text-surface-outline dark:text-gray-500" />
+                              Backend
+                            </button>
+                          )}
                           
                           <div className="my-1 border-t border-surface-outline-variant/50 dark:border-gray-700/50"></div>
                           

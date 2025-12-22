@@ -14,6 +14,7 @@ interface BuilderManagementProps {
   onUpdateUser: (user: BuilderUser, password?: string) => void; // Kept for compatibility
   onDeleteUser: (id: string) => void; // Kept for compatibility
   onClose: () => void;
+  currentUser?: { role: string }; // Current logged-in user to check permissions
 }
 
 const BuilderManagement: React.FC<BuilderManagementProps> = ({
@@ -25,9 +26,12 @@ const BuilderManagement: React.FC<BuilderManagementProps> = ({
   onAddUser: _onAddUser, // Unused
   onUpdateUser: _onUpdateUser, // Unused
   onDeleteUser: _onDeleteUser, // Unused
-  onClose
+  onClose,
+  currentUser
 }) => {
   // Removed USERS tab - builder users are now in InternalUserManagement
+  // Check if current user is Administrator (has full access)
+  const isAdministrator = currentUser?.role === 'Administrator';
   
   // Group Form State
   const [showGroupModal, setShowGroupModal] = useState(false);
@@ -98,9 +102,11 @@ const BuilderManagement: React.FC<BuilderManagementProps> = ({
         
         {/* ACTION BAR */}
         <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-end">
-          <Button onClick={handleOpenCreateGroup} icon={<Plus className="h-4 w-4" />}>
-            Add Builder
-          </Button>
+          {isAdministrator && (
+            <Button onClick={handleOpenCreateGroup} icon={<Plus className="h-4 w-4" />}>
+              Add Builder
+            </Button>
+          )}
         </div>
 
         <div className="overflow-x-auto">
@@ -127,10 +133,12 @@ const BuilderManagement: React.FC<BuilderManagementProps> = ({
                     {group.email || 'N/A'}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => handleOpenEditGroup(group)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
-                      <button onClick={() => onDeleteGroup(group.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
-                    </div>
+                    {isAdministrator && (
+                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => handleOpenEditGroup(group)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
+                        <button onClick={() => onDeleteGroup(group.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))}
