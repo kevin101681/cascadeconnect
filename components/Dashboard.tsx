@@ -136,7 +136,10 @@ const ManualImagePage = forwardRef<HTMLDivElement, ManualImagePageProps>(({ imag
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: '#fff',
-        overflow: 'hidden'
+        background: '#fff',
+        overflow: 'hidden',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden'
       }}
     >
       <img
