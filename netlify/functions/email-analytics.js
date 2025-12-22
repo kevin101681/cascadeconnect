@@ -77,13 +77,18 @@ exports.handler = async (event, context) => {
     let activityData = [];
     try {
       const activityUrl = new URL('https://api.sendgrid.com/v3/messages');
-      const limit = event.queryStringParameters?.limit ? parseInt(event.queryStringParameters.limit) : 500; // Increased default limit
-      // Fetch more messages than we need since we'll filter by date range on our side
-      activityUrl.searchParams.set('limit', Math.min(limit * 2, 1000).toString());
+      const limit = event.queryStringParameters?.limit ? parseInt(event.queryStringParameters.limit) : 1000; // Increased default limit
       
-      // Don't use query parameter - fetch recent messages and filter on our side
-      // SendGrid's Messages API query syntax can be unreliable
-      console.log('Fetching SendGrid messages (no query, will filter by date on our side)');
+      // Use query parameter to filter by date range on SendGrid's side for better performance
+      // SendGrid Messages API query syntax: last_event_time BETWEEN TIMESTAMP 'start' AND TIMESTAMP 'end'
+      const startTimestamp = `${startDate}T00:00:00Z`;
+      const endTimestamp = `${endDate}T23:59:59Z`;
+      const query = `last_event_time BETWEEN TIMESTAMP '${startTimestamp}' AND TIMESTAMP '${endTimestamp}'`;
+      activityUrl.searchParams.set('query', query);
+      activityUrl.searchParams.set('limit', Math.min(limit, 1000).toString());
+      
+      console.log('Fetching SendGrid messages with date filter query');
+      console.log('Query:', query);
       console.log('Full URL:', activityUrl.toString());
       
       const activityResponse = await fetch(activityUrl.toString(), {
@@ -101,7 +106,7 @@ exports.handler = async (event, context) => {
         console.log(`SendGrid Messages API returned ${activityResult.messages?.length || 0} messages`);
         const messages = activityResult.messages || [];
         
-        // Filter messages by date range (always do this since we're not using query parameter)
+        // Messages should already be filtered by date range via query, but do a final filter as safety check
         const filteredMessages = messages.filter(msg => {
           const msgDate = msg.last_event_time || msg.sent_at;
           if (!msgDate) {
@@ -109,23 +114,29 @@ exports.handler = async (event, context) => {
             return false;
           }
           const msgTimestamp = new Date(msgDate).getTime();
-          const startTimestamp = new Date(`${startDate}T00:00:00Z`).getTime();
-          const endTimestamp = new Date(`${endDate}T23:59:59Z`).getTime();
-          const inRange = msgTimestamp >= startTimestamp && msgTimestamp <= endTimestamp;
-          if (!inRange) {
-            console.log(`Message ${msg.msg_id} outside date range: ${msgDate} (range: ${startDate} to ${endDate})`);
-          }
-          return inRange;
+          const startTimestampMs = new Date(`${startDate}T00:00:00Z`).getTime();
+          const endTimestampMs = new Date(`${endDate}T23:59:59Z`).getTime();
+          return msgTimestamp >= startTimestampMs && msgTimestamp <= endTimestampMs;
         });
         
-        console.log(`Filtered to ${filteredMessages.length} messages within date range (${startDate} to ${endDate})`);
-        const messagesToProcess = filteredMessages;
+        console.log(`Found ${filteredMessages.length} messages within date range (${startDate} to ${endDate})`);
         
-        // Process messages and fetch detailed activity for each
-        // Note: SendGrid API rate limit is 6 requests per minute, so we process in batches
-        const finalMessagesToProcess = messagesToProcess.slice(0, Math.min(limit, 200)); // Limit to 200 max to avoid too many API calls
+        // Process ALL filtered messages (removed the 200 message limit)
+        // Note: SendGrid API rate limit is 6 requests per minute, so we process in batches with delays
+        const batchSize = 50;
+        const finalMessagesToProcess = filteredMessages.slice(0, limit); // Process up to the requested limit
         console.log(`Processing ${finalMessagesToProcess.length} messages in detail`);
-        for (const msg of finalMessagesToProcess) {
+        
+        // Process messages in batches to respect rate limits
+        for (let i = 0; i < finalMessagesToProcess.length; i++) {
+          const msg = finalMessagesToProcess[i];
+          
+          // Add delay between batches to respect SendGrid rate limits (6 requests per minute)
+          if (i > 0 && i % batchSize === 0) {
+            console.log(`Processing batch ${Math.floor(i / batchSize) + 1}, pausing 11 seconds to respect rate limits...`);
+            await new Promise(resolve => setTimeout(resolve, 11000)); // 11 second delay between batches
+          }
+          
           try {
             // Get opens for this message
             let opens = [];
