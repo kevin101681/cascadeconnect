@@ -346,29 +346,54 @@ app.get("/api/email/analytics", async (req, res) => {
         const messages = activityResult.messages || [];
         
         // Filter messages by date range (client-side filtering)
-        const startTimestampMs = new Date(`${startDate}T00:00:00Z`).getTime();
-        const endTimestampMs = new Date(`${endDate}T23:59:59Z`).getTime();
+        // Use UTC dates to avoid timezone issues
+        const startTimestampMs = new Date(`${startDate}T00:00:00.000Z`).getTime();
+        const endTimestampMs = new Date(`${endDate}T23:59:59.999Z`).getTime();
         
-        console.log(`Filtering messages by date range: ${startDate} (${new Date(startTimestampMs).toISOString()}) to ${endDate} (${new Date(endTimestampMs).toISOString()})`);
+        console.log(`\n=== DATE FILTERING DEBUG ===`);
+        console.log(`Date range: ${startDate} to ${endDate}`);
+        console.log(`Start timestamp (UTC): ${new Date(startTimestampMs).toISOString()} (${startTimestampMs})`);
+        console.log(`End timestamp (UTC): ${new Date(endTimestampMs).toISOString()} (${endTimestampMs})`);
+        console.log(`Total messages fetched: ${messages.length}`);
         
-        const filteredMessages = messages.filter(msg => {
+        const filteredMessages = messages.filter((msg, index) => {
           const msgDate = msg.last_event_time || msg.sent_at;
           if (!msgDate) {
-            console.warn('Message missing date field:', msg.msg_id);
+            if (index < 10) {
+              console.warn(`Message ${msg.msg_id}: missing date field`);
+            }
             return false;
           }
+          
+          // Parse the date - SendGrid dates are typically ISO strings
           const msgTimestamp = new Date(msgDate).getTime();
           const inRange = msgTimestamp >= startTimestampMs && msgTimestamp <= endTimestampMs;
           
-          // Log first few messages for debugging
-          if (messages.indexOf(msg) < 5) {
-            console.log(`Message ${msg.msg_id}: date=${msgDate}, timestamp=${msgTimestamp}, inRange=${inRange}`);
+          // Log first 10 messages for debugging
+          if (index < 10) {
+            console.log(`Message ${index + 1}: msg_id=${msg.msg_id?.substring(0, 20)}..., date=${msgDate}, parsed=${new Date(msgTimestamp).toISOString()}, inRange=${inRange}`);
           }
           
           return inRange;
         });
         
-        console.log(`Filtered to ${filteredMessages.length} messages within date range (${startDate} to ${endDate}) out of ${messages.length} total messages`);
+        console.log(`\n=== FILTERING RESULTS ===`);
+        console.log(`Filtered to ${filteredMessages.length} messages within date range`);
+        console.log(`Date range: ${startDate} to ${endDate}`);
+        console.log(`Total messages fetched from SendGrid: ${messages.length}`);
+        if (filteredMessages.length === 0 && messages.length > 0) {
+          console.log(`\n⚠️ WARNING: No messages matched the date range!`);
+          console.log(`This could mean:`);
+          console.log(`1. The date range is outside the most recent 1000 messages (SendGrid limit)`);
+          console.log(`2. There's a timezone mismatch`);
+          console.log(`3. The messages have different date formats`);
+          console.log(`\nSample message dates (first 5):`);
+          messages.slice(0, 5).forEach((msg, i) => {
+            const msgDate = msg.last_event_time || msg.sent_at;
+            console.log(`  ${i + 1}. ${msgDate} (${new Date(msgDate).toISOString()})`);
+          });
+        }
+        console.log(`========================\n`);
         
         // Process ALL filtered messages (removed the 200 message limit)
         // Note: SendGrid API rate limit is 6 requests per minute, so we process in batches with delays
