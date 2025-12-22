@@ -221,14 +221,14 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
-        handlePrevPage();
-      } else if (e.key === 'ArrowRight') {
-        handleNextPage();
+      if (e.key === 'ArrowLeft' && currentPage > 1) {
+        setCurrentPage(prev => prev - 1);
+      } else if (e.key === 'ArrowRight' && currentPage < numPages) {
+        setCurrentPage(prev => prev + 1);
       } else if (e.key === '+' || e.key === '=') {
-        handleZoomIn();
+        setZoom(prev => Math.min(prev + 0.25, 3));
       } else if (e.key === '-') {
-        handleZoomOut();
+        setZoom(prev => Math.max(prev - 0.25, 0.5));
       }
     };
 
