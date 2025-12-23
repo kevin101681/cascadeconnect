@@ -99,7 +99,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
   // Use a single state to track which FAB modal is active
   const [activeFab, setActiveFab] = useState<ActiveFab>('none');
   
-  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'sent' | 'paid'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'sent' | 'paid'>('sent');
   const [sortValue, setSortValue] = useState('date-desc'); // date-desc, date-asc, client-asc, total-desc
   const [showCheckScanner, setShowCheckScanner] = useState(false);
   const [showInvoiceScanner, setShowInvoiceScanner] = useState(false);
