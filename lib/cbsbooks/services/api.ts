@@ -167,25 +167,27 @@ export const api = {
   
   // --- INVOICES ---
   invoices: {
-    list: async (): Promise<Invoice[]> => {
-      // Check cache first (if available and recent)
+    list: async (forceFresh = false): Promise<Invoice[]> => {
+      // Check cache first (if available and not forcing fresh)
       const cacheKey = 'cbs_invoices_cache';
       const cacheTimeKey = 'cbs_invoices_cache_time';
-      const CACHE_DURATION = 5000; // 5 seconds cache
+      const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days cache
       
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && !forceFresh) {
         const cached = localStorage.getItem(cacheKey);
         const cacheTime = localStorage.getItem(cacheTimeKey);
         if (cached && cacheTime) {
           const age = Date.now() - parseInt(cacheTime);
           if (age < CACHE_DURATION) {
-            console.log('✅ Using cached invoices (age:', age, 'ms)');
+            console.log('✅ Using cached invoices (age:', Math.round(age / 1000 / 60), 'minutes)');
             return JSON.parse(cached);
+          } else {
+            console.log('⚠️ Cache expired (age:', Math.round(age / 1000 / 60 / 60), 'hours), fetching fresh data');
           }
         }
       }
       
-      // Always try the real API first, fall back to mock data if it fails
+      // Fetch from API (cache already checked above)
       const startTime = performance.now();
       try {
         const response = await fetch(`${API_BASE}/invoices`, {
@@ -475,18 +477,19 @@ export const api = {
 
   // --- EXPENSES ---
   expenses: {
-    list: async (): Promise<Expense[]> => {
-      // Check cache first
+    list: async (forceFresh = false): Promise<Expense[]> => {
+      // Check cache first (if available and not forcing fresh)
       const cacheKey = 'cbs_expenses_cache';
       const cacheTimeKey = 'cbs_expenses_cache_time';
-      const CACHE_DURATION = 5000;
+      const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days cache
       
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && !forceFresh) {
         const cached = localStorage.getItem(cacheKey);
         const cacheTime = localStorage.getItem(cacheTimeKey);
         if (cached && cacheTime) {
           const age = Date.now() - parseInt(cacheTime);
           if (age < CACHE_DURATION) {
+            console.log('✅ Using cached expenses (age:', Math.round(age / 1000 / 60), 'minutes)');
             return JSON.parse(cached);
           }
         }
@@ -623,18 +626,19 @@ export const api = {
 
   // --- CLIENTS ---
   clients: {
-    list: async (): Promise<Client[]> => {
-      // Check cache first
+    list: async (forceFresh = false): Promise<Client[]> => {
+      // Check cache first (if available and not forcing fresh)
       const cacheKey = 'cbs_clients_cache';
       const cacheTimeKey = 'cbs_clients_cache_time';
-      const CACHE_DURATION = 5000;
+      const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days cache
       
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && !forceFresh) {
         const cached = localStorage.getItem(cacheKey);
         const cacheTime = localStorage.getItem(cacheTimeKey);
         if (cached && cacheTime) {
           const age = Date.now() - parseInt(cacheTime);
           if (age < CACHE_DURATION) {
+            console.log('✅ Using cached clients (age:', Math.round(age / 1000 / 60), 'minutes)');
             return JSON.parse(cached);
           }
         }

@@ -86,22 +86,76 @@ const App: React.FC<CBSBooksAppProps> = ({ prefillInvoice }) => {
     setError(null);
     try {
       console.log('CBS Books: Loading data...');
-      const startTime = performance.now();
       
       // Start migration in background (non-blocking)
       migrateLocalStorageData().catch(err => {
         console.warn('Background migration failed:', err);
       });
       
-      // Load data in parallel (don't wait for migration)
+      // Try to load from cache first for instant display
+      try {
+        const cacheStartTime = performance.now();
+        const [cachedInvoices, cachedExpenses, cachedClients] = await Promise.all([
+          api.invoices.list(false), // Use cache
+          api.expenses.list(false), // Use cache
+          api.clients.list(false) // Use cache
+        ]);
+        
+        // If we got cached data, show it immediately
+        if (cachedInvoices.length > 0 || cachedExpenses.length > 0 || cachedClients.length > 0) {
+          const cacheTime = performance.now() - cacheStartTime;
+          console.log(`✅ Loaded from cache in ${cacheTime.toFixed(0)}ms`);
+          setInvoices(cachedInvoices);
+          setExpenses(cachedExpenses);
+          setClients(cachedClients);
+          setIsLoading(false); // Stop loading to show cached data immediately
+          
+          // Refresh from API in background (don't await - let it run async)
+          refreshDataFromAPI().catch(err => {
+            console.warn('Background refresh failed:', err);
+            // Don't show error to user if we have cached data
+          });
+          return;
+        }
+      } catch (cacheError) {
+        console.log('No cache available, fetching fresh data');
+        // Continue to fetch fresh data below
+      }
+      
+      // No cache available or failed - load from API
+      await refreshDataFromAPI();
+    } catch (err: any) {
+      console.error("Failed to load data:", err);
+      const errorMessage = err.message || "Unknown error occurred";
+      
+      // Provide helpful error messages for common issues
+      let userFriendlyMessage = errorMessage;
+      if (errorMessage.includes('does not exist')) {
+        userFriendlyMessage = `Database table missing. Please run: npm run create-cbsbooks-tables\n\nOriginal error: ${errorMessage}`;
+      } else if (errorMessage.includes('Connection') || errorMessage.includes('ECONNREFUSED')) {
+        userFriendlyMessage = `Cannot connect to server. Make sure the server is running on port 3000.\n\nOriginal error: ${errorMessage}`;
+      } else if (errorMessage.includes('Database configuration')) {
+        userFriendlyMessage = `Database not configured. Please set NETLIFY_DATABASE_URL or DATABASE_URL in your .env.local file.\n\nOriginal error: ${errorMessage}`;
+      }
+      
+      setError(userFriendlyMessage);
+      setIsLoading(false);
+    }
+  };
+
+  const refreshDataFromAPI = async () => {
+    try {
+      const startTime = performance.now();
+      
+      // Load fresh data from API
       const [fetchedInvoices, fetchedExpenses, fetchedClients] = await Promise.all([
-        api.invoices.list(),
-        api.expenses.list(),
-        api.clients.list()
+        api.invoices.list(true), // Force fresh
+        api.expenses.list(true), // Force fresh
+        api.clients.list(true) // Force fresh
       ]);
       
       const loadTime = performance.now() - startTime;
-      console.log(`CBS Books: Data loaded in ${loadTime.toFixed(0)}ms`);
+      console.log(`CBS Books: Fresh data loaded from API in ${loadTime.toFixed(0)}ms`);
       console.log('CBS Books: Data loaded:', {
         invoices: fetchedInvoices.length,
         expenses: fetchedExpenses.length,
@@ -122,20 +176,8 @@ const App: React.FC<CBSBooksAppProps> = ({ prefillInvoice }) => {
       setExpenses(fetchedExpenses);
       setClients(fetchedClients);
     } catch (err: any) {
-      console.error("Failed to load data:", err);
-      const errorMessage = err.message || "Unknown error occurred";
-      
-      // Provide helpful error messages for common issues
-      let userFriendlyMessage = errorMessage;
-      if (errorMessage.includes('does not exist')) {
-        userFriendlyMessage = `Database table missing. Please run: npm run create-cbsbooks-tables\n\nOriginal error: ${errorMessage}`;
-      } else if (errorMessage.includes('Connection') || errorMessage.includes('ECONNREFUSED')) {
-        userFriendlyMessage = `Cannot connect to server. Make sure the server is running on port 3000.\n\nOriginal error: ${errorMessage}`;
-      } else if (errorMessage.includes('Database configuration')) {
-        userFriendlyMessage = `Database not configured. Please set NETLIFY_DATABASE_URL or DATABASE_URL in your .env.local file.\n\nOriginal error: ${errorMessage}`;
-      }
-      
-      setError(userFriendlyMessage);
+      console.error("Failed to refresh data from API:", err);
+      throw err; // Re-throw so loadData can handle it
     } finally {
       setIsLoading(false);
     }
