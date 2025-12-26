@@ -329,9 +329,10 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       false;
 
     // Connect to database
-    const databaseUrl = process.env.DATABASE_URL;
+    // Check all possible environment variable names (matching other Netlify functions)
+    const databaseUrl = process.env.DATABASE_URL || process.env.VITE_DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
     if (!databaseUrl) {
-      console.error('❌ DATABASE_URL is not configured');
+      console.error('❌ DATABASE_URL is not configured. Checked: DATABASE_URL, VITE_DATABASE_URL, NETLIFY_DATABASE_URL');
       return {
         statusCode: 500,
         headers: { 'Content-Type': 'application/json' },
@@ -339,6 +340,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       };
     }
 
+    console.log(`🔌 [VAPI WEBHOOK] Connecting to database (URL length: ${databaseUrl.length})`);
     const sql = neon(databaseUrl);
     const db = drizzle(sql);
 
@@ -435,7 +437,8 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     }
 
     // Send email notification when call is completed
-    if (messageType === 'end-of-call-report' || messageType === 'function-call' || payload.type === 'end-of-call-report') {
+    // Note: Call is saved regardless of messageType, email is only sent for completed calls
+    if (messageType === 'end-of-call-report' || messageType === 'function-call' || payload.type === 'end-of-call-report' || payload.type === 'function-call') {
       console.log(`📧 [VAPI WEBHOOK] Attempting to send email for call ${vapiCallId}...`);
       try {
         const savedCall = await db
