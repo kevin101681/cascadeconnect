@@ -295,7 +295,7 @@ interface DashboardProps {
   onToggleTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
   onUpdateTask?: (taskId: string, updates: Partial<Task>) => void;
-  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND') => void;
+  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'AI_INTAKE') => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -544,6 +544,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [replyContent, setReplyContent] = useState('');
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
   const [showSubListModal, setShowSubListModal] = useState(false);
+  const [showCallsModal, setShowCallsModal] = useState(false);
   const [newMessageSubject, setNewMessageSubject] = useState('');
   const [newMessageContent, setNewMessageContent] = useState('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
@@ -902,9 +903,6 @@ const Dashboard: React.FC<DashboardProps> = ({
     
     loadHomeownerCalls();
   }, [effectiveHomeowner?.id]);
-  
-  // State for calls modal
-  const [showCallsModal, setShowCallsModal] = useState(false);
 
   // Sync state when editing starts
   const parseEditSubcontractorFile = (file: File) => {

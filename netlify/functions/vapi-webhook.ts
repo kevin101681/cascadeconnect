@@ -249,17 +249,17 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       };
     }
 
-    console.log(`📦 [VAPI WEBHOOK] [${requestId}] Received payload:`, JSON.stringify({
-      type: payload.type || payload.message?.type || 'unknown',
-      hasMessage: !!payload.message,
-      hasCall: !!payload.call || !!payload.message?.call,
-      hasAnalysis: !!(message.analysis || callData.analysis || payload.analysis),
-    }, null, 2));
-
     // Handle different payload structures
     const message = payload.message || payload;
     const callData = message.call || payload.call || message;
     const messageType = message.type || payload.type;
+
+    console.log(`📦 [VAPI WEBHOOK] [${requestId}] Received payload:`, JSON.stringify({
+      type: payload.type || messageType || 'unknown',
+      hasMessage: !!payload.message,
+      hasCall: !!payload.call || !!message.call,
+      hasAnalysis: !!(message.analysis || callData.analysis || payload.analysis),
+    }, null, 2));
 
     // Extract call ID
     const vapiCallId = callData.id || callData.callId || callData.vapiCallId;
@@ -376,32 +376,32 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       await db
         .insert(calls)
         .values({
-          vapiCallId,
+          vapiCallId: vapiCallId,
           homeownerId: matchedHomeowner?.id || null,
-          homeownerName,
-          phoneNumber,
-          propertyAddress,
-          issueDescription,
-          isUrgent,
-          transcript,
-          recordingUrl,
-          isVerified,
+          homeownerName: homeownerName,
+          phoneNumber: phoneNumber,
+          propertyAddress: propertyAddress,
+          issueDescription: issueDescription,
+          isUrgent: isUrgent,
+          transcript: transcript,
+          recordingUrl: recordingUrl,
+          isVerified: isVerified,
           addressMatchSimilarity: matchedHomeowner ? similarity.toFixed(3) : null,
-        })
+        } as any)
         .onConflictDoUpdate({
           target: calls.vapiCallId,
           set: {
             homeownerId: matchedHomeowner?.id || null,
-            homeownerName,
-            phoneNumber,
-            propertyAddress,
-            issueDescription,
-            isUrgent,
-            transcript,
-            recordingUrl,
-            isVerified,
+            homeownerName: homeownerName,
+            phoneNumber: phoneNumber,
+            propertyAddress: propertyAddress,
+            issueDescription: issueDescription,
+            isUrgent: isUrgent,
+            transcript: transcript,
+            recordingUrl: recordingUrl,
+            isVerified: isVerified,
             addressMatchSimilarity: matchedHomeowner ? similarity.toFixed(3) : null,
-          },
+          } as any,
         });
 
       console.log(`✅ [VAPI WEBHOOK] Call ${vapiCallId} successfully saved to database.`);
