@@ -420,20 +420,24 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       };
     }
 
-    // Auto-create claim if urgent and matched, but skip if callIntent is 'general_question'
-    if (isUrgent && matchedHomeowner && callIntent !== 'general_question') {
+    // Auto-create claim if matched homeowner AND callIntent is 'warranty_issue'
+    // Skip for 'general_question' and 'solicitation'
+    if (matchedHomeowner && callIntent === 'warranty_issue') {
       try {
         await createClaimFromCall(db, {
           issueDescription,
           homeownerName,
           propertyAddress,
         }, matchedHomeowner.id, matchedHomeowner);
+        console.log(`✅ [VAPI WEBHOOK] Created claim for warranty_issue call`);
       } catch (claimError) {
         console.error('❌ Error creating claim from call:', claimError);
         // Don't fail the webhook if claim creation fails
       }
-    } else if (callIntent === 'general_question') {
-      console.log(`⏭️ [VAPI WEBHOOK] Skipping claim creation - callIntent is 'general_question'`);
+    } else if (matchedHomeowner && callIntent && callIntent !== 'warranty_issue') {
+      console.log(`⏭️ [VAPI WEBHOOK] Skipping claim creation - callIntent is '${callIntent}' (only creating for warranty_issue)`);
+    } else if (!matchedHomeowner) {
+      console.log(`⏭️ [VAPI WEBHOOK] Skipping claim creation - no homeowner match found`);
     }
 
     // Send email notification when call is completed
