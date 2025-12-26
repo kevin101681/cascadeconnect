@@ -41,6 +41,15 @@
 # Handle Neon Stats API
 /api/neon/stats       /.netlify/functions/neon-stats    200!
 
+# Handle Vapi Webhook
+/api/webhook/vapi     /.netlify/functions/vapi-webhook    200!
+
+# Handle SendGrid Webhook
+/api/webhook/sendgrid /.netlify/functions/sendgrid-webhook    200!
+
+# Handle Email Call Completed
+/api/email/call-completed /.netlify/functions/email-call-completed    200!
+
 # All other routes go to index.html for SPA routing
 /*    /index.html   200
 

@@ -6,10 +6,13 @@ import HTMLFlipBook from 'react-pageflip';
 // import Papa from 'papaparse';
 // import * as XLSX from 'xlsx';
 import { motion, AnimatePresence, type Transition, type Variants } from 'framer-motion';
-import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor } from '../types';
+import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor, Call } from '../types';
 import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play } from 'lucide-react';
+import { calls } from '../db/schema';
+import { eq, desc } from 'drizzle-orm';
+import { db, isDbConfigured } from '../db';
 import Button from './Button';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
@@ -705,7 +708,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   useEffect(() => {
     const isAnyModalOpen = showNewTaskModal || showNewMessageModal || showNewClaimModal || 
                           showDocsModal || showInviteModal || showEditHomeownerModal || 
-                          showSubListModal || showPunchListApp || isPDFViewerOpen;
+                          showSubListModal || showPunchListApp || isPDFViewerOpen || showCallsModal;
     
     if (isAnyModalOpen) {
       // Save current scroll position
@@ -736,7 +739,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       };
     }
   }, [showNewTaskModal, showNewMessageModal, showNewClaimModal, showDocsModal, 
-      showInviteModal, showEditHomeownerModal, showSubListModal, showPunchListApp, isPDFViewerOpen]);
+      showInviteModal, showEditHomeownerModal, showSubListModal, showPunchListApp, isPDFViewerOpen, showCallsModal]);
 
   // Sync state when props change
   useEffect(() => {
@@ -850,6 +853,58 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // --- Filtering Logic ---
   const effectiveHomeowner = (isAdmin || isBuilder) ? targetHomeowner : activeHomeowner;
+  
+  // State for homeowner calls
+  const [homeownerCalls, setHomeownerCalls] = useState<Call[]>([]);
+  const [callsLoading, setCallsLoading] = useState(false);
+  
+  // Load calls for the effective homeowner
+  useEffect(() => {
+    const loadHomeownerCalls = async () => {
+      if (!effectiveHomeowner?.id || !isDbConfigured) {
+        setHomeownerCalls([]);
+        return;
+      }
+      
+      setCallsLoading(true);
+      try {
+        const callsList = await db
+          .select()
+          .from(calls)
+          .where(eq(calls.homeownerId, effectiveHomeowner.id))
+          .orderBy(desc(calls.createdAt))
+          .limit(50);
+        
+        const mappedCalls: Call[] = callsList.map((c: any) => ({
+          id: c.id,
+          vapiCallId: c.vapiCallId,
+          homeownerId: c.homeownerId,
+          homeownerName: c.homeownerName,
+          phoneNumber: c.phoneNumber,
+          propertyAddress: c.propertyAddress,
+          issueDescription: c.issueDescription,
+          isUrgent: c.isUrgent || false,
+          transcript: c.transcript,
+          recordingUrl: c.recordingUrl,
+          isVerified: c.isVerified || false,
+          addressMatchSimilarity: c.addressMatchSimilarity,
+          createdAt: c.createdAt ? new Date(c.createdAt) : new Date(),
+        }));
+        
+        setHomeownerCalls(mappedCalls);
+      } catch (error) {
+        console.error('Error loading homeowner calls:', error);
+        setHomeownerCalls([]);
+      } finally {
+        setCallsLoading(false);
+      }
+    };
+    
+    loadHomeownerCalls();
+  }, [effectiveHomeowner?.id]);
+  
+  // State for calls modal
+  const [showCallsModal, setShowCallsModal] = useState(false);
 
   // Sync state when editing starts
   const parseEditSubcontractorFile = (file: File) => {
@@ -2667,6 +2722,17 @@ const Dashboard: React.FC<DashboardProps> = ({
                         </Button>
                       );
                     })()}
+                    {/* Calls Button - Show if homeowner has matched calls */}
+                    {homeownerCalls.length > 0 && (
+                      <Button
+                        onClick={() => setShowCallsModal(true)}
+                        variant="outlined"
+                        icon={<Phone className="h-4 w-4" />}
+                        className="!h-9 !px-4 !bg-surface dark:!bg-gray-800"
+                      >
+                        Calls ({homeownerCalls.length})
+                      </Button>
+                    )}
                   </>
                 )}
                 {/* Admin Only Actions - Hidden in homeowner view */}
@@ -3496,6 +3562,130 @@ const Dashboard: React.FC<DashboardProps> = ({
               {/* Footer */}
               <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end flex-shrink-0">
                 <Button onClick={() => setShowSubListModal(false)} variant="filled">
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+        {/* HOMEOWNER CALLS MODAL */}
+        {showCallsModal && displayHomeowner && homeownerCalls.length > 0 && createPortal(
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setShowCallsModal(false);
+              }
+            }}
+          >
+            <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl max-h-[85vh] rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 flex flex-col">
+              {/* Header */}
+              <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center sticky top-0 z-10 flex-shrink-0">
+                <div>
+                  <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                    <Phone className="h-6 w-6 text-primary" />
+                    AI Intake Calls - {displayHomeowner.name}
+                  </h2>
+                  <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
+                    {homeownerCalls.length} call{homeownerCalls.length !== 1 ? 's' : ''} found
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setShowCallsModal(false)} 
+                  className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 p-2 rounded-full hover:bg-white/10 dark:hover:bg-gray-600/50"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+              
+              {/* Content */}
+              <div className="p-6 overflow-y-auto flex-1 min-h-0">
+                <div className="space-y-4">
+                          {homeownerCalls.map((call) => (
+                    <div
+                      key={call.id}
+                      className="bg-surface-container dark:bg-gray-700 rounded-xl p-4 border border-surface-outline-variant dark:border-gray-600"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-semibold text-surface-on dark:text-gray-100">
+                              {new Date(call.createdAt).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: 'numeric',
+                                minute: '2-digit',
+                              })}
+                            </span>
+                            {call.isUrgent && (
+                              <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                                URGENT
+                              </span>
+                            )}
+                            {call.isVerified ? (
+                              <span className="bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full">
+                                Verified
+                              </span>
+                            ) : (
+                              <span className="bg-orange-500 text-white text-xs font-medium px-2 py-1 rounded-full">
+                                Unverified
+                              </span>
+                            )}
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-surface-on-variant dark:text-gray-400">
+                            {call.phoneNumber && (
+                              <div className="flex items-center gap-2">
+                                <Phone className="h-4 w-4" />
+                                <span>{call.phoneNumber}</span>
+                              </div>
+                            )}
+                            {call.propertyAddress && (
+                              <div className="flex items-center gap-2">
+                                <MapPin className="h-4 w-4" />
+                                <span>{call.propertyAddress}</span>
+                              </div>
+                            )}
+                          </div>
+                          {call.issueDescription && (
+                            <div className="mt-3 p-3 bg-surface dark:bg-gray-900 rounded-lg">
+                              <p className="text-sm text-surface-on dark:text-gray-100">{call.issueDescription}</p>
+                            </div>
+                          )}
+                        </div>
+                        {call.recordingUrl && (
+                          <a
+                            href={call.recordingUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="ml-4 p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            title="Listen to Recording"
+                          >
+                            <Play className="h-5 w-5" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Footer */}
+              <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-3 flex-shrink-0">
+                <Button 
+                  onClick={() => {
+                    setShowCallsModal(false);
+                    if (onNavigate) {
+                      onNavigate('AI_INTAKE');
+                    }
+                  }} 
+                  variant="outlined"
+                >
+                  View All Calls
+                </Button>
+                <Button onClick={() => setShowCallsModal(false)} variant="filled">
                   Close
                 </Button>
               </div>

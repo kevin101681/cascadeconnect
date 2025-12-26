@@ -226,6 +226,25 @@ export interface DashboardStats {
   avgDaysOpen: number;
 }
 
+export interface Call {
+  id: string;
+  vapiCallId: string;
+  homeownerId?: string | null;
+  homeownerName?: string | null;
+  phoneNumber?: string | null;
+  propertyAddress?: string | null;
+  issueDescription?: string | null;
+  isUrgent: boolean;
+  transcript?: string | null;
+  recordingUrl?: string | null;
+  isVerified: boolean;
+  addressMatchSimilarity?: string | null;
+  createdAt: Date;
+  // Joined from homeowners table (when matched)
+  verifiedBuilderName?: string | null;
+  verifiedClosingDate?: Date | null;
+}
+
 
 
 

@@ -16,6 +16,7 @@ import HomeownersList from './components/HomeownersList';
 import { X, Info } from 'lucide-react';
 import EmailHistory from './components/EmailHistory';
 import BackendDashboard from './components/BackendDashboard';
+import AIIntakeDashboard from './components/AIIntakeDashboard';
 import HomeownerSelector from './components/HomeownerSelector';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS, MOCK_CLAIM_MESSAGES } from './constants';
@@ -791,7 +792,7 @@ function App() {
 
   // UI State - Persistent (but reset INVOICES on page load to prevent auto-opening)
   // Check URL hash for invoice creation link
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND'>(() => {
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'AI_INTAKE'>(() => {
     // Check if URL has invoice creation parameters
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
@@ -826,7 +827,7 @@ function App() {
         }
       }
     }
-    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY'>('cascade_ui_view', 'DASHBOARD');
+    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'AI_INTAKE'>('cascade_ui_view', 'DASHBOARD');
     // Don't auto-open modals on page load - always start at DASHBOARD
     return saved === 'INVOICES' ? 'DASHBOARD' : saved;
   });

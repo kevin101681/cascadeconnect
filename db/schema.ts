@@ -199,3 +199,25 @@ export const emailLogs = pgTable('email_logs', {
   // Additional event data stored as JSON
   eventData: json('event_data').$type<any>().default({}),
 });
+
+// --- 10. Calls (AI Intake Service - Vapi) ---
+export const calls = pgTable('calls', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  vapiCallId: text('vapi_call_id').notNull().unique(), // Vapi call ID
+  homeownerId: uuid('homeowner_id').references(() => homeowners.id), // Foreign key to homeowners (null if unmatched)
+  
+  // Call data from Vapi
+  homeownerName: text('homeowner_name'), // Name from the call (not from database)
+  phoneNumber: text('phone_number'),
+  propertyAddress: text('property_address'), // Address from the call (used for matching)
+  issueDescription: text('issue_description'),
+  isUrgent: boolean('is_urgent').default(false),
+  transcript: text('transcript'),
+  recordingUrl: text('recording_url'),
+  
+  // Verification status
+  isVerified: boolean('is_verified').default(false), // True if address matched to homeowner
+  addressMatchSimilarity: text('address_match_similarity'), // Similarity score for matching
+  
+  createdAt: timestamp('created_at').defaultNow(),
+});
