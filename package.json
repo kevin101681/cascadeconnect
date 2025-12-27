@@ -20,6 +20,7 @@
     "create-message-threads-table": "tsx scripts/create-message-threads-table.ts",
     "create-missing-tables": "tsx scripts/create-missing-tables.ts",
     "create-calls-table": "tsx scripts/create-calls-table.ts",
+    "verify-calls-table": "tsx scripts/verify-calls-table.ts",
     "create-sms-messages-table": "tsx scripts/create-sms-messages-table.ts",
     "create-sms-messages-indexes": "tsx scripts/create-sms-messages-indexes.ts",
     "disable-user-mfa": "tsx scripts/disable-user-mfa.ts",
