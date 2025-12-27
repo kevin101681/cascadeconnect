@@ -189,7 +189,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
       contractorEmail: isAdmin ? contractor?.email : undefined,
       status: shouldClose ? ClaimStatus.COMPLETED : ClaimStatus.SUBMITTED,
       attachments,
-      proposedDates: proposeDate ? [{
+      proposedDates: (isAdmin && proposeDate) ? [{
         date: new Date(proposeDate).toISOString(),
         timeSlot: proposeTime,
         status: 'PENDING' as const
