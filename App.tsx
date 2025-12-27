@@ -10,6 +10,7 @@ import InternalUserManagement from './components/InternalUserManagement';
 import BuilderManagement from './components/BuilderManagement';
 import DataImport from './components/DataImport';
 import TaskList from './components/TaskList';
+import TasksSheet from './components/TasksSheet';
 import MessageSummaryModal, { ClaimMessage, TaskMessage } from './components/MessageSummaryModal';
 import InvoicesModal from './components/InvoicesModal';
 import HomeownersList from './components/HomeownersList';
@@ -3721,6 +3722,17 @@ Assigned By: ${assignerName}
         />
       )}
       <HomeownerEnrollment isOpen={isEnrollmentOpen} onClose={() => setIsEnrollmentOpen(false)} onEnroll={handleEnrollHomeowner} builderGroups={builderGroups} />
+      
+      {/* Global Tasks Sheet */}
+      <TasksSheet
+        onNavigateToClaim={(claimId) => {
+          const claim = claims.find((c) => c.id === claimId);
+          if (claim) {
+            handleSelectClaim(claim);
+          }
+        }}
+        claims={claims}
+      />
     </Layout>
     </>
   );

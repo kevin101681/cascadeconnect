@@ -23,6 +23,7 @@
     "verify-calls-table": "tsx scripts/verify-calls-table.ts",
     "create-sms-messages-table": "tsx scripts/create-sms-messages-table.ts",
     "create-sms-messages-indexes": "tsx scripts/create-sms-messages-indexes.ts",
+    "add-tasks-fields": "tsx scripts/add-tasks-fields.ts",
     "disable-user-mfa": "tsx scripts/disable-user-mfa.ts",
     "check-cloudinary": "node scripts/check-cloudinary.js",
     "migrate:cbsbooks": "tsx scripts/migrate-cbsbooks.ts",
@@ -47,9 +48,9 @@
     "better-auth": "^1.4.7",
     "busboy": "^1.6.0",
     "cloudinary": "^1.41.0",
-    "clsx": "^2.1.0",
+    "clsx": "^2.1.1",
     "cors": "^2.8.5",
-    "date-fns": "^3.3.1",
+    "date-fns": "^3.6.0",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.41.0",
     "express": "^4.18.2",
@@ -66,10 +67,11 @@
     "react-pageflip": "^2.0.3",
     "react-pdf": "^10.2.0",
     "serverless-http": "^3.2.0",
-    "tailwind-merge": "^2.2.1",
+    "tailwind-merge": "^2.6.0",
     "twilio": "^5.11.1",
     "uuid": "^13.0.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@jridgewell/source-map": "^0.3.11",

@@ -57,6 +57,10 @@
 /api/webhook/sms /.netlify/functions/sms-webhook    200!
 /api/webhook/sms/status /.netlify/functions/sms-status-webhook    200!
 
+# Handle Tasks API
+/api/tasks /.netlify/functions/tasks    200!
+/api/tasks/* /.netlify/functions/tasks/:splat    200!
+
 # All other routes go to index.html for SPA routing
 /*    /index.html   200
 

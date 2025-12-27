@@ -175,6 +175,11 @@ export const tasks = pgTable('tasks', {
   dueDate: timestamp('due_date'),
   
   relatedClaimIds: json('related_claim_ids').$type<string[]>().default([]),
+  
+  // Google Tasks-style fields (for global task drawer)
+  content: text('content'), // If null, use title as content for backward compatibility
+  claimId: uuid('claim_id').references(() => claims.id), // Single claim link for task drawer
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
 // --- 8. Messages ---

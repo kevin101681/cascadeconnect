@@ -1,9 +1,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, Homeowner } from '../types';
-import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2, Phone } from 'lucide-react';
+import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2, Phone, CheckSquare2 } from 'lucide-react';
 import { useDarkMode } from './DarkModeProvider';
 import { UserButton, useUser } from '@clerk/clerk-react';
+import { useTaskStore } from '../stores/useTaskStore';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -491,6 +492,16 @@ const Layout: React.FC<LayoutProps> = ({
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
+
+      {/* Floating Action Button - Tasks Drawer */}
+      <button
+        onClick={() => useTaskStore.getState().openTasks()}
+        className="fixed bottom-6 right-6 z-40 bg-primary hover:bg-primary/90 text-primary-on rounded-full p-4 shadow-elevation-6 hover:shadow-elevation-8 transition-all duration-200 flex items-center justify-center w-14 h-14 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+        aria-label="Open Tasks"
+        title="Tasks"
+      >
+        <CheckSquare2 className="h-6 w-6" />
+      </button>
     </div>
   );
 };
