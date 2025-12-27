@@ -245,6 +245,16 @@ export interface Call {
   verifiedClosingDate?: Date | null;
 }
 
+export interface SmsMessage {
+  id: string;
+  homeownerId: string;
+  callId?: string | null;
+  direction: 'inbound' | 'outbound';
+  content: string;
+  status: 'sent' | 'delivered' | 'failed';
+  createdAt: Date;
+}
+
 
 
 

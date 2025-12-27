@@ -50,6 +50,13 @@
 # Handle Email Call Completed
 /api/email/call-completed /.netlify/functions/email-call-completed    200!
 
+# Handle SMS Messages
+/api/messages/send /.netlify/functions/messages-send    200!
+
+# Handle SMS Webhooks (Twilio)
+/api/webhook/sms /.netlify/functions/sms-webhook    200!
+/api/webhook/sms/status /.netlify/functions/sms-status-webhook    200!
+
 # All other routes go to index.html for SPA routing
 /*    /index.html   200
 

@@ -221,3 +221,14 @@ export const calls = pgTable('calls', {
   
   createdAt: timestamp('created_at').defaultNow(),
 });
+
+// --- 11. SMS Messages (Two-Way SMS Chat) ---
+export const smsMessages = pgTable('sms_messages', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  homeownerId: uuid('homeowner_id').references(() => homeowners.id).notNull(),
+  callId: uuid('call_id').references(() => calls.id), // Links SMS thread to a specific call (nullable)
+  direction: text('direction').notNull(), // 'inbound' | 'outbound'
+  content: text('content').notNull(),
+  status: text('status').default('sent'), // 'sent' | 'delivered' | 'failed'
+  createdAt: timestamp('created_at').defaultNow(),
+});

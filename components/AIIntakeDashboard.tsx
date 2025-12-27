@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { db, isDbConfigured } from '../db';
 import { calls, homeowners } from '../db/schema';
 import { eq, desc, sql } from 'drizzle-orm';
+import CallSmsChat from './CallSmsChat';
 
 interface AIIntakeDashboardProps {
   onNavigate?: (view: string) => void;
@@ -227,10 +228,12 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className="bg-surface-container dark:bg-gray-800 rounded-xl p-6 border border-surface-outline-variant dark:border-gray-700 hover:shadow-elevation-2 transition-shadow cursor-pointer"
-                onClick={() => setSelectedCall(call)}
+                className="bg-surface-container dark:bg-gray-800 rounded-xl p-6 border border-surface-outline-variant dark:border-gray-700 hover:shadow-elevation-2 transition-shadow"
               >
-                <div className="flex items-start justify-between mb-4">
+                <div 
+                  className="flex items-start justify-between mb-4 cursor-pointer"
+                  onClick={() => setSelectedCall(call)}
+                >
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-semibold text-surface-on dark:text-gray-100">
@@ -291,6 +294,13 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                     {call.issueDescription && (
                       <div className="mt-3 p-3 bg-surface dark:bg-gray-900 rounded-lg">
                         <p className="text-sm text-surface-on dark:text-gray-100 line-clamp-2">{call.issueDescription}</p>
+                      </div>
+                    )}
+                    
+                    {/* SMS Chat Section */}
+                    {call.homeownerId && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <CallSmsChat homeownerId={call.homeownerId} callId={call.id} />
                       </div>
                     )}
                   </div>
