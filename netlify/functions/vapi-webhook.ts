@@ -301,13 +301,55 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     // Log the full structured data to debug extraction issues
     console.log(`🔍 [VAPI WEBHOOK] Analysis object keys:`, analysis ? Object.keys(analysis) : 'null');
     console.log(`🔍 [VAPI WEBHOOK] Raw structured data keys:`, Object.keys(structuredData));
+    
+    // Log a sample of the actual payload to see structure (truncate large fields)
+    const payloadSample: any = {
+      type: payload.type,
+      messageType: messageType,
+      hasAnalysis: !!analysis,
+      analysisKeys: analysis ? Object.keys(analysis) : [],
+      hasVariables: !!variables,
+      variablesKeys: variables ? Object.keys(variables) : [],
+      callDataKeys: callData ? Object.keys(callData).slice(0, 20) : [], // First 20 keys
+      messageKeys: message ? Object.keys(message).slice(0, 20) : [], // First 20 keys
+    };
+    
+    // If analysis exists, show its structure (but truncate large values)
+    if (analysis && Object.keys(analysis).length > 0) {
+      const analysisSample: any = {};
+      for (const key of Object.keys(analysis).slice(0, 10)) {
+        const value = analysis[key];
+        if (typeof value === 'string' && value.length > 200) {
+          analysisSample[key] = value.substring(0, 200) + '... (truncated)';
+        } else if (typeof value === 'object' && value !== null) {
+          analysisSample[key] = `[Object with ${Object.keys(value).length} keys]`;
+        } else {
+          analysisSample[key] = value;
+        }
+      }
+      payloadSample.analysisSample = analysisSample;
+    }
+    
+    console.log(`🔍 [VAPI WEBHOOK] Payload structure sample:`, JSON.stringify(payloadSample, null, 2));
+    
     if (Object.keys(structuredData).length > 0) {
       console.log(`🔍 [VAPI WEBHOOK] Full structured data:`, JSON.stringify(structuredData, null, 2));
     } else {
-      console.log(`🔍 [VAPI WEBHOOK] Structured data is empty`);
-      console.log(`🔍 [VAPI WEBHOOK] Analysis object:`, JSON.stringify(analysis, null, 2));
-      console.log(`🔍 [VAPI WEBHOOK] Variables object:`, JSON.stringify(variables, null, 2));
-      console.log(`🔍 [VAPI WEBHOOK] VariableValues object:`, JSON.stringify(variableValues, null, 2));
+      console.log(`🔍 [VAPI WEBHOOK] Structured data is empty - checking all possible locations...`);
+      
+      // Check if analysis has the data directly
+      if (analysis) {
+        console.log(`🔍 [VAPI WEBHOOK] Analysis object (first level):`, JSON.stringify(
+          Object.fromEntries(
+            Object.entries(analysis).slice(0, 5).map(([k, v]) => [
+              k, 
+              typeof v === 'string' && v.length > 100 ? v.substring(0, 100) + '...' : v
+            ])
+          ), 
+          null, 
+          2
+        ));
+      }
     }
     
     // Also check callData and message for address fields directly
