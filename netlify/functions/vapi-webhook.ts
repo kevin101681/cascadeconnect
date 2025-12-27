@@ -493,6 +493,17 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
             finalIssueDescription = apiStructuredData.issueDescription;
             console.log(`✅ [VAPI WEBHOOK] [${requestId}] Extracted issueDescription from API`);
           }
+          
+          // Also update other fields from API if missing
+          if (apiStructuredData.homeownerName && !homeownerName) {
+            homeownerName = apiStructuredData.homeownerName;
+          }
+          if (apiStructuredData.phoneNumber && !phoneNumber) {
+            phoneNumber = apiStructuredData.phoneNumber;
+          }
+          if (apiStructuredData.isUrgent !== undefined && !isUrgent) {
+            isUrgent = apiStructuredData.isUrgent === true;
+          }
         } else {
           console.log(`⚠️ [VAPI WEBHOOK] [${requestId}] API response also missing structured data`);
         }
@@ -503,6 +514,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     }
 
     // Extract other call data (not from structured outputs)
+    // Note: These will be re-extracted after API fallback if needed
     let homeownerName = 
       structuredData.homeowner_name || 
       structuredData.homeownerName || 
@@ -510,7 +522,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       callData.homeownerName ||
       null;
 
-    const phoneNumber = 
+    let phoneNumber = 
       structuredData.phone_number || 
       structuredData.phoneNumber ||
       callData.phoneNumber ||
@@ -518,11 +530,11 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       null;
 
     // Determine urgency (can be derived from callIntent or other fields if needed)
-    const isUrgent = 
+    let isUrgent = 
       structuredData.is_urgent === true || 
       structuredData.isUrgent === true || 
       structuredData.urgent === true ||
-      callIntent === 'urgent' ||
+      finalCallIntent === 'urgent' ||
       false;
 
     // Determine if this is a final event (with structured data)
