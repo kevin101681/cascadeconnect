@@ -144,8 +144,8 @@ exports.handler = async (event, context) => {
         console.log('SendGrid response body:', JSON.stringify(response.body));
       }
       
-      // Log to database
-      await logEmailToDb({
+      // Log to database (non-blocking - don't await to avoid timeout)
+      logEmailToDb({
         recipient: to,
         subject: subject,
         status: 'sent',
@@ -156,7 +156,7 @@ exports.handler = async (event, context) => {
           replyToId: replyToId,
           hasAttachments: attachments && attachments.length > 0,
         }
-      });
+      }).catch(err => console.error('Failed to log email (non-blocking):', err));
       
       return {
         statusCode: 200,
@@ -227,8 +227,8 @@ exports.handler = async (event, context) => {
       const info = await transporter.sendMail(mailOptions);
       console.log('✅ Email sent via SMTP:', info.messageId);
       
-      // Log to database
-      await logEmailToDb({
+      // Log to database (non-blocking - don't await to avoid timeout)
+      logEmailToDb({
         recipient: to,
         subject: subject,
         status: 'sent',
@@ -239,7 +239,7 @@ exports.handler = async (event, context) => {
           replyToId: replyToId,
           hasAttachments: attachments && attachments.length > 0,
         }
-      });
+      }).catch(err => console.error('Failed to log email (non-blocking):', err));
       
       return {
         statusCode: 200,
@@ -292,10 +292,10 @@ exports.handler = async (event, context) => {
       }
     }
     
-    // Log failed email attempt to database
+    // Log failed email attempt to database (non-blocking)
     const emailTo = typeof to === 'string' ? to : (Array.isArray(to) ? to[0] : 'unknown');
     const emailSubject = subject || 'No Subject';
-    await logEmailToDb({
+    logEmailToDb({
       recipient: emailTo,
       subject: emailSubject,
       status: 'failed',
@@ -304,7 +304,7 @@ exports.handler = async (event, context) => {
         code: error.code,
         from: process.env.SENDGRID_REPLY_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER,
       }
-    });
+    }).catch(err => console.error('Failed to log email error (non-blocking):', err));
     
     return {
       statusCode: 500,

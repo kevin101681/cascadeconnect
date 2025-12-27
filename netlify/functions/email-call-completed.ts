@@ -187,9 +187,9 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           to: recipientEmail,
         });
 
-        // Log to database
+        // Log to database (non-blocking - don't await to avoid timeout)
         const { logEmailToDb } = require('../../lib/email-logger.js');
-        await logEmailToDb({
+        logEmailToDb({
           recipient: recipientEmail,
           subject: subject,
           status: 'sent',
@@ -199,7 +199,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
             type: 'call_completed',
             callId: callId,
           }
-        });
+        }).catch(err => console.error('Failed to log email (non-blocking):', err));
 
         return {
           statusCode: 200,
@@ -221,9 +221,9 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           response: sendGridError.response?.body,
         });
         
-        // Log failed email attempt to database
+        // Log failed email attempt to database (non-blocking)
         const { logEmailToDb } = require('../../lib/email-logger.js');
-        await logEmailToDb({
+        logEmailToDb({
           recipient: recipientEmail,
           subject: subject,
           status: 'failed',
@@ -234,7 +234,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
             type: 'call_completed',
             callId: callId,
           }
-        });
+        }).catch(err => console.error('Failed to log email error (non-blocking):', err));
         
         // Don't throw - return error response instead
         return {
