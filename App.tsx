@@ -14,7 +14,7 @@ import TasksSheet from './components/TasksSheet';
 import MessageSummaryModal, { ClaimMessage, TaskMessage } from './components/MessageSummaryModal';
 import InvoicesModal from './components/InvoicesModal';
 import HomeownersList from './components/HomeownersList';
-import { X, Info } from 'lucide-react';
+import { X, Info, CheckCircle } from 'lucide-react';
 import EmailHistory from './components/EmailHistory';
 import BackendDashboard from './components/BackendDashboard';
 import AIIntakeDashboard from './components/AIIntakeDashboard';
@@ -871,6 +871,7 @@ function App() {
   
   // Alert modal state
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [alertType, setAlertType] = useState<'info' | 'success' | 'error'>('info');
   
   const selectedClaim = claims.find(c => c.id === selectedClaimId);
   const targetHomeowner = selectedAdminHomeownerId ? homeowners.find(h => h.id === selectedAdminHomeownerId) || null : null;
@@ -916,6 +917,7 @@ function App() {
         // Keep selectedAdminHomeownerId so we can show admin-style card
         setUserRole(UserRole.HOMEOWNER);
       } else {
+        setAlertType('error');
         setAlertMessage('Selected homeowner not found. Please select a homeowner first.');
         return;
       }
@@ -1528,7 +1530,8 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
 
         // Redirect to dashboard with success
         setCurrentView('DASHBOARD');
-        alert(`Successfully submitted ${createdClaims.length} claim${createdClaims.length > 1 ? 's' : ''}!`);
+        setAlertType('success');
+        setAlertMessage(`Successfully submitted ${createdClaims.length} claim${createdClaims.length > 1 ? 's' : ''}!`);
         return;
       } catch (error: any) {
         console.error('Batch submission error:', error);
@@ -3586,7 +3589,10 @@ Assigned By: ${assignerName}
       {alertMessage && (
         <div 
           className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
-          onClick={() => setAlertMessage(null)}
+          onClick={() => {
+            setAlertMessage(null);
+            setAlertType('info');
+          }}
         >
           <div 
             className="bg-surface dark:bg-gray-800 w-full max-w-md rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]"
@@ -3594,15 +3600,30 @@ Assigned By: ${assignerName}
           >
             <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary-container dark:bg-primary/20 rounded-full">
-                  <Info className="h-5 w-5 text-primary" />
+                <div className={`p-2 rounded-full ${
+                  alertType === 'success' 
+                    ? 'bg-green-100 dark:bg-green-900/20' 
+                    : alertType === 'error'
+                    ? 'bg-red-100 dark:bg-red-900/20'
+                    : 'bg-primary-container dark:bg-primary/20'
+                }`}>
+                  {alertType === 'success' ? (
+                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  ) : alertType === 'error' ? (
+                    <Info className="h-5 w-5 text-red-600 dark:text-red-400" />
+                  ) : (
+                    <Info className="h-5 w-5 text-primary" />
+                  )}
                 </div>
                 <h2 className="text-lg font-normal text-surface-on dark:text-gray-100">
-                  Notice
+                  {alertType === 'success' ? 'Success' : alertType === 'error' ? 'Error' : 'Notice'}
                 </h2>
               </div>
               <button 
-                onClick={() => setAlertMessage(null)} 
+                onClick={() => {
+                  setAlertMessage(null);
+                  setAlertType('info');
+                }} 
                 className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
               >
                 <X className="h-5 w-5" />
@@ -3617,7 +3638,10 @@ Assigned By: ${assignerName}
 
             <div className="p-4 bg-surface-container dark:bg-gray-700 flex justify-end border-t border-surface-outline-variant dark:border-gray-700">
               <button
-                onClick={() => setAlertMessage(null)}
+                onClick={() => {
+                  setAlertMessage(null);
+                  setAlertType('info');
+                }}
                 className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-on dark:text-white font-medium rounded-lg transition-colors"
               >
                 OK
