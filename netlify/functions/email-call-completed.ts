@@ -50,6 +50,8 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       matchedHomeownerId,
     } = payload;
 
+    const callId = vapiCallId; // Alias for clarity
+
     if (!vapiCallId) {
       return {
         statusCode: 400,
@@ -185,6 +187,20 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           to: recipientEmail,
         });
 
+        // Log to database
+        const { logEmailToDb } = require('../../lib/email-logger.js');
+        await logEmailToDb({
+          recipient: recipientEmail,
+          subject: subject,
+          status: 'sent',
+          metadata: {
+            messageId: response.headers['x-message-id'],
+            from: fromEmail,
+            type: 'call_completed',
+            callId: callId,
+          }
+        });
+
         return {
           statusCode: 200,
           headers: {
@@ -203,6 +219,21 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           message: sendGridError.message,
           code: sendGridError.code,
           response: sendGridError.response?.body,
+        });
+        
+        // Log failed email attempt to database
+        const { logEmailToDb } = require('../../lib/email-logger.js');
+        await logEmailToDb({
+          recipient: recipientEmail,
+          subject: subject,
+          status: 'failed',
+          error: sendGridError.message || 'Failed to send email via SendGrid',
+          metadata: {
+            code: sendGridError.code,
+            from: fromEmail,
+            type: 'call_completed',
+            callId: callId,
+          }
         });
         
         // Don't throw - return error response instead

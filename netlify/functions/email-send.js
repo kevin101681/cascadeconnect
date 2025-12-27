@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const { logEmailToDb } = require('../../lib/email-logger.js');
 
 exports.handler = async (event, context) => {
   // Only allow POST requests (OPTIONS is handled above)
@@ -143,6 +144,20 @@ exports.handler = async (event, context) => {
         console.log('SendGrid response body:', JSON.stringify(response.body));
       }
       
+      // Log to database
+      await logEmailToDb({
+        recipient: to,
+        subject: subject,
+        status: 'sent',
+        metadata: {
+          messageId: sendGridMessageId,
+          from: fromEmail,
+          fromName: fromName,
+          replyToId: replyToId,
+          hasAttachments: attachments && attachments.length > 0,
+        }
+      });
+      
       return {
         statusCode: 200,
         headers: {
@@ -212,6 +227,20 @@ exports.handler = async (event, context) => {
       const info = await transporter.sendMail(mailOptions);
       console.log('✅ Email sent via SMTP:', info.messageId);
       
+      // Log to database
+      await logEmailToDb({
+        recipient: to,
+        subject: subject,
+        status: 'sent',
+        metadata: {
+          messageId: info.messageId,
+          from: fromEmail,
+          fromName: fromName,
+          replyToId: replyToId,
+          hasAttachments: attachments && attachments.length > 0,
+        }
+      });
+      
       return {
         statusCode: 200,
         headers: {
@@ -262,6 +291,20 @@ exports.handler = async (event, context) => {
         errorMessage = errorBody.errors.map(e => e.message || e).join('; ');
       }
     }
+    
+    // Log failed email attempt to database
+    const emailTo = typeof to === 'string' ? to : (Array.isArray(to) ? to[0] : 'unknown');
+    const emailSubject = subject || 'No Subject';
+    await logEmailToDb({
+      recipient: emailTo,
+      subject: emailSubject,
+      status: 'failed',
+      error: errorMessage,
+      metadata: {
+        code: error.code,
+        from: process.env.SENDGRID_REPLY_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER,
+      }
+    });
     
     return {
       statusCode: 500,

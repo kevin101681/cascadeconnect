@@ -1391,9 +1391,154 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
     setCurrentView('NEW');
   };
 
-  const handleCreateClaim = async (data: Partial<Claim>) => {
+  const handleCreateClaim = async (data: Partial<Claim> | Partial<Claim>[]) => {
     const subjectHomeowner = ((userRole === UserRole.ADMIN || userRole === UserRole.BUILDER) && targetHomeowner) ? targetHomeowner : activeHomeowner;
     if (!subjectHomeowner) return;
+
+    // Check if this is a batch submission (array)
+    const isBatch = Array.isArray(data);
+    
+    // For batch submissions, use the batch API endpoint
+    if (isBatch && userRole === UserRole.HOMEOWNER) {
+      try {
+        const batchData = data as Partial<Claim>[];
+        
+        // Validate homeowner data
+        if (!subjectHomeowner.id) {
+          alert('Error: Homeowner ID is required for batch submission.');
+          return;
+        }
+
+        // Call batch API endpoint
+        const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const apiEndpoint = isLocalDev 
+          ? 'http://localhost:8888/api/claims/batch'
+          : `${window.location.protocol}//${window.location.hostname.startsWith('www.') ? window.location.hostname : `www.${window.location.hostname}`}/api/claims/batch`;
+        
+        const response = await fetch(apiEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            claims: batchData,
+            homeownerId: subjectHomeowner.id,
+            homeownerData: {
+              name: subjectHomeowner.name,
+              email: subjectHomeowner.email,
+              address: subjectHomeowner.address,
+              builder: subjectHomeowner.builder,
+              jobName: subjectHomeowner.jobName,
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(errorData.error || `HTTP ${response.status}`);
+        }
+
+        const result = await response.json();
+        const createdClaims = result.claims || [];
+
+        // Update local state with new claims
+        const newClaims: Claim[] = createdClaims.map((c: any, index: number) => ({
+          id: c.id,
+          claimNumber: c.claimNumber,
+          title: c.title,
+          description: batchData[index].description || '',
+          category: c.category,
+          address: subjectHomeowner.address,
+          homeownerName: subjectHomeowner.name,
+          homeownerEmail: subjectHomeowner.email,
+          builderName: subjectHomeowner.builder,
+          jobName: subjectHomeowner.jobName,
+          closingDate: subjectHomeowner.closingDate,
+          status: ClaimStatus.SUBMITTED,
+          classification: 'Unclassified',
+          dateSubmitted: new Date(),
+          proposedDates: [],
+          comments: [],
+          attachments: batchData[index].attachments || [],
+        } as Claim));
+
+        setClaims(prev => [...newClaims, ...prev]);
+
+        // Send ONE summary email to all admins
+        const baseUrl = typeof window !== 'undefined' 
+          ? `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`
+          : 'https://www.cascadeconnect.app';
+
+        // Generate HTML table for batch summary
+        const claimsTableRows = createdClaims.map((c: any, index: number) => {
+          const claimData = batchData[index];
+          return `
+            <tr style="border-bottom: 1px solid #e0e0e0;">
+              <td style="padding: 12px; text-align: left;">${c.claimNumber || 'N/A'}</td>
+              <td style="padding: 12px; text-align: left;">${c.category || 'General'}</td>
+              <td style="padding: 12px; text-align: left;">${c.title}</td>
+              <td style="padding: 12px; text-align: left;">${(claimData.description || '').substring(0, 100)}${(claimData.description || '').length > 100 ? '...' : ''}</td>
+              <td style="padding: 12px; text-align: center;">${(claimData.attachments || []).length}</td>
+            </tr>
+          `;
+        }).join('');
+
+        const emailBody = `
+          <p><strong>${createdClaims.length} new warranty claim${createdClaims.length > 1 ? 's have' : ' has'} been submitted:</strong></p>
+          
+          <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-family: Arial, sans-serif;">
+            <thead>
+              <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
+                <th style="padding: 12px; text-align: left; font-weight: bold;">Claim #</th>
+                <th style="padding: 12px; text-align: left; font-weight: bold;">Category</th>
+                <th style="padding: 12px; text-align: left; font-weight: bold;">Title</th>
+                <th style="padding: 12px; text-align: left; font-weight: bold;">Description</th>
+                <th style="padding: 12px; text-align: center; font-weight: bold;">Attachments</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${claimsTableRows}
+            </tbody>
+          </table>
+
+          <p><strong>Homeowner:</strong> ${subjectHomeowner.name}</p>
+          <p><strong>Address:</strong> ${subjectHomeowner.address}</p>
+
+          <div style="margin: 20px 0;">
+            <a href="${baseUrl}#claims" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">View All Claims</a>
+          </div>
+        `.trim();
+
+        // Send to all employees who have this preference enabled
+        for (const emp of employees) {
+          if (emp.emailNotifyClaimSubmitted !== false) {
+            try {
+              await sendEmail({
+                to: emp.email,
+                subject: `New Batch of Warranty Claims Submitted: ${createdClaims.length} claim${createdClaims.length > 1 ? 's' : ''} from ${subjectHomeowner.name}`,
+                body: emailBody,
+                fromName: 'Cascade Connect System',
+                fromRole: UserRole.ADMIN,
+              });
+            } catch (error) {
+              console.error(`Failed to send batch claim notification to ${emp.email}:`, error);
+            }
+          }
+        }
+
+        // Redirect to dashboard with success
+        setCurrentView('DASHBOARD');
+        alert(`Successfully submitted ${createdClaims.length} claim${createdClaims.length > 1 ? 's' : ''}!`);
+        return;
+      } catch (error: any) {
+        console.error('Batch submission error:', error);
+        alert(`Failed to submit claims: ${error.message || 'Unknown error'}`);
+        return;
+      }
+    }
+
+    // Single claim submission (existing behavior for admins)
+    const singleData = data as Partial<Claim>;
 
     // Generate claim number per homeowner (starting at 1 for each homeowner)
     // Count existing claims for this specific homeowner
@@ -1427,27 +1572,27 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
     const newClaim: Claim = {
       id: crypto.randomUUID(),
       claimNumber: claimNumber,
-      title: data.title || '',
-      description: data.description || '',
-      category: data.category || 'Other',
+      title: singleData.title || '',
+      description: singleData.description || '',
+      category: singleData.category || 'Other',
       address: subjectHomeowner.address,
       homeownerName: subjectHomeowner.name,
       homeownerEmail: subjectHomeowner.email,
       builderName: subjectHomeowner.builder,
       jobName: subjectHomeowner.jobName,
       closingDate: subjectHomeowner.closingDate,
-      status: data.status || ClaimStatus.SUBMITTED,
-      classification: data.classification || 'Unclassified',
-      dateEvaluated: data.dateEvaluated,
-      nonWarrantyExplanation: data.nonWarrantyExplanation,
-      internalNotes: data.internalNotes,
-      contractorId: data.contractorId,
-      contractorName: data.contractorName,
-      contractorEmail: data.contractorEmail,
+      status: singleData.status || ClaimStatus.SUBMITTED,
+      classification: singleData.classification || 'Unclassified',
+      dateEvaluated: singleData.dateEvaluated,
+      nonWarrantyExplanation: singleData.nonWarrantyExplanation,
+      internalNotes: singleData.internalNotes,
+      contractorId: singleData.contractorId,
+      contractorName: singleData.contractorName,
+      contractorEmail: singleData.contractorEmail,
       dateSubmitted: new Date(),
-      proposedDates: [],
+      proposedDates: singleData.proposedDates || [],
       comments: [],
-      attachments: data.attachments || []
+      attachments: singleData.attachments || []
     } as any;
     
     // Add homeownerId to the claim object for filtering

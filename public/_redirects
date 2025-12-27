@@ -33,6 +33,7 @@
 /api/email/send       /.netlify/functions/email-send    200!
 /api/email/inbound    /.netlify/functions/email-inbound    200!
 /api/email/analytics   /.netlify/functions/email-analytics    200!
+/api/email/logs        /.netlify/functions/email-logs    200!
 
 # Handle Netlify Info API
 /api/netlify/info     /.netlify/functions/netlify-info    200!
@@ -60,6 +61,9 @@
 # Handle Tasks API
 /api/tasks /.netlify/functions/tasks    200!
 /api/tasks/* /.netlify/functions/tasks/:splat    200!
+
+# Handle Batch Claims API
+/api/claims/batch /.netlify/functions/claims-batch    200!
 
 # All other routes go to index.html for SPA routing
 /*    /index.html   200

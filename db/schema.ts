@@ -193,16 +193,15 @@ export const messageThreads = pgTable('message_threads', {
   messages: json('messages').$type<any[]>().default([]),
 });
 
-// --- 9. Email Logs (SendGrid Webhook Events) ---
+// --- 9. Email Logs (Self-Hosted Email History) ---
 export const emailLogs = pgTable('email_logs', {
   id: uuid('id').defaultRandom().primaryKey(),
-  sgMessageId: text('sg_message_id').notNull(), // SendGrid message ID
-  email: text('email').notNull(), // Recipient email address
-  event: text('event').notNull(), // Event type: processed, delivered, open, click, bounce, etc.
-  timestamp: timestamp('timestamp').notNull(), // Event timestamp
-  createdAt: timestamp('created_at').defaultNow(), // When we received the webhook
-  // Additional event data stored as JSON
-  eventData: json('event_data').$type<any>().default({}),
+  recipient: text('recipient').notNull(), // Recipient email address
+  subject: text('subject').notNull(), // Email subject
+  status: text('status').notNull(), // 'sent' | 'failed'
+  error: text('error'), // Error message if status is 'failed' (nullable)
+  metadata: json('metadata').$type<any>(), // JSON metadata (claim_id, user_id, etc.) (nullable)
+  createdAt: timestamp('created_at').defaultNow(), // When the email was sent/attempted
 });
 
 // --- 10. Calls (AI Intake Service - Vapi) ---

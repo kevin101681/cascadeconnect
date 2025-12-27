@@ -1,12 +1,21 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { CLAIM_CLASSIFICATIONS } from '../constants';
+import { CLAIM_CLASSIFICATIONS, CATEGORIES } from '../constants';
 import { Contractor, ClaimClassification, Attachment, Homeowner, ClaimStatus, UserRole } from '../types';
 import Button from './Button';
 import ImageViewerModal from './ImageViewerModal';
 import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
-import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar, Briefcase } from 'lucide-react';
+import { ToastContainer, Toast } from './Toast';
+import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar, Briefcase, Trash2, Plus } from 'lucide-react';
+
+interface StagedClaim {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  attachments: Attachment[];
+}
 
 interface NewClaimFormProps {
   onSubmit: (data: any) => void;
@@ -20,9 +29,14 @@ interface NewClaimFormProps {
 const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendMessage, contractors, activeHomeowner, userRole }) => {
   const isAdmin = userRole === UserRole.ADMIN;
 
+  // Staged Claims for Batch Submission (Homeowners only)
+  const [stagedClaims, setStagedClaims] = useState<StagedClaim[]>([]);
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
   // Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [category, setCategory] = useState<string>('General');
   
   // Classification & Status (Admin Only)
   const [classification, setClassification] = useState<ClaimClassification>('60 Day');
@@ -66,12 +80,91 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
   const [isUploading, setIsUploading] = useState(false);
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [imageViewerIndex, setImageViewerIndex] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Toast management
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    const id = crypto.randomUUID();
+    setToasts(prev => [...prev, { id, message, type }]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
 
   // Only show contractors if user has typed something
   const filteredContractors = contractorSearch.trim() 
     ? contractors.filter(c => c.companyName.toLowerCase().includes(contractorSearch.toLowerCase()) || c.specialty.toLowerCase().includes(contractorSearch.toLowerCase()))
     : [];
 
+  // Handle adding item to staging (for homeowners)
+  const handleAddItem = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    if (!title.trim()) {
+      addToast('Please enter a claim title', 'error');
+      return;
+    }
+    
+    if (!description.trim()) {
+      addToast('Please enter a description', 'error');
+      return;
+    }
+
+    // Add to staged claims
+    const newStagedClaim: StagedClaim = {
+      id: crypto.randomUUID(),
+      title: title.trim(),
+      description: description.trim(),
+      category: category,
+      attachments: [...attachments] // Copy attachments (already uploaded URLs)
+    };
+
+    setStagedClaims(prev => [...prev, newStagedClaim]);
+    addToast('Item added. Add another or submit below.', 'success');
+
+    // Clear form
+    setTitle('');
+    setDescription('');
+    setCategory('General');
+    setAttachments([]);
+  };
+
+  // Handle batch submission
+  const handleSubmitAll = async () => {
+    if (stagedClaims.length === 0) {
+      addToast('Please add at least one item before submitting', 'error');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Convert staged claims to payload format
+      const batchPayload = stagedClaims.map(staged => ({
+        title: staged.title,
+        description: staged.description,
+        category: staged.category,
+        attachments: staged.attachments,
+        classification: 'Unclassified',
+        status: ClaimStatus.SUBMITTED,
+        proposedDates: []
+      }));
+
+      // Submit batch
+      await onSubmit(batchPayload);
+
+      // Clear staged claims
+      setStagedClaims([]);
+    } catch (error) {
+      console.error('Batch submission error:', error);
+      addToast('Failed to submit claims. Please try again.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle single submission (Admin mode - legacy behavior)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -89,7 +182,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
     const payload = {
       title,
       description,
-      category: 'General',
+      category: category,
       // Admin specific fields default if not admin
       classification: isAdmin ? classification : 'Unclassified',
       dateEvaluated: isAdmin && dateEvaluated ? new Date(dateEvaluated) : undefined,
@@ -118,50 +211,65 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
   const selectClass = "block w-full rounded-md border border-surface-outline dark:border-gray-600 bg-transparent dark:bg-gray-700 px-3 py-3 text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 flex flex-col h-full">
-      {/* Header */}
-      <div className="pb-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center">
-        <h2 className="text-lg font-normal text-surface-on dark:text-gray-100">
-          New Claim
-        </h2>
-      {/* Job Name Pill */}
-        <span className="bg-primary text-primary-on text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+    <>
+      <ToastContainer toasts={toasts} onDismiss={removeToast} />
+      <form onSubmit={isAdmin ? handleSubmit : handleAddItem} className="space-y-6 flex flex-col h-full">
+        {/* Header */}
+        <div className="pb-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center">
+          <h2 className="text-lg font-normal text-surface-on dark:text-gray-100">
+            {isAdmin ? 'New Claim' : 'Submit Warranty Request'}
+          </h2>
+          {/* Job Name Pill */}
+          <span className="bg-primary text-primary-on text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
             <Building2 className="h-3 w-3" />
             {activeHomeowner.jobName}
-         </span>
-      </div>
+          </span>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left Column: Basic Info */}
-        <div className="space-y-6">
-          {/* Title and Description Card */}
-          <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-            <div className="space-y-4">
-           <div>
-                <label htmlFor="title" className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Claim Title</label>
-            <input
-              id="title"
-              type="text"
-              required
-                  className={`${inputClass} bg-white dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Left Column: Basic Info */}
+          <div className="space-y-6">
+            {/* Title and Description Card */}
+            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+              <div className="space-y-4">
+                {/* Category (for homeowners) */}
+                {!isAdmin && (
+                  <div>
+                    <label htmlFor="category" className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Category</label>
+                    <MaterialSelect
+                      value={category}
+                      onChange={(value) => setCategory(value)}
+                      options={CATEGORIES.map(cat => ({ value: cat, label: cat }))}
+                      className="bg-white dark:bg-gray-700/50"
+                    />
+                  </div>
+                )}
+                
+                <div>
+                  <label htmlFor="title" className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Claim Title</label>
+                  <input
+                    id="title"
+                    type="text"
+                    required
+                    className={`${inputClass} bg-white dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
+                </div>
 
-          <div>
-                <label htmlFor="description" className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Description</label>
-            <textarea
-              id="description"
-              rows={4}
-              required
-                  className={`${inputClass} bg-white dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
+                <div>
+                  <label htmlFor="description" className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Description</label>
+                  <textarea
+                    id="description"
+                    rows={4}
+                    required
+                    className={`${inputClass} bg-white dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
-        </div>
 
           {/* Internal Notes (Admin Only) */}
            {isAdmin && (
@@ -532,6 +640,59 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
         </div>
       </div>
 
+      {/* Staging Area (Homeowners only) */}
+      {!isAdmin && stagedClaims.length > 0 && (
+        <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+          <h3 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Pending Items ({stagedClaims.length})</h3>
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {stagedClaims.map((staged, index) => (
+              <div key={staged.id} className="bg-surface dark:bg-gray-800 p-3 rounded-lg border border-surface-outline-variant dark:border-gray-600 flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">
+                      {staged.category}
+                    </span>
+                    <span className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">
+                      {staged.title}
+                    </span>
+                  </div>
+                  <p className="text-xs text-surface-on-variant dark:text-gray-400 line-clamp-2">
+                    {staged.description}
+                  </p>
+                  {staged.attachments.length > 0 && (
+                    <div className="mt-2 flex gap-2">
+                      {staged.attachments.slice(0, 3).map((att, i) => (
+                        <div key={i} className="w-12 h-12 rounded overflow-hidden border border-surface-outline-variant dark:border-gray-600">
+                          {att.type === 'IMAGE' && att.url ? (
+                            <img src={att.url} alt={att.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-surface-container dark:bg-gray-700">
+                              <FileText className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {staged.attachments.length > 3 && (
+                        <div className="w-12 h-12 rounded border border-surface-outline-variant dark:border-gray-600 flex items-center justify-center bg-surface-container dark:bg-gray-700 text-xs text-surface-on-variant dark:text-gray-400">
+                          +{staged.attachments.length - 3}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setStagedClaims(stagedClaims.filter((_, i) => i !== index))}
+                  className="p-1.5 rounded hover:bg-error/10 text-error hover:text-error transition-colors"
+                  title="Remove item"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Image Viewer Modal */}
       <ImageViewerModal
@@ -553,29 +714,53 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
         }}
       />
       
-      {/* Footer with buttons */}
-      <div className="flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700 mt-auto">
-        {onSendMessage && (
+        {/* Footer with buttons */}
+        <div className="flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700 mt-auto">
+          {onSendMessage && (
+            <Button 
+              type="button" 
+              variant="filled" 
+              onClick={onSendMessage}
+            >
+              Message
+            </Button>
+          )}
           <Button 
             type="button" 
             variant="filled" 
-            onClick={onSendMessage}
+            onClick={onCancel}
           >
-            Message
+            Cancel
           </Button>
-        )}
-        <Button 
-          type="button" 
-          variant="filled" 
-          onClick={onCancel}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" variant="filled">
-          Save
-        </Button>
-      </div>
-    </form>
+          {isAdmin ? (
+            <Button type="submit" variant="filled">
+              Save
+            </Button>
+          ) : (
+            <>
+              <Button 
+                type="submit" 
+                variant="filled"
+                icon={<Plus className="h-4 w-4" />}
+              >
+                Add Item to Request
+              </Button>
+              {stagedClaims.length > 0 && (
+                <Button 
+                  type="button"
+                  variant="filled"
+                  onClick={handleSubmitAll}
+                  disabled={isSubmitting}
+                  icon={isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                >
+                  Submit All ({stagedClaims.length})
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+      </form>
+    </>
   );
 };
 

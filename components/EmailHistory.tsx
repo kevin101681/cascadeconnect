@@ -27,42 +27,42 @@ interface EmailStats {
 }
 
 interface EmailActivity {
-  msg_id: string;
-  from: string;
-  from_name?: string;
+  id: string;
+  recipient: string;
   subject: string;
-  to: string[];
-  status: string;
-  opens_count: number;
-  clicks_count: number;
-  last_event_time: string;
+  status: 'sent' | 'failed';
+  error?: string | null;
+  metadata?: Record<string, any> | null;
+  created_at: string;
+  // Legacy SendGrid fields (kept for backward compatibility if needed)
+  msg_id?: string;
+  from?: string;
+  from_name?: string;
+  to?: string[];
+  opens_count?: number;
+  clicks_count?: number;
+  last_event_time?: string;
   sent_at?: string;
-  opens?: Array<{
-    email: string;
-    timestamp: string;
-    ip?: string;
-    user_agent?: string;
-  }>;
-  clicks?: Array<{
-    email: string;
-    timestamp: string;
-    url?: string;
-    ip?: string;
-    user_agent?: string;
-  }>;
 }
 
 interface EmailAnalyticsData {
   success: boolean;
-  dateRange: {
+  logs: EmailActivity[];
+  stats: {
+    total: number;
+    sent: number;
+    failed: number;
+  };
+  // Legacy SendGrid fields (kept for backward compatibility)
+  dateRange?: {
     start: string;
     end: string;
   };
-  aggregatedBy: string;
-  stats: EmailStats[];
-  totals: Record<string, number>;
-  activity: EmailActivity[];
-  activityCount: number;
+  aggregatedBy?: string;
+  stats_legacy?: EmailStats[];
+  totals?: Record<string, number>;
+  activity?: EmailActivity[];
+  activityCount?: number;
   warning?: string;
 }
 
@@ -82,20 +82,19 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
   const [endDate, setEndDate] = useState(() => {
     return new Date().toISOString().split('T')[0];
   });
-  const [aggregatedBy, setAggregatedBy] = useState<'day' | 'week' | 'month'>('day');
+  // Removed aggregatedBy - not needed for simple email logs
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedEmail, setSelectedEmail] = useState<EmailActivity | null>(null);
 
   // Filter emails based on search query - MUST be before any early returns
   const filteredActivity = useMemo(() => {
-    if (!data?.activity) return [];
-    if (!searchQuery.trim()) return data.activity;
+    const logs = data?.logs || data?.activity || [];
+    if (!searchQuery.trim()) return logs;
     
     const query = searchQuery.toLowerCase();
-    return data.activity.filter(email => 
-      email.from?.toLowerCase().includes(query) ||
+    return logs.filter(email => 
+      email.recipient?.toLowerCase().includes(query) ||
       email.subject?.toLowerCase().includes(query) ||
-      email.to?.some(to => typeof to === 'string' ? to.toLowerCase().includes(query) : false) ||
       email.status?.toLowerCase().includes(query)
     );
   }, [data, searchQuery]);
@@ -110,19 +109,18 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
       // In production, use the redirect path
       const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
       
-      // Build URL - try Express server endpoint first in dev, then Netlify function
+      // Build URL - use new email logs endpoint
       let url: URL;
       if (isLocalDev) {
-        // Try Express server first (runs on port 3000 with 'npm run dev')
-        url = new URL('http://localhost:3000/api/email/analytics');
+        // Try Netlify function path (requires 'netlify dev')
+        url = new URL('/.netlify/functions/email-logs', window.location.origin);
       } else {
         // Use redirect path in production
-        url = new URL('/api/email/analytics', window.location.origin);
+        url = new URL('/api/email/logs', window.location.origin);
       }
       
       url.searchParams.set('start_date', startDate);
       url.searchParams.set('end_date', endDate);
-      url.searchParams.set('aggregated_by', aggregatedBy);
       url.searchParams.set('limit', '500'); // Request more emails
 
       console.log('Fetching email analytics from:', url.toString());
@@ -277,7 +275,7 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
     } finally {
       setLoading(false);
     }
-  }, [startDate, endDate, aggregatedBy]);
+  }, [startDate, endDate]);
 
   useEffect(() => {
     fetchAnalytics();
@@ -313,7 +311,7 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
           <Mail className="h-5 w-5 text-primary" />
           Email History
         </h3>
-        <p className="text-sm text-surface-on-variant dark:text-gray-400">SendGrid email analytics and statistics</p>
+                <p className="text-sm text-surface-on-variant dark:text-gray-400">Self-hosted email history and statistics</p>
       </div>
       <div className="flex items-center gap-2">
         {actions}
@@ -364,10 +362,18 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
     );
   }
 
-  const totals = data?.totals || {};
-
-  // Show warning if stats show emails but Messages API returned none
-  const showWarning = data?.warning && totals.delivered > 0 && (!data.activity || data.activity.length === 0);
+  const stats = data?.stats || { total: 0, sent: 0, failed: 0 };
+  const totals = {
+    delivered: stats.sent,
+    failed: stats.failed,
+    processed: stats.total,
+    requests: stats.total,
+    unique_opens: 0, // Not tracked in self-hosted logs
+    unique_clicks: 0, // Not tracked in self-hosted logs
+    bounces: 0,
+    spam_reports: 0,
+    unsubscribes: 0,
+  };
 
   const formatDateTime = (dateString: string) => {
     if (!dateString) return 'N/A';
@@ -395,30 +401,6 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
           </Button>
         )}
         <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
-          {/* Warning Banner */}
-          {showWarning && (
-            <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-1">
-                    Email Activity History Not Available
-                  </h4>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                    SendGrid Stats show {totals.delivered} delivered emails, but the Messages API returned 0 messages. 
-                    This typically requires:
-                  </p>
-                  <ul className="text-sm text-yellow-700 dark:text-yellow-300 mt-2 ml-4 list-disc">
-                    <li>Email Activity History add-on enabled in SendGrid</li>
-                    <li>API key with "messages.read" permission</li>
-                  </ul>
-                  <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-2">
-                    Contact SendGrid support or check your account settings to enable this feature.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
           
           {/* Filters */}
           <div className="mb-6 flex flex-col sm:flex-row gap-4 p-4 bg-surface-container dark:bg-gray-700 rounded-xl">
@@ -441,18 +423,6 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
                 className="bg-surface-container-high dark:bg-gray-600 rounded-lg px-3 py-1.5 text-sm text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-surface-on-variant dark:text-gray-400">Group By:</label>
-              <select
-                value={aggregatedBy}
-                onChange={(e) => setAggregatedBy(e.target.value as 'day' | 'week' | 'month')}
-                className="bg-surface-container-high dark:bg-gray-600 rounded-lg px-3 py-1.5 text-sm text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-              >
-                <option value="day">Day</option>
-                <option value="week">Week</option>
-                <option value="month">Month</option>
-              </select>
-            </div>
           </div>
 
           {/* Summary Cards */}
@@ -463,10 +433,10 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
               <Send className="h-4 w-4 text-primary" />
             </div>
             <div className="text-2xl font-medium text-surface-on dark:text-gray-100">
-              {formatNumber(totals.requests || 0)}
+              {formatNumber(stats.sent || 0)}
             </div>
             <div className="text-xs text-surface-on-variant dark:text-gray-400 mt-1">
-              {formatPercentage(totals.delivered || 0, totals.requests || 1)} delivered
+              {formatPercentage(stats.sent || 0, stats.total || 1)} success rate
             </div>
             </div>
 
@@ -476,72 +446,40 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
                 <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
               </div>
               <div className="text-2xl font-medium text-surface-on dark:text-gray-100">
-                {formatNumber(totals.delivered || 0)}
+                {formatNumber(stats.sent || 0)}
               </div>
               <div className="text-xs text-surface-on-variant dark:text-gray-400 mt-1">
-                {formatPercentage(totals.delivered || 0, totals.requests || 1)} of sent
+                Successfully sent
               </div>
             </div>
 
             <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-4 border border-surface-outline-variant">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-surface-on-variant dark:text-gray-400">Opens</span>
-                <Eye className="h-4 w-4 text-primary" />
+                <span className="text-sm text-surface-on-variant dark:text-gray-400">Total Processed</span>
+                <CheckCircle className="h-4 w-4 text-primary" />
               </div>
               <div className="text-2xl font-medium text-surface-on dark:text-gray-100">
-                {formatNumber(totals.unique_opens || 0)}
+                {formatNumber(stats.total || 0)}
               </div>
               <div className="text-xs text-surface-on-variant dark:text-gray-400 mt-1">
-                {formatPercentage(totals.unique_opens || 0, totals.delivered || 1)} open rate
+                Sent + Failed
               </div>
             </div>
 
             <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-4 border border-surface-outline-variant">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-surface-on-variant dark:text-gray-400">Clicks</span>
-                <MousePointerClick className="h-4 w-4 text-primary" />
-              </div>
-              <div className="text-2xl font-medium text-surface-on dark:text-gray-100">
-                {formatNumber(totals.unique_clicks || 0)}
-              </div>
-              <div className="text-xs text-surface-on-variant dark:text-gray-400 mt-1">
-                {formatPercentage(totals.unique_clicks || 0, totals.delivered || 1)} click rate
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-4 border border-surface-outline-variant">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-surface-on-variant dark:text-gray-400">Bounces</span>
+                <span className="text-sm text-surface-on-variant dark:text-gray-400">Failed</span>
                 <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
               </div>
-              <div className="text-xl font-medium text-surface-on dark:text-gray-100">
-                {formatNumber(totals.bounces || 0)}
+              <div className="text-2xl font-medium text-red-600 dark:text-red-400">
+                {formatNumber(stats.failed || 0)}
               </div>
-            </div>
-
-            <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-4 border border-surface-outline-variant">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-surface-on-variant dark:text-gray-400">Spam Reports</span>
-                <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-              </div>
-              <div className="text-xl font-medium text-surface-on dark:text-gray-100">
-                {formatNumber(totals.spam_reports || 0)}
-              </div>
-            </div>
-
-            <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-4 border border-surface-outline-variant">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-surface-on-variant dark:text-gray-400">Unsubscribes</span>
-                <TrendingUp className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-              </div>
-              <div className="text-xl font-medium text-surface-on dark:text-gray-100">
-                {formatNumber(totals.unsubscribes || 0)}
+              <div className="text-xs text-surface-on-variant dark:text-gray-400 mt-1">
+                {formatPercentage(stats.failed || 0, stats.total || 1)} failure rate
               </div>
             </div>
           </div>
+
 
           {/* Email Logs Section */}
           <div className="mt-6">
@@ -568,41 +506,26 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
                   <table className="w-full">
                     <thead className="bg-surface-container-high dark:bg-gray-600 border-b border-surface-outline-variant">
                       <tr>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">From</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">To</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">Date</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">Recipient</th>
                         <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">Subject</th>
                         <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">Status</th>
-                        <th className="text-center px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">
-                          <Eye className="h-4 w-4 inline mr-1" />
-                          Opens
-                        </th>
-                        <th className="text-center px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">
-                          <MousePointerClick className="h-4 w-4 inline mr-1" />
-                          Clicks
-                        </th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">Sent</th>
                         <th className="text-center px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">Details</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-surface-outline-variant dark:divide-gray-600">
                       {filteredActivity.map((email, idx) => (
-                        <React.Fragment key={email.msg_id || idx}>
+                        <React.Fragment key={email.id || email.msg_id || idx}>
                           <tr 
                             className={`hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors cursor-pointer ${selectedEmail?.msg_id === email.msg_id ? 'bg-surface-container-high dark:bg-gray-600' : ''}`}
                             onClick={() => setSelectedEmail(selectedEmail?.msg_id === email.msg_id ? null : email)}
                           >
-                            <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">
-                              <div className="font-medium">{email.from_name || email.from}</div>
-                              {email.from_name && email.from !== email.from_name && (
-                                <div className="text-xs text-surface-on-variant dark:text-gray-400">{email.from}</div>
-                              )}
+                            <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
+                              {formatDateTime(email.created_at)}
                             </td>
                             <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">
                               <div className="max-w-xs truncate">
-                                {Array.isArray(email.to) ? email.to.slice(0, 2).join(', ') : email.to}
-                                {Array.isArray(email.to) && email.to.length > 2 && (
-                                  <span className="text-surface-on-variant dark:text-gray-400"> +{email.to.length - 2} more</span>
-                                )}
+                                {email.recipient}
                               </div>
                             </td>
                             <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">
@@ -611,21 +534,12 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
                               </div>
                             </td>
                             <td className="px-4 py-3">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(email.status)}`}>
-                                {email.status || 'unknown'}
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${email.status === 'sent' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                {email.status === 'sent' ? 'Sent' : 'Failed'}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100 text-center">
-                              {email.opens_count || 0}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100 text-center">
-                              {email.clicks_count || 0}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
-                              {formatDateTime(email.last_event_time || email.sent_at)}
-                            </td>
                             <td className="px-4 py-3 text-center">
-                              {selectedEmail?.msg_id === email.msg_id ? (
+                              {selectedEmail?.id === email.id ? (
                                 <ChevronUp className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
                               ) : (
                                 <ChevronDown className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
@@ -633,95 +547,49 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
                             </td>
                           </tr>
                           {/* Expanded Details Row */}
-                          {selectedEmail?.msg_id === email.msg_id && (
+                          {selectedEmail?.id === email.id && (
                             <tr className="bg-surface-container-high/50 dark:bg-gray-600/50">
-                              <td colSpan={8} className="px-4 py-4">
+                              <td colSpan={5} className="px-4 py-4">
                                 <div className="space-y-4">
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                      <div className="text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-1">Message ID</div>
-                                      <div className="text-sm text-surface-on dark:text-gray-100 font-mono break-all">{email.msg_id}</div>
+                                      <div className="text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-1">ID</div>
+                                      <div className="text-sm text-surface-on dark:text-gray-100 font-mono break-all">{email.id}</div>
                                     </div>
                                     <div>
                                       <div className="text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-1">Status</div>
-                                      <div className="text-sm text-surface-on dark:text-gray-100">{email.status || 'unknown'}</div>
+                                      <div className="text-sm text-surface-on dark:text-gray-100">{email.status === 'sent' ? 'Sent' : 'Failed'}</div>
                                     </div>
                                     <div>
                                       <div className="text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-1">Sent At</div>
-                                      <div className="text-sm text-surface-on dark:text-gray-100">{formatDateTime(email.sent_at || email.last_event_time)}</div>
+                                      <div className="text-sm text-surface-on dark:text-gray-100">{formatDateTime(email.created_at)}</div>
                                     </div>
                                     <div>
-                                      <div className="text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-1">Last Event</div>
-                                      <div className="text-sm text-surface-on dark:text-gray-100">{formatDateTime(email.last_event_time)}</div>
+                                      <div className="text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-1">Recipient</div>
+                                      <div className="text-sm text-surface-on dark:text-gray-100">{email.recipient}</div>
                                     </div>
                                   </div>
                                   
-                                  {/* Opens and Clicks Details */}
-                                  <div className="grid grid-cols-2 gap-4">
-                                    {(email.opens && email.opens.length > 0) && (
-                                      <div>
-                                        <div className="text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                                          <Eye className="h-3 w-3" />
-                                          Opens ({email.opens.length})
-                                        </div>
-                                        <div className="space-y-1 max-h-32 overflow-y-auto">
-                                          {email.opens.slice(0, 5).map((open: any, idx: number) => (
-                                            <div key={idx} className="text-xs text-surface-on dark:text-gray-100 bg-surface dark:bg-gray-700 rounded px-2 py-1">
-                                              <div className="font-medium">{open.email}</div>
-                                              <div className="text-surface-on-variant dark:text-gray-400">
-                                                {formatDateTime(open.timestamp)}
-                                              </div>
-                                            </div>
-                                          ))}
-                                          {email.opens.length > 5 && (
-                                            <div className="text-xs text-surface-on-variant dark:text-gray-400">
-                                              +{email.opens.length - 5} more
-                                            </div>
-                                          )}
-                                        </div>
+                                  {/* Error message if failed */}
+                                  {email.status === 'failed' && email.error && (
+                                    <div className="pt-2 border-t border-surface-outline-variant dark:border-gray-600">
+                                      <p className="text-sm text-error font-medium">Error:</p>
+                                      <p className="text-sm text-error/80 mt-1">{email.error}</p>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Metadata if available */}
+                                  {email.metadata && Object.keys(email.metadata).length > 0 && (
+                                    <div className="pt-2 border-t border-surface-outline-variant dark:border-gray-600">
+                                      <p className="text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-2">Metadata</p>
+                                      <div className="text-sm text-surface-on dark:text-gray-100 space-y-1">
+                                        {email.metadata.type && <div>Type: {email.metadata.type}</div>}
+                                        {email.metadata.messageId && <div>Message ID: {email.metadata.messageId}</div>}
+                                        {email.metadata.from && <div>From: {email.metadata.from}</div>}
+                                        {email.metadata.callId && <div>Call ID: {email.metadata.callId}</div>}
                                       </div>
-                                    )}
-                                    
-                                    {(email.clicks && email.clicks.length > 0) && (
-                                      <div>
-                                        <div className="text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1">
-                                          <MousePointerClick className="h-3 w-3" />
-                                          Clicks ({email.clicks.length})
-                                        </div>
-                                        <div className="space-y-1 max-h-32 overflow-y-auto">
-                                          {email.clicks.slice(0, 5).map((click: any, idx: number) => (
-                                            <div key={idx} className="text-xs text-surface-on dark:text-gray-100 bg-surface dark:bg-gray-700 rounded px-2 py-1">
-                                              <div className="font-medium">{click.email}</div>
-                                              <div className="text-surface-on-variant dark:text-gray-400 truncate" title={click.url}>
-                                                {click.url}
-                                              </div>
-                                              <div className="text-surface-on-variant dark:text-gray-400">
-                                                {formatDateTime(click.timestamp)}
-                                              </div>
-                                            </div>
-                                          ))}
-                                          {email.clicks.length > 5 && (
-                                            <div className="text-xs text-surface-on-variant dark:text-gray-400">
-                                              +{email.clicks.length - 5} more
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {/* Link to SendGrid */}
-                                  <div className="pt-2 border-t border-surface-outline-variant dark:border-gray-600">
-                                    <a
-                                      href={`https://app.sendgrid.com/email_logs?msg_id=${email.msg_id}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors"
-                                    >
-                                      <ExternalLink className="h-4 w-4" />
-                                      View in SendGrid
-                                    </a>
-                                  </div>
+                                    </div>
+                                  )}
                                 </div>
                               </td>
                             </tr>
