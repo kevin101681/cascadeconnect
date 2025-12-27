@@ -706,38 +706,24 @@ const Dashboard: React.FC<DashboardProps> = ({
     console.log('showNewTaskModal changed to:', showNewTaskModal);
   }, [showNewTaskModal]);
 
-  // Lock body scroll when any modal is open
+  // Lock body scroll when any modal is open (without layout shifts)
   useEffect(() => {
     const isAnyModalOpen = showNewTaskModal || showNewMessageModal || showNewClaimModal || 
                           showDocsModal || showInviteModal || showEditHomeownerModal || 
                           showSubListModal || showPunchListApp || isPDFViewerOpen || showCallsModal;
     
     if (isAnyModalOpen) {
-      // Save current scroll position
-      const scrollY = window.scrollY;
-      const scrollX = window.scrollX;
+      // Use overflow hidden only to prevent scrolling without layout shifts
+      const originalBodyOverflow = document.body.style.overflow;
+      const originalHtmlOverflow = document.documentElement.style.overflow;
       
-      // Lock body scroll
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.left = `-${scrollX}px`;
-      document.body.style.width = '100%';
-      document.body.style.height = '100%';
       document.body.style.overflow = 'hidden';
-      
-      // Also lock html element
       document.documentElement.style.overflow = 'hidden';
       
       return () => {
-        // Restore scroll position when modal closes
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.left = '';
-        document.body.style.width = '';
-        document.body.style.height = '';
-        document.body.style.overflow = '';
-        document.documentElement.style.overflow = '';
-        window.scrollTo(scrollX, scrollY);
+        // Restore original overflow values
+        document.body.style.overflow = originalBodyOverflow;
+        document.documentElement.style.overflow = originalHtmlOverflow;
       };
     }
   }, [showNewTaskModal, showNewMessageModal, showNewClaimModal, showDocsModal, 
@@ -1541,11 +1527,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   // --- Render Helpers ---
 
   const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, filter?: 'All' | 'Open' | 'Closed', setFilter?: (filter: 'All' | 'Open' | 'Closed') => void, onExportExcel?: () => void, allClaims?: Claim[], isAdminView: boolean = false) => (
-    <motion.div 
+    <div 
       className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col md:shadow-elevation-1"
-      variants={cardVariants}
-      initial="hidden"
-      animate="visible"
     >
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
         <div className="flex items-center justify-between md:justify-start gap-4 w-full md:w-auto">
@@ -1677,7 +1660,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 
                 const isReviewed = claim.reviewed || false;
                 return (
-                  <motion.div 
+                  <div 
                     key={claim.id}
                     className={`group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer ${
                       isCompleted 
@@ -1686,7 +1669,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                         ? 'bg-green-50 dark:bg-green-950/20 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
                         : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
                     }`}
-                    variants={cardVariants}
                     onClick={(e) => {
                       setSelectedClaimForModal(claim);
                     }}
@@ -1766,14 +1748,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                           )}
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                 );
               })}
             </div>
           </div>
         </div>
       )}
-    </motion.div>
+    </div>
     );
 
   const handleExportToExcel = async (claimsList: Claim[]) => {
@@ -2072,7 +2054,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       : thread.participants.filter(p => p !== activeHomeowner.name).join(', ') || 'Me';
 
                     return (
-                      <motion.div
+                      <div
                         key={thread.id}
                         onClick={() => setSelectedThreadId(thread.id)}
                         className={`group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer ${
@@ -2082,8 +2064,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                             ? 'bg-white dark:bg-white border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
                             : 'bg-white dark:bg-white border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1 opacity-75'
                         }`}
-                        variants={cardVariants}
-                        layout
                       >
                         <div className="px-4 py-4">
                           <div className="flex flex-wrap gap-2">
@@ -2122,7 +2102,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             )}
                           </div>
                         </div>
-                      </motion.div>
+                      </div>
                     );
                   })}
                 </div>
@@ -2642,13 +2622,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* HOMEOWNER INFO AND SCHEDULE ROW */}
         <div className="flex flex-col lg:flex-row gap-6 items-stretch relative w-full">
           {/* COMPACT HOMEOWNER HEADER CARD */}
-          <motion.div 
+          <div 
             key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
             className="w-full lg:flex-1 lg:min-w-0 lg:flex-shrink lg:self-start bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 group relative flex flex-col"
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            layout
           >
             <div className="flex flex-col p-6">
              
@@ -2839,16 +2815,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           </motion.div>
 
           {/* Next Appointment Card - Right of Homeowner Info */}
-          <motion.div 
+          <div 
             className="w-full lg:w-[300px] lg:flex-shrink-0 bg-primary/10 dark:bg-gray-800 rounded-3xl text-secondary-on-container dark:text-gray-100 flex flex-col relative border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden"
-            variants={cardVariants}
-            initial="hidden"
-            animate="visible"
-            transition={{
-              ...springTransition,
-              delay: 0.1
-            }}
-            layout
           >
             <div className="p-6 w-full text-left flex-shrink-0 z-10 relative">
               <h3 className="font-medium text-lg mb-0 flex items-center justify-between text-secondary-on-container dark:text-gray-100">
@@ -2925,11 +2893,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
               );
             })()}
-          </motion.div>
+          </div>
         </div>
 
         {/* Navigation Tabs (Context Specific) */}
-        <motion.div 
+        <div 
           ref={tabsContainerRef}
           className="flex gap-2 max-w-7xl mx-auto overflow-x-auto scrollbar-hide"
           style={{
@@ -2937,14 +2905,6 @@ const Dashboard: React.FC<DashboardProps> = ({
             msOverflowStyle: 'none',
             WebkitOverflowScrolling: 'touch'
           } as React.CSSProperties}
-          variants={cardVariants}
-          initial="hidden"
-          animate="visible"
-          transition={{
-            ...springTransition,
-            delay: 0.2
-          }}
-          layout
         >
            <button 
               data-tab="CLAIMS"
