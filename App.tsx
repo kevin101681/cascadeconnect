@@ -470,6 +470,8 @@ function App() {
                 // Try to fetch email notification preferences separately if columns exist
                 let emailPrefsMap = new Map<string, any>();
                 try {
+                  // Only try to fetch preferences if we can safely query for them
+                  // This avoids 400 errors if columns don't exist
                   const usersWithPrefs = await db.select({
                     id: usersTable.id,
                     emailNotifyClaimSubmitted: usersTable.emailNotifyClaimSubmitted,
@@ -485,25 +487,34 @@ function App() {
                     pushNotifyTaskAssigned: usersTable.pushNotifyTaskAssigned,
                     pushNotifyHomeownerMessage: usersTable.pushNotifyHomeownerMessage,
                     pushNotifyHomeownerEnrollment: usersTable.pushNotifyHomeownerEnrollment
-                  }).from(usersTable);
-                  
-                  usersWithPrefs.forEach(u => {
-                    emailPrefsMap.set(u.id, {
-                      emailNotifyClaimSubmitted: u.emailNotifyClaimSubmitted ?? true,
-                      emailNotifyHomeownerAcceptsAppointment: u.emailNotifyHomeownerAcceptsAppointment ?? true,
-                      emailNotifySubAcceptsAppointment: u.emailNotifySubAcceptsAppointment ?? true,
-                      emailNotifyHomeownerRescheduleRequest: u.emailNotifyHomeownerRescheduleRequest ?? true,
-                      emailNotifyTaskAssigned: u.emailNotifyTaskAssigned ?? true,
-                      pushNotifyClaimSubmitted: u.pushNotifyClaimSubmitted === true,
-                      pushNotifyHomeownerAcceptsAppointment: u.pushNotifyHomeownerAcceptsAppointment === true,
-                      pushNotifySubAcceptsAppointment: u.pushNotifySubAcceptsAppointment === true,
-                      pushNotifyHomeownerRescheduleRequest: u.pushNotifyHomeownerRescheduleRequest === true,
-                      pushNotifyTaskAssigned: u.pushNotifyTaskAssigned === true,
-                      pushNotifyHomeownerMessage: u.pushNotifyHomeownerMessage === true,
-                      pushNotifyHomeownerEnrollment: u.pushNotifyHomeownerEnrollment === true,
-                      emailNotifyHomeownerEnrollment: u.emailNotifyHomeownerEnrollment ?? true
-                    });
+                  }).from(usersTable).catch((err: any) => {
+                    // If query fails due to missing columns, return empty array
+                    if (err?.message?.includes('email_notify') || err?.message?.includes('push_notify') || err?.statusCode === 400) {
+                      console.log('⚠️ Email notification columns not found, using defaults');
+                      return [];
+                    }
+                    throw err; // Re-throw other errors
                   });
+                  
+                  if (usersWithPrefs && usersWithPrefs.length > 0) {
+                    usersWithPrefs.forEach(u => {
+                      emailPrefsMap.set(u.id, {
+                        emailNotifyClaimSubmitted: u.emailNotifyClaimSubmitted ?? true,
+                        emailNotifyHomeownerAcceptsAppointment: u.emailNotifyHomeownerAcceptsAppointment ?? true,
+                        emailNotifySubAcceptsAppointment: u.emailNotifySubAcceptsAppointment ?? true,
+                        emailNotifyHomeownerRescheduleRequest: u.emailNotifyHomeownerRescheduleRequest ?? true,
+                        emailNotifyTaskAssigned: u.emailNotifyTaskAssigned ?? true,
+                        pushNotifyClaimSubmitted: u.pushNotifyClaimSubmitted === true,
+                        pushNotifyHomeownerAcceptsAppointment: u.pushNotifyHomeownerAcceptsAppointment === true,
+                        pushNotifySubAcceptsAppointment: u.pushNotifySubAcceptsAppointment === true,
+                        pushNotifyHomeownerRescheduleRequest: u.pushNotifyHomeownerRescheduleRequest === true,
+                        pushNotifyTaskAssigned: u.pushNotifyTaskAssigned === true,
+                        pushNotifyHomeownerMessage: u.pushNotifyHomeownerMessage === true,
+                        pushNotifyHomeownerEnrollment: u.pushNotifyHomeownerEnrollment === true,
+                        emailNotifyHomeownerEnrollment: u.emailNotifyHomeownerEnrollment ?? true
+                      });
+                    });
+                  }
                 } catch (prefsError: any) {
                   // Email notification columns don't exist - use defaults
                   console.log('⚠️ Email notification columns not found, using defaults');
