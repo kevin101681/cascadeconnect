@@ -1820,11 +1820,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
           Account Documents
-          {displayDocuments.length > 0 && (
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-              {displayDocuments.length}
-            </span>
-          )}
         </h2>
       </div>
       <div className="flex-1 overflow-y-auto p-6 min-h-0">
@@ -2937,15 +2932,6 @@ const Dashboard: React.FC<DashboardProps> = ({
             >
               <FileText className="h-4 w-4" />
               Documents
-              {displayDocuments.length > 0 && (
-                <span className={`ml-1.5 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1.5 rounded-full text-xs font-medium ${
-                  currentTab === 'DOCUMENTS' 
-                    ? 'bg-primary-on text-primary' 
-                    : 'bg-primary text-primary-on'
-                }`}>
-                  {displayDocuments.length}
-                </span>
-              )}
             </button>
         </div>
 
