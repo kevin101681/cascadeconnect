@@ -10,17 +10,6 @@
   node_bundler = "esbuild"
   included_files = ["netlify/functions/**"]
 
-# Function-specific timeout configuration
-# Note: Netlify free tier max is 10s, Pro tier allows up to 26s
-# These are set to the maximum allowed for each tier
-[[functions]]
-  name = "email-send"
-  timeout = 26
-
-[[functions]]
-  name = "email-call-completed"
-  timeout = 26
-
 # Note: Environment variables should be set in Netlify dashboard, not here
 # This file only contains build configuration, no secrets
 
