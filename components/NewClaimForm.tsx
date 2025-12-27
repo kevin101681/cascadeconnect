@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { CLAIM_CLASSIFICATIONS, CATEGORIES } from '../constants';
+import { CLAIM_CLASSIFICATIONS } from '../constants';
 import { Contractor, ClaimClassification, Attachment, Homeowner, ClaimStatus, UserRole } from '../types';
 import Button from './Button';
 import ImageViewerModal from './ImageViewerModal';
@@ -13,7 +13,6 @@ interface StagedClaim {
   id: string;
   title: string;
   description: string;
-  category: string;
   attachments: Attachment[];
 }
 
@@ -36,7 +35,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
   // Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<string>('General');
   
   // Classification & Status (Admin Only)
   const [classification, setClassification] = useState<ClaimClassification>('60 Day');
@@ -117,7 +115,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
       id: crypto.randomUUID(),
       title: title.trim(),
       description: description.trim(),
-      category: category,
       attachments: [...attachments] // Copy attachments (already uploaded URLs)
     };
 
@@ -127,7 +124,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
     // Clear form
     setTitle('');
     setDescription('');
-    setCategory('General');
     setAttachments([]);
   };
 
@@ -144,7 +140,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
       const batchPayload = stagedClaims.map(staged => ({
         title: staged.title,
         description: staged.description,
-        category: staged.category,
+        category: 'General', // Default category for homeowner submissions
         attachments: staged.attachments,
         classification: 'Unclassified',
         status: ClaimStatus.SUBMITTED,
@@ -182,7 +178,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
     const payload = {
       title,
       description,
-      category: category,
+      category: 'General', // Default category
       // Admin specific fields default if not admin
       classification: isAdmin ? classification : 'Unclassified',
       dateEvaluated: isAdmin && dateEvaluated ? new Date(dateEvaluated) : undefined,
@@ -232,19 +228,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
             {/* Title and Description Card */}
             <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
               <div className="space-y-4">
-                {/* Category (for homeowners) */}
-                {!isAdmin && (
-                  <div>
-                    <label htmlFor="category" className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Category</label>
-                    <MaterialSelect
-                      value={category}
-                      onChange={(value) => setCategory(value)}
-                      options={CATEGORIES.map(cat => ({ value: cat, label: cat }))}
-                      className="bg-white dark:bg-gray-700/50"
-                    />
-                  </div>
-                )}
-                
                 <div>
                   <label htmlFor="title" className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Claim Title</label>
                   <input
@@ -649,9 +632,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
               <div key={staged.id} className="bg-surface dark:bg-gray-800 p-3 rounded-lg border border-surface-outline-variant dark:border-gray-600 flex items-start gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded">
-                      {staged.category}
-                    </span>
                     <span className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">
                       {staged.title}
                     </span>
