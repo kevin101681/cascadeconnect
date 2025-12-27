@@ -429,6 +429,30 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     let finalCallerType = callerType;
     let finalIssueDescription = issueDescription;
 
+    // Extract other call data (not from structured outputs)
+    // Note: These will be re-extracted after API fallback if needed
+    let homeownerName = 
+      structuredData.homeowner_name || 
+      structuredData.homeownerName || 
+      structuredData.name ||
+      callData.homeownerName ||
+      null;
+
+    let phoneNumber = 
+      structuredData.phone_number || 
+      structuredData.phoneNumber ||
+      callData.phoneNumber ||
+      callData.from ||
+      null;
+
+    // Determine urgency (can be derived from callIntent or other fields if needed)
+    let isUrgent = 
+      structuredData.is_urgent === true || 
+      structuredData.isUrgent === true || 
+      structuredData.urgent === true ||
+      finalCallIntent === 'urgent' ||
+      false;
+
     console.log(`📊 [VAPI WEBHOOK] [${requestId}] Extracted Structured Data (before fallback):`, {
       propertyAddress: finalPropertyAddress || 'not provided',
       propertyAddressSource: propertyAddress ? 'structuredData' : propertyAddressFromCall ? 'callData' : propertyAddressFromMessage ? 'message' : 'none',
@@ -512,30 +536,6 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
         // Continue with webhook data even if API fails
       }
     }
-
-    // Extract other call data (not from structured outputs)
-    // Note: These will be re-extracted after API fallback if needed
-    let homeownerName = 
-      structuredData.homeowner_name || 
-      structuredData.homeownerName || 
-      structuredData.name ||
-      callData.homeownerName ||
-      null;
-
-    let phoneNumber = 
-      structuredData.phone_number || 
-      structuredData.phoneNumber ||
-      callData.phoneNumber ||
-      callData.from ||
-      null;
-
-    // Determine urgency (can be derived from callIntent or other fields if needed)
-    let isUrgent = 
-      structuredData.is_urgent === true || 
-      structuredData.isUrgent === true || 
-      structuredData.urgent === true ||
-      finalCallIntent === 'urgent' ||
-      false;
 
     // Determine if this is a final event (with structured data)
     // Vapi sends multiple webhooks during a call - we only want to process the final one
