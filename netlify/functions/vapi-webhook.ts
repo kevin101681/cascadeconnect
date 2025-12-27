@@ -372,6 +372,19 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       callIntent === 'urgent' ||
       false;
 
+    // Determine if this is a final event (with structured data)
+    // Vapi sends multiple webhooks during a call - we only want to process the final one
+    const isFinalEvent = 
+      messageType === 'end-of-call-report' || 
+      messageType === 'function-call' ||
+      payload.type === 'end-of-call-report' || 
+      payload.type === 'function-call' ||
+      !!structuredData?.propertyAddress || // Has structured data
+      !!structuredData?.callIntent || // Has call intent
+      !!analysis?.structuredData; // Has analysis structured data
+    
+    console.log(`📋 [VAPI WEBHOOK] Event type: ${messageType || payload.type || 'unknown'}, isFinalEvent: ${isFinalEvent}`);
+
     // Connect to database
     // Check all possible environment variable names (matching other Netlify functions)
     const databaseUrl = process.env.DATABASE_URL || process.env.VITE_DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
