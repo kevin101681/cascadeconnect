@@ -415,21 +415,26 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       callData.propertyAddress ||
       callData.property_address ||
       null;
-    const callerType = structuredData.callerType || null;
-    const callIntent = structuredData.callIntent || null;
-    const issueDescription = structuredData.issueDescription || null;
+    let callerType = structuredData.callerType || null;
+    let callIntent = structuredData.callIntent || null;
+    let issueDescription = structuredData.issueDescription || null;
 
     // Also check other possible locations for propertyAddress
     const propertyAddressFromCall = callData.propertyAddress || callData.property_address || callData.address || null;
     const propertyAddressFromMessage = message.propertyAddress || message.property_address || message.address || null;
-    const finalPropertyAddress = propertyAddress || propertyAddressFromCall || propertyAddressFromMessage;
+    let finalPropertyAddress = propertyAddress || propertyAddressFromCall || propertyAddressFromMessage;
+    
+    // Initialize final variables (will be updated by API fallback if needed)
+    let finalCallIntent = callIntent;
+    let finalCallerType = callerType;
+    let finalIssueDescription = issueDescription;
 
-    console.log(`📊 [VAPI WEBHOOK] Extracted Structured Data:`, {
+    console.log(`📊 [VAPI WEBHOOK] [${requestId}] Extracted Structured Data (before fallback):`, {
       propertyAddress: finalPropertyAddress || 'not provided',
       propertyAddressSource: propertyAddress ? 'structuredData' : propertyAddressFromCall ? 'callData' : propertyAddressFromMessage ? 'message' : 'none',
-      callerType: callerType || 'not provided',
-      callIntent: callIntent || 'not provided',
-      issueDescription: issueDescription ? (issueDescription.substring(0, 100) + '...') : 'not provided',
+      callerType: finalCallerType || 'not provided',
+      callIntent: finalCallIntent || 'not provided',
+      issueDescription: finalIssueDescription ? (finalIssueDescription.substring(0, 100) + '...') : 'not provided',
     });
 
     // Extract other call data (not from structured outputs)
