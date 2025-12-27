@@ -1625,17 +1625,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               <FileSpreadsheet className="h-4 w-4" />
             </button>
           )}
-          {showNewClaimButton && (
-            <button
-              onClick={() => {
-                setShowNewClaimModal(true);
-              }}
-              className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-primary text-primary-on text-sm font-medium transition-all hover:bg-primary/90 dark:hover:bg-primary/80"
-            >
-              <Plus className="h-4 w-4" />
-              New Claim
-            </button>
-          )}
         </div>
       </div>
       {groupClaims.length === 0 ? (
