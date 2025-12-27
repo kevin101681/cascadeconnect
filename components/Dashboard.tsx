@@ -2812,7 +2812,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 )}
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Next Appointment Card - Right of Homeowner Info */}
           <div 
@@ -2957,7 +2957,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </span>
               )}
             </button>
-        </motion.div>
+        </div>
 
         {/* Content Area */}
         {/* Mobile Carousel - All tabs pre-loaded */}
