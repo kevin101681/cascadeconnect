@@ -4192,16 +4192,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                     />
                   </div>
                   
-                  {/* Save as Template Button */}
-                  <div className="flex justify-end">
-                    <button
-                      onClick={() => handleOpenMessageTemplateCreator()}
-                      className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 px-3 py-1.5 hover:bg-primary/5 rounded-lg transition-colors"
-                    >
-                      <Save className="h-4 w-4" />
-                      Save as Template
-                    </button>
-                  </div>
+                  {/* Save as Template Button - Admin Only */}
+                  {isAdmin && (
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => handleOpenMessageTemplateCreator()}
+                        className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 px-3 py-1.5 hover:bg-primary/5 rounded-lg transition-colors"
+                      >
+                        <Save className="h-4 w-4" />
+                        Save as Template
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="p-4 flex justify-end gap-3 shrink-0 border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
