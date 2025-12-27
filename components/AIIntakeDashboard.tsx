@@ -230,11 +230,11 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                 transition={{ delay: index * 0.05 }}
                 className="bg-surface-container dark:bg-gray-800 rounded-xl p-6 border border-surface-outline-variant dark:border-gray-700 hover:shadow-elevation-2 transition-shadow"
               >
-                <div 
-                  className="flex items-start justify-between mb-4 cursor-pointer"
-                  onClick={() => setSelectedCall(call)}
-                >
-                  <div className="flex-1">
+                <div className="flex items-start justify-between mb-4">
+                  <div 
+                    className="flex-1 cursor-pointer"
+                    onClick={() => setSelectedCall(call)}
+                  >
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="text-lg font-semibold text-surface-on dark:text-gray-100">
                         {call.homeownerName || 'Unknown Caller'}
@@ -297,13 +297,15 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                       </div>
                     )}
                     
-                    {/* SMS Chat Section */}
-                    {call.homeownerId && (
-                      <div onClick={(e) => e.stopPropagation()}>
-                        <CallSmsChat homeownerId={call.homeownerId} callId={call.id} />
-                      </div>
-                    )}
                   </div>
+                  
+                  {/* SMS Chat Section - Outside clickable area */}
+                  {call.homeownerId && (
+                    <div className="w-full mt-4" onClick={(e) => e.stopPropagation()}>
+                      <CallSmsChat homeownerId={call.homeownerId} callId={call.id} />
+                    </div>
+                  )}
+                </div>
                   {call.homeownerId && (
                     <button
                       onClick={(e) => {
