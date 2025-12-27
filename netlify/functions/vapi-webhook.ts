@@ -291,15 +291,32 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     const transcript = callData.transcript || callData.transcription || message.transcript || payload.transcript || null;
     const recordingUrl = callData.recordingUrl || callData.recording_url || message.recordingUrl || payload.recordingUrl || null;
 
+    // Log the full structured data to debug extraction issues
+    console.log(`🔍 [VAPI WEBHOOK] Raw structured data keys:`, Object.keys(structuredData));
+    console.log(`🔍 [VAPI WEBHOOK] Full structured data:`, JSON.stringify(structuredData, null, 2));
+
     // Extract data using exact Vapi Structured Output keys
     // These keys come directly from Vapi's Structured Outputs (Analysis)
-    const propertyAddress = structuredData.propertyAddress || null;
+    // Try multiple possible key variations
+    const propertyAddress = 
+      structuredData.propertyAddress || 
+      structuredData.property_address ||
+      structuredData.address ||
+      callData.propertyAddress ||
+      callData.property_address ||
+      null;
     const callerType = structuredData.callerType || null;
     const callIntent = structuredData.callIntent || null;
     const issueDescription = structuredData.issueDescription || null;
 
+    // Also check other possible locations for propertyAddress
+    const propertyAddressFromCall = callData.propertyAddress || callData.property_address || callData.address || null;
+    const propertyAddressFromMessage = message.propertyAddress || message.property_address || message.address || null;
+    const finalPropertyAddress = propertyAddress || propertyAddressFromCall || propertyAddressFromMessage;
+
     console.log(`📊 [VAPI WEBHOOK] Extracted Structured Data:`, {
-      propertyAddress: propertyAddress || 'not provided',
+      propertyAddress: finalPropertyAddress || 'not provided',
+      propertyAddressSource: propertyAddress ? 'structuredData' : propertyAddressFromCall ? 'callData' : propertyAddressFromMessage ? 'message' : 'none',
       callerType: callerType || 'not provided',
       callIntent: callIntent || 'not provided',
       issueDescription: issueDescription ? (issueDescription.substring(0, 100) + '...') : 'not provided',
@@ -351,9 +368,12 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     let verifiedBuilderName: string | null = null;
     let verifiedClosingDate: Date | null = null;
 
-    if (propertyAddress) {
-      console.log(`🔍 [VAPI WEBHOOK] Attempting to match address: "${propertyAddress}"`);
-      const matchResult = await findMatchingHomeowner(db, propertyAddress, 0.4);
+    // Use the final propertyAddress (from any source)
+    const addressForMatching = finalPropertyAddress;
+
+    if (addressForMatching) {
+      console.log(`🔍 [VAPI WEBHOOK] Attempting to match address: "${addressForMatching}"`);
+      const matchResult = await findMatchingHomeowner(db, addressForMatching, 0.4);
       
       if (matchResult) {
         matchedHomeowner = matchResult.homeowner;
@@ -367,10 +387,10 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
         console.log(`✅ [VAPI WEBHOOK] Matched homeowner ${matchedHomeowner.id} (similarity: ${similarity.toFixed(3)})`);
         console.log(`📋 [VAPI WEBHOOK] Verified Builder: ${verifiedBuilderName || 'N/A'}, Closing Date: ${verifiedClosingDate ? verifiedClosingDate.toISOString() : 'N/A'}`);
       } else {
-        console.log(`⚠️ [VAPI WEBHOOK] No matching homeowner found for address: "${propertyAddress}"`);
+        console.log(`⚠️ [VAPI WEBHOOK] No matching homeowner found for address: "${addressForMatching}"`);
       }
     } else {
-      console.log(`⚠️ [VAPI WEBHOOK] No propertyAddress provided in structured data`);
+      console.log(`⚠️ [VAPI WEBHOOK] No propertyAddress provided in any data source (checked structuredData, callData, message)`);
     }
 
     // Save call record
@@ -382,7 +402,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           homeownerId: matchedHomeowner?.id || null,
           homeownerName: homeownerName,
           phoneNumber: phoneNumber,
-          propertyAddress: propertyAddress,
+          propertyAddress: addressForMatching,
           issueDescription: issueDescription,
           isUrgent: isUrgent,
           transcript: transcript,
