@@ -389,6 +389,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     const db = drizzle(sql);
 
     // Perform fuzzy matching using propertyAddress to find homeowner
+    // Only do matching on final events (when we have structured data)
     let matchedHomeowner: any = null;
     let similarity: number = 0;
     let isVerified = false;
@@ -398,6 +399,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     // Use the final propertyAddress (from any source)
     const addressForMatching = finalPropertyAddress;
 
+    // Only attempt matching if we have an address (typically only on final events)
     if (addressForMatching) {
       console.log(`🔍 [VAPI WEBHOOK] Attempting to match address: "${addressForMatching}"`);
       const matchResult = await findMatchingHomeowner(db, addressForMatching, 0.4);
@@ -422,6 +424,8 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
 
     // Save call record - IMPORTANT: Save ALL calls regardless of matching
     // The dashboard will display all calls; only matched calls can create claims
+    // Note: This will upsert (update if exists, insert if new) based on vapiCallId
+    // Multiple webhook events may update the same call record as more data arrives
     try {
       await db
         .insert(calls)
@@ -469,8 +473,9 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     }
 
     // Auto-create claim if matched homeowner AND callIntent is 'warranty_issue'
+    // Only on final events with structured data
     // Skip for 'general_question' and 'solicitation'
-    if (matchedHomeowner && callIntent === 'warranty_issue') {
+    if (isFinalEvent && matchedHomeowner && callIntent === 'warranty_issue') {
       try {
         await createClaimFromCall(db, {
           issueDescription,
@@ -488,10 +493,22 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       console.log(`⏭️ [VAPI WEBHOOK] Skipping claim creation - no homeowner match found`);
     }
 
-    // Send email notification when call is completed
-    // Note: Call is saved regardless of messageType, email is only sent for completed calls
-    if (messageType === 'end-of-call-report' || messageType === 'function-call' || payload.type === 'end-of-call-report' || payload.type === 'function-call') {
-      console.log(`📧 [VAPI WEBHOOK] Attempting to send email for call ${vapiCallId}...`);
+    // Only process fully (matching, email) on final events with structured data
+    // Vapi sends multiple webhooks during a call - we only want to process the final one
+    const isFinalEvent = 
+      messageType === 'end-of-call-report' || 
+      messageType === 'function-call' ||
+      payload.type === 'end-of-call-report' || 
+      payload.type === 'function-call' ||
+      !!structuredData?.propertyAddress || // Has structured data
+      !!structuredData?.callIntent || // Has call intent
+      !!analysis?.structuredData; // Has analysis structured data
+    
+    console.log(`📋 [VAPI WEBHOOK] Event type: ${messageType || payload.type || 'unknown'}, isFinalEvent: ${isFinalEvent}`);
+
+    // Send email notification only on final events with structured data
+    if (isFinalEvent) {
+      console.log(`📧 [VAPI WEBHOOK] Processing final event - attempting to send email for call ${vapiCallId}...`);
       try {
         const savedCall = await db
           .select()
