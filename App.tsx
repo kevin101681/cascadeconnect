@@ -1512,9 +1512,14 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
         `.trim();
 
         // Send to all employees who have this preference enabled
+        console.log(`📧 [EMAIL] Preparing to send batch claim notification emails to ${employees.length} employees`);
+        let emailSuccessCount = 0;
+        let emailFailureCount = 0;
+        
         for (const emp of employees) {
           if (emp.emailNotifyClaimSubmitted !== false) {
             try {
+              console.log(`📧 [EMAIL] Sending batch claim notification to ${emp.email}...`);
               await sendEmail({
                 to: emp.email,
                 subject: `New Batch of Warranty Claims Submitted: ${createdClaims.length} claim${createdClaims.length > 1 ? 's' : ''} from ${subjectHomeowner.name}`,
@@ -1522,11 +1527,18 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
                 fromName: 'Cascade Connect System',
                 fromRole: UserRole.ADMIN,
               });
-            } catch (error) {
-              console.error(`Failed to send batch claim notification to ${emp.email}:`, error);
+              emailSuccessCount++;
+              console.log(`✅ [EMAIL] Successfully sent batch claim notification to ${emp.email}`);
+            } catch (error: any) {
+              emailFailureCount++;
+              console.error(`❌ [EMAIL] Failed to send batch claim notification to ${emp.email}:`, error?.message || error);
             }
+          } else {
+            console.log(`⏭️ [EMAIL] Skipping ${emp.email} (emailNotifyClaimSubmitted is disabled)`);
           }
         }
+        
+        console.log(`📧 [EMAIL] Batch claim notification summary: ${emailSuccessCount} sent, ${emailFailureCount} failed`);
 
         // Redirect to dashboard with success
         setCurrentView('DASHBOARD');
