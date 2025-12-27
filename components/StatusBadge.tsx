@@ -13,7 +13,7 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
     [ClaimStatus.SUBMITTED]: "bg-gray-300 dark:bg-gray-700 text-surface-on-variant dark:text-gray-300",
     [ClaimStatus.REVIEWING]: "bg-secondary-container dark:bg-gray-700 text-secondary-on-container dark:text-gray-300",
     [ClaimStatus.SCHEDULING]: "bg-tertiary-container dark:bg-gray-700 text-tertiary-on-container dark:text-gray-300",
-    [ClaimStatus.SCHEDULED]: "bg-primary-container dark:bg-primary/40 text-primary-on-container dark:text-primary",
+    [ClaimStatus.SCHEDULED]: "bg-primary/20 dark:bg-primary/40 text-primary dark:text-primary",
     [ClaimStatus.COMPLETED]: "bg-gray-300 dark:bg-gray-700 text-surface-on dark:text-gray-100",
   };
 

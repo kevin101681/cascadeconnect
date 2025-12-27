@@ -1718,7 +1718,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           </span>
                           {/* Scheduled Date */}
                           {scheduledDate && (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary px-3 rounded-full whitespace-nowrap w-fit">
+                            <span className="inline-flex items-center h-6 text-xs font-medium gap-1 bg-primary/20 dark:bg-primary/20 text-primary dark:text-primary px-3 rounded-full whitespace-nowrap w-fit">
                               <Calendar className="h-3 w-3 flex-shrink-0" />
                               <span>Scheduled: {new Date(scheduledDate.date).toLocaleDateString()}</span>
                             </span>
