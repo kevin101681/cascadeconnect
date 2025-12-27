@@ -378,14 +378,11 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                   
                   setIsUploading(true);
                   const newAttachments: Attachment[] = [];
+                  const uploadErrors: string[] = [];
                   
-                  try {
-                    for (const file of Array.from(files)) {
-                      if (file.size > 10 * 1024 * 1024) {
-                        alert(`File ${file.name} is too large (>10MB). Please upload a smaller file.`);
-                        continue;
-                      }
-                      
+                  // Helper function to upload a file with retry logic
+                  const uploadFileWithRetry = async (file: File, maxRetries = 3): Promise<Attachment | null> => {
+                    for (let attempt = 1; attempt <= maxRetries; attempt++) {
                       try {
                         const formData = new FormData();
                         formData.append('file', file);
@@ -395,33 +392,85 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                           ? 'http://localhost:3000/api/upload'
                           : `${window.location.protocol}//${window.location.hostname.startsWith('www.') ? window.location.hostname : `www.${window.location.hostname}`}/api/upload`;
                         
-                        const response = await fetch(apiEndpoint, {
-                          method: 'POST',
-                          body: formData
-                        });
+                        // Add timeout to prevent hanging
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
                         
-                        if (!response.ok) {
-                          throw new Error(`Upload failed: ${response.statusText}`);
-                        }
-                        
-                        const result = await response.json();
-                        
-                        if (result.success && result.url) {
-                          newAttachments.push({
-                            id: result.publicId || crypto.randomUUID(),
-                            url: result.url,
-                            name: file.name,
-                            type: result.type || 'DOCUMENT'
+                        try {
+                          const response = await fetch(apiEndpoint, {
+                            method: 'POST',
+                            body: formData,
+                            signal: controller.signal
                           });
+                          
+                          clearTimeout(timeoutId);
+                          
+                          if (!response.ok) {
+                            const errorText = await response.text().catch(() => response.statusText);
+                            throw new Error(`Upload failed (${response.status}): ${errorText}`);
+                          }
+                          
+                          const result = await response.json();
+                          
+                          if (result.success && result.url) {
+                            return {
+                              id: result.publicId || crypto.randomUUID(),
+                              url: result.url,
+                              name: file.name,
+                              type: result.type || 'DOCUMENT'
+                            };
+                          } else {
+                            throw new Error(result.error || 'Upload failed: No URL returned');
+                          }
+                        } catch (fetchError: any) {
+                          clearTimeout(timeoutId);
+                          if (fetchError.name === 'AbortError') {
+                            throw new Error('Upload timed out after 60 seconds');
+                          }
+                          throw fetchError;
                         }
-                      } catch (error) {
-                        console.error(`Failed to upload ${file.name}:`, error);
-                        alert(`Failed to upload ${file.name}. Please try again.`);
+                      } catch (error: any) {
+                        const errorMessage = error.message || 'Unknown error';
+                        console.error(`Upload attempt ${attempt}/${maxRetries} failed for ${file.name}:`, errorMessage);
+                        
+                        if (attempt === maxRetries) {
+                          // Final attempt failed
+                          return null;
+                        }
+                        
+                        // Wait before retrying (exponential backoff)
+                        await new Promise(resolve => setTimeout(resolve, Math.min(1000 * Math.pow(2, attempt - 1), 5000)));
+                      }
+                    }
+                    return null;
+                  };
+                  
+                  try {
+                    for (const file of Array.from(files)) {
+                      if (file.size > 10 * 1024 * 1024) {
+                        uploadErrors.push(`${file.name}: File is too large (>10MB)`);
+                        continue;
+                      }
+                      
+                      const uploadedAttachment = await uploadFileWithRetry(file);
+                      
+                      if (uploadedAttachment) {
+                        newAttachments.push(uploadedAttachment);
+                      } else {
+                        uploadErrors.push(`${file.name}: Upload failed after retries`);
                       }
                     }
                     
                     if (newAttachments.length > 0) {
                       setAttachments([...attachments, ...newAttachments]);
+                      addToast(`Successfully uploaded ${newAttachments.length} file${newAttachments.length > 1 ? 's' : ''}`, 'success');
+                    }
+                    
+                    if (uploadErrors.length > 0) {
+                      const errorMessage = uploadErrors.length === 1 
+                        ? uploadErrors[0] 
+                        : `${uploadErrors.length} files failed to upload:\n${uploadErrors.slice(0, 5).join('\n')}${uploadErrors.length > 5 ? `\n...and ${uploadErrors.length - 5} more` : ''}`;
+                      addToast(errorMessage, 'error');
                     }
                   } finally {
                     setIsUploading(false);
@@ -695,12 +744,13 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
       />
       
         {/* Footer with buttons */}
-        <div className="flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700 mt-auto">
+        <div className="flex justify-end gap-2 pt-6 border-t border-surface-outline-variant dark:border-gray-700 mt-auto flex-wrap">
           {onSendMessage && (
             <Button 
               type="button" 
               variant="filled" 
               onClick={onSendMessage}
+              className="whitespace-nowrap"
             >
               Message
             </Button>
@@ -709,11 +759,12 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
             type="button" 
             variant="filled" 
             onClick={onCancel}
+            className="whitespace-nowrap"
           >
             Cancel
           </Button>
           {isAdmin ? (
-            <Button type="submit" variant="filled">
+            <Button type="submit" variant="filled" className="whitespace-nowrap">
               Save
             </Button>
           ) : (
@@ -721,7 +772,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
               <Button 
                 type="submit" 
                 variant="filled"
-                icon={<Plus className="h-4 w-4" />}
+                icon={<Plus className="h-4 w-4 flex-shrink-0" />}
+                className="whitespace-nowrap"
               >
                 Add Item to Request
               </Button>
@@ -731,7 +783,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                   variant="filled"
                   onClick={handleSubmitAll}
                   disabled={isSubmitting}
-                  icon={isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  icon={isSubmitting ? <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" /> : <Send className="h-4 w-4 flex-shrink-0" />}
+                  className="whitespace-nowrap"
                 >
                   Submit All ({stagedClaims.length})
                 </Button>

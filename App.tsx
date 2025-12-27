@@ -1677,7 +1677,9 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
     }
 
     // Send email notifications to users who have this preference enabled
-    if (userRole === UserRole.HOMEOWNER) {
+    // Note: This only applies to single claim submissions (admin-created claims)
+    // Batch submissions by homeowners send emails in the batch submission path above
+    if (userRole === UserRole.HOMEOWNER && !isBatch) {
       const baseUrl = typeof window !== 'undefined' 
         ? `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`
         : 'https://www.cascadeconnect.app';
@@ -1751,9 +1753,14 @@ Homeowner: ${newClaim.homeownerName}
       const validEmailAttachments = emailAttachments.filter(att => att !== null) as Array<{ filename: string; content: string; contentType: string }>;
 
       // Send to all employees who have this preference enabled
+      console.log(`📧 [EMAIL] Preparing to send single claim notification emails to ${employees.length} employees`);
+      let emailSuccessCount = 0;
+      let emailFailureCount = 0;
+      
       for (const emp of employees) {
         if (emp.emailNotifyClaimSubmitted !== false) {
           try {
+            console.log(`📧 [EMAIL] Sending single claim notification to ${emp.email}...`);
             await sendEmail({
               to: emp.email,
               subject: `New Claim Submitted: ${newClaim.claimNumber} - ${newClaim.title}`,
@@ -1762,11 +1769,18 @@ Homeowner: ${newClaim.homeownerName}
               fromRole: UserRole.ADMIN,
               attachments: validEmailAttachments.length > 0 ? validEmailAttachments : undefined
             });
-          } catch (error) {
-            console.error(`Failed to send claim notification to ${emp.email}:`, error);
+            emailSuccessCount++;
+            console.log(`✅ [EMAIL] Successfully sent single claim notification to ${emp.email}`);
+          } catch (error: any) {
+            emailFailureCount++;
+            console.error(`❌ [EMAIL] Failed to send single claim notification to ${emp.email}:`, error?.message || error);
           }
+        } else {
+          console.log(`⏭️ [EMAIL] Skipping ${emp.email} (emailNotifyClaimSubmitted is disabled)`);
         }
       }
+      
+      console.log(`📧 [EMAIL] Single claim notification summary: ${emailSuccessCount} sent, ${emailFailureCount} failed`);
     }
   };
 
