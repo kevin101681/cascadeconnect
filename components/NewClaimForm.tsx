@@ -585,83 +585,77 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                   </div>
                 )}
              </div>
-           )}
 
-           {/* Scheduling - Admin Only */}
-           {isAdmin && (
-             <>
-               <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-                 <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Scheduling</h4>
-                 <div className="space-y-3">
-                   <div>
-                     <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Scheduled Date</label>
-                     <Button
-                       type="button"
-                       variant="filled"
-                       onClick={() => setShowCalendarPicker(true)}
-                     >
-                       {proposeDate ? new Date(proposeDate).toLocaleDateString() : 'Add'}
-                     </Button>
-                   </div>
-                   <div>
-                     <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Time Slot</label>
-                     <MaterialSelect
-                       value={proposeTime}
-                       onChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
-                       options={[
-                         { value: 'AM', label: 'AM (8am-12pm)' },
-                         { value: 'PM', label: 'PM (12pm-4pm)' },
-                         { value: 'All Day', label: 'All Day' }
-                       ]}
-                     />
-                   </div>
+             {/* Scheduling - Admin Only */}
+             <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Scheduling</h4>
+               <div className="space-y-3">
+                 <div>
+                   <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Scheduled Date</label>
+                   <Button
+                     type="button"
+                     variant="filled"
+                     onClick={() => setShowCalendarPicker(true)}
+                   >
+                     {proposeDate ? new Date(proposeDate).toLocaleDateString() : 'Add'}
+                   </Button>
+                 </div>
+                 <div>
+                   <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Time Slot</label>
+                   <MaterialSelect
+                     value={proposeTime}
+                     onChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
+                     options={[
+                       { value: 'AM', label: 'AM (8am-12pm)' },
+                       { value: 'PM', label: 'PM (12pm-4pm)' },
+                       { value: 'All Day', label: 'All Day' }
+                     ]}
+                   />
                  </div>
                </div>
-               
-               {showCalendarPicker && (
-                 <CalendarPicker
-                   isOpen={showCalendarPicker}
-                   selectedDate={proposeDate ? new Date(proposeDate) : undefined}
-                   onSelectDate={(date) => {
-                     if (date) {
-                       setProposeDate(date.toISOString().split('T')[0]);
-                     }
-                     setShowCalendarPicker(false);
-                   }}
-                   onClose={() => setShowCalendarPicker(false)}
-                 />
-               )}
-             </>
-           )}
+             </div>
+             
+             {showCalendarPicker && (
+               <CalendarPicker
+                 isOpen={showCalendarPicker}
+                 selectedDate={proposeDate ? new Date(proposeDate) : undefined}
+                 onSelectDate={(date) => {
+                   if (date) {
+                     setProposeDate(date.toISOString().split('T')[0]);
+                   }
+                   setShowCalendarPicker(false);
+                 }}
+                 onClose={() => setShowCalendarPicker(false)}
+               />
+             )}
            
-           {showDateEvaluatedPicker && (
-             <CalendarPicker
-               isOpen={showDateEvaluatedPicker}
-               selectedDate={dateEvaluated ? new Date(dateEvaluated) : undefined}
-               onSelectDate={(date) => {
-                 if (date) {
-                   setDateEvaluated(date.toISOString().split('T')[0]);
-                 }
-                 setShowDateEvaluatedPicker(false);
-               }}
-               onClose={() => setShowDateEvaluatedPicker(false)}
-             />
-           )}
+             {showDateEvaluatedPicker && (
+               <CalendarPicker
+                 isOpen={showDateEvaluatedPicker}
+                 selectedDate={dateEvaluated ? new Date(dateEvaluated) : undefined}
+                 onSelectDate={(date) => {
+                   if (date) {
+                     setDateEvaluated(date.toISOString().split('T')[0]);
+                   }
+                   setShowDateEvaluatedPicker(false);
+                 }}
+                 onClose={() => setShowDateEvaluatedPicker(false)}
+               />
+             )}
 
-           {/* Warranty Assessment (Admin Only) */}
-           {isAdmin && (
+             {/* Warranty Assessment (Admin Only) */}
              <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Warranty Assessment</h4>
               <div className="space-y-4">
                 <div className="relative" ref={classificationSelectRef}>
                   <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Classification</label>
-        <Button 
-          type="button" 
+                  <Button 
+                    type="button" 
                     variant="filled"
                     onClick={() => setShowClassificationSelect(!showClassificationSelect)}
-        >
+                  >
                     {classification || 'Add'}
-        </Button>
+                  </Button>
                   {showClassificationSelect && (
                     <div className="absolute top-full left-0 mt-2 z-50 bg-surface dark:bg-gray-800 rounded-xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-2 min-w-[200px]">
                       {CLAIM_CLASSIFICATIONS.map(c => (
@@ -693,7 +687,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                     onClick={() => setShowDateEvaluatedPicker(true)}
                   >
                     {dateEvaluated ? new Date(dateEvaluated).toLocaleDateString() : 'Add'}
-        </Button>
+                  </Button>
                 </div>
 
                 {classification === 'Non-Warranty' && (
@@ -710,7 +704,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                 )}
               </div>
             </div>
-           )}
            </>
            )}
           </div>
