@@ -1533,13 +1533,28 @@ const Dashboard: React.FC<DashboardProps> = ({
     >
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
         <div className="flex items-center justify-between md:justify-start gap-4 w-full md:w-auto">
-          <h3 className={`text-xl font-normal flex items-center gap-2 ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-              {groupClaims.length}
-            </span>
-            {title}
-          </h3>
-          {/* New Claim Button - Mobile Only */}
+          <div className="flex items-center gap-3">
+            <h3 className={`text-xl font-normal flex items-center gap-2 ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                {groupClaims.length}
+              </span>
+              {title}
+            </h3>
+            {/* New Claim Button - Homeowner View Only, Next to Title */}
+            {showNewClaimButton && title === 'Warranty Claims' && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onNewClaim();
+                }}
+                className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-primary text-primary-on text-sm font-medium transition-all hover:bg-primary/90 dark:hover:bg-primary/80"
+              >
+                <Plus className="h-4 w-4" />
+                Add a Claim
+              </button>
+            )}
+          </div>
+          {/* New Claim Button - Admin Mobile Only */}
           {isAdminView && title === 'Warranty Claims' && (
             <button
               onClick={(e) => {
