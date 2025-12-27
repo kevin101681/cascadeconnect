@@ -4088,16 +4088,16 @@ const Dashboard: React.FC<DashboardProps> = ({
         )}
 
         {/* NEW MESSAGE MODAL */}
-        {showNewMessageModal && (
+        {showNewMessageModal && createPortal(
           <div 
-            className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
-            style={{ top: 0, left: 0, right: 0, bottom: 0 }}
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out] overflow-y-auto"
+            style={{ overscrollBehavior: 'contain' }}
             onClick={(e) => {
               if (e.target === e.currentTarget) setShowNewMessageModal(false);
             }}
           >
-             <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
-                <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
+             <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 flex flex-col max-h-[90vh]">
+                <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700 shrink-0">
                   <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                     <Mail className="h-5 w-5 text-primary" />
                     New Message
@@ -4107,7 +4107,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </button>
                 </div>
                 
-                <div className="p-6 space-y-4">
+                <div className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
                   {/* Recipient Display/Selector */}
                   {isAdmin ? (
                     <div className="bg-surface-container dark:bg-gray-700 p-3 rounded-xl flex items-center justify-between">
@@ -4251,7 +4251,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                 </div>
 
-                <div className="p-4 flex justify-end gap-3">
+                <div className="p-4 flex justify-end gap-3 shrink-0 border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 -mx-6 -mb-6 mt-6">
                   <Button
                     variant="filled"
                     onClick={() => setShowNewMessageModal(false)}
@@ -4268,7 +4268,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </Button>
                 </div>
              </div>
-          </div>
+          </div>,
+          document.body
         )}
         
         {/* Message Email Template Creator Modal */}
