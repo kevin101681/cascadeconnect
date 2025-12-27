@@ -548,47 +548,51 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
              </div>
            )}
 
-           {/* Scheduling */}
-           <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-             <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Scheduling</h4>
-             <div className="space-y-3">
-               <div>
-                 <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Scheduled Date</label>
-                 <Button
-                   type="button"
-                   variant="filled"
-                   onClick={() => setShowCalendarPicker(true)}
-                 >
-                   {proposeDate ? new Date(proposeDate).toLocaleDateString() : 'Add'}
-                 </Button>
+           {/* Scheduling - Admin Only */}
+           {isAdmin && (
+             <>
+               <div className="bg-surface-container/20 dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+                 <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Scheduling</h4>
+                 <div className="space-y-3">
+                   <div>
+                     <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Scheduled Date</label>
+                     <Button
+                       type="button"
+                       variant="filled"
+                       onClick={() => setShowCalendarPicker(true)}
+                     >
+                       {proposeDate ? new Date(proposeDate).toLocaleDateString() : 'Add'}
+                     </Button>
+                   </div>
+                   <div>
+                     <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Time Slot</label>
+                     <MaterialSelect
+                       value={proposeTime}
+                       onChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
+                       options={[
+                         { value: 'AM', label: 'AM (8am-12pm)' },
+                         { value: 'PM', label: 'PM (12pm-4pm)' },
+                         { value: 'All Day', label: 'All Day' }
+                       ]}
+                     />
+                   </div>
+                 </div>
                </div>
-               <div>
-                 <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Time Slot</label>
-                 <MaterialSelect
-                   value={proposeTime}
-                   onChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
-                   options={[
-                     { value: 'AM', label: 'AM (8am-12pm)' },
-                     { value: 'PM', label: 'PM (12pm-4pm)' },
-                     { value: 'All Day', label: 'All Day' }
-                   ]}
+               
+               {showCalendarPicker && (
+                 <CalendarPicker
+                   isOpen={showCalendarPicker}
+                   selectedDate={proposeDate ? new Date(proposeDate) : undefined}
+                   onSelectDate={(date) => {
+                     if (date) {
+                       setProposeDate(date.toISOString().split('T')[0]);
+                     }
+                     setShowCalendarPicker(false);
+                   }}
+                   onClose={() => setShowCalendarPicker(false)}
                  />
-               </div>
-             </div>
-           </div>
-           
-           {showCalendarPicker && (
-             <CalendarPicker
-               isOpen={showCalendarPicker}
-               selectedDate={proposeDate ? new Date(proposeDate) : undefined}
-               onSelectDate={(date) => {
-                 if (date) {
-                   setProposeDate(date.toISOString().split('T')[0]);
-                 }
-                 setShowCalendarPicker(false);
-               }}
-               onClose={() => setShowCalendarPicker(false)}
-             />
+               )}
+             </>
            )}
            
            {showDateEvaluatedPicker && (
