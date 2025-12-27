@@ -31,6 +31,13 @@ async function createSmsMessagesTable() {
 
     const statements = sqlContent.split(';').map(s => s.trim()).filter(s => s.length > 0 && !s.startsWith('--'));
 
+    console.log(`   Found ${statements.length} statement(s) to execute\n`);
+
+    if (statements.length === 0) {
+      console.error('❌ No SQL statements found in the SQL file!');
+      process.exit(1);
+    }
+
     for (const statement of statements) {
       if (statement.trim()) {
         const preview = statement.substring(0, 80).replace(/\s+/g, ' ');
