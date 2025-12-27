@@ -9,8 +9,3 @@ CREATE TABLE IF NOT EXISTS sms_messages (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Create indexes for better query performance
-CREATE INDEX IF NOT EXISTS idx_sms_messages_homeowner_id ON sms_messages(homeowner_id);
-CREATE INDEX IF NOT EXISTS idx_sms_messages_call_id ON sms_messages(call_id);
-CREATE INDEX IF NOT EXISTS idx_sms_messages_created_at ON sms_messages(created_at DESC);
-
