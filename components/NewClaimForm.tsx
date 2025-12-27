@@ -711,9 +711,10 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
               </div>
             </div>
            )}
-
+           </>
+           )}
+          </div>
         </div>
-      </div>
 
       {/* Staging Area (Homeowners only) */}
       {!isAdmin && stagedClaims.length > 0 && (
