@@ -2,9 +2,6 @@ const nodemailer = require('nodemailer');
 const { logEmailToDb } = require('../../lib/email-logger.js');
 
 exports.handler = async (event, context) => {
-  // Set callbackWaitsForEmptyEventLoop to false to allow function to finish quickly
-  context.callbackWaitsForEmptyEventLoop = false;
-  
   // Only allow POST requests (OPTIONS is handled above)
   if (event.httpMethod !== 'POST' && event.httpMethod !== 'OPTIONS') {
     return {
