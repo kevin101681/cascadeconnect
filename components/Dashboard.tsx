@@ -2061,8 +2061,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                           isSelected
                             ? 'bg-primary-container/20 dark:bg-primary/20 border-primary ring-1 ring-primary'
                             : isUnread
-                            ? 'bg-white dark:bg-white border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
-                            : 'bg-white dark:bg-white border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1 opacity-75'
+                            ? 'bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
+                            : 'bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1 opacity-75'
                         }`}
                       >
                         <div className="px-4 py-4">
@@ -2095,7 +2095,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             
                             {/* Last message preview */}
                             {lastMsg.content && (
-                              <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant/80 dark:text-gray-400 bg-surface-container/50 dark:bg-gray-700/50 px-3 rounded-full whitespace-nowrap w-fit">
+                              <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant/80 dark:text-gray-200 bg-surface-container/50 dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
                                 {lastMsg.senderName === (isAdmin ? currentUser.name : activeHomeowner.name) ? 'You: ' : ''}
                                 {lastMsg.content.substring(0, 30)}{lastMsg.content.length > 30 ? '...' : ''}
                               </span>
