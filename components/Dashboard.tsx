@@ -547,6 +547,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [showCallsModal, setShowCallsModal] = useState(false);
   const [newMessageSubject, setNewMessageSubject] = useState('');
   const [newMessageContent, setNewMessageContent] = useState('');
+  const [newMessageRecipientId, setNewMessageRecipientId] = useState<string>('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [replyExpanded, setReplyExpanded] = useState(false);
   
@@ -1473,9 +1474,23 @@ const Dashboard: React.FC<DashboardProps> = ({
         return;
     }
     
+    // For homeowner view, require recipient selection
+    if (!isAdmin && !newMessageRecipientId) {
+      alert("Please select a recipient.");
+      return;
+    }
+    
     // Safe-guard for TS
     const targetId = effectiveHomeowner ? effectiveHomeowner.id : activeHomeowner.id;
-    const targetEmail = effectiveHomeowner ? effectiveHomeowner.email : 'info@cascadebuilderservices.com';
+    
+    // Determine target email: use selected employee email in homeowner view, otherwise use homeowner email or default
+    let targetEmail: string;
+    if (!isAdmin && newMessageRecipientId) {
+      const selectedEmployee = employees.find(emp => emp.id === newMessageRecipientId);
+      targetEmail = selectedEmployee?.email || 'info@cascadebuilderservices.com';
+    } else {
+      targetEmail = effectiveHomeowner ? effectiveHomeowner.email : 'info@cascadebuilderservices.com';
+    }
 
     if (!newMessageSubject || !newMessageContent) return;
     
@@ -1520,6 +1535,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     setShowNewMessageModal(false);
     setNewMessageSubject('');
     setNewMessageContent('');
+    setNewMessageRecipientId('');
   };
 
   // --- Render Helpers ---
@@ -4092,21 +4108,37 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
                 
                 <div className="p-6 space-y-4">
-                  {/* Recipient Display */}
-                  <div className="bg-surface-container dark:bg-gray-700 p-3 rounded-xl flex items-center justify-between">
-                     <div>
-                       <span className="text-xs font-bold text-surface-on-variant dark:text-gray-400 uppercase">To</span>
-                       <p className="font-medium text-surface-on dark:text-gray-100">
-                         {isAdmin 
-                           ? (effectiveHomeowner ? effectiveHomeowner.name : 'Select a Homeowner') 
-                           : 'Cascade Support Team'
-                         }
-                       </p>
-                     </div>
-                     <div className="bg-surface dark:bg-gray-800 p-2 rounded-full border border-surface-outline-variant dark:border-gray-600">
-                        {isAdmin ? <Home className="h-4 w-4 text-surface-outline dark:text-gray-500"/> : <Building2 className="h-4 w-4 text-surface-outline dark:text-gray-500"/>}
-                     </div>
-                  </div>
+                  {/* Recipient Display/Selector */}
+                  {isAdmin ? (
+                    <div className="bg-surface-container dark:bg-gray-700 p-3 rounded-xl flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-surface-on-variant dark:text-gray-400 uppercase">To</span>
+                        <p className="font-medium text-surface-on dark:text-gray-100">
+                          {effectiveHomeowner ? effectiveHomeowner.name : 'Select a Homeowner'}
+                        </p>
+                      </div>
+                      <div className="bg-surface dark:bg-gray-800 p-2 rounded-full border border-surface-outline-variant dark:border-gray-600">
+                        <Home className="h-4 w-4 text-surface-outline dark:text-gray-500"/>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">To</label>
+                      <select
+                        className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                        value={newMessageRecipientId}
+                        onChange={(e) => setNewMessageRecipientId(e.target.value)}
+                        required
+                      >
+                        <option value="">Select an admin user...</option>
+                        {employees
+                          .filter(emp => emp.role === 'Administrator')
+                          .map(emp => (
+                            <option key={emp.id} value={emp.id}>{emp.name}</option>
+                          ))}
+                      </select>
+                    </div>
+                  )}
 
                   {/* Template Selector */}
                   <div>
@@ -4229,7 +4261,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <Button
                     variant="filled"
                     onClick={handleCreateNewThread}
-                    disabled={!newMessageSubject || !newMessageContent || isSendingMessage}
+                    disabled={!newMessageSubject || !newMessageContent || isSendingMessage || (!isAdmin && !newMessageRecipientId)}
                     icon={isSendingMessage ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"/> : <Send className="h-4 w-4" />}
                   >
                     Send Message
