@@ -393,7 +393,8 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       console.log(`⚠️ [VAPI WEBHOOK] No propertyAddress provided in any data source (checked structuredData, callData, message)`);
     }
 
-    // Save call record
+    // Save call record - IMPORTANT: Save ALL calls regardless of matching
+    // The dashboard will display all calls; only matched calls can create claims
     try {
       await db
         .insert(calls)
@@ -407,7 +408,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           isUrgent: isUrgent,
           transcript: transcript,
           recordingUrl: recordingUrl,
-          isVerified: isVerified,
+          isVerified: isVerified, // true if matched, false if not matched
           addressMatchSimilarity: matchedHomeowner ? similarity.toFixed(3) : null,
         } as any)
         .onConflictDoUpdate({

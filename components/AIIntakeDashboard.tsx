@@ -20,6 +20,13 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
 
   useEffect(() => {
     loadCalls();
+    
+    // Auto-refresh calls every 30 seconds to pick up new calls
+    const interval = setInterval(() => {
+      loadCalls();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const loadCalls = async () => {
