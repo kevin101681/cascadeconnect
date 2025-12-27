@@ -417,7 +417,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
             homeownerId: matchedHomeowner?.id || null,
             homeownerName: homeownerName,
             phoneNumber: phoneNumber,
-            propertyAddress: propertyAddress,
+            propertyAddress: addressForMatching,
             issueDescription: issueDescription,
             isUrgent: isUrgent,
             transcript: transcript,
