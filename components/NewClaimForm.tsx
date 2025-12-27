@@ -129,15 +129,47 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
 
   // Handle batch submission
   const handleSubmitAll = async () => {
-    if (stagedClaims.length === 0) {
+    // Check for orphan data (form fields that have data but weren't added to staged claims)
+    const hasOrphanData = title.trim().length > 0 || description.trim().length > 0 || attachments.length > 0;
+    let orphanIncluded = false;
+    let finalClaimsList = [...stagedClaims];
+
+    // Scenario B: Form has data - attempt to auto-include
+    if (hasOrphanData) {
+      // Validate the orphan data
+      if (!title.trim()) {
+        addToast('Please complete the claim you are currently typing, or clear the form to submit the others.', 'error');
+        return;
+      }
+      
+      if (!description.trim()) {
+        addToast('Please complete the claim you are currently typing, or clear the form to submit the others.', 'error');
+        return;
+      }
+
+      // Orphan data is valid - create claim object and append to list
+      const orphanClaim: StagedClaim = {
+        id: crypto.randomUUID(),
+        title: title.trim(),
+        description: description.trim(),
+        attachments: [...attachments] // Copy attachments (already uploaded URLs)
+      };
+
+      finalClaimsList = [...stagedClaims, orphanClaim];
+      orphanIncluded = true;
+    }
+
+    // Scenario A: Form is empty - proceed with staged claims only
+    // Check if we have any claims to submit (either staged or orphan)
+    if (finalClaimsList.length === 0) {
       addToast('Please add at least one item before submitting', 'error');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Convert staged claims to payload format
-      const batchPayload = stagedClaims.map(staged => ({
+      // Convert claims to payload format
+      const batchPayload = finalClaimsList.map(staged => ({
         title: staged.title,
         description: staged.description,
         category: 'General', // Default category for homeowner submissions
@@ -150,8 +182,15 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
       // Submit batch
       await onSubmit(batchPayload);
 
-      // Clear staged claims
+      // Clear staged claims and form if orphan was included
       setStagedClaims([]);
+      if (orphanIncluded) {
+        setTitle('');
+        setDescription('');
+        setAttachments([]);
+        // Show success message with orphan note
+        addToast(`Submitted ${finalClaimsList.length} item${finalClaimsList.length > 1 ? 's' : ''} (including the one you were typing).`, 'success');
+      }
     } catch (error) {
       console.error('Batch submission error:', error);
       addToast('Failed to submit claims. Please try again.', 'error');
