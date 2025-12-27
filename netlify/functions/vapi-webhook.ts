@@ -506,19 +506,6 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       console.log(`⏭️ [VAPI WEBHOOK] Skipping claim creation - no homeowner match found`);
     }
 
-    // Only process fully (matching, email) on final events with structured data
-    // Vapi sends multiple webhooks during a call - we only want to process the final one
-    const isFinalEvent = 
-      messageType === 'end-of-call-report' || 
-      messageType === 'function-call' ||
-      payload.type === 'end-of-call-report' || 
-      payload.type === 'function-call' ||
-      !!structuredData?.propertyAddress || // Has structured data
-      !!structuredData?.callIntent || // Has call intent
-      !!analysis?.structuredData; // Has analysis structured data
-    
-    console.log(`📋 [VAPI WEBHOOK] Event type: ${messageType || payload.type || 'unknown'}, isFinalEvent: ${isFinalEvent}`);
-
     // Send email notification only on final events with structured data
     if (isFinalEvent) {
       console.log(`📧 [VAPI WEBHOOK] Processing final event - attempting to send email for call ${vapiCallId}...`);
