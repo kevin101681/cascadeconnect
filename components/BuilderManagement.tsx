@@ -134,9 +134,23 @@ const BuilderManagement: React.FC<BuilderManagementProps> = ({
                   </td>
                   <td className="px-6 py-4 text-right">
                     {isAdministrator && (
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => handleOpenEditGroup(group)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
-                        <button onClick={() => onDeleteGroup(group.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="filled"
+                          onClick={() => handleOpenEditGroup(group)}
+                          icon={<Edit2 className="h-4 w-4" />}
+                          className="bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          variant="filled"
+                          onClick={() => onDeleteGroup(group.id)}
+                          icon={<Trash2 className="h-4 w-4" />}
+                          className="bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80"
+                        >
+                          Delete
+                        </Button>
                       </div>
                     )}
                   </td>

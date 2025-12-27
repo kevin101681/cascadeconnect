@@ -411,8 +411,22 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                     <td className="px-6 py-4 text-right">
                       {isAdministrator && (
                         <div className="flex items-center justify-end gap-2">
-                          <button onClick={() => handleOpenEditEmp(emp)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
-                          <button onClick={() => onDeleteEmployee(emp.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
+                          <Button
+                            variant="filled"
+                            onClick={() => handleOpenEditEmp(emp)}
+                            icon={<Edit2 className="h-4 w-4" />}
+                            className="bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80"
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="filled"
+                            onClick={() => onDeleteEmployee(emp.id)}
+                            icon={<Trash2 className="h-4 w-4" />}
+                            className="bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80"
+                          >
+                            Delete
+                          </Button>
                         </div>
                       )}
                     </td>
@@ -442,10 +456,32 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button onClick={() => handleOpenInviteSub(sub)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full" title="Invite Sub"><Mail className="h-4 w-4" /></button>
-                        <button onClick={() => handleOpenEditSub(sub)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
+                        <Button
+                          variant="filled"
+                          onClick={() => handleOpenInviteSub(sub)}
+                          icon={<Mail className="h-4 w-4" />}
+                          className="bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80"
+                          title="Invite Sub"
+                        >
+                          Invite
+                        </Button>
+                        <Button
+                          variant="filled"
+                          onClick={() => handleOpenEditSub(sub)}
+                          icon={<Edit2 className="h-4 w-4" />}
+                          className="bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80"
+                        >
+                          Edit
+                        </Button>
                         {isAdministrator && (
-                          <button onClick={() => onDeleteContractor(sub.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
+                          <Button
+                            variant="filled"
+                            onClick={() => onDeleteContractor(sub.id)}
+                            icon={<Trash2 className="h-4 w-4" />}
+                            className="bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80"
+                          >
+                            Delete
+                          </Button>
                         )}
                       </div>
                     </td>
@@ -475,8 +511,22 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                       <td className="px-6 py-4 text-right">
                         {isAdministrator && (
                           <div className="flex items-center justify-end gap-2">
-                            <button onClick={() => handleOpenEditBuilderUser(user)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Edit2 className="h-4 w-4" /></button>
-                            <button onClick={() => onDeleteBuilderUser && onDeleteBuilderUser(user.id)} className="p-1.5 text-surface-outline-variant dark:text-gray-500 hover:text-error hover:bg-error/5 rounded-full"><Trash2 className="h-4 w-4" /></button>
+                            <Button
+                              variant="filled"
+                              onClick={() => handleOpenEditBuilderUser(user)}
+                              icon={<Edit2 className="h-4 w-4" />}
+                              className="bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80"
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="filled"
+                              onClick={() => onDeleteBuilderUser && onDeleteBuilderUser(user.id)}
+                              icon={<Trash2 className="h-4 w-4" />}
+                              className="bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80"
+                            >
+                              Delete
+                            </Button>
                           </div>
                         )}
                       </td>
