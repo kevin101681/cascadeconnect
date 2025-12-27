@@ -254,12 +254,19 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     const callData = message.call || payload.call || message;
     const messageType = message.type || payload.type;
 
-    console.log(`📦 [VAPI WEBHOOK] [${requestId}] Received payload:`, JSON.stringify({
+    console.log(`📦 [VAPI WEBHOOK] [${requestId}] Received payload summary:`, JSON.stringify({
       type: payload.type || messageType || 'unknown',
       hasMessage: !!payload.message,
       hasCall: !!payload.call || !!message.call,
       hasAnalysis: !!(message.analysis || callData.analysis || payload.analysis),
     }, null, 2));
+    
+    // Log full payload structure (truncated for large fields)
+    console.log(`📦 [VAPI WEBHOOK] [${requestId}] Full payload keys:`, {
+      payloadKeys: Object.keys(payload),
+      messageKeys: message ? Object.keys(message) : [],
+      callDataKeys: callData ? Object.keys(callData) : [],
+    });
 
     // Extract call ID
     const vapiCallId = callData.id || callData.callId || callData.vapiCallId;
@@ -292,8 +299,28 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     const recordingUrl = callData.recordingUrl || callData.recording_url || message.recordingUrl || payload.recordingUrl || null;
 
     // Log the full structured data to debug extraction issues
+    console.log(`🔍 [VAPI WEBHOOK] Analysis object keys:`, analysis ? Object.keys(analysis) : 'null');
     console.log(`🔍 [VAPI WEBHOOK] Raw structured data keys:`, Object.keys(structuredData));
-    console.log(`🔍 [VAPI WEBHOOK] Full structured data:`, JSON.stringify(structuredData, null, 2));
+    if (Object.keys(structuredData).length > 0) {
+      console.log(`🔍 [VAPI WEBHOOK] Full structured data:`, JSON.stringify(structuredData, null, 2));
+    } else {
+      console.log(`🔍 [VAPI WEBHOOK] Structured data is empty`);
+      console.log(`🔍 [VAPI WEBHOOK] Analysis object:`, JSON.stringify(analysis, null, 2));
+      console.log(`🔍 [VAPI WEBHOOK] Variables object:`, JSON.stringify(variables, null, 2));
+      console.log(`🔍 [VAPI WEBHOOK] VariableValues object:`, JSON.stringify(variableValues, null, 2));
+    }
+    
+    // Also check callData and message for address fields directly
+    console.log(`🔍 [VAPI WEBHOOK] CallData address fields:`, {
+      propertyAddress: callData.propertyAddress || callData.property_address || 'not found',
+      address: callData.address || 'not found',
+      property: callData.property || 'not found',
+    });
+    console.log(`🔍 [VAPI WEBHOOK] Message address fields:`, {
+      propertyAddress: message.propertyAddress || message.property_address || 'not found',
+      address: message.address || 'not found',
+      property: message.property || 'not found',
+    });
 
     // Extract data using exact Vapi Structured Output keys
     // These keys come directly from Vapi's Structured Outputs (Analysis)
