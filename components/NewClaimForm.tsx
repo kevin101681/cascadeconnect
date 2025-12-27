@@ -525,11 +525,9 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
           </div>
         </div>
       </div>
-
-        </div>
-
-        {/* Right Column: Sub Assignment, Scheduling, Warranty Assessment */}
-        <div className="space-y-6">
+           {/* Sub Assignment, Scheduling, Warranty Assessment (Admin Only) */}
+           {isAdmin && (
+             <>
            {/* Sub Assignment (Admin Only) */}
            {isAdmin && (
              <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
