@@ -306,7 +306,10 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
               />
             </div>
            )}
+          </div>
 
+          {/* Right Column: Attachments (Homeowner) or Admin Sections */}
+          <div className="space-y-6">
       {/* Attachments Section */}
       <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
         <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">
