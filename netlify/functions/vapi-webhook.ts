@@ -3,6 +3,38 @@ import { drizzle } from 'drizzle-orm/neon-http';
 import { calls, homeowners, claims } from '../../db/schema';
 import { eq, and, gte, inArray } from 'drizzle-orm';
 
+/**
+ * Fetch call data from Vapi API as a fallback if webhook payload is incomplete
+ */
+async function fetchVapiCall(callId: string): Promise<any> {
+  const vapiSecret = process.env.VAPI_SECRET;
+  if (!vapiSecret) {
+    throw new Error('VAPI_SECRET not configured');
+  }
+
+  try {
+    const response = await fetch(`https://api.vapi.ai/call/${callId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${vapiSecret}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Vapi API error: ${response.status} - ${errorText}`);
+    }
+
+    const callData = await response.json();
+    console.log(`✅ [VAPI API] Successfully fetched call ${callId} from Vapi API`);
+    return callData;
+  } catch (error: any) {
+    console.error(`❌ [VAPI API] Error fetching call ${callId}:`, error.message);
+    throw error;
+  }
+}
+
 interface HandlerResponse {
   statusCode: number;
   headers: Record<string, string>;
@@ -249,17 +281,14 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       };
     }
 
-    // Handle different payload structures
+    // STEP 1: Immediate Logging
     const message = payload.message || payload;
     const callData = message.call || payload.call || message;
     const messageType = message.type || payload.type;
 
-    console.log(`📦 [VAPI WEBHOOK] [${requestId}] Received payload summary:`, JSON.stringify({
-      type: payload.type || messageType || 'unknown',
-      hasMessage: !!payload.message,
-      hasCall: !!payload.call || !!message.call,
-      hasAnalysis: !!(message.analysis || callData.analysis || payload.analysis),
-    }, null, 2));
+    console.log(`📦 [VAPI WEBHOOK] [${requestId}] STEP 1: Immediate Logging`);
+    console.log(`📦 [VAPI WEBHOOK] [${requestId}] Message type: ${messageType || payload.type || 'unknown'}`);
+    console.log(`📦 [VAPI WEBHOOK] [${requestId}] Full req.body (first 500 chars):`, JSON.stringify(payload).substring(0, 500));
     
     // Log full payload structure (truncated for large fields)
     console.log(`📦 [VAPI WEBHOOK] [${requestId}] Full payload keys:`, {
@@ -281,26 +310,30 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
 
     console.log(`🆔 [VAPI WEBHOOK] Processing call with ID: ${vapiCallId}`);
 
+    // STEP 2: Primary Extraction from webhook payload
+    console.log(`📦 [VAPI WEBHOOK] [${requestId}] STEP 2: Primary Extraction`);
+    
     // Extract structured data from Vapi Analysis (Structured Outputs)
     // Check multiple possible locations for structured data
     const analysis = message.analysis || callData.analysis || payload.analysis || {};
+    const artifact = message.artifact || callData.artifact || payload.artifact || {};
     const variables = callData.variables || message.variables || payload.variables || {};
     const assistantOverrides = callData.assistantOverrides || message.assistantOverrides || payload.assistantOverrides || {};
     const variableValues = assistantOverrides.variableValues || {};
     
-    // Also check if structured data is directly in assistantOverrides or other locations
-    const artifact = message.artifact || callData.artifact || payload.artifact || {};
-    
-    // Get structured data - prioritize analysis.structuredData, then fallback to other locations
-    const structuredData = 
+    // STEP 2: Primary extraction paths (as specified by user)
+    let structuredData = 
+      message.analysis?.structuredData ||
+      message.artifact?.structuredOutputs ||
       analysis.structuredData || 
       analysis.extractedData ||
-      analysis.output || // Sometimes structured outputs are in analysis.output
+      analysis.output ||
+      artifact.structuredOutputs ||
+      artifact.output ||
+      artifact.structuredData ||
       variables.structuredData ||
       variableValues ||
-      assistantOverrides.output || // Check assistantOverrides.output
-      artifact.output || // Check artifact.output
-      artifact.structuredData || // Check artifact.structuredData
+      assistantOverrides.output ||
       {};
 
     const transcript = callData.transcript || callData.transcription || message.transcript || payload.transcript || null;
@@ -459,7 +492,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     let verifiedBuilderName: string | null = null;
     let verifiedClosingDate: Date | null = null;
 
-    // Use the final propertyAddress (from any source)
+    // Use the final propertyAddress (from any source) - this will be set after STEP 3 (API fallback)
     const addressForMatching = finalPropertyAddress;
 
     // Only attempt matching if we have an address (typically only on final events)
@@ -485,6 +518,17 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       console.log(`⚠️ [VAPI WEBHOOK] No propertyAddress provided in any data source (checked structuredData, callData, message)`);
     }
 
+    // STEP 4: Database Matching and Saving
+    console.log(`📦 [VAPI WEBHOOK] [${requestId}] STEP 4: Database Matching`);
+    
+    // Check if we have required data for matching
+    const hasRequiredData = !!finalPropertyAddress;
+    const needsManualReview = !hasRequiredData && !finalPropertyAddress;
+    
+    if (needsManualReview) {
+      console.error(`❌ [VAPI WEBHOOK] [${requestId}] FAILED_TO_IDENTIFY_CALL_DATA - No propertyAddress found in webhook or API`);
+    }
+
     // Save call record - IMPORTANT: Save ALL calls regardless of matching
     // The dashboard will display all calls; only matched calls can create claims
     // Note: This will upsert (update if exists, insert if new) based on vapiCallId
@@ -497,8 +541,8 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           homeownerId: matchedHomeowner?.id || null,
           homeownerName: homeownerName,
           phoneNumber: phoneNumber,
-          propertyAddress: addressForMatching,
-          issueDescription: issueDescription,
+          propertyAddress: addressForMatching || finalPropertyAddress,
+          issueDescription: finalIssueDescription || issueDescription,
           isUrgent: isUrgent,
           transcript: transcript,
           recordingUrl: recordingUrl,
@@ -511,8 +555,8 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
             homeownerId: matchedHomeowner?.id || null,
             homeownerName: homeownerName,
             phoneNumber: phoneNumber,
-            propertyAddress: addressForMatching,
-            issueDescription: issueDescription,
+            propertyAddress: addressForMatching || finalPropertyAddress,
+            issueDescription: finalIssueDescription || issueDescription,
             isUrgent: isUrgent,
             transcript: transcript,
             recordingUrl: recordingUrl,
@@ -521,7 +565,11 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           } as any,
         });
 
-      console.log(`✅ [VAPI WEBHOOK] Call ${vapiCallId} successfully saved to database.`);
+      if (needsManualReview) {
+        console.log(`⚠️ [VAPI WEBHOOK] [${requestId}] Call ${vapiCallId} saved but needs manual review - propertyAddress not found`);
+      } else {
+        console.log(`✅ [VAPI WEBHOOK] [${requestId}] Call ${vapiCallId} successfully saved to database.`);
+      }
     } catch (dbError) {
       console.error('❌ Database error saving call:', dbError);
       return {
