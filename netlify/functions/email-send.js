@@ -132,26 +132,19 @@ exports.handler = async (event, context) => {
         attachments: sendGridAttachments
       };
 
-      let response;
-      let sendGridMessageId;
-      try {
-        [response] = await sgMail.send(msg);
-        sendGridMessageId = response.headers['x-message-id'];
-        console.log('✅ Email sent via SendGrid:', {
-          statusCode: response.statusCode,
-          messageId: sendGridMessageId,
-          to: to,
-          from: fromEmail,
-          subject: subject
-        });
-        
-        // Log any warnings from SendGrid
-        if (response.body) {
-          console.log('SendGrid response body:', JSON.stringify(response.body));
-        }
-      } catch (sendError) {
-        console.error('❌ SendGrid send error:', sendError);
-        throw sendError;
+      const [response] = await sgMail.send(msg);
+      const sendGridMessageId = response.headers['x-message-id'];
+      console.log('✅ Email sent via SendGrid:', {
+        statusCode: response.statusCode,
+        messageId: sendGridMessageId,
+        to: to,
+        from: fromEmail,
+        subject: subject
+      });
+      
+      // Log any warnings from SendGrid
+      if (response.body) {
+        console.log('SendGrid response body:', JSON.stringify(response.body));
       }
       
       // Log to database (non-blocking - don't await to avoid timeout)
