@@ -64,6 +64,10 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     // Get recipient email (admin email or configured notification email)
     const recipientEmail = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.SENDGRID_REPLY_EMAIL || 'info@cascadebuilderservices.com';
     const fromEmail = process.env.SENDGRID_REPLY_EMAIL || process.env.SMTP_FROM || 'noreply@cascadeconnect.app';
+    
+    console.log(`📧 [EMAIL] Sending call completion email to: ${recipientEmail}`);
+    console.log(`📧 [EMAIL] From email: ${fromEmail}`);
+    console.log(`📧 [EMAIL] SendGrid API Key configured: ${!!process.env.SENDGRID_API_KEY}`);
 
     // Build email subject
     const urgencyTag = isUrgent ? '[URGENT] ' : '';
@@ -160,28 +164,60 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
 
     // Send email using SendGrid if available
     if (process.env.SENDGRID_API_KEY) {
-      const sgMail = require('@sendgrid/mail');
-      sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+      try {
+        const sgMail = require('@sendgrid/mail');
+        sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-      await sgMail.send({
-        to: recipientEmail,
-        from: fromEmail,
-        subject: subject,
-        html: htmlBody,
-        text: htmlBody.replace(/<[^>]*>/g, ''), // Plain text version
-      });
+        const msg = {
+          to: recipientEmail,
+          from: fromEmail,
+          subject: subject,
+          html: htmlBody,
+          text: htmlBody.replace(/<[^>]*>/g, ''), // Plain text version
+        };
 
-      return {
-        statusCode: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-        body: JSON.stringify({ 
-          success: true, 
-          message: 'Email notification sent successfully' 
-        }),
-      };
+        console.log(`📧 [EMAIL] Sending via SendGrid to ${recipientEmail}...`);
+        const [response] = await sgMail.send(msg);
+        
+        console.log(`✅ [EMAIL] Email sent successfully via SendGrid:`, {
+          statusCode: response.statusCode,
+          messageId: response.headers['x-message-id'],
+          to: recipientEmail,
+        });
+
+        return {
+          statusCode: 200,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+          body: JSON.stringify({ 
+            success: true, 
+            message: 'Email notification sent successfully',
+            recipientEmail,
+            messageId: response.headers['x-message-id'],
+          }),
+        };
+      } catch (sendGridError: any) {
+        console.error(`❌ [EMAIL] SendGrid error:`, {
+          message: sendGridError.message,
+          code: sendGridError.code,
+          response: sendGridError.response?.body,
+        });
+        
+        // Don't throw - return error response instead
+        return {
+          statusCode: 500,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+          body: JSON.stringify({ 
+            error: 'Failed to send email via SendGrid',
+            details: sendGridError.message,
+          }),
+        };
+      }
     } else {
       // Fallback: Log email (for development)
       console.log('📧 Email Notification (SMTP not configured):');
