@@ -437,8 +437,73 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       issueDescription: finalIssueDescription ? (finalIssueDescription.substring(0, 100) + '...') : 'not provided',
     });
 
+    // STEP 3: Fallback Trigger - If propertyAddress is missing, fetch from API
+    if (!finalPropertyAddress && vapiCallId) {
+      console.log(`⚠️ [VAPI WEBHOOK] [${requestId}] STEP 3: Required data missing from webhook. Initiating 2-second delay before API fallback.`);
+      
+      try {
+        // Wait 2 seconds before calling API
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        console.log(`🔄 [VAPI WEBHOOK] [${requestId}] Fetching call data from Vapi API...`);
+        const apiCallData = await fetchVapiCall(vapiCallId);
+        
+        // Extract structured data from API response
+        const apiAnalysis = apiCallData.analysis || {};
+        const apiArtifact = apiCallData.artifact || {};
+        const apiStructuredData = 
+          apiAnalysis.structuredData ||
+          apiAnalysis.extractedData ||
+          apiAnalysis.output ||
+          apiArtifact.structuredOutputs ||
+          apiArtifact.output ||
+          apiArtifact.structuredData ||
+          {};
+        
+        console.log(`✅ [VAPI WEBHOOK] [${requestId}] API response structured data keys:`, Object.keys(apiStructuredData));
+        
+        // Use API data if webhook data was missing
+        if (apiStructuredData && Object.keys(apiStructuredData).length > 0) {
+          // Merge API data with webhook data (API takes precedence for missing fields)
+          structuredData = { ...structuredData, ...apiStructuredData };
+          
+          // Re-extract fields from merged structured data
+          const apiPropertyAddress = 
+            apiStructuredData.propertyAddress || 
+            apiStructuredData.property_address ||
+            apiStructuredData.address ||
+            null;
+          
+          if (apiPropertyAddress && !finalPropertyAddress) {
+            finalPropertyAddress = apiPropertyAddress;
+            console.log(`✅ [VAPI WEBHOOK] [${requestId}] Extracted propertyAddress from API: ${finalPropertyAddress}`);
+          }
+          
+          if (apiStructuredData.callIntent && !finalCallIntent) {
+            finalCallIntent = apiStructuredData.callIntent;
+            console.log(`✅ [VAPI WEBHOOK] [${requestId}] Extracted callIntent from API: ${finalCallIntent}`);
+          }
+          
+          if (apiStructuredData.callerType && !finalCallerType) {
+            finalCallerType = apiStructuredData.callerType;
+            console.log(`✅ [VAPI WEBHOOK] [${requestId}] Extracted callerType from API: ${finalCallerType}`);
+          }
+          
+          if (apiStructuredData.issueDescription && !finalIssueDescription) {
+            finalIssueDescription = apiStructuredData.issueDescription;
+            console.log(`✅ [VAPI WEBHOOK] [${requestId}] Extracted issueDescription from API`);
+          }
+        } else {
+          console.log(`⚠️ [VAPI WEBHOOK] [${requestId}] API response also missing structured data`);
+        }
+      } catch (apiError: any) {
+        console.error(`❌ [VAPI WEBHOOK] [${requestId}] API fallback failed:`, apiError.message);
+        // Continue with webhook data even if API fails
+      }
+    }
+
     // Extract other call data (not from structured outputs)
-    const homeownerName = 
+    let homeownerName = 
       structuredData.homeowner_name || 
       structuredData.homeownerName || 
       structuredData.name ||
