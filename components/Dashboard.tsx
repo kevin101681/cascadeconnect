@@ -14,6 +14,7 @@ import { calls } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { db, isDbConfigured } from '../db';
 import Button from './Button';
+import MaterialSelect from './MaterialSelect';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
@@ -4073,23 +4074,25 @@ const Dashboard: React.FC<DashboardProps> = ({
                   ) : (
                     <div>
                       <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">To</label>
-                      <select
-                        className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                      <MaterialSelect
                         value={newMessageRecipientId}
-                        onChange={(e) => setNewMessageRecipientId(e.target.value)}
-                        required
-                      >
-                        <option value="">Select an admin user...</option>
-                        {employees
-                          .filter(emp => emp.role === 'Administrator')
-                          .map(emp => (
-                            <option key={emp.id} value={emp.id}>{emp.name}</option>
-                          ))}
-                      </select>
+                        onChange={(value) => setNewMessageRecipientId(value)}
+                        options={[
+                          { value: '', label: 'Select a team member' },
+                          ...employees
+                            .filter(emp => emp.role === 'Administrator')
+                            .map(emp => ({
+                              value: emp.id,
+                              label: emp.name
+                            }))
+                        ]}
+                        className="w-full"
+                      />
                     </div>
                   )}
 
-                  {/* Template Selector */}
+                  {/* Template Selector - Admin Only */}
+                  {isAdmin && (
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400">Email Template</label>
@@ -4167,6 +4170,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       </div>
                     )}
                   </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Subject</label>

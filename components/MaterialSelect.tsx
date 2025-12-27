@@ -72,9 +72,11 @@ const MaterialSelect: React.FC<MaterialSelectProps> = ({
           <span className={`text-sm ${value ? 'text-surface-on dark:text-gray-100' : 'text-surface-on-variant dark:text-gray-400'}`}>
             {selectedOption?.label || 'Select...'}
           </span>
-          <ChevronDown 
-            className={`h-4 w-4 text-surface-on-variant dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-          />
+          <div className="w-6 h-6 rounded-full bg-surface-container dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+            <ChevronDown 
+              className={`h-4 w-4 text-surface-on-variant dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            />
+          </div>
         </div>
         {label && (
           <label className={`absolute left-2 -top-2 z-[1] bg-surface dark:bg-gray-800 px-1 text-xs transition-all ${
@@ -88,7 +90,7 @@ const MaterialSelect: React.FC<MaterialSelectProps> = ({
         
         {/* Dropdown Menu */}
         {isOpen && !disabled && (
-          <div className="absolute z-50 w-full mt-1 bg-surface dark:bg-gray-800 rounded-lg border border-surface-outline-variant dark:border-gray-700 shadow-elevation-2 overflow-hidden animate-in fade-in slide-in-from-top-2">
+          <div className="absolute z-50 w-full mt-1 bg-surface dark:bg-gray-800 rounded-lg border border-surface-outline-variant dark:border-gray-700 shadow-elevation-2 overflow-hidden">
             <div className="py-1">
               {options.map((option) => (
                 <button
