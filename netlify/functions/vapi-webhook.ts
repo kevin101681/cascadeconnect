@@ -282,17 +282,25 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     console.log(`🆔 [VAPI WEBHOOK] Processing call with ID: ${vapiCallId}`);
 
     // Extract structured data from Vapi Analysis (Structured Outputs)
+    // Check multiple possible locations for structured data
     const analysis = message.analysis || callData.analysis || payload.analysis || {};
     const variables = callData.variables || message.variables || payload.variables || {};
     const assistantOverrides = callData.assistantOverrides || message.assistantOverrides || payload.assistantOverrides || {};
     const variableValues = assistantOverrides.variableValues || {};
     
+    // Also check if structured data is directly in assistantOverrides or other locations
+    const artifact = message.artifact || callData.artifact || payload.artifact || {};
+    
     // Get structured data - prioritize analysis.structuredData, then fallback to other locations
     const structuredData = 
       analysis.structuredData || 
       analysis.extractedData ||
+      analysis.output || // Sometimes structured outputs are in analysis.output
       variables.structuredData ||
       variableValues ||
+      assistantOverrides.output || // Check assistantOverrides.output
+      artifact.output || // Check artifact.output
+      artifact.structuredData || // Check artifact.structuredData
       {};
 
     const transcript = callData.transcript || callData.transcription || message.transcript || payload.transcript || null;
