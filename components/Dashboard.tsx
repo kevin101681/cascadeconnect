@@ -1676,7 +1676,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <div className="px-4 py-4">
                         <div className="flex flex-wrap gap-2">
                             {/* Claim # */}
-                          <span className="inline-flex items-center h-6 text-xs font-medium tracking-wide bg-primary/10 dark:bg-primary/20 text-primary-on dark:text-primary px-3 rounded-full whitespace-nowrap w-fit">
+                          <span className="inline-flex items-center h-6 text-xs font-medium tracking-wide bg-primary text-primary-on px-3 rounded-full whitespace-nowrap w-fit">
                             #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
                           </span>
                           {/* Status */}
