@@ -117,9 +117,9 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     }
 
     // Send SMS via Twilio
-    // Dynamic import for ESM compatibility in Netlify functions
-    const twilioModule = await import('twilio');
-    const twilio = twilioModule.default || twilioModule;
+    // Use require for compatibility with Netlify functions
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const twilio = require('twilio');
     const client = twilio(twilioAccountSid, twilioAuthToken);
 
     let twilioMessageSid: string | null = null;

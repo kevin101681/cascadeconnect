@@ -297,15 +297,13 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                       </div>
                     )}
                     
+                    {/* SMS Chat Section - Outside clickable area */}
+                    {call.homeownerId && (
+                      <div className="w-full mt-4" onClick={(e) => e.stopPropagation()}>
+                        <CallSmsChat homeownerId={call.homeownerId} callId={call.id} />
+                      </div>
+                    )}
                   </div>
-                  
-                  {/* SMS Chat Section - Outside clickable area */}
-                  {call.homeownerId && (
-                    <div className="w-full mt-4" onClick={(e) => e.stopPropagation()}>
-                      <CallSmsChat homeownerId={call.homeownerId} callId={call.id} />
-                    </div>
-                  )}
-                </div>
                   {call.homeownerId && (
                     <button
                       onClick={(e) => {
