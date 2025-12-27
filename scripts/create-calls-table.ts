@@ -33,10 +33,17 @@ async function createCallsTable() {
     const sqlContent = readFileSync(sqlPath, 'utf-8');
     
     // Execute each statement (split by semicolon)
-    const statements = sqlContent
+    // Remove comment lines first, then split by semicolon
+    const cleanedContent = sqlContent
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0 && !line.startsWith('--'))
+      .join('\n');
+    
+    const statements = cleanedContent
       .split(';')
-      .map(s => s.trim())
-      .filter(s => s.length > 0 && !s.startsWith('--'));
+      .map(s => s.trim().replace(/\s+/g, ' '))
+      .filter(s => s.length > 0);
     
     console.log(`   Found ${statements.length} statement(s) to execute\n`);
     
