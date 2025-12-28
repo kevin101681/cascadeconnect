@@ -75,6 +75,13 @@ exports.handler = async (event, context) => {
 
       bb.on('finish', () => {
         console.log('📧 Parsed fields:', Object.keys(fields));
+        // Log field values to debug (truncate long values)
+        for (const [key, value] of Object.entries(fields)) {
+          const preview = typeof value === 'string' && value.length > 100 
+            ? value.substring(0, 100) + '...' 
+            : value;
+          console.log(`📧 Field "${key}":`, preview);
+        }
         resolve(fields);
       });
 
