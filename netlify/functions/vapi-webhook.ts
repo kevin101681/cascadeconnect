@@ -1,7 +1,24 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { calls, homeowners, claims } from '../../db/schema';
+import { calls, homeowners, claims, users } from '../../db/schema';
 import { eq, and, gte, inArray } from 'drizzle-orm';
+
+/**
+ * VAPI WEBHOOK - COMPLETELY REWRITTEN
+ * 
+ * Features:
+ * 1. Robust data extraction from multiple locations
+ * 2. API fallback with 2-second delay if data is missing
+ * 3. Fuzzy address matching against homeowners table
+ * 4. Automatic claim creation for warranty_issue intent
+ * 5. Direct SendGrid email notification with safety wrapper
+ */
+
+interface HandlerResponse {
+  statusCode: number;
+  headers: Record<string, string>;
+  body: string;
+}
 
 /**
  * Fetch call data from Vapi API as a fallback if webhook payload is incomplete
@@ -12,38 +29,26 @@ async function fetchVapiCall(callId: string): Promise<any> {
     throw new Error('VAPI_SECRET not configured');
   }
 
-  try {
-    const response = await fetch(`https://api.vapi.ai/call/${callId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${vapiSecret}`,
-        'Content-Type': 'application/json',
-      },
-    });
+  const response = await fetch(`https://api.vapi.ai/call/${callId}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${vapiSecret}`,
+      'Content-Type': 'application/json',
+    },
+  });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Vapi API error: ${response.status} - ${errorText}`);
-    }
-
-    const callData = await response.json();
-    console.log(`✅ [VAPI API] Successfully fetched call ${callId} from Vapi API`);
-    return callData;
-  } catch (error: any) {
-    console.error(`❌ [VAPI API] Error fetching call ${callId}:`, error.message);
-    throw error;
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Vapi API error: ${response.status} - ${errorText}`);
   }
-}
 
-interface HandlerResponse {
-  statusCode: number;
-  headers: Record<string, string>;
-  body: string;
+  const callData = await response.json();
+  console.log(`🔄 Webhook empty. Fetched data from API.`);
+  return callData;
 }
 
 /**
  * Calculate similarity between two strings using Levenshtein distance
- * Returns a value between 0 and 1, where 1 is identical and 0 is completely different
  */
 function calculateSimilarity(str1: string, str2: string): number {
   const s1 = normalizeAddress(str1);
@@ -67,8 +72,8 @@ function normalizeAddress(address: string): string {
   return address
     .toLowerCase()
     .trim()
-    .replace(/\s+/g, ' ') // Normalize whitespace
-    .replace(/[.,#]/g, '') // Remove common punctuation
+    .replace(/\s+/g, ' ')
+    .replace(/[.,#]/g, '')
     .replace(/\bstreet\b/gi, 'st')
     .replace(/\bavenue\b/gi, 'ave')
     .replace(/\broad\b/gi, 'rd')
@@ -82,7 +87,7 @@ function normalizeAddress(address: string): string {
 }
 
 /**
- * Calculate Levenshtein distance between two strings
+ * Calculate Levenshtein distance
  */
 function levenshteinDistance(str1: string, str2: string): number {
   const matrix: number[][] = [];
@@ -101,9 +106,9 @@ function levenshteinDistance(str1: string, str2: string): number {
         matrix[i][j] = matrix[i - 1][j - 1];
       } else {
         matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
+          matrix[i - 1][j - 1] + 1,
+          matrix[i][j - 1] + 1,
+          matrix[i - 1][j] + 1
         );
       }
     }
@@ -124,9 +129,7 @@ async function findMatchingHomeowner(
     return null;
   }
   
-  // Fetch all homeowners
   const allHomeowners = await db.select().from(homeowners);
-  
   let bestMatch: { homeowner: any; similarity: number } | null = null;
   
   for (const homeowner of allHomeowners) {
@@ -168,73 +171,222 @@ async function hasRecentOpenClaim(
 }
 
 /**
- * Create a claim from a call if urgent and matched
+ * Get admin emails from database
  */
-async function createClaimFromCall(
-  db: any,
-  callData: any,
-  homeownerId: string,
-  homeowner: any
-): Promise<void> {
-  // Check for duplicate claims
-  const hasRecentClaim = await hasRecentOpenClaim(db, homeownerId);
-  if (hasRecentClaim) {
-    console.log(`⏭️ [VAPI WEBHOOK] Skipping claim creation - duplicate claim exists for homeowner ${homeownerId} in last 24 hours`);
-    return;
+async function getAdminEmails(db: any): Promise<string[]> {
+  try {
+    const admins = await db
+      .select()
+      .from(users)
+      .where(eq(users.role, 'ADMIN'));
+    
+    const adminEmails = admins
+      .map((admin: any) => admin.email)
+      .filter((email: string) => {
+        // Filter out mock/test emails
+        return email && 
+               !email.includes('mock') && 
+               !email.includes('test') && 
+               !email.includes('example.com');
+      });
+    
+    return adminEmails;
+  } catch (error) {
+    console.error('❌ Error fetching admin emails:', error);
+    return [];
   }
-  
-  // Get the next claim number for this homeowner
-  const existingClaims = await db
-    .select()
-    .from(claims)
-    .where(eq(claims.homeownerId, homeownerId));
-  
-  const maxNumber = existingClaims
-    .map(c => {
-      const num = c.claimNumber ? parseInt(c.claimNumber, 10) : 0;
-      return isNaN(num) ? 0 : num;
-    })
-    .reduce((max, num) => Math.max(max, num), 0);
-  
-  const claimNumber = (maxNumber + 1).toString();
-  
-  // Create the claim
-  await db.insert(claims).values({
-    homeownerId: homeownerId,
-    homeownerName: homeowner.name,
-    homeownerEmail: homeowner.email,
-    builderName: homeowner.builder || null,
-    jobName: homeowner.jobName || null,
-    address: homeowner.address,
-    title: callData.issueDescription || 'Service Request',
-    description: callData.issueDescription || 'Service request from AI intake call',
-    category: 'General',
-    claimNumber: claimNumber,
-    status: 'SUBMITTED',
-    classification: 'Unclassified',
-    dateSubmitted: new Date(),
-  });
-  
-  console.log(`✅ [VAPI WEBHOOK] Created claim #${claimNumber} for homeowner ${homeownerId}`);
 }
 
+/**
+ * Send email notification via SendGrid
+ * Wrapped in try/catch so failures don't break the webhook
+ */
+async function sendEmailNotification(
+  propertyAddress: string,
+  summary: string,
+  homeownerName: string | null,
+  phoneNumber: string | null,
+  isUrgent: boolean,
+  isVerified: boolean,
+  matchedHomeownerId: string | null,
+  vapiCallId: string,
+  db: any
+): Promise<void> {
+  try {
+    // Check if SendGrid is configured
+    if (!process.env.SENDGRID_API_KEY) {
+      console.log('⚠️ SendGrid not configured, skipping email notification');
+      return;
+    }
+
+    // Get admin emails from database
+    const adminEmails = await getAdminEmails(db);
+    
+    // Fallback to environment variable if no admins in database
+    const recipientEmail = adminEmails.length > 0 
+      ? adminEmails[0] 
+      : (process.env.ADMIN_NOTIFICATION_EMAIL || process.env.SENDGRID_REPLY_EMAIL || 'info@cascadebuilderservices.com');
+    
+    console.log(`📧 Sending email to admin: ${recipientEmail}`);
+
+    // Import SendGrid
+    const sgMail = require('@sendgrid/mail');
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+    // Build email subject
+    const urgencyTag = isUrgent ? '[URGENT] ' : '';
+    const verifiedTag = isVerified ? '[VERIFIED] ' : '[UNVERIFIED] ';
+    const subject = `${urgencyTag}${verifiedTag}New Voice Claim: ${propertyAddress}`;
+
+    // Build dashboard link
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://www.cascadeconnect.app';
+    const callsLink = `${appUrl}#ai-intake`;
+    const homeownerLink = matchedHomeownerId 
+      ? `${appUrl}#dashboard?homeownerId=${matchedHomeownerId}` 
+      : null;
+
+    // Build email body
+    const htmlBody = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #6750A4; margin-bottom: 20px;">🎙️ New Voice Claim Received</h2>
+        
+        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+          <h3 style="margin-top: 0; color: #333;">Call Information</h3>
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold; width: 150px;">Homeowner:</td>
+              <td style="padding: 8px 0;">${homeownerName || 'Not provided'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold;">Phone:</td>
+              <td style="padding: 8px 0;">${phoneNumber || 'Not provided'}</td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold;">Property Address:</td>
+              <td style="padding: 8px 0;"><strong>${propertyAddress || 'Not provided'}</strong></td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold;">Status:</td>
+              <td style="padding: 8px 0;">
+                ${isVerified 
+                  ? '<span style="color: green; font-weight: bold;">✓ Verified (Matched)</span>' 
+                  : '<span style="color: orange; font-weight: bold;">⚠ Unverified</span>'}
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 8px 0; font-weight: bold;">Urgent:</td>
+              <td style="padding: 8px 0;">
+                ${isUrgent 
+                  ? '<span style="color: red; font-weight: bold;">YES</span>' 
+                  : 'No'}
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        ${summary ? `
+        <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+          <h3 style="margin-top: 0; color: #333;">Summary</h3>
+          <p style="margin: 0; color: #333; white-space: pre-wrap;">${summary}</p>
+        </div>
+        ` : ''}
+
+        <div style="margin-top: 30px; text-align: center;">
+          <a href="${callsLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; margin: 5px;">
+            View in Dashboard
+          </a>
+          ${homeownerLink ? `
+          <a href="${homeownerLink}" style="display: inline-block; background-color: #4CAF50; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; margin: 5px;">
+            View Homeowner
+          </a>
+          ` : ''}
+        </div>
+
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 12px;">
+          Call ID: ${vapiCallId}
+        </div>
+      </div>
+    `;
+
+    const textBody = `
+New Voice Claim Received
+
+Homeowner: ${homeownerName || 'Not provided'}
+Phone: ${phoneNumber || 'Not provided'}
+Property Address: ${propertyAddress || 'Not provided'}
+Status: ${isVerified ? 'Verified (Matched)' : 'Unverified'}
+Urgent: ${isUrgent ? 'YES' : 'No'}
+
+${summary ? `Summary:\n${summary}\n` : ''}
+
+View in Dashboard: ${callsLink}
+${homeownerLink ? `View Homeowner: ${homeownerLink}\n` : ''}
+
+Call ID: ${vapiCallId}
+    `.trim();
+
+    // Send email
+    const fromEmail = process.env.SENDGRID_REPLY_EMAIL || process.env.SMTP_FROM || 'noreply@cascadeconnect.app';
+    
+    const msg = {
+      to: recipientEmail,
+      from: {
+        email: fromEmail,
+        name: 'Cascade Connect',
+      },
+      subject: subject,
+      text: textBody,
+      html: htmlBody,
+    };
+
+    const [response] = await sgMail.send(msg);
+    
+    console.log(`✅ Email sent successfully:`, {
+      statusCode: response.statusCode,
+      to: recipientEmail,
+      subject: subject,
+    });
+
+    // Send to additional admins if available
+    if (adminEmails.length > 1) {
+      for (let i = 1; i < adminEmails.length; i++) {
+        try {
+          const additionalMsg = { ...msg, to: adminEmails[i] };
+          await sgMail.send(additionalMsg);
+          console.log(`✅ Email sent to additional admin: ${adminEmails[i]}`);
+        } catch (err) {
+          console.error(`❌ Failed to send to ${adminEmails[i]}:`, err);
+        }
+      }
+    }
+  } catch (error: any) {
+    // Log the error but don't throw - we don't want email failures to break the webhook
+    console.error('❌ Email notification failed (non-blocking):', error.message);
+    if (error.response?.body) {
+      console.error('SendGrid error details:', error.response.body);
+    }
+  }
+}
+
+/**
+ * Main webhook handler
+ */
 export const handler = async (event: any): Promise<HandlerResponse> => {
+  const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: 'Method not allowed' }),
     };
   }
 
-  const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  console.log(`🚀 [VAPI WEBHOOK] [${requestId}] Webhook endpoint called at ${new Date().toISOString()}`);
+  console.log(`\n🚀 [VAPI WEBHOOK] [${requestId}] New webhook received at ${new Date().toISOString()}`);
 
   try {
-    // 1. Security Check: Verify Vapi Secret
+    // Security: Verify Vapi Secret
     const vapiSecret = 
       event.headers['x-vapi-secret'] || 
       event.headers['X-Vapi-Secret'] ||
@@ -243,24 +395,24 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     const expectedSecret = process.env.VAPI_SECRET;
     
     if (!expectedSecret) {
-      console.error('❌ VAPI_SECRET environment variable is not set');
+      console.error('❌ VAPI_SECRET not configured');
       return {
         statusCode: 500,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Server configuration error: VAPI_SECRET not set' }),
+        body: JSON.stringify({ error: 'Server configuration error' }),
       };
     }
     
     if (!vapiSecret || vapiSecret !== expectedSecret) {
-      console.error('❌ Webhook authentication failed');
+      console.error('❌ Invalid Vapi secret');
       return {
         statusCode: 401,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Unauthorized: Invalid or missing Vapi secret' }),
+        body: JSON.stringify({ error: 'Unauthorized' }),
       };
     }
 
-    // Get the raw body
+    // Parse body
     let rawBody: string;
     if (event.isBase64Encoded) {
       rawBody = Buffer.from(event.body, 'base64').toString('utf-8');
@@ -268,293 +420,174 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       rawBody = event.body || '';
     }
 
-    // Parse payload
-    let payload: any;
+    let body: any;
     try {
-      payload = JSON.parse(rawBody);
+      body = JSON.parse(rawBody);
     } catch (parseError) {
-      console.error('❌ Failed to parse JSON payload:', parseError);
+      console.error('❌ Invalid JSON payload');
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Invalid JSON payload' }),
+        body: JSON.stringify({ error: 'Invalid JSON' }),
       };
     }
 
-    // STEP 1: Immediate Logging
-    const message = payload.message || payload;
-    const callData = message.call || payload.call || message;
-    const messageType = message.type || payload.type;
-
-    console.log(`📦 [VAPI WEBHOOK] [${requestId}] STEP 1: Immediate Logging`);
-    console.log(`📦 [VAPI WEBHOOK] [${requestId}] Message type: ${messageType || payload.type || 'unknown'}`);
-    console.log(`📦 [VAPI WEBHOOK] [${requestId}] Full req.body (first 500 chars):`, JSON.stringify(payload).substring(0, 500));
+    // ==========================================
+    // STEP 1: DEEP LOGGING
+    // ==========================================
+    console.log(`📦 [${requestId}] STEP 1: Deep Logging`);
+    console.log(`📦 [${requestId}] Full body structure (first 1000 chars):`, JSON.stringify(body).substring(0, 1000));
+    console.log(`📦 [${requestId}] Body keys:`, Object.keys(body));
     
-    // Log full payload structure (truncated for large fields)
-    console.log(`📦 [VAPI WEBHOOK] [${requestId}] Full payload keys:`, {
-      payloadKeys: Object.keys(payload),
-      messageKeys: message ? Object.keys(message) : [],
-      callDataKeys: callData ? Object.keys(callData) : [],
-    });
+    const message = body.message || body;
+    const callData = message.call || body.call || message;
+    const messageType = message.type || body.type;
+    
+    console.log(`📦 [${requestId}] Message type: ${messageType || 'unknown'}`);
+    console.log(`📦 [${requestId}] Message keys:`, message ? Object.keys(message) : []);
+    console.log(`📦 [${requestId}] Call data keys:`, callData ? Object.keys(callData) : []);
 
     // Extract call ID
-    const vapiCallId = callData.id || callData.callId || callData.vapiCallId;
+    const vapiCallId = callData?.id || callData?.callId || body?.id;
     if (!vapiCallId) {
-      console.error('❌ No call ID found in payload');
+      console.error('❌ No call ID found');
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Call ID is required' }),
+        body: JSON.stringify({ error: 'Call ID required' }),
       };
     }
 
-    console.log(`🆔 [VAPI WEBHOOK] Processing call with ID: ${vapiCallId}`);
+    console.log(`🆔 [${requestId}] Call ID: ${vapiCallId}`);
 
-    // STEP 2: Primary Extraction from webhook payload
-    console.log(`📦 [VAPI WEBHOOK] [${requestId}] STEP 2: Primary Extraction`);
+    // ==========================================
+    // STEP 2: SMART EXTRACTION
+    // ==========================================
+    console.log(`📦 [${requestId}] STEP 2: Smart Extraction`);
     
-    // Extract structured data from Vapi Analysis (Structured Outputs)
-    // Check multiple possible locations for structured data
-    const analysis = message.analysis || callData.analysis || payload.analysis || {};
-    const artifact = message.artifact || callData.artifact || payload.artifact || {};
-    const variables = callData.variables || message.variables || payload.variables || {};
-    const assistantOverrides = callData.assistantOverrides || message.assistantOverrides || payload.assistantOverrides || {};
-    const variableValues = assistantOverrides.variableValues || {};
+    // Look for structuredData in multiple locations
+    const analysis = message?.analysis || callData?.analysis || body?.analysis || {};
+    const artifact = message?.artifact || callData?.artifact || body?.artifact || {};
     
-    // STEP 2: Primary extraction paths (as specified by user)
     let structuredData = 
-      message.analysis?.structuredData ||
-      message.artifact?.structuredOutputs ||
-      analysis.structuredData || 
-      analysis.extractedData ||
-      analysis.output ||
-      artifact.structuredOutputs ||
-      artifact.output ||
-      artifact.structuredData ||
-      variables.structuredData ||
-      variableValues ||
-      assistantOverrides.output ||
+      message?.analysis?.structuredData ||
+      message?.artifact?.structuredOutputs ||
+      message?.structuredData ||
+      analysis?.structuredData || 
+      artifact?.structuredOutputs ||
+      artifact?.structuredData ||
       {};
 
-    const transcript = callData.transcript || callData.transcription || message.transcript || payload.transcript || null;
-    const recordingUrl = callData.recordingUrl || callData.recording_url || message.recordingUrl || payload.recordingUrl || null;
-
-    // Log the full structured data to debug extraction issues
-    console.log(`🔍 [VAPI WEBHOOK] Analysis object keys:`, analysis ? Object.keys(analysis) : 'null');
-    console.log(`🔍 [VAPI WEBHOOK] Raw structured data keys:`, Object.keys(structuredData));
-    
-    // Log a sample of the actual payload to see structure (truncate large fields)
-    const payloadSample: any = {
-      type: payload.type,
-      messageType: messageType,
-      hasAnalysis: !!analysis,
-      analysisKeys: analysis ? Object.keys(analysis) : [],
-      hasVariables: !!variables,
-      variablesKeys: variables ? Object.keys(variables) : [],
-      callDataKeys: callData ? Object.keys(callData).slice(0, 20) : [], // First 20 keys
-      messageKeys: message ? Object.keys(message).slice(0, 20) : [], // First 20 keys
-    };
-    
-    // If analysis exists, show its structure (but truncate large values)
-    if (analysis && Object.keys(analysis).length > 0) {
-      const analysisSample: any = {};
-      for (const key of Object.keys(analysis).slice(0, 10)) {
-        const value = analysis[key];
-        if (typeof value === 'string' && value.length > 200) {
-          analysisSample[key] = value.substring(0, 200) + '... (truncated)';
-        } else if (typeof value === 'object' && value !== null) {
-          analysisSample[key] = `[Object with ${Object.keys(value).length} keys]`;
-        } else {
-          analysisSample[key] = value;
-        }
-      }
-      payloadSample.analysisSample = analysisSample;
-    }
-    
-    console.log(`🔍 [VAPI WEBHOOK] Payload structure sample:`, JSON.stringify(payloadSample, null, 2));
-    
+    console.log(`🔍 [${requestId}] Structured data keys:`, Object.keys(structuredData));
     if (Object.keys(structuredData).length > 0) {
-      console.log(`🔍 [VAPI WEBHOOK] Full structured data:`, JSON.stringify(structuredData, null, 2));
-    } else {
-      console.log(`🔍 [VAPI WEBHOOK] Structured data is empty - checking all possible locations...`);
-      
-      // Check if analysis has the data directly
-      if (analysis) {
-        console.log(`🔍 [VAPI WEBHOOK] Analysis object (first level):`, JSON.stringify(
-          Object.fromEntries(
-            Object.entries(analysis).slice(0, 5).map(([k, v]) => [
-              k, 
-              typeof v === 'string' && v.length > 100 ? v.substring(0, 100) + '...' : v
-            ])
-          ), 
-          null, 
-          2
-        ));
-      }
+      console.log(`🔍 [${requestId}] Structured data:`, JSON.stringify(structuredData, null, 2));
     }
-    
-    // Also check callData and message for address fields directly
-    console.log(`🔍 [VAPI WEBHOOK] CallData address fields:`, {
-      propertyAddress: callData.propertyAddress || callData.property_address || 'not found',
-      address: callData.address || 'not found',
-      property: callData.property || 'not found',
-    });
-    console.log(`🔍 [VAPI WEBHOOK] Message address fields:`, {
-      propertyAddress: message.propertyAddress || message.property_address || 'not found',
-      address: message.address || 'not found',
-      property: message.property || 'not found',
-    });
 
-    // Extract data using exact Vapi Structured Output keys
-    // These keys come directly from Vapi's Structured Outputs (Analysis)
-    // Try multiple possible key variations
-    const propertyAddress = 
-      structuredData.propertyAddress || 
-      structuredData.property_address ||
-      structuredData.address ||
-      callData.propertyAddress ||
-      callData.property_address ||
+    // Extract fields
+    let propertyAddress = 
+      structuredData?.propertyAddress || 
+      structuredData?.property_address ||
+      structuredData?.address ||
+      callData?.propertyAddress ||
+      callData?.address ||
       null;
-    let callerType = structuredData.callerType || null;
-    let callIntent = structuredData.callIntent || null;
-    let issueDescription = structuredData.issueDescription || null;
 
-    // Also check other possible locations for propertyAddress
-    const propertyAddressFromCall = callData.propertyAddress || callData.property_address || callData.address || null;
-    const propertyAddressFromMessage = message.propertyAddress || message.property_address || message.address || null;
-    let finalPropertyAddress = propertyAddress || propertyAddressFromCall || propertyAddressFromMessage;
-    
-    // Initialize final variables (will be updated by API fallback if needed)
-    let finalCallIntent = callIntent;
-    let finalCallerType = callerType;
-    let finalIssueDescription = issueDescription;
-
-    // Extract other call data (not from structured outputs)
-    // Note: These will be re-extracted after API fallback if needed
     let homeownerName = 
-      structuredData.homeowner_name || 
-      structuredData.homeownerName || 
-      structuredData.name ||
-      callData.homeownerName ||
+      structuredData?.homeownerName || 
+      structuredData?.homeowner_name ||
+      structuredData?.name ||
+      callData?.homeownerName ||
       null;
 
     let phoneNumber = 
-      structuredData.phone_number || 
-      structuredData.phoneNumber ||
-      callData.phoneNumber ||
-      callData.from ||
+      structuredData?.phoneNumber || 
+      structuredData?.phone_number ||
+      callData?.phoneNumber ||
+      callData?.from ||
       null;
 
-    // Determine urgency (can be derived from callIntent or other fields if needed)
+    let issueDescription = 
+      structuredData?.issueDescription || 
+      structuredData?.issue_description ||
+      structuredData?.description ||
+      null;
+
+    let callIntent = 
+      structuredData?.callIntent || 
+      structuredData?.call_intent ||
+      structuredData?.intent ||
+      null;
+
     let isUrgent = 
-      structuredData.is_urgent === true || 
-      structuredData.isUrgent === true || 
-      structuredData.urgent === true ||
-      finalCallIntent === 'urgent' ||
+      structuredData?.isUrgent === true || 
+      structuredData?.is_urgent === true ||
+      structuredData?.urgent === true ||
+      callIntent === 'urgent' ||
       false;
 
-    console.log(`📊 [VAPI WEBHOOK] [${requestId}] Extracted Structured Data (before fallback):`, {
-      propertyAddress: finalPropertyAddress || 'not provided',
-      propertyAddressSource: propertyAddress ? 'structuredData' : propertyAddressFromCall ? 'callData' : propertyAddressFromMessage ? 'message' : 'none',
-      callerType: finalCallerType || 'not provided',
-      callIntent: finalCallIntent || 'not provided',
-      issueDescription: finalIssueDescription ? (finalIssueDescription.substring(0, 100) + '...') : 'not provided',
+    const transcript = callData?.transcript || callData?.transcription || message?.transcript || null;
+    const recordingUrl = callData?.recordingUrl || callData?.recording_url || null;
+
+    console.log(`📊 [${requestId}] Extracted (before API fallback):`, {
+      propertyAddress: propertyAddress || 'MISSING',
+      homeownerName: homeownerName || 'not provided',
+      phoneNumber: phoneNumber || 'not provided',
+      callIntent: callIntent || 'not provided',
+      isUrgent,
     });
 
-    // STEP 3: Fallback Trigger - If propertyAddress is missing, fetch from API
-    if (!finalPropertyAddress && vapiCallId) {
-      console.log(`⚠️ [VAPI WEBHOOK] [${requestId}] STEP 3: Required data missing from webhook. Initiating 2-second delay before API fallback.`);
+    // ==========================================
+    // STEP 3: API FALLBACK (Critical Fix)
+    // ==========================================
+    if (!propertyAddress && vapiCallId) {
+      console.log(`⚠️ [${requestId}] STEP 3: propertyAddress missing, waiting 2000ms before API fallback...`);
       
       try {
-        // Wait 2 seconds before calling API
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        console.log(`🔄 [VAPI WEBHOOK] [${requestId}] Fetching call data from Vapi API...`);
+        console.log(`🔄 [${requestId}] Fetching from Vapi API...`);
         const apiCallData = await fetchVapiCall(vapiCallId);
         
-        // Extract structured data from API response
-        const apiAnalysis = apiCallData.analysis || {};
-        const apiArtifact = apiCallData.artifact || {};
+        // Extract from API response
+        const apiAnalysis = apiCallData?.analysis || {};
+        const apiArtifact = apiCallData?.artifact || {};
         const apiStructuredData = 
-          apiAnalysis.structuredData ||
-          apiAnalysis.extractedData ||
-          apiAnalysis.output ||
-          apiArtifact.structuredOutputs ||
-          apiArtifact.output ||
-          apiArtifact.structuredData ||
+          apiAnalysis?.structuredData ||
+          apiArtifact?.structuredOutputs ||
+          apiArtifact?.structuredData ||
           {};
         
-        console.log(`✅ [VAPI WEBHOOK] [${requestId}] API response structured data keys:`, Object.keys(apiStructuredData));
+        console.log(`✅ [${requestId}] API structured data keys:`, Object.keys(apiStructuredData));
         
-        // Use API data if webhook data was missing
-        if (apiStructuredData && Object.keys(apiStructuredData).length > 0) {
-          // Merge API data with webhook data (API takes precedence for missing fields)
-          structuredData = { ...structuredData, ...apiStructuredData };
-          
-          // Re-extract fields from merged structured data
-          const apiPropertyAddress = 
-            apiStructuredData.propertyAddress || 
-            apiStructuredData.property_address ||
-            apiStructuredData.address ||
-            null;
-          
-          if (apiPropertyAddress && !finalPropertyAddress) {
-            finalPropertyAddress = apiPropertyAddress;
-            console.log(`✅ [VAPI WEBHOOK] [${requestId}] Extracted propertyAddress from API: ${finalPropertyAddress}`);
-          }
-          
-          if (apiStructuredData.callIntent && !finalCallIntent) {
-            finalCallIntent = apiStructuredData.callIntent;
-            console.log(`✅ [VAPI WEBHOOK] [${requestId}] Extracted callIntent from API: ${finalCallIntent}`);
-          }
-          
-          if (apiStructuredData.callerType && !finalCallerType) {
-            finalCallerType = apiStructuredData.callerType;
-            console.log(`✅ [VAPI WEBHOOK] [${requestId}] Extracted callerType from API: ${finalCallerType}`);
-          }
-          
-          if (apiStructuredData.issueDescription && !finalIssueDescription) {
-            finalIssueDescription = apiStructuredData.issueDescription;
-            console.log(`✅ [VAPI WEBHOOK] [${requestId}] Extracted issueDescription from API`);
-          }
-          
-          // Also update other fields from API if missing
-          if (apiStructuredData.homeownerName && !homeownerName) {
-            homeownerName = apiStructuredData.homeownerName;
-          }
-          if (apiStructuredData.phoneNumber && !phoneNumber) {
-            phoneNumber = apiStructuredData.phoneNumber;
-          }
-          if (apiStructuredData.isUrgent !== undefined && !isUrgent) {
-            isUrgent = apiStructuredData.isUrgent === true;
-          }
-        } else {
-          console.log(`⚠️ [VAPI WEBHOOK] [${requestId}] API response also missing structured data`);
+        // Update missing fields
+        if (apiStructuredData?.propertyAddress && !propertyAddress) {
+          propertyAddress = apiStructuredData.propertyAddress;
+          console.log(`✅ [${requestId}] Got propertyAddress from API: ${propertyAddress}`);
+        }
+        if (apiStructuredData?.homeownerName && !homeownerName) {
+          homeownerName = apiStructuredData.homeownerName;
+        }
+        if (apiStructuredData?.phoneNumber && !phoneNumber) {
+          phoneNumber = apiStructuredData.phoneNumber;
+        }
+        if (apiStructuredData?.issueDescription && !issueDescription) {
+          issueDescription = apiStructuredData.issueDescription;
+        }
+        if (apiStructuredData?.callIntent && !callIntent) {
+          callIntent = apiStructuredData.callIntent;
+        }
+        if (apiStructuredData?.isUrgent !== undefined && !isUrgent) {
+          isUrgent = apiStructuredData.isUrgent === true;
         }
       } catch (apiError: any) {
-        console.error(`❌ [VAPI WEBHOOK] [${requestId}] API fallback failed:`, apiError.message);
-        // Continue with webhook data even if API fails
+        console.error(`❌ [${requestId}] API fallback failed:`, apiError.message);
       }
     }
 
-    // Determine if this is a final event (with structured data)
-    // Vapi sends multiple webhooks during a call - we only want to process the final one
-    const isFinalEvent = 
-      messageType === 'end-of-call-report' || 
-      messageType === 'function-call' ||
-      payload.type === 'end-of-call-report' || 
-      payload.type === 'function-call' ||
-      !!structuredData?.propertyAddress || // Has structured data
-      !!structuredData?.callIntent || // Has call intent
-      !!analysis?.structuredData; // Has analysis structured data
-    
-    console.log(`📋 [VAPI WEBHOOK] Event type: ${messageType || payload.type || 'unknown'}, isFinalEvent: ${isFinalEvent}`);
-
     // Connect to database
-    // Check all possible environment variable names (matching other Netlify functions)
     const databaseUrl = process.env.DATABASE_URL || process.env.VITE_DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
     if (!databaseUrl) {
-      console.error('❌ DATABASE_URL is not configured. Checked: DATABASE_URL, VITE_DATABASE_URL, NETLIFY_DATABASE_URL');
+      console.error('❌ DATABASE_URL not configured');
       return {
         statusCode: 500,
         headers: { 'Content-Type': 'application/json' },
@@ -562,59 +595,35 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       };
     }
 
-    console.log(`🔌 [VAPI WEBHOOK] Connecting to database (URL length: ${databaseUrl.length})`);
     const sql = neon(databaseUrl);
     const db = drizzle(sql);
 
-    // Perform fuzzy matching using propertyAddress to find homeowner
-    // Only do matching on final events (when we have structured data)
+    // ==========================================
+    // STEP 4: DATABASE LOGIC - Fuzzy Match
+    // ==========================================
+    console.log(`📦 [${requestId}] STEP 4: Database Matching`);
+    
     let matchedHomeowner: any = null;
     let similarity: number = 0;
     let isVerified = false;
-    let verifiedBuilderName: string | null = null;
-    let verifiedClosingDate: Date | null = null;
 
-    // Use the final propertyAddress (from any source) - this will be set after STEP 3 (API fallback)
-    const addressForMatching = finalPropertyAddress;
-
-    // Only attempt matching if we have an address (typically only on final events)
-    if (addressForMatching) {
-      console.log(`🔍 [VAPI WEBHOOK] Attempting to match address: "${addressForMatching}"`);
-      const matchResult = await findMatchingHomeowner(db, addressForMatching, 0.4);
+    if (propertyAddress) {
+      console.log(`🔍 [${requestId}] Fuzzy matching address: "${propertyAddress}"`);
+      const matchResult = await findMatchingHomeowner(db, propertyAddress, 0.4);
       
       if (matchResult) {
         matchedHomeowner = matchResult.homeowner;
         similarity = matchResult.similarity;
         isVerified = true;
-        
-        // Pull Builder Name and Closing Date from the matched homeowner record in database
-        verifiedBuilderName = matchedHomeowner.builder || null;
-        verifiedClosingDate = matchedHomeowner.closingDate ? new Date(matchedHomeowner.closingDate) : null;
-        
-        console.log(`✅ [VAPI WEBHOOK] Matched homeowner ${matchedHomeowner.id} (similarity: ${similarity.toFixed(3)})`);
-        console.log(`📋 [VAPI WEBHOOK] Verified Builder: ${verifiedBuilderName || 'N/A'}, Closing Date: ${verifiedClosingDate ? verifiedClosingDate.toISOString() : 'N/A'}`);
+        console.log(`✅ [${requestId}] Matched homeowner ${matchedHomeowner.id} (similarity: ${similarity.toFixed(3)})`);
       } else {
-        console.log(`⚠️ [VAPI WEBHOOK] No matching homeowner found for address: "${addressForMatching}"`);
+        console.log(`⚠️ [${requestId}] No match found for: "${propertyAddress}"`);
       }
     } else {
-      console.log(`⚠️ [VAPI WEBHOOK] No propertyAddress provided in any data source (checked structuredData, callData, message)`);
+      console.log(`⚠️ [${requestId}] No propertyAddress available for matching`);
     }
 
-    // STEP 4: Database Matching and Saving
-    console.log(`📦 [VAPI WEBHOOK] [${requestId}] STEP 4: Database Matching`);
-    
-    // Check if we have required data for matching
-    const hasRequiredData = !!finalPropertyAddress;
-    const needsManualReview = !hasRequiredData && !finalPropertyAddress;
-    
-    if (needsManualReview) {
-      console.error(`❌ [VAPI WEBHOOK] [${requestId}] FAILED_TO_IDENTIFY_CALL_DATA - No propertyAddress found in webhook or API`);
-    }
-
-    // Save call record - IMPORTANT: Save ALL calls regardless of matching
-    // The dashboard will display all calls; only matched calls can create claims
-    // Note: This will upsert (update if exists, insert if new) based on vapiCallId
-    // Multiple webhook events may update the same call record as more data arrives
+    // Insert/update call record
     try {
       await db
         .insert(calls)
@@ -623,12 +632,12 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           homeownerId: matchedHomeowner?.id || null,
           homeownerName: homeownerName,
           phoneNumber: phoneNumber,
-          propertyAddress: addressForMatching || finalPropertyAddress,
-          issueDescription: finalIssueDescription || issueDescription,
+          propertyAddress: propertyAddress,
+          issueDescription: issueDescription,
           isUrgent: isUrgent,
           transcript: transcript,
           recordingUrl: recordingUrl,
-          isVerified: isVerified, // true if matched, false if not matched
+          isVerified: isVerified,
           addressMatchSimilarity: matchedHomeowner ? similarity.toFixed(3) : null,
         } as any)
         .onConflictDoUpdate({
@@ -637,8 +646,8 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
             homeownerId: matchedHomeowner?.id || null,
             homeownerName: homeownerName,
             phoneNumber: phoneNumber,
-            propertyAddress: addressForMatching || finalPropertyAddress,
-            issueDescription: finalIssueDescription || issueDescription,
+            propertyAddress: propertyAddress,
+            issueDescription: issueDescription,
             isUrgent: isUrgent,
             transcript: transcript,
             recordingUrl: recordingUrl,
@@ -647,129 +656,114 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           } as any,
         });
 
-      if (needsManualReview) {
-        console.log(`⚠️ [VAPI WEBHOOK] [${requestId}] Call ${vapiCallId} saved but needs manual review - propertyAddress not found`);
-      } else {
-        console.log(`✅ [VAPI WEBHOOK] [${requestId}] Call ${vapiCallId} successfully saved to database.`);
-      }
-    } catch (dbError) {
-      console.error('❌ Database error saving call:', dbError);
-      return {
-        statusCode: 200, // Return 200 to avoid Vapi retries
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          received: true, 
-          warning: 'Call data received but database save failed',
-          error: dbError instanceof Error ? dbError.message : 'Unknown database error'
-        }),
-      };
+      console.log(`✅ [${requestId}] Call saved to database`);
+    } catch (dbError: any) {
+      console.error(`❌ [${requestId}] Database error:`, dbError.message);
+      // Continue processing even if DB save fails
     }
 
-    // Auto-create claim if matched homeowner AND callIntent is 'warranty_issue'
-    // Only on final events with structured data
-    // Skip for 'general_question' and 'solicitation'
-    if (isFinalEvent && matchedHomeowner && callIntent === 'warranty_issue') {
+    // ==========================================
+    // STEP 5: CREATE CLAIM (if warranty_issue)
+    // ==========================================
+    if (matchedHomeowner && callIntent === 'warranty_issue') {
+      console.log(`📦 [${requestId}] STEP 5: Creating claim for warranty_issue`);
+      
       try {
-        await createClaimFromCall(db, {
-          issueDescription,
-          homeownerName,
-          propertyAddress,
-        }, matchedHomeowner.id, matchedHomeowner);
-        console.log(`✅ [VAPI WEBHOOK] Created claim for warranty_issue call`);
-      } catch (claimError) {
-        console.error('❌ Error creating claim from call:', claimError);
-        // Don't fail the webhook if claim creation fails
-      }
-    } else if (matchedHomeowner && callIntent && callIntent !== 'warranty_issue') {
-      console.log(`⏭️ [VAPI WEBHOOK] Skipping claim creation - callIntent is '${callIntent}' (only creating for warranty_issue)`);
-    } else if (!matchedHomeowner) {
-      console.log(`⏭️ [VAPI WEBHOOK] Skipping claim creation - no homeowner match found`);
-    }
-
-    // Send email notification only on final events with structured data
-    if (isFinalEvent) {
-      console.log(`📧 [VAPI WEBHOOK] Processing final event - attempting to send email for call ${vapiCallId}...`);
-      try {
-        const savedCall = await db
-          .select()
-          .from(calls)
-          .where(eq(calls.vapiCallId, vapiCallId))
-          .limit(1);
-
-        if (savedCall.length > 0) {
-          const call = savedCall[0];
+        // Check for duplicate claims
+        const hasDuplicate = await hasRecentOpenClaim(db, matchedHomeowner.id);
+        
+        if (hasDuplicate) {
+          console.log(`⏭️ [${requestId}] Duplicate claim detected, skipping`);
+        } else {
+          // Get next claim number
+          const existingClaims = await db
+            .select()
+            .from(claims)
+            .where(eq(claims.homeownerId, matchedHomeowner.id));
           
-          // Use verified data that was already retrieved from database during matching
-          // These values come from the matched homeowner record (builder and closingDate)
-          const builderName = verifiedBuilderName;
-          const closingDate = verifiedClosingDate;
-
-          // Determine email endpoint
-          const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://www.cascadeconnect.app';
-          const emailUrl = `${appUrl}/api/email/call-completed`;
+          const maxNumber = existingClaims
+            .map((c: any) => {
+              const num = c.claimNumber ? parseInt(c.claimNumber, 10) : 0;
+              return isNaN(num) ? 0 : num;
+            })
+            .reduce((max: number, num: number) => Math.max(max, num), 0);
           
-          console.log(`📧 [VAPI WEBHOOK] Sending email request to: ${emailUrl}`);
+          const claimNumber = (maxNumber + 1).toString();
           
-          // Prepare email payload with verified data from database
-          const emailPayload = {
-            callId: call.id,
-            vapiCallId: call.vapiCallId,
-            homeownerName: call.homeownerName,
-            phoneNumber: call.phoneNumber,
-            propertyAddress: call.propertyAddress,
-            builderName: builderName, // Verified from database (matched homeowner)
-            closingDate: closingDate ? closingDate.toISOString() : null, // Verified from database (matched homeowner)
-            isUrgent: call.isUrgent,
-            issueDescription: call.issueDescription,
-            transcript: call.transcript,
-            recordingUrl: call.recordingUrl,
-            isVerified: call.isVerified,
-            matchedHomeownerId: matchedHomeowner?.id || null,
-          };
-
-          const emailResponse = await fetch(emailUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(emailPayload),
-          });
-
-          if (!emailResponse.ok) {
-            const errorText = await emailResponse.text();
-            console.error('❌ [VAPI WEBHOOK] Failed to send email notification:', {
-              status: emailResponse.status,
-              statusText: emailResponse.statusText,
-              body: errorText,
-            });
-          } else {
-            console.log(`✅ [VAPI WEBHOOK] Email notification sent successfully for call ${vapiCallId}`);
-          }
+          // Insert claim
+          await db.insert(claims).values({
+            homeownerId: matchedHomeowner.id,
+            homeownerName: matchedHomeowner.name,
+            homeownerEmail: matchedHomeowner.email,
+            builderName: matchedHomeowner.builder || null,
+            jobName: matchedHomeowner.jobName || null,
+            address: matchedHomeowner.address,
+            title: issueDescription || 'Voice Service Request',
+            description: issueDescription || 'Service request from AI voice intake',
+            category: 'General',
+            claimNumber: claimNumber,
+            status: 'SUBMITTED',
+            classification: 'Unclassified',
+            summary: issueDescription,
+            dateSubmitted: new Date(),
+          } as any);
+          
+          console.log(`✅ [${requestId}] Claim #${claimNumber} created`);
         }
-      } catch (emailError) {
-        console.error('❌ [VAPI WEBHOOK] Error sending email notification:', emailError);
-        // Don't fail the webhook if email fails
+      } catch (claimError: any) {
+        console.error(`❌ [${requestId}] Claim creation error:`, claimError.message);
       }
+    } else if (callIntent && callIntent !== 'warranty_issue') {
+      console.log(`⏭️ [${requestId}] Skipping claim - intent is '${callIntent}'`);
     }
 
-    // Always respond with 200 OK
+    // ==========================================
+    // STEP 6: EMAIL NOTIFICATION (Safe Wrapper)
+    // ==========================================
+    const isFinalEvent = 
+      messageType === 'end-of-call-report' || 
+      messageType === 'function-call' ||
+      body.type === 'end-of-call-report' ||
+      !!propertyAddress ||
+      !!callIntent;
+
+    if (isFinalEvent) {
+      console.log(`📧 [${requestId}] STEP 6: Sending email notification`);
+      
+      // This is wrapped in try/catch inside the function
+      await sendEmailNotification(
+        propertyAddress || 'Address not provided',
+        issueDescription || 'No description provided',
+        homeownerName,
+        phoneNumber,
+        isUrgent,
+        isVerified,
+        matchedHomeowner?.id || null,
+        vapiCallId,
+        db
+      );
+    }
+
+    // ==========================================
+    // ALWAYS RETURN 200 OK
+    // ==========================================
+    console.log(`✅ [${requestId}] Webhook processed successfully\n`);
+    
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ received: true }),
+      body: JSON.stringify({ success: true }),
     };
-  } catch (error) {
-    console.error('❌ Webhook Error:', error);
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-    // Still return 200 to prevent Vapi from retrying
+
+  } catch (error: any) {
+    console.error(`❌ [${requestId}] Webhook error:`, error.message);
+    console.error('Stack:', error.stack);
+    
+    // Still return 200 to prevent Vapi retries
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        received: true, 
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }),
+      body: JSON.stringify({ success: true }),
     };
   }
 };
-
