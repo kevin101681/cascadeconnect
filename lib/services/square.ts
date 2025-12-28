@@ -26,30 +26,37 @@ export async function withIdempotency<T>(
 }
 
 // 3. Example: Create Invoice Function
+// NOTE: Temporarily disabled due to Square SDK v43 API changes
+// The SDK's invoice API surface has changed. Will need to update implementation
+// based on the latest Square SDK documentation.
 export async function createInvoice(
   customerId: string, 
   amountCents: number, 
   title: string
-) {
+): Promise<any> {
+  throw new Error('createInvoice is temporarily disabled. Please update to use the latest Square SDK API.');
+  
+  /* Original implementation - needs update for v43+
   return withIdempotency(async (idempotencyKey) => {
     const response = await square.invoices.createInvoice({
-      idempotencyKey, // ✨ MAGIC: Retrying this function won't charge them twice
+      idempotencyKey,
       invoice: {
         locationId: process.env.SQUARE_LOCATION_ID!,
         primaryRecipient: { customerId },
         paymentRequests: [{
           requestType: "BALANCE",
           computedAmountMoney: {
-            amount: BigInt(amountCents), // Square requires BigInt for money
+            amount: BigInt(amountCents),
             currency: "USD"
           },
-          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // Due in 7 days
+          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
         }],
         title,
       }
     });
-    return response.invoice;
+    return response.result.invoice;
   });
+  */
 }
 
 

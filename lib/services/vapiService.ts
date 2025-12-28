@@ -9,12 +9,31 @@
 // ==========================================
 
 export interface VapiStructuredData {
+  // CamelCase variants (preferred)
   propertyAddress?: string;
   homeownerName?: string;
   phoneNumber?: string;
   issueDescription?: string;
   callIntent?: string;
   isUrgent?: boolean;
+  
+  // Snake_case variants (for backward compatibility with Vapi webhook)
+  property_address?: string;
+  homeowner_name?: string;
+  phone_number?: string;
+  issue_description?: string;
+  call_intent?: string;
+  is_urgent?: boolean;
+  
+  // Generic fallbacks
+  address?: string;
+  name?: string;
+  description?: string;
+  intent?: string;
+  urgent?: boolean;
+  
+  // Allow any other fields from Vapi
+  [key: string]: unknown;
 }
 
 export interface VapiCall {
@@ -144,9 +163,14 @@ export async function fetchVapiCall(callId: string): Promise<VapiCall> {
  */
 export function extractCallId(payload: VapiWebhookPayload): string | null {
   const message = payload.message || payload;
-  const callData = message.call || payload.call || message;
+  const callData = message?.call || payload.call || message;
   
-  return callData?.id || callData?.callId || payload?.id || null;
+  // Type guard: check if callData has the id or callId property
+  const id = (callData && typeof callData === 'object' && 'id' in callData) ? callData.id : undefined;
+  const callId = (callData && typeof callData === 'object' && 'callId' in callData) ? callData.callId : undefined;
+  const payloadId = (payload && typeof payload === 'object' && 'id' in payload) ? payload.id : undefined;
+  
+  return (id as string) || (callId as string) || (payloadId as string) || null;
 }
 
 /**
@@ -155,21 +179,21 @@ export function extractCallId(payload: VapiWebhookPayload): string | null {
  */
 export function extractStructuredData(payload: VapiWebhookPayload): VapiStructuredData {
   const message = payload.message || payload;
-  const callData = message.call || payload.call || message;
-  const analysis = message?.analysis || callData?.analysis || payload?.analysis || {};
-  const artifact = message?.artifact || callData?.artifact || payload?.artifact || {};
+  const callData = message?.call || payload.call || message;
+  const analysis = message?.analysis || (callData && 'analysis' in callData ? callData.analysis : undefined) || payload?.analysis || {};
+  const artifact = message?.artifact || (callData && 'artifact' in callData ? callData.artifact : undefined) || payload?.artifact || {};
   
   // Try multiple possible locations for structured data
   const structuredData = 
     message?.analysis?.structuredData ||
     message?.artifact?.structuredOutputs ||
-    message?.structuredData ||
-    analysis?.structuredData || 
-    artifact?.structuredOutputs ||
-    artifact?.structuredData ||
+    (message && 'structuredData' in message ? message.structuredData : undefined) ||
+    (analysis && 'structuredData' in analysis ? analysis.structuredData : undefined) || 
+    (artifact && 'structuredOutputs' in artifact ? artifact.structuredOutputs : undefined) ||
+    (artifact && 'structuredData' in artifact ? artifact.structuredData : undefined) ||
     {};
 
-  return structuredData;
+  return structuredData as VapiStructuredData;
 }
 
 /**
@@ -178,30 +202,38 @@ export function extractStructuredData(payload: VapiWebhookPayload): VapiStructur
 export function extractCallData(payload: VapiWebhookPayload): Partial<ExtractedCallData> {
   const callId = extractCallId(payload);
   const message = payload.message || payload;
-  const callData = message.call || payload.call || message;
+  const callData = message?.call || payload.call || message;
   const structuredData = extractStructuredData(payload);
+
+  // Helper to safely access properties
+  const getProperty = (obj: any, ...keys: string[]): any => {
+    for (const key of keys) {
+      if (obj && typeof obj === 'object' && key in obj) {
+        return obj[key];
+      }
+    }
+    return null;
+  };
 
   // Extract fields with fallbacks
   const propertyAddress = 
     structuredData?.propertyAddress || 
     structuredData?.property_address ||
     structuredData?.address ||
-    callData?.propertyAddress ||
-    callData?.address ||
+    getProperty(callData, 'propertyAddress', 'address') ||
     null;
 
   const homeownerName = 
     structuredData?.homeownerName || 
     structuredData?.homeowner_name ||
     structuredData?.name ||
-    callData?.homeownerName ||
+    getProperty(callData, 'homeownerName') ||
     null;
 
   const phoneNumber = 
     structuredData?.phoneNumber || 
     structuredData?.phone_number ||
-    callData?.phoneNumber ||
-    callData?.from ||
+    getProperty(callData, 'phoneNumber', 'from') ||
     null;
 
   const issueDescription = 
@@ -223,8 +255,8 @@ export function extractCallData(payload: VapiWebhookPayload): Partial<ExtractedC
     callIntent === 'urgent' ||
     false;
 
-  const transcript = callData?.transcript || callData?.transcription || message?.transcript || null;
-  const recordingUrl = callData?.recordingUrl || callData?.recording_url || null;
+  const transcript = getProperty(callData, 'transcript', 'transcription') || getProperty(message, 'transcript') || null;
+  const recordingUrl = getProperty(callData, 'recordingUrl', 'recording_url') || null;
 
   return {
     vapiCallId: callId || '',

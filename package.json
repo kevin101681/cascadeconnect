@@ -48,6 +48,7 @@
     "@google/genai": "^1.33.0",
     "@jaymanyoo/pdf-book-viewer": "^1.4.7",
     "@neondatabase/serverless": "^0.10.1",
+    "@netlify/functions": "^5.1.2",
     "@sendgrid/eventwebhook": "^8.0.0",
     "@sendgrid/mail": "^8.1.6",
     "@types/uuid": "^10.0.0",

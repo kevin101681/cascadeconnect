@@ -9,7 +9,7 @@
     "contextualTriggers": [
       {
         "unconditional": {},
-        "onTriggerFunction": "buildAddOn"
+        "onTriggerFunction": "buildAddOn" 
       }
     ],
     "primaryColor": "#2563eb",

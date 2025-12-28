@@ -161,7 +161,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
 
     if (propertyAddress) {
       console.log(`🔍 Fuzzy matching: "${propertyAddress}"`);
-      const matchResult = await findMatchingHomeowner(db, propertyAddress, 0.4);
+      const matchResult = await findMatchingHomeowner(db, propertyAddress, { minSimilarity: 0.4 });
       
       if (matchResult) {
         matchedHomeowner = matchResult.homeowner;
