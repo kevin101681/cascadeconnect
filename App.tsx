@@ -822,7 +822,7 @@ function App() {
         
         if (targetClaim) {
           // Open the claim detail view
-          setSelectedClaim(targetClaim);
+          setSelectedClaimId(targetClaim.id);
           setCurrentView('DETAIL');
           
           // Clean up URL
