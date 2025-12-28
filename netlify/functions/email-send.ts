@@ -32,13 +32,13 @@ exports.handler = async (event, context) => {
   }
 
   // Declare variables at function scope so they're accessible in catch block
-  let to;
-  let subject;
-  let body;
-  let fromName;
-  let fromRole;
-  let replyToId;
-  let attachments;
+  let to: string | undefined;
+  let subject: string | undefined;
+  let body: string | undefined;
+  let fromName: string | undefined;
+  let fromRole: string | undefined;
+  let replyToId: string | undefined;
+  let attachments: any[] | undefined;
 
   try {
     const parsed = JSON.parse(event.body || '{}');
@@ -86,7 +86,7 @@ exports.handler = async (event, context) => {
     
     // Format email body - check if it already contains HTML
     const containsHTML = /<[a-z][\s\S]*>/i.test(body);
-    let htmlBody;
+    let htmlBody: string;
     if (containsHTML) {
       // Body already contains HTML, use as-is
       htmlBody = body;
@@ -111,7 +111,7 @@ exports.handler = async (event, context) => {
 
       // Prepare attachments for SendGrid
       const sendGridAttachments = attachments && attachments.length > 0
-        ? attachments.map((att) => ({
+        ? attachments.map((att: any) => ({
             content: att.content,
             filename: att.filename,
             type: att.contentType || 'application/octet-stream',
@@ -172,7 +172,7 @@ exports.handler = async (event, context) => {
           replyToId: replyToId,
           hasAttachments: attachments && attachments.length > 0,
         }
-      }).catch((err) => console.error('Failed to log email (non-blocking):', err));
+      }).catch((err: any) => console.error('Failed to log email (non-blocking):', err));
       
       return {
         statusCode: 200,
@@ -212,7 +212,7 @@ exports.handler = async (event, context) => {
 
       // Prepare attachments for SMTP
       const smtpAttachments = attachments && attachments.length > 0
-        ? attachments.map((att) => ({
+        ? attachments.map((att: any) => ({
             filename: att.filename,
             content: att.content,
             encoding: 'base64',
@@ -255,7 +255,7 @@ exports.handler = async (event, context) => {
           replyToId: replyToId,
           hasAttachments: attachments && attachments.length > 0,
         }
-      }).catch((err) => console.error('Failed to log email (non-blocking):', err));
+      }).catch((err: any) => console.error('Failed to log email (non-blocking):', err));
       
       return {
         statusCode: 200,
@@ -285,7 +285,7 @@ exports.handler = async (event, context) => {
         })
       };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("SEND EMAIL ERROR:", {
       message: error.message,
       code: error.code,
@@ -304,7 +304,7 @@ exports.handler = async (event, context) => {
         ? JSON.parse(error.response.body) 
         : error.response.body;
       if (errorBody.errors && errorBody.errors.length > 0) {
-        errorMessage = errorBody.errors.map((e) => e.message || e).join('; ');
+        errorMessage = errorBody.errors.map((e: any) => e.message || e).join('; ');
       }
     }
     
@@ -320,7 +320,7 @@ exports.handler = async (event, context) => {
         code: error.code,
         from: process.env.SENDGRID_REPLY_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER,
       }
-    }).catch((err) => console.error('Failed to log email error (non-blocking):', err));
+    }).catch((err: any) => console.error('Failed to log email error (non-blocking):', err));
     
     return {
       statusCode: 500,
