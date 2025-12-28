@@ -98,6 +98,9 @@ export const homeowners = pgTable('homeowners', {
   reportAppLinked: boolean('report_app_linked').default(false), // Whether this homeowner is linked to PDF Reports App
   reportAppLinkedAt: timestamp('report_app_linked_at'), // When the link was created
   
+  // SMS Opt-in
+  smsOptIn: boolean('sms_opt_in').default(false), // Whether homeowner consents to receive SMS messages
+  
   createdAt: timestamp('created_at').defaultNow(),
 });
 

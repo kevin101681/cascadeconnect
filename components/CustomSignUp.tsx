@@ -15,11 +15,12 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [smsOptIn, setSmsOptIn] = useState(false);
   const [error, setError] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
   // Link Clerk account to existing Cascade Connect account
-  const linkClerkAccount = async (clerkUserId: string, emailToLink: string): Promise<void> => {
+  const linkClerkAccount = async (clerkUserId: string, emailToLink: string, smsConsent: boolean): Promise<void> => {
     if (!isDbConfigured) {
       console.log('Database not configured, skipping account linking');
       return;
@@ -36,12 +37,15 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
         .limit(1);
       
       if (homeowners.length > 0) {
-        // Update homeowner with Clerk ID
+        // Update homeowner with Clerk ID and SMS opt-in
         await db
           .update(homeownersTable)
-          .set({ clerkId: clerkUserId })
+          .set({ 
+            clerkId: clerkUserId,
+            smsOptIn: smsConsent
+          })
           .where(eq(homeownersTable.email, emailLower));
-        console.log(`✅ Linked Clerk account to homeowner: ${emailLower}`);
+        console.log(`✅ Linked Clerk account to homeowner: ${emailLower} (SMS opt-in: ${smsConsent})`);
         return;
       }
 
@@ -118,7 +122,7 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
         
         if (clerkUserId) {
           // Link Clerk account to existing Cascade Connect account (if email exists)
-          await linkClerkAccount(clerkUserId, email.trim());
+          await linkClerkAccount(clerkUserId, email.trim(), smsOptIn);
         }
         
         // Set the active session
@@ -193,6 +197,22 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
           className="w-full px-3 py-2 bg-surface-container dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 rounded-lg text-surface-on dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
           placeholder="At least 8 characters"
         />
+      </div>
+
+      <div className="flex items-start gap-3 p-4 bg-surface-container/50 dark:bg-gray-700/50 rounded-lg border border-surface-outline-variant dark:border-gray-600">
+        <input
+          type="checkbox"
+          id="smsOptIn"
+          checked={smsOptIn}
+          onChange={(e) => setSmsOptIn(e.target.checked)}
+          className="mt-0.5 h-5 w-5 rounded border-surface-outline dark:border-gray-600 text-primary focus:ring-2 focus:ring-primary cursor-pointer"
+        />
+        <label htmlFor="smsOptIn" className="text-sm text-surface-on dark:text-gray-100 cursor-pointer select-none">
+          <span className="font-medium">Receive SMS notifications</span>
+          <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-1">
+            I consent to receive text messages about my warranty claims, appointments, and important updates. Message and data rates may apply. You can opt out at any time.
+          </p>
+        </label>
       </div>
 
       {error && (
