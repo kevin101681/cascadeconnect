@@ -202,7 +202,7 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
 
       <div>
         <label htmlFor="firstName" className="block text-sm font-medium text-surface-on dark:text-gray-100 mb-1">
-          First Name (Optional)
+          First Name
         </label>
         <input
           id="firstName"
@@ -215,7 +215,7 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
 
       <div>
         <label htmlFor="lastName" className="block text-sm font-medium text-surface-on dark:text-gray-100 mb-1">
-          Last Name (Optional)
+          Last Name
         </label>
         <input
           id="lastName"
