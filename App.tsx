@@ -3365,7 +3365,7 @@ Assigned By: ${assignerName}
             fromName: sender.name,
             fromRole: userRole,
             replyToId: newThread.id,
-            replyToEmail: `replies+${newThread.id}@cascadeconnect.app` // Use replies subdomain with thread ID
+            replyToEmail: `${newThread.id}@replies.cascadeconnect.app` // Use subdomain format
           });
           console.log(`✅ Sent new thread notification email to ${homeowner.email}`);
         } catch (error) {
@@ -3536,7 +3536,7 @@ Assigned By: ${assignerName}
           fromName: assignedUser.name,
           fromRole: UserRole.ADMIN,
           replyToId: newThread.id,
-          replyToEmail: `replies+${newThread.id}@cascadeconnect.app` // Use replies subdomain
+          replyToEmail: `${newThread.id}@replies.cascadeconnect.app` // Use subdomain format
         });
       } catch (error) {
         console.error('Failed to send task message email:', error);

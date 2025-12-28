@@ -79,16 +79,25 @@ exports.handler = async (event, context) => {
     // Extract thread ID from email headers or body
     let threadId = null;
     
-    // Method 1: Check for custom header we add when sending
+    // Method 1: Extract from TO address (threadId@replies.cascadeconnect.app)
+    if (toEmail && toEmail.includes('@replies.cascadeconnect.app')) {
+      const toMatch = toEmail.match(/([a-f0-9-]+)@replies\.cascadeconnect\.app/i);
+      if (toMatch) {
+        threadId = toMatch[1];
+        console.log(`✅ Extracted thread ID from TO address: ${threadId}`);
+      }
+    }
+    
+    // Method 2: Check for custom header we add when sending
     const headers = emailData.headers || '';
-    if (headers) {
+    if (headers && !threadId) {
       const headerMatch = headers.match(/X-Thread-ID:\s*([a-f0-9-]+)/i);
       if (headerMatch) {
         threadId = headerMatch[1];
       }
     }
     
-    // Method 2: Extract from References or In-Reply-To header
+    // Method 3: Extract from References or In-Reply-To header
     const references = emailData.references || emailData['in-reply-to'] || '';
     if (references && !threadId) {
       const threadMatch = references.match(/<([a-f0-9-]+)@/);
@@ -97,7 +106,7 @@ exports.handler = async (event, context) => {
       }
     }
     
-    // Method 3: Parse from email body footer (fallback)
+    // Method 4: Parse from email body footer (fallback)
     if (!threadId && (textBody || htmlBody)) {
       const body = textBody || htmlBody.replace(/<[^>]*>/g, '');
       const footerMatch = body.match(/Reply-To ID:\s*([a-f0-9-]+)/i);
