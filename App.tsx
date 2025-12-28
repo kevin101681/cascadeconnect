@@ -2834,6 +2834,7 @@ Assigned By: ${assignerName}
       setEmployees(prev => [...prev, emp]); 
       if (isDbConfigured) {
          try {
+           console.log('💾 Saving employee to database:', emp.name, emp.role);
            await db.insert(usersTable).values({
              id: emp.id,
              name: emp.name,
@@ -2855,7 +2856,13 @@ Assigned By: ${assignerName}
              pushNotifyHomeownerMessage: emp.pushNotifyHomeownerMessage === true,
              pushNotifyHomeownerEnrollment: emp.pushNotifyHomeownerEnrollment === true
            } as any);
-         } catch(e) { console.error(e); }
+           console.log('✅ Employee saved to database successfully');
+         } catch(e) { 
+           console.error('❌ Failed to save employee to database:', e);
+           alert(`Failed to save employee to database: ${e instanceof Error ? e.message : 'Unknown error'}\n\nNote: If the error mentions "internal_role", you need to run the database migration first.`);
+         }
+      } else {
+        console.warn('⚠️ Database not configured, employee only saved to localStorage');
       }
   };
 
