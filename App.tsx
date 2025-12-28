@@ -580,7 +580,6 @@ function App() {
                   claimNumber: c.claimNumber || undefined,
                   title: c.title,
                   description: c.description,
-                  category: c.category || 'General',
                   address: c.address || '',
                   homeownerName: c.homeownerName || '',
                   homeownerEmail: c.homeownerEmail || '',
@@ -1241,7 +1240,7 @@ Homeowner: ${updatedClaim.homeownerName}
                   to: emp.email,
                   subject: `Appointment Accepted: ${updatedClaim.claimNumber} - ${updatedClaim.title}`,
                   body: emailBody,
-                  fromName: 'Cascade Connect System',
+                  fromName: 'Cascade Connect',
                   fromRole: UserRole.ADMIN
                 });
               } catch (error) {
@@ -1320,7 +1319,7 @@ Homeowner: ${updatedClaim.homeownerName}
                   to: emp.email,
                   subject: `Sub Accepted Appointment: ${updatedClaim.claimNumber} - ${updatedClaim.title}`,
                   body: adminEmailBody,
-                  fromName: 'Cascade Connect System',
+                  fromName: 'Cascade Connect',
                   fromRole: UserRole.ADMIN
                 });
               } catch (error) {
@@ -1496,7 +1495,6 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
           claimNumber: c.claimNumber,
           title: c.title,
           description: batchData[index].description || '',
-          category: c.category,
           address: subjectHomeowner.address,
           homeownerName: subjectHomeowner.name,
           homeownerEmail: subjectHomeowner.email,
@@ -1527,7 +1525,6 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
               <td style="padding: 12px; text-align: left;">
                 <a href="${claimLink}" style="display: inline-block; background-color: #3c6b80; color: #FFFFFF; text-decoration: none; padding: 4px 12px; border-radius: 100px; font-weight: 500; font-size: 12px; font-family: Arial, sans-serif;">#${c.claimNumber || 'N/A'}</a>
               </td>
-              <td style="padding: 12px; text-align: left;">${c.category || 'General'}</td>
               <td style="padding: 12px; text-align: left;">${c.title}</td>
               <td style="padding: 12px; text-align: left;">${(claimData.description || '').substring(0, 100)}${(claimData.description || '').length > 100 ? '...' : ''}</td>
               <td style="padding: 12px; text-align: center;">${(claimData.attachments || []).length}</td>
@@ -1542,7 +1539,6 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
             <thead>
               <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
                 <th style="padding: 12px; text-align: left; font-weight: bold;">Claim #</th>
-                <th style="padding: 12px; text-align: left; font-weight: bold;">Category</th>
                 <th style="padding: 12px; text-align: left; font-weight: bold;">Title</th>
                 <th style="padding: 12px; text-align: left; font-weight: bold;">Description</th>
                 <th style="padding: 12px; text-align: center; font-weight: bold;">Attachments</th>
@@ -1644,7 +1640,6 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
       claimNumber: claimNumber,
       title: singleData.title || '',
       description: singleData.description || '',
-      category: singleData.category || 'Other',
       address: subjectHomeowner.address,
       homeownerName: subjectHomeowner.name,
       homeownerEmail: subjectHomeowner.email,
@@ -1713,7 +1708,6 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
           homeownerId: dbHomeownerId, // Use validated UUID or null
           title: newClaim.title,
           description: newClaim.description,
-          category: newClaim.category,
           claimNumber: newClaim.claimNumber || null,
           address: newClaim.address,
           homeownerName: newClaim.homeownerName,
@@ -1768,10 +1762,6 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
     <td style="padding: 12px;">
       <a href="${claimLink}" style="display: inline-block; background-color: #3c6b80; color: #FFFFFF; text-decoration: none; padding: 4px 12px; border-radius: 100px; font-weight: 500; font-size: 12px; font-family: Arial, sans-serif;">#${newClaim.claimNumber}</a>
     </td>
-  </tr>
-  <tr style="border-bottom: 1px solid #e0e0e0;">
-    <td style="padding: 12px; font-weight: bold;">Category:</td>
-    <td style="padding: 12px;">${newClaim.category}</td>
   </tr>
   <tr style="border-bottom: 1px solid #e0e0e0;">
     <td style="padding: 12px; font-weight: bold;">Title:</td>
@@ -2353,7 +2343,6 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
                       id: c.id, // Explicit ID
                       title: c.title,
                       description: c.description,
-                      category: c.category,
                       status: c.status,
                       address: c.address,
                       homeownerEmail: c.homeownerEmail,
@@ -2367,7 +2356,6 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
                            id: c.id,
                            title: c.title,
                            description: c.description,
-                           category: c.category,
                            status: c.status,
                            address: c.address,
                            homeownerEmail: c.homeownerEmail,

@@ -80,7 +80,7 @@ class NotificationService {
     to: string,
     subject: string,
     body: string,
-    fromName: string = 'Cascade Connect System',
+    fromName: string = 'Cascade Connect',
     fromRole: UserRole = UserRole.ADMIN,
     context: string = 'notification'
   ): Promise<boolean> {
@@ -186,7 +186,7 @@ A new warranty claim has been submitted:
           emp.email,
           `New Claim Submitted: ${claim.claimNumber || 'N/A'} - ${claim.title}`,
           emailBody,
-          'Cascade Connect System',
+          'Cascade Connect',
           UserRole.ADMIN,
           'claim submission notification'
         );
@@ -311,7 +311,7 @@ ${claim.homeownerName} has accepted the appointment date:
           emp.email,
           `Appointment Accepted: ${claim.claimNumber || 'N/A'} - ${claim.title}`,
           emailBody,
-          'Cascade Connect System',
+          'Cascade Connect',
           UserRole.ADMIN,
           'homeowner appointment acceptance (admin)'
         );
@@ -372,7 +372,7 @@ ${claim.contractorName || 'The assigned contractor'} has accepted the appointmen
           emp.email,
           `Sub Accepted Appointment: ${claim.claimNumber || 'N/A'} - ${claim.title}`,
           emailBody,
-          'Cascade Connect System',
+          'Cascade Connect',
           UserRole.ADMIN,
           'sub appointment acceptance (admin)'
         );
@@ -426,7 +426,7 @@ ${claim.homeownerName} has requested to reschedule the appointment:
           emp.email,
           `Reschedule Requested: ${claim.claimNumber || 'N/A'} - ${claim.title}`,
           emailBody,
-          'Cascade Connect System',
+          'Cascade Connect',
           UserRole.ADMIN,
           'reschedule request'
         );

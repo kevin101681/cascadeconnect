@@ -134,7 +134,6 @@ export const claims = pgTable('claims', {
 
   title: text('title').notNull(),
   description: text('description').notNull(),
-  category: text('category').default('General'),
   claimNumber: text('claim_number'), // Sequential claim number per homeowner (1, 2, 3, etc.)
   
   status: claimStatusEnum('status').default('SUBMITTED'),
