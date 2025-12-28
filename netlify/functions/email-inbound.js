@@ -3,6 +3,7 @@
 
 const { Client } = require('pg');
 const { v4: uuidv4 } = require('uuid');
+const busboy = require('busboy');
 
 // Helper to get database connection
 const getDbClient = async () => {
@@ -54,64 +55,43 @@ exports.handler = async (event, context) => {
 
   let client = null;
   try {
-    console.log('📧 Parsing email data...');
+    console.log('📧 Parsing email data with busboy...');
     console.log('Content-Type:', event.headers['content-type']);
     console.log('Body length:', event.body ? event.body.length : 0);
     
-    // SendGrid Inbound Parse sends data as multipart/form-data
-    // We need to parse it differently than URL-encoded
-    const contentType = event.headers['content-type'] || '';
-    let emailData = {};
-    
-    if (contentType.includes('multipart/form-data')) {
-      // Parse multipart form data
-      const boundary = contentType.split('boundary=')[1];
-      if (!boundary) {
-        console.error('❌ No boundary found in multipart data');
-        return {
-          statusCode: 400,
-          headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-          },
-          body: JSON.stringify({ error: 'Invalid multipart data' })
-        };
-      }
+    // Use busboy to parse multipart/form-data
+    const emailData = await new Promise((resolve, reject) => {
+      const fields = {};
+      const bb = busboy({ 
+        headers: {
+          'content-type': event.headers['content-type'] || event.headers['Content-Type']
+        }
+      });
+
+      bb.on('field', (fieldname, val) => {
+        console.log('📧 Field:', fieldname);
+        fields[fieldname] = val;
+      });
+
+      bb.on('finish', () => {
+        console.log('📧 Parsed fields:', Object.keys(fields));
+        resolve(fields);
+      });
+
+      bb.on('error', (err) => {
+        console.error('❌ Busboy error:', err);
+        reject(err);
+      });
+
+      // Write the body to busboy
+      // event.body is base64 encoded when coming from Netlify
+      const bodyBuffer = event.isBase64Encoded 
+        ? Buffer.from(event.body, 'base64')
+        : Buffer.from(event.body);
       
-      console.log('📧 Boundary:', boundary);
-      
-      // Split by boundary
-      const parts = event.body.split('--' + boundary);
-      console.log('📧 Found', parts.length, 'parts');
-      
-      for (const part of parts) {
-        if (!part || part === '--\n' || part === '--\r\n') continue;
-        
-        // Extract field name and value
-        const nameMatch = part.match(/name="([^"]+)"/);
-        if (!nameMatch) continue;
-        
-        const fieldName = nameMatch[1];
-        
-        // Extract the value (after the double newline)
-        const valueMatch = part.split(/\r?\n\r?\n/);
-        if (valueMatch.length < 2) continue;
-        
-        // Get everything after the headers, trim the trailing boundary markers
-        let value = valueMatch.slice(1).join('\n\n').trim();
-        value = value.replace(/\r?\n--$/, '').trim();
-        
-        emailData[fieldName] = value;
-      }
-      
-      console.log('📧 Parsed fields:', Object.keys(emailData));
-    } else {
-      // Fallback to URL-encoded parsing
-      const formData = new URLSearchParams(event.body || '');
-      for (const [key, value] of formData.entries()) {
-        emailData[key] = value;
-      }
-    }
+      bb.write(bodyBuffer);
+      bb.end();
+    });
 
     // Extract key information from SendGrid's parsed email
     const fromEmailRaw = emailData.from || emailData.envelope || '';
