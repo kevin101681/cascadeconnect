@@ -38,7 +38,7 @@ exports.handler = async (event) => {
 
     // Parse request
     const parsed = JSON.parse(event.body || '{}');
-    const { to, subject, body, fromName, replyToId, attachments } = parsed;
+    const { to, subject, body, fromName, replyToId, replyToEmail, attachments } = parsed;
     
     if (!to || !subject || !body) {
       return {
@@ -51,6 +51,7 @@ exports.handler = async (event) => {
     }
 
     const fromEmail = process.env.SENDGRID_REPLY_EMAIL || 'noreply@cascadeconnect.app';
+    const actualReplyTo = replyToEmail || fromEmail; // Use provided reply-to email or fallback to from email
 
     // Set API key
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
@@ -105,7 +106,7 @@ exports.handler = async (event) => {
           ${replyToId ? `<hr style="margin-top: 20px; border: none; border-top: 1px solid #ddd;"><p style="font-size: 12px; color: #666;">Reply-To ID: ${replyToId}</p>` : ''}
         </div>
       `,
-      replyTo: fromEmail,
+      replyTo: actualReplyTo, // Use admin's email for replies if provided
       headers: {
         'X-Thread-ID': replyToId || '',
         'In-Reply-To': replyMessageId,

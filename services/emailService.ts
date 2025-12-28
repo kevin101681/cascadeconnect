@@ -13,6 +13,7 @@ interface EmailPayload {
   fromName: string;
   fromRole: UserRole;
   replyToId?: string; // Thread ID or Claim ID
+  replyToEmail?: string; // Email address for replies (e.g., admin's actual email)
   attachments?: EmailAttachment[]; // Array of attachments
 }
 
@@ -47,6 +48,7 @@ export const sendEmail = async (payload: EmailPayload): Promise<boolean> => {
         fromName: payload.fromName,
         fromRole: payload.fromRole,
         replyToId: payload.replyToId,
+        replyToEmail: payload.replyToEmail,
         attachments: payload.attachments,
       }),
     });

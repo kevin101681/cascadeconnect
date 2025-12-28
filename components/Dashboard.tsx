@@ -1395,6 +1395,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       
       if (thread && effectiveHomeowner) {
         const recipientEmail = isAdmin ? effectiveHomeowner.email : 'info@cascadebuilderservices.com';
+        const replyToEmail = isAdmin ? (currentUser?.email || 'info@cascadebuilderservices.com') : undefined;
         
         // Generate Cascade Connect messages link
         const baseUrl = typeof window !== 'undefined' 
@@ -1408,7 +1409,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           body: generateNotificationBody(senderName, replyContent, 'MESSAGE', thread.id, messagesLink),
           fromName: senderName,
           fromRole: userRole,
-          replyToId: thread.id
+          replyToId: thread.id,
+          replyToEmail: replyToEmail
         });
       }
       

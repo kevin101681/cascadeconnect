@@ -3348,6 +3348,32 @@ Assigned By: ${assignerName}
        }
     }
 
+    // Send email notification to homeowner when admin creates new thread
+    if (userRole === UserRole.ADMIN) {
+      const homeowner = homeowners.find(h => h.id === homeownerId);
+      if (homeowner) {
+        const baseUrl = typeof window !== 'undefined' 
+          ? `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`
+          : 'https://www.cascadeconnect.app';
+        const messagesLink = `${baseUrl}#messages${newThread.id ? `?threadId=${newThread.id}` : ''}`;
+
+        try {
+          await sendEmail({
+            to: homeowner.email,
+            subject: subject,
+            body: generateNotificationBody(sender.name, content, 'MESSAGE', newThread.id, messagesLink),
+            fromName: sender.name,
+            fromRole: userRole,
+            replyToId: newThread.id,
+            replyToEmail: sender.email
+          });
+          console.log(`✅ Sent new thread notification email to ${homeowner.email}`);
+        } catch (error) {
+          console.error('Failed to send new thread notification email:', error);
+        }
+      }
+    }
+
     // Track claim-related message if thread is from admin and claim-related
     if (userRole === UserRole.ADMIN) {
       // Try to find a claim with matching title
@@ -3509,7 +3535,8 @@ Assigned By: ${assignerName}
           body: emailBody,
           fromName: assignedUser.name,
           fromRole: UserRole.ADMIN,
-          replyToId: newThread.id
+          replyToId: newThread.id,
+          replyToEmail: assignedUser.email
         });
       } catch (error) {
         console.error('Failed to send task message email:', error);
