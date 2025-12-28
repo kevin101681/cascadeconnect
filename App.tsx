@@ -821,13 +821,14 @@ function App() {
         const targetClaim = claims.find(c => c.id === claimId);
         
         if (targetClaim) {
-          // Open the claim detail view
+          // Open the claim detail view in edit mode
           setSelectedClaimId(targetClaim.id);
+          setClaimEditMode(true); // Open in edit mode
           setCurrentView('DETAIL');
           
           // Clean up URL
           window.history.replaceState({}, '', window.location.pathname);
-          console.log(`✅ Opened claim: ${targetClaim.claimNumber}`);
+          console.log(`✅ Opened claim in edit mode: ${targetClaim.claimNumber}`);
         } else {
           console.warn(`⚠️ Claim ${claimId} not found`);
           // Clean up URL even if claim not found
