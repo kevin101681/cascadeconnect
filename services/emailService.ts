@@ -24,12 +24,15 @@ export const sendEmail = async (payload: EmailPayload): Promise<boolean> => {
     if (isLocalDev) {
       apiEndpoint = 'http://localhost:3000/api/email/send';
     } else {
-      // Use full URL with www to avoid redirect issues that break CORS preflight
+      // Use current domain - no need to add www for Netlify subdomain
       const hostname = window.location.hostname;
       const protocol = window.location.protocol;
-      // If already on www, use it; otherwise use www to match Netlify redirect
-      const domain = hostname.startsWith('www.') ? hostname : `www.${hostname}`;
-      apiEndpoint = `${protocol}//${domain}/api/email/send`;
+      apiEndpoint = `${protocol}//${hostname}/api/email/send`;
+    }
+
+    console.log(`📧 [emailService] Sending email to ${payload.to} via ${apiEndpoint}`);
+    if (payload.attachments && payload.attachments.length > 0) {
+      console.log(`📎 [emailService] ${payload.attachments.length} attachments to send`);
     }
 
     const response = await fetch(apiEndpoint, {
