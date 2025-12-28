@@ -1,5 +1,6 @@
 // Email send function - working version based on email-simple.js
 const sgMail = require('@sendgrid/mail');
+const { neon } = require('@neondatabase/serverless');
 
 exports.handler = async (event) => {
   // CORS headers
@@ -137,6 +138,35 @@ exports.handler = async (event) => {
       attachmentsCount: sendGridAttachments.length
     });
 
+    // Log to database
+    try {
+      const databaseUrl = process.env.DATABASE_URL || process.env.VITE_DATABASE_URL;
+      if (databaseUrl) {
+        const sql = neon(databaseUrl);
+        await sql(
+          `INSERT INTO email_logs (recipient, subject, status, metadata) VALUES ($1, $2, $3, $4)`,
+          [
+            to,
+            subject,
+            'sent',
+            JSON.stringify({
+              messageId: sendGridMessageId,
+              from: fromEmail,
+              fromName: fromName || 'Cascade Connect',
+              replyToId: replyToId,
+              attachmentCount: sendGridAttachments.length
+            })
+          ]
+        );
+        console.log('📝 Logged email to database');
+      } else {
+        console.warn('⚠️ DATABASE_URL not set, skipping email logging');
+      }
+    } catch (dbError) {
+      // Don't fail the email send if logging fails
+      console.error('❌ Failed to log email to database:', dbError);
+    }
+
     return {
       statusCode: 200,
       headers,
@@ -170,6 +200,34 @@ exports.handler = async (event) => {
       if (errorBody.errors && errorBody.errors.length > 0) {
         errorMessage = errorBody.errors.map((e) => e.message || e).join('; ');
       }
+    }
+    
+    // Log failed email to database
+    try {
+      const parsed = JSON.parse(event.body || '{}');
+      const { to, subject, fromName } = parsed;
+      
+      const databaseUrl = process.env.DATABASE_URL || process.env.VITE_DATABASE_URL;
+      if (databaseUrl && to && subject) {
+        const sql = neon(databaseUrl);
+        await sql(
+          `INSERT INTO email_logs (recipient, subject, status, error, metadata) VALUES ($1, $2, $3, $4, $5)`,
+          [
+            to,
+            subject,
+            'failed',
+            errorMessage,
+            JSON.stringify({
+              fromName: fromName || 'Cascade Connect',
+              errorCode: error.code,
+              errorDetails: error.response ? error.response.body : null
+            })
+          ]
+        );
+        console.log('📝 Logged failed email to database');
+      }
+    } catch (dbError) {
+      console.error('❌ Failed to log failed email to database:', dbError);
     }
     
     return {
