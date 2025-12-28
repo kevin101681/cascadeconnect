@@ -1704,8 +1704,6 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
     } catch (emailError) {
       console.error('❌ Failed to send claim notification email:', emailError);
       // Don't block claim creation if email fails
-    } else if (isDbConfigured && !db) {
-      console.warn("⚠️ Database configured but connection failed. Data saved to localStorage only.");
     }
 
     // Send email notifications to users who have this preference enabled

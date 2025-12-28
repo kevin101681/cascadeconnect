@@ -28,7 +28,7 @@ export const HeaderMenu: React.FC<HeaderMenuProps> = ({ children }) => {
 
       {/* Mobile Sheet/Modal */}
       {isOpen && (
-        <div className="fixed inset-0 z-[70] bg-black/50 md:hidden animate-fade-in" onClick={() => setIsOpen(false)}>
+        <div className="fixed inset-0 z-[220] bg-black/50 md:hidden animate-fade-in" onClick={() => setIsOpen(false)}>
             <div 
                 className="absolute top-0 right-0 h-full w-3/4 max-w-sm bg-surface p-6 shadow-xl flex flex-col gap-6 animate-slide-left"
                 onClick={e => e.stopPropagation()}

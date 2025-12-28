@@ -32,6 +32,7 @@ export interface IssuePhoto {
     id?: string;
     url: string;
     description: string;
+    isUploading?: boolean; // For Cloudinary upload progress
 }
 
 export interface Issue {

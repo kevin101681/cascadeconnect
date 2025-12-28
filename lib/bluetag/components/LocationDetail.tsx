@@ -2,13 +2,15 @@
 
 import React, { useState, useRef, useEffect, useMemo, useLayoutEffect } from 'react';
 import { Issue, LocationGroup, IssuePhoto } from '../types';
-import { Plus, Camera, Trash2, X, Edit2, Mic, MicOff, ChevronDown, Sparkles, Save, Check } from 'lucide-react';
+import { Plus, Camera, Trash2, X, Edit2, Mic, MicOff, ChevronDown, Sparkles, Save, Check, Loader2, AlertCircle } from 'lucide-react';
 import { PREDEFINED_LOCATIONS, generateUUID } from '../constants';
 import { ImageEditor } from './ImageEditor';
 import { analyzeDefectImage } from '../services/geminiService';
 import { createPortal } from 'react-dom';
+import { uploadFile } from '../../services/uploadService';
 
-// --- Shared Helper ---
+// --- Shared Helper (DEPRECATED - Use Cloudinary instead) ---
+// Keeping for backwards compatibility with existing base64 photos
 export const compressImage = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -105,7 +107,7 @@ export const DeleteConfirmationModal = ({
     isExiting?: boolean
 }) => createPortal(
     <div 
-        className={`fixed inset-0 z-[250] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-300 ${isExiting ? 'opacity-0' : 'animate-fade-in'}`}
+        className={`fixed inset-0 z-[350] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-300 ${isExiting ? 'opacity-0' : 'animate-fade-in'}`}
         onClick={isExiting ? undefined : onCancel}
     >
         <div 
@@ -623,13 +625,16 @@ export const LocationDetail: React.FC<LocationDetailProps> = ({
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0] && uploadIssueId) {
             const file = e.target.files[0];
+            const photoId = generateUUID();
+            
             try {
-                // Show thumbnail immediately using object URL (instant)
+                // Show loading state immediately using object URL
                 const tempUrl = URL.createObjectURL(file);
                 const tempPhoto: IssuePhoto = {
-                    id: generateUUID(),
+                    id: photoId,
                     url: tempUrl,
-                    description: ''
+                    description: '',
+                    isUploading: true // Add loading indicator
                 };
 
                 // Add photo immediately with temp URL
@@ -640,19 +645,40 @@ export const LocationDetail: React.FC<LocationDetailProps> = ({
                     return i;
                 }));
 
-                // Compress image in background and replace temp URL
-                const compressed = await compressImage(file);
-                setLocalIssues(prev => prev.map(i => {
-                    if (i.id === uploadIssueId) {
-                        return {
-                            ...i,
-                            photos: i.photos.map(p => 
-                                p.id === tempPhoto.id ? { ...p, url: compressed } : p
-                            )
-                        };
-                    }
-                    return i;
-                }));
+                // Upload to Cloudinary in background
+                console.log('📤 Uploading image to Cloudinary:', file.name);
+                const result = await uploadFile(file, { maxFileSizeMB: 10 });
+
+                if (result.success && result.attachment) {
+                    // Replace temp URL with Cloudinary URL
+                    setLocalIssues(prev => prev.map(i => {
+                        if (i.id === uploadIssueId) {
+                            return {
+                                ...i,
+                                photos: i.photos.map(p => 
+                                    p.id === photoId 
+                                        ? { ...p, url: result.attachment!.url, isUploading: false } 
+                                        : p
+                                )
+                            };
+                        }
+                        return i;
+                    }));
+                    console.log('✅ Upload successful:', result.attachment.url);
+                } else {
+                    // Upload failed - remove the temp photo
+                    console.error('❌ Upload failed:', result.error);
+                    setLocalIssues(prev => prev.map(i => {
+                        if (i.id === uploadIssueId) {
+                            return {
+                                ...i,
+                                photos: i.photos.filter(p => p.id !== photoId)
+                            };
+                        }
+                        return i;
+                    }));
+                    alert(`Upload failed: ${result.error || 'Unknown error'}`);
+                }
 
                 // Clean up temporary object URL
                 URL.revokeObjectURL(tempUrl);
@@ -662,6 +688,17 @@ export const LocationDetail: React.FC<LocationDetailProps> = ({
                 setUploadIssueId(null);
             } catch (err) {
                 console.error("Image upload failed", err);
+                // Remove the temp photo on error
+                setLocalIssues(prev => prev.map(i => {
+                    if (i.id === uploadIssueId) {
+                        return {
+                            ...i,
+                            photos: i.photos.filter(p => p.id !== photoId)
+                        };
+                    }
+                    return i;
+                }));
+                alert(`Upload error: ${err instanceof Error ? err.message : 'Unknown error'}`);
                 if (fileInputRef.current) fileInputRef.current.value = '';
                 setUploadIssueId(null);
             }
@@ -747,27 +784,38 @@ export const LocationDetail: React.FC<LocationDetailProps> = ({
                                                     <img 
                                                         src={photo.url} 
                                                         alt="Thumbnail" 
-                                                        className="w-full h-full object-cover" 
-                                                        onClick={() => setEditingPhoto({ issueId: issue.id, photoIndex: idx })}
+                                                        className={`w-full h-full object-cover ${photo.isUploading ? 'opacity-50' : ''}`}
+                                                        onClick={() => !photo.isUploading && setEditingPhoto({ issueId: issue.id, photoIndex: idx })}
                                                     />
-                                                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover/photo:opacity-100 transition-opacity pointer-events-none">
-                                                        <Edit2 size={16} className="text-white drop-shadow-md" />
-                                                    </div>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleDeletePhoto(issue.id, idx);
-                                                        }}
-                                                        className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white p-1 rounded-full opacity-0 group-hover/photo:opacity-100 transition-opacity"
-                                                    >
-                                                        <X size={12} />
-                                                    </button>
+                                                    {photo.isUploading && (
+                                                        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2">
+                                                            <Loader2 size={20} className="text-white animate-spin" />
+                                                            <span className="text-[10px] text-white font-medium">Uploading...</span>
+                                                        </div>
+                                                    )}
+                                                    {!photo.isUploading && (
+                                                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover/photo:opacity-100 transition-opacity pointer-events-none">
+                                                            <Edit2 size={16} className="text-white drop-shadow-md" />
+                                                        </div>
+                                                    )}
+                                                    {!photo.isUploading && (
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                handleDeletePhoto(issue.id, idx);
+                                                            }}
+                                                            className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white p-1 rounded-full opacity-0 group-hover/photo:opacity-100 transition-opacity"
+                                                        >
+                                                            <X size={12} />
+                                                        </button>
+                                                    )}
                                                 </div>
                                                 <input
                                                     value={photo.description || ""}
                                                     onChange={(e) => handlePhotoCaptionChange(issue.id, idx, e.target.value)}
                                                     placeholder="Caption..."
-                                                    className="w-full bg-slate-50 dark:bg-slate-900 text-[10px] px-2 py-1.5 rounded-lg border border-surface-outline-variant dark:border-gray-600 outline-none focus:border-primary dark:text-slate-200"
+                                                    disabled={photo.isUploading}
+                                                    className="w-full bg-slate-50 dark:bg-slate-900 text-[10px] px-2 py-1.5 rounded-lg border border-surface-outline-variant dark:border-gray-600 outline-none focus:border-primary dark:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 />
                                             </div>
                                         ))}

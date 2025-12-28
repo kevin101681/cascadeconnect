@@ -64,7 +64,7 @@ export const InvoiceScanner: React.FC<InvoiceScannerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/80 flex flex-col items-center justify-center p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[220] bg-black/80 flex flex-col items-center justify-center p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="invoice-scanner-title">
       <input 
         type="file" 
         ref={fileInputRef} 
@@ -77,11 +77,11 @@ export const InvoiceScanner: React.FC<InvoiceScannerProps> = ({
         
         {/* Header */}
         <div className="p-4 border-b border-surfaceContainerHigh flex justify-between items-center bg-white">
-          <h3 className="font-medium text-lg flex items-center gap-2">
+          <h3 id="invoice-scanner-title" className="font-medium text-lg flex items-center gap-2">
             <ScanText className="text-primary" />
             Upload Invoice/Doc
           </h3>
-          <button onClick={onClose} className="p-2 hover:bg-surfaceContainer rounded-full">
+          <button onClick={onClose} className="p-2 hover:bg-surfaceContainer rounded-full" aria-label="Close invoice scanner">
             <X size={20} />
           </button>
         </div>

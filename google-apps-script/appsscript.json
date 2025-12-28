@@ -1,0 +1,32 @@
+{
+  "timeZone": "America/Denver",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "gmail": {
+    "name": "Cascade Connect Command Center",
+    "logoUrl": "https://cascadeconnect.netlify.app/logo.svg",
+    "contextualTriggers": [
+      {
+        "unconditional": {},
+        "onTriggerFunction": "buildAddOn"
+      }
+    ],
+    "primaryColor": "#2563eb",
+    "secondaryColor": "#1e40af",
+    "openLinkUrlPrefixes": [
+      "https://cascadeconnect.netlify.app"
+    ],
+    "universalActions": [
+      {
+        "text": "Open Dashboard",
+        "openLink": "https://cascadeconnect.netlify.app/dashboard"
+      }
+    ]
+  },
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/gmail.addons.current.message.readonly",
+    "https://www.googleapis.com/auth/gmail.addons.execute"
+  ]
+}
+

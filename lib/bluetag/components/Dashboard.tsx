@@ -1,12 +1,13 @@
 
 import React, { useState, useEffect, useRef, useMemo, useLayoutEffect } from 'react';
 import { LocationGroup, ProjectDetails, Issue, SignOffTemplate, SignOffSection, ProjectField, Point, SignOffStroke } from '../types';
-import { ChevronRight, ArrowLeft, X, Plus, PenTool, Save, Trash2, Check, ChevronDown, Undo, Redo, Info, Download, Sun, Moon, FileText, MapPin, Eye, RefreshCw, Minimize2, Share, Mail, Pencil, Edit2, Send, Calendar, ChevronUp, Hand, Move, AlertCircle, MousePointer2, Settings, GripVertical, AlignLeft, CheckSquare, PanelLeft, User as UserIcon, Phone, Briefcase, Hash, Sparkles, Camera, Mic, MicOff, Layers, Eraser, Book } from 'lucide-react';
+import { ChevronRight, ArrowLeft, X, Plus, PenTool, Save, Trash2, Check, ChevronDown, Undo, Redo, Info, Download, Sun, Moon, FileText, MapPin, Eye, RefreshCw, Minimize2, Share, Mail, Pencil, Edit2, Send, Calendar, ChevronUp, Hand, Move, AlertCircle, MousePointer2, Settings, GripVertical, AlignLeft, CheckSquare, PanelLeft, User as UserIcon, Phone, Briefcase, Hash, Sparkles, Camera, Mic, MicOff, Layers, Eraser, Book, Loader2 } from 'lucide-react';
 import { generateSignOffPDF, SIGN_OFF_TITLE, generatePDFWithMetadata, ImageLocation, CheckboxLocation } from '../pdfService';
 import { AddIssueForm, LocationDetail, AutoResizeTextarea, compressImage, DeleteConfirmationModal } from './LocationDetail';
 import { generateUUID, PREDEFINED_LOCATIONS } from '../constants';
 import { createPortal } from 'react-dom';
 import { ImageEditor } from './ImageEditor';
+import { uploadFile } from '../../services/uploadService';
 
 export interface DashboardProps {
   project: ProjectDetails;
@@ -737,9 +738,14 @@ export const AllItemsModal = ({ locations, onUpdate, onClose }: { locations: Loc
     };
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0] && uploadTarget) {
+            const file = e.target.files[0];
+            const photoId = generateUUID();
+            
             try {
-                const compressed = await compressImage(e.target.files[0]);
-                const newPhoto = { id: generateUUID(), url: compressed, description: '' };
+                // Show loading state immediately using object URL
+                const tempUrl = URL.createObjectURL(file);
+                const newPhoto = { id: photoId, url: tempUrl, description: '', isUploading: true };
+                
                 setLocalLocations(prev => prev.map(l => {
                     if (l.id !== uploadTarget.locId) return l;
                     return {
@@ -750,9 +756,76 @@ export const AllItemsModal = ({ locations, onUpdate, onClose }: { locations: Loc
                         })
                     };
                 }));
+
+                // Upload to Cloudinary in background
+                console.log('📤 Uploading image to Cloudinary:', file.name);
+                const result = await uploadFile(file, { maxFileSizeMB: 10 });
+
+                if (result.success && result.attachment) {
+                    // Replace temp URL with Cloudinary URL
+                    setLocalLocations(prev => prev.map(l => {
+                        if (l.id !== uploadTarget.locId) return l;
+                        return {
+                            ...l,
+                            issues: l.issues.map(i => {
+                                if (i.id !== uploadTarget.issueId) return i;
+                                return {
+                                    ...i,
+                                    photos: i.photos.map(p => 
+                                        p.id === photoId 
+                                            ? { ...p, url: result.attachment!.url, isUploading: false } 
+                                            : p
+                                    )
+                                };
+                            })
+                        };
+                    }));
+                    console.log('✅ Upload successful:', result.attachment.url);
+                } else {
+                    // Upload failed - remove the temp photo
+                    console.error('❌ Upload failed:', result.error);
+                    setLocalLocations(prev => prev.map(l => {
+                        if (l.id !== uploadTarget.locId) return l;
+                        return {
+                            ...l,
+                            issues: l.issues.map(i => {
+                                if (i.id !== uploadTarget.issueId) return i;
+                                return {
+                                    ...i,
+                                    photos: i.photos.filter(p => p.id !== photoId)
+                                };
+                            })
+                        };
+                    }));
+                    alert(`Upload failed: ${result.error || 'Unknown error'}`);
+                }
+
+                // Clean up temporary object URL
+                URL.revokeObjectURL(tempUrl);
+
+                // Reset
                 if (fileInputRef.current) fileInputRef.current.value = '';
                 setUploadTarget(null);
-            } catch (err) { console.error("Image upload failed", err); }
+            } catch (err) {
+                console.error("Image upload failed", err);
+                // Remove the temp photo on error
+                setLocalLocations(prev => prev.map(l => {
+                    if (l.id !== uploadTarget.locId) return l;
+                    return {
+                        ...l,
+                        issues: l.issues.map(i => {
+                            if (i.id !== uploadTarget.issueId) return i;
+                            return {
+                                ...i,
+                                photos: i.photos.filter(p => p.id !== photoId)
+                            };
+                        })
+                    };
+                }));
+                alert(`Upload error: ${err instanceof Error ? err.message : 'Unknown error'}`);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+                setUploadTarget(null);
+            }
         }
     };
     const triggerUpload = (locId: string, issueId: string) => {
@@ -783,7 +856,7 @@ export const AllItemsModal = ({ locations, onUpdate, onClose }: { locations: Loc
 
     return createPortal(
         <>
-            <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+            <div className="fixed inset-0 z-[300] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
                 <div className="bg-surface dark:bg-gray-800 w-full max-w-2xl h-[85vh] rounded-3xl shadow-xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
                     <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-center items-center bg-surface dark:bg-gray-800 shrink-0 z-20">
                         <div className="bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-full">
@@ -815,11 +888,21 @@ export const AllItemsModal = ({ locations, onUpdate, onClose }: { locations: Loc
                                                         {issue.photos.map((photo, pIdx) => (
                                                             <div key={pIdx} className="flex flex-col w-24 shrink-0 gap-1.5 group/wrapper">
                                                                 <div className="w-full aspect-square rounded-xl overflow-hidden border border-surface-outline-variant dark:border-gray-600 relative group/photo cursor-pointer">
-                                                                    <img src={photo.url} className="w-full h-full object-cover" onClick={() => setEditingPhoto({ locId: loc.id, issueId: issue.id, photoIndex: pIdx })} />
-                                                                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover/photo:opacity-100 transition-opacity pointer-events-none"><Edit2 size={16} className="text-white drop-shadow-md" /></div>
-                                                                    <button onClick={(e) => { e.stopPropagation(); handleDeletePhoto(loc.id, issue.id, pIdx); }} className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white p-1 rounded-full opacity-0 group-hover/photo:opacity-100 transition-opacity"><X size={12} /></button>
+                                                                    <img src={photo.url} className={`w-full h-full object-cover ${photo.isUploading ? 'opacity-50' : ''}`} onClick={() => !photo.isUploading && setEditingPhoto({ locId: loc.id, issueId: issue.id, photoIndex: pIdx })} />
+                                                                    {photo.isUploading && (
+                                                                        <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2">
+                                                                            <Loader2 size={16} className="text-white animate-spin" />
+                                                                            <span className="text-[9px] text-white font-medium">Uploading...</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {!photo.isUploading && (
+                                                                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover/photo:opacity-100 transition-opacity pointer-events-none"><Edit2 size={16} className="text-white drop-shadow-md" /></div>
+                                                                    )}
+                                                                    {!photo.isUploading && (
+                                                                        <button onClick={(e) => { e.stopPropagation(); handleDeletePhoto(loc.id, issue.id, pIdx); }} className="absolute top-1 right-1 bg-black/50 hover:bg-red-500 text-white p-1 rounded-full opacity-0 group-hover/photo:opacity-100 transition-opacity"><X size={12} /></button>
+                                                                    )}
                                                                 </div>
-                                                                <input value={photo.description || ""} onChange={(e) => handlePhotoCaptionChange(loc.id, issue.id, pIdx, e.target.value)} placeholder="Caption..." className="w-full bg-surface-container dark:bg-gray-700 text-[10px] px-2 py-1.5 rounded-lg border border-surface-outline-variant dark:border-gray-600 outline-none focus:border-primary dark:text-gray-200" />
+                                                                <input value={photo.description || ""} onChange={(e) => handlePhotoCaptionChange(loc.id, issue.id, pIdx, e.target.value)} placeholder="Caption..." disabled={photo.isUploading} className="w-full bg-surface-container dark:bg-gray-700 text-[10px] px-2 py-1.5 rounded-lg border border-surface-outline-variant dark:border-gray-600 outline-none focus:border-primary dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed" />
                                                             </div>
                                                         ))}
                                                         <button onClick={() => triggerUpload(loc.id, issue.id)} className="w-16 h-16 shrink-0 rounded-xl border-2 border-dashed border-surface-outline-variant dark:border-gray-600 flex flex-col items-center justify-center text-surface-on-variant dark:text-gray-400 hover:text-primary hover:border-primary/50 hover:bg-surface-container dark:hover:bg-gray-700/50 transition-colors" title="Add Photo"><Camera size={20} /><span className="text-[9px] font-bold mt-1">Add</span></button>
@@ -955,7 +1038,7 @@ export const ReportPreviewModal = ({ project, locations, companyLogo, onClose, o
     }
 
     return createPortal(
-        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={handleClose}>
+        <div className="fixed inset-0 z-[300] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in" onClick={handleClose}>
              <div className="bg-surface dark:bg-gray-800 w-full max-w-4xl h-[90vh] rounded-3xl shadow-xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
                 <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-center items-center shrink-0">
                     <div className="bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-2xl"><h3 className="font-bold text-surface-on dark:text-gray-100">Report Preview</h3></div>
@@ -1079,7 +1162,7 @@ export const SignOffModal = ({ project, companyLogo, onClose, onUpdateProject, t
     };
 
     return createPortal(
-        <div className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+        <div className="fixed inset-0 z-[300] bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
             {isTemplateEditorOpen ? ( <TemplateEditorModal templates={templates} onUpdate={onUpdateTemplates} onClose={() => setIsTemplateEditorOpen(false)} /> ) : (
                 <div className="bg-surface dark:bg-gray-800 w-full max-w-2xl h-[90vh] rounded-3xl shadow-xl flex flex-col overflow-hidden">
                     <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-center items-center shrink-0 relative">
@@ -1252,7 +1335,7 @@ export const Dashboard = React.memo<DashboardProps>(({
     
     return (
         <div 
-            className={`min-h-screen animate-fade-in ${embedded ? 'bg-gray-100 dark:bg-gray-900 pb-6 pt-6' : 'bg-gray-100 dark:bg-gray-900 pb-32'}`}
+            className={`min-h-full animate-fade-in ${embedded ? 'bg-gray-100 dark:bg-gray-900 pb-6 pt-6' : 'bg-gray-100 dark:bg-gray-900 pb-32'}`}
             style={{ pointerEvents: 'auto' }}
         >
             <div className={`max-w-3xl mx-auto ${embedded ? 'space-y-4 p-0 pt-8 pb-8' : 'p-6 space-y-8'} relative ${shouldInitialExpand ? 'animate-expand-sections origin-top overflow-hidden opacity-0' : ''}`} style={{ pointerEvents: 'auto' }}>

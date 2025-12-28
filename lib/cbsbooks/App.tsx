@@ -278,7 +278,7 @@ const App: React.FC<CBSBooksAppProps> = ({ prefillInvoice }) => {
   // Show UI immediately - no loading indicator needed for fast loads
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+      <div className="min-h-full bg-gray-100 dark:bg-gray-900">
         <main className="p-4 md:p-8 max-w-7xl mx-auto w-full pb-32">
           {view === 'invoices' && <Invoices invoices={[]} clients={[]} onAdd={handleAddInvoice} onUpdate={handleUpdateInvoice} onDelete={handleDeleteInvoice} onBulkAdd={handleBulkAddInvoices} onBulkDelete={handleBulkDeleteInvoices} onNavigate={setView} onBackup={handleFullBackup} prefillInvoice={prefillInvoice} />}
           {view === 'expenses' && <Expenses expenses={[]} onAdd={handleAddExpense} onDelete={handleDeleteExpense} onBulkAdd={handleBulkAddExpenses} onBulkDelete={handleBulkDeleteExpenses} onNavigate={setView} onBackup={handleFullBackup} />}
@@ -291,7 +291,7 @@ const App: React.FC<CBSBooksAppProps> = ({ prefillInvoice }) => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-surface p-4">
+      <div className="flex items-center justify-center min-h-full bg-surface p-4">
         <div className="bg-red-50 border border-red-200 rounded-3xl p-8 max-w-md w-full shadow-sm">
           <div className="flex items-center gap-4 text-red-700 mb-4"><AlertTriangle size={32} /><h2 className="text-xl font-bold">Connection Failed</h2></div>
           <p className="text-red-900 mb-4 font-medium">Could not load application data.</p>
@@ -306,11 +306,11 @@ const App: React.FC<CBSBooksAppProps> = ({ prefillInvoice }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+    <div className="min-h-full bg-gray-100 dark:bg-gray-900">
       {/* Only show offline banner if FORCE_OFFLINE is explicitly set, not just when using mock data */}
       {typeof window !== 'undefined' && localStorage.getItem('FORCE_OFFLINE') === 'true' && (
-        <div className="fixed top-0 left-0 right-0 z-50 flex justify-center p-2 pointer-events-none">
-          <div className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-4 py-2 rounded-full shadow-md text-sm font-medium flex items-center gap-2 pointer-events-auto border border-orange-200 dark:border-orange-800">
+        <div className="sticky top-0 left-0 right-0 z-50 flex justify-center p-2">
+          <div className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-200 px-4 py-2 rounded-full shadow-md text-sm font-medium flex items-center gap-2 border border-orange-200 dark:border-orange-800">
             <WifiOff size={16} />
             <span>Offline Mode</span>
             <button onClick={handleRetry} className="underline ml-2">Retry</button>

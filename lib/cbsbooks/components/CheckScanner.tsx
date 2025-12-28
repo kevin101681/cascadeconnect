@@ -174,16 +174,16 @@ export const CheckScanner: React.FC<CheckScannerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/90 flex flex-col items-center justify-center p-4">
+    <div className="fixed inset-0 z-[220] bg-black/90 flex flex-col items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="check-scanner-title">
       <div className="w-full max-w-lg bg-surface rounded-3xl overflow-hidden relative flex flex-col max-h-[90vh]">
         
         {/* Header */}
         <div className="p-4 border-b border-surfaceContainerHigh flex justify-between items-center bg-white">
-          <h3 className="font-medium text-lg flex items-center gap-2">
+          <h3 id="check-scanner-title" className="font-medium text-lg flex items-center gap-2">
             <Camera className="text-primary" />
             Check Scanner
           </h3>
-          <button onClick={onClose} className="p-2 hover:bg-surfaceContainer rounded-full">
+          <button onClick={onClose} className="p-2 hover:bg-surfaceContainer rounded-full" aria-label="Close check scanner">
             <X size={20} />
           </button>
         </div>

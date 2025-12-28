@@ -89,7 +89,11 @@ const CalendarPicker: React.FC<CalendarPickerProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/60 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+      className="fixed inset-0 z-[250] flex items-center justify-center bg-black/50 dark:bg-black/60 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="calendar-picker-title"
     >
       <div 
         className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-3 w-full max-w-sm mx-4 overflow-hidden animate-[scale-in_0.2s_ease-out] border border-surface-outline-variant/50 dark:border-gray-700/50"
@@ -97,7 +101,7 @@ const CalendarPicker: React.FC<CalendarPickerProps> = ({
       >
         {/* Header - Material 3 style with surface container */}
         <div className="bg-surface-container-high dark:bg-gray-700/50 px-6 py-4 flex items-center justify-between border-b border-surface-outline-variant/50 dark:border-gray-700/50">
-          <h3 className="text-lg font-medium text-surface-on dark:text-gray-100">Select Date</h3>
+          <h3 id="calendar-picker-title" className="text-lg font-medium text-surface-on dark:text-gray-100">Select Date</h3>
           <button
             onClick={onClose}
             className="p-2 rounded-full hover:bg-surface-container dark:hover:bg-gray-600 transition-colors text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100"

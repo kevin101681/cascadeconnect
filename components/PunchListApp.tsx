@@ -323,9 +323,9 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
   }
 
   return (
-    <div className="h-full w-full flex flex-col overflow-auto bg-gray-100 dark:bg-gray-900" style={{ minHeight: '100%', pointerEvents: 'auto' }}>
+    <div className="h-full w-full flex flex-col bg-gray-100 dark:bg-gray-900 overflow-hidden">
       {BlueTagDashboard ? (
-        <div className="h-full w-full" style={{ isolation: 'isolate', pointerEvents: 'auto' }}>
+        <div className="h-full w-full overflow-auto" style={{ isolation: 'isolate' }}>
           <BlueTagDashboard
           project={project}
           locations={locations}
