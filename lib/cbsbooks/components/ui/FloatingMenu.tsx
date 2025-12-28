@@ -65,7 +65,7 @@ export const FloatingMenu: React.FC<FloatingMenuProps> = ({
         <div 
           className="
             absolute bottom-full mb-4 right-0 w-[calc(100vw-32px)] max-w-xs max-h-[calc(100vh-8rem)] overflow-y-auto flex flex-col gap-2 pb-2 z-[220] animate-slide-up origin-bottom
-            md:w-auto md:min-w-[240px] md:max-h-none
+            md:w-auto md:min-w-[240px] md:max-h-[calc(100vh-12rem)]
           "
           style={{ bottom: '100%', marginBottom: '1rem' }}
         >
