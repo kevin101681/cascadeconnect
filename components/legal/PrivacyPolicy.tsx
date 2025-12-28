@@ -190,7 +190,7 @@ const PrivacyPolicy: React.FC<PrivacyPolicyProps> = ({ onBack }) => {
             <div className="bg-surface-container dark:bg-gray-800 rounded-lg p-6 border border-surface-outline-variant dark:border-gray-700">
               <p className="text-surface-on dark:text-gray-300 leading-relaxed">
                 <strong>Cascade Connect</strong><br />
-                Email: <a href="mailto:privacy@cascadeconnect.app" className="text-primary hover:underline">privacy@cascadeconnect.app</a><br />
+                Email: <a href="mailto:info@cascadebuilderservices.com" className="text-primary hover:underline">info@cascadebuilderservices.com</a><br />
                 Website: <a href="https://cascadeconnect.app" className="text-primary hover:underline">cascadeconnect.app</a>
               </p>
             </div>

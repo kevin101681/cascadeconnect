@@ -162,7 +162,7 @@ const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
                   Help and Support
                 </h3>
                 <p className="text-surface-on dark:text-gray-300 leading-relaxed">
-                  For help with the Program, reply <strong>HELP</strong> to any text message or contact our support team at <a href="mailto:support@cascadeconnect.app" className="text-primary hover:underline">support@cascadeconnect.app</a>.
+                  For help with the Program, reply <strong>HELP</strong> to any text message or contact our support team at <a href="mailto:info@cascadebuilderservices.com" className="text-primary hover:underline">info@cascadebuilderservices.com</a>.
                 </p>
               </div>
 
@@ -334,7 +334,7 @@ const TermsOfService: React.FC<TermsOfServiceProps> = ({ onBack }) => {
             <div className="bg-surface-container dark:bg-gray-800 rounded-lg p-6 border border-surface-outline-variant dark:border-gray-700">
               <p className="text-surface-on dark:text-gray-300 leading-relaxed">
                 <strong>Cascade Connect</strong><br />
-                Email: <a href="mailto:support@cascadeconnect.app" className="text-primary hover:underline">support@cascadeconnect.app</a><br />
+                Email: <a href="mailto:info@cascadebuilderservices.com" className="text-primary hover:underline">info@cascadebuilderservices.com</a><br />
                 Website: <a href="https://cascadeconnect.app" className="text-primary hover:underline">cascadeconnect.app</a>
               </p>
             </div>
