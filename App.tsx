@@ -1695,6 +1695,15 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
         // Show user-friendly error
         alert("Warning: Claim saved locally but failed to sync to database. Please check your connection.");
       }
+    }
+
+    // Send email notification to admins (non-blocking)
+    try {
+      const { notificationService } = await import('./services/notificationService');
+      await notificationService.notifyClaimSubmitted(newClaim, employees);
+    } catch (emailError) {
+      console.error('❌ Failed to send claim notification email:', emailError);
+      // Don't block claim creation if email fails
     } else if (isDbConfigured && !db) {
       console.warn("⚠️ Database configured but connection failed. Data saved to localStorage only.");
     }

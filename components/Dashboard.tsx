@@ -1330,14 +1330,19 @@ const Dashboard: React.FC<DashboardProps> = ({
   const handleSendInvite = async () => {
     setIsDrafting(true);
     const subject = `A Warm Welcome to Your New Home, ${inviteName}! Important Information from Cascade Builder Services`;
-    await sendEmail({
-      to: inviteEmail,
-      subject: subject,
-      body: inviteBody,
-      fromName: 'Cascade Admin',
-      fromRole: UserRole.ADMIN
-    });
-    alert(`Invite sent to ${inviteEmail} via Internal Mail System!`);
+    try {
+      await sendEmail({
+        to: inviteEmail,
+        subject: subject,
+        body: inviteBody,
+        fromName: 'Cascade Admin',
+        fromRole: UserRole.ADMIN
+      });
+      alert(`✅ Invitation email sent successfully to ${inviteEmail}`);
+    } catch (error) {
+      console.error('Failed to send invitation email:', error);
+      alert(`❌ Failed to send invitation email. Please try again.`);
+    }
     setIsDrafting(false);
     setShowInviteModal(false);
     setInviteName('');
