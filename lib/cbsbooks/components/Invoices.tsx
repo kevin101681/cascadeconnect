@@ -1413,7 +1413,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
 
             {/* Expanded Editor Inline */}
             {expanded && (
-                <div className="bg-surface dark:bg-gray-800 border border-surface-outline-variant dark:border-gray-700 border-t-0 !rounded-t-none !rounded-b-3xl p-4 animate-slide-up -mt-px">
+                <div className="bg-surface dark:bg-gray-800 border border-surface-outline-variant dark:border-gray-700 border-t-0 !rounded-t-none !rounded-b-3xl p-4 animate-slide-down -mt-px">
                     <div className="flex flex-col gap-4">
                         {children}
                     </div>
