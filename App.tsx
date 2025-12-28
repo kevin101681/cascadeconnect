@@ -802,6 +802,41 @@ function App() {
     syncDataAndUser();
   }, [isLoaded, isSignedIn, authUser?.id]); // Re-run when auth state changes
 
+  // Handle deep linking to specific claim from email
+  useEffect(() => {
+    if (typeof window === 'undefined' || !claims || claims.length === 0) return;
+    
+    const hash = window.location.hash;
+    
+    // Check if URL has #claims?claimId=... format
+    if (hash.startsWith('#claims') && hash.includes('?')) {
+      const hashParts = hash.split('?');
+      const urlParams = new URLSearchParams(hashParts[1] || '');
+      const claimId = urlParams.get('claimId');
+      
+      if (claimId) {
+        console.log(`📧 Deep link detected: Opening claim ${claimId}`);
+        
+        // Find the claim
+        const targetClaim = claims.find(c => c.id === claimId);
+        
+        if (targetClaim) {
+          // Open the claim detail view
+          setSelectedClaim(targetClaim);
+          setCurrentView('DETAIL');
+          
+          // Clean up URL
+          window.history.replaceState({}, '', window.location.pathname);
+          console.log(`✅ Opened claim: ${targetClaim.claimNumber}`);
+        } else {
+          console.warn(`⚠️ Claim ${claimId} not found`);
+          // Clean up URL even if claim not found
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+      }
+    }
+  }, [claims]); // Re-run when claims are loaded
+
   // UI State - Persistent (but reset INVOICES on page load to prevent auto-opening)
   // Check URL hash for invoice creation link
   const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'AI_INTAKE'>(() => {
