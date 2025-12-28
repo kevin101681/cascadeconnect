@@ -37,8 +37,24 @@ export const handler = async (event: any, context?: any): Promise<HandlerRespons
     };
   }
 
+  // Declare variables at function scope so they're accessible in catch block
+  let to: string | undefined;
+  let subject: string | undefined;
+  let body: string | undefined;
+  let fromName: string | undefined;
+  let fromRole: string | undefined;
+  let replyToId: string | undefined;
+  let attachments: any[] | undefined;
+
   try {
-    const { to, subject, body, fromName, fromRole, replyToId, attachments } = JSON.parse(event.body || '{}');
+    const parsed = JSON.parse(event.body || '{}');
+    to = parsed.to;
+    subject = parsed.subject;
+    body = parsed.body;
+    fromName = parsed.fromName;
+    fromRole = parsed.fromRole;
+    replyToId = parsed.replyToId;
+    attachments = parsed.attachments;
 
     if (!to || !subject || !body) {
       return {
