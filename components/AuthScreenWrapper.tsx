@@ -1,5 +1,5 @@
 import React from 'react';
-import AuthScreen from './AuthScreen';
+import LegalRouter from './LegalRouter';
 import { AlertCircle } from 'lucide-react';
 
 /**
@@ -40,8 +40,8 @@ const AuthScreenWrapper: React.FC = () => {
     );
   }
   
-  // Clerk is configured, safe to render AuthScreen
-  return <AuthScreen />;
+  // Clerk is configured, safe to render AuthScreen with legal routing
+  return <LegalRouter />;
 };
 
 export default AuthScreenWrapper;
