@@ -3365,7 +3365,7 @@ Assigned By: ${assignerName}
             fromName: sender.name,
             fromRole: userRole,
             replyToId: newThread.id,
-            replyToEmail: `replies+${newThread.id}@cascadeconnect.app` // Use replies subdomain with thread ID
+            replyToEmail: 'info@cascadebuilderservices.com' // TEMPORARY: Use info email while DNS propagates
           });
           console.log(`✅ Sent new thread notification email to ${homeowner.email}`);
         } catch (error) {
