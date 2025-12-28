@@ -1395,7 +1395,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       
       if (thread && effectiveHomeowner) {
         const recipientEmail = isAdmin ? effectiveHomeowner.email : 'info@cascadebuilderservices.com';
-        const replyToEmail = isAdmin ? (currentUser?.email || 'info@cascadebuilderservices.com') : undefined;
+        // Use replies subdomain with thread ID so SendGrid Inbound Parse can capture homeowner replies
+        const replyToEmail = isAdmin ? `replies+${thread.id}@cascadeconnect.app` : undefined;
         
         // Generate Cascade Connect messages link
         const baseUrl = typeof window !== 'undefined' 
