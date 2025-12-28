@@ -4,6 +4,7 @@ import Button from './Button';
 import { db, isDbConfigured } from '../db';
 import { users as usersTable, homeowners as homeownersTable, claims as claimsTable, documents as documentsTable, tasks as tasksTable, messageThreads as messageThreadsTable, builderGroups as builderGroupsTable, contractors as contractorsTable } from '../db/schema';
 import { eq, count, desc } from 'drizzle-orm';
+import { getNetlifyInfo, getNetlifyDeploys, rollbackDeployment as rollbackDeploymentService, getNeonStats } from '../lib/services/netlifyService';
 
 interface BackendDashboardProps {
   onClose: () => void;
@@ -207,29 +208,17 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
   const fetchNetlifyInfo = async () => {
     setNetlifyLoading(true);
     try {
-      const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      let apiEndpoint: string;
-      if (isLocalDev) {
-        apiEndpoint = 'http://localhost:3000/api/netlify/info';
-      } else {
-        const hostname = window.location.hostname;
-        const protocol = window.location.protocol;
-        const domain = hostname.startsWith('www.') ? hostname : `www.${hostname}`;
-        apiEndpoint = `${protocol}//${domain}/api/netlify/info`;
-      }
-
-      const response = await fetch(apiEndpoint);
+      const result = await getNetlifyInfo();
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || 'Failed to fetch Netlify information');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch Netlify information');
       }
-
-      const result = await response.json();
+      
       setNetlifyInfo(result);
-    } catch (err: any) {
-      console.error('Failed to fetch Netlify info:', err);
-      setError(err.message || 'Failed to load Netlify information');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load Netlify information';
+      console.error('❌ Failed to fetch Netlify info:', errorMessage);
+      setError(errorMessage);
     } finally {
       setNetlifyLoading(false);
     }
@@ -238,29 +227,17 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
   const fetchNetlifyDeploys = async () => {
     setNetlifyDeploysLoading(true);
     try {
-      const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      let apiEndpoint: string;
-      if (isLocalDev) {
-        apiEndpoint = 'http://localhost:3000/api/netlify/deploys';
-      } else {
-        const hostname = window.location.hostname;
-        const protocol = window.location.protocol;
-        const domain = hostname.startsWith('www.') ? hostname : `www.${hostname}`;
-        apiEndpoint = `${protocol}//${domain}/api/netlify/deploys`;
-      }
-
-      const response = await fetch(apiEndpoint);
+      const result = await getNetlifyDeploys();
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || 'Failed to fetch deployments');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch deployments');
       }
-
-      const result = await response.json();
+      
       setNetlifyDeploys(result);
-    } catch (err: any) {
-      console.error('Failed to fetch Netlify deployments:', err);
-      setError(err.message || 'Failed to load deployments');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load deployments';
+      console.error('❌ Failed to fetch Netlify deployments:', errorMessage);
+      setError(errorMessage);
     } finally {
       setNetlifyDeploysLoading(false);
     }
@@ -272,67 +249,37 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
     }
 
     try {
-      const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      let apiEndpoint: string;
-      if (isLocalDev) {
-        apiEndpoint = 'http://localhost:3000/api/netlify/deploys';
-      } else {
-        const hostname = window.location.hostname;
-        const protocol = window.location.protocol;
-        const domain = hostname.startsWith('www.') ? hostname : `www.${hostname}`;
-        apiEndpoint = `${protocol}//${domain}/api/netlify/deploys`;
-      }
-
-      const response = await fetch(apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ deploy_id: deployId })
-      });
+      const result = await rollbackDeploymentService(deployId);
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || 'Failed to rollback deployment');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to rollback deployment');
       }
-
-      const result = await response.json();
+      
       alert('Rollback initiated successfully! The site will be restored to the selected deployment.');
       // Refresh deployments list
       fetchNetlifyDeploys();
       fetchNetlifyInfo();
-    } catch (err: any) {
-      console.error('Failed to rollback deployment:', err);
-      alert(`Failed to rollback: ${err.message}`);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      console.error('❌ Failed to rollback deployment:', errorMessage);
+      alert(`Failed to rollback: ${errorMessage}`);
     }
   };
 
   const fetchNeonStats = async () => {
     setNeonStatsLoading(true);
     try {
-      const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      let apiEndpoint: string;
-      if (isLocalDev) {
-        apiEndpoint = 'http://localhost:3000/api/neon/stats';
-      } else {
-        const hostname = window.location.hostname;
-        const protocol = window.location.protocol;
-        const domain = hostname.startsWith('www.') ? hostname : `www.${hostname}`;
-        apiEndpoint = `${protocol}//${domain}/api/neon/stats`;
-      }
-
-      const response = await fetch(apiEndpoint);
+      const result = await getNeonStats();
       
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || 'Failed to fetch Neon statistics');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch Neon statistics');
       }
-
-      const result = await response.json();
+      
       setNeonStats(result);
-    } catch (err: any) {
-      console.error('Failed to fetch Neon stats:', err);
-      setError(err.message || 'Failed to load Neon statistics');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load Neon statistics';
+      console.error('❌ Failed to fetch Neon stats:', errorMessage);
+      setError(errorMessage);
     } finally {
       setNeonStatsLoading(false);
     }

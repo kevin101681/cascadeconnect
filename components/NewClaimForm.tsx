@@ -7,6 +7,7 @@ import ImageViewerModal from './ImageViewerModal';
 import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
 import { ToastContainer, Toast } from './Toast';
+import { uploadMultipleFiles } from '../lib/services/uploadService';
 import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar, Briefcase, Trash2, Plus } from 'lucide-react';
 
 interface StagedClaim {
@@ -419,101 +420,32 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                   if (!files || files.length === 0) return;
                   
                   setIsUploading(true);
-                  const newAttachments: Attachment[] = [];
-                  const uploadErrors: string[] = [];
-                  
-                  // Helper function to upload a file with retry logic
-                  const uploadFileWithRetry = async (file: File, maxRetries = 3): Promise<Attachment | null> => {
-                    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-                      try {
-                        const formData = new FormData();
-                        formData.append('file', file);
-                        
-                        const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                        const apiEndpoint = isLocalDev 
-                          ? 'http://localhost:3000/api/upload'
-                          : `${window.location.protocol}//${window.location.hostname.startsWith('www.') ? window.location.hostname : `www.${window.location.hostname}`}/api/upload`;
-                        
-                        // Add timeout to prevent hanging
-                        const controller = new AbortController();
-                        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-                        
-                        try {
-                          const response = await fetch(apiEndpoint, {
-                            method: 'POST',
-                            body: formData,
-                            signal: controller.signal
-                          });
-                          
-                          clearTimeout(timeoutId);
-                          
-                          if (!response.ok) {
-                            const errorText = await response.text().catch(() => response.statusText);
-                            throw new Error(`Upload failed (${response.status}): ${errorText}`);
-                          }
-                          
-                          const result = await response.json();
-                          
-                          if (result.success && result.url) {
-                            return {
-                              id: result.publicId || crypto.randomUUID(),
-                              url: result.url,
-                              name: file.name,
-                              type: result.type || 'DOCUMENT'
-                            };
-                          } else {
-                            throw new Error(result.error || 'Upload failed: No URL returned');
-                          }
-                        } catch (fetchError: any) {
-                          clearTimeout(timeoutId);
-                          if (fetchError.name === 'AbortError') {
-                            throw new Error('Upload timed out after 60 seconds');
-                          }
-                          throw fetchError;
-                        }
-                      } catch (error: any) {
-                        const errorMessage = error.message || 'Unknown error';
-                        console.error(`Upload attempt ${attempt}/${maxRetries} failed for ${file.name}:`, errorMessage);
-                        
-                        if (attempt === maxRetries) {
-                          // Final attempt failed
-                          return null;
-                        }
-                        
-                        // Wait before retrying (exponential backoff)
-                        await new Promise(resolve => setTimeout(resolve, Math.min(1000 * Math.pow(2, attempt - 1), 5000)));
-                      }
-                    }
-                    return null;
-                  };
                   
                   try {
-                    for (const file of Array.from(files)) {
-                      if (file.size > 10 * 1024 * 1024) {
-                        uploadErrors.push(`${file.name}: File is too large (>10MB)`);
-                        continue;
-                      }
-                      
-                      const uploadedAttachment = await uploadFileWithRetry(file);
-                      
-                      if (uploadedAttachment) {
-                        newAttachments.push(uploadedAttachment);
-                      } else {
-                        uploadErrors.push(`${file.name}: Upload failed after retries`);
-                      }
+                    // Use centralized upload service
+                    const { successes, failures } = await uploadMultipleFiles(Array.from(files), {
+                      maxRetries: 3,
+                      timeoutMs: 60000,
+                      maxFileSizeMB: 10,
+                    });
+                    
+                    // Handle successes
+                    if (successes.length > 0) {
+                      setAttachments([...attachments, ...successes]);
+                      addToast(`Successfully uploaded ${successes.length} file${successes.length > 1 ? 's' : ''}`, 'success');
                     }
                     
-                    if (newAttachments.length > 0) {
-                      setAttachments([...attachments, ...newAttachments]);
-                      addToast(`Successfully uploaded ${newAttachments.length} file${newAttachments.length > 1 ? 's' : ''}`, 'success');
-                    }
-                    
-                    if (uploadErrors.length > 0) {
-                      const errorMessage = uploadErrors.length === 1 
-                        ? uploadErrors[0] 
-                        : `${uploadErrors.length} files failed to upload:\n${uploadErrors.slice(0, 5).join('\n')}${uploadErrors.length > 5 ? `\n...and ${uploadErrors.length - 5} more` : ''}`;
+                    // Handle failures
+                    if (failures.length > 0) {
+                      const errorMessage = failures.length === 1 
+                        ? `${failures[0].file.name}: ${failures[0].error}` 
+                        : `${failures.length} files failed to upload:\n${failures.slice(0, 5).map(f => `${f.file.name}: ${f.error}`).join('\n')}${failures.length > 5 ? `\n...and ${failures.length - 5} more` : ''}`;
                       addToast(errorMessage, 'error');
                     }
+                  } catch (error: unknown) {
+                    const errorMessage = error instanceof Error ? error.message : 'Unknown upload error';
+                    console.error('❌ Upload error:', errorMessage);
+                    addToast(`Upload failed: ${errorMessage}`, 'error');
                   } finally {
                     setIsUploading(false);
                     // Reset input

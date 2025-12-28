@@ -4,6 +4,7 @@ import { MessageSquare, Send, Loader2 } from 'lucide-react';
 import { db, isDbConfigured } from '../db';
 import { smsMessages } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
+import { sendMessage } from '../lib/services/messagesService';
 
 interface CallSmsChatProps {
   homeownerId: string;
@@ -80,21 +81,15 @@ const CallSmsChat: React.FC<CallSmsChatProps> = ({ homeownerId, callId }) => {
 
     setSending(true);
     try {
-      const response = await fetch('/api/messages/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          homeownerId,
-          text: messageText.trim(),
-          callId: callId || null,
-        }),
+      // Use centralized messages service
+      const result = await sendMessage({
+        homeownerId,
+        text: messageText.trim(),
+        callId: callId || null,
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to send message');
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to send message');
       }
 
       setMessageText('');
@@ -102,9 +97,10 @@ const CallSmsChat: React.FC<CallSmsChatProps> = ({ homeownerId, callId }) => {
       setTimeout(() => {
         loadMessages();
       }, 500);
-    } catch (error: any) {
-      console.error('Error sending message:', error);
-      alert(`Failed to send message: ${error.message}`);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('❌ Error sending message:', errorMessage);
+      alert(`Failed to send message: ${errorMessage}`);
     } finally {
       setSending(false);
     }
