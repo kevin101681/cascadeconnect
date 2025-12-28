@@ -1485,9 +1485,12 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
         // Generate HTML table for batch summary
         const claimsTableRows = createdClaims.map((c: any, index: number) => {
           const claimData = batchData[index];
+          const claimLink = `${baseUrl}#claims?claimId=${c.id}`;
           return `
             <tr style="border-bottom: 1px solid #e0e0e0;">
-              <td style="padding: 12px; text-align: left;">${c.claimNumber || 'N/A'}</td>
+              <td style="padding: 12px; text-align: left;">
+                <a href="${claimLink}" style="display: inline-block; background-color: #3c6b80; color: #FFFFFF; text-decoration: none; padding: 4px 12px; border-radius: 100px; font-weight: 500; font-size: 12px; font-family: Arial, sans-serif;">#${c.claimNumber || 'N/A'}</a>
+              </td>
               <td style="padding: 12px; text-align: left;">${c.category || 'General'}</td>
               <td style="padding: 12px; text-align: left;">${c.title}</td>
               <td style="padding: 12px; text-align: left;">${(claimData.description || '').substring(0, 100)}${(claimData.description || '').length > 100 ? '...' : ''}</td>
@@ -1499,7 +1502,7 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
         const emailBody = `
           <p><strong>${createdClaims.length} new warranty claim${createdClaims.length > 1 ? 's have' : ' has'} been submitted:</strong></p>
           
-          <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-family: Arial, sans-serif;">
+          <table style="width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0; font-family: Arial, sans-serif; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
             <thead>
               <tr style="background-color: #f5f5f5; border-bottom: 2px solid #ddd;">
                 <th style="padding: 12px; text-align: left; font-weight: bold;">Claim #</th>
@@ -1723,10 +1726,12 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
       const emailBody = `
 <p><strong>A new claim has been submitted:</strong></p>
 
-<table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-family: Arial, sans-serif; background-color: #ffffff;">
+<table style="width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0; font-family: Arial, sans-serif; background-color: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
   <tr style="border-bottom: 1px solid #e0e0e0;">
     <td style="padding: 12px; font-weight: bold; width: 150px;">Claim Number:</td>
-    <td style="padding: 12px;">${newClaim.claimNumber}</td>
+    <td style="padding: 12px;">
+      <a href="${claimLink}" style="display: inline-block; background-color: #3c6b80; color: #FFFFFF; text-decoration: none; padding: 4px 12px; border-radius: 100px; font-weight: 500; font-size: 12px; font-family: Arial, sans-serif;">#${newClaim.claimNumber}</a>
+    </td>
   </tr>
   <tr style="border-bottom: 1px solid #e0e0e0;">
     <td style="padding: 12px; font-weight: bold;">Category:</td>
