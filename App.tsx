@@ -1523,7 +1523,7 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
           </div>
 
           <div style="margin: 20px 0; text-align: center;">
-            <a href="${baseUrl}#claims" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 10px 24px; border-radius: 100px; font-weight: 500; font-size: 14px; font-family: Arial, sans-serif; border: none; cursor: pointer;">View All Claims</a>
+            <a href="${baseUrl}#claims" style="display: inline-block; background-color: #3c6b80; color: #FFFFFF; text-decoration: none; padding: 10px 24px; border-radius: 100px; font-weight: 500; font-size: 14px; font-family: Arial, sans-serif; border: none; cursor: pointer;">View All Claims</a>
           </div>
         `.trim();
 
@@ -1755,7 +1755,7 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
 </div>
 
 <div style="margin: 20px 0; text-align: center;">
-  <a href="${claimLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 10px 24px; border-radius: 100px; font-weight: 500; font-size: 14px; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Claim</a>
+  <a href="${claimLink}" style="display: inline-block; background-color: #3c6b80; color: #FFFFFF; text-decoration: none; padding: 10px 24px; border-radius: 100px; font-weight: 500; font-size: 14px; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Claim</a>
 </div>
       `.trim();
 
