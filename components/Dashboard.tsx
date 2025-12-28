@@ -1497,6 +1497,11 @@ const Dashboard: React.FC<DashboardProps> = ({
     // 2. Send Email Notification
     const senderName = isAdmin ? currentUser.name : activeHomeowner.name;
 
+    // Generate thread ID for reply tracking (this will be created by onCreateThread)
+    // We need to get the thread ID from the newly created thread
+    // For now, we'll use a temporary ID that will be replaced
+    const tempThreadId = crypto.randomUUID();
+
     // Generate Cascade Connect messages link
     const baseUrl = typeof window !== 'undefined' 
       ? `${window.location.protocol}//${window.location.hostname}${window.location.port ? `:${window.location.port}` : ''}`
@@ -1506,9 +1511,11 @@ const Dashboard: React.FC<DashboardProps> = ({
     await sendEmail({
       to: targetEmail,
       subject: newMessageSubject,
-      body: generateNotificationBody(senderName, newMessageContent, 'MESSAGE', 'new', messagesLink),
+      body: generateNotificationBody(senderName, newMessageContent, 'MESSAGE', tempThreadId, messagesLink),
       fromName: senderName,
-      fromRole: userRole
+      fromRole: userRole,
+      replyToId: tempThreadId,
+      replyToEmail: isAdmin ? `replies+${tempThreadId}@cascadeconnect.app` : undefined
     });
 
     // Track claim-related message if thread is from admin and claim-related
