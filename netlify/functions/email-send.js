@@ -52,6 +52,14 @@ exports.handler = async (event) => {
 
     const fromEmail = process.env.SENDGRID_REPLY_EMAIL || 'noreply@cascadeconnect.app';
     const actualReplyTo = replyToEmail || fromEmail; // Use provided reply-to email or fallback to from email
+    
+    console.log('📧 Email configuration:', {
+      to,
+      from: fromEmail,
+      replyTo: actualReplyTo,
+      replyToEmail: replyToEmail || 'not provided',
+      subject
+    });
 
     // Set API key
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
