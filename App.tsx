@@ -1514,11 +1514,16 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
             </tbody>
           </table>
 
-          <p><strong>Homeowner:</strong> ${subjectHomeowner.name}</p>
-          <p><strong>Address:</strong> ${subjectHomeowner.address}</p>
+          <div style="background-color: #f5f5f5; padding: 16px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 8px 0;"><strong>Homeowner:</strong> ${subjectHomeowner.name}</p>
+            <p style="margin: 8px 0;"><strong>Address:</strong> ${subjectHomeowner.address}</p>
+            <p style="margin: 8px 0;"><strong>Builder:</strong> ${subjectHomeowner.builder || 'N/A'}</p>
+            <p style="margin: 8px 0;"><strong>Project:</strong> ${subjectHomeowner.jobName || 'N/A'}</p>
+            <p style="margin: 8px 0;"><strong>Closing Date:</strong> ${subjectHomeowner.closingDate ? new Date(subjectHomeowner.closingDate).toLocaleDateString() : 'N/A'}</p>
+          </div>
 
-          <div style="margin: 20px 0;">
-            <a href="${baseUrl}#claims" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">View All Claims</a>
+          <div style="margin: 20px 0; text-align: center;">
+            <a href="${baseUrl}#claims" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 10px 24px; border-radius: 100px; font-weight: 500; font-size: 14px; font-family: Arial, sans-serif; border: none; cursor: pointer;">View All Claims</a>
           </div>
         `.trim();
 
@@ -1716,17 +1721,41 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
       const claimLink = `${baseUrl}#claims?claimId=${newClaim.id}`;
 
       const emailBody = `
-A new claim has been submitted:
+<p><strong>A new claim has been submitted:</strong></p>
 
-Claim Number: ${newClaim.claimNumber}
-Title: ${newClaim.title}
-Description: ${newClaim.description}
-Category: ${newClaim.category}
-Address: ${newClaim.address}
-Homeowner: ${newClaim.homeownerName}
+<table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-family: Arial, sans-serif; background-color: #ffffff;">
+  <tr style="border-bottom: 1px solid #e0e0e0;">
+    <td style="padding: 12px; font-weight: bold; width: 150px;">Claim Number:</td>
+    <td style="padding: 12px;">${newClaim.claimNumber}</td>
+  </tr>
+  <tr style="border-bottom: 1px solid #e0e0e0;">
+    <td style="padding: 12px; font-weight: bold;">Category:</td>
+    <td style="padding: 12px;">${newClaim.category}</td>
+  </tr>
+  <tr style="border-bottom: 1px solid #e0e0e0;">
+    <td style="padding: 12px; font-weight: bold;">Title:</td>
+    <td style="padding: 12px;">${newClaim.title}</td>
+  </tr>
+  <tr style="border-bottom: 1px solid #e0e0e0;">
+    <td style="padding: 12px; font-weight: bold;">Description:</td>
+    <td style="padding: 12px;">${newClaim.description}</td>
+  </tr>
+  <tr style="border-bottom: 1px solid #e0e0e0;">
+    <td style="padding: 12px; font-weight: bold;">Attachments:</td>
+    <td style="padding: 12px;">${(newClaim.attachments || []).length} photo${(newClaim.attachments || []).length !== 1 ? 's' : ''}</td>
+  </tr>
+</table>
 
-<div style="margin: 20px 0;">
-  <a href="${claimLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Claim</a>
+<div style="background-color: #f5f5f5; padding: 16px; border-radius: 8px; margin: 20px 0;">
+  <p style="margin: 8px 0;"><strong>Homeowner:</strong> ${newClaim.homeownerName}</p>
+  <p style="margin: 8px 0;"><strong>Address:</strong> ${newClaim.address}</p>
+  <p style="margin: 8px 0;"><strong>Builder:</strong> ${subjectHomeowner.builder || 'N/A'}</p>
+  <p style="margin: 8px 0;"><strong>Project:</strong> ${subjectHomeowner.jobName || 'N/A'}</p>
+  <p style="margin: 8px 0;"><strong>Closing Date:</strong> ${subjectHomeowner.closingDate ? new Date(subjectHomeowner.closingDate).toLocaleDateString() : 'N/A'}</p>
+</div>
+
+<div style="margin: 20px 0; text-align: center;">
+  <a href="${claimLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 10px 24px; border-radius: 100px; font-weight: 500; font-size: 14px; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Claim</a>
 </div>
       `.trim();
 
