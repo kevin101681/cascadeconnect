@@ -209,6 +209,8 @@ export const emailLogs = pgTable('email_logs', {
   status: text('status').notNull(), // 'sent' | 'failed'
   error: text('error'), // Error message if status is 'failed' (nullable)
   metadata: json('metadata').$type<any>(), // JSON metadata (claim_id, user_id, etc.) (nullable)
+  sendgridMessageId: text('sendgrid_message_id'), // SendGrid message ID for tracking
+  openedAt: timestamp('opened_at'), // When the email was first opened (null if not opened)
   createdAt: timestamp('created_at').defaultNow(), // When the email was sent/attempted
 });
 

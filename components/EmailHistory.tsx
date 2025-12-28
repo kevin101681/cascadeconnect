@@ -34,6 +34,7 @@ interface EmailActivity {
   error?: string | null;
   metadata?: Record<string, any> | null;
   created_at: string;
+  opened_at?: string | null; // Timestamp when email was first opened
   // Legacy SendGrid fields (kept for backward compatibility if needed)
   msg_id?: string;
   from?: string;
@@ -510,6 +511,7 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
                         <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">Recipient</th>
                         <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">Subject</th>
                         <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">Status</th>
+                        <th className="text-center px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">Read</th>
                         <th className="text-center px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">Details</th>
                       </tr>
                     </thead>
@@ -537,6 +539,23 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${email.status === 'sent' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                                 {email.status === 'sent' ? 'Sent' : 'Failed'}
                               </span>
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              {email.opened_at ? (
+                                <div className="flex flex-col items-center gap-1">
+                                  <Eye className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                  <span className="text-xs text-blue-600 dark:text-blue-400">
+                                    {formatDateTime(email.opened_at)}
+                                  </span>
+                                </div>
+                              ) : email.status === 'sent' ? (
+                                <div className="flex items-center justify-center gap-1 text-surface-on-variant dark:text-gray-500">
+                                  <Mail className="h-4 w-4" />
+                                  <span className="text-xs">Unread</span>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-surface-on-variant dark:text-gray-500">—</span>
+                              )}
                             </td>
                             <td className="px-4 py-3 text-center">
                               {selectedEmail?.id === email.id ? (

@@ -120,7 +120,7 @@ exports.handler = async (event) => {
           enableText: false
         },
         openTracking: {
-          enable: false
+          enable: true  // Enable open tracking to detect when emails are read
         }
       },
       attachments: sendGridAttachments
@@ -144,11 +144,12 @@ exports.handler = async (event) => {
       if (databaseUrl) {
         const sql = neon(databaseUrl);
         await sql(
-          `INSERT INTO email_logs (recipient, subject, status, metadata) VALUES ($1, $2, $3, $4)`,
+          `INSERT INTO email_logs (recipient, subject, status, sendgrid_message_id, metadata) VALUES ($1, $2, $3, $4, $5)`,
           [
             to,
             subject,
             'sent',
+            sendGridMessageId,  // Store SendGrid message ID for tracking opens
             JSON.stringify({
               messageId: sendGridMessageId,
               from: fromEmail,
