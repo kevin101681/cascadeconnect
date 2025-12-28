@@ -54,12 +54,63 @@ exports.handler = async (event, context) => {
 
   let client = null;
   try {
-    // SendGrid Inbound Parse sends data as form-urlencoded
-    // Parse the form data
-    const formData = new URLSearchParams(event.body || '');
-    const emailData = {};
-    for (const [key, value] of formData.entries()) {
-      emailData[key] = value;
+    console.log('📧 Parsing email data...');
+    console.log('Content-Type:', event.headers['content-type']);
+    console.log('Body length:', event.body ? event.body.length : 0);
+    
+    // SendGrid Inbound Parse sends data as multipart/form-data
+    // We need to parse it differently than URL-encoded
+    const contentType = event.headers['content-type'] || '';
+    let emailData = {};
+    
+    if (contentType.includes('multipart/form-data')) {
+      // Parse multipart form data
+      const boundary = contentType.split('boundary=')[1];
+      if (!boundary) {
+        console.error('❌ No boundary found in multipart data');
+        return {
+          statusCode: 400,
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*'
+          },
+          body: JSON.stringify({ error: 'Invalid multipart data' })
+        };
+      }
+      
+      console.log('📧 Boundary:', boundary);
+      
+      // Split by boundary
+      const parts = event.body.split('--' + boundary);
+      console.log('📧 Found', parts.length, 'parts');
+      
+      for (const part of parts) {
+        if (!part || part === '--\n' || part === '--\r\n') continue;
+        
+        // Extract field name and value
+        const nameMatch = part.match(/name="([^"]+)"/);
+        if (!nameMatch) continue;
+        
+        const fieldName = nameMatch[1];
+        
+        // Extract the value (after the double newline)
+        const valueMatch = part.split(/\r?\n\r?\n/);
+        if (valueMatch.length < 2) continue;
+        
+        // Get everything after the headers, trim the trailing boundary markers
+        let value = valueMatch.slice(1).join('\n\n').trim();
+        value = value.replace(/\r?\n--$/, '').trim();
+        
+        emailData[fieldName] = value;
+      }
+      
+      console.log('📧 Parsed fields:', Object.keys(emailData));
+    } else {
+      // Fallback to URL-encoded parsing
+      const formData = new URLSearchParams(event.body || '');
+      for (const [key, value] of formData.entries()) {
+        emailData[key] = value;
+      }
     }
 
     // Extract key information from SendGrid's parsed email
