@@ -93,10 +93,55 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
       return;
     }
 
-    // Proceed with Clerk sign-up
-    // Note: We allow sign-up even if email exists in Cascade Connect - we'll link accounts after sign-up
     try {
       setIsCreating(true);
+      const emailLower = email.trim().toLowerCase();
+
+      // ✅ STEP 1: Check if this email exists in Cascade Connect database
+      if (isDbConfigured) {
+        let existingAccount = null;
+        let accountType = '';
+
+        // Check homeowners table
+        const homeowners = await db
+          .select()
+          .from(homeownersTable)
+          .where(eq(homeownersTable.email, emailLower))
+          .limit(1);
+        
+        if (homeowners.length > 0) {
+          existingAccount = homeowners[0];
+          accountType = 'homeowner';
+        } else {
+          // Check users table (employees/builders)
+          const users = await db
+            .select()
+            .from(usersTable)
+            .where(eq(usersTable.email, emailLower))
+            .limit(1);
+          
+          if (users.length > 0) {
+            existingAccount = users[0];
+            accountType = users[0].role === 'ADMIN' ? 'employee' : 'builder';
+          }
+        }
+
+        // ❌ If email NOT in database, reject signup
+        if (!existingAccount) {
+          setError('This email address is not recognized. Please contact support or use the email address from your invitation.');
+          return;
+        }
+
+        // ✅ If already linked to Clerk, they should sign in instead
+        if (existingAccount.clerkId) {
+          setError('This account already exists. Please use "Sign In" instead.');
+          return;
+        }
+
+        console.log(`✅ Email verified in database as ${accountType}: ${emailLower}`);
+      }
+
+      // ✅ STEP 2: Create Clerk account (now that we've verified they should have access)
       await signUp.create({
         emailAddress: email.trim(),
         password: password,
@@ -104,24 +149,18 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
         lastName: lastName.trim() || undefined,
       });
 
-      // Complete the sign-up process
-      // If email verification is required, Clerk will handle it
-      // Otherwise, we can activate the session directly
+      // ✅ STEP 3: Handle verification if needed
       if (signUp.status === 'missing_requirements') {
-        // If email verification is needed, prepare it
         await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
         setError('Please check your email for a verification code.');
-        // You could add a verification code input here
         return;
       }
 
-      // If sign-up is complete, link to Cascade Connect account if email exists
+      // ✅ STEP 4: Link Clerk account to Cascade Connect account
       if (signUp.status === 'complete') {
-        // Get the Clerk user ID
         const clerkUserId = signUp.createdUserId;
         
         if (clerkUserId) {
-          // Link Clerk account to existing Cascade Connect account (if email exists)
           await linkClerkAccount(clerkUserId, email.trim(), smsOptIn);
         }
         
@@ -133,8 +172,21 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
       }
     } catch (err: any) {
       console.error('Sign-up error:', err);
-      const errorMessage = err.errors?.[0]?.message || err.message || 'Failed to create account. Please try again.';
-      setError(errorMessage);
+      
+      // Handle specific Clerk errors
+      if (err.errors && err.errors.length > 0) {
+        const clerkError = err.errors[0];
+        
+        // If Clerk says email is taken, explain what that means
+        if (clerkError.code === 'form_identifier_exists') {
+          setError('This email already has an account. Please use "Sign In" instead, or contact support if you need help.');
+          return;
+        }
+        
+        setError(clerkError.message || 'Failed to create account. Please try again.');
+      } else {
+        setError(err.message || 'Failed to create account. Please try again.');
+      }
     } finally {
       setIsCreating(false);
     }
@@ -142,6 +194,12 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="mb-4 p-4 bg-primary/10 dark:bg-primary/20 border border-primary/30 rounded-lg">
+        <p className="text-sm text-surface-on dark:text-gray-100">
+          <strong>Creating your account?</strong> Enter the email address from your invitation to link your account.
+        </p>
+      </div>
+
       <div>
         <label htmlFor="firstName" className="block text-sm font-medium text-surface-on dark:text-gray-100 mb-1">
           First Name (Optional)
@@ -170,7 +228,7 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
 
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-surface-on dark:text-gray-100 mb-1">
-          Email <span className="text-error">*</span>
+          Email from Your Invitation <span className="text-error">*</span>
         </label>
         <input
           id="email"
@@ -181,11 +239,14 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
           className="w-full px-3 py-2 bg-surface-container dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 rounded-lg text-surface-on dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
           placeholder="your.email@example.com"
         />
+        <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-1">
+          This must match the email address you were invited with
+        </p>
       </div>
 
       <div>
         <label htmlFor="password" className="block text-sm font-medium text-surface-on dark:text-gray-100 mb-1">
-          Password <span className="text-error">*</span>
+          Create a Password <span className="text-error">*</span>
         </label>
         <input
           id="password"
