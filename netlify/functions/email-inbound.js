@@ -35,8 +35,13 @@ const extractEmail = (emailString) => {
 };
 
 exports.handler = async (event, context) => {
+  console.log('🔔 WEBHOOK CALLED - email-inbound.js');
+  console.log('📧 Method:', event.httpMethod);
+  console.log('📧 Headers:', JSON.stringify(event.headers, null, 2));
+  
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
+    console.log('❌ Method not allowed:', event.httpMethod);
     return {
       statusCode: 405,
       headers: {
@@ -123,6 +128,13 @@ exports.handler = async (event, context) => {
       hasText: !!textBody,
       hasHtml: !!htmlBody
     });
+    
+    if (!threadId) {
+      console.warn('⚠️ Could not extract thread ID from email');
+      console.log('TO email:', toEmail);
+      console.log('Headers:', headers);
+      console.log('References:', references);
+    }
 
     // Connect to database
     client = await getDbClient();
