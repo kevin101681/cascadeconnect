@@ -341,3 +341,6 @@ exports.handler = async (event, context) => {
   }
 };
 
+// Ensure the handler is properly exported for Netlify Functions
+module.exports = { handler: exports.handler };
+
