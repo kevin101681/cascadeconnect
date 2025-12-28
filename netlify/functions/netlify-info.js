@@ -158,10 +158,11 @@ exports.handler = async (event, context) => {
         'cbsbooks-invoices',
         'cbsbooks-expenses',
         'cbsbooks-clients',
-        'uploadthing',
-        'netlify-info'
+        'upload',
+        'netlify-info',
+        'vapi-webhook'
       ],
-      functionCount: 8
+      functionCount: 9
     };
 
     // Get request information
