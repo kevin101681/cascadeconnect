@@ -1,13 +1,7 @@
 const nodemailer = require('nodemailer');
 const { logEmailToDb } = require('../../lib/email-logger.js');
 
-interface HandlerResponse {
-  statusCode: number;
-  headers: Record<string, string>;
-  body: string;
-}
-
-export const handler = async (event: any, context?: any): Promise<HandlerResponse> => {
+exports.handler = async (event, context) => {
   // Only allow POST requests (OPTIONS is handled above)
   if (event.httpMethod !== 'POST' && event.httpMethod !== 'OPTIONS') {
     return {
