@@ -4,14 +4,12 @@ import { calls, homeowners, claims, users } from '../../db/schema';
 import { eq, and, gte, inArray } from 'drizzle-orm';
 
 /**
- * VAPI WEBHOOK - COMPLETELY REWRITTEN
+ * VAPI WEBHOOK - UNIVERSAL EMAIL NOTIFICATIONS
  * 
- * Features:
- * 1. Robust data extraction from multiple locations
- * 2. API fallback with 2-second delay if data is missing
- * 3. Fuzzy address matching against homeowners table
- * 4. Automatic claim creation for warranty_issue intent
- * 5. Direct SendGrid email notification with safety wrapper
+ * Sends email for EVERY call with dynamic content:
+ * - Scenario A: Claim created (warranty_issue + matched)
+ * - Scenario B: Match found, no claim (other intent)
+ * - Scenario C: No match / unknown caller
  */
 
 interface HandlerResponse {
@@ -21,7 +19,7 @@ interface HandlerResponse {
 }
 
 /**
- * Fetch call data from Vapi API as a fallback if webhook payload is incomplete
+ * Fetch call data from Vapi API as a fallback
  */
 async function fetchVapiCall(callId: string): Promise<any> {
   const vapiSecret = process.env.VAPI_SECRET;
@@ -48,7 +46,7 @@ async function fetchVapiCall(callId: string): Promise<any> {
 }
 
 /**
- * Calculate similarity between two strings using Levenshtein distance
+ * Calculate similarity between two strings
  */
 function calculateSimilarity(str1: string, str2: string): number {
   const s1 = normalizeAddress(str1);
@@ -64,7 +62,7 @@ function calculateSimilarity(str1: string, str2: string): number {
 }
 
 /**
- * Normalize address string for comparison
+ * Normalize address for comparison
  */
 function normalizeAddress(address: string): string {
   if (!address) return '';
@@ -118,7 +116,7 @@ function levenshteinDistance(str1: string, str2: string): number {
 }
 
 /**
- * Find matching homeowner by address using fuzzy matching
+ * Find matching homeowner by address
  */
 async function findMatchingHomeowner(
   db: any,
@@ -147,7 +145,7 @@ async function findMatchingHomeowner(
 }
 
 /**
- * Check for duplicate claims in the last 24 hours
+ * Check for duplicate claims in last 24 hours
  */
 async function hasRecentOpenClaim(
   db: any,
@@ -183,7 +181,6 @@ async function getAdminEmails(db: any): Promise<string[]> {
     const adminEmails = admins
       .map((admin: any) => admin.email)
       .filter((email: string) => {
-        // Filter out mock/test emails
         return email && 
                !email.includes('mock') && 
                !email.includes('test') && 
@@ -198,131 +195,242 @@ async function getAdminEmails(db: any): Promise<string[]> {
 }
 
 /**
- * Send email notification via SendGrid
- * Wrapped in try/catch so failures don't break the webhook
+ * UNIVERSAL EMAIL NOTIFICATION
+ * Sends email for EVERY call with dynamic content based on scenario
  */
-async function sendEmailNotification(
-  propertyAddress: string,
-  summary: string,
-  homeownerName: string | null,
-  phoneNumber: string | null,
-  isUrgent: boolean,
-  isVerified: boolean,
-  matchedHomeownerId: string | null,
-  vapiCallId: string,
+async function sendUniversalEmailNotification(
+  scenario: 'CLAIM_CREATED' | 'MATCH_NO_CLAIM' | 'NO_MATCH',
+  data: {
+    propertyAddress: string | null;
+    homeownerName: string | null;
+    phoneNumber: string | null;
+    issueDescription: string | null;
+    callIntent: string | null;
+    isUrgent: boolean;
+    isVerified: boolean;
+    matchedHomeownerId: string | null;
+    matchedHomeownerName: string | null;
+    claimNumber: string | null;
+    claimId: string | null;
+    vapiCallId: string;
+    similarity: number | null;
+  },
   db: any
 ): Promise<void> {
   try {
-    // Check if SendGrid is configured
     if (!process.env.SENDGRID_API_KEY) {
-      console.log('⚠️ SendGrid not configured, skipping email notification');
+      console.log('⚠️ SendGrid not configured, skipping email');
       return;
     }
 
-    // Get admin emails from database
+    // Get admin emails
     const adminEmails = await getAdminEmails(db);
-    
-    // Fallback to environment variable if no admins in database
     const recipientEmail = adminEmails.length > 0 
       ? adminEmails[0] 
       : (process.env.ADMIN_NOTIFICATION_EMAIL || process.env.SENDGRID_REPLY_EMAIL || 'info@cascadebuilderservices.com');
     
-    console.log(`📧 Sending email to admin: ${recipientEmail}`);
+    console.log(`📧 Sending ${scenario} email to: ${recipientEmail}`);
 
-    // Import SendGrid
     const sgMail = require('@sendgrid/mail');
     sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-    // Build email subject
-    const urgencyTag = isUrgent ? '[URGENT] ' : '';
-    const verifiedTag = isVerified ? '[VERIFIED] ' : '[UNVERIFIED] ';
-    const subject = `${urgencyTag}${verifiedTag}New Voice Claim: ${propertyAddress}`;
-
-    // Build dashboard link
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://www.cascadeconnect.app';
     const callsLink = `${appUrl}#ai-intake`;
-    const homeownerLink = matchedHomeownerId 
-      ? `${appUrl}#dashboard?homeownerId=${matchedHomeownerId}` 
-      : null;
+    const homeownerLink = data.matchedHomeownerId ? `${appUrl}#dashboard?homeownerId=${data.matchedHomeownerId}` : null;
+    const claimLink = data.claimId ? `${appUrl}#claims?claimId=${data.claimId}` : null;
 
-    // Build email body
+    let subject = '';
+    let headerTitle = '';
+    let scenarioDescription = '';
+    let statusBadge = '';
+    let primaryCta = { text: '', link: '', color: '' };
+
+    // ====================================
+    // SCENARIO A: CLAIM CREATED
+    // ====================================
+    if (scenario === 'CLAIM_CREATED') {
+      subject = `🚨 New Warranty Claim: ${data.propertyAddress || 'Unknown Address'}`;
+      headerTitle = '🚨 New Warranty Claim Created';
+      scenarioDescription = `A warranty claim has been automatically created for ${data.matchedHomeownerName || data.homeownerName || 'this homeowner'}.`;
+      statusBadge = '<span style="background-color: #dc3545; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block;">✓ Claim Created</span>';
+      primaryCta = { text: 'View Claim', link: claimLink || callsLink, color: '#dc3545' };
+    }
+    // ====================================
+    // SCENARIO B: MATCH FOUND, NO CLAIM
+    // ====================================
+    else if (scenario === 'MATCH_NO_CLAIM') {
+      subject = `📞 Homeowner Call: ${data.propertyAddress || 'Unknown Address'}`;
+      headerTitle = '📞 Homeowner Call Received';
+      scenarioDescription = `${data.matchedHomeownerName || data.homeownerName || 'A homeowner'} called, but no claim was automatically created. Intent: ${data.callIntent || 'unknown'}.`;
+      statusBadge = '<span style="background-color: #ffc107; color: #333; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block;">✓ Matched - No Claim</span>';
+      primaryCta = { text: 'View Homeowner', link: homeownerLink || callsLink, color: '#4CAF50' };
+    }
+    // ====================================
+    // SCENARIO C: NO MATCH / UNKNOWN
+    // ====================================
+    else {
+      subject = `⚠️ Unknown Caller: ${data.phoneNumber || 'No Phone'}`;
+      headerTitle = '⚠️ Unknown Caller - Manual Review Required';
+      scenarioDescription = `The AI could not match this address to any homeowner in the database. Please review manually and create a homeowner record if needed.`;
+      statusBadge = '<span style="background-color: #ff5722; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block;">⚠ Unmatched</span>';
+      primaryCta = { text: 'Review Call', link: callsLink, color: '#ff5722' };
+    }
+
+    // Add urgency flag to subject if urgent
+    if (data.isUrgent) {
+      subject = `[URGENT] ${subject}`;
+    }
+
+    // Build HTML email body
     const htmlBody = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-        <h2 style="color: #6750A4; margin-bottom: 20px;">🎙️ New Voice Claim Received</h2>
-        
-        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-          <h3 style="margin-top: 0; color: #333;">Call Information</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold; width: 150px;">Homeowner:</td>
-              <td style="padding: 8px 0;">${homeownerName || 'Not provided'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Phone:</td>
-              <td style="padding: 8px 0;">${phoneNumber || 'Not provided'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Property Address:</td>
-              <td style="padding: 8px 0;"><strong>${propertyAddress || 'Not provided'}</strong></td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Status:</td>
-              <td style="padding: 8px 0;">
-                ${isVerified 
-                  ? '<span style="color: green; font-weight: bold;">✓ Verified (Matched)</span>' 
-                  : '<span style="color: orange; font-weight: bold;">⚠ Unverified</span>'}
-              </td>
-            </tr>
-            <tr>
-              <td style="padding: 8px 0; font-weight: bold;">Urgent:</td>
-              <td style="padding: 8px 0;">
-                ${isUrgent 
-                  ? '<span style="color: red; font-weight: bold;">YES</span>' 
-                  : 'No'}
-              </td>
-            </tr>
-          </table>
-        </div>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
+        <div style="background-color: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+          
+          <!-- Header -->
+          <h2 style="color: #6750A4; margin-bottom: 10px; margin-top: 0;">${headerTitle}</h2>
+          <div style="margin-bottom: 20px;">${statusBadge}</div>
+          <p style="color: #666; font-size: 15px; line-height: 1.6;">${scenarioDescription}</p>
+          
+          <hr style="border: none; border-top: 2px solid #e0e0e0; margin: 30px 0;">
+          
+          <!-- Call Information -->
+          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0; color: #333; font-size: 16px;">Call Information</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              ${scenario === 'NO_MATCH' ? `
+              <tr>
+                <td style="padding: 10px 0; font-weight: bold; width: 160px; color: #666;">Phone Number:</td>
+                <td style="padding: 10px 0; color: #333;"><strong>${data.phoneNumber || 'Not provided'}</strong></td>
+              </tr>
+              ` : ''}
+              <tr>
+                <td style="padding: 10px 0; font-weight: bold; width: 160px; color: #666;">Property Address:</td>
+                <td style="padding: 10px 0; color: #333;"><strong>${data.propertyAddress || 'Not provided'}</strong></td>
+              </tr>
+              ${scenario !== 'NO_MATCH' ? `
+              <tr>
+                <td style="padding: 10px 0; font-weight: bold; color: #666;">Homeowner:</td>
+                <td style="padding: 10px 0; color: #333;">${data.matchedHomeownerName || data.homeownerName || 'Not provided'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; font-weight: bold; color: #666;">Phone:</td>
+                <td style="padding: 10px 0; color: #333;">${data.phoneNumber || 'Not provided'}</td>
+              </tr>
+              ` : `
+              <tr>
+                <td style="padding: 10px 0; font-weight: bold; color: #666;">Caller Name:</td>
+                <td style="padding: 10px 0; color: #333;">${data.homeownerName || 'Not provided'}</td>
+              </tr>
+              `}
+              <tr>
+                <td style="padding: 10px 0; font-weight: bold; color: #666;">Call Intent:</td>
+                <td style="padding: 10px 0; color: #333;">${data.callIntent || 'Not specified'}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; font-weight: bold; color: #666;">Urgency:</td>
+                <td style="padding: 10px 0; color: #333;">
+                  ${data.isUrgent ? '<span style="color: #dc3545; font-weight: bold;">🔥 URGENT</span>' : 'Normal'}
+                </td>
+              </tr>
+              ${scenario === 'CLAIM_CREATED' ? `
+              <tr>
+                <td style="padding: 10px 0; font-weight: bold; color: #666;">Claim Number:</td>
+                <td style="padding: 10px 0; color: #333;"><strong>#${data.claimNumber}</strong></td>
+              </tr>
+              ` : ''}
+              ${scenario !== 'NO_MATCH' && data.similarity ? `
+              <tr>
+                <td style="padding: 10px 0; font-weight: bold; color: #666;">Match Quality:</td>
+                <td style="padding: 10px 0; color: #333;">${Math.round((data.similarity || 0) * 100)}% similar</td>
+              </tr>
+              ` : ''}
+            </table>
+          </div>
 
-        ${summary ? `
-        <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
-          <h3 style="margin-top: 0; color: #333;">Summary</h3>
-          <p style="margin: 0; color: #333; white-space: pre-wrap;">${summary}</p>
-        </div>
-        ` : ''}
-
-        <div style="margin-top: 30px; text-align: center;">
-          <a href="${callsLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; margin: 5px;">
-            View in Dashboard
-          </a>
-          ${homeownerLink ? `
-          <a href="${homeownerLink}" style="display: inline-block; background-color: #4CAF50; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; margin: 5px;">
-            View Homeowner
-          </a>
+          <!-- Issue Description -->
+          ${data.issueDescription ? `
+          <div style="background-color: ${scenario === 'CLAIM_CREATED' ? '#fff3cd' : '#e3f2fd'}; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid ${scenario === 'CLAIM_CREATED' ? '#ffc107' : '#2196F3'};">
+            <h3 style="margin-top: 0; color: #333; font-size: 16px;">${scenario === 'CLAIM_CREATED' ? '🔧 Issue Description' : '💬 Caller Message'}</h3>
+            <p style="margin: 0; color: #333; white-space: pre-wrap; line-height: 1.6;">${data.issueDescription}</p>
+          </div>
           ` : ''}
-        </div>
 
-        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #666; font-size: 12px;">
-          Call ID: ${vapiCallId}
+          <!-- Action Needed (for NO_MATCH scenario) -->
+          ${scenario === 'NO_MATCH' ? `
+          <div style="background-color: #ffebee; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f44336;">
+            <h3 style="margin-top: 0; color: #d32f2f; font-size: 16px;">⚠️ Action Required</h3>
+            <p style="margin: 0; color: #666; line-height: 1.6;">
+              This caller could not be matched to a homeowner in the database. Please:
+            </p>
+            <ul style="color: #666; line-height: 1.8; margin-top: 10px;">
+              <li>Verify if this is a valid homeowner</li>
+              <li>Check if the address was captured correctly</li>
+              <li>Add homeowner to database if needed</li>
+              <li>Create a claim manually if this is a warranty issue</li>
+            </ul>
+          </div>
+          ` : ''}
+
+          <!-- Primary CTA Button -->
+          <div style="margin-top: 30px; text-align: center;">
+            <a href="${primaryCta.link}" style="display: inline-block; background-color: ${primaryCta.color}; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 5px;">
+              ${primaryCta.text}
+            </a>
+            ${scenario !== 'NO_MATCH' && homeownerLink && scenario !== 'CLAIM_CREATED' ? `
+            <a href="${homeownerLink}" style="display: inline-block; background-color: #4CAF50; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 5px;">
+              View Homeowner
+            </a>
+            ` : ''}
+            <a href="${callsLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 5px;">
+              View All Calls
+            </a>
+          </div>
+
+          <!-- Footer -->
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e0e0e0; text-align: center; color: #999; font-size: 12px;">
+            <p style="margin: 5px 0;">Vapi Call ID: ${data.vapiCallId}</p>
+            <p style="margin: 5px 0;">Powered by Cascade Connect AI Intake</p>
+          </div>
+
         </div>
       </div>
     `;
 
+    // Build plain text version
     const textBody = `
-New Voice Claim Received
+${headerTitle}
 
-Homeowner: ${homeownerName || 'Not provided'}
-Phone: ${phoneNumber || 'Not provided'}
-Property Address: ${propertyAddress || 'Not provided'}
-Status: ${isVerified ? 'Verified (Matched)' : 'Unverified'}
-Urgent: ${isUrgent ? 'YES' : 'No'}
+${scenarioDescription}
 
-${summary ? `Summary:\n${summary}\n` : ''}
+CALL INFORMATION
+${scenario === 'NO_MATCH' ? `Phone Number: ${data.phoneNumber || 'Not provided'}` : ''}
+Property Address: ${data.propertyAddress || 'Not provided'}
+${scenario !== 'NO_MATCH' ? `Homeowner: ${data.matchedHomeownerName || data.homeownerName || 'Not provided'}` : `Caller Name: ${data.homeownerName || 'Not provided'}`}
+${scenario !== 'NO_MATCH' ? `Phone: ${data.phoneNumber || 'Not provided'}` : ''}
+Call Intent: ${data.callIntent || 'Not specified'}
+Urgency: ${data.isUrgent ? 'URGENT' : 'Normal'}
+${scenario === 'CLAIM_CREATED' ? `Claim Number: #${data.claimNumber}` : ''}
+${scenario !== 'NO_MATCH' && data.similarity ? `Match Quality: ${Math.round((data.similarity || 0) * 100)}%` : ''}
 
-View in Dashboard: ${callsLink}
-${homeownerLink ? `View Homeowner: ${homeownerLink}\n` : ''}
+${data.issueDescription ? `\nISSUE DESCRIPTION\n${data.issueDescription}\n` : ''}
 
-Call ID: ${vapiCallId}
+${scenario === 'NO_MATCH' ? `
+ACTION REQUIRED
+This caller could not be matched to a homeowner. Please:
+- Verify if this is a valid homeowner
+- Check if the address was captured correctly
+- Add homeowner to database if needed
+- Create a claim manually if this is a warranty issue
+` : ''}
+
+LINKS
+${primaryCta.text}: ${primaryCta.link}
+${scenario !== 'NO_MATCH' && homeownerLink ? `View Homeowner: ${homeownerLink}` : ''}
+View All Calls: ${callsLink}
+
+---
+Vapi Call ID: ${data.vapiCallId}
+Powered by Cascade Connect AI Intake
     `.trim();
 
     // Send email
@@ -332,7 +440,7 @@ Call ID: ${vapiCallId}
       to: recipientEmail,
       from: {
         email: fromEmail,
-        name: 'Cascade Connect',
+        name: 'Cascade Connect AI',
       },
       subject: subject,
       text: textBody,
@@ -341,29 +449,28 @@ Call ID: ${vapiCallId}
 
     const [response] = await sgMail.send(msg);
     
-    console.log(`✅ Email sent successfully:`, {
+    console.log(`✅ Sent '${scenario}' email successfully:`, {
       statusCode: response.statusCode,
       to: recipientEmail,
       subject: subject,
     });
 
-    // Send to additional admins if available
+    // Send to additional admins
     if (adminEmails.length > 1) {
       for (let i = 1; i < adminEmails.length; i++) {
         try {
           const additionalMsg = { ...msg, to: adminEmails[i] };
           await sgMail.send(additionalMsg);
-          console.log(`✅ Email sent to additional admin: ${adminEmails[i]}`);
+          console.log(`✅ Sent to additional admin: ${adminEmails[i]}`);
         } catch (err) {
           console.error(`❌ Failed to send to ${adminEmails[i]}:`, err);
         }
       }
     }
   } catch (error: any) {
-    // Log the error but don't throw - we don't want email failures to break the webhook
-    console.error('❌ Email notification failed (non-blocking):', error.message);
+    console.error(`❌ Email notification failed (non-blocking) for scenario '${scenario}':`, error.message);
     if (error.response?.body) {
-      console.error('SendGrid error details:', error.response.body);
+      console.error('SendGrid error:', error.response.body);
     }
   }
 }
@@ -374,7 +481,6 @@ Call ID: ${vapiCallId}
 export const handler = async (event: any): Promise<HandlerResponse> => {
   const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   
-  // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -424,7 +530,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     try {
       body = JSON.parse(rawBody);
     } catch (parseError) {
-      console.error('❌ Invalid JSON payload');
+      console.error('❌ Invalid JSON');
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
@@ -433,24 +539,18 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     }
 
     // ==========================================
-    // STEP 1: DEEP LOGGING
+    // STEP 1: EXTRACTION
     // ==========================================
-    console.log(`📦 [${requestId}] STEP 1: Deep Logging`);
-    console.log(`📦 [${requestId}] Full body structure (first 1000 chars):`, JSON.stringify(body).substring(0, 1000));
-    console.log(`📦 [${requestId}] Body keys:`, Object.keys(body));
+    console.log(`📦 [${requestId}] STEP 1: Extraction`);
+    console.log(`📦 Body keys:`, Object.keys(body));
     
     const message = body.message || body;
     const callData = message.call || body.call || message;
     const messageType = message.type || body.type;
     
-    console.log(`📦 [${requestId}] Message type: ${messageType || 'unknown'}`);
-    console.log(`📦 [${requestId}] Message keys:`, message ? Object.keys(message) : []);
-    console.log(`📦 [${requestId}] Call data keys:`, callData ? Object.keys(callData) : []);
-
-    // Extract call ID
     const vapiCallId = callData?.id || callData?.callId || body?.id;
     if (!vapiCallId) {
-      console.error('❌ No call ID found');
+      console.error('❌ No call ID');
       return {
         statusCode: 400,
         headers: { 'Content-Type': 'application/json' },
@@ -458,14 +558,9 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       };
     }
 
-    console.log(`🆔 [${requestId}] Call ID: ${vapiCallId}`);
+    console.log(`🆔 Call ID: ${vapiCallId}`);
 
-    // ==========================================
-    // STEP 2: SMART EXTRACTION
-    // ==========================================
-    console.log(`📦 [${requestId}] STEP 2: Smart Extraction`);
-    
-    // Look for structuredData in multiple locations
+    // Extract structured data
     const analysis = message?.analysis || callData?.analysis || body?.analysis || {};
     const artifact = message?.artifact || callData?.artifact || body?.artifact || {};
     
@@ -478,10 +573,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       artifact?.structuredData ||
       {};
 
-    console.log(`🔍 [${requestId}] Structured data keys:`, Object.keys(structuredData));
-    if (Object.keys(structuredData).length > 0) {
-      console.log(`🔍 [${requestId}] Structured data:`, JSON.stringify(structuredData, null, 2));
-    }
+    console.log(`🔍 Structured data keys:`, Object.keys(structuredData));
 
     // Extract fields
     let propertyAddress = 
@@ -528,7 +620,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     const transcript = callData?.transcript || callData?.transcription || message?.transcript || null;
     const recordingUrl = callData?.recordingUrl || callData?.recording_url || null;
 
-    console.log(`📊 [${requestId}] Extracted (before API fallback):`, {
+    console.log(`📊 Extracted:`, {
       propertyAddress: propertyAddress || 'MISSING',
       homeownerName: homeownerName || 'not provided',
       phoneNumber: phoneNumber || 'not provided',
@@ -536,11 +628,9 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       isUrgent,
     });
 
-    // ==========================================
-    // STEP 3: API FALLBACK (Critical Fix)
-    // ==========================================
+    // API Fallback if propertyAddress missing
     if (!propertyAddress && vapiCallId) {
-      console.log(`⚠️ [${requestId}] STEP 3: propertyAddress missing, waiting 2000ms before API fallback...`);
+      console.log(`⚠️ [${requestId}] propertyAddress missing, waiting 2000ms...`);
       
       try {
         await new Promise(resolve => setTimeout(resolve, 2000));
@@ -548,7 +638,6 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
         console.log(`🔄 [${requestId}] Fetching from Vapi API...`);
         const apiCallData = await fetchVapiCall(vapiCallId);
         
-        // Extract from API response
         const apiAnalysis = apiCallData?.analysis || {};
         const apiArtifact = apiCallData?.artifact || {};
         const apiStructuredData = 
@@ -557,12 +646,11 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           apiArtifact?.structuredData ||
           {};
         
-        console.log(`✅ [${requestId}] API structured data keys:`, Object.keys(apiStructuredData));
+        console.log(`✅ API structured data keys:`, Object.keys(apiStructuredData));
         
-        // Update missing fields
         if (apiStructuredData?.propertyAddress && !propertyAddress) {
           propertyAddress = apiStructuredData.propertyAddress;
-          console.log(`✅ [${requestId}] Got propertyAddress from API: ${propertyAddress}`);
+          console.log(`✅ Got propertyAddress from API: ${propertyAddress}`);
         }
         if (apiStructuredData?.homeownerName && !homeownerName) {
           homeownerName = apiStructuredData.homeownerName;
@@ -580,7 +668,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           isUrgent = apiStructuredData.isUrgent === true;
         }
       } catch (apiError: any) {
-        console.error(`❌ [${requestId}] API fallback failed:`, apiError.message);
+        console.error(`❌ API fallback failed:`, apiError.message);
       }
     }
 
@@ -599,31 +687,31 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     const db = drizzle(sql);
 
     // ==========================================
-    // STEP 4: DATABASE LOGIC - Fuzzy Match
+    // STEP 2: DATABASE - Find Homeowner
     // ==========================================
-    console.log(`📦 [${requestId}] STEP 4: Database Matching`);
+    console.log(`📦 [${requestId}] STEP 2: Database Matching`);
     
     let matchedHomeowner: any = null;
     let similarity: number = 0;
     let isVerified = false;
 
     if (propertyAddress) {
-      console.log(`🔍 [${requestId}] Fuzzy matching address: "${propertyAddress}"`);
+      console.log(`🔍 Fuzzy matching: "${propertyAddress}"`);
       const matchResult = await findMatchingHomeowner(db, propertyAddress, 0.4);
       
       if (matchResult) {
         matchedHomeowner = matchResult.homeowner;
         similarity = matchResult.similarity;
         isVerified = true;
-        console.log(`✅ [${requestId}] Matched homeowner ${matchedHomeowner.id} (similarity: ${similarity.toFixed(3)})`);
+        console.log(`✅ Matched homeowner ${matchedHomeowner.id} (${Math.round(similarity * 100)}% similar)`);
       } else {
-        console.log(`⚠️ [${requestId}] No match found for: "${propertyAddress}"`);
+        console.log(`⚠️ No match found`);
       }
     } else {
-      console.log(`⚠️ [${requestId}] No propertyAddress available for matching`);
+      console.log(`⚠️ No propertyAddress for matching`);
     }
 
-    // Insert/update call record
+    // Save call record (ALWAYS, regardless of match)
     try {
       await db
         .insert(calls)
@@ -656,24 +744,26 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           } as any,
         });
 
-      console.log(`✅ [${requestId}] Call saved to database`);
+      console.log(`✅ Call saved to database`);
     } catch (dbError: any) {
-      console.error(`❌ [${requestId}] Database error:`, dbError.message);
-      // Continue processing even if DB save fails
+      console.error(`❌ Database error:`, dbError.message);
     }
 
     // ==========================================
-    // STEP 5: CREATE CLAIM (if warranty_issue)
+    // STEP 3: CREATE CLAIM (if applicable)
     // ==========================================
+    let claimCreated = false;
+    let claimNumber: string | null = null;
+    let claimId: string | null = null;
+
     if (matchedHomeowner && callIntent === 'warranty_issue') {
-      console.log(`📦 [${requestId}] STEP 5: Creating claim for warranty_issue`);
+      console.log(`📦 [${requestId}] STEP 3: Creating claim`);
       
       try {
-        // Check for duplicate claims
         const hasDuplicate = await hasRecentOpenClaim(db, matchedHomeowner.id);
         
         if (hasDuplicate) {
-          console.log(`⏭️ [${requestId}] Duplicate claim detected, skipping`);
+          console.log(`⏭️ Duplicate claim detected, skipping`);
         } else {
           // Get next claim number
           const existingClaims = await db
@@ -688,10 +778,10 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
             })
             .reduce((max: number, num: number) => Math.max(max, num), 0);
           
-          const claimNumber = (maxNumber + 1).toString();
+          claimNumber = (maxNumber + 1).toString();
           
           // Insert claim
-          await db.insert(claims).values({
+          const insertResult = await db.insert(claims).values({
             homeownerId: matchedHomeowner.id,
             homeownerName: matchedHomeowner.name,
             homeownerEmail: matchedHomeowner.email,
@@ -706,20 +796,25 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
             classification: 'Unclassified',
             summary: issueDescription,
             dateSubmitted: new Date(),
-          } as any);
+          } as any).returning();
           
-          console.log(`✅ [${requestId}] Claim #${claimNumber} created`);
+          claimCreated = true;
+          claimId = insertResult[0]?.id || null;
+          console.log(`✅ Claim #${claimNumber} created (ID: ${claimId})`);
         }
       } catch (claimError: any) {
-        console.error(`❌ [${requestId}] Claim creation error:`, claimError.message);
+        console.error(`❌ Claim creation error:`, claimError.message);
       }
-    } else if (callIntent && callIntent !== 'warranty_issue') {
-      console.log(`⏭️ [${requestId}] Skipping claim - intent is '${callIntent}'`);
+    } else {
+      console.log(`⏭️ Skipping claim - ${!matchedHomeowner ? 'no match' : `intent is '${callIntent}'`}`);
     }
 
     // ==========================================
-    // STEP 6: EMAIL NOTIFICATION (Safe Wrapper)
+    // STEP 4: UNIVERSAL EMAIL NOTIFICATION
+    // (ALWAYS SENT, OUTSIDE ANY IF/ELSE)
     // ==========================================
+    console.log(`📧 [${requestId}] STEP 4: Sending universal email notification`);
+
     const isFinalEvent = 
       messageType === 'end-of-call-report' || 
       messageType === 'function-call' ||
@@ -728,20 +823,41 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       !!callIntent;
 
     if (isFinalEvent) {
-      console.log(`📧 [${requestId}] STEP 6: Sending email notification`);
+      // Determine scenario
+      let scenario: 'CLAIM_CREATED' | 'MATCH_NO_CLAIM' | 'NO_MATCH';
       
-      // This is wrapped in try/catch inside the function
-      await sendEmailNotification(
-        propertyAddress || 'Address not provided',
-        issueDescription || 'No description provided',
-        homeownerName,
-        phoneNumber,
-        isUrgent,
-        isVerified,
-        matchedHomeowner?.id || null,
-        vapiCallId,
+      if (claimCreated) {
+        scenario = 'CLAIM_CREATED';
+      } else if (matchedHomeowner) {
+        scenario = 'MATCH_NO_CLAIM';
+      } else {
+        scenario = 'NO_MATCH';
+      }
+
+      console.log(`📧 Determined scenario: ${scenario}`);
+
+      // Send email with all data
+      await sendUniversalEmailNotification(
+        scenario,
+        {
+          propertyAddress: propertyAddress,
+          homeownerName: homeownerName,
+          phoneNumber: phoneNumber,
+          issueDescription: issueDescription,
+          callIntent: callIntent,
+          isUrgent: isUrgent,
+          isVerified: isVerified,
+          matchedHomeownerId: matchedHomeowner?.id || null,
+          matchedHomeownerName: matchedHomeowner?.name || null,
+          claimNumber: claimNumber,
+          claimId: claimId,
+          vapiCallId: vapiCallId,
+          similarity: similarity,
+        },
         db
       );
+    } else {
+      console.log(`⏭️ Not a final event, skipping email`);
     }
 
     // ==========================================
@@ -759,7 +875,6 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     console.error(`❌ [${requestId}] Webhook error:`, error.message);
     console.error('Stack:', error.stack);
     
-    // Still return 200 to prevent Vapi retries
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
