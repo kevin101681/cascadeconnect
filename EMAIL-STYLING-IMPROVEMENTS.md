@@ -29,22 +29,24 @@ Address: 123 Main St
 ### 2. Button Styling Updated
 **Changed "View All Claims" and "View Claim" buttons:**
 
-**Before** (Rectangle):
+**Before** (Rectangle with wrong color):
 ```css
 padding: 12px 24px;
 border-radius: 8px;
+background-color: #6750A4; /* Purple - not in app */
 ```
-Result: [  View All Claims  ] (rectangle with rounded corners)
+Result: [  View All Claims  ] (purple rectangle with rounded corners)
 
-**After** (Pill):
+**After** (Pill with correct color):
 ```css
 padding: 10px 24px;
 border-radius: 100px;
+background-color: #3c6b80; /* Teal - matches app theme */
 text-align: center;
 ```
-Result: ( View All Claims ) (full pill shape)
+Result: ( View All Claims ) (teal pill shape)
 
-**Color**: `#6750A4` (Material Design Primary Purple) - matches the app's button color
+**Color**: `#3c6b80` (Teal/Blue) - matches the Warranty Claims, Tasks, and Documents tab pills in the app
 
 ### 3. Single Claim Email Formatting
 **Before** (Plain Text):
@@ -88,7 +90,7 @@ A new claim has been submitted:
 
 ## Design System Alignment
 - **Button shape**: `rounded-full` (100px) matches Material Design 3 pill buttons
-- **Button color**: `#6750A4` matches the app's primary color
+- **Button color**: `#3c6b80` matches the app's primary teal/blue color used in navigation tabs
 - **Typography**: Arial sans-serif for email compatibility
 - **Spacing**: Consistent 20px margins, 8px for info items
 
