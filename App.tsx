@@ -1803,7 +1803,7 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
               to: emp.email,
               subject: `New Claim Submitted: ${newClaim.claimNumber} - ${newClaim.title}`,
               body: emailBody,
-              fromName: 'Cascade Connect System',
+              fromName: 'Cascade Connect',
               fromRole: UserRole.ADMIN
             });
             emailSuccessCount++;
