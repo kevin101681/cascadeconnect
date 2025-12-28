@@ -113,6 +113,15 @@ exports.handler = async (event) => {
       customArgs: {
         threadId: replyToId || ''
       },
+      trackingSettings: {
+        clickTracking: {
+          enable: false,
+          enableText: false
+        },
+        openTracking: {
+          enable: false
+        }
+      },
       attachments: sendGridAttachments
     };
 
