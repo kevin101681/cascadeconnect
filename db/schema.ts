@@ -22,6 +22,9 @@ export const users = pgTable('users', {
   role: userRoleEnum('role').default('ADMIN'),
   password: text('password'),
   
+  // Internal role for ADMIN users (Administrator, Employee, etc.)
+  internalRole: text('internal_role'), // Stores "Administrator", "Employee", etc.
+  
   // For Builder Users
   builderGroupId: uuid('builder_group_id').references(() => builderGroups.id),
   

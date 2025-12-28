@@ -528,7 +528,7 @@ function App() {
                         id: u.id,
                         name: u.name,
                         email: u.email,
-                        role: 'Administrator', // Map generic ADMIN to display role
+                        role: u.internalRole || 'Administrator', // Use internalRole if available, default to Administrator
                         password: u.password || undefined,
                         // Use preferences if available, otherwise default to true
                         emailNotifyClaimSubmitted: prefs?.emailNotifyClaimSubmitted ?? true,
@@ -2839,6 +2839,7 @@ Assigned By: ${assignerName}
              name: emp.name,
              email: emp.email,
              role: 'ADMIN',
+             internalRole: emp.role, // Store the actual role (Administrator, Employee, etc.)
              password: emp.password,
              emailNotifyClaimSubmitted: emp.emailNotifyClaimSubmitted !== false,
              emailNotifyHomeownerAcceptsAppointment: emp.emailNotifyHomeownerAcceptsAppointment !== false,
@@ -2865,6 +2866,7 @@ Assigned By: ${assignerName}
           await db.update(usersTable).set({
             name: emp.name,
             email: emp.email,
+            internalRole: emp.role, // Update the internal role
             emailNotifyClaimSubmitted: emp.emailNotifyClaimSubmitted !== false,
             emailNotifyHomeownerAcceptsAppointment: emp.emailNotifyHomeownerAcceptsAppointment !== false,
             emailNotifySubAcceptsAppointment: emp.emailNotifySubAcceptsAppointment !== false,
@@ -2878,7 +2880,6 @@ Assigned By: ${assignerName}
             pushNotifyTaskAssigned: emp.pushNotifyTaskAssigned === true,
             pushNotifyHomeownerMessage: emp.pushNotifyHomeownerMessage === true,
             pushNotifyHomeownerEnrollment: emp.pushNotifyHomeownerEnrollment === true
-            // role update ignored for now to map to enum
           }).where(eq(usersTable.id, emp.id));
         } catch(e) { console.error(e); }
       }
