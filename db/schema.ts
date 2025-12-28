@@ -32,6 +32,11 @@ export const users = pgTable('users', {
   emailNotifyHomeownerRescheduleRequest: boolean('email_notify_homeowner_reschedule_request').default(true),
   emailNotifyTaskAssigned: boolean('email_notify_task_assigned').default(true),
   emailNotifyHomeownerEnrollment: boolean('email_notify_homeowner_enrollment').default(true),
+  
+  // Simplified Notification Preferences (for centralized notification service)
+  notifyClaims: boolean('notify_claims').default(true),
+  notifyTasks: boolean('notify_tasks').default(true),
+  notifyAppointments: boolean('notify_appointments').default(true),
   // Push Notification Preferences
   pushNotifyClaimSubmitted: boolean('push_notify_claim_submitted').default(false),
   pushNotifyHomeownerAcceptsAppointment: boolean('push_notify_homeowner_accepts_appointment').default(false),
