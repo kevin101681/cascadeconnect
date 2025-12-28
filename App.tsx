@@ -1782,6 +1782,13 @@ Homeowner: ${newClaim.homeownerName}
       // Filter out any failed conversions
       const validEmailAttachments = emailAttachments.filter(att => att !== null) as Array<{ filename: string; content: string; contentType: string }>;
 
+      console.log(`📎 [EMAIL] Processed ${validEmailAttachments.length} attachments for email`);
+      if (validEmailAttachments.length > 0) {
+        validEmailAttachments.forEach((att, idx) => {
+          console.log(`  📎 Attachment ${idx + 1}: ${att.filename}, content length: ${att.content?.length || 0}, type: ${att.contentType}`);
+        });
+      }
+
       // Send to all employees who have this preference enabled
       console.log(`📧 [EMAIL] Preparing to send single claim notification emails to ${employees.length} employees`);
       let emailSuccessCount = 0;

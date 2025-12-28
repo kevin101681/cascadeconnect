@@ -81,6 +81,14 @@ exports.handler = async (event) => {
         }))
       : [];
 
+    // Log attachment details
+    console.log(`📎 Attachments: ${attachments ? attachments.length : 0} provided, ${sendGridAttachments.length} processed`);
+    if (sendGridAttachments.length > 0) {
+      sendGridAttachments.forEach((att, idx) => {
+        console.log(`  📎 Attachment ${idx + 1}: ${att.filename} (${att.type}), content length: ${att.content?.length || 0} chars`);
+      });
+    }
+
     // Send email
     const msg = {
       to: to,
@@ -116,7 +124,8 @@ exports.handler = async (event) => {
       messageId: sendGridMessageId,
       to: to,
       from: fromEmail,
-      subject: subject
+      subject: subject,
+      attachmentsCount: sendGridAttachments.length
     });
 
     return {
