@@ -62,63 +62,71 @@ export const FloatingMenu: React.FC<FloatingMenuProps> = ({
   return (
     <div className={`relative ${className}`} style={{ position: 'relative' }}>
       {isOpen && (
-        <div 
-          className="
-            absolute bottom-full mb-4 right-0 
-            w-[min(calc(100vw-2rem),20rem)] 
-            max-h-[min(calc(100vh-12rem),32rem)] 
-            overflow-y-auto 
-            flex flex-col gap-2 pb-2 
-            z-[220] 
-            animate-slide-up origin-bottom
-          "
-          style={{ bottom: '100%', marginBottom: '1rem' }}
-        >
-          {/* Custom Actions Section */}
-          {customActions.length > 0 && (
-            <div className="bg-surface-container dark:bg-gray-700 rounded-2xl p-2 shadow-xl border border-surfaceContainerHigh overflow-hidden">
-                <p className="text-xs font-bold text-primary px-4 py-2 uppercase tracking-wider">Actions</p>
-                {customActions.map((action, idx) => (
-                    <button
-                        key={idx}
-                        onClick={(e) => { 
-                          e.preventDefault();
-                          e.stopPropagation();
-                          action.onClick(); 
-                          closeMenu(); 
-                        }}
-                        className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-xl hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors text-surface-on dark:text-gray-200 text-sm font-medium whitespace-nowrap active:scale-95 touch-manipulation"
-                    >
-                        <span className="text-primary shrink-0">{action.icon}</span>
-                        <span className="truncate">{action.label}</span>
-                    </button>
-                ))}
-            </div>
-          )}
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/50 z-[210] animate-fade-in"
+            onClick={closeMenu}
+          />
+          
+          {/* Menu - Center Screen */}
+          <div 
+            className="
+              fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
+              w-[min(calc(100vw-2rem),22rem)] 
+              max-h-[min(calc(100vh-4rem),36rem)] 
+              overflow-y-auto 
+              flex flex-col gap-2 pb-2 
+              z-[220] 
+              animate-slide-up
+            "
+          >
+            {/* Custom Actions Section */}
+            {customActions.length > 0 && (
+              <div className="bg-surface-container dark:bg-gray-700 rounded-2xl p-2 shadow-xl border border-surfaceContainerHigh overflow-hidden">
+                  <p className="text-xs font-bold text-primary px-4 py-2 uppercase tracking-wider">Actions</p>
+                  {customActions.map((action, idx) => (
+                      <button
+                          key={idx}
+                          onClick={(e) => { 
+                            e.preventDefault();
+                            e.stopPropagation();
+                            action.onClick(); 
+                            closeMenu(); 
+                          }}
+                          className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-xl hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors text-surface-on dark:text-gray-200 text-sm font-medium whitespace-nowrap active:scale-95 touch-manipulation"
+                      >
+                          <span className="text-primary shrink-0">{action.icon}</span>
+                          <span className="truncate">{action.label}</span>
+                      </button>
+                  ))}
+              </div>
+            )}
 
-          {/* Navigation Section */}
-          <div className="bg-surface-container dark:bg-gray-700 rounded-2xl p-2 shadow-xl border border-surfaceContainerHigh overflow-hidden">
-             <p className="text-xs font-bold text-outline px-4 py-2 uppercase tracking-wider">Navigation</p>
-            {navItems.map((item) => (
-                <button
-                key={item.id}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleNav(item.id);
-                }}
-                className={`flex items-center gap-3 px-4 py-3 w-full text-left rounded-xl transition-colors text-sm font-medium whitespace-nowrap active:scale-95 touch-manipulation ${
-                    currentView === item.id 
-                    ? 'bg-primary text-primary-on' 
-                    : 'text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-600'
-                }`}
-                >
-                <span className="shrink-0">{item.icon}</span>
-                <span className="truncate">{item.label}</span>
-                </button>
-            ))}
+            {/* Navigation Section */}
+            <div className="bg-surface-container dark:bg-gray-700 rounded-2xl p-2 shadow-xl border border-surfaceContainerHigh overflow-hidden">
+               <p className="text-xs font-bold text-outline px-4 py-2 uppercase tracking-wider">Navigation</p>
+              {navItems.map((item) => (
+                  <button
+                  key={item.id}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleNav(item.id);
+                  }}
+                  className={`flex items-center gap-3 px-4 py-3 w-full text-left rounded-xl transition-colors text-sm font-medium whitespace-nowrap active:scale-95 touch-manipulation ${
+                      currentView === item.id 
+                      ? 'bg-primary text-primary-on' 
+                      : 'text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                  }`}
+                  >
+                  <span className="shrink-0">{item.icon}</span>
+                  <span className="truncate">{item.label}</span>
+                  </button>
+              ))}
+            </div>
           </div>
-        </div>
+        </>
       )}
       
       <button
