@@ -1269,7 +1269,9 @@ export const Invoices: React.FC<InvoicesProps> = ({
                 {/* Check Number Input */}
                 <div className="shrink-0 w-24 ml-2">
                     <input
-                        type="text"
+                        type="tel"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         defaultValue={inv.checkNumber || ''}
                         placeholder="Check #"
                         onClick={(e) => e.stopPropagation()}
@@ -1283,7 +1285,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                                  e.currentTarget.blur();
                              }
                         }}
-                        className="w-full h-8 px-3 rounded-full text-xs font-medium bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-200 outline-none focus:ring-2 focus:ring-primary placeholder:text-surface-outline dark:placeholder:text-gray-400 text-center"
+                        className="w-full h-8 px-3 py-2 rounded-full text-xs font-medium bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-200 outline-none focus:ring-2 focus:ring-primary focus:ring-inset placeholder:text-surface-outline dark:placeholder:text-gray-400 text-center"
                     />
                 </div>
 

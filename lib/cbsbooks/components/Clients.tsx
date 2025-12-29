@@ -177,7 +177,16 @@ export const Clients: React.FC<ClientsProps> = ({ clients, invoices, onAdd, onUp
       <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleFileUpload}/>
       
       {/* FAB GROUP */}
-      <div className="fixed bottom-8 right-8 z-50 flex items-end gap-4">
+      <div className="fixed bottom-8 right-8 z-50 flex items-end gap-3">
+        {/* Search FAB */}
+        <button 
+            onClick={() => toggleFab('search')}
+            className="md:hidden w-14 h-14 bg-primary text-primary-on rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+        >
+            {activeFab === 'search' ? <X size={24} /> : <Search size={24} />}
+        </button>
+
+        {/* Menu FAB */}
         <FloatingMenu 
           currentView="clients" 
           onNavigate={onNavigate} 
@@ -185,16 +194,6 @@ export const Clients: React.FC<ClientsProps> = ({ clients, invoices, onAdd, onUp
           isOpen={activeFab === 'menu'}
           onToggle={(open) => setActiveFab(open ? 'menu' : 'none')}
         />
-
-        {/* Search FAB */}
-        <div className="md:hidden">
-            <button 
-                onClick={() => toggleFab('search')}
-                className="w-14 h-14 bg-primary text-primary-on rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-            >
-                {activeFab === 'search' ? <X size={24} /> : <Search size={24} />}
-            </button>
-        </div>
 
         <button 
             onClick={() => {

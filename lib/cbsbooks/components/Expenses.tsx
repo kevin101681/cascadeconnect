@@ -152,7 +152,7 @@ export const Expenses: React.FC<ExpensesProps> = ({ expenses, onAdd, onDelete, o
       <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleFileUpload}/>
       
       {/* FAB GROUP */}
-      <div className="fixed bottom-8 right-8 z-50 flex items-end gap-4">
+      <div className="fixed bottom-8 right-8 z-50 flex items-end gap-3">
         <FloatingMenu 
           currentView="expenses" 
           onNavigate={onNavigate} 
