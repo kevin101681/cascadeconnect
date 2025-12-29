@@ -55,15 +55,35 @@ exports.handler = async (event, context) => {
   let client = null;
   try {
     console.log('📧 Parsing email data...');
-    console.log('Content-Type:', event.headers['content-type']);
-    console.log('Body type:', typeof event.body);
-    console.log('Is base64?', event.isBase64Encoded);
+    
+    try {
+      console.log('Step A: Checking headers...');
+      const contentType = event.headers['content-type'] || event.headers['Content-Type'] || '';
+      console.log('Step B: Content-Type =', contentType);
+      
+      console.log('Step C: Checking body...');
+      const bodyExists = !!event.body;
+      const bodyLength = event.body ? event.body.length : 0;
+      console.log('Step D: Body exists?', bodyExists, 'Length:', bodyLength);
+      
+      console.log('Step E: Checking isBase64Encoded...');
+      const isBase64 = event.isBase64Encoded || false;
+      console.log('Step F: Is base64?', isBase64);
+      
+      console.log('Step G: Starting to parse multipart...');
+    } catch (logError) {
+      console.error('❌ Error in initial logging:', logError.message);
+    }
     
     // Parse multipart/form-data manually (simpler than busboy)
     let emailData = {};
-    const contentType = event.headers['content-type'] || '';
+    const contentType = event.headers['content-type'] || event.headers['Content-Type'] || '';
+    
+    console.log('Step H: Checking content type:', contentType);
     
     if (contentType.includes('multipart/form-data')) {
+      console.log('Step I: Is multipart/form-data');
+      
       const boundaryMatch = contentType.match(/boundary=(.+)$/);
       if (!boundaryMatch) {
         console.error('❌ No boundary in content-type');
@@ -75,19 +95,22 @@ exports.handler = async (event, context) => {
       }
       
       const boundary = boundaryMatch[1];
-      console.log('📧 Boundary:', boundary);
+      console.log('Step J: Boundary =', boundary);
       
       // Decode body if base64
+      console.log('Step K: Decoding body...');
       const bodyText = event.isBase64Encoded 
         ? Buffer.from(event.body, 'base64').toString('utf-8')
         : event.body;
       
-      console.log('📧 Body length:', bodyText.length);
+      console.log('Step L: Body decoded, length =', bodyText.length);
       
       // Split by boundary
+      console.log('Step M: Splitting by boundary...');
       const parts = bodyText.split(`--${boundary}`);
-      console.log('📧 Found', parts.length, 'parts');
+      console.log('Step N: Found', parts.length, 'parts');
       
+      let fieldCount = 0;
       for (const part of parts) {
         if (!part || part.trim() === '' || part.trim() === '--') continue;
         
@@ -104,16 +127,19 @@ exports.handler = async (event, context) => {
         const value = part.substring(headerEnd).trim();
         emailData[fieldName] = value;
         
-        console.log(`📧 Parsed field "${fieldName}": ${value.length} chars`);
+        fieldCount++;
+        console.log(`Step O.${fieldCount}: Parsed field "${fieldName}": ${value.length} chars`);
       }
       
-      console.log('📧 Total fields parsed:', Object.keys(emailData).length);
+      console.log('Step P: Total fields parsed:', Object.keys(emailData).length);
     } else {
+      console.log('Step Q: Not multipart, trying URL-encoded...');
       // Fallback to URL-encoded
       const formData = new URLSearchParams(event.body || '');
       for (const [key, value] of formData.entries()) {
         emailData[key] = value;
       }
+      console.log('Step R: URL-encoded fields:', Object.keys(emailData).length);
     }
 
     // Extract key information from SendGrid's parsed email
