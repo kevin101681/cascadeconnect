@@ -67,7 +67,6 @@ export const FloatingMenu: React.FC<FloatingMenuProps> = ({
         <button
           onClick={(e) => { 
             e.stopPropagation(); 
-            console.log('🔵 FAB Menu clicked, isOpen:', isOpen);
             handleToggle(); 
           }}
           className={`w-14 h-14 rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 bg-primary text-primary-on`}
@@ -84,44 +83,11 @@ export const FloatingMenu: React.FC<FloatingMenuProps> = ({
               />
           </div>
         </button>
-        
-        {/* Debug indicator - visible text */}
-        {isOpen && (
-          <div style={{
-            position: 'fixed',
-            top: '10px',
-            left: '10px',
-            background: 'red',
-            color: 'white',
-            padding: '10px',
-            zIndex: 99999,
-            fontSize: '20px',
-            fontWeight: 'bold'
-          }}>
-            MENU OPEN
-          </div>
-        )}
       </div>
       
       {/* Menu Content - Portal to body to escape overflow:hidden */}
       {isOpen && createPortal(
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, pointerEvents: 'none' }}>
-          {/* Debug: Portal is rendering */}
-          <div style={{
-            position: 'fixed',
-            top: '50px',
-            left: '10px',
-            background: 'blue',
-            color: 'white',
-            padding: '10px',
-            zIndex: 99999,
-            fontSize: '20px',
-            fontWeight: 'bold',
-            pointerEvents: 'auto'
-          }}>
-            PORTAL RENDERED
-          </div>
-          
           {/* Backdrop */}
           <div 
             className="fixed inset-0 bg-black/50 animate-fade-in"
@@ -131,7 +97,7 @@ export const FloatingMenu: React.FC<FloatingMenuProps> = ({
           
           {/* Menu - Center Screen */}
           <div 
-            className="overflow-y-auto flex flex-col gap-2 pb-2 animate-slide-up"
+            className="overflow-y-auto flex flex-col gap-2 p-2 animate-slide-up"
             style={{ 
               position: 'fixed',
               top: 0,
@@ -143,8 +109,7 @@ export const FloatingMenu: React.FC<FloatingMenuProps> = ({
               pointerEvents: 'auto',
               width: 'min(calc(100vw - 2rem), 22rem)',
               height: 'fit-content',
-              maxHeight: 'min(calc(100vh - 4rem), 36rem)',
-              background: 'lime' // Bright green for visibility
+              maxHeight: 'min(calc(100vh - 4rem), 36rem)'
             }}
           >
             {/* Custom Actions Section */}
