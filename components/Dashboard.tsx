@@ -21,6 +21,7 @@ import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
 import TaskDetail from './TaskDetail';
 import TasksSheet from './TasksSheet';
+import AIIntakeDashboard from './AIIntakeDashboard';
 // Lazy load heavy components to improve initial load time
 // Add error handling for failed dynamic imports
 const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err => {
@@ -289,7 +290,7 @@ interface DashboardProps {
   currentUserEmail?: string; // Current user's email for contractor matching
 
   // Initial State Control (Optional)
-  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES';
+  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS';
   initialThreadId?: string | null;
 
   // Tasks Widget Support
@@ -298,7 +299,7 @@ interface DashboardProps {
   onToggleTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
   onUpdateTask?: (taskId: string, updates: Partial<Task>) => void;
-  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'AI_INTAKE') => void;
+  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS') => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -378,8 +379,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, [selectedClaimForModal, selectedTaskForModal]);
   
   
-  // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Documents)
-  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'DOCUMENTS'>(initialTab || 'CLAIMS');
+  // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents)
+  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS'>(initialTab || 'CLAIMS');
   
   // Carousel ref for mobile
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -395,20 +396,23 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [swipeProgress, setSwipeProgress] = useState<number>(0); // 0 to 1, represents swipe completion
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
-  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'DOCUMENTS' | null>(null);
+  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | null>(null);
   
   // Minimum swipe distance (in pixels)
   const minSwipeDistance = 50;
   
   // Get available tabs in order
-  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'DOCUMENTS'> => {
+  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS'> => {
     const isHomeownerViewRole = userRole === UserRole.HOMEOWNER;
-    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'DOCUMENTS'> = ['CLAIMS'];
+    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS'> = ['CLAIMS'];
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('TASKS');
       tabs.push('NOTES'); // NOTES tab between TASKS and MESSAGES
     }
     tabs.push('MESSAGES');
+    if (isAdmin && !isHomeownerViewRole) {
+      tabs.push('CALLS'); // CALLS tab between MESSAGES and DOCUMENTS
+    }
     tabs.push('DOCUMENTS'); // Always include DOCUMENTS tab
     return tabs;
   };
@@ -2943,6 +2947,18 @@ const Dashboard: React.FC<DashboardProps> = ({
               )}
             </button>
 
+            {/* CALLS TAB - Admin Only (hidden in homeowner view) */}
+            {isAdmin && !isHomeownerView && (
+              <button 
+                data-tab="CALLS"
+                onClick={() => setCurrentTab('CALLS')}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'CALLS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+              >
+                <Phone className="h-4 w-4" />
+                Calls
+              </button>
+            )}
+
             {/* Documents Tab - Always show */}
             <button 
               data-tab="DOCUMENTS"
@@ -3090,6 +3106,20 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* CALLS Tab - Admin Only */}
+            {isAdmin && (
+              <div 
+                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+              >
+                <div className="w-full min-h-[calc(100vh-300px)]">
+                  <div className="max-w-7xl mx-auto py-4">
+                    <AIIntakeDashboard homeowner={effectiveHomeowner} />
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* DOCUMENTS Tab */}
             <div 
@@ -3265,6 +3295,35 @@ const Dashboard: React.FC<DashboardProps> = ({
             </motion.div>
           )}
 
+          {currentTab === 'MESSAGES' && (
+            <motion.div 
+              key="messages"
+              className="max-w-7xl mx-auto md:relative"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+              {renderMessagesTab()}
+            </motion.div>
+          )}
+
+          {/* CALLS Tab - Admin Only */}
+          {currentTab === 'CALLS' && isAdmin && (
+            <motion.div 
+              key="calls"
+              className="max-w-7xl mx-auto md:relative"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+              <div className="max-w-7xl mx-auto py-4">
+                <AIIntakeDashboard homeowner={effectiveHomeowner} />
+              </div>
+            </motion.div>
+          )}
+
           {currentTab === 'DOCUMENTS' && (
             <motion.div 
               key="documents"
@@ -3277,20 +3336,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div className="max-w-7xl mx-auto py-4">
                 {renderDocumentsTab()}
               </div>
-            </motion.div>
-          )}
-          
-
-          {currentTab === 'MESSAGES' && (
-            <motion.div 
-              key="messages"
-              className="max-w-7xl mx-auto md:relative"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              {renderMessagesTab()}
             </motion.div>
           )}
 
@@ -3618,7 +3663,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div>
                   <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                     <Phone className="h-6 w-6 text-primary" />
-                    AI Intake Calls - {displayHomeowner.name}
+                    Calls - {displayHomeowner.name}
                   </h2>
                   <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
                     {homeownerCalls.length} call{homeownerCalls.length !== 1 ? 's' : ''} found
@@ -3709,9 +3754,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <Button 
                   onClick={() => {
                     setShowCallsModal(false);
-                    if (onNavigate) {
-                      onNavigate('AI_INTAKE');
-                    }
+                    setCurrentTab('CALLS');
                   }} 
                   variant="outlined"
                 >

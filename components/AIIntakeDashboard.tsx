@@ -134,8 +134,8 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-surface-on dark:text-gray-100 mb-2">AI Intake Dashboard</h1>
-          <p className="text-surface-on-variant dark:text-gray-400">View and manage AI intake calls from Vapi</p>
+          <h1 className="text-3xl font-bold text-surface-on dark:text-gray-100 mb-2">Calls Dashboard</h1>
+          <p className="text-surface-on-variant dark:text-gray-400">View and manage calls from Vapi</p>
         </div>
 
         {/* Stats Cards */}
