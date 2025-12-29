@@ -104,8 +104,25 @@ exports.handler = async (event, context) => {
     const fromEmailRaw = emailData.from || emailData.envelope || '';
     const fromEmail = extractEmail(fromEmailRaw);
     const subject = emailData.subject || '';
-    const textBody = emailData.text || '';
-    const htmlBody = emailData.html || '';
+    
+    // Try multiple field names for the email body
+    // SendGrid can send: text, html, or the full raw email
+    let textBody = emailData.text || emailData.plain || '';
+    let htmlBody = emailData.html || '';
+    
+    // If no text/html, try to extract from the raw email field
+    if (!textBody && !htmlBody && emailData.email) {
+      console.log('📧 No text/html fields, parsing raw email...');
+      // Simple extraction - look for the body after headers
+      const rawEmail = emailData.email;
+      const bodyStart = rawEmail.indexOf('\n\n');
+      if (bodyStart > -1) {
+        const potentialBody = rawEmail.substring(bodyStart + 2).trim();
+        textBody = potentialBody;
+        console.log('📧 Extracted body from raw email:', textBody.substring(0, 100));
+      }
+    }
+    
     const toEmail = emailData.to || '';
     
     if (!fromEmail) {
@@ -345,10 +362,6 @@ exports.handler = async (event, context) => {
 ${homeownerName} replied to your message:
 
 "${cleanBody}"
-
----
-To view and reply, log in to Cascade Connect:
-https://cascadeconnect.netlify.app
           `.trim();
 
           const fromEmail = process.env.SENDGRID_REPLY_EMAIL || process.env.SMTP_FROM || process.env.SMTP_USER;
