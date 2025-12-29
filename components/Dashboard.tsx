@@ -3115,7 +3115,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
-                    <AIIntakeDashboard homeowner={effectiveHomeowner} />
+                    <AIIntakeDashboard />
                   </div>
                 </div>
               </div>
@@ -3319,7 +3319,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="max-w-7xl mx-auto py-4">
-                <AIIntakeDashboard homeowner={effectiveHomeowner} />
+                <AIIntakeDashboard />
               </div>
             </motion.div>
           )}
