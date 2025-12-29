@@ -20,6 +20,7 @@ import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
 import TaskDetail from './TaskDetail';
+import TasksSheet from './TasksSheet';
 // Lazy load heavy components to improve initial load time
 // Add error handling for failed dynamic imports
 const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err => {
@@ -288,7 +289,7 @@ interface DashboardProps {
   currentUserEmail?: string; // Current user's email for contractor matching
 
   // Initial State Control (Optional)
-  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS';
+  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES';
   initialThreadId?: string | null;
 
   // Tasks Widget Support
@@ -377,8 +378,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, [selectedClaimForModal, selectedTaskForModal]);
   
   
-  // View State for Dashboard (Claims vs Messages vs Tasks vs Documents)
-  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'DOCUMENTS'>(initialTab || 'CLAIMS');
+  // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Documents)
+  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'DOCUMENTS'>(initialTab || 'CLAIMS');
   
   // Carousel ref for mobile
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -394,17 +395,18 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [swipeProgress, setSwipeProgress] = useState<number>(0); // 0 to 1, represents swipe completion
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
-  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'DOCUMENTS' | null>(null);
+  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'DOCUMENTS' | null>(null);
   
   // Minimum swipe distance (in pixels)
   const minSwipeDistance = 50;
   
   // Get available tabs in order
-  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'DOCUMENTS'> => {
+  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'DOCUMENTS'> => {
     const isHomeownerViewRole = userRole === UserRole.HOMEOWNER;
-    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'DOCUMENTS'> = ['CLAIMS'];
+    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'DOCUMENTS'> = ['CLAIMS'];
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('TASKS');
+      tabs.push('NOTES'); // NOTES tab between TASKS and MESSAGES
     }
     tabs.push('MESSAGES');
     tabs.push('DOCUMENTS'); // Always include DOCUMENTS tab
@@ -2917,6 +2919,18 @@ const Dashboard: React.FC<DashboardProps> = ({
               </button>
             )}
 
+            {/* NOTES TAB - Admin Only (hidden in homeowner view) */}
+            {isAdmin && !isHomeownerView && (
+              <button 
+                data-tab="NOTES"
+                onClick={() => setCurrentTab('NOTES')}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'NOTES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+              >
+                <StickyNote className="h-4 w-4" />
+                Notes
+              </button>
+            )}
+
             <button 
               data-tab="MESSAGES"
               onClick={() => setCurrentTab('MESSAGES')}
@@ -3037,6 +3051,29 @@ const Dashboard: React.FC<DashboardProps> = ({
                         onSelectTask={(task) => setSelectedTaskForModal(task)}
                       />
                     </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* NOTES Tab - Admin Only */}
+            {isAdmin && (
+              <div 
+                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+              >
+                <div className="w-full min-h-[calc(100vh-300px)]">
+                  <div className="max-w-7xl mx-auto py-4">
+                    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
+                      <TasksSheet 
+                        isInline={true}
+                        onNavigateToClaim={(claimId) => {
+                          const claim = claims.find(c => c.id === claimId);
+                          if (claim) setSelectedClaimForModal(claim);
+                        }} 
+                        claims={claims} 
+                      />
+                    </Suspense>
                   </div>
                 </div>
               </div>
@@ -3199,6 +3236,31 @@ const Dashboard: React.FC<DashboardProps> = ({
                       onSelectTask={(task) => setSelectedTaskForModal(task)}
                     />
                 </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* NOTES Tab - Admin Only */}
+          {currentTab === 'NOTES' && isAdmin && (
+            <motion.div 
+              key="notes"
+              className="max-w-7xl mx-auto md:relative"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+              <div className="max-w-7xl mx-auto py-4">
+                <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
+                  <TasksSheet 
+                    isInline={true}
+                    onNavigateToClaim={(claimId) => {
+                      const claim = claims.find(c => c.id === claimId);
+                      if (claim) setSelectedClaimForModal(claim);
+                    }} 
+                    claims={claims} 
+                  />
+                </Suspense>
               </div>
             </motion.div>
           )}

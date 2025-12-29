@@ -8,25 +8,28 @@ import { fetchTasks, createTask, updateTask, deleteTask, SimpleTask } from '../s
 interface TasksSheetProps {
   onNavigateToClaim?: (claimId: string) => void;
   claims?: Array<{ id: string; claimNumber?: string | null }>; // For displaying claim numbers
+  isInline?: boolean; // If true, renders inline without modal/drawer
 }
 
-const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [] }) => {
+const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [], isInline = false }) => {
   const { isOpen, activeClaimId, isFilterEnabled, closeTasks, toggleFilter } = useTaskStore();
   const [tasks, setTasks] = useState<SimpleTask[]>([]);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch tasks when drawer opens or filter changes
+  // Fetch tasks when drawer opens or filter changes, or immediately if inline
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen || isInline) {
       loadTasks();
-      // Auto-focus input when opened
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
+      // Auto-focus input when opened (only for modal, not inline)
+      if (!isInline) {
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 100);
+      }
     }
-  }, [isOpen, activeClaimId, isFilterEnabled]);
+  }, [isOpen, activeClaimId, isFilterEnabled, isInline]);
 
   const loadTasks = async () => {
     setLoading(true);
@@ -127,6 +130,119 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [] 
   const activeTasks = sortedTasks.filter((t) => !t.isCompleted);
   const completedTasks = sortedTasks.filter((t) => t.isCompleted);
 
+  // Render the content (shared between inline and modal modes)
+  const renderContent = () => (
+    <>
+      {/* Header */}
+      <div className="flex-shrink-0 px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface-container/30 dark:bg-gray-700/30">
+        <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+          {activeTasks.length > 0 && (
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+              {activeTasks.length}
+            </span>
+          )}
+          Notes
+        </h2>
+        {!isInline && (
+          <button
+            onClick={closeTasks}
+            className="p-2 rounded-full hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors absolute top-6 right-6"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
+      </div>
+
+      {/* Input Area */}
+      <div className="flex-shrink-0 px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700">
+        <form onSubmit={handleAddTask} className="flex gap-2">
+          <input
+            ref={inputRef}
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Add a note..."
+            className="flex-1 px-4 py-2 rounded-lg border border-surface-outline-variant dark:border-gray-600 bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          />
+          <button
+            type="submit"
+            className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-on rounded-lg transition-colors font-medium"
+          >
+            Add
+          </button>
+        </form>
+      </div>
+
+      {/* Task List */}
+      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
+          </div>
+        ) : (
+          <>
+            {/* Active Tasks */}
+            {activeTasks.length > 0 && (
+              <div className="space-y-2 mb-6">
+                {activeTasks.map((task) => (
+                  <TaskItem
+                    key={task.id}
+                    task={task}
+                    onToggle={handleToggleTask}
+                    onDelete={handleDeleteTask}
+                    onNavigateToClaim={onNavigateToClaim}
+                    showClaimBadge={!isFilterEnabled || !activeClaimId}
+                    claims={claims}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Completed Tasks */}
+            {completedTasks.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-2">
+                  Completed
+                </h3>
+                {completedTasks.map((task) => (
+                  <TaskItem
+                    key={task.id}
+                    task={task}
+                    onToggle={handleToggleTask}
+                    onDelete={handleDeleteTask}
+                    onNavigateToClaim={onNavigateToClaim}
+                    showClaimBadge={!isFilterEnabled || !activeClaimId}
+                    claims={claims}
+                  />
+                ))}
+              </div>
+            )}
+
+            {sortedTasks.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <p className="text-surface-on-variant dark:text-gray-400 mb-2">No notes yet</p>
+                <p className="text-sm text-surface-on-variant/70 dark:text-gray-500">
+                  Add a note above to get started
+                </p>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </>
+  );
+
+  // Inline mode - render directly in a card
+  if (isInline) {
+    return (
+      <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1">
+        {renderContent()}
+      </div>
+    );
+  }
+
+  // Modal/Drawer mode - render with backdrop and animations
   return (
     <AnimatePresence>
       {isOpen && (
@@ -150,113 +266,7 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [] 
             className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-surface dark:bg-gray-800 shadow-elevation-5 z-[201] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="flex-shrink-0 p-6 border-b border-surface-outline-variant dark:border-gray-700">
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-xl font-semibold text-surface-on dark:text-gray-100">Notes</h2>
-                <button
-                  onClick={closeTasks}
-                  className="p-2 rounded-full hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
-                  aria-label="Close"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              {activeClaimId && (
-                <p className="text-sm text-surface-on-variant dark:text-gray-400 mb-3">
-                  Linked to Claim #{activeClaimId.substring(0, 8)}
-                </p>
-              )}
-
-              {/* Filter toggle */}
-              {activeClaimId && (
-                <button
-                  onClick={toggleFilter}
-                  className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors"
-                >
-                  <Filter className="h-4 w-4" />
-                  {isFilterEnabled ? 'Show Only This Claim' : 'Show All Tasks'}
-                </button>
-              )}
-            </div>
-
-            {/* Input Area */}
-            <div className="flex-shrink-0 p-4 border-b border-surface-outline-variant dark:border-gray-700">
-              <form onSubmit={handleAddTask} className="flex gap-2">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Add a note..."
-                  className="flex-1 px-4 py-2 rounded-lg border border-surface-outline-variant dark:border-gray-600 bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-on rounded-lg transition-colors font-medium"
-                >
-                  Add
-                </button>
-              </form>
-            </div>
-
-            {/* Task List */}
-            <div className="flex-1 overflow-y-auto p-4">
-              {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
-                </div>
-              ) : (
-                <>
-                  {/* Active Tasks */}
-                  {activeTasks.length > 0 && (
-                    <div className="space-y-2 mb-6">
-                      {activeTasks.map((task) => (
-                        <TaskItem
-                          key={task.id}
-                          task={task}
-                          onToggle={handleToggleTask}
-                          onDelete={handleDeleteTask}
-                          onNavigateToClaim={onNavigateToClaim}
-                          showClaimBadge={!isFilterEnabled || !activeClaimId}
-                          claims={claims}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Completed Tasks */}
-                  {completedTasks.length > 0 && (
-                    <div className="space-y-2">
-                      <h3 className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-2">
-                        Completed
-                      </h3>
-                      {completedTasks.map((task) => (
-                        <TaskItem
-                          key={task.id}
-                          task={task}
-                          onToggle={handleToggleTask}
-                          onDelete={handleDeleteTask}
-                          onNavigateToClaim={onNavigateToClaim}
-                          showClaimBadge={!isFilterEnabled || !activeClaimId}
-                          claims={claims}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  {sortedTasks.length === 0 && (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <p className="text-surface-on-variant dark:text-gray-400 mb-2">No notes yet</p>
-                      <p className="text-sm text-surface-on-variant/70 dark:text-gray-500">
-                        Add a note above to get started
-                      </p>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+            {renderContent()}
           </motion.div>
         </>
       )}
