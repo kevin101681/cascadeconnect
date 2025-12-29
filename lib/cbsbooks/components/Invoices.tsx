@@ -890,7 +890,6 @@ export const Invoices: React.FC<InvoicesProps> = ({
 
   const menuActions: ActionItem[] = [
     { label: 'New Invoice', icon: <Plus size={20} />, onClick: handleCreate },
-    { label: 'Search', icon: <Search size={20} />, onClick: () => toggleFab('search') },
     { label: 'Filter & Sort', icon: <SlidersHorizontal size={20} />, onClick: () => toggleFab('filter') },
     { label: 'Import CSV', icon: <Upload size={20} />, onClick: () => fileInputRef.current?.click() },
     { label: 'AI Import (Text)', icon: <Sparkles size={20} />, onClick: () => setShowAIImport(true) },
@@ -1601,8 +1600,28 @@ export const Invoices: React.FC<InvoicesProps> = ({
         </div>
       )}
 
-      {/* FAB GROUP - Single Menu FAB */}
-      <div className="fixed bottom-8 right-8 z-50">
+      {/* FAB GROUP - Menu and Search FABs */}
+      <div className="fixed bottom-8 right-8 z-50 flex items-end gap-3">
+        {/* Search FAB - Shows on mobile, hidden on desktop */}
+        <button
+          onClick={() => {
+            const newState = activeFab === 'search' ? 'none' : 'search';
+            setActiveFab(newState);
+            if (newState === 'search') {
+              setTimeout(() => searchInputRef.current?.focus(), 100);
+            }
+          }}
+          className={`md:hidden w-12 h-12 rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 ${
+            activeFab === 'search' 
+              ? 'bg-primary text-primary-on scale-110' 
+              : 'bg-surface-container-high dark:bg-gray-700 text-surface-on dark:text-gray-200'
+          }`}
+          title="Search"
+        >
+          {activeFab === 'search' ? <X size={20} /> : <Search size={20} />}
+        </button>
+        
+        {/* Menu FAB */}
         <FloatingMenu 
           currentView="invoices" 
           onNavigate={onNavigate} 
