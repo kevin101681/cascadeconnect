@@ -106,6 +106,22 @@ export const FloatingMenu: React.FC<FloatingMenuProps> = ({
       {/* Menu Content - Portal to body to escape overflow:hidden */}
       {isOpen && createPortal(
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, pointerEvents: 'none' }}>
+          {/* Debug: Portal is rendering */}
+          <div style={{
+            position: 'fixed',
+            top: '50px',
+            left: '10px',
+            background: 'blue',
+            color: 'white',
+            padding: '10px',
+            zIndex: 99999,
+            fontSize: '20px',
+            fontWeight: 'bold',
+            pointerEvents: 'auto'
+          }}>
+            PORTAL RENDERED
+          </div>
+          
           {/* Backdrop */}
           <div 
             className="fixed inset-0 bg-black/50 animate-fade-in"
@@ -131,7 +147,8 @@ export const FloatingMenu: React.FC<FloatingMenuProps> = ({
               zIndex: 9999,
               pointerEvents: 'auto',
               maxWidth: 'min(calc(100vw - 2rem), 22rem)',
-              maxHeight: 'min(calc(100vh - 4rem), 36rem)'
+              maxHeight: 'min(calc(100vh - 4rem), 36rem)',
+              background: 'lime' // Bright green for visibility
             }}
           >
             {/* Custom Actions Section */}
