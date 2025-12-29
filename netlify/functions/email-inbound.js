@@ -112,79 +112,74 @@ exports.handler = async (event, context) => {
     
     // If no text/html, try to extract from the raw email field
     if (!textBody && !htmlBody && emailData.email) {
-      console.log('📧 No text/html fields, parsing raw email...');
-      console.log('📧 Raw email length:', emailData.email.length);
-      
-      const rawEmail = emailData.email;
-      
-      // Method 1: Look for blank line after headers
-      let bodyStart = rawEmail.indexOf('\r\n\r\n');
-      if (bodyStart === -1) bodyStart = rawEmail.indexOf('\n\n');
-      
-      if (bodyStart > -1) {
-        const separator = rawEmail.indexOf('\r\n\r\n') > -1 ? '\r\n\r\n' : '\n\n';
-        let fullBody = rawEmail.substring(bodyStart + separator.length).trim();
+      try {
+        console.log('📧 No text/html fields, parsing raw email...');
+        console.log('📧 Raw email length:', emailData.email.length);
         
-        console.log('📧 Full body length:', fullBody.length);
-        console.log('📧 Full body preview (first 300 chars):', fullBody.substring(0, 300));
+        const rawEmail = emailData.email;
         
-        // Check if this is a MIME multipart message
-        if (fullBody.includes('Content-Type: text/plain')) {
-          console.log('📧 Detected MIME multipart message');
+        // Method 1: Look for blank line after headers
+        let bodyStart = rawEmail.indexOf('\r\n\r\n');
+        if (bodyStart === -1) bodyStart = rawEmail.indexOf('\n\n');
+        
+        if (bodyStart > -1) {
+          const separator = rawEmail.indexOf('\r\n\r\n') > -1 ? '\r\n\r\n' : '\n\n';
+          let fullBody = rawEmail.substring(bodyStart + separator.length).trim();
           
-          // Find the text/plain section
-          const plainTextMatch = fullBody.match(/Content-Type: text\/plain[\s\S]*?\n\n([\s\S]*?)(?=\n--|\n\nOn .+wrote:)/i);
+          console.log('📧 Step 1: Found body, length =', fullBody.length);
           
-          if (plainTextMatch && plainTextMatch[1]) {
-            let textContent = plainTextMatch[1].trim();
-            console.log('📧 Regex extracted:', textContent.substring(0, 200));
+          // Check if this is a MIME multipart message
+          if (fullBody.includes('Content-Type: text/plain')) {
+            console.log('📧 Step 2: Detected MIME multipart');
             
-            // Decode quoted-printable encoding (=XX or =E2=80=AF)
-            textContent = textContent.replace(/=([0-9A-F]{2})/gi, (match, hex) => {
-              return String.fromCharCode(parseInt(hex, 16));
-            });
-            
-            // Remove soft line breaks (= at end of line)
-            textContent = textContent.replace(/=\r?\n/g, '');
-            
-            console.log('📧 After decoding:', textContent.substring(0, 200));
-            textBody = textContent.trim();
-          } else {
-            console.log('⚠️ Regex did not match, trying manual extraction');
-            
-            // Fallback: Find Content-Type: text/plain and extract manually
+            // Find the text/plain section - use a simpler approach
             const textPlainIndex = fullBody.indexOf('Content-Type: text/plain');
-            if (textPlainIndex > -1) {
-              // Find the next double newline (start of content)
-              const contentStart = fullBody.indexOf('\n\n', textPlainIndex);
-              if (contentStart > -1) {
-                let content = fullBody.substring(contentStart + 2);
-                
-                // Stop at quoted reply marker
-                const quoteIndex = content.search(/\nOn .+wrote:/i);
-                if (quoteIndex > -1) {
-                  content = content.substring(0, quoteIndex);
-                }
-                
-                // Stop at MIME boundary
-                const boundaryIndex = content.indexOf('\n--');
-                if (boundaryIndex > -1) {
-                  content = content.substring(0, boundaryIndex);
-                }
-                
-                console.log('📧 Manual extraction:', content.substring(0, 200));
-                textBody = content.trim();
+            const contentStart = fullBody.indexOf('\n\n', textPlainIndex);
+            
+            console.log('📧 Step 3: text/plain at', textPlainIndex, 'content at', contentStart);
+            
+            if (contentStart > -1) {
+              let content = fullBody.substring(contentStart + 2);
+              console.log('📧 Step 4: Raw content length =', content.length);
+              
+              // Stop at quoted reply marker ("On ... wrote:")
+              const quoteIndex = content.search(/\n\nOn .+wrote:/i);
+              if (quoteIndex > -1) {
+                content = content.substring(0, quoteIndex);
+                console.log('📧 Step 5: After removing quote, length =', content.length);
               }
+              
+              // Stop at MIME boundary (--xxxx)
+              const boundaryIndex = content.indexOf('\n--');
+              if (boundaryIndex > -1) {
+                content = content.substring(0, boundaryIndex);
+                console.log('📧 Step 6: After removing boundary, length =', content.length);
+              }
+              
+              // Decode quoted-printable (=XX)
+              content = content.replace(/=([0-9A-F]{2})/gi, (match, hex) => {
+                return String.fromCharCode(parseInt(hex, 16));
+              });
+              
+              // Remove soft line breaks
+              content = content.replace(/=\r?\n/g, '');
+              
+              textBody = content.trim();
+              console.log('📧 Step 7: FINAL textBody length =', textBody.length);
+              console.log('📧 Step 8: FINAL textBody =', textBody);
+            } else {
+              console.log('⚠️ Could not find content start');
             }
+          } else {
+            console.log('📧 Plain email (not MIME)');
+            textBody = fullBody;
           }
         } else {
-          console.log('📧 Plain email (not MIME multipart)');
-          textBody = fullBody;
+          console.log('⚠️ Could not find body separator');
         }
-        
-        console.log('📧 Final textBody length:', textBody ? textBody.length : 0);
-      } else {
-        console.log('⚠️ Could not find body separator');
+      } catch (err) {
+        console.error('❌ Error parsing raw email:', err.message);
+        console.error('Stack:', err.stack);
       }
     }
     
