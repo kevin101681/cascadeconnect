@@ -1398,7 +1398,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                     )}
                  </div>
 
-                 {/* Row 3: Paid, Email, Download, Delete, Expand (Centered) */}
+                 {/* Row 3: Paid, Email, Download, Delete (Centered) */}
                  <div className="flex items-center justify-center mt-1 gap-2">
                     {inv.status !== 'paid' && (
                         <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={() => handleMarkAsPaid(inv)}><Check size={16} /></button>
@@ -1406,7 +1406,6 @@ export const Invoices: React.FC<InvoicesProps> = ({
                     <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={() => handlePrepareEmail(inv)}><Mail size={16} /></button>
                     <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={() => handleDownloadPDF(inv)}><Download size={16} /></button>
                     <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={() => handleDeleteInvoice(inv.id)}><Trash2 size={16} /></button>
-                    <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={onExpand}><ArrowUpDown size={16} /></button>
                  </div>
             </div>
 
@@ -1611,14 +1610,10 @@ export const Invoices: React.FC<InvoicesProps> = ({
               setTimeout(() => searchInputRef.current?.focus(), 100);
             }
           }}
-          className={`md:hidden w-12 h-12 rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 ${
-            activeFab === 'search' 
-              ? 'bg-primary text-primary-on scale-110' 
-              : 'bg-surface-container-high dark:bg-gray-700 text-surface-on dark:text-gray-200'
-          }`}
+          className={`md:hidden w-14 h-14 rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 bg-primary text-primary-on`}
           title="Search"
         >
-          {activeFab === 'search' ? <X size={20} /> : <Search size={20} />}
+          {activeFab === 'search' ? <X size={24} /> : <Search size={24} />}
         </button>
         
         {/* Menu FAB */}
