@@ -6,11 +6,12 @@ import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
 import { ClaimMessage } from './MessageSummaryModal';
 import ImageViewerModal from './ImageViewerModal';
-import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload, FileEdit, Trash2 } from 'lucide-react';
+import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload, FileEdit, Trash2, StickyNote } from 'lucide-react';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
 import { generatePDFThumbnail } from '../lib/pdfThumbnail';
+import { useTaskStore } from '../stores/useTaskStore';
 
 interface ClaimInlineEditorProps {
   claim: Claim;
@@ -647,6 +648,15 @@ If this repair work is billable, please let me know prior to scheduling.`);
         <div className="flex flex-wrap items-center gap-2">
           <Button 
             type="button" 
+            variant="outlined"
+            onClick={() => useTaskStore.getState().openTasks(claim.id)}
+            icon={<StickyNote className="h-4 w-4" />}
+            title="Add a note for this claim"
+          >
+            +Note
+          </Button>
+          <Button 
+            type="button" 
             variant="filled"
             onClick={() => onSendMessage(claim)}
           >
@@ -936,9 +946,19 @@ If this repair work is billable, please let me know prior to scheduling.`);
                             <span className="text-xs text-secondary-on-container dark:text-gray-500 opacity-70">•</span>
                             <span className="text-xs text-secondary-on-container dark:text-gray-400 opacity-70">{msg.recipient}</span>
                           </div>
-                          <span className="text-xs text-secondary-on-container dark:text-gray-400 opacity-70">
-                            {new Date(msg.timestamp).toLocaleString()}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => useTaskStore.getState().openTasks(claim.id)}
+                              className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
+                              title="Add a note for this message"
+                            >
+                              <StickyNote className="h-3.5 w-3.5" />
+                              <span>+Note</span>
+                            </button>
+                            <span className="text-xs text-secondary-on-container dark:text-gray-400 opacity-70">
+                              {new Date(msg.timestamp).toLocaleString()}
+                            </span>
+                          </div>
                         </div>
                         <div className="mb-2">
                           <p className="text-xs font-medium text-secondary-on-container dark:text-gray-400 opacity-70 mb-1">Subject:</p>

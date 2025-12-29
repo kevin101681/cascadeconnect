@@ -9,7 +9,8 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor, Call } from '../types';
 import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote } from 'lucide-react';
+import { useTaskStore } from '../stores/useTaskStore';
 import { calls } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { db, isDbConfigured } from '../db';
@@ -2137,8 +2138,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         <span className="font-bold text-surface-on dark:text-gray-100 text-sm">{msg.senderName}</span>
                                         <span className="text-xs text-surface-on-variant dark:text-gray-400">&lt;{isMe ? 'me' : msg.senderRole.toLowerCase()}&gt;</span>
                                       </div>
-                                      <div className="text-xs text-surface-on-variant dark:text-gray-400 group-hover:text-surface-on dark:group-hover:text-gray-100 transition-colors">
-                                         {new Date(msg.timestamp).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          onClick={() => useTaskStore.getState().openTasks()}
+                                          className="text-xs text-primary hover:text-primary/80 opacity-0 group-hover:opacity-100 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-all"
+                                          title="Add a note for this message"
+                                        >
+                                          <StickyNote className="h-3.5 w-3.5" />
+                                          <span>+Note</span>
+                                        </button>
+                                        <div className="text-xs text-surface-on-variant dark:text-gray-400 group-hover:text-surface-on dark:group-hover:text-gray-100 transition-colors">
+                                          {new Date(msg.timestamp).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                                        </div>
                                       </div>
                                    </div>
                                    <div className="text-xs text-surface-on-variant dark:text-gray-400">to {isMe ? (effectiveHomeowner?.name || 'Homeowner') : 'Me'}</div>

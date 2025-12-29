@@ -6,10 +6,11 @@ import StatusBadge from './StatusBadge';
 import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
 import { ClaimMessage } from './MessageSummaryModal';
-import { Calendar, CheckCircle, FileText, Mail, MessageSquare, ArrowLeft, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink } from 'lucide-react';
+import { Calendar, CheckCircle, FileText, Mail, MessageSquare, ArrowLeft, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, StickyNote } from 'lucide-react';
 import ImageViewerModal from './ImageViewerModal';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
+import { useTaskStore } from '../stores/useTaskStore';
 
 interface ClaimDetailProps {
   claim: Claim;
@@ -332,6 +333,14 @@ If this repair work is billable, please let me know prior to scheduling.`);
         {/* Actions */}
         <div className="flex items-center gap-2">
            <Button 
+             variant="outlined" 
+             onClick={() => useTaskStore.getState().openTasks(claim.id)} 
+             icon={<StickyNote className="h-4 w-4" />}
+             title="Add a note for this claim"
+           >
+             +Note
+           </Button>
+           <Button 
              variant="tonal" 
              onClick={() => onSendMessage(claim)} 
              icon={<MessageSquare className="h-4 w-4" />}
@@ -615,7 +624,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     ).map((msg) => (
                       <div
                         key={msg.id}
-                        className="bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600"
+                        className="bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600 group"
                       >
                         <div className="flex items-start justify-between mb-2">
                           <div className="flex items-center gap-2">
@@ -630,9 +639,19 @@ If this repair work is billable, please let me know prior to scheduling.`);
                             <span className="text-xs text-secondary-on-container opacity-70">•</span>
                             <span className="text-xs text-secondary-on-container opacity-70">{msg.recipient}</span>
                           </div>
-                          <span className="text-xs text-secondary-on-container opacity-70">
-                            {new Date(msg.timestamp).toLocaleString()}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => useTaskStore.getState().openTasks(claim.id)}
+                              className="text-xs text-primary hover:text-primary/80 opacity-0 group-hover:opacity-100 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-all"
+                              title="Add a note for this message"
+                            >
+                              <StickyNote className="h-3.5 w-3.5" />
+                              <span>+Note</span>
+                            </button>
+                            <span className="text-xs text-secondary-on-container opacity-70">
+                              {new Date(msg.timestamp).toLocaleString()}
+                            </span>
+                          </div>
                         </div>
                         <div className="mb-2">
                           <p className="text-xs font-medium text-secondary-on-container opacity-70 mb-1">Subject:</p>
