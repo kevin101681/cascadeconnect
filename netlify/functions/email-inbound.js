@@ -115,8 +115,7 @@ exports.handler = async (event, context) => {
       console.log('📧 No text/html fields, parsing raw email...');
       console.log('📧 Raw email length:', emailData.email.length);
       
-      // The raw email contains full RFC 822 format
-      // Try multiple methods to extract the body
+      // The raw email contains full RFC 822 format with MIME parts
       const rawEmail = emailData.email;
       
       // Method 1: Look for blank line after headers (\r\n\r\n or \n\n)
@@ -125,16 +124,51 @@ exports.handler = async (event, context) => {
       
       if (bodyStart > -1) {
         const separator = rawEmail.indexOf('\r\n\r\n') > -1 ? '\r\n\r\n' : '\n\n';
-        const potentialBody = rawEmail.substring(bodyStart + separator.length).trim();
-        console.log('📧 Found body separator at position:', bodyStart);
-        console.log('📧 Body preview (first 200 chars):', potentialBody.substring(0, 200));
+        let fullBody = rawEmail.substring(bodyStart + separator.length).trim();
         
-        if (potentialBody.length > 0) {
-          textBody = potentialBody;
+        // Check if this is a MIME multipart message
+        if (fullBody.includes('Content-Type: text/plain')) {
+          console.log('📧 Detected MIME multipart message');
+          
+          // Find the text/plain part
+          const textPlainStart = fullBody.indexOf('Content-Type: text/plain');
+          if (textPlainStart > -1) {
+            // Skip past the Content-Type headers to the actual content
+            const contentStart = fullBody.indexOf('\n\n', textPlainStart);
+            if (contentStart > -1) {
+              let textContent = fullBody.substring(contentStart + 2);
+              
+              // Find where the quoted reply starts (usually "On [date]...")
+              const quoteStart = textContent.search(/\n\nOn .+wrote:/i);
+              if (quoteStart > -1) {
+                textContent = textContent.substring(0, quoteStart);
+              }
+              
+              // Find the next MIME boundary (--xxxxx)
+              const boundaryMatch = textContent.match(/\n--[\w\d]+/);
+              if (boundaryMatch) {
+                textContent = textContent.substring(0, boundaryMatch.index);
+              }
+              
+              // Clean up quoted-printable encoding (=XX)
+              textContent = textContent.replace(/=([0-9A-F]{2})/g, (match, hex) => {
+                return String.fromCharCode(parseInt(hex, 16));
+              });
+              
+              // Trim whitespace
+              textContent = textContent.trim();
+              
+              console.log('📧 Extracted text from MIME part:', textContent.substring(0, 200));
+              textBody = textContent;
+            }
+          }
+        } else {
+          // Not MIME multipart, use the full body
+          console.log('📧 Plain email body (not MIME)');
+          textBody = fullBody;
         }
       } else {
         console.log('⚠️ Could not find body separator in raw email');
-        console.log('📧 Raw email preview:', rawEmail.substring(0, 500));
       }
     }
     
