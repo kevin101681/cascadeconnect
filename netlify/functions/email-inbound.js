@@ -192,8 +192,9 @@ exports.handler = async (event, context) => {
               let content = fullBody.substring(contentStart + headerLength);
               console.log('📧 Step 4: Raw content length =', content.length);
               
-              // Stop at quoted reply marker ("On ... wrote:")
-              const quoteIndex = content.search(/\n\nOn .+wrote:/i);
+              // Stop at quoted reply marker ("On ... wrote:" which may span multiple lines)
+              // Look for "On [date] at [time]" pattern which is how Gmail quotes
+              const quoteIndex = content.search(/\n\nOn\s+.+?(\r?\n)?wrote:/is);
               if (quoteIndex > -1) {
                 content = content.substring(0, quoteIndex);
                 console.log('📧 Step 5: After removing quote, length =', content.length);
@@ -211,8 +212,17 @@ exports.handler = async (event, context) => {
                 return String.fromCharCode(parseInt(hex, 16));
               });
               
-              // Remove soft line breaks
+              // Remove soft line breaks (= at end of line)
               content = content.replace(/=\r?\n/g, '');
+              
+              // Fix common UTF-8 encoding issues (like â€¯ which is a non-breaking space)
+              // These are from misencoded characters
+              content = content.replace(/â€¯/g, ' '); // Non-breaking space
+              content = content.replace(/â€™/g, "'"); // Right single quotation mark
+              content = content.replace(/â€œ/g, '"'); // Left double quotation mark
+              content = content.replace(/â€/g, '"'); // Right double quotation mark
+              content = content.replace(/â€"/g, '—'); // Em dash
+              content = content.replace(/â€"/g, '–'); // En dash
               
               textBody = content.trim();
               console.log('📧 Step 7: FINAL textBody length =', textBody.length);
