@@ -176,12 +176,20 @@ exports.handler = async (event, context) => {
             
             // Find the text/plain section - use a simpler approach
             const textPlainIndex = fullBody.indexOf('Content-Type: text/plain');
-            const contentStart = fullBody.indexOf('\n\n', textPlainIndex);
+            
+            // Look for content start - try \r\n\r\n first, then \n\n
+            let contentStart = fullBody.indexOf('\r\n\r\n', textPlainIndex);
+            let headerLength = 4; // \r\n\r\n
+            
+            if (contentStart === -1) {
+              contentStart = fullBody.indexOf('\n\n', textPlainIndex);
+              headerLength = 2; // \n\n
+            }
             
             console.log('📧 Step 3: text/plain at', textPlainIndex, 'content at', contentStart);
             
             if (contentStart > -1) {
-              let content = fullBody.substring(contentStart + 2);
+              let content = fullBody.substring(contentStart + headerLength);
               console.log('📧 Step 4: Raw content length =', content.length);
               
               // Stop at quoted reply marker ("On ... wrote:")
