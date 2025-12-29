@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Menu, X, PieChart, Users, CreditCard, Receipt } from 'lucide-react';
 import { ViewState } from '../../types';
+import { createPortal } from 'react-dom';
 
 export interface ActionItem {
   label: string;
@@ -60,8 +61,29 @@ export const FloatingMenu: React.FC<FloatingMenuProps> = ({
   };
 
   return (
-    <div className={`relative ${className}`} style={{ position: 'relative' }}>
-      {isOpen && (
+    <>
+      {/* FAB Button */}
+      <div className={`relative ${className}`} style={{ position: 'relative' }}>
+        <button
+          onClick={(e) => { e.stopPropagation(); handleToggle(); }}
+          className={`w-14 h-14 rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 bg-primary text-primary-on`}
+          title="Menu"
+        >
+          <div className="relative w-6 h-6 flex items-center justify-center">
+              <Menu 
+                size={24} 
+                className={`absolute transition-all duration-300 ${isOpen ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} 
+              />
+              <X 
+                size={24} 
+                className={`absolute transition-all duration-300 ${isOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'}`} 
+              />
+          </div>
+        </button>
+      </div>
+      
+      {/* Menu Content - Portal to body to escape overflow:hidden */}
+      {isOpen && createPortal(
         <>
           {/* Backdrop */}
           <div 
@@ -126,25 +148,9 @@ export const FloatingMenu: React.FC<FloatingMenuProps> = ({
               ))}
             </div>
           </div>
-        </>
+        </>,
+        document.body
       )}
-      
-      <button
-        onClick={(e) => { e.stopPropagation(); handleToggle(); }}
-        className={`w-14 h-14 rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 bg-primary text-primary-on`}
-        title="Menu"
-      >
-        <div className="relative w-6 h-6 flex items-center justify-center">
-            <Menu 
-              size={24} 
-              className={`absolute transition-all duration-300 ${isOpen ? 'opacity-0 rotate-90 scale-50' : 'opacity-100 rotate-0 scale-100'}`} 
-            />
-            <X 
-              size={24} 
-              className={`absolute transition-all duration-300 ${isOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-50'}`} 
-            />
-        </div>
-      </button>
-    </div>
+    </>
   );
 };
