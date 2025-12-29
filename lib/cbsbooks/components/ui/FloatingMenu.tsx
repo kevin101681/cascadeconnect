@@ -65,7 +65,11 @@ export const FloatingMenu: React.FC<FloatingMenuProps> = ({
       {/* FAB Button */}
       <div className={`relative ${className}`} style={{ position: 'relative' }}>
         <button
-          onClick={(e) => { e.stopPropagation(); handleToggle(); }}
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            console.log('🔵 FAB Menu clicked, isOpen:', isOpen);
+            handleToggle(); 
+          }}
           className={`w-14 h-14 rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 bg-primary text-primary-on`}
           title="Menu"
         >
@@ -80,6 +84,23 @@ export const FloatingMenu: React.FC<FloatingMenuProps> = ({
               />
           </div>
         </button>
+        
+        {/* Debug indicator - visible text */}
+        {isOpen && (
+          <div style={{
+            position: 'fixed',
+            top: '10px',
+            left: '10px',
+            background: 'red',
+            color: 'white',
+            padding: '10px',
+            zIndex: 99999,
+            fontSize: '20px',
+            fontWeight: 'bold'
+          }}>
+            MENU OPEN
+          </div>
+        )}
       </div>
       
       {/* Menu Content - Portal to body to escape overflow:hidden */}
