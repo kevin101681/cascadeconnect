@@ -66,7 +66,7 @@ export const FloatingMenu: React.FC<FloatingMenuProps> = ({
           className="
             absolute bottom-full mb-4 right-0 
             w-[min(calc(100vw-2rem),20rem)] 
-            max-h-[min(calc(100vh-14rem),28rem)] 
+            max-h-[min(calc(100vh-12rem),32rem)] 
             overflow-y-auto 
             flex flex-col gap-2 pb-2 
             z-[220] 

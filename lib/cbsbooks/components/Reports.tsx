@@ -138,15 +138,7 @@ export const Reports: React.FC<ReportsProps> = ({ invoices, expenses, onNavigate
   return (
     <div className="space-y-6 relative min-h-[calc(100vh-100px)]">
       {/* FAB GROUP */}
-      <div className="fixed bottom-8 right-8 z-50 flex items-end gap-4">
-        <FloatingMenu 
-          currentView="reports" 
-          onNavigate={onNavigate} 
-          customActions={menuActions} 
-          isOpen={activeFab === 'menu'}
-          onToggle={(open) => setActiveFab(open ? 'menu' : 'none')}
-        />
-        
+      <div className="fixed bottom-8 right-8 z-50 flex items-end gap-3">
         {/* Mobile Filter FAB */}
         <div className="relative md:hidden">
             {activeFab === 'filter' && (
@@ -181,6 +173,15 @@ export const Reports: React.FC<ReportsProps> = ({ invoices, expenses, onNavigate
         </div>
 
         <button onClick={handleDownloadPDF} className="w-14 h-14 bg-primary text-primary-on rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95" title="Download PDF"><Download size={24} /></button>
+        
+        {/* Menu FAB - rightmost */}
+        <FloatingMenu 
+          currentView="reports" 
+          onNavigate={onNavigate} 
+          customActions={menuActions} 
+          isOpen={activeFab === 'menu'}
+          onToggle={(open) => setActiveFab(open ? 'menu' : 'none')}
+        />
       </div>
       
       <div className="max-w-4xl mx-auto pt-6">
