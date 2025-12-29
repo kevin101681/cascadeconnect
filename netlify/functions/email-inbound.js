@@ -113,13 +113,28 @@ exports.handler = async (event, context) => {
     // If no text/html, try to extract from the raw email field
     if (!textBody && !htmlBody && emailData.email) {
       console.log('📧 No text/html fields, parsing raw email...');
-      // Simple extraction - look for the body after headers
+      console.log('📧 Raw email length:', emailData.email.length);
+      
+      // The raw email contains full RFC 822 format
+      // Try multiple methods to extract the body
       const rawEmail = emailData.email;
-      const bodyStart = rawEmail.indexOf('\n\n');
+      
+      // Method 1: Look for blank line after headers (\r\n\r\n or \n\n)
+      let bodyStart = rawEmail.indexOf('\r\n\r\n');
+      if (bodyStart === -1) bodyStart = rawEmail.indexOf('\n\n');
+      
       if (bodyStart > -1) {
-        const potentialBody = rawEmail.substring(bodyStart + 2).trim();
-        textBody = potentialBody;
-        console.log('📧 Extracted body from raw email:', textBody.substring(0, 100));
+        const separator = rawEmail.indexOf('\r\n\r\n') > -1 ? '\r\n\r\n' : '\n\n';
+        const potentialBody = rawEmail.substring(bodyStart + separator.length).trim();
+        console.log('📧 Found body separator at position:', bodyStart);
+        console.log('📧 Body preview (first 200 chars):', potentialBody.substring(0, 200));
+        
+        if (potentialBody.length > 0) {
+          textBody = potentialBody;
+        }
+      } else {
+        console.log('⚠️ Could not find body separator in raw email');
+        console.log('📧 Raw email preview:', rawEmail.substring(0, 500));
       }
     }
     
