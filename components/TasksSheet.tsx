@@ -141,19 +141,19 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [] 
             onClick={closeTasks}
           />
 
-          {/* Slide-over drawer */}
+          {/* Drawer with fade animation */}
           <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
             className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-surface dark:bg-gray-800 shadow-elevation-5 z-[201] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex-shrink-0 p-6 border-b border-surface-outline-variant dark:border-gray-700">
               <div className="flex items-center justify-between mb-2">
-                <h2 className="text-xl font-semibold text-surface-on dark:text-gray-100">Tasks</h2>
+                <h2 className="text-xl font-semibold text-surface-on dark:text-gray-100">Notes</h2>
                 <button
                   onClick={closeTasks}
                   className="p-2 rounded-full hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
@@ -189,7 +189,7 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [] 
                   type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="Add a task..."
+                  placeholder="Add a note..."
                   className="flex-1 px-4 py-2 rounded-lg border border-surface-outline-variant dark:border-gray-600 bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
                 <button
@@ -248,9 +248,9 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [] 
 
                   {sortedTasks.length === 0 && (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <p className="text-surface-on-variant dark:text-gray-400 mb-2">No tasks yet</p>
+                      <p className="text-surface-on-variant dark:text-gray-400 mb-2">No notes yet</p>
                       <p className="text-sm text-surface-on-variant/70 dark:text-gray-500">
-                        Add a task above to get started
+                        Add a note above to get started
                       </p>
                     </div>
                   )}

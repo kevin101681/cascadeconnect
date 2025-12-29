@@ -493,13 +493,13 @@ const Layout: React.FC<LayoutProps> = ({
         {children}
       </main>
 
-      {/* Floating Action Button - Tasks Drawer (Internal Users Only) */}
+      {/* Floating Action Button - Notes Drawer (Internal Users Only) */}
       {(isAdmin || isBuilder) && (
         <button
           onClick={() => useTaskStore.getState().openTasks()}
           className="fixed bottom-6 right-6 z-40 bg-primary hover:bg-primary/90 text-primary-on rounded-full p-4 shadow-elevation-6 hover:shadow-elevation-8 transition-all duration-200 flex items-center justify-center w-14 h-14 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-gray-900"
-          aria-label="Open Tasks"
-          title="Tasks"
+          aria-label="Open Notes"
+          title="Notes"
         >
           <CheckSquare2 className="h-6 w-6" />
         </button>
