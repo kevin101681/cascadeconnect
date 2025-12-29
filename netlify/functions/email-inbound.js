@@ -3,7 +3,6 @@
 
 const { Client } = require('pg');
 const { v4: uuidv4 } = require('uuid');
-const busboy = require('busboy');
 
 // Helper to get database connection
 const getDbClient = async () => {
@@ -55,50 +54,67 @@ exports.handler = async (event, context) => {
 
   let client = null;
   try {
-    console.log('📧 Parsing email data with busboy...');
+    console.log('📧 Parsing email data...');
     console.log('Content-Type:', event.headers['content-type']);
-    console.log('Body length:', event.body ? event.body.length : 0);
+    console.log('Body type:', typeof event.body);
+    console.log('Is base64?', event.isBase64Encoded);
     
-    // Use busboy to parse multipart/form-data
-    const emailData = await new Promise((resolve, reject) => {
-      const fields = {};
-      const bb = busboy({ 
-        headers: {
-          'content-type': event.headers['content-type'] || event.headers['Content-Type']
-        }
-      });
-
-      bb.on('field', (fieldname, val) => {
-        console.log('📧 Field:', fieldname);
-        fields[fieldname] = val;
-      });
-
-      bb.on('finish', () => {
-        console.log('📧 Parsed fields:', Object.keys(fields));
-        // Log field values to debug (truncate long values)
-        for (const [key, value] of Object.entries(fields)) {
-          const preview = typeof value === 'string' && value.length > 100 
-            ? value.substring(0, 100) + '...' 
-            : value;
-          console.log(`📧 Field "${key}":`, preview);
-        }
-        resolve(fields);
-      });
-
-      bb.on('error', (err) => {
-        console.error('❌ Busboy error:', err);
-        reject(err);
-      });
-
-      // Write the body to busboy
-      // event.body is base64 encoded when coming from Netlify
-      const bodyBuffer = event.isBase64Encoded 
-        ? Buffer.from(event.body, 'base64')
-        : Buffer.from(event.body);
+    // Parse multipart/form-data manually (simpler than busboy)
+    let emailData = {};
+    const contentType = event.headers['content-type'] || '';
+    
+    if (contentType.includes('multipart/form-data')) {
+      const boundaryMatch = contentType.match(/boundary=(.+)$/);
+      if (!boundaryMatch) {
+        console.error('❌ No boundary in content-type');
+        return {
+          statusCode: 400,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+          body: JSON.stringify({ error: 'Invalid multipart data' })
+        };
+      }
       
-      bb.write(bodyBuffer);
-      bb.end();
-    });
+      const boundary = boundaryMatch[1];
+      console.log('📧 Boundary:', boundary);
+      
+      // Decode body if base64
+      const bodyText = event.isBase64Encoded 
+        ? Buffer.from(event.body, 'base64').toString('utf-8')
+        : event.body;
+      
+      console.log('📧 Body length:', bodyText.length);
+      
+      // Split by boundary
+      const parts = bodyText.split(`--${boundary}`);
+      console.log('📧 Found', parts.length, 'parts');
+      
+      for (const part of parts) {
+        if (!part || part.trim() === '' || part.trim() === '--') continue;
+        
+        // Extract field name from Content-Disposition header
+        const nameMatch = part.match(/Content-Disposition: form-data; name="([^"]+)"/);
+        if (!nameMatch) continue;
+        
+        const fieldName = nameMatch[1];
+        
+        // Extract value (everything after the headers, which end with \r\n\r\n or \n\n)
+        const headerEnd = part.indexOf('\r\n\r\n') > -1 ? part.indexOf('\r\n\r\n') + 4 : part.indexOf('\n\n') + 2;
+        if (headerEnd < 4) continue;
+        
+        const value = part.substring(headerEnd).trim();
+        emailData[fieldName] = value;
+        
+        console.log(`📧 Parsed field "${fieldName}": ${value.length} chars`);
+      }
+      
+      console.log('📧 Total fields parsed:', Object.keys(emailData).length);
+    } else {
+      // Fallback to URL-encoded
+      const formData = new URLSearchParams(event.body || '');
+      for (const [key, value] of formData.entries()) {
+        emailData[key] = value;
+      }
+    }
 
     // Extract key information from SendGrid's parsed email
     const fromEmailRaw = emailData.from || emailData.envelope || '';
