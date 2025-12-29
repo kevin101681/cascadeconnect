@@ -132,9 +132,6 @@ export const FloatingMenu: React.FC<FloatingMenuProps> = ({
           {/* Menu - Center Screen */}
           <div 
             className="
-              fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-              w-[min(calc(100vw-2rem),22rem)] 
-              max-h-[min(calc(100vh-4rem),36rem)] 
               overflow-y-auto 
               flex flex-col gap-2 pb-2 
               animate-slide-up
@@ -146,7 +143,7 @@ export const FloatingMenu: React.FC<FloatingMenuProps> = ({
               transform: 'translate(-50%, -50%)',
               zIndex: 9999,
               pointerEvents: 'auto',
-              maxWidth: 'min(calc(100vw - 2rem), 22rem)',
+              width: 'min(calc(100vw - 2rem), 22rem)',
               maxHeight: 'min(calc(100vh - 4rem), 36rem)',
               background: 'lime' // Bright green for visibility
             }}
