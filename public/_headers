@@ -1,0 +1,9 @@
+# Headers for static HTML manual files
+/complete_homeowner_manual.html
+  Content-Type: text/html; charset=UTF-8
+  Cache-Control: no-cache
+
+/homeowner-manual.html
+  Content-Type: text/html; charset=UTF-8
+  Cache-Control: no-cache
+

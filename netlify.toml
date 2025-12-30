@@ -27,6 +27,19 @@
 [build.processing.html]
   pretty_urls = true
 
+# Headers for static HTML files to ensure they're served correctly
+[[headers]]
+  for = "/complete_homeowner_manual.html"
+  [headers.values]
+    Content-Type = "text/html; charset=UTF-8"
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/homeowner-manual.html"
+  [headers.values]
+    Content-Type = "text/html; charset=UTF-8"
+    Cache-Control = "public, max-age=0, must-revalidate"
+
 # Redirects for SPA routing (handled by public/_redirects)
 # All routes redirect to index.html for client-side routing
 # API routes are handled in public/_redirects (processed first)

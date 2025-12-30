@@ -148,6 +148,9 @@ export default defineConfig(({ mode }) => {
     build: {
       target: 'esnext',
       rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, 'index.html'),
+        },
         output: {
           manualChunks(id) {
             // Create a separate chunk for CBS Books app
@@ -172,7 +175,9 @@ export default defineConfig(({ mode }) => {
         }
       },
       // Increase chunk size warning limit
-      chunkSizeWarningLimit: 1000
+      chunkSizeWarningLimit: 1000,
+      // Ensure public directory files are copied as-is
+      copyPublicDir: true
     },
     resolve: {
       alias: {
