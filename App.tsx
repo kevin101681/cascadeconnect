@@ -474,9 +474,12 @@ function App() {
                 name: usersTable.name,
                 email: usersTable.email,
                 role: usersTable.role,
+                internalRole: usersTable.internalRole, // CRITICAL: Load the internal role for ADMIN users
                 password: usersTable.password,
                 builderGroupId: usersTable.builderGroupId
               }).from(usersTable);
+              
+              console.log('👥 Loaded users from database:', dbUsers.length, 'users');
               
               if (dbUsers.length > 0) {
                 // Try to fetch email notification preferences separately if columns exist
