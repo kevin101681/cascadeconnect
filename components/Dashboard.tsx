@@ -2944,9 +2944,6 @@ const Dashboard: React.FC<DashboardProps> = ({
             >
               <Mail className="h-4 w-4" />
               Messages
-              {displayThreads.some(t => !t.isRead) && (
-                <span className="w-2 h-2 rounded-full bg-error ml-1"></span>
-              )}
             </button>
 
             {/* CALLS TAB - Admin Only (hidden in homeowner view) */}
