@@ -3317,7 +3317,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              {renderMessagesTab()}
+              <div className="max-w-7xl mx-auto py-4">
+                {renderMessagesTab()}
+              </div>
             </motion.div>
           )}
 
