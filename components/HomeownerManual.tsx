@@ -131,23 +131,31 @@ const HomeownerManual: React.FC = () => {
   return (
     <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 180px)' }}>
       {/* Header with Download Button */}
-      <div className="px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
+      <div className="px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 flex-shrink-0" style={{ backgroundColor: '#3C6B80' }}>
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">
+          <div className="flex-1">
+            <h2 className="text-xl font-normal text-white">
               Homeowner Manual
             </h2>
-            <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
+            <p className="text-sm text-white/80 mt-1">
               {pages[currentPage - 1]?.title}
             </p>
+          </div>
+          
+          {/* Logo */}
+          <div className="flex items-center gap-4 mx-4">
+            <img 
+              src="/cbslogo.png" 
+              alt="Cascade Builder Services" 
+              className="h-12 w-auto object-contain"
+            />
           </div>
           
           {/* Download PDF Button */}
           <button
             onClick={downloadAsPDF}
             disabled={isGeneratingPDF}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium"
-            style={{ backgroundColor: '#3C6B80' }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-white bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium border border-white/30"
             title="Download as PDF"
           >
             {isGeneratingPDF ? (
@@ -172,10 +180,9 @@ const HomeownerManual: React.FC = () => {
               onClick={() => setCurrentPage(page.id)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 currentPage === page.id
-                  ? 'text-white'
-                  : 'bg-surface dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-600'
+                  ? 'bg-white text-[#3C6B80]'
+                  : 'bg-white/20 text-white/90 hover:bg-white/30 border border-white/30'
               }`}
-              style={currentPage === page.id ? { backgroundColor: '#3C6B80' } : {}}
             >
               {page.title}
             </button>
