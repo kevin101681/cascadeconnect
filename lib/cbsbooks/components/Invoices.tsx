@@ -1628,22 +1628,26 @@ export const Invoices: React.FC<InvoicesProps> = ({
         />
       </div>
 
-      {/* Header Stats */}
-      <div className="flex flex-row gap-2 mb-4 md:gap-4 md:mb-6 overflow-x-auto no-scrollbar justify-start">
+      {/* Header Stats & Controls - Reorganized for even distribution */}
+      <div className="space-y-4 mb-6">
+        {/* Row 1: Metrics - Evenly spaced */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {statusFilter !== 'paid' && (
-            <div className="bg-primary text-primary-on px-4 py-2 md:px-6 md:py-2 rounded-full flex items-center gap-2 md:gap-3 whitespace-nowrap shrink-0">
-                <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider">Outstanding</p>
-                <p className="text-sm md:text-xl font-bold">${stats.outstanding.toFixed(0)}</p>
+            <div className="bg-primary text-primary-on px-6 py-3 rounded-xl flex items-center justify-between">
+              <p className="text-xs font-bold uppercase tracking-wider">Outstanding</p>
+              <p className="text-2xl font-bold">${stats.outstanding.toFixed(0)}</p>
             </div>
           )}
-          <div className="bg-primary text-primary-on px-4 py-2 md:px-6 md:py-2 rounded-full flex items-center gap-2 md:gap-3 whitespace-nowrap shrink-0">
-              <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider">Revenue YTD</p>
-              <p className="text-sm md:text-xl font-bold">${stats.ytd.toFixed(0)}</p>
+          <div className="bg-primary text-primary-on px-6 py-3 rounded-xl flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wider">Revenue YTD</p>
+            <p className="text-2xl font-bold">${stats.ytd.toFixed(0)}</p>
           </div>
-      </div>
+        </div>
 
-      <div className={`flex flex-col md:flex-row gap-4 items-start md:items-center ${activeFab === 'search' ? '' : 'hidden md:flex'}`}>
-         <div className={`relative w-full md:w-auto md:min-w-[180px] transition-all duration-300 ${activeFab === 'search' ? 'block' : 'hidden md:block'}`}>
+        {/* Row 2: Search & Filters - Evenly distributed */}
+        <div className={`grid grid-cols-1 md:grid-cols-12 gap-3 ${activeFab === 'search' ? '' : 'hidden md:grid'}`}>
+          {/* Search - Takes 3 columns */}
+          <div className={`md:col-span-3 relative transition-all duration-300 ${activeFab === 'search' ? 'block' : 'hidden md:block'}`}>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-outline dark:text-gray-400" size={20} />
             <input 
               ref={searchInputRef}
@@ -1654,20 +1658,35 @@ export const Invoices: React.FC<InvoicesProps> = ({
               className="w-full bg-surface-container-high dark:bg-gray-600 pl-10 pr-10 h-10 rounded-full outline-none focus:ring-2 focus:ring-primary text-surface-on dark:text-gray-200 placeholder:text-surface-on-variant dark:placeholder:text-gray-400 text-sm font-medium"
             />
             {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2"><X size={18} className="text-surface-outline dark:text-gray-400"/></button>}
-         </div>
-         <div className="hidden md:flex items-center gap-3">
-             <div className="w-48">
-                 <Dropdown 
-                    value={sortValue} 
-                    onChange={setSortValue} 
-                    options={sortOptions} 
-                    placeholder="Sort By" 
-                 />
-             </div>
-             {(['all', 'draft', 'sent', 'paid'] as const).map(s => (
-                <button key={s} onClick={() => setStatusFilter(s)} className={`px-4 h-10 rounded-full text-sm font-medium transition-all ${statusFilter === s ? 'bg-primary text-primary-on' : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 hover:bg-opacity-80'}`}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>
-             ))}
-         </div>
+          </div>
+          
+          {/* Sort Dropdown - Takes 3 columns */}
+          <div className="hidden md:block md:col-span-3">
+            <Dropdown 
+              value={sortValue} 
+              onChange={setSortValue} 
+              options={sortOptions} 
+              placeholder="Sort By" 
+            />
+          </div>
+          
+          {/* Status Filters - Takes 6 columns */}
+          <div className="hidden md:flex md:col-span-6 items-center gap-2">
+            {(['all', 'draft', 'sent', 'paid'] as const).map(s => (
+              <button 
+                key={s} 
+                onClick={() => setStatusFilter(s)} 
+                className={`flex-1 h-10 rounded-full text-sm font-medium transition-all ${
+                  statusFilter === s 
+                    ? 'bg-primary text-primary-on' 
+                    : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 hover:bg-opacity-80'
+                }`}
+              >
+                {s.charAt(0).toUpperCase() + s.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Invoice List Header / Count Pill */}
