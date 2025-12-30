@@ -1670,7 +1670,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
             <input 
               ref={searchInputRef}
               type="text" 
-              placeholder="Search invoices..." 
+              placeholder="" 
               value={searchQuery} 
               onChange={e => setSearchQuery(e.target.value)} 
               className="w-full bg-surface-container-high dark:bg-gray-600 pl-10 pr-10 h-10 rounded-full outline-none focus:ring-2 focus:ring-primary text-surface-on dark:text-gray-200 placeholder:text-surface-on-variant dark:placeholder:text-gray-400 text-sm font-medium"
