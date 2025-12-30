@@ -2150,7 +2150,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             // Find associated claim by matching thread subject to claim title
                                             const associatedClaim = claims.find(c => c.title === selectedThread.subject);
                                             const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
-                                            const contextLabel = `${msg.subject || selectedThread.subject} • ${project}`;
+                                            const contextLabel = `${selectedThread.subject} • ${project}`;
                                             setCurrentTab('NOTES');
                                             useTaskStore.setState({ contextLabel, contextType: 'message' });
                                           }}
@@ -2909,6 +2909,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             WebkitOverflowScrolling: 'touch'
           } as React.CSSProperties}
         >
+           {/* HOMEOWNER-SPECIFIC TABS */}
            <button 
               data-tab="CLAIMS"
               onClick={() => setCurrentTab('CLAIMS')}
@@ -2930,6 +2931,33 @@ const Dashboard: React.FC<DashboardProps> = ({
               </button>
             )}
 
+            <button 
+              data-tab="MESSAGES"
+              onClick={() => setCurrentTab('MESSAGES')}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'MESSAGES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+            >
+              <Mail className="h-4 w-4" />
+              Messages
+            </button>
+
+            {/* Documents Tab - Always show */}
+            <button 
+              data-tab="DOCUMENTS"
+              onClick={() => setCurrentTab('DOCUMENTS')}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+            >
+              <FileText className="h-4 w-4" />
+              Documents
+            </button>
+
+            {/* VISUAL DIVIDER - Only show for admin */}
+            {isAdmin && !isHomeownerView && (
+              <div className="flex items-center px-2 flex-shrink-0">
+                <div className="h-8 w-px bg-surface-outline-variant dark:bg-gray-600"></div>
+              </div>
+            )}
+
+            {/* GLOBAL TABS - Admin Only */}
             {/* NOTES TAB - Admin Only (hidden in homeowner view) */}
             {isAdmin && !isHomeownerView && (
               <button 
@@ -2942,15 +2970,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               </button>
             )}
 
-            <button 
-              data-tab="MESSAGES"
-              onClick={() => setCurrentTab('MESSAGES')}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'MESSAGES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
-            >
-              <Mail className="h-4 w-4" />
-              Messages
-            </button>
-
             {/* CALLS TAB - Admin Only (hidden in homeowner view) */}
             {isAdmin && !isHomeownerView && (
               <button 
@@ -2962,16 +2981,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 Calls
               </button>
             )}
-
-            {/* Documents Tab - Always show */}
-            <button 
-              data-tab="DOCUMENTS"
-              onClick={() => setCurrentTab('DOCUMENTS')}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
-            >
-              <FileText className="h-4 w-4" />
-              Documents
-            </button>
         </div>
 
         {/* Content Area */}
