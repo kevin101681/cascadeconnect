@@ -136,7 +136,9 @@ export const handler: Handler = async (event, context) => {
       statusCode: 200,
       headers,
       body: JSON.stringify({ 
-        url: data.payment_link.url,
+        // Use long_url instead of url to avoid SSL certificate issues with shortened URLs
+        // long_url uses Square's own domain which has proper SSL certificates
+        url: data.payment_link.long_url || data.payment_link.url,
         id: data.payment_link.id 
       })
     };
