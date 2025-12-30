@@ -252,6 +252,12 @@ interface DashboardProps {
   onClearHomeownerSelection: () => void;
   onUpdateHomeowner?: (homeowner: Homeowner) => void;
   
+  // Search Props for Homeowner Search Bar
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  searchResults?: Homeowner[];
+  onSelectHomeowner?: (homeowner: Homeowner) => void;
+  
   // Documents
   documents: HomeownerDocument[];
   onUploadDocument: (doc: Partial<HomeownerDocument>) => void;
@@ -320,6 +326,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   targetHomeowner,
   onClearHomeownerSelection,
   onUpdateHomeowner,
+  searchQuery,
+  onSearchChange,
+  searchResults,
+  onSelectHomeowner,
   documents,
   onUploadDocument,
   onDeleteDocument,
@@ -2643,8 +2653,61 @@ const Dashboard: React.FC<DashboardProps> = ({
         {renderModals()}
         {/* Main Layout Container - Sidebar + Content */}
         <div className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 animate-in fade-in slide-in-from-top-4">
-          {/* LEFT SIDEBAR - Homeowner Info Card */}
-          <div className="w-full lg:w-80 lg:flex-shrink-0">
+          {/* LEFT SIDEBAR - Search + Homeowner Info Card */}
+          <div className="w-full lg:w-80 lg:flex-shrink-0 space-y-4">
+            {/* Homeowner Search Bar - Admin & Builder Only */}
+            {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search homeowners..."
+                  className="w-full bg-surface-container dark:bg-gray-700 rounded-full pl-9 pr-8 py-2 text-sm border-none focus:ring-2 focus:ring-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => onSearchChange('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-outline-variant hover:text-surface-on"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+                
+                {/* Dropdown Results */}
+                {searchQuery && searchResults.length > 0 && (
+                  <div className="absolute z-50 w-full mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 max-h-96 overflow-y-auto">
+                    {searchResults.map((homeowner) => (
+                      <button
+                        key={homeowner.id}
+                        onClick={() => {
+                          onSelectHomeowner(homeowner);
+                          onSearchChange('');
+                        }}
+                        className="w-full text-left px-4 py-3 hover:bg-surface-container dark:hover:bg-gray-700 border-b border-surface-outline-variant dark:border-gray-700 last:border-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{homeowner.name}</p>
+                            <p className="text-xs text-surface-on-variant dark:text-gray-400 truncate">{homeowner.email}</p>
+                            {homeowner.jobName && (
+                              <p className="text-xs text-surface-on-variant dark:text-gray-400 truncate mt-0.5">{homeowner.jobName}</p>
+                            )}
+                          </div>
+                          {homeowner.builder && (
+                            <span className="flex-shrink-0 text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
+                              {homeowner.builder}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+            
             <div 
               ref={homeownerCardContainerRef}
               key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}

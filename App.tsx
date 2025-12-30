@@ -3803,6 +3803,7 @@ Assigned By: ${assignerName}
       onClearSelection={handleClearHomeownerSelection}
       onNavigate={setCurrentView}
       onOpenEnrollment={() => setIsEnrollmentOpen(true)}
+      currentView={currentView}
       onSignOut={async () => {
         // Mark as logged out in sessionStorage
         if (typeof window !== 'undefined') {
@@ -3828,6 +3829,10 @@ Assigned By: ${assignerName}
           targetHomeowner={targetHomeowner}
           onClearHomeownerSelection={handleClearHomeownerSelection}
           onUpdateHomeowner={handleUpdateHomeowner}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          searchResults={searchResults}
+          onSelectHomeowner={handleSelectHomeowner}
           documents={documents}
           onUploadDocument={handleUploadDocument}
           onDeleteDocument={handleDeleteDocument}

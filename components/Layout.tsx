@@ -24,6 +24,7 @@ interface LayoutProps {
   // Navigation & Actions
   onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES') => void;
   onOpenEnrollment: () => void;
+  currentView?: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'DETAIL' | 'NEW';
 
   // Auth
   onSignOut: () => Promise<void>;
@@ -41,7 +42,7 @@ const Layout: React.FC<LayoutProps> = ({
   userRole, 
   onSwitchRole, 
   homeowners, 
-  activeHomeowner, 
+  activeHomeowner,
   onSwitchHomeowner,
   searchQuery,
   onSearchChange,
@@ -53,7 +54,8 @@ const Layout: React.FC<LayoutProps> = ({
   onOpenEnrollment,
   onSignOut,
   isAdminAccount = false,
-  currentUser
+  currentUser,
+  currentView
 }) => {
   // Minimal approach: Just ensure avatar is sized correctly, let CSS handle the rest
   useEffect(() => {
@@ -225,8 +227,8 @@ const Layout: React.FC<LayoutProps> = ({
               </div>
             </button>
             
-            {/* Centered Search Bar (Admin & Builder Only) */}
-            {(isAdmin || isBuilder) && (
+            {/* Centered Search Bar (Admin & Builder Only) - Hidden on Dashboard */}
+            {(isAdmin || isBuilder) && currentView !== 'DASHBOARD' && (
               <div className="flex-1 max-w-sm relative">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" style={{ top: '50%', transform: 'translateY(-50%)' }} />
