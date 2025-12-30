@@ -3496,7 +3496,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* END RIGHT CONTENT AREA */}
         </div>
         {/* END MAIN LAYOUT CONTAINER */}
-        </div>
 
         {/* DOCUMENTS MODAL - Removed, now using tab */}
         {false && showDocsModal && userRole !== UserRole.HOMEOWNER && createPortal(
@@ -4543,7 +4542,6 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>,
           document.body
         )}
-        </div>
       </>
     );
   }
