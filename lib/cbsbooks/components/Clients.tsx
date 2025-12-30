@@ -3,7 +3,7 @@ import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { Client, Invoice, ViewState } from '../types';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
-import { Plus, Trash2, Mail, MapPin, Building, TrendingUp, AlertCircle, Banknote, Upload, Database, Search, X, Pencil } from 'lucide-react';
+import { Plus, Trash2, Mail, MapPin, Building, TrendingUp, AlertCircle, Banknote, Upload, Database, Search, X, Pencil, PieChart, Users, Receipt, CreditCard } from 'lucide-react';
 import { FloatingMenu, ActionItem } from './ui/FloatingMenu';
 
 interface ClientsProps {
@@ -174,6 +174,38 @@ export const Clients: React.FC<ClientsProps> = ({ clients, invoices, onAdd, onUp
 
   return (
     <div className="space-y-6 relative min-h-[calc(100vh-100px)]">
+      {/* Navigation Bar */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <button
+          onClick={() => onNavigate('invoices')}
+          className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+        >
+          <Receipt size={18} />
+          <span className="text-sm font-medium">Invoices</span>
+        </button>
+        <button
+          onClick={() => onNavigate('clients')}
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg transition-opacity"
+        >
+          <Users size={18} />
+          <span className="text-sm font-medium">Builders</span>
+        </button>
+        <button
+          onClick={() => onNavigate('reports')}
+          className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+        >
+          <PieChart size={18} />
+          <span className="text-sm font-medium">Profit and Loss</span>
+        </button>
+        <button
+          onClick={() => onNavigate('expenses')}
+          className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+        >
+          <CreditCard size={18} />
+          <span className="text-sm font-medium">Expenses</span>
+        </button>
+      </div>
+
       <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleFileUpload}/>
       
       {/* FAB GROUP */}
