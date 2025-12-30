@@ -142,15 +142,6 @@ const HomeownerManual: React.FC = () => {
             </p>
           </div>
           
-          {/* Logo */}
-          <div className="flex items-center gap-4 mx-4">
-            <img 
-              src="/cbslogo.png" 
-              alt="Cascade Builder Services" 
-              className="h-12 w-auto object-contain"
-            />
-          </div>
-          
           {/* Download PDF Button */}
           <button
             onClick={downloadAsPDF}
