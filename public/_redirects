@@ -10,6 +10,10 @@
 # Exclude static assets from SPA redirect
 /assets/*    /assets/:splat   200
 
+# Serve static HTML files directly (MUST come before API routes and catch-all)
+/complete_homeowner_manual.html    /complete_homeowner_manual.html    200!
+/homeowner-manual.html    /homeowner-manual.html    200!
+
 # Handle API routes - redirect directly to Netlify Functions
 # This prevents the catch-all from matching these routes
 # Note: Netlify Functions are accessed via /.netlify/functions/function-name
@@ -64,10 +68,6 @@
 
 # Handle Batch Claims API
 /api/claims/batch /.netlify/functions/claims-batch    200!
-
-# Serve static HTML files directly (force these to NOT use the SPA catch-all)
-/complete_homeowner_manual.html    /complete_homeowner_manual.html    200!
-/homeowner-manual.html    /homeowner-manual.html    200!
 
 # All other routes go to index.html for SPA routing
 /*    /index.html   200
