@@ -23,11 +23,21 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
   useEffect(() => {
     const scrollToSection = () => {
       const iframe = iframeRef.current;
-      if (!iframe?.contentWindow?.document) return;
+      if (!iframe?.contentWindow?.document) {
+        console.log('Iframe not ready');
+        return;
+      }
 
       const iframeDoc = iframe.contentWindow.document;
-      const page = pages[currentPage - 1];
       
+      // Check if the document body has content
+      if (!iframeDoc.body || iframeDoc.body.children.length === 0) {
+        console.log('Iframe body not ready, retrying...');
+        setTimeout(scrollToSection, 100);
+        return;
+      }
+
+      const page = pages[currentPage - 1];
       if (!page) return;
 
       const element = iframeDoc.querySelector(page.selector) as HTMLElement;
@@ -35,22 +45,26 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
       if (element) {
         // Scroll to element
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        console.log(`Scrolled to section ${currentPage}: ${page.title}`, element);
+        console.log(`✓ Scrolled to section ${currentPage}: ${page.title}`);
       } else {
-        console.error(`Element not found for selector: ${page.selector}`);
+        console.log(`Waiting for content... (selector: ${page.selector})`);
+        // Retry after a longer delay if content isn't ready
+        setTimeout(scrollToSection, 200);
       }
     };
 
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    // If iframe is already loaded, scroll immediately
+    // If iframe is already loaded, scroll with a longer delay
     if (iframe.contentDocument?.readyState === 'complete') {
-      // Small delay to ensure rendering is complete
-      setTimeout(scrollToSection, 50);
+      setTimeout(scrollToSection, 300);
     } else {
-      // Otherwise wait for load
-      const handleLoad = () => setTimeout(scrollToSection, 50);
+      // Otherwise wait for load event
+      const handleLoad = () => {
+        console.log('Iframe loaded');
+        setTimeout(scrollToSection, 300);
+      };
       iframe.addEventListener('load', handleLoad);
       return () => iframe.removeEventListener('load', handleLoad);
     }
@@ -92,6 +106,8 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
           src={`/complete_homeowner_manual.html${homeownerId ? `?homeownerId=${homeownerId}` : ''}`}
           style={{ width: '100%', height: '100%', border: 'none' }}
           title="Homeowner Manual"
+          sandbox="allow-same-origin allow-scripts allow-forms"
+          loading="eager"
         />
       </div>
     </div>
