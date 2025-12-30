@@ -9,7 +9,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor, Call } from '../types';
 import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign } from 'lucide-react';
 import { useTaskStore } from '../stores/useTaskStore';
 import { calls } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -23,6 +23,7 @@ import TaskDetail from './TaskDetail';
 import TasksSheet from './TasksSheet';
 import AIIntakeDashboard from './AIIntakeDashboard';
 import HomeownerManual from './HomeownerManual';
+import PayrollDashboard from './PayrollDashboard';
 // Lazy load heavy components to improve initial load time
 // Add error handling for failed dynamic imports
 const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err => {
@@ -381,7 +382,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual)
-  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL'>(initialTab || 'CLAIMS');
+  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL'>(initialTab || 'CLAIMS');
   
   // Carousel ref for mobile
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -403,9 +404,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   const minSwipeDistance = 50;
   
   // Get available tabs in order
-  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL'> => {
+  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL'> => {
     const isHomeownerViewRole = userRole === UserRole.HOMEOWNER;
-    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL'> = ['CLAIMS'];
+    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL'> = ['CLAIMS'];
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('TASKS');
       tabs.push('NOTES'); // NOTES tab between TASKS and MESSAGES
@@ -417,6 +418,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('CALLS'); // CALLS tab between MANUAL and DOCUMENTS (admin only)
+      tabs.push('PAYROLL'); // PAYROLL tab (admin only)
     }
     tabs.push('DOCUMENTS'); // Always include DOCUMENTS tab
     return tabs;
@@ -2988,14 +2990,26 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             {/* CALLS TAB - Admin Only (hidden in homeowner view) */}
             {isAdmin && !isHomeownerView && (
-              <button 
-                data-tab="CALLS"
-                onClick={() => setCurrentTab('CALLS')}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'CALLS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
-              >
-                <Phone className="h-4 w-4" />
-                Calls
-              </button>
+              <>
+                <button 
+                  data-tab="CALLS"
+                  onClick={() => setCurrentTab('CALLS')}
+                  className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'CALLS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                >
+                  <Phone className="h-4 w-4" />
+                  Calls
+                </button>
+                
+                {/* PAYROLL TAB - Admin Only (hidden in homeowner view) */}
+                <button 
+                  data-tab="PAYROLL"
+                  onClick={() => setCurrentTab('PAYROLL')}
+                  className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'PAYROLL' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                >
+                  <DollarSign className="h-4 w-4" />
+                  Payroll
+                </button>
+              </>
             )}
         </div>
 
@@ -3352,6 +3366,19 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div className="max-w-7xl mx-auto py-4">
                 <AIIntakeDashboard />
               </div>
+            </motion.div>
+          )}
+
+          {currentTab === 'PAYROLL' && isAdmin && (
+            <motion.div 
+              key="payroll"
+              className="max-w-7xl mx-auto md:relative"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+              <PayrollDashboard />
             </motion.div>
           )}
 

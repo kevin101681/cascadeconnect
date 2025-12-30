@@ -850,7 +850,7 @@ function App() {
 
   // UI State - Persistent (but reset INVOICES on page load to prevent auto-opening)
   // Check URL hash for invoice creation link
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS'>(() => {
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'PAYROLL'>(() => {
     // Check if URL has invoice creation parameters
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
@@ -885,7 +885,7 @@ function App() {
         }
       }
     }
-    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'CALLS'>('cascade_ui_view', 'DASHBOARD');
+    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'CALLS' | 'PAYROLL'>('cascade_ui_view', 'DASHBOARD');
     // Don't auto-open modals on page load - always start at DASHBOARD
     return saved === 'INVOICES' ? 'DASHBOARD' : saved;
   });
@@ -3911,6 +3911,33 @@ Assigned By: ${assignerName}
       )}
       {currentView === 'EMAIL_HISTORY' && (
         <EmailHistory onClose={() => setCurrentView('DASHBOARD')} />
+      )}
+      {currentView === 'PAYROLL' && (
+        <Dashboard
+          claims={[]}
+          homeowners={[]}
+          activeHomeowner={activeHomeowner}
+          onSelectClaim={() => {}}
+          onCreateClaim={() => {}}
+          userRole={userRole}
+          internalEmployees={[]}
+          onUpdateStatus={() => {}}
+          onSendMessage={() => {}}
+          messages={{}}
+          selectedThread={null}
+          onSelectThread={() => {}}
+          documents={[]}
+          messageThreads={[]}
+          onDeleteDocument={() => {}}
+          builders={[]}
+          contractors={[]}
+          onStatusUpdate={() => {}}
+          onNotesUpdate={() => {}}
+          onDocumentUpload={() => {}}
+          initialTab="PAYROLL"
+          isAdmin={userRole === UserRole.ADMIN}
+          onNavigate={setCurrentView}
+        />
       )}
       {currentView === 'BACKEND' && (
         <BackendDashboard onClose={() => setCurrentView('DASHBOARD')} />
