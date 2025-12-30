@@ -346,6 +346,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
+  console.log('Dashboard component: isAdmin =', isAdmin, 'userRole =', userRole);
   // Check if user is actually logged in as admin (has currentUser/activeEmployee)
   const isAdminAccount = !!currentUser;
   
@@ -384,6 +385,15 @@ const Dashboard: React.FC<DashboardProps> = ({
   // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual)
   console.log('Dashboard initialTab:', initialTab, 'will set currentTab to:', initialTab || 'CLAIMS');
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL'>(initialTab || 'CLAIMS');
+  console.log('Dashboard currentTab state after useState:', currentTab);
+  
+  // Update currentTab when initialTab prop changes
+  useEffect(() => {
+    if (initialTab) {
+      console.log('initialTab changed, updating currentTab to:', initialTab);
+      setCurrentTab(initialTab);
+    }
+  }, [initialTab]);
   
   // Carousel ref for mobile
   const carouselRef = useRef<HTMLDivElement>(null);
@@ -3370,21 +3380,24 @@ const Dashboard: React.FC<DashboardProps> = ({
             </motion.div>
           )}
 
-          {currentTab === 'PAYROLL' && isAdmin && (
-            <>
-              {console.log('PAYROLL tab content rendering, currentTab:', currentTab, 'isAdmin:', isAdmin)}
-              <motion.div 
-                key="payroll"
-                className="max-w-7xl mx-auto md:relative"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-              >
-                <PayrollDashboard />
-              </motion.div>
-            </>
-          )}
+          {(() => {
+            console.log('Checking PAYROLL condition: currentTab =', currentTab, 'isAdmin =', isAdmin, 'matches =', currentTab === 'PAYROLL' && isAdmin);
+            return currentTab === 'PAYROLL' && isAdmin && (
+              <>
+                {console.log('PAYROLL tab content rendering')}
+                <motion.div 
+                  key="payroll"
+                  className="max-w-7xl mx-auto md:relative"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                >
+                  <PayrollDashboard />
+                </motion.div>
+              </>
+            );
+          })()}
 
           {currentTab === 'MANUAL' && (
             <motion.div 
