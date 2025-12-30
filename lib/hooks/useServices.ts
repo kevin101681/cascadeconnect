@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { uploadFile, uploadMultipleFiles, type UploadResult, type UploadOptions } from '../services/uploadService';
-import { sendMessage, type SendMessageRequest, type SendMessageResponse } from '../services/messagesService';
+import { sendSms, type SendSmsRequest, type SendSmsResponse } from '../services/smsService';
 import { getNetlifyInfo, getNetlifyDeploys, getNeonStats, type NetlifyInfoResponse, type NetlifyDeploymentsResponse, type NeonStats } from '../services/netlifyService';
 
 // ==========================================
@@ -87,7 +87,7 @@ export interface UseSendMessageState {
  * const handleSend = async () => {
  *   const result = await sendSms({
  *     homeownerId: 'abc123',
- *     text: 'Hello!',
+ *     message: 'Hello!',
  *   });
  *   if (result.success) {
  *     alert('Message sent!');
@@ -102,11 +102,11 @@ export function useSendMessage() {
     lastMessageId: null,
   });
 
-  const sendSms = useCallback(async (request: SendMessageRequest): Promise<SendMessageResponse> => {
+  const sendMessage = useCallback(async (request: SendSmsRequest): Promise<SendSmsResponse> => {
     setState(prev => ({ ...prev, sending: true, error: null }));
     
     try {
-      const result = await sendMessage(request);
+      const result = await sendSms(request);
       
       if (result.success) {
         setState({
@@ -139,7 +139,7 @@ export function useSendMessage() {
   }, []);
 
   return {
-    sendSms,
+    sendSms: sendMessage,
     reset,
     ...state,
   };
