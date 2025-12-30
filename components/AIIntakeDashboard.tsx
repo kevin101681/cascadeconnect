@@ -130,97 +130,48 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
   }
 
   return (
-    <div className="min-h-screen bg-surface dark:bg-gray-900 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1">
+      <div className="p-6">
         {/* Calls List */}
         {filteredCalls.length === 0 ? (
-          <div className="bg-surface-container dark:bg-gray-800 rounded-xl p-12 text-center border border-surface-outline-variant dark:border-gray-700">
-            <Phone className="h-12 w-12 text-surface-outline-variant dark:text-gray-600 mx-auto mb-4" />
+          <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-12 text-center border border-surface-outline-variant dark:border-gray-600">
+            <Phone className="h-12 w-12 text-surface-outline-variant dark:text-gray-500 mx-auto mb-4" />
             <p className="text-surface-on-variant dark:text-gray-400">No calls found</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredCalls.map((call, index) => (
               <motion.div
                 key={call.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="bg-surface-container dark:bg-gray-800 rounded-xl p-6 border border-surface-outline-variant dark:border-gray-700 hover:shadow-elevation-2 transition-shadow"
+                transition={{ delay: index * 0.02 }}
+                className="bg-surface dark:bg-gray-700 rounded-xl p-4 border border-surface-outline-variant dark:border-gray-600 hover:shadow-elevation-1 transition-all cursor-pointer group"
+                onClick={() => setSelectedCall(call)}
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div 
-                    className="flex-1 cursor-pointer"
-                    onClick={() => setSelectedCall(call)}
-                  >
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="text-lg font-semibold text-surface-on dark:text-gray-100">
-                        {call.homeownerName || 'Unknown Caller'}
-                      </h3>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="text-base font-semibold text-surface-on dark:text-gray-100 mb-2 line-clamp-1 group-hover:text-primary transition-colors">
+                      {call.homeownerName || 'Unknown Caller'}
+                    </h3>
+                    <div className="flex flex-wrap gap-1 mb-2">
                       {call.isUrgent && (
-                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                           URGENT
                         </span>
                       )}
                       {call.isVerified ? (
-                        <span className="bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1">
+                        <span className="bg-green-500 text-white text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
                           <CheckCircle className="h-3 w-3" />
                           Verified
                         </span>
                       ) : (
-                        <span className="bg-orange-500 text-white text-xs font-medium px-2 py-1 rounded-full flex items-center gap-1">
+                        <span className="bg-orange-500 text-white text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
                           <AlertCircle className="h-3 w-3" />
                           Unverified
                         </span>
                       )}
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-surface-on-variant dark:text-gray-400">
-                      {call.phoneNumber && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4" />
-                          <span>{call.phoneNumber}</span>
-                        </div>
-                      )}
-                      {call.propertyAddress && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          <span className="truncate">{call.propertyAddress}</span>
-                        </div>
-                      )}
-                      {call.verifiedBuilderName && (
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4" />
-                          <span className="font-medium text-surface-on dark:text-gray-100">Verified Builder: {call.verifiedBuilderName}</span>
-                        </div>
-                      )}
-                      {call.verifiedClosingDate && (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="h-4 w-4" />
-                          <span className="font-medium text-surface-on dark:text-gray-100">Closing: {new Date(call.verifiedClosingDate).toLocaleDateString()}</span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        <span>{formatDate(call.createdAt)}</span>
-                      </div>
-                      {call.addressMatchSimilarity && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs">Match: {(parseFloat(call.addressMatchSimilarity) * 100).toFixed(1)}%</span>
-                        </div>
-                      )}
-                    </div>
-                    {call.issueDescription && (
-                      <div className="mt-3 p-3 bg-surface dark:bg-gray-900 rounded-lg">
-                        <p className="text-sm text-surface-on dark:text-gray-100 line-clamp-2">{call.issueDescription}</p>
-                      </div>
-                    )}
-                    
-                    {/* SMS Chat Section - Outside clickable area */}
-                    {call.homeownerId && (
-                      <div className="w-full mt-4" onClick={(e) => e.stopPropagation()}>
-                        <CallSmsChat homeownerId={call.homeownerId} callId={call.id} />
-                      </div>
-                    )}
                   </div>
                   {call.homeownerId && (
                     <button
@@ -228,24 +179,56 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                         e.stopPropagation();
                         handleViewHomeowner(call.homeownerId);
                       }}
-                      className="ml-4 p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                      className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                       title="View Homeowner"
                     >
-                      <ExternalLink className="h-5 w-5" />
+                      <ExternalLink className="h-4 w-4" />
                     </button>
                   )}
                 </div>
+                
+                <div className="space-y-2 text-xs text-surface-on-variant dark:text-gray-400">
+                  {call.phoneNumber && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-3.5 w-3.5 flex-shrink-0" />
+                      <span className="truncate">{call.phoneNumber}</span>
+                    </div>
+                  )}
+                  {call.propertyAddress && (
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
+                      <span className="truncate">{call.propertyAddress}</span>
+                    </div>
+                  )}
+                  {call.verifiedBuilderName && (
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
+                      <span className="truncate font-medium text-surface-on dark:text-gray-300">{call.verifiedBuilderName}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3.5 w-3.5 flex-shrink-0" />
+                    <span>{formatDate(call.createdAt)}</span>
+                  </div>
+                </div>
+                
+                {call.issueDescription && (
+                  <div className="mt-3 p-2 bg-surface-container/50 dark:bg-gray-600/50 rounded-lg">
+                    <p className="text-xs text-surface-on dark:text-gray-100 line-clamp-2">{call.issueDescription}</p>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
         )}
+      </div>
 
-        {/* Call Detail Modal */}
-        {selectedCall && (
-          <div
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-            onClick={() => setSelectedCall(null)}
-          >
+      {/* Call Detail Modal */}
+      {selectedCall && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedCall(null)}
+        >
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -384,7 +367,6 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
             </motion.div>
           </div>
         )}
-      </div>
     </div>
   );
 };
