@@ -6,6 +6,7 @@ import html2canvas from 'html2canvas';
 const HomeownerManual: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [contentHeight, setContentHeight] = useState<number>(800);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Define pages based on actual HTML structure
@@ -19,7 +20,7 @@ const HomeownerManual: React.FC = () => {
     { id: 6, title: 'Contact & Notes', selector: 'body > .page:nth-of-type(7)' },
   ];
 
-  // Scroll to the correct section when page changes
+  // Scroll to the correct section when page changes and measure its height
   useEffect(() => {
     const scrollToSection = () => {
       const iframe = iframeRef.current;
@@ -35,7 +36,14 @@ const HomeownerManual: React.FC = () => {
       if (element) {
         // Scroll to element
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        console.log(`Scrolled to section ${currentPage}: ${page.title}`, element);
+        
+        // Measure the height of the section
+        const sectionHeight = element.offsetHeight;
+        // Add padding for header (200px) and some buffer (50px)
+        const totalHeight = Math.min(sectionHeight + 250, window.innerHeight * 0.9);
+        setContentHeight(totalHeight);
+        
+        console.log(`Scrolled to section ${currentPage}: ${page.title}`, element, `Height: ${sectionHeight}px`);
       } else {
         console.error(`Element not found for selector: ${page.selector}`);
       }
@@ -47,10 +55,10 @@ const HomeownerManual: React.FC = () => {
     // If iframe is already loaded, scroll immediately
     if (iframe.contentDocument?.readyState === 'complete') {
       // Small delay to ensure rendering is complete
-      setTimeout(scrollToSection, 50);
+      setTimeout(scrollToSection, 100);
     } else {
       // Otherwise wait for load
-      const handleLoad = () => setTimeout(scrollToSection, 50);
+      const handleLoad = () => setTimeout(scrollToSection, 100);
       iframe.addEventListener('load', handleLoad);
       return () => iframe.removeEventListener('load', handleLoad);
     }
@@ -129,7 +137,7 @@ const HomeownerManual: React.FC = () => {
   };
 
   return (
-    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 100px)', maxHeight: '95vh' }}>
+    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden flex flex-col transition-all duration-300" style={{ height: `${contentHeight}px`, maxHeight: '90vh' }}>
       {/* Header with Download Button */}
       <div className="px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
         <div className="flex items-center justify-between">

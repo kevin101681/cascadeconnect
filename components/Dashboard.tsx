@@ -2564,7 +2564,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           }}
         >
           <div 
-            className="w-full max-w-7xl h-[95vh]"
+            className="w-full max-w-7xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative">
