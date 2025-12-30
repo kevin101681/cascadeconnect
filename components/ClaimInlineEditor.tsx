@@ -649,9 +649,17 @@ If this repair work is billable, please let me know prior to scheduling.`);
           <Button 
             type="button" 
             variant="outlined"
-            onClick={() => useTaskStore.getState().openTasks(claim.id)}
+            onClick={() => {
+              // Navigate to the Notes tab and store context
+              const contextLabel = `${claim.claimNumber || claim.id.substring(0, 8)} • ${claim.jobName || claim.address}`;
+              if (onNavigate) {
+                onNavigate('DASHBOARD', { initialTab: 'NOTES' });
+              }
+              // Store context for when user adds a note
+              useTaskStore.setState({ contextLabel });
+            }}
             icon={<StickyNote className="h-4 w-4" />}
-            title="Add a note for this claim"
+            title={`Add a note for ${claim.claimNumber || 'this claim'}`}
           >
             +Note
           </Button>
@@ -948,9 +956,17 @@ If this repair work is billable, please let me know prior to scheduling.`);
                           </div>
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => useTaskStore.getState().openTasks(claim.id)}
+                              onClick={() => {
+                                // Navigate to the Notes tab with message context
+                                const contextLabel = `Message: ${msg.subject}`;
+                                if (onNavigate) {
+                                  onNavigate('DASHBOARD', { initialTab: 'NOTES' });
+                                }
+                                // Store context for when user adds a note
+                                useTaskStore.setState({ contextLabel });
+                              }}
                               className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
-                              title="Add a note for this message"
+                              title={`Add a note about: ${msg.subject}`}
                             >
                               <StickyNote className="h-3.5 w-3.5" />
                               <span>+Note</span>

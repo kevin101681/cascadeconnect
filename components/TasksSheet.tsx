@@ -12,7 +12,7 @@ interface TasksSheetProps {
 }
 
 const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [], isInline = false }) => {
-  const { isOpen, activeClaimId, isFilterEnabled, closeTasks, toggleFilter } = useTaskStore();
+  const { isOpen, activeClaimId, isFilterEnabled, contextLabel, closeTasks, toggleFilter } = useTaskStore();
   const [tasks, setTasks] = useState<SimpleTask[]>([]);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -156,6 +156,14 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
 
       {/* Input Area */}
       <div className="flex-shrink-0 px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700">
+        {contextLabel && (
+          <div className="mb-3 flex items-center gap-2">
+            <span className="text-xs text-surface-on-variant dark:text-gray-400">Adding note for:</span>
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+              {contextLabel}
+            </span>
+          </div>
+        )}
         <form onSubmit={handleAddTask} className="flex gap-2">
           <input
             ref={inputRef}

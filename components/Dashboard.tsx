@@ -2146,14 +2146,16 @@ const Dashboard: React.FC<DashboardProps> = ({
                                       </div>
                                       <div className="flex items-center gap-2">
                                         <button
-                                          onClick={() => useTaskStore.getState().openTasks()}
-                                          className="text-xs text-primary hover:text-primary/80 opacity-0 group-hover:opacity-100 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-all"
-                                          title="Add a note for this message"
+                                          onClick={() => {
+                                            setCurrentTab('NOTES');
+                                          }}
+                                          className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
+                                          title={`Add a note about: ${selectedThread.subject}`}
                                         >
                                           <StickyNote className="h-3.5 w-3.5" />
                                           <span>+Note</span>
                                         </button>
-                                        <div className="text-xs text-surface-on-variant dark:text-gray-400 group-hover:text-surface-on dark:group-hover:text-gray-100 transition-colors">
+                                        <div className="text-xs text-surface-on-variant dark:text-gray-400 transition-colors">
                                           {new Date(msg.timestamp).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                                         </div>
                                       </div>
