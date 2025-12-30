@@ -382,6 +382,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual)
+  console.log('Dashboard initialTab:', initialTab, 'will set currentTab to:', initialTab || 'CLAIMS');
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL'>(initialTab || 'CLAIMS');
   
   // Carousel ref for mobile
@@ -3370,16 +3371,19 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
 
           {currentTab === 'PAYROLL' && isAdmin && (
-            <motion.div 
-              key="payroll"
-              className="max-w-7xl mx-auto md:relative"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <PayrollDashboard />
-            </motion.div>
+            <>
+              {console.log('PAYROLL tab content rendering, currentTab:', currentTab, 'isAdmin:', isAdmin)}
+              <motion.div 
+                key="payroll"
+                className="max-w-7xl mx-auto md:relative"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+              >
+                <PayrollDashboard />
+              </motion.div>
+            </>
           )}
 
           {currentTab === 'MANUAL' && (

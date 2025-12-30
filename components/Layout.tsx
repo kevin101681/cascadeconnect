@@ -436,7 +436,13 @@ const Layout: React.FC<LayoutProps> = ({
                             Email History
                           </button>
                           <button 
-                            onClick={() => handleMenuAction(() => onNavigate('PAYROLL'))}
+                            onClick={() => {
+                              console.log('Payroll menu button clicked');
+                              handleMenuAction(() => {
+                                console.log('Navigating to PAYROLL');
+                                onNavigate('PAYROLL');
+                              });
+                            }}
                             className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
                           >
                             <DollarSign className="h-4 w-4 text-surface-outline dark:text-gray-500" />

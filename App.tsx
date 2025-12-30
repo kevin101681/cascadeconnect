@@ -3913,29 +3913,32 @@ Assigned By: ${assignerName}
         <EmailHistory onClose={() => setCurrentView('DASHBOARD')} />
       )}
       {currentView === 'PAYROLL' && (
-        <Dashboard
-          claims={[]}
-          homeowners={[]}
-          activeHomeowner={activeHomeowner}
-          onSelectClaim={() => {}}
-          onNewClaim={() => {}}
-          userRole={userRole}
-          employees={employees}
-          currentUser={activeEmployee}
-          targetHomeowner={null}
-          onClearHomeownerSelection={() => {}}
-          documents={[]}
-          onUploadDocument={() => {}}
-          messages={[]}
-          onSendMessage={() => {}}
-          onCreateThread={() => {}}
-          tasks={tasks}
-          onAddTask={handleAddTask}
-          onToggleTask={handleToggleTask}
-          onDeleteTask={handleDeleteTask}
-          initialTab="PAYROLL"
-          onNavigate={setCurrentView}
-        />
+        <>
+          {console.log('PAYROLL view rendering, userRole:', userRole, 'isAdmin:', userRole === UserRole.ADMIN)}
+          <Dashboard
+            claims={[]}
+            homeowners={[]}
+            activeHomeowner={activeHomeowner}
+            onSelectClaim={() => {}}
+            onNewClaim={() => {}}
+            userRole={userRole}
+            employees={employees}
+            currentUser={activeEmployee}
+            targetHomeowner={null}
+            onClearHomeownerSelection={() => {}}
+            documents={[]}
+            onUploadDocument={() => {}}
+            messages={[]}
+            onSendMessage={() => {}}
+            onCreateThread={() => {}}
+            tasks={tasks}
+            onAddTask={handleAddTask}
+            onToggleTask={handleToggleTask}
+            onDeleteTask={handleDeleteTask}
+            initialTab="PAYROLL"
+            onNavigate={setCurrentView}
+          />
+        </>
       )}
       {currentView === 'BACKEND' && (
         <BackendDashboard onClose={() => setCurrentView('DASHBOARD')} />
