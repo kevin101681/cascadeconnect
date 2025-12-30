@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
 const HomeownerManual: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [sectionHeight, setSectionHeight] = useState<number | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // Define pages based on logical sections in the manual
@@ -20,7 +21,7 @@ const HomeownerManual: React.FC = () => {
 
   const totalPages = pages.length;
 
-  // Scroll to the correct section when page changes
+  // Scroll to the correct section when page changes and measure height
   useEffect(() => {
     if (iframeRef.current?.contentWindow) {
       const iframe = iframeRef.current;
@@ -31,13 +32,26 @@ const HomeownerManual: React.FC = () => {
         if (!iframeDoc) return;
 
         const page = pages[currentPage - 1];
+        let element: Element | null = null;
+
         if (typeof page.scrollTo === 'number') {
           iframe.contentWindow?.scrollTo({ top: page.scrollTo, behavior: 'smooth' });
+          // For cover page, get the cover element
+          element = iframeDoc.querySelector('.cover');
         } else {
-          const element = iframeDoc.querySelector(page.scrollTo);
+          element = iframeDoc.querySelector(page.scrollTo);
           if (element) {
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }
+        }
+
+        // Measure the height of the current section
+        if (element) {
+          const height = element.scrollHeight;
+          // Add some padding and account for header
+          setSectionHeight(Math.min(height + 100, window.innerHeight - 150));
+        } else {
+          setSectionHeight(null);
         }
       };
 
@@ -49,18 +63,6 @@ const HomeownerManual: React.FC = () => {
       }
     }
   }, [currentPage, pages]);
-
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const goToPrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
 
   const downloadAsPDF = async () => {
     setIsGeneratingPDF(true);
@@ -135,8 +137,8 @@ const HomeownerManual: React.FC = () => {
   };
 
   return (
-    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 200px)' }}>
-      {/* Header with Pagination Controls */}
+    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden flex flex-col">
+      {/* Header with Download Button */}
       <div className="px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div>
@@ -148,58 +150,28 @@ const HomeownerManual: React.FC = () => {
             </p>
           </div>
           
-          {/* Action Buttons */}
-          <div className="flex items-center gap-3">
-            {/* Download PDF Button */}
-            <button
-              onClick={downloadAsPDF}
-              disabled={isGeneratingPDF}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-on hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium"
-              title="Download as PDF"
-            >
-              {isGeneratingPDF ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-on border-t-transparent"></div>
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Download className="h-4 w-4" />
-                  Download PDF
-                </>
-              )}
-            </button>
-
-            {/* Pagination Navigation */}
-            <div className="flex items-center gap-2 ml-2">
-              <button
-                onClick={goToPrevPage}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg bg-surface dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                title="Previous section"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-surface-on dark:text-gray-100">
-                  {currentPage} / {totalPages}
-                </span>
-              </div>
-
-              <button
-                onClick={goToNextPage}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-lg bg-surface dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                title="Next section"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
+          {/* Download PDF Button */}
+          <button
+            onClick={downloadAsPDF}
+            disabled={isGeneratingPDF}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-on hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium"
+            title="Download as PDF"
+          >
+            {isGeneratingPDF ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-on border-t-transparent"></div>
+                Generating...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                Download PDF
+              </>
+            )}
+          </button>
         </div>
 
-        {/* Page Indicators */}
+        {/* Section Navigation Tabs */}
         <div className="flex items-center gap-2 mt-4 flex-wrap">
           {pages.map((page) => (
             <button
@@ -217,8 +189,15 @@ const HomeownerManual: React.FC = () => {
         </div>
       </div>
       
-      {/* Manual Content */}
-      <div className="flex-1 overflow-hidden">
+      {/* Manual Content - Dynamic Height */}
+      <div 
+        className="flex-1 overflow-hidden"
+        style={{ 
+          height: sectionHeight ? `${sectionHeight}px` : 'calc(100vh - 280px)',
+          minHeight: '400px',
+          maxHeight: 'calc(100vh - 200px)'
+        }}
+      >
         <iframe 
           ref={iframeRef}
           src="/complete_homeowner_manual.html" 
