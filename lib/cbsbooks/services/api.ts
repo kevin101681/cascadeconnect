@@ -1,5 +1,6 @@
 
 import { Invoice, Expense, Client } from '../types';
+import { idbCache } from './indexedDBCache';
 
 // --- CONFIGURATION ---
 
@@ -168,22 +169,22 @@ export const api = {
   // --- INVOICES ---
   invoices: {
     list: async (forceFresh = false): Promise<Invoice[]> => {
-      // Check cache first (if available and not forcing fresh)
+      // Check IndexedDB cache first (much larger storage capacity than localStorage)
       const cacheKey = 'cbs_invoices_cache';
-      const cacheTimeKey = 'cbs_invoices_cache_time';
       const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days cache
       
-      if (typeof window !== 'undefined' && !forceFresh) {
-        const cached = localStorage.getItem(cacheKey);
-        const cacheTime = localStorage.getItem(cacheTimeKey);
-        if (cached && cacheTime) {
-          const age = Date.now() - parseInt(cacheTime);
-          if (age < CACHE_DURATION) {
-            console.log('✅ Using cached invoices (age:', Math.round(age / 1000 / 60), 'minutes)');
-            return JSON.parse(cached);
-          } else {
-            console.log('⚠️ Cache expired (age:', Math.round(age / 1000 / 60 / 60), 'hours), fetching fresh data');
+      if (!forceFresh) {
+        try {
+          const cached = await idbCache.get<Invoice[]>(cacheKey, CACHE_DURATION);
+          if (cached && Array.isArray(cached)) {
+            const age = await idbCache.getAge(cacheKey);
+            if (age !== null) {
+              console.log('✅ Using cached invoices from IndexedDB (age:', Math.round(age / 1000 / 60), 'minutes)');
+            }
+            return cached;
           }
+        } catch (error) {
+          console.warn('Failed to read from IndexedDB cache, will fetch fresh:', error);
         }
       }
       
@@ -228,18 +229,14 @@ export const api = {
             USE_MOCK_DATA = false;
             const result = Array.isArray(data) ? data : [];
             
-            // Cache the result (but don't fail if caching fails due to quota)
+            // Cache the result in IndexedDB (much larger storage capacity than localStorage)
             if (typeof window !== 'undefined') {
               try {
-                localStorage.setItem(cacheKey, JSON.stringify(result));
-                localStorage.setItem(cacheTimeKey, Date.now().toString());
+                await idbCache.set(cacheKey, result);
+                console.log('✅ Cached', result.length, 'invoices in IndexedDB');
               } catch (cacheError: any) {
-                // If localStorage quota exceeded, just log and continue
-                if (cacheError.name === 'QuotaExceededError') {
-                  console.warn('⚠️  localStorage quota exceeded, skipping cache. Data will still load from API.');
-                } else {
-                  console.warn('⚠️  Failed to cache data:', cacheError.message);
-                }
+                console.warn('⚠️  Failed to cache invoices in IndexedDB:', cacheError.message);
+                // Don't fail the request if caching fails
               }
             }
             
@@ -487,20 +484,22 @@ export const api = {
   // --- EXPENSES ---
   expenses: {
     list: async (forceFresh = false): Promise<Expense[]> => {
-      // Check cache first (if available and not forcing fresh)
+      // Check IndexedDB cache first (much larger storage capacity)
       const cacheKey = 'cbs_expenses_cache';
-      const cacheTimeKey = 'cbs_expenses_cache_time';
       const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days cache
       
-      if (typeof window !== 'undefined' && !forceFresh) {
-        const cached = localStorage.getItem(cacheKey);
-        const cacheTime = localStorage.getItem(cacheTimeKey);
-        if (cached && cacheTime) {
-          const age = Date.now() - parseInt(cacheTime);
-          if (age < CACHE_DURATION) {
-            console.log('✅ Using cached expenses (age:', Math.round(age / 1000 / 60), 'minutes)');
-            return JSON.parse(cached);
+      if (!forceFresh) {
+        try {
+          const cached = await idbCache.get<Expense[]>(cacheKey, CACHE_DURATION);
+          if (cached && Array.isArray(cached)) {
+            const age = await idbCache.getAge(cacheKey);
+            if (age !== null) {
+              console.log('✅ Using cached expenses from IndexedDB (age:', Math.round(age / 1000 / 60), 'minutes)');
+            }
+            return cached;
           }
+        } catch (error) {
+          console.warn('Failed to read from IndexedDB cache, will fetch fresh:', error);
         }
       }
       
@@ -512,18 +511,14 @@ export const api = {
       try {
         const result = await fetchWithErrors(`${API_BASE}/expenses`);
         
-        // Cache the result (but don't fail if caching fails due to quota)
+        // Cache the result in IndexedDB (much larger storage capacity than localStorage)
         if (typeof window !== 'undefined' && Array.isArray(result)) {
           try {
-            localStorage.setItem(cacheKey, JSON.stringify(result));
-            localStorage.setItem(cacheTimeKey, Date.now().toString());
+            await idbCache.set(cacheKey, result);
+            console.log('✅ Cached', result.length, 'expenses in IndexedDB');
           } catch (cacheError: any) {
-            // If localStorage quota exceeded, just log and continue
-            if (cacheError.name === 'QuotaExceededError') {
-              console.warn('⚠️  localStorage quota exceeded for expenses, skipping cache. Data will still load from API.');
-            } else {
-              console.warn('⚠️  Failed to cache expenses:', cacheError.message);
-            }
+            console.warn('⚠️  Failed to cache expenses in IndexedDB:', cacheError.message);
+            // Don't fail the request if caching fails
           }
         }
         
