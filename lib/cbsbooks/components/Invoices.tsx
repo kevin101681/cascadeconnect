@@ -1436,34 +1436,45 @@ export const Invoices: React.FC<InvoicesProps> = ({
   return (
     <div className="space-y-4 relative min-h-[calc(100vh-100px)] pb-24 max-w-7xl mx-auto">
       {/* Navigation Bar */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4 items-center justify-between">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => onNavigate('invoices')}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg transition-opacity"
+          >
+            <Receipt size={18} />
+            <span className="text-sm font-medium">Invoices</span>
+          </button>
+          <button
+            onClick={() => onNavigate('clients')}
+            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+          >
+            <Users size={18} />
+            <span className="text-sm font-medium">Builders</span>
+          </button>
+          <button
+            onClick={() => onNavigate('reports')}
+            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+          >
+            <PieChart size={18} />
+            <span className="text-sm font-medium">Profit and Loss</span>
+          </button>
+          <button
+            onClick={() => onNavigate('expenses')}
+            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+          >
+            <CreditCard size={18} />
+            <span className="text-sm font-medium">Expenses</span>
+          </button>
+        </div>
+        
+        {/* New Invoice Button - Right side */}
         <button
-          onClick={() => onNavigate('invoices')}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg transition-opacity"
+          onClick={handleCreate}
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:opacity-90 transition-opacity"
         >
-          <Receipt size={18} />
-          <span className="text-sm font-medium">Invoices</span>
-        </button>
-        <button
-          onClick={() => onNavigate('clients')}
-          className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
-        >
-          <Users size={18} />
-          <span className="text-sm font-medium">Builders</span>
-        </button>
-        <button
-          onClick={() => onNavigate('reports')}
-          className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
-        >
-          <PieChart size={18} />
-          <span className="text-sm font-medium">Profit and Loss</span>
-        </button>
-        <button
-          onClick={() => onNavigate('expenses')}
-          className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
-        >
-          <CreditCard size={18} />
-          <span className="text-sm font-medium">Expenses</span>
+          <Plus size={18} />
+          <span className="text-sm font-medium">New Invoice</span>
         </button>
       </div>
 
@@ -1637,18 +1648,6 @@ export const Invoices: React.FC<InvoicesProps> = ({
 
       {/* Header Stats & Controls - Reorganized for even distribution */}
       <div className="space-y-4 mb-6">
-        {/* Action Buttons Row */}
-        <div className="flex flex-wrap gap-2">
-          {/* New Invoice Button */}
-          <button
-            onClick={handleCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:opacity-90 transition-opacity"
-          >
-            <Plus size={18} />
-            <span className="text-sm font-medium">New Invoice</span>
-          </button>
-        </div>
-
         {/* Row 1: Metrics - Evenly spaced */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {statusFilter !== 'paid' && (
