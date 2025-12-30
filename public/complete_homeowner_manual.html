@@ -535,7 +535,7 @@
                 <div class="subtitle">Your Complete Guide to Warranty & Maintenance</div>
             </div>
             <div style="flex-shrink: 0;">
-                <img src="/images/manual/cbslogo.png" alt="Cascade Builder Services" style="height: 120px; width: auto; object-fit: contain; filter: brightness(0) invert(1);" />
+                <img src="/images/manual/cbslogo.png" alt="Cascade Builder Services" style="height: 120px; width: auto; object-fit: contain;" />
             </div>
         </div>
         <div class="contact-grid">
@@ -1148,6 +1148,15 @@
             document.getElementById('warranty-expires').valueAsDate = warrantyExpires;
         });
         
+        // Get homeowner ID from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const homeownerId = urlParams.get('homeownerId') || 'default';
+        
+        // Helper function to get storage key with homeowner ID prefix
+        function getStorageKey(key) {
+            return `homeowner_${homeownerId}_${key}`;
+        }
+        
         // Save functions with localStorage
         function saveLocations() {
             const data = {
@@ -1157,7 +1166,7 @@
                 gasShutoff: document.getElementById('gas-shutoff').value,
                 furnaceSwitch: document.getElementById('furnace-switch').value
             };
-            localStorage.setItem('shutoffLocations', JSON.stringify(data));
+            localStorage.setItem(getStorageKey('shutoffLocations'), JSON.stringify(data));
             showSaveStatus('save-status-1');
         }
         
@@ -1168,7 +1177,7 @@
                 elevenMonth: document.getElementById('eleven-month').value,
                 warrantyExpires: document.getElementById('warranty-expires').value
             };
-            localStorage.setItem('warrantyDates', JSON.stringify(data));
+            localStorage.setItem(getStorageKey('warrantyDates'), JSON.stringify(data));
             showSaveStatus('save-status-2');
         }
         
@@ -1182,7 +1191,7 @@
                 waterCompany: document.getElementById('water-company').value,
                 internetCompany: document.getElementById('internet-company').value
             };
-            localStorage.setItem('contactInfo', JSON.stringify(data));
+            localStorage.setItem(getStorageKey('contactInfo'), JSON.stringify(data));
             showSaveStatus('save-status-3');
         }
         
@@ -1191,7 +1200,7 @@
                 paintNotes: document.getElementById('paint-notes').value,
                 additionalNotes: document.getElementById('additional-notes').value
             };
-            localStorage.setItem('homeNotes', JSON.stringify(data));
+            localStorage.setItem(getStorageKey('homeNotes'), JSON.stringify(data));
             showSaveStatus('save-status-4');
         }
         
@@ -1206,7 +1215,7 @@
         // Load saved data on page load
         window.addEventListener('load', function() {
             // Load shut-off locations
-            const locations = JSON.parse(localStorage.getItem('shutoffLocations') || '{}');
+            const locations = JSON.parse(localStorage.getItem(getStorageKey('shutoffLocations')) || '{}');
             if (locations.waterShutoff) document.getElementById('water-shutoff').value = locations.waterShutoff;
             if (locations.waterMeter) document.getElementById('water-meter').value = locations.waterMeter;
             if (locations.electricalPanel) document.getElementById('electrical-panel').value = locations.electricalPanel;
@@ -1214,14 +1223,14 @@
             if (locations.furnaceSwitch) document.getElementById('furnace-switch').value = locations.furnaceSwitch;
             
             // Load warranty dates
-            const dates = JSON.parse(localStorage.getItem('warrantyDates') || '{}');
+            const dates = JSON.parse(localStorage.getItem(getStorageKey('warrantyDates')) || '{}');
             if (dates.closingDate) document.getElementById('closing-date').value = dates.closingDate;
             if (dates.sixtyDay) document.getElementById('sixty-day').value = dates.sixtyDay;
             if (dates.elevenMonth) document.getElementById('eleven-month').value = dates.elevenMonth;
             if (dates.warrantyExpires) document.getElementById('warranty-expires').value = dates.warrantyExpires;
             
             // Load contact info
-            const contacts = JSON.parse(localStorage.getItem('contactInfo') || '{}');
+            const contacts = JSON.parse(localStorage.getItem(getStorageKey('contactInfo')) || '{}');
             if (contacts.builderName) document.getElementById('builder-name').value = contacts.builderName;
             if (contacts.builderPhone) document.getElementById('builder-phone').value = contacts.builderPhone;
             if (contacts.salesRep) document.getElementById('sales-rep').value = contacts.salesRep;
@@ -1231,7 +1240,7 @@
             if (contacts.internetCompany) document.getElementById('internet-company').value = contacts.internetCompany;
             
             // Load notes
-            const notes = JSON.parse(localStorage.getItem('homeNotes') || '{}');
+            const notes = JSON.parse(localStorage.getItem(getStorageKey('homeNotes')) || '{}');
             if (notes.paintNotes) document.getElementById('paint-notes').value = notes.paintNotes;
             if (notes.additionalNotes) document.getElementById('additional-notes').value = notes.additionalNotes;
         });

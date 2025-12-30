@@ -2589,7 +2589,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </button>
               
               {/* Homeowner Manual Component */}
-              <HomeownerManual />
+              <HomeownerManual homeownerId={activeHomeowner?.id} />
             </div>
           </div>
         </div>,
@@ -3365,7 +3365,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="max-w-7xl mx-auto py-4">
-                <HomeownerManual />
+                <HomeownerManual homeownerId={activeHomeowner?.id} />
               </div>
             </motion.div>
           )}
