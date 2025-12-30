@@ -3490,6 +3490,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
         {/* END RIGHT CONTENT AREA */}
         </div>
+        </div>
         {/* END MAIN LAYOUT CONTAINER */}
 
         {/* DOCUMENTS MODAL - Removed, now using tab */}
