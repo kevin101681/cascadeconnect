@@ -411,9 +411,12 @@ const Dashboard: React.FC<DashboardProps> = ({
       tabs.push('NOTES'); // NOTES tab between TASKS and MESSAGES
     }
     tabs.push('MESSAGES');
-    tabs.push('MANUAL'); // Homeowner Manual tab between MESSAGES and DOCUMENTS
+    // Homeowner Manual tab - only show for homeowners
+    if (isHomeownerViewRole) {
+      tabs.push('MANUAL'); // Homeowner Manual tab between MESSAGES and DOCUMENTS
+    }
     if (isAdmin && !isHomeownerViewRole) {
-      tabs.push('CALLS'); // CALLS tab between MESSAGES and DOCUMENTS
+      tabs.push('CALLS'); // CALLS tab between MANUAL and DOCUMENTS (admin only)
     }
     tabs.push('DOCUMENTS'); // Always include DOCUMENTS tab
     return tabs;
@@ -2942,15 +2945,17 @@ const Dashboard: React.FC<DashboardProps> = ({
               Messages
             </button>
 
-            {/* Homeowner Manual Tab - Always show */}
-            <button 
-              data-tab="MANUAL"
-              onClick={() => setCurrentTab('MANUAL')}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'MANUAL' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
-            >
-              <BookOpen className="h-4 w-4" />
-              Manual
-            </button>
+            {/* Homeowner Manual Tab - Only show for homeowners */}
+            {userRole === UserRole.HOMEOWNER && (
+              <button 
+                data-tab="MANUAL"
+                onClick={() => setCurrentTab('MANUAL')}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'MANUAL' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+              >
+                <BookOpen className="h-4 w-4" />
+                Manual
+              </button>
+            )}
 
             {/* Documents Tab - Always show */}
             <button 
