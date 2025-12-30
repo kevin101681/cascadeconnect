@@ -2642,13 +2642,13 @@ const Dashboard: React.FC<DashboardProps> = ({
       <>
         {renderModals()}
         {/* Main Layout Container - Sidebar + Content */}
-        <div className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto animate-in fade-in slide-in-from-top-4">
+        <div className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 animate-in fade-in slide-in-from-top-4">
           {/* LEFT SIDEBAR - Homeowner Info Card */}
-          <div className="lg:w-80 lg:flex-shrink-0">
+          <div className="w-full lg:w-80 lg:flex-shrink-0">
             <div 
               ref={homeownerCardContainerRef}
               key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
-              className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 sticky top-6"
+              className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 lg:sticky lg:top-6"
             >
             <div className="flex flex-col p-6">
              
@@ -2796,88 +2796,83 @@ const Dashboard: React.FC<DashboardProps> = ({
                 )}
               </div>
             </div>
-          </div>
 
-          {/* Next Appointment Card - Right of Homeowner Info */}
-          <div 
-            className="w-full lg:w-[300px] lg:flex-shrink-0 bg-primary/10 dark:bg-gray-800 rounded-3xl text-secondary-on-container dark:text-gray-100 flex flex-col relative border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden"
-          >
-            <div className="p-6 w-full text-left flex-shrink-0 z-10 relative">
-              <h3 className="font-medium text-lg mb-0 flex items-center justify-between text-secondary-on-container dark:text-gray-100">
-                <span className="flex items-center">
-                  <Calendar className="h-5 w-5 mr-3" />
+            {/* Next Appointment Card - Below Homeowner Info within sidebar */}
+            <div className="mt-4 bg-primary/5 dark:bg-gray-700/50 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-600 overflow-hidden">
+              <div className="p-4 bg-surface-container/30 dark:bg-gray-700/30 border-b border-surface-outline-variant/50 dark:border-gray-600">
+                <h3 className="font-medium text-sm flex items-center text-secondary-on-container dark:text-gray-100">
+                  <Calendar className="h-4 w-4 mr-2" />
                   Next Appointment
-                </span>
-              </h3>
-            </div>
-            
-            {(() => {
-              // Get the next upcoming appointment date
-              const now = new Date();
-              now.setHours(0, 0, 0, 0);
+                </h3>
+              </div>
               
-              const upcomingClaims = scheduledClaims
-                .map(c => {
-                  const acceptedDate = c.proposedDates.find(d => d.status === 'ACCEPTED');
-                  if (!acceptedDate) return null;
-                  const appointmentDate = new Date(acceptedDate.date);
-                  appointmentDate.setHours(0, 0, 0, 0);
-                  if (appointmentDate < now) return null;
-                  return { claim: c, date: appointmentDate, acceptedDate };
-                })
-                .filter(Boolean) as Array<{ claim: Claim; date: Date; acceptedDate: any }>;
-              
-              if (upcomingClaims.length === 0) {
+              {(() => {
+                // Get the next upcoming appointment date
+                const now = new Date();
+                now.setHours(0, 0, 0, 0);
+                
+                const upcomingClaims = scheduledClaims
+                  .map(c => {
+                    const acceptedDate = c.proposedDates.find(d => d.status === 'ACCEPTED');
+                    if (!acceptedDate) return null;
+                    const appointmentDate = new Date(acceptedDate.date);
+                    appointmentDate.setHours(0, 0, 0, 0);
+                    if (appointmentDate < now) return null;
+                    return { claim: c, date: appointmentDate, acceptedDate };
+                  })
+                  .filter(Boolean) as Array<{ claim: Claim; date: Date; acceptedDate: any }>;
+                
+                if (upcomingClaims.length === 0) {
+                  return (
+                    <div className="p-4">
+                      <p className="text-xs opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No upcoming appointments.</p>
+                    </div>
+                  );
+                }
+                
+                // Sort by date
+                upcomingClaims.sort((a, b) => a.date.getTime() - b.date.getTime());
+                
+                // Get the next date
+                const nextDate = upcomingClaims[0].date;
+                const nextDateStr = nextDate.toISOString().split('T')[0];
+                
+                // Count how many claims have this same date
+                const claimsOnNextDate = upcomingClaims.filter(item => {
+                  const itemDateStr = item.date.toISOString().split('T')[0];
+                  return itemDateStr === nextDateStr;
+                });
+                
+                const firstClaim = claimsOnNextDate[0].claim;
+                const acceptedDate = claimsOnNextDate[0].acceptedDate;
+                
                 return (
-                  <div className="px-6 pb-6 pt-0">
-                    <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No upcoming appointments.</p>
-                  </div>
-                );
-              }
-              
-              // Sort by date
-              upcomingClaims.sort((a, b) => a.date.getTime() - b.date.getTime());
-              
-              // Get the next date
-              const nextDate = upcomingClaims[0].date;
-              const nextDateStr = nextDate.toISOString().split('T')[0];
-              
-              // Count how many claims have this same date
-              const claimsOnNextDate = upcomingClaims.filter(item => {
-                const itemDateStr = item.date.toISOString().split('T')[0];
-                return itemDateStr === nextDateStr;
-              });
-              
-              const firstClaim = claimsOnNextDate[0].claim;
-              const acceptedDate = claimsOnNextDate[0].acceptedDate;
-              
-              return (
-                <div className="px-6 pb-6 pt-0">
-                  <div 
-                    className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-xl text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors"
-                    onClick={() => setSelectedClaimForModal(firstClaim)}
-                  >
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <p className="font-medium text-secondary-on-container dark:text-gray-200 text-center">{firstClaim.title}</p>
-                      {claimsOnNextDate.length > 1 && (
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-                          {claimsOnNextDate.length}
-                        </span>
+                  <div className="p-4">
+                    <div 
+                      className="bg-surface/50 dark:bg-gray-700/50 p-3 rounded-lg text-xs backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors"
+                      onClick={() => setSelectedClaimForModal(firstClaim)}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <p className="font-medium text-secondary-on-container dark:text-gray-200 truncate">{firstClaim.title}</p>
+                        {claimsOnNextDate.length > 1 && (
+                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-on text-[10px] font-medium flex-shrink-0">
+                            {claimsOnNextDate.length}
+                          </span>
+                        )}
+                      </div>
+                      <p className="opacity-80 dark:opacity-70 text-secondary-on-container dark:text-gray-300">
+                        {new Date(acceptedDate.date).toLocaleDateString()} - {acceptedDate?.timeSlot}
+                      </p>
+                      {firstClaim.contractorName && (
+                        <p className="opacity-70 dark:opacity-60 mt-1 text-secondary-on-container dark:text-gray-400 text-[10px]">
+                          {firstClaim.contractorName}
+                        </p>
                       )}
                     </div>
-                    <p className="opacity-80 dark:opacity-70 mt-1 text-secondary-on-container dark:text-gray-300 text-center">
-                      {new Date(acceptedDate.date).toLocaleDateString()} - {acceptedDate?.timeSlot}
-                    </p>
-                    {firstClaim.contractorName && (
-                      <p className="opacity-70 dark:opacity-60 mt-1 text-secondary-on-container dark:text-gray-400 text-center text-xs">
-                        {firstClaim.contractorName}
-                      </p>
-                    )}
                   </div>
-                </div>
-              );
-            })()}
-          </div>
+                );
+              })()}
+            </div>
           </div>
           </div>
           {/* END LEFT SIDEBAR */}
