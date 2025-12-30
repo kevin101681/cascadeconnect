@@ -2717,7 +2717,7 @@ const Dashboard: React.FC<DashboardProps> = ({
              
              {/* Two-Line Layout with Even Spacing - Center Aligned */}
              <div className="flex flex-col gap-3 mb-4 w-full">
-                {/* Line 1: Name, Project, Address - Even Spacing */}
+                {/* Line 1: Name, Address - Even Spacing */}
                 <div className="flex items-center justify-center gap-4 flex-wrap">
                   {/* Name */}
                   <div className="flex items-center gap-2 flex-shrink-0">
@@ -2734,12 +2734,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                     )}
                   </div>
                   
-                  {/* Project */}
-                  <div className="flex items-center gap-1.5 text-sm flex-shrink-0">
-                     <Home className="h-4 w-4 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                     <span className="font-medium text-surface-on dark:text-gray-100 truncate">{displayHomeowner.jobName || 'N/A'}</span>
-                  </div>
-                  
                   {/* Address */}
                   <a 
                     href={`https://maps.google.com/?q=${encodeURIComponent(displayHomeowner.address)}`}
@@ -2752,13 +2746,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </a>
                 </div>
 
-                {/* Line 2: Builder, Closing Date, Phone, Email - Even Spacing */}
+                {/* Line 2: Builder, Project, Closing Date, Phone, Email - Even Spacing */}
                 <div className="flex items-center justify-center gap-4 flex-wrap">
                   {/* Builder */}
                   <span className="flex items-center gap-1.5 text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-2.5 py-0.5 rounded-full border border-surface-outline-variant dark:border-gray-600 flex-shrink-0">
                     <Building2 className="h-3 w-3" />
                     {displayHomeowner.builder}
                   </span>
+                  
+                  {/* Project */}
+                  <div className="flex items-center gap-1.5 text-sm flex-shrink-0">
+                     <Home className="h-4 w-4 text-surface-outline dark:text-gray-500 flex-shrink-0" />
+                     <span className="font-medium text-surface-on dark:text-gray-100 truncate">{displayHomeowner.jobName || 'N/A'}</span>
+                  </div>
                   
                   {/* Closing Date */}
                   <span className="flex items-center gap-1.5 text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-2.5 py-0.5 rounded-full border border-surface-outline-variant dark:border-gray-600 flex-shrink-0">
@@ -2790,7 +2790,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       onClick={() => setShowDocsModal(true)} 
                       variant="outlined" 
                       icon={<FileText className="h-4 w-4" />}
-                      className="!h-9 !px-4"
+                      className="!h-9 !px-4 !bg-surface dark:!bg-gray-800"
                     >
                       Documents
                     </Button>
