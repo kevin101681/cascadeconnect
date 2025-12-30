@@ -24,7 +24,9 @@ import TasksSheet from './TasksSheet';
 import AIIntakeDashboard from './AIIntakeDashboard';
 import HomeownerManual from './HomeownerManual';
 import PayrollDashboard from './PayrollDashboard';
-import InvoicesModal from './InvoicesModal';
+
+// Import CBS Books App directly for inline rendering in tab
+const CBSBooksApp = React.lazy(() => import('../lib/cbsbooks/App'));
 // Lazy load heavy components to improve initial load time
 // Add error handling for failed dynamic imports
 const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err => {
@@ -3218,18 +3220,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                 style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
-                  <div className="max-w-7xl mx-auto py-4">
-                    {currentTab === 'INVOICES' ? (
-                      <InvoicesModal 
-                        isOpen={true} 
-                        onClose={() => setCurrentTab('CLAIMS')}
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-surface-on-variant dark:text-gray-400">
-                        Switch to Invoices tab to view
-                      </div>
-                    )}
-                  </div>
+                  {currentTab === 'INVOICES' ? (
+                    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
+                      <CBSBooksApp />
+                    </Suspense>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-surface-on-variant dark:text-gray-400">
+                      Switch to Invoices tab to view
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -3461,10 +3460,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <InvoicesModal 
-                isOpen={true} 
-                onClose={() => setCurrentTab('CLAIMS')}
-              />
+              <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
+                <CBSBooksApp />
+              </Suspense>
             </motion.div>
           )}
 

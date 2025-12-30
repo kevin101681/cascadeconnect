@@ -228,10 +228,19 @@ export const api = {
             USE_MOCK_DATA = false;
             const result = Array.isArray(data) ? data : [];
             
-            // Cache the result
+            // Cache the result (but don't fail if caching fails due to quota)
             if (typeof window !== 'undefined') {
-              localStorage.setItem(cacheKey, JSON.stringify(result));
-              localStorage.setItem(cacheTimeKey, Date.now().toString());
+              try {
+                localStorage.setItem(cacheKey, JSON.stringify(result));
+                localStorage.setItem(cacheTimeKey, Date.now().toString());
+              } catch (cacheError: any) {
+                // If localStorage quota exceeded, just log and continue
+                if (cacheError.name === 'QuotaExceededError') {
+                  console.warn('⚠️  localStorage quota exceeded, skipping cache. Data will still load from API.');
+                } else {
+                  console.warn('⚠️  Failed to cache data:', cacheError.message);
+                }
+              }
             }
             
             return result;
@@ -503,10 +512,19 @@ export const api = {
       try {
         const result = await fetchWithErrors(`${API_BASE}/expenses`);
         
-        // Cache the result
+        // Cache the result (but don't fail if caching fails due to quota)
         if (typeof window !== 'undefined' && Array.isArray(result)) {
-          localStorage.setItem(cacheKey, JSON.stringify(result));
-          localStorage.setItem(cacheTimeKey, Date.now().toString());
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify(result));
+            localStorage.setItem(cacheTimeKey, Date.now().toString());
+          } catch (cacheError: any) {
+            // If localStorage quota exceeded, just log and continue
+            if (cacheError.name === 'QuotaExceededError') {
+              console.warn('⚠️  localStorage quota exceeded for expenses, skipping cache. Data will still load from API.');
+            } else {
+              console.warn('⚠️  Failed to cache expenses:', cacheError.message);
+            }
+          }
         }
         
         return result;
