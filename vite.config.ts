@@ -18,26 +18,49 @@ export default defineConfig(({ mode }) => {
   };
   
   // Custom plugin to serve HTML files from public directory
+  // Must use 'pre' enforce to run before Vite's SPA fallback
   const serveStaticHtml = (): Plugin => ({
     name: 'serve-static-html',
+    enforce: 'pre',
     configureServer(server) {
-      server.middlewares.use((req, res, next) => {
-        if (req.url === '/complete_homeowner_manual.html' || req.url?.startsWith('/complete_homeowner_manual.html?')) {
-          const filePath = path.join(__dirname, 'public', 'complete_homeowner_manual.html');
-          const html = fs.readFileSync(filePath, 'utf-8');
-          res.setHeader('Content-Type', 'text/html');
-          res.end(html);
-          return;
-        }
-        if (req.url === '/homeowner-manual.html' || req.url?.startsWith('/homeowner-manual.html?')) {
-          const filePath = path.join(__dirname, 'public', 'homeowner-manual.html');
-          const html = fs.readFileSync(filePath, 'utf-8');
-          res.setHeader('Content-Type', 'text/html');
-          res.end(html);
-          return;
-        }
-        next();
-      });
+      return () => {
+        server.middlewares.use((req, res, next) => {
+          // Log the request for debugging
+          if (req.url?.includes('.html')) {
+            console.log('HTML request intercepted:', req.url);
+          }
+          
+          if (req.url === '/complete_homeowner_manual.html' || req.url?.startsWith('/complete_homeowner_manual.html?')) {
+            const filePath = path.join(__dirname, 'public', 'complete_homeowner_manual.html');
+            try {
+              const html = fs.readFileSync(filePath, 'utf-8');
+              res.setHeader('Content-Type', 'text/html');
+              res.setHeader('Cache-Control', 'no-cache');
+              res.statusCode = 200;
+              res.end(html);
+              console.log('✓ Served complete_homeowner_manual.html');
+              return;
+            } catch (err) {
+              console.error('Error reading complete_homeowner_manual.html:', err);
+            }
+          }
+          if (req.url === '/homeowner-manual.html' || req.url?.startsWith('/homeowner-manual.html?')) {
+            const filePath = path.join(__dirname, 'public', 'homeowner-manual.html');
+            try {
+              const html = fs.readFileSync(filePath, 'utf-8');
+              res.setHeader('Content-Type', 'text/html');
+              res.setHeader('Cache-Control', 'no-cache');
+              res.statusCode = 200;
+              res.end(html);
+              console.log('✓ Served homeowner-manual.html');
+              return;
+            } catch (err) {
+              console.error('Error reading homeowner-manual.html:', err);
+            }
+          }
+          next();
+        });
+      };
     }
   });
 
