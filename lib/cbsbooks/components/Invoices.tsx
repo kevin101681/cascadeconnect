@@ -1290,8 +1290,8 @@ export const Invoices: React.FC<InvoicesProps> = ({
                 </div>
 
                 {/* Actions */}
-                <div className="shrink-0 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                    <div className="hidden md:flex gap-1">
+                <div className="shrink-0 flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
+                    <div className="hidden md:flex gap-1 flex-wrap justify-center">
                         {inv.status !== 'paid' && (
                             <button onClick={() => handleMarkAsPaid(inv)} className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} title="Mark as Paid">
                                 <Check size={16} />
