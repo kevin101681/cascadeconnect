@@ -915,7 +915,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [dashboardConfig, setDashboardConfig] = useState<{
-    initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES';
+    initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'PAYROLL';
     initialThreadId?: string | null;
   }>({});
 
@@ -3918,24 +3918,22 @@ Assigned By: ${assignerName}
           homeowners={[]}
           activeHomeowner={activeHomeowner}
           onSelectClaim={() => {}}
-          onCreateClaim={() => {}}
+          onNewClaim={() => {}}
           userRole={userRole}
-          internalEmployees={[]}
-          onUpdateStatus={() => {}}
-          onSendMessage={() => {}}
-          messages={{}}
-          selectedThread={null}
-          onSelectThread={() => {}}
+          employees={employees}
+          currentUser={activeEmployee}
+          targetHomeowner={null}
+          onClearHomeownerSelection={() => {}}
           documents={[]}
-          messageThreads={[]}
-          onDeleteDocument={() => {}}
-          builders={[]}
-          contractors={[]}
-          onStatusUpdate={() => {}}
-          onNotesUpdate={() => {}}
-          onDocumentUpload={() => {}}
+          onUploadDocument={() => {}}
+          messages={[]}
+          onSendMessage={() => {}}
+          onCreateThread={() => {}}
+          tasks={tasks}
+          onAddTask={handleAddTask}
+          onToggleTask={handleToggleTask}
+          onDeleteTask={handleDeleteTask}
           initialTab="PAYROLL"
-          isAdmin={userRole === UserRole.ADMIN}
           onNavigate={setCurrentView}
         />
       )}

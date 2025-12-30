@@ -292,7 +292,7 @@ interface DashboardProps {
   currentUserEmail?: string; // Current user's email for contractor matching
 
   // Initial State Control (Optional)
-  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS';
+  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'PAYROLL';
   initialThreadId?: string | null;
 
   // Tasks Widget Support
@@ -398,7 +398,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [swipeProgress, setSwipeProgress] = useState<number>(0); // 0 to 1, represents swipe completion
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
-  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | null>(null);
+  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | null>(null);
   
   // Minimum swipe distance (in pixels)
   const minSwipeDistance = 50;
