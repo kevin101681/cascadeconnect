@@ -131,6 +131,18 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
 
   return (
     <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1">
+      {/* Header */}
+      <div className="flex-shrink-0 px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface-container/30 dark:bg-gray-700/30">
+        <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+          {stats.total > 0 && (
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+              {stats.total}
+            </span>
+          )}
+          Calls
+        </h2>
+      </div>
+
       <div className="p-6">
         {/* Calls List */}
         {filteredCalls.length === 0 ? (
