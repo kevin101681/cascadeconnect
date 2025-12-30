@@ -2662,7 +2662,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <input 
                   type="text" 
                   placeholder="Search homeowners..."
-                  className="w-full bg-gray-100 dark:bg-gray-700 rounded-full pl-9 pr-8 py-2 text-sm border-none focus:ring-2 focus:ring-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all"
+                  className="w-full bg-white dark:bg-gray-700 rounded-full pl-9 pr-8 py-2 text-sm border border-surface-outline-variant dark:border-gray-600 focus:ring-2 focus:ring-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all"
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
                 />
@@ -2711,7 +2711,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div 
               ref={homeownerCardContainerRef}
               key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
-              className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 lg:sticky lg:top-0"
+              className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 lg:sticky lg:top-[72px]"
             >
             <div className="flex flex-col p-6">
              
