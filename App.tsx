@@ -163,6 +163,7 @@ function App() {
   const [activeEmployee, setActiveEmployee] = useState<InternalEmployee>(MOCK_INTERNAL_EMPLOYEES[0]);
   const [activeHomeowner, setActiveHomeowner] = useState<Homeowner>(PLACEHOLDER_HOMEOWNER);
   const [currentBuilderId, setCurrentBuilderId] = useState<string | null>(null);
+  const [isRoleLoading, setIsRoleLoading] = useState<boolean>(true);
 
   // Data State - Lazy Load from LS first
   // CRITICAL: FORCE_MOCK_DATA should be false in production to preserve data
@@ -727,6 +728,7 @@ function App() {
               if (emp) {
                  setUserRole(UserRole.ADMIN);
                  setActiveEmployee(emp);
+                 setIsRoleLoading(false);
                  return;
               }
 
@@ -735,6 +737,7 @@ function App() {
               if (builder) {
                  setUserRole(UserRole.BUILDER);
                  setCurrentBuilderId(builder.builderGroupId);
+                 setIsRoleLoading(false);
                  return;
               }
 
@@ -775,6 +778,7 @@ function App() {
                    localStorage.setItem('cascade_user_email', email);
                  }
                  
+                 setIsRoleLoading(false);
                  return;
               }
 
@@ -790,7 +794,14 @@ function App() {
               };
               setUserRole(UserRole.HOMEOWNER);
               setActiveHomeowner(newHomeowner);
+              setIsRoleLoading(false);
+           } else {
+              // No email found, set loading to false anyway
+              setIsRoleLoading(false);
            }
+        } else {
+           // Not signed in, set loading to false
+           setIsRoleLoading(false);
         }
 
       } catch (e) {
@@ -3600,8 +3611,8 @@ Assigned By: ${assignerName}
     });
   }
   
-  // Show loading screen only if auth is still loading and hasn't timed out
-  if (!isLoaded && !authTimeout) {
+  // Show loading screen only if auth is still loading and hasn't timed out, OR if role is being determined
+  if ((!isLoaded && !authTimeout) || (effectiveIsSignedIn && isRoleLoading)) {
     return (
       <div className="flex h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
         <div className="text-center">

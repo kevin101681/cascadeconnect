@@ -57,7 +57,6 @@
             <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
                 <div class="mb-4">
                     <h1 class="text-2xl font-semibold text-gray-800">Homeowner Manual</h1>
-                    <p class="text-sm text-gray-600 mt-1" id="sectionTitle">Cover & Quick Reference</p>
                 </div>
 
                 <!-- Section Navigation Tabs -->
@@ -110,9 +109,6 @@
             currentSection = sectionId;
             const section = sections.find(s => s.id === sectionId);
             if (!section) return;
-
-            // Update section title
-            document.getElementById('sectionTitle').textContent = section.title;
 
             // Update tab styles
             document.querySelectorAll('.tab-button').forEach(btn => {

@@ -64,9 +64,6 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">
             Homeowner Manual
           </h2>
-          <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
-            {pages[currentPage - 1]?.title}
-          </p>
         </div>
 
         {/* Section Navigation Tabs */}
