@@ -24,6 +24,7 @@ import TasksSheet from './TasksSheet';
 import AIIntakeDashboard from './AIIntakeDashboard';
 import HomeownerManual from './HomeownerManual';
 import PayrollDashboard from './PayrollDashboard';
+import InvoicesModal from './InvoicesModal';
 // Lazy load heavy components to improve initial load time
 // Add error handling for failed dynamic imports
 const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err => {
@@ -292,7 +293,7 @@ interface DashboardProps {
   currentUserEmail?: string; // Current user's email for contractor matching
 
   // Initial State Control (Optional)
-  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS';
+  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'INVOICES';
   initialThreadId?: string | null;
 
   // Tasks Widget Support
@@ -382,7 +383,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual)
-  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL'>(initialTab || 'CLAIMS');
+  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'>(initialTab || 'CLAIMS');
   
   // Update currentTab when initialTab prop changes
   useEffect(() => {
@@ -405,15 +406,15 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [swipeProgress, setSwipeProgress] = useState<number>(0); // 0 to 1, represents swipe completion
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
-  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | null>(null);
+  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | null>(null);
   
   // Minimum swipe distance (in pixels)
   const minSwipeDistance = 50;
   
   // Get available tabs in order
-  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL'> => {
+  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> => {
     const isHomeownerViewRole = userRole === UserRole.HOMEOWNER;
-    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL'> = ['CLAIMS'];
+    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> = ['CLAIMS'];
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('TASKS');
       tabs.push('NOTES'); // NOTES tab between TASKS and MESSAGES
@@ -426,6 +427,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('CALLS'); // CALLS tab between MANUAL and DOCUMENTS (admin only)
       tabs.push('PAYROLL'); // PAYROLL tab (admin only)
+      tabs.push('INVOICES'); // INVOICES tab (admin only)
     }
     tabs.push('DOCUMENTS'); // Always include DOCUMENTS tab
     return tabs;
@@ -3016,6 +3018,16 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <DollarSign className="h-4 w-4" />
                   Payroll
                 </button>
+                
+                {/* INVOICES TAB - Admin Only (hidden in homeowner view) */}
+                <button 
+                  data-tab="INVOICES"
+                  onClick={() => setCurrentTab('INVOICES')}
+                  className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                >
+                  <FileText className="h-4 w-4" />
+                  Invoices
+                </button>
               </>
             )}
         </div>
@@ -3194,6 +3206,23 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
                     <PayrollDashboard />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* INVOICES Tab - Admin Only */}
+            {isAdmin && (
+              <div 
+                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+              >
+                <div className="w-full min-h-[calc(100vh-300px)]">
+                  <div className="max-w-7xl mx-auto py-4">
+                    <InvoicesModal 
+                      isOpen={true} 
+                      onClose={() => setCurrentTab('CLAIMS')}
+                    />
                   </div>
                 </div>
               </div>
@@ -3414,6 +3443,22 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <PayrollDashboard />
+            </motion.div>
+          )}
+
+          {currentTab === 'INVOICES' && isAdmin && (
+            <motion.div 
+              key="invoices"
+              className="max-w-7xl mx-auto md:relative"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+              <InvoicesModal 
+                isOpen={true} 
+                onClose={() => setCurrentTab('CLAIMS')}
+              />
             </motion.div>
           )}
 

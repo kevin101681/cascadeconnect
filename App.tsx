@@ -850,7 +850,7 @@ function App() {
 
   // UI State - Persistent (but reset INVOICES on page load to prevent auto-opening)
   // Check URL hash for invoice creation link
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS'>(() => {
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES'>(() => {
     // Check if URL has invoice creation parameters
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
@@ -881,13 +881,13 @@ function App() {
           sessionStorage.setItem('invoicePrefill', JSON.stringify(prefillData));
           // Clean up URL
           window.history.replaceState({}, '', window.location.pathname);
-          return 'INVOICES';
         }
+        // Note: Invoice navigation handled via dashboardConfig instead of currentView
       }
     }
-    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'CALLS'>('cascade_ui_view', 'DASHBOARD');
+    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'CALLS' | 'INVOICES'>('cascade_ui_view', 'DASHBOARD');
     // Don't auto-open modals on page load - always start at DASHBOARD
-    return saved === 'INVOICES' ? 'DASHBOARD' : saved;
+    return saved;
   });
   
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(() => 
@@ -915,14 +915,31 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [dashboardConfig, setDashboardConfig] = useState<{
-    initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES';
+    initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'INVOICES';
     initialThreadId?: string | null;
-  }>({});
+  }>(() => {
+    // Check if we should open invoices tab from URL hash
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      if (hash.includes('#invoices')) {
+        return { initialTab: 'INVOICES' };
+      }
+    }
+    return {};
+  });
 
   // --- UI PERSISTENCE EFFECTS ---
   useEffect(() => { saveState('cascade_ui_view', currentView); }, [currentView]);
   useEffect(() => { saveState('cascade_ui_claim_id', selectedClaimId); }, [selectedClaimId]);
   useEffect(() => { saveState('cascade_ui_homeowner_id', selectedAdminHomeownerId); }, [selectedAdminHomeownerId]);
+  
+  // Redirect INVOICES view to Dashboard with Invoices tab
+  useEffect(() => {
+    if (currentView === 'INVOICES') {
+      setDashboardConfig({ initialTab: 'INVOICES' });
+      setCurrentView('DASHBOARD');
+    }
+  }, [currentView]);
 
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
   
@@ -3961,28 +3978,6 @@ Assigned By: ${assignerName}
             }
             setCurrentView(view);
           }}
-        />
-      )}
-      {currentView === 'INVOICES' && (
-        <InvoicesModal
-          isOpen={currentView === 'INVOICES'}
-          onClose={() => {
-            // Clear prefill data when closing
-            sessionStorage.removeItem('invoicePrefill');
-            setCurrentView('DASHBOARD');
-          }}
-          prefillData={(() => {
-            // Get prefill data from sessionStorage
-            try {
-              const stored = sessionStorage.getItem('invoicePrefill');
-              if (stored) {
-                return JSON.parse(stored);
-              }
-            } catch (e) {
-              console.error('Error parsing invoice prefill data:', e);
-            }
-            return undefined;
-          })()}
         />
       )}
       <HomeownerEnrollment isOpen={isEnrollmentOpen} onClose={() => setIsEnrollmentOpen(false)} onEnroll={handleEnrollHomeowner} builderGroups={builderGroups} />

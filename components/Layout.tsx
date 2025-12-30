@@ -22,7 +22,7 @@ interface LayoutProps {
   onClearSelection: () => void;
 
   // Navigation & Actions
-  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS') => void;
+  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES') => void;
   onOpenEnrollment: () => void;
 
   // Auth
@@ -418,13 +418,6 @@ const Layout: React.FC<LayoutProps> = ({
                               >
                                 <Database className="h-4 w-4 text-surface-outline dark:text-gray-500" />
                                 Data Import
-                              </button>
-                              <button 
-                                onClick={() => handleMenuAction(() => onNavigate('INVOICES'))}
-                                className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
-                              >
-                                <FileText className="h-4 w-4 text-surface-outline dark:text-gray-500" />
-                                Invoices
                               </button>
                             </>
                           )}
