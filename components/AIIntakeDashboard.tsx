@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { db, isDbConfigured } from '../db';
 import { calls, homeowners } from '../db/schema';
 import { eq, desc, sql } from 'drizzle-orm';
-import CallSmsChat from './CallSmsChat';
+import SMSChatView from './SMSChatView';
 
 interface AIIntakeDashboardProps {
   onNavigate?: (view: string) => void;
@@ -339,6 +339,17 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                       <Play className="h-4 w-4" />
                       Listen to Recording
                     </a>
+                  </div>
+                )}
+
+                {/* SMS Chat - Show if homeowner is verified and has phone number */}
+                {selectedCall.homeownerId && selectedCall.phoneNumber && (
+                  <div className="mt-6">
+                    <SMSChatView
+                      homeownerId={selectedCall.homeownerId}
+                      homeownerName={selectedCall.homeownerName}
+                      homeownerPhone={selectedCall.phoneNumber}
+                    />
                   </div>
                 )}
 

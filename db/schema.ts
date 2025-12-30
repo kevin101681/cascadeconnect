@@ -238,13 +238,23 @@ export const calls = pgTable('calls', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-// --- 11. SMS Messages (Two-Way SMS Chat) ---
-export const smsMessages = pgTable('sms_messages', {
+// --- 11. SMS System (Real-Time Two-Way SMS with Pusher) ---
+// SMS Threads: One thread per homeowner containing all their SMS conversations
+export const smsThreads = pgTable('sms_threads', {
   id: uuid('id').defaultRandom().primaryKey(),
   homeownerId: uuid('homeowner_id').references(() => homeowners.id).notNull(),
-  callId: uuid('call_id').references(() => calls.id), // Links SMS thread to a specific call (nullable)
+  phoneNumber: text('phone_number').notNull(), // Homeowner's phone number for quick lookup
+  lastMessageAt: timestamp('last_message_at').defaultNow().notNull(), // For sorting threads by recent activity
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// SMS Messages: Individual messages within a thread
+export const smsMessages = pgTable('sms_messages', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  threadId: uuid('thread_id').references(() => smsThreads.id).notNull(),
   direction: text('direction').notNull(), // 'inbound' | 'outbound'
-  content: text('content').notNull(),
-  status: text('status').default('sent'), // 'sent' | 'delivered' | 'failed'
-  createdAt: timestamp('created_at').defaultNow(),
+  body: text('body').notNull(), // Message content
+  twilioSid: text('twilio_sid'), // Twilio message SID for tracking
+  status: text('status').default('sent'), // 'sent' | 'delivered' | 'failed' | 'received'
+  createdAt: timestamp('created_at').defaultNow().notNull(),
 });
