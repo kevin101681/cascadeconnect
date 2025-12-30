@@ -115,11 +115,11 @@
         let currentSection = 1;
         const sections = [
             { id: 1, title: 'Cover & Quick Reference', selector: '.cover' },
-            { id: 2, title: 'Understanding Your Warranty Team', selector: '.page:nth-of-type(2)' },
-            { id: 3, title: 'Emergency: No Heat', selector: '.page:nth-of-type(3)' },
-            { id: 4, title: 'Emergency: Plumbing Leaks', selector: '.page:nth-of-type(4)' },
-            { id: 5, title: 'Glossary & Contacts', selector: '.page:nth-of-type(5)' },
-            { id: 6, title: 'Notes', selector: '.page:nth-of-type(6)' }
+            { id: 2, title: 'Understanding Your Warranty Team', selector: '.page:nth-of-type(1)' },
+            { id: 3, title: 'Emergency: No Heat', selector: '.page:nth-of-type(2)' },
+            { id: 4, title: 'Emergency: Plumbing Leaks', selector: '.page:nth-of-type(3)' },
+            { id: 5, title: 'Glossary & Contacts', selector: '.page:nth-of-type(4)' },
+            { id: 6, title: 'Notes', selector: '.page:nth-of-type(5)' }
         ];
 
         function navigateToSection(sectionId) {
@@ -148,30 +148,20 @@
             const iframe = document.getElementById('manualIframe');
             if (iframe && iframe.contentWindow && iframe.contentWindow.document) {
                 const iframeDoc = iframe.contentWindow.document;
+                const element = iframeDoc.querySelector(section.selector);
                 
-                if (section.id === 1) {
-                    iframe.contentWindow.scrollTo({ top: 0, behavior: 'smooth' });
-                } else {
-                    const element = iframeDoc.querySelector(section.selector);
-                    if (element) {
-                        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                }
-
-                // Adjust container height based on section
-                setTimeout(() => {
-                    const element = section.id === 1 
-                        ? iframeDoc.querySelector('.cover')
-                        : iframeDoc.querySelector(section.selector);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     
-                    if (element) {
+                    // Adjust container height based on section
+                    setTimeout(() => {
                         const height = element.scrollHeight;
                         const container = document.getElementById('manualContainer');
                         const maxHeight = window.innerHeight - 280;
                         const newHeight = Math.min(height + 100, maxHeight);
                         container.style.height = `${Math.max(newHeight, 400)}px`;
-                    }
-                }, 100);
+                    }, 100);
+                }
             }
         }
 

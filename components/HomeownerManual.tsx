@@ -11,58 +11,54 @@ const HomeownerManual: React.FC = () => {
 
   // Define pages based on logical sections in the manual
   const pages = [
-    { id: 1, title: 'Cover & Quick Reference', scrollTo: 0 },
-    { id: 2, title: 'Understanding Your Warranty Team', scrollTo: '.page:nth-of-type(2)' },
-    { id: 3, title: 'Emergency: No Heat', scrollTo: '.page:nth-of-type(3)' },
-    { id: 4, title: 'Emergency: Plumbing Leaks', scrollTo: '.page:nth-of-type(4)' },
-    { id: 5, title: 'Glossary & Contacts', scrollTo: '.page:nth-of-type(5)' },
-    { id: 6, title: 'Notes', scrollTo: '.page:nth-of-type(6)' },
+    { id: 1, title: 'Cover & Quick Reference', selector: '.cover' },
+    { id: 2, title: 'Understanding Your Warranty Team', selector: '.page:nth-of-type(1)' },
+    { id: 3, title: 'Emergency: No Heat', selector: '.page:nth-of-type(2)' },
+    { id: 4, title: 'Emergency: Plumbing Leaks', selector: '.page:nth-of-type(3)' },
+    { id: 5, title: 'Glossary & Contacts', selector: '.page:nth-of-type(4)' },
+    { id: 6, title: 'Notes', selector: '.page:nth-of-type(5)' },
   ];
 
   const totalPages = pages.length;
 
   // Scroll to the correct section when page changes and measure height
   useEffect(() => {
-    if (iframeRef.current?.contentWindow) {
+    const scrollToSection = () => {
       const iframe = iframeRef.current;
+      if (!iframe?.contentWindow?.document) return;
+
+      const iframeDoc = iframe.contentWindow.document;
+      const page = pages[currentPage - 1];
       
-      // Wait for iframe to load before scrolling
-      const handleLoad = () => {
-        const iframeDoc = iframe.contentWindow?.document;
-        if (!iframeDoc) return;
+      if (!page) return;
 
-        const page = pages[currentPage - 1];
-        let element: Element | null = null;
-
-        if (typeof page.scrollTo === 'number') {
-          iframe.contentWindow?.scrollTo({ top: page.scrollTo, behavior: 'smooth' });
-          // For cover page, get the cover element
-          element = iframeDoc.querySelector('.cover');
-        } else {
-          element = iframeDoc.querySelector(page.scrollTo);
-          if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }
-
-        // Measure the height of the current section
-        if (element) {
+      const element = iframeDoc.querySelector(page.selector) as HTMLElement;
+      
+      if (element) {
+        // Scroll to element
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // Measure and set height
+        setTimeout(() => {
           const height = element.scrollHeight;
-          // Add some padding and account for header
           setSectionHeight(Math.min(height + 100, window.innerHeight - 150));
-        } else {
-          setSectionHeight(null);
-        }
-      };
-
-      if (iframe.contentDocument?.readyState === 'complete') {
-        handleLoad();
-      } else {
-        iframe.addEventListener('load', handleLoad);
-        return () => iframe.removeEventListener('load', handleLoad);
+        }, 100);
       }
+    };
+
+    const iframe = iframeRef.current;
+    if (!iframe) return;
+
+    // If iframe is already loaded, scroll immediately
+    if (iframe.contentDocument?.readyState === 'complete') {
+      scrollToSection();
+    } else {
+      // Otherwise wait for load
+      const handleLoad = () => scrollToSection();
+      iframe.addEventListener('load', handleLoad);
+      return () => iframe.removeEventListener('load', handleLoad);
     }
-  }, [currentPage, pages]);
+  }, [currentPage]);
 
   const downloadAsPDF = async () => {
     setIsGeneratingPDF(true);
