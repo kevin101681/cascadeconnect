@@ -129,7 +129,7 @@ const HomeownerManual: React.FC = () => {
   };
 
   return (
-    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 180px)' }}>
+    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 100px)', maxHeight: '95vh' }}>
       {/* Header with Download Button */}
       <div className="px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
         <div className="flex items-center justify-between">
