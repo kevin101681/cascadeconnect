@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Call, Homeowner } from '../types';
-import { Phone, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Building2, User, Mail, ExternalLink, Play, Download } from 'lucide-react';
+import { Phone, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Building2, User, Mail, ExternalLink, Play, Download, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { db, isDbConfigured } from '../db';
 import { calls, homeowners } from '../db/schema';
@@ -17,6 +17,9 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'verified' | 'unverified' | 'urgent'>('all');
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 9;
 
   useEffect(() => {
     loadCalls();
@@ -87,12 +90,39 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
     }
   };
 
-  const filteredCalls = callsData.filter(call => {
+  // Filter calls by status filter
+  const statusFilteredCalls = callsData.filter(call => {
     if (filter === 'verified') return call.isVerified;
     if (filter === 'unverified') return !call.isVerified;
     if (filter === 'urgent') return call.isUrgent;
     return true;
   });
+
+  // Search across all fields
+  const filteredCalls = statusFilteredCalls.filter(call => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase();
+    return (
+      call.homeownerName?.toLowerCase().includes(query) ||
+      call.phoneNumber?.toLowerCase().includes(query) ||
+      call.propertyAddress?.toLowerCase().includes(query) ||
+      call.issueDescription?.toLowerCase().includes(query) ||
+      call.verifiedBuilderName?.toLowerCase().includes(query) ||
+      call.transcript?.toLowerCase().includes(query)
+    );
+  });
+
+  // Pagination
+  const totalPages = Math.ceil(filteredCalls.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedCalls = filteredCalls.slice(startIndex, endIndex);
+
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filter]);
 
   const stats = {
     total: callsData.length,
@@ -132,15 +162,29 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
   return (
     <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1">
       {/* Header */}
-      <div className="flex-shrink-0 px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface-container/30 dark:bg-gray-700/30">
-        <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-          {stats.total > 0 && (
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-              {stats.total}
-            </span>
-          )}
-          Calls
-        </h2>
+      <div className="flex-shrink-0 px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col gap-4 bg-surface-container/30 dark:bg-gray-700/30">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+            {stats.total > 0 && (
+              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                {stats.total}
+              </span>
+            )}
+            Calls
+          </h2>
+        </div>
+
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search calls (name, phone, address, description, builder...)"
+            className="w-full pl-10 pr-4 py-2 bg-surface dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 rounded-lg text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
       </div>
 
       <div className="p-6">
@@ -148,11 +192,14 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
         {filteredCalls.length === 0 ? (
           <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-12 text-center border border-surface-outline-variant dark:border-gray-600">
             <Phone className="h-12 w-12 text-surface-outline-variant dark:text-gray-500 mx-auto mb-4" />
-            <p className="text-surface-on-variant dark:text-gray-400">No calls found</p>
+            <p className="text-surface-on-variant dark:text-gray-400">
+              {searchQuery ? 'No calls match your search' : 'No calls found'}
+            </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredCalls.map((call, index) => (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {paginatedCalls.map((call, index) => (
               <motion.div
                 key={call.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -168,17 +215,17 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                     </h3>
                     <div className="flex flex-wrap gap-1 mb-2">
                       {call.isUrgent && (
-                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                        <span className="bg-red-500/20 dark:bg-red-500/30 text-red-700 dark:text-red-300 text-xs font-bold px-2 py-0.5 rounded-full">
                           URGENT
                         </span>
                       )}
                       {call.isVerified ? (
-                        <span className="bg-green-500 text-white text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="bg-green-500/20 dark:bg-green-500/30 text-green-700 dark:text-green-300 text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
                           <CheckCircle className="h-3 w-3" />
                           Verified
                         </span>
                       ) : (
-                        <span className="bg-orange-500 text-white text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="bg-blue-500/20 dark:bg-blue-500/30 text-blue-700 dark:text-blue-300 text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
                           <AlertCircle className="h-3 w-3" />
                           Unverified
                         </span>
@@ -232,6 +279,50 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
               </motion.div>
             ))}
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 mt-6">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-lg bg-surface dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                title="Previous page"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    className={`min-w-[2rem] h-8 px-2 rounded-lg text-sm font-medium transition-all ${
+                      currentPage === page
+                        ? 'bg-primary text-primary-on'
+                        : 'bg-surface dark:bg-gray-700 text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-lg bg-surface dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                title="Next page"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+
+              <span className="ml-4 text-sm text-surface-on-variant dark:text-gray-400">
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredCalls.length)} of {filteredCalls.length}
+              </span>
+            </div>
+          )}
+          </>
         )}
       </div>
 
