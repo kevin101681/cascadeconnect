@@ -839,6 +839,18 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [carouselContainerWidth]);
 
+  // Prevent page scroll when switching to Manual tab
+  useEffect(() => {
+    if (currentTab === 'MANUAL') {
+      // Store current scroll position
+      const scrollY = window.scrollY;
+      // Restore it after a brief moment to prevent any automatic scrolling
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollY);
+      });
+    }
+  }, [currentTab]);
+
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -2933,7 +2945,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             {userRole === UserRole.HOMEOWNER && (
               <button 
                 data-tab="MANUAL"
-                onClick={() => setCurrentTab('MANUAL')}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setCurrentTab('MANUAL');
+                }}
                 className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'MANUAL' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
               >
                 <BookOpen className="h-4 w-4" />
