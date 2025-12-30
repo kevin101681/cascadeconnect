@@ -559,6 +559,8 @@ function App() {
                     };
                   });
                 
+                console.log('📋 Loaded employees from database:', fetchedEmployees.map(e => ({ name: e.name, role: e.role, email: e.email })));
+                
                 const fetchedBuilders: BuilderUser[] = dbUsers
                   .filter(u => u.role === 'BUILDER')
                   .map(u => ({
@@ -737,6 +739,7 @@ function App() {
               // 1. Check Employees
               const emp = loadedEmployees.find(e => e.email.toLowerCase() === email);
               if (emp) {
+                 console.log('✅ User logged in as employee:', emp.name, 'Role:', emp.role);
                  setUserRole(UserRole.ADMIN);
                  setActiveEmployee(emp);
                  setIsRoleLoading(false);
@@ -2894,9 +2897,11 @@ Assigned By: ${assignerName}
   };
 
   const handleUpdateEmployee = async (emp: InternalEmployee) => { 
+      console.log('🔄 Updating employee:', emp.name, 'Role:', emp.role, 'ID:', emp.id);
       setEmployees(prev => prev.map(e => e.id === emp.id ? emp : e)); 
       if (isDbConfigured) {
         try {
+          console.log('💾 Updating employee in database...');
           await db.update(usersTable).set({
             name: emp.name,
             email: emp.email,
@@ -2915,7 +2920,13 @@ Assigned By: ${assignerName}
             pushNotifyHomeownerMessage: emp.pushNotifyHomeownerMessage === true,
             pushNotifyHomeownerEnrollment: emp.pushNotifyHomeownerEnrollment === true
           }).where(eq(usersTable.id, emp.id));
-        } catch(e) { console.error(e); }
+          console.log('✅ Employee updated in database successfully with role:', emp.role);
+        } catch(e) { 
+          console.error('❌ Failed to update employee in database:', e);
+          alert(`Failed to update employee in database: ${e instanceof Error ? e.message : 'Unknown error'}\n\nThe change was saved locally but may not persist after refresh.`);
+        }
+      } else {
+        console.warn('⚠️ Database not configured, employee only saved to localStorage');
       }
   };
 
