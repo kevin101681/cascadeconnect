@@ -904,7 +904,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [dashboardConfig, setDashboardConfig] = useState<{
-    initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS';
+    initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES';
     initialThreadId?: string | null;
   }>({});
 
