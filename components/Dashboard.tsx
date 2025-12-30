@@ -2564,36 +2564,20 @@ const Dashboard: React.FC<DashboardProps> = ({
           }}
         >
           <div 
-            className="bg-surface dark:bg-gray-800 w-full max-w-6xl max-h-[95vh] rounded-3xl shadow-xl flex flex-col overflow-hidden"
+            className="w-full max-w-6xl max-h-[95vh]"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center shrink-0">
-              <h2 className="text-xl font-bold text-surface-on dark:text-gray-100">Homeowner Manual</h2>
+            <div className="relative">
+              {/* Close Button */}
               <button
                 onClick={() => setShowManualModal(false)}
-                className="p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors"
+                className="absolute -top-12 right-0 p-2 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors shadow-lg z-10"
               >
-                <X className="h-5 w-5 text-surface-on dark:text-gray-100" />
+                <X className="h-5 w-5 text-gray-800 dark:text-gray-100" />
               </button>
-            </div>
-            
-            {/* Content - Manual Images with Flipbook */}
-            <div className="flex-1 flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4" style={{ overflow: 'hidden' }}>
-              {HOMEOWNER_MANUAL_IMAGES && HOMEOWNER_MANUAL_IMAGES.length > 0 ? (
-                <ManualImageFlipBook
-                  images={HOMEOWNER_MANUAL_IMAGES}
-                  width={manualPageDimensions.width}
-                  height={manualPageDimensions.height}
-                  flipBookRef={manualFlipBookRef}
-                  onDimensionsChange={setManualPageDimensions}
-                />
-              ) : (
-                <div className="w-full p-8 bg-surface-container dark:bg-gray-700 rounded-lg shadow-lg text-center">
-                  <p className="text-surface-on-variant dark:text-gray-400">No manual pages available</p>
-                  <p className="text-xs text-surface-on-variant dark:text-gray-500 mt-2">HOMEOWNER_MANUAL_IMAGES is empty or undefined</p>
-                </div>
-              )}
+              
+              {/* Homeowner Manual Component */}
+              <HomeownerManual />
             </div>
           </div>
         </div>,
