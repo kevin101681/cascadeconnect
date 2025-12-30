@@ -280,6 +280,17 @@ function App() {
   useEffect(() => { saveState('cascade_builder_groups', builderGroups); }, [builderGroups]);
   useEffect(() => { saveState('cascade_builder_users', builderUsers); }, [builderUsers]);
 
+  // Sync activeEmployee when employees array changes (e.g., role update)
+  useEffect(() => {
+    if (activeEmployee && activeEmployee.id !== 'placeholder') {
+      const updatedEmployee = employees.find(e => e.id === activeEmployee.id);
+      if (updatedEmployee && JSON.stringify(updatedEmployee) !== JSON.stringify(activeEmployee)) {
+        console.log('🔄 Updating activeEmployee to reflect role/data change:', updatedEmployee.role);
+        setActiveEmployee(updatedEmployee);
+      }
+    }
+  }, [employees]);
+
   // --- DATABASE & USER SYNC ---
   useEffect(() => {
     const syncDataAndUser = async () => {

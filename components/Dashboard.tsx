@@ -416,6 +416,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Get available tabs in order
   const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> => {
     const isHomeownerViewRole = userRole === UserRole.HOMEOWNER;
+    const isEmployee = currentUser?.role === 'Employee';
     const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> = ['CLAIMS'];
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('TASKS');
@@ -428,8 +429,11 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('CALLS'); // CALLS tab between MANUAL and DOCUMENTS (admin only)
-      tabs.push('PAYROLL'); // PAYROLL tab (admin only)
-      tabs.push('INVOICES'); // INVOICES tab (admin only)
+      // Only show Payroll and Invoices for Administrator role, not Employee role
+      if (!isEmployee) {
+        tabs.push('PAYROLL'); // PAYROLL tab (administrator only)
+        tabs.push('INVOICES'); // INVOICES tab (administrator only)
+      }
     }
     tabs.push('DOCUMENTS'); // Always include DOCUMENTS tab
     return tabs;
