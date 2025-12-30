@@ -2147,7 +2147,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                                       <div className="flex items-center gap-2">
                                         <button
                                           onClick={() => {
+                                            // Find associated claim by matching thread subject to claim title
+                                            const associatedClaim = claims.find(c => c.title === selectedThread.subject);
+                                            const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
+                                            const contextLabel = `${msg.subject || selectedThread.subject} • ${project}`;
                                             setCurrentTab('NOTES');
+                                            useTaskStore.setState({ contextLabel, contextType: 'message' });
                                           }}
                                           className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
                                           title={`Add a note about: ${selectedThread.subject}`}

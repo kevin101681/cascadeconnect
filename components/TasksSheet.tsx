@@ -12,13 +12,14 @@ interface TasksSheetProps {
 }
 
 const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [], isInline = false }) => {
-  const { isOpen, activeClaimId, isFilterEnabled, contextLabel, closeTasks, toggleFilter } = useTaskStore();
+  const { isOpen, activeClaimId, isFilterEnabled, contextLabel, contextType, closeTasks, toggleFilter } = useTaskStore();
   const [tasks, setTasks] = useState<SimpleTask[]>([]);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Fetch tasks when drawer opens or filter changes, or immediately if inline
+  // Always fetch ALL tasks (no filtering by claim)
   useEffect(() => {
     if (isOpen || isInline) {
       loadTasks();
@@ -29,13 +30,13 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
         }, 100);
       }
     }
-  }, [isOpen, activeClaimId, isFilterEnabled, isInline]);
+  }, [isOpen, isInline]); // Removed activeClaimId and isFilterEnabled from dependencies
 
   const loadTasks = async () => {
     setLoading(true);
     try {
-      const claimIdToFilter = isFilterEnabled && activeClaimId ? activeClaimId : null;
-      const fetchedTasks = await fetchTasks(claimIdToFilter);
+      // Always fetch all tasks (pass null to get all)
+      const fetchedTasks = await fetchTasks(null);
       setTasks(fetchedTasks);
     } catch (error) {
       console.error('Failed to load tasks:', error);
@@ -156,23 +157,26 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
 
       {/* Input Area */}
       <div className="flex-shrink-0 px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700">
-        {contextLabel && (
-          <div className="mb-3 flex items-center gap-2">
-            <span className="text-xs text-surface-on-variant dark:text-gray-400">Adding note for:</span>
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
-              {contextLabel}
-            </span>
-          </div>
-        )}
         <form onSubmit={handleAddTask} className="flex gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Add a note..."
-            className="flex-1 px-4 py-2 rounded-lg border border-surface-outline-variant dark:border-gray-600 bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-          />
+          <div className="flex-1">
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Add a note..."
+              className="w-full px-4 py-2 rounded-lg border border-surface-outline-variant dark:border-gray-600 bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            />
+            {contextLabel && (
+              <div className="mt-2 flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
+                  {contextType === 'claim' && '🏠'}
+                  {contextType === 'message' && '💬'}
+                  {contextLabel}
+                </span>
+              </div>
+            )}
+          </div>
           <button
             type="submit"
             className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-on rounded-lg transition-colors font-medium"
@@ -200,7 +204,7 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
                     onToggle={handleToggleTask}
                     onDelete={handleDeleteTask}
                     onNavigateToClaim={onNavigateToClaim}
-                    showClaimBadge={!isFilterEnabled || !activeClaimId}
+                    showClaimBadge={true}
                     claims={claims}
                   />
                 ))}
@@ -220,7 +224,7 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
                     onToggle={handleToggleTask}
                     onDelete={handleDeleteTask}
                     onNavigateToClaim={onNavigateToClaim}
-                    showClaimBadge={!isFilterEnabled || !activeClaimId}
+                    showClaimBadge={true}
                     claims={claims}
                   />
                 ))}
