@@ -1,8 +1,9 @@
 
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
+import fs from 'fs';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -16,12 +17,37 @@ export default defineConfig(({ mode }) => {
     // Database URL and secrets should be server-side only
   };
   
+  // Custom plugin to serve HTML files from public directory
+  const serveStaticHtml = (): Plugin => ({
+    name: 'serve-static-html',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (req.url === '/complete_homeowner_manual.html' || req.url?.startsWith('/complete_homeowner_manual.html?')) {
+          const filePath = path.join(__dirname, 'public', 'complete_homeowner_manual.html');
+          const html = fs.readFileSync(filePath, 'utf-8');
+          res.setHeader('Content-Type', 'text/html');
+          res.end(html);
+          return;
+        }
+        if (req.url === '/homeowner-manual.html' || req.url?.startsWith('/homeowner-manual.html?')) {
+          const filePath = path.join(__dirname, 'public', 'homeowner-manual.html');
+          const html = fs.readFileSync(filePath, 'utf-8');
+          res.setHeader('Content-Type', 'text/html');
+          res.end(html);
+          return;
+        }
+        next();
+      });
+    }
+  });
+
   return {
     plugins: [
+      serveStaticHtml(),
       react(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['logo.svg', 'favicon.ico'],
+        includeAssets: ['logo.svg', 'favicon.ico', 'complete_homeowner_manual.html', 'homeowner-manual.html'],
         manifest: {
           name: 'CASCADE CONNECT',
           short_name: 'CASCADE',
@@ -113,7 +139,13 @@ export default defineConfig(({ mode }) => {
           // Ensure consistent chunk naming for better caching
           chunkFileNames: 'assets/[name]-[hash].js',
           entryFileNames: 'assets/[name]-[hash].js',
-          assetFileNames: 'assets/[name]-[hash].[ext]'
+          assetFileNames: (assetInfo) => {
+            // Don't hash HTML files - keep original names for direct access
+            if (assetInfo.name?.endsWith('.html')) {
+              return '[name].[ext]';
+            }
+            return 'assets/[name]-[hash].[ext]';
+          }
         }
       },
       // Increase chunk size warning limit
@@ -134,6 +166,9 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
         },
       },
+      // Ensure static HTML files are served directly without SPA fallback
+      middlewareMode: false,
     },
+    publicDir: 'public',
   };
 });
