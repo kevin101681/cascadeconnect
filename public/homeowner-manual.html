@@ -55,25 +55,9 @@
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200">
             <!-- Header -->
             <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex-1">
-                        <h1 class="text-2xl font-semibold text-gray-800">Homeowner Manual</h1>
-                        <p class="text-sm text-gray-600 mt-1" id="sectionTitle">Cover & Quick Reference</p>
-                    </div>
-                    
-                    <!-- Download PDF Button -->
-                    <button
-                        id="downloadBtn"
-                        onclick="downloadPDF()"
-                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium shadow-md hover:shadow-lg"
-                        style="background-color: #3C6B80;"
-                        title="Download as PDF"
-                    >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                        </svg>
-                        <span id="downloadText">Download PDF</span>
-                    </button>
+                <div class="mb-4">
+                    <h1 class="text-2xl font-semibold text-gray-800">Homeowner Manual</h1>
+                    <p class="text-sm text-gray-600 mt-1" id="sectionTitle">Cover & Quick Reference</p>
                 </div>
 
                 <!-- Section Navigation Tabs -->
@@ -161,89 +145,6 @@
                 } else {
                     console.error('Element not found for selector:', section.selector);
                 }
-            }
-        }
-
-        async function downloadPDF() {
-            const downloadBtn = document.getElementById('downloadBtn');
-            const downloadText = document.getElementById('downloadText');
-            
-            // Disable button and show loading
-            downloadBtn.disabled = true;
-            downloadText.textContent = 'Generating...';
-            downloadBtn.innerHTML = `
-                <div class="spinner"></div>
-                <span>Generating...</span>
-            `;
-
-            try {
-                const iframe = document.getElementById('manualIframe');
-                if (!iframe || !iframe.contentWindow || !iframe.contentWindow.document) {
-                    throw new Error('Unable to access manual content');
-                }
-
-                const iframeDoc = iframe.contentWindow.document;
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'letter');
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
-
-                // Get all page sections
-                const pageSections = iframeDoc.querySelectorAll('.page, .cover');
-                
-                for (let i = 0; i < pageSections.length; i++) {
-                    const section = pageSections[i];
-                    
-                    // Capture section as image
-                    const canvas = await html2canvas(section, {
-                        scale: 2,
-                        useCORS: true,
-                        logging: false,
-                        backgroundColor: section.classList.contains('cover') ? null : '#ffffff',
-                        windowWidth: 850,
-                        windowHeight: section.scrollHeight,
-                    });
-
-                    const imgData = canvas.toDataURL('image/png');
-                    const imgWidth = pdfWidth;
-                    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-                    
-                    if (i > 0) {
-                        pdf.addPage();
-                    }
-                    
-                    // Handle tall sections
-                    if (imgHeight > pdfHeight) {
-                        let heightLeft = imgHeight;
-                        let position = 0;
-                        
-                        while (heightLeft > 0) {
-                            if (position > 0) {
-                                pdf.addPage();
-                            }
-                            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                            heightLeft -= pdfHeight;
-                            position -= pdfHeight;
-                        }
-                    } else {
-                        const yOffset = (pdfHeight - imgHeight) / 2;
-                        pdf.addImage(imgData, 'PNG', 0, yOffset, imgWidth, imgHeight);
-                    }
-                }
-
-                pdf.save('Cascade-Homeowner-Manual.pdf');
-            } catch (error) {
-                console.error('Error generating PDF:', error);
-                alert('Failed to generate PDF. Please try again.');
-            } finally {
-                // Re-enable button
-                downloadBtn.disabled = false;
-                downloadBtn.innerHTML = `
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                    </svg>
-                    <span>Download PDF</span>
-                `;
             }
         }
 
