@@ -1207,7 +1207,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
             
             {/* DESKTOP ROW (Hidden on Mobile) */}
             <div 
-              className={`hidden md:flex flex-nowrap items-center gap-2 p-3 bg-surface dark:bg-gray-800 border border-surface-outline-variant dark:border-gray-700 shadow-sm hover:shadow-md transition-all cursor-pointer ${expanded ? '!rounded-t-3xl !rounded-b-none border-b-0 shadow-none mb-0' : 'rounded-3xl'}`}
+              className={`hidden md:flex flex-wrap items-center gap-2 p-3 bg-surface dark:bg-gray-800 border border-surface-outline-variant dark:border-gray-700 shadow-sm hover:shadow-md transition-all cursor-pointer ${expanded ? '!rounded-t-3xl !rounded-b-none border-b-0 shadow-none mb-0' : 'rounded-3xl'}`}
               onClick={onExpand}
             >
                 
