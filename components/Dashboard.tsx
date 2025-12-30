@@ -3219,10 +3219,16 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
-                    <InvoicesModal 
-                      isOpen={true} 
-                      onClose={() => setCurrentTab('CLAIMS')}
-                    />
+                    {currentTab === 'INVOICES' ? (
+                      <InvoicesModal 
+                        isOpen={true} 
+                        onClose={() => setCurrentTab('CLAIMS')}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-surface-on-variant dark:text-gray-400">
+                        Switch to Invoices tab to view
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
