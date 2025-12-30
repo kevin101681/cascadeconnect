@@ -16,7 +16,7 @@ const HomeownerManual: React.FC = () => {
     { id: 3, title: 'Emergency: No Heat', selector: 'body > .page:nth-of-type(4)' },
     { id: 4, title: 'Emergency: Plumbing Leaks', selector: 'body > .page:nth-of-type(5)' },
     { id: 5, title: 'Glossary & Contacts', selector: 'body > .page:nth-of-type(6)' },
-    { id: 6, title: 'Notes', selector: 'body > .page:nth-of-type(7)' },
+    { id: 6, title: 'Contact & Notes', selector: 'body > .page:nth-of-type(7)' },
   ];
 
   // Scroll to the correct section when page changes
@@ -173,7 +173,7 @@ const HomeownerManual: React.FC = () => {
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 currentPage === page.id
                   ? 'text-white'
-                  : 'bg-surface dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-600'
+                  : 'bg-surface dark:bg-gray-700 text-surface-on dark:text-gray-900 hover:bg-surface-container dark:hover:bg-gray-600'
               }`}
               style={currentPage === page.id ? { backgroundColor: '#3C6B80' } : {}}
             >
