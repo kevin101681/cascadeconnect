@@ -23,51 +23,66 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
   useEffect(() => {
     const scrollToSection = () => {
       const iframe = iframeRef.current;
-      if (!iframe?.contentWindow?.document) {
-        console.log('Iframe not ready');
+      if (!iframe) {
+        console.log('❌ No iframe ref');
         return;
       }
 
-      const iframeDoc = iframe.contentWindow.document;
-      
-      // Check if the document body has content
-      if (!iframeDoc.body || iframeDoc.body.children.length === 0) {
-        console.log('Iframe body not ready, retrying...');
-        setTimeout(scrollToSection, 100);
-        return;
-      }
+      try {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        
+        if (!iframeDoc) {
+          console.log('❌ Cannot access iframe document - possible CORS issue');
+          return;
+        }
 
-      const page = pages[currentPage - 1];
-      if (!page) return;
+        console.log('📄 Iframe document accessible');
+        console.log('📄 Ready state:', iframeDoc.readyState);
+        console.log('📄 Body exists:', !!iframeDoc.body);
+        console.log('📄 Body children count:', iframeDoc.body?.children.length || 0);
+        
+        if (iframeDoc.body && iframeDoc.body.children.length > 0) {
+          console.log('📄 First child:', iframeDoc.body.children[0]?.tagName);
+          console.log('📄 Looking for selector:', pages[currentPage - 1]?.selector);
+          
+          const page = pages[currentPage - 1];
+          if (!page) return;
 
-      const element = iframeDoc.querySelector(page.selector) as HTMLElement;
-      
-      if (element) {
-        // Scroll to element
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        console.log(`✓ Scrolled to section ${currentPage}: ${page.title}`);
-      } else {
-        console.log(`Waiting for content... (selector: ${page.selector})`);
-        // Retry after a longer delay if content isn't ready
-        setTimeout(scrollToSection, 200);
+          const element = iframeDoc.querySelector(page.selector) as HTMLElement;
+          
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            console.log(`✅ Scrolled to section ${currentPage}: ${page.title}`);
+          } else {
+            // Try to find what elements ARE in the document
+            const allElements = iframeDoc.querySelectorAll('body > *');
+            console.log(`❌ Element not found. Found ${allElements.length} top-level elements:`, 
+              Array.from(allElements).map((el: Element) => el.tagName + (el.className ? `.${el.className}` : '')).join(', '));
+          }
+        } else {
+          console.log('⏳ Body not ready, waiting...');
+          setTimeout(scrollToSection, 100);
+        }
+      } catch (error) {
+        console.error('❌ Error accessing iframe:', error);
       }
     };
 
     const iframe = iframeRef.current;
     if (!iframe) return;
 
-    // If iframe is already loaded, scroll with a longer delay
-    if (iframe.contentDocument?.readyState === 'complete') {
-      setTimeout(scrollToSection, 300);
-    } else {
-      // Otherwise wait for load event
-      const handleLoad = () => {
-        console.log('Iframe loaded');
-        setTimeout(scrollToSection, 300);
-      };
-      iframe.addEventListener('load', handleLoad);
-      return () => iframe.removeEventListener('load', handleLoad);
-    }
+    // Wait for iframe to fully load
+    const handleLoad = () => {
+      console.log('🔄 Iframe load event fired');
+      setTimeout(scrollToSection, 500);
+    };
+    
+    iframe.addEventListener('load', handleLoad);
+    
+    // Also try after a delay in case it's already loaded
+    setTimeout(scrollToSection, 500);
+
+    return () => iframe.removeEventListener('load', handleLoad);
   }, [currentPage]);
 
   return (
@@ -106,8 +121,6 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
           src={`/complete_homeowner_manual.html${homeownerId ? `?homeownerId=${homeownerId}` : ''}`}
           style={{ width: '100%', height: '100%', border: 'none' }}
           title="Homeowner Manual"
-          sandbox="allow-same-origin allow-scripts allow-forms"
-          loading="eager"
         />
       </div>
     </div>
