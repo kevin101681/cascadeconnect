@@ -346,7 +346,6 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
-  console.log('Dashboard component: isAdmin =', isAdmin, 'userRole =', userRole);
   // Check if user is actually logged in as admin (has currentUser/activeEmployee)
   const isAdminAccount = !!currentUser;
   
@@ -383,14 +382,11 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual)
-  console.log('Dashboard initialTab:', initialTab, 'will set currentTab to:', initialTab || 'CLAIMS');
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL'>(initialTab || 'CLAIMS');
-  console.log('Dashboard currentTab state after useState:', currentTab);
   
   // Update currentTab when initialTab prop changes
   useEffect(() => {
     if (initialTab) {
-      console.log('initialTab changed, updating currentTab to:', initialTab);
       setCurrentTab(initialTab);
     }
   }, [initialTab]);
@@ -3161,6 +3157,20 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             </div>
 
+            {/* MANUAL Tab - Homeowner Only */}
+            {userRole === UserRole.HOMEOWNER && (
+              <div 
+                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+              >
+                <div className="w-full min-h-[calc(100vh-300px)]">
+                  <div className="max-w-7xl mx-auto py-4">
+                    <HomeownerManual homeownerId={activeHomeowner?.id} />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* CALLS Tab - Admin Only */}
             {isAdmin && (
               <div 
@@ -3170,6 +3180,20 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
                     <AIIntakeDashboard />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* PAYROLL Tab - Admin Only */}
+            {isAdmin && (
+              <div 
+                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+              >
+                <div className="w-full min-h-[calc(100vh-300px)]">
+                  <div className="max-w-7xl mx-auto py-4">
+                    <PayrollDashboard />
                   </div>
                 </div>
               </div>
@@ -3380,24 +3404,18 @@ const Dashboard: React.FC<DashboardProps> = ({
             </motion.div>
           )}
 
-          {(() => {
-            console.log('Checking PAYROLL condition: currentTab =', currentTab, 'isAdmin =', isAdmin, 'matches =', currentTab === 'PAYROLL' && isAdmin);
-            return currentTab === 'PAYROLL' && isAdmin && (
-              <>
-                {console.log('PAYROLL tab content rendering')}
-                <motion.div 
-                  key="payroll"
-                  className="max-w-7xl mx-auto md:relative"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.35, ease: "easeOut" }}
-                >
-                  <PayrollDashboard />
-                </motion.div>
-              </>
-            );
-          })()}
+          {currentTab === 'PAYROLL' && isAdmin && (
+            <motion.div 
+              key="payroll"
+              className="max-w-7xl mx-auto md:relative"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+              <PayrollDashboard />
+            </motion.div>
+          )}
 
           {currentTab === 'MANUAL' && (
             <motion.div 
