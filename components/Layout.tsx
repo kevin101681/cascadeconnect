@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, Homeowner } from '../types';
-import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2, Phone, DollarSign } from 'lucide-react';
+import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2, Phone } from 'lucide-react';
 import { useDarkMode } from './DarkModeProvider';
 import { UserButton, useUser } from '@clerk/clerk-react';
 
@@ -22,7 +22,7 @@ interface LayoutProps {
   onClearSelection: () => void;
 
   // Navigation & Actions
-  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'PAYROLL') => void;
+  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS') => void;
   onOpenEnrollment: () => void;
 
   // Auth
@@ -434,13 +434,6 @@ const Layout: React.FC<LayoutProps> = ({
                           >
                             <Mail className="h-4 w-4 text-surface-outline dark:text-gray-500" />
                             Email History
-                          </button>
-                          <button 
-                            onClick={() => handleMenuAction(() => onNavigate('PAYROLL'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
-                          >
-                            <DollarSign className="h-4 w-4 text-surface-outline dark:text-gray-500" />
-                            Payroll
                           </button>
                           {isAdministrator && (
                             <button 

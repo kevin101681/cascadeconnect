@@ -292,7 +292,7 @@ interface DashboardProps {
   currentUserEmail?: string; // Current user's email for contractor matching
 
   // Initial State Control (Optional)
-  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'PAYROLL';
+  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS';
   initialThreadId?: string | null;
 
   // Tasks Widget Support
