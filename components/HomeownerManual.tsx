@@ -12,11 +12,11 @@ const HomeownerManual: React.FC = () => {
   // Structure: .cover, then .page elements in order
   const pages = [
     { id: 1, title: 'Cover & Quick Reference', selector: '.cover' },
-    { id: 2, title: 'Understanding Your Warranty Team', selector: 'body > .page:nth-of-type(2)' }, // Second .page div in body
-    { id: 3, title: 'Emergency: No Heat', selector: 'body > .page:nth-of-type(3)' },
-    { id: 4, title: 'Emergency: Plumbing Leaks', selector: 'body > .page:nth-of-type(4)' },
-    { id: 5, title: 'Glossary & Contacts', selector: 'body > .page:nth-of-type(5)' },
-    { id: 6, title: 'Notes', selector: 'body > .page:nth-of-type(6)' },
+    { id: 2, title: 'Understanding Your Warranty Team', selector: 'body > .page:nth-of-type(3)' },
+    { id: 3, title: 'Emergency: No Heat', selector: 'body > .page:nth-of-type(4)' },
+    { id: 4, title: 'Emergency: Plumbing Leaks', selector: 'body > .page:nth-of-type(5)' },
+    { id: 5, title: 'Glossary & Contacts', selector: 'body > .page:nth-of-type(6)' },
+    { id: 6, title: 'Notes', selector: 'body > .page:nth-of-type(7)' },
   ];
 
   // Scroll to the correct section when page changes
