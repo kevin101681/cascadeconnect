@@ -269,9 +269,6 @@ const PayrollDashboard: React.FC = () => {
             <DollarSign className="h-5 w-5 text-primary" />
             Payroll Dashboard
           </h2>
-          <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
-            Powered by Finch API • Gusto Integration
-          </p>
         </div>
         <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:opacity-90 transition-opacity">
           <Download className="h-4 w-4" />

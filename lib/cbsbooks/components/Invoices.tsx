@@ -86,7 +86,7 @@ const parseCSVDate = (dateStr: string): string => {
     return new Date().toISOString().split('T')[0];
 };
 
-type ActiveFab = 'none' | 'menu' | 'filter' | 'search';
+type ActiveFab = 'none' | 'menu' | 'filter' | 'search' | 'import' | 'scan' | 'more';
 
 export const Invoices: React.FC<InvoicesProps> = ({ 
   invoices, clients, onAdd, onUpdate, onDelete, onBulkAdd, onBulkDelete, onNavigate, onBackup, prefillInvoice 
@@ -138,6 +138,20 @@ export const Invoices: React.FC<InvoicesProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Close dropdown if clicking outside and not on a dropdown button or inside a dropdown
+      if (activeFab !== 'none' && activeFab !== 'filter' && !target.closest('.relative')) {
+        setActiveFab('none');
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [activeFab]);
 
   const rateOptions = [25, 35, 50, 75, 100, 150];
 
@@ -1601,35 +1615,109 @@ export const Invoices: React.FC<InvoicesProps> = ({
         </div>
       )}
 
-      {/* FAB GROUP - Menu and Search FABs */}
-      <div className="fixed bottom-8 right-8 z-50 flex items-end gap-3">
-        {/* Search FAB - Shows on mobile, hidden on desktop */}
-        <button
-          onClick={() => {
-            const newState = activeFab === 'search' ? 'none' : 'search';
-            setActiveFab(newState);
-            if (newState === 'search') {
-              setTimeout(() => searchInputRef.current?.focus(), 100);
-            }
-          }}
-          className={`md:hidden w-14 h-14 rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 bg-primary text-primary-on`}
-          title="Search"
-        >
-          {activeFab === 'search' ? <X size={24} /> : <Search size={24} />}
-        </button>
-        
-        {/* Menu FAB */}
-        <FloatingMenu 
-          currentView="invoices" 
-          onNavigate={onNavigate} 
-          customActions={menuActions} 
-          isOpen={activeFab === 'menu'}
-          onToggle={(open) => setActiveFab(open ? 'menu' : 'none')}
-        />
-      </div>
+      {/* Removed FAB GROUP - Actions now in header dropdown menus */}
 
       {/* Header Stats & Controls - Reorganized for even distribution */}
       <div className="space-y-4 mb-6">
+        {/* Action Buttons Row - Dropdown Menus */}
+        <div className="flex flex-wrap gap-2">
+          {/* New Invoice Button */}
+          <button
+            onClick={handleCreate}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:opacity-90 transition-opacity"
+          >
+            <Plus size={18} />
+            <span className="text-sm font-medium">New Invoice</span>
+          </button>
+
+          {/* Import Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setActiveFab(activeFab === 'import' ? 'none' : 'import')}
+              className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+            >
+              <Upload size={18} />
+              <span className="text-sm font-medium">Import</span>
+            </button>
+            {activeFab === 'import' && (
+              <div className="absolute top-full mt-2 left-0 bg-surface-container dark:bg-gray-700 rounded-xl shadow-xl border border-surface-outline-variant dark:border-gray-600 py-2 min-w-[200px] z-50">
+                <button
+                  onClick={() => { fileInputRef.current?.click(); setActiveFab('none'); }}
+                  className="w-full px-4 py-2 text-left text-sm text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors flex items-center gap-3"
+                >
+                  <Upload size={18} />
+                  Import CSV
+                </button>
+                <button
+                  onClick={() => { setShowAIImport(true); setActiveFab('none'); }}
+                  className="w-full px-4 py-2 text-left text-sm text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors flex items-center gap-3"
+                >
+                  <Sparkles size={18} />
+                  AI Import (Text)
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Scan Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setActiveFab(activeFab === 'scan' ? 'none' : 'scan')}
+              className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+            >
+              <Camera size={18} />
+              <span className="text-sm font-medium">Scan</span>
+            </button>
+            {activeFab === 'scan' && (
+              <div className="absolute top-full mt-2 left-0 bg-surface-container dark:bg-gray-700 rounded-xl shadow-xl border border-surface-outline-variant dark:border-gray-600 py-2 min-w-[200px] z-50">
+                <button
+                  onClick={() => { setShowInvoiceScanner(true); setActiveFab('none'); }}
+                  className="w-full px-4 py-2 text-left text-sm text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors flex items-center gap-3"
+                >
+                  <ScanText size={18} />
+                  Scan Doc/Email
+                </button>
+                <button
+                  onClick={() => { setShowCheckScanner(true); setActiveFab('none'); }}
+                  className="w-full px-4 py-2 text-left text-sm text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors flex items-center gap-3"
+                >
+                  <Camera size={18} />
+                  Scan Check
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* More Actions Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setActiveFab(activeFab === 'more' ? 'none' : 'more')}
+              className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+            >
+              <SlidersHorizontal size={18} />
+              <span className="text-sm font-medium">More</span>
+            </button>
+            {activeFab === 'more' && (
+              <div className="absolute top-full mt-2 left-0 bg-surface-container dark:bg-gray-700 rounded-xl shadow-xl border border-surface-outline-variant dark:border-gray-600 py-2 min-w-[200px] z-50">
+                <button
+                  onClick={() => { toggleFab('filter'); setActiveFab('none'); }}
+                  className="w-full px-4 py-2 text-left text-sm text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors flex items-center gap-3"
+                >
+                  <SlidersHorizontal size={18} />
+                  Filter & Sort
+                </button>
+                <button
+                  onClick={() => { onBackup(); setActiveFab('none'); }}
+                  className="w-full px-4 py-2 text-left text-sm text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors flex items-center gap-3"
+                >
+                  <Database size={18} />
+                  Backup Data
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Row 1: Metrics - Evenly spaced */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {statusFilter !== 'paid' && (

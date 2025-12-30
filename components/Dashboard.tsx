@@ -417,6 +417,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> => {
     const isHomeownerViewRole = userRole === UserRole.HOMEOWNER;
     const isEmployee = currentUser?.role === 'Employee';
+    console.log('🔍 Dashboard getAvailableTabs - currentUser:', currentUser?.name, 'role:', currentUser?.role, 'isEmployee:', isEmployee);
     const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> = ['CLAIMS'];
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('TASKS');
@@ -436,6 +437,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       }
     }
     tabs.push('DOCUMENTS'); // Always include DOCUMENTS tab
+    console.log('📋 Available tabs:', tabs);
     return tabs;
   };
   
@@ -3232,9 +3234,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <FileText className="h-5 w-5 text-primary" />
                             Invoices & Billing
                           </h2>
-                          <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
-                            CBS Books • Square Integration
-                          </p>
                         </div>
                         <div className="flex-1 overflow-y-auto">
                           <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
@@ -3486,9 +3485,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <FileText className="h-5 w-5 text-primary" />
                       Invoices & Billing
                     </h2>
-                    <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
-                      CBS Books • Square Integration
-                    </p>
                   </div>
                   <div className="flex-1 overflow-y-auto">
                     <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
