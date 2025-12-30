@@ -3220,15 +3220,30 @@ const Dashboard: React.FC<DashboardProps> = ({
                 style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
-                  {currentTab === 'INVOICES' ? (
-                    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
-                      <CBSBooksApp />
-                    </Suspense>
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-surface-on-variant dark:text-gray-400">
-                      Switch to Invoices tab to view
-                    </div>
-                  )}
+                  <div className="max-w-7xl mx-auto py-4">
+                    {currentTab === 'INVOICES' ? (
+                      <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 md:shadow-elevation-1 flex flex-col min-h-[calc(100vh-300px)]">
+                        <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
+                          <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                            <FileText className="h-5 w-5 text-primary" />
+                            Invoices & Billing
+                          </h2>
+                          <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
+                            CBS Books • Square Integration
+                          </p>
+                        </div>
+                        <div className="flex-1 overflow-y-auto">
+                          <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
+                            <CBSBooksApp />
+                          </Suspense>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-surface-on-variant dark:text-gray-400">
+                        Switch to Invoices tab to view
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -3460,9 +3475,24 @@ const Dashboard: React.FC<DashboardProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
-                <CBSBooksApp />
-              </Suspense>
+              <div className="max-w-7xl mx-auto py-4">
+                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 md:shadow-elevation-1 flex flex-col">
+                  <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
+                    <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-primary" />
+                      Invoices & Billing
+                    </h2>
+                    <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
+                      CBS Books • Square Integration
+                    </p>
+                  </div>
+                  <div className="flex-1 overflow-y-auto">
+                    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
+                      <CBSBooksApp />
+                    </Suspense>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           )}
 

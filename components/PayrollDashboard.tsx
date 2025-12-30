@@ -261,14 +261,15 @@ const PayrollDashboard: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 md:shadow-elevation-1 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-semibold text-surface-on dark:text-gray-100">
+          <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-primary" />
             Payroll Dashboard
-          </h1>
-          <p className="text-surface-on-variant dark:text-gray-400 mt-1">
+          </h2>
+          <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
             Powered by Finch API • Gusto Integration
           </p>
         </div>
@@ -277,6 +278,9 @@ const PayrollDashboard: React.FC = () => {
           Export Report
         </button>
       </div>
+      
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -505,6 +509,7 @@ const PayrollDashboard: React.FC = () => {
             </p>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
