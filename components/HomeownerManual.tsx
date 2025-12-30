@@ -6,7 +6,53 @@ interface HomeownerManualProps {
 
 const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [manualHtml, setManualHtml] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Fetch the manual HTML content
+  useEffect(() => {
+    const fetchManual = async () => {
+      try {
+        // Try multiple paths
+        const paths = ['/static/manual.html', '/complete_homeowner_manual.html'];
+        
+        for (const path of paths) {
+          try {
+            const response = await fetch(path, {
+              headers: { 'Accept': 'text/html' },
+              cache: 'no-cache'
+            });
+            
+            if (response.ok && response.headers.get('content-type')?.includes('text/html')) {
+              let html = await response.text();
+              console.log(`✅ Successfully fetched manual from ${path}`);
+              console.log('HTML length:', html.length);
+              console.log('Contains .cover:', html.includes('class="cover"'));
+              
+              // Inject homeownerId into the HTML
+              if (homeownerId) {
+                html = html.replace(
+                  "const homeownerId = urlParams.get('homeownerId') || 'default';",
+                  `const homeownerId = '${homeownerId}';`
+                );
+              }
+              
+              setManualHtml(html);
+              return;
+            }
+          } catch (err) {
+            console.log(`Failed to fetch from ${path}:`, err);
+          }
+        }
+        
+        console.error('❌ Could not fetch manual from any path');
+      } catch (error) {
+        console.error('Error fetching manual:', error);
+      }
+    };
+
+    fetchManual();
+  }, []);
 
   // Define pages based on actual HTML structure
   // Structure: .cover, then .page elements in order
@@ -118,13 +164,21 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
       
       {/* Manual Content - Full Height */}
       <div className="flex-1 overflow-hidden">
-        <iframe 
-          ref={iframeRef}
-          src={`/static/manual.html${homeownerId ? `?homeownerId=${homeownerId}` : ''}`}
-          style={{ width: '100%', height: '100%', border: 'none' }}
-          title="Homeowner Manual"
-          onError={(e) => console.error('Iframe load error:', e)}
-        />
+        {manualHtml ? (
+          <iframe 
+            ref={iframeRef}
+            srcDoc={manualHtml}
+            style={{ width: '100%', height: '100%', border: 'none' }}
+            title="Homeowner Manual"
+          />
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-surface-on-variant dark:text-gray-400">Loading manual...</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
