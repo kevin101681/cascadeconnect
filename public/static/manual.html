@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cascade Builder Services - Homeowner Manual</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Serif:wght@400;700&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --md-primary: #3C6B80;
+            --md-primary-container: #C2E8FF;
+            --md-on-primary: #FFFFFF;
+            --md-on-primary-container: #001F2A;
+            
+            --md-secondary: #4F616D;
+            --md-secondary-container: #D3E4F3;
+            --md-on-secondary: #FFFFFF;
+            --md-on-secondary-container: #0C1F28;
+            
+            --md-tertiary: #5D5B7D;
+            --md-tertiary-container: #E3DFFF;
+            --md-on-tertiary: #FFFFFF;
+            --md-on-tertiary-container: #1A1836;
+            
+            --md-error: #BA1A1A;
+            --md-error-container: #FFDAD6;
+            --md-on-error: #FFFFFF;
+            --md-on-error-container: #410002;
+            
+            --md-success: #006D3A;
+            --md-success-container: #93F7B4;
+            --md-on-success: #FFFFFF;
+            --md-on-success-container: #00210E;
+            
+            --md-warning: #775A00;
+            --md-warning-container: #FFDF9C;
+            --md-on-warning: #FFFFFF;
+            --md-on-warning-container: #261A00;
+            
+            --md-surface: #F8F9FA;
+            --md-surface-variant: #DCE4E9;
+            --md-on-surface: #191C1E;
+            --md-on-surface-variant: #40484C;
+            --md-outline: #70787D;
+            --md-outline-variant: #C0C8CD;
+            
+            --md-shadow: rgba(0, 0, 0, 0.12);
+            --md-elevation-1: 0 1px 2px var(--md-shadow), 0 1px 3px rgba(0, 0, 0, 0.06);
+            --md-elevation-2: 0 2px 4px var(--md-shadow), 0 3px 6px rgba(0, 0, 0, 0.08);
+            --md-elevation-3: 0 4px 8px var(--md-shadow), 0 6px 12px rgba(0, 0, 0, 0.1);
+            
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 28px;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            color: var(--md-on-surface);
+            line-height: 1.6;
+            background: var(--md-surface);
+            font-size: 16px;
+            font-weight: 400;
+        }
+        
+        .page {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 48px 60px;
+            background: white;
+        }
+        
+        /* Material 3 Icons */
+        .icon {
+            width: 48px;
+            height: 48px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--md-primary-container);
+            color: var(--md-primary);
+            border-radius: var(--radius-md);
+            font-size: 24px;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+        
+        .icon.small {
+            width: 32px;
+            height: 32px;
+            font-size: 18px;
+            border-radius: var(--radius-sm);
+        }
+        
+        .icon.emergency {
+            background: var(--md-error-container);
+            color: var(--md-error);
+        }
+        
+        .icon.success {
+            background: var(--md-success-container);
+            color: var(--md-success);
+        }
+        
+        .icon.warning {
+            background: var(--md-warning-container);
+            color: var(--md-warning);
+        }
+        
+        /* Cover */
+        .cover {
+            min-height: 100vh;
+            background: #3C6B80;
+            color: var(--md-on-primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 80px 60px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .logo { 
+            font-size: 1.5em; 
+            font-weight: 500; 
+            letter-spacing: 0.5px;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+        }
+        
+        .title { 
+            font-family: 'Roboto Serif', serif;
+            font-size: 4.5em; 
+            font-weight: 700; 
+            line-height: 1.05;
+            margin-bottom: 16px;
+            letter-spacing: -0.5px;
+        }
+        
+        .subtitle { 
+            font-size: 1.5em; 
+            opacity: 0.9;
+            margin-bottom: 80px;
+            font-weight: 300;
+            letter-spacing: 0.25px;
+        }
+        
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 32px;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .contact-label {
+            font-size: 0.875em;
+            opacity: 0.85;
+            font-weight: 400;
+            letter-spacing: 0.4px;
+        }
+        
+        .contact-value {
+            font-size: 1.25em;
+            font-weight: 500;
+            letter-spacing: 0.15px;
+            margin-top: 4px;
+        }
+        
+        /* Typography */
+        h1 {
+            font-family: 'Roboto Serif', serif;
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #3C6B80;
+            margin: 32px 0 24px;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        h2 {
+            font-size: 1.75em;
+            font-weight: 500;
+            color: var(--md-primary);
+            margin: 40px 0 16px;
+            letter-spacing: 0;
+            line-height: 1.3;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        h3 {
+            font-size: 1.375em;
+            font-weight: 500;
+            color: var(--md-on-surface);
+            margin: 28px 0 12px;
+            letter-spacing: 0.15px;
+        }
+        
+        h4 {
+            font-size: 1.125em;
+            font-weight: 500;
+            color: var(--md-on-surface);
+            margin: 20px 0 8px;
+            letter-spacing: 0.15px;
+        }
+        
+        p { 
+            margin-bottom: 16px;
+            letter-spacing: 0.25px;
+            color: var(--md-on-surface-variant);
+        }
+        
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin: 24px 0;
+            box-shadow: var(--md-elevation-1);
+            border: 1px solid var(--md-outline-variant);
+        }
+        
+        .card.filled {
+            background: var(--md-primary-container);
+            color: var(--md-on-primary-container);
+            border: none;
+        }
+        
+        .card.filled-secondary {
+            background: var(--md-secondary-container);
+            color: var(--md-on-secondary-container);
+            border: none;
+        }
+        
+        .card.filled-error {
+            background: var(--md-error-container);
+            color: var(--md-on-error-container);
+            border: none;
+        }
+        
+        .card.filled-success {
+            background: var(--md-success-container);
+            color: var(--md-on-success-container);
+            border: none;
+        }
+        
+        .card.filled-warning {
+            background: var(--md-warning-container);
+            color: var(--md-on-warning-container);
+            border: none;
+        }
+        
+        .card-title {
+            font-size: 1.25em;
+            font-weight: 500;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 0.15px;
+        }
+        
+        /* Lists */
+        ul, ol { 
+            margin: 16px 0 16px 28px;
+        }
+        
+        li { 
+            margin-bottom: 10px;
+            letter-spacing: 0.25px;
+            color: var(--md-on-surface-variant);
+        }
+        
+        .checklist {
+            list-style: none;
+            margin-left: 0;
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 8px;
+            border: 1px solid var(--md-outline-variant);
+        }
+        
+        .checklist li {
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: start;
+            gap: 16px;
+            transition: background 0.2s;
+            color: var(--md-on-surface);
+        }
+        
+        .checklist li:hover {
+            background: var(--md-surface-variant);
+        }
+        
+        .checklist li:before {
+            content: "";
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--md-primary);
+            border-radius: 4px;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 24px 0;
+            font-size: 0.9375em;
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            border: 1px solid var(--md-outline-variant);
+        }
+        
+        th {
+            background: var(--md-primary);
+            color: var(--md-on-primary);
+            padding: 16px;
+            text-align: left;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--md-outline-variant);
+            letter-spacing: 0.25px;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:hover {
+            background: var(--md-surface-variant);
+        }
+        
+        /* Input Fields */
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--md-outline);
+            border-radius: var(--radius-sm);
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.9375em;
+            color: var(--md-on-surface);
+            background: var(--md-surface);
+            transition: all 0.2s;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: var(--md-primary);
+            background: white;
+            box-shadow: 0 0 0 2px rgba(60, 107, 128, 0.1);
+        }
+        
+        .input-field::placeholder {
+            color: var(--md-on-surface-variant);
+            opacity: 0.6;
+        }
+        
+        textarea.input-field {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        /* Material 3 Date Picker Override */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%233C6B80" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>') center/contain no-repeat;
+            cursor: pointer;
+            opacity: 1;
+            width: 20px;
+            height: 20px;
+        }
+        
+        input[type="date"]::-webkit-datetime-edit {
+            padding: 0;
+        }
+        
+        input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+            padding: 0;
+        }
+        
+        /* Save Button */
+        .save-btn {
+            background: var(--md-primary);
+            color: var(--md-on-primary);
+            border: none;
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.9375em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+            box-shadow: var(--md-elevation-1);
+        }
+        
+        .save-btn:hover {
+            background: #2A5366;
+            box-shadow: var(--md-elevation-2);
+            transform: translateY(-1px);
+        }
+        
+        .save-btn:active {
+            transform: translateY(0);
+        }
+        
+        .save-status {
+            display: inline-block;
+            margin-left: 12px;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.875em;
+            font-weight: 500;
+            background: var(--md-success-container);
+            color: var(--md-on-success-container);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .save-status.show {
+            opacity: 1;
+        }
+        
+        /* Dividers */
+        .divider {
+            height: 1px;
+            background: var(--md-outline-variant);
+            margin: 32px 0;
+        }
+        
+        /* Surface Variants */
+        .surface-variant {
+            background: var(--md-surface-variant);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            margin: 20px 0;
+        }
+        
+        /* Glossary */
+        .term {
+            font-weight: 500;
+            color: var(--md-primary);
+            margin-top: 16px;
+            font-size: 1.0625em;
+            letter-spacing: 0.15px;
+        }
+        
+        .definition {
+            margin-left: 24px;
+            margin-bottom: 12px;
+            color: var(--md-on-surface-variant);
+            letter-spacing: 0.25px;
+        }
+        
+        strong {
+            font-weight: 500;
+            color: var(--md-on-surface);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page {
+                padding: 32px 24px;
+            }
+            
+            .contact-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            
+            .title {
+                font-size: 3em;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- COVER -->
+    <div class="cover">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 40px;">
+            <div style="flex: 1;">
+                <div class="title">Homeowner's<br>Manual</div>
+                <div class="subtitle">Your Complete Guide to Warranty & Maintenance</div>
+            </div>
+            <div style="flex-shrink: 0; background: rgba(255, 255, 255, 0.15); padding: 12px 16px; border-radius: 32px; backdrop-filter: blur(10px); display: inline-block;">
+                <img src="/images/manual/cbslogo.png" alt="Cascade Builder Services" style="height: 100px; width: auto; object-fit: contain; display: block;" />
+            </div>
+        </div>
+        <div class="contact-grid">
+            <div class="contact-item">
+                <div class="icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="contact-label">24/7 Service</div>
+                    <div class="contact-value">888.429.5468</div>
+                </div>
+            </div>
+            <div class="contact-item">
+                <div class="icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="2" y1="12" x2="22" y2="12"/>
+                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="contact-label">Submit Claims</div>
+                    <div class="contact-value">cascadeconnect.app</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUICK REFERENCE -->
+    <div class="page">
+        <h1>
+            <div class="icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="3"/>
+                </svg>
+            </div>
+            Quick Reference Card
+        </h1>
+        
+        <div class="card filled-error">
+            <strong style="font-size: 1.125em; display: block; text-align: center;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 8px;">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    <line x1="12" y1="9" x2="12" y2="13"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                SAVE THIS PAGE • KEEP INFORMATION UPDATED
+            </strong>
+        </div>
+        
+        <div class="card filled" style="margin: 32px 0; background: white; border: 1px solid var(--md-outline-variant);">
+            <div class="card-title" style="font-size: 1.5em; margin-bottom: 20px; color: var(--md-on-surface);">
+                <div class="icon small emergency">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+                Emergency Contacts
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px;">
+                <div class="surface-variant">
+                    <div class="contact-label">CASCADE BUILDER SERVICES</div>
+                    <div style="font-size: 1.75em; font-weight: 500; color: var(--md-primary); margin: 8px 0;">888.429.5468</div>
+                    <div style="font-size: 0.875em; color: var(--md-on-surface-variant);">Available 24/7 for heating, plumbing & electrical emergencies</div>
+                </div>
+                <div class="surface-variant">
+                    <div class="contact-label">GAS LEAK EMERGENCY</div>
+                    <div style="font-size: 1.375em; font-weight: 500; color: var(--md-error); margin: 8px 0;">Call Gas Company</div>
+                    <div style="font-size: 0.875em; color: var(--md-on-surface-variant);">Number on your gas bill or meter tag</div>
+                </div>
+                <div class="surface-variant">
+                    <div class="contact-label">FIRE / MEDICAL / POLICE</div>
+                    <div style="font-size: 1.75em; font-weight: 500; color: var(--md-error); margin: 8px 0;">911</div>
+                </div>
+                <div class="surface-variant">
+                    <div class="contact-label">POISON CONTROL</div>
+                    <div style="font-size: 1.375em; font-weight: 500; color: var(--md-on-surface); margin: 8px 0;">1-800-222-1222</div>
+                </div>
+            </div>
+        </div>
+        
+        <h2>
+            <div class="icon small">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                </svg>
+            </div>
+            Locate These Today
+        </h2>
+        <p><strong>Take photos and save them on your phone. Fill in locations below:</strong></p>
+        
+        <table>
+            <tr>
+                <th style="width: 50%;">Critical Shut-Off</th>
+                <th>Location in My Home</th>
+            </tr>
+            <tr>
+                <td><strong>Main Water Shut-Off (Indoor)</strong></td>
+                <td><input type="text" class="input-field" id="water-shutoff" placeholder="e.g., Basement utility room, right wall"></td>
+            </tr>
+            <tr>
+                <td><strong>Water Meter (Street/Yard)</strong></td>
+                <td><input type="text" class="input-field" id="water-meter" placeholder="e.g., Front yard, near sidewalk"></td>
+            </tr>
+            <tr>
+                <td><strong>Main Electrical Panel</strong></td>
+                <td><input type="text" class="input-field" id="electrical-panel" placeholder="e.g., Garage, back wall"></td>
+            </tr>
+            <tr>
+                <td><strong>Gas Main Shut-Off</strong></td>
+                <td><input type="text" class="input-field" id="gas-shutoff" placeholder="e.g., Side of house, near meter"></td>
+            </tr>
+            <tr>
+                <td><strong>Furnace Switch</strong></td>
+                <td><input type="text" class="input-field" id="furnace-switch" placeholder="e.g., Basement, on furnace wall"></td>
+            </tr>
+        </table>
+        
+        <button class="save-btn" onclick="saveLocations()">Save Shut-Off Locations</button>
+        <span class="save-status" id="save-status-1">Saved!</span>
+        
+        <h2 style="margin-top: 40px;">
+            <div class="icon small">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polyline points="12 6 12 12 16 14"/>
+                </svg>
+            </div>
+            Your Warranty Timeline
+        </h2>
+        <table>
+            <tr>
+                <th>Milestone</th>
+                <th style="width: 30%;">Your Date</th>
+                <th>What to Do</th>
+            </tr>
+            <tr>
+                <td><strong>Closing Date</strong></td>
+                <td><input type="date" class="input-field" id="closing-date"></td>
+                <td>Warranty begins</td>
+            </tr>
+            <tr>
+                <td><strong>60-Day Review</strong></td>
+                <td><input type="date" class="input-field" id="sixty-day" readonly style="background: var(--md-surface-variant);"></td>
+                <td>Submit non-emergency claims</td>
+            </tr>
+            <tr>
+                <td><strong>11-Month Final Review</strong></td>
+                <td><input type="date" class="input-field" id="eleven-month" readonly style="background: var(--md-surface-variant);"></td>
+                <td>Last chance for warranty claims</td>
+            </tr>
+            <tr>
+                <td><strong>Warranty Expires</strong></td>
+                <td><input type="date" class="input-field" id="warranty-expires" readonly style="background: var(--md-surface-variant);"></td>
+                <td>12 months after closing</td>
+            </tr>
+        </table>
+        
+        <button class="save-btn" onclick="saveDates()">Save Timeline</button>
+        <span class="save-status" id="save-status-2">Saved!</span>
+    </div>
+
+    <!-- WHO DOES WHAT -->
+    <div class="page">
+        <h1>
+            <div class="icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
+            Understanding Your Warranty Team
+        </h1>
+        
+        <p>Your warranty involves three key players. Here's exactly who does what:</p>
+        
+        <table style="margin-top: 24px;">
+            <tr>
+                <th style="width: 25%;">Who</th>
+                <th>What They Do</th>
+                <th style="width: 30%;">When to Contact</th>
+            </tr>
+            <tr>
+                <td><strong>YOUR BUILDER</strong><br><span style="font-size: 0.875em; color: var(--md-on-surface-variant);">Built your home</span></td>
+                <td>
+                    • Owns warranty obligation<br>
+                    • Directs all repairs<br>
+                    • Makes coverage decisions
+                </td>
+                <td>You typically <strong>don't</strong> contact them — CBS coordinates</td>
+            </tr>
+            <tr>
+                <td><strong>CASCADE BUILDER SERVICES</strong><br><span style="font-size: 0.875em; color: var(--md-on-surface-variant);">Warranty administrator</span></td>
+                <td>
+                    • Inspects all claims<br>
+                    • Determines coverage<br>
+                    • Schedules repairs<br>
+                    • Neutral third party
+                </td>
+                <td style="background: var(--md-success-container); color: var(--md-on-success-container);"><strong>THIS IS YOUR PRIMARY CONTACT</strong></td>
+            </tr>
+            <tr>
+                <td><strong>TRADE CONTRACTORS</strong><br><span style="font-size: 0.875em; color: var(--md-on-surface-variant);">Plumbers, electricians, etc.</span></td>
+                <td>
+                    • Perform actual repairs<br>
+                    • Same crews who built home
+                </td>
+                <td>CBS will typically facilitate schedule but you may schedule directly with trades as well</td>
+            </tr>
+        </table>
+        
+        <div class="card filled-secondary" style="margin-top: 32px;">
+            <div class="card-title">
+                <div class="icon small">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                </div>
+                The Simple Flow
+            </div>
+            <p style="color: var(--md-on-secondary-container);"><strong>You</strong> contact CBS → <strong>CBS</strong> inspects & approves → <strong>Trade contractor</strong> schedules & repairs → <strong>CBS</strong> verifies quality → Done!</p>
+        </div>
+        
+        <h2>
+            <div class="icon small">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+            </div>
+            Your Role as Homeowner
+        </h2>
+        
+        <p>We're partners in maintaining your home. Here's what you're responsible for:</p>
+        
+        <div class="card">
+            <ul style="margin: 0;">
+                <li><strong>Routine Maintenance:</strong> Changing furnace filters, cleaning gutters, caulking, etc.</li>
+                <li><strong>Preventing Damage:</strong> Shutting off water during leaks, clearing snow from drains</li>
+                <li><strong>Providing Access:</strong> Being present for inspections and repairs (adult required)</li>
+                <li><strong>Timely Reporting:</strong> Submitting claims before warranty expires</li>
+            </ul>
+        </div>
+        
+        <div class="card filled-warning" style="margin-top: 24px;">
+            <div class="card-title">
+                <div class="icon small warning">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+                Important: Maintenance vs. Warranty
+            </div>
+            <p style="color: var(--md-on-warning-container);"><strong>Warranty covers defects in materials or workmanship.</strong> It does NOT cover:</p>
+            <ul style="color: var(--md-on-warning-container); margin-top: 8px;">
+                <li>Damage from neglected maintenance (dirty filters causing furnace failure)</li>
+                <li>Normal wear and tear (carpet matting in high-traffic areas)</li>
+                <li>Homeowner-caused damage (cracked tile from dropped object)</li>
+                <li>Natural settling (minor hairline drywall cracks)</li>
+            </ul>
+            <p style="margin-top: 12px; color: var(--md-on-warning-container);">When in doubt, submit it anyway — we'll help you determine coverage!</p>
+        </div>
+    </div>
+
+    <!-- EMERGENCY: NO HEAT -->
+    <div class="page">
+        <h1>
+            <div class="icon emergency">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2v10m0 0L8 8m4 4l4-4"/>
+                    <path d="M9 21c0-1.5 1.5-2.5 3-2.5s3 1 3 2.5"/>
+                    <circle cx="12" cy="12" r="10"/>
+                </svg>
+            </div>
+            EMERGENCY: No Heat
+        </h1>
+        
+        <div class="card filled-error">
+            <strong>Use this checklist when outdoor temperature is below 50°F and you have no heat.</strong>
+        </div>
+        
+        <h2>
+            <div class="icon small success">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+            </div>
+            Complete ALL Steps Before Calling
+        </h2>
+        
+        <h3>STEP 1: Check Your Thermostat</h3>
+        <ul class="checklist">
+            <li>Set to "HEAT" mode (not "COOL" or "OFF")</li>
+            <li>Temperature set at least 2° ABOVE current room temperature</li>
+            <li>Replace batteries if display is dim (most use 2 AA batteries)</li>
+        </ul>
+        
+        <h3>STEP 2: Check Furnace Power</h3>
+        <ul class="checklist">
+            <li>Find furnace (basement, utility room, or closet)</li>
+            <li>Light switch on side of furnace is ON (may be upside down)</li>
+            <li>Door panel is fully closed and clicked into place (furnace won't run if loose)</li>
+        </ul>
+        
+        <h3>STEP 3: Check Electrical Panel</h3>
+        <ul class="checklist">
+            <li>Find breaker labeled "FURNACE" or "HVAC"</li>
+            <li>If tripped, flip to OFF first, then back to ON</li>
+        </ul>
+        
+        <h3>STEP 4: Check Furnace Filter</h3>
+        <ul class="checklist">
+            <li>Open furnace door, remove air filter</li>
+            <li>Hold it up to light — can you see through it?</li>
+            <li>If NO = Replace immediately (change every 3 months)</li>
+        </ul>
+        
+        <h3>STEP 5: Check Airflow</h3>
+        <ul class="checklist">
+            <li>All room vents are OPEN (not blocked by furniture)</li>
+            <li>Cold air return vents are UNBLOCKED</li>
+        </ul>
+        
+        <h3>STEP 6: For Gas Furnaces Only</h3>
+        <ul class="checklist">
+            <li>Gas valve at meter is OPEN (handle parallel to pipe)</li>
+            <li>Gas valve at furnace is OPEN (usually red, handle parallel)</li>
+        </ul>
+        
+        <div class="card filled-error" style="margin-top: 32px;">
+            <div class="card-title">
+                <div class="icon small emergency">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                    </svg>
+                </div>
+                STILL NO HEAT? CALL NOW
+            </div>
+            <p style="color: var(--md-on-error-container);"><strong style="font-size: 1.25em;">Cascade Builder Services: 888.429.5468</strong> (24/7)<br>
+            Have ready: Your address, outdoor temperature, which steps you completed</p>
+        </div>
+        
+        <div class="card filled-warning" style="margin-top: 24px;">
+            <div class="card-title">
+                <div class="icon small warning">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                </div>
+                Trip Charge Warning
+            </div>
+            <p style="color: var(--md-on-warning-container);">If we send a technician and the problem was a dead battery, tripped breaker, or dirty filter, you may be charged a service fee. This checklist protects you!</p>
+        </div>
+    </div>
+
+    <!-- EMERGENCY: PLUMBING -->
+    <div class="page">
+        <h1>
+            <div class="icon emergency">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+                </svg>
+            </div>
+            EMERGENCY: Plumbing Leaks
+        </h1>
+        
+        <h2>
+            <div class="icon small emergency">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+            MAJOR LEAK (Water Everywhere)
+        </h2>
+        
+        <div class="card filled-error">
+            <strong>DO THIS IMMEDIATELY:</strong>
+        </div>
+        
+        <h3>STEP 1: SHUT OFF WATER</h3>
+        <ul class="checklist">
+            <li><strong>Option A:</strong> Main shut-off inside home (turn clockwise)</li>
+            <li><strong>Option B:</strong> Water meter at street (need "curb key" tool)</li>
+        </ul>
+        
+        <h3>STEP 2: PROTECT BELONGINGS</h3>
+        <ul class="checklist">
+            <li>Move furniture/electronics away from water</li>
+            <li>Use towels/buckets to contain spread</li>
+        </ul>
+        
+        <h3>STEP 3: CALL FOR HELP</h3>
+        <ul class="checklist">
+            <li><strong>Under 30 days in home?</strong> Call CBS: 888.429.5468</li>
+            <li><strong>Over 30 days?</strong> Call plumber + homeowner's insurance</li>
+        </ul>
+        
+        <div class="divider"></div>
+        
+        <h2>
+            <div class="icon small">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                </svg>
+            </div>
+            MINOR LEAK (One Fixture)
+        </h2>
+        
+        <h3>STEP 1: Stop Water Flow</h3>
+        <ul class="checklist">
+            <li>Find shut-off valve under sink/toilet</li>
+            <li>Turn clockwise until water stops</li>
+        </ul>
+        
+        <h3>STEP 2: Check Simple Causes</h3>
+        <ul class="checklist">
+            <li>Missing/cracked caulking around tub/shower?</li>
+            <li>Shower door left open during use?</li>
+            <li>Loose connection under sink?</li>
+        </ul>
+        
+        <h3>STEP 3: Dry & Report</h3>
+        <ul class="checklist">
+            <li>Wipe up all standing water</li>
+            <li>Use other facilities in your home</li>
+            <li>Submit warranty claim during business hours (NOT an emergency)</li>
+        </ul>
+    </div>
+
+    <!-- GLOSSARY -->
+    <div class="page">
+        <h1>
+            <div class="icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                </svg>
+            </div>
+            Homeowner's Glossary
+        </h1>
+        
+        <p>We've translated construction jargon into plain English. Bookmark this page!</p>
+        
+        <div class="card" style="margin-top: 24px;">
+            <div class="term">Asphalt Shingles</div>
+            <div class="definition">Common roofing material with protective granules that look like sand</div>
+            
+            <div class="term">Ball Valve</div>
+            <div class="definition">A shut-off valve with a handle you turn 90 degrees (usually for gas or water)</div>
+            
+            <div class="term">Caulking</div>
+            <div class="definition">Flexible sealing compound used to fill gaps and prevent water entry</div>
+            
+            <div class="term">Circuit Breaker</div>
+            <div class="definition">Safety switch in your electrical panel that shuts off power if overloaded</div>
+            
+            <div class="term">Control Joint</div>
+            <div class="definition">Planned crack line in concrete that controls where natural cracking occurs</div>
+            
+            <div class="term">Curb Key</div>
+            <div class="definition">Special wrench used to turn off water at the street meter (available at hardware stores)</div>
+            
+            <div class="term">GFCI Outlet</div>
+            <div class="definition">Safety outlet with "test" and "reset" buttons (required in bathrooms/kitchens) that shuts off power if water is detected</div>
+            
+            <div class="term">Hose Bib</div>
+            <div class="definition">Outdoor water faucet where you attach your garden hose</div>
+            
+            <div class="term">P-Trap</div>
+            <div class="definition">U-shaped pipe under sinks that holds water to block sewer gases from entering home</div>
+            
+            <div class="term">Sump Pump</div>
+            <div class="definition">Pump in basement that removes excess groundwater to prevent flooding</div>
+            
+            <div class="term">Swale</div>
+            <div class="definition">Shallow drainage ditch designed to direct rainwater away from your home</div>
+        </div>
+    </div>
+
+    <!-- IMPORTANT CONTACTS -->
+    <div class="page">
+        <h1>
+            <div class="icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
+            </div>
+            Important Contacts
+        </h1>
+        
+        <h2>
+            <div class="icon small">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                </svg>
+            </div>
+            Your Builder Information
+        </h2>
+        <table>
+            <tr>
+                <td style="width: 40%;"><strong>Builder Name:</strong></td>
+                <td><input type="text" class="input-field" id="builder-name" placeholder="Enter builder name"></td>
+            </tr>
+            <tr>
+                <td><strong>Builder Phone:</strong></td>
+                <td><input type="tel" class="input-field" id="builder-phone" placeholder="(555) 555-5555"></td>
+            </tr>
+            <tr>
+                <td><strong>Sales Representative:</strong></td>
+                <td><input type="text" class="input-field" id="sales-rep" placeholder="Enter name"></td>
+            </tr>
+        </table>
+        
+        <h2>
+            <div class="icon small">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+            </div>
+            Utility Providers
+        </h2>
+        <p style="font-size: 0.9375em; color: var(--md-on-surface-variant);">Fill these in from your first utility bills and save for emergencies:</p>
+        
+        <table>
+            <tr>
+                <td style="width: 40%;"><strong>Electric Company:</strong></td>
+                <td><input type="text" class="input-field" id="electric-company" placeholder="Company name & phone"></td>
+            </tr>
+            <tr>
+                <td><strong>Gas Company:</strong></td>
+                <td><input type="text" class="input-field" id="gas-company" placeholder="Company name & phone"></td>
+            </tr>
+            <tr>
+                <td><strong>Water/Sewer:</strong></td>
+                <td><input type="text" class="input-field" id="water-company" placeholder="Company name & phone"></td>
+            </tr>
+            <tr>
+                <td><strong>Internet/Cable:</strong></td>
+                <td><input type="text" class="input-field" id="internet-company" placeholder="Company name & phone"></td>
+            </tr>
+        </table>
+        
+        <button class="save-btn" onclick="saveContacts()">Save Contact Information</button>
+        <span class="save-status" id="save-status-3">Saved!</span>
+    </div>
+
+    <!-- NOTES PAGE -->
+    <div class="page">
+        <h1>
+            <div class="icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+            </div>
+            My Home Notes
+        </h1>
+        
+        <p>Use this space to track important information about your home:</p>
+        
+        <h3 style="margin-top: 32px;">Paint Colors & Materials</h3>
+        <textarea class="input-field" id="paint-notes" placeholder="Write down paint colors, flooring types, and materials for future touch-ups..."></textarea>
+        
+        <h3 style="margin-top: 32px;">Additional Notes</h3>
+        <textarea class="input-field" id="additional-notes" placeholder="Any other important information about your home..."></textarea>
+        
+        <button class="save-btn" onclick="saveNotes()" style="margin-top: 24px;">Save All Notes</button>
+        <span class="save-status" id="save-status-4">Saved!</span>
+    </div>
+
+    <script>
+        // Auto-calculate warranty dates
+        document.getElementById('closing-date').addEventListener('change', function() {
+            const closingDate = new Date(this.value);
+            if (!closingDate || isNaN(closingDate)) return;
+            
+            // Calculate 60-day review
+            const sixtyDay = new Date(closingDate);
+            sixtyDay.setDate(sixtyDay.getDate() + 60);
+            document.getElementById('sixty-day').valueAsDate = sixtyDay;
+            
+            // Calculate 11-month review
+            const elevenMonth = new Date(closingDate);
+            elevenMonth.setMonth(elevenMonth.getMonth() + 11);
+            document.getElementById('eleven-month').valueAsDate = elevenMonth;
+            
+            // Calculate warranty expiration
+            const warrantyExpires = new Date(closingDate);
+            warrantyExpires.setFullYear(warrantyExpires.getFullYear() + 1);
+            document.getElementById('warranty-expires').valueAsDate = warrantyExpires;
+        });
+        
+        // Get homeowner ID from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const homeownerId = urlParams.get('homeownerId') || 'default';
+        
+        // Helper function to get storage key with homeowner ID prefix
+        function getStorageKey(key) {
+            return `homeowner_${homeownerId}_${key}`;
+        }
+        
+        // Save functions with localStorage
+        function saveLocations() {
+            const data = {
+                waterShutoff: document.getElementById('water-shutoff').value,
+                waterMeter: document.getElementById('water-meter').value,
+                electricalPanel: document.getElementById('electrical-panel').value,
+                gasShutoff: document.getElementById('gas-shutoff').value,
+                furnaceSwitch: document.getElementById('furnace-switch').value
+            };
+            localStorage.setItem(getStorageKey('shutoffLocations'), JSON.stringify(data));
+            showSaveStatus('save-status-1');
+        }
+        
+        function saveDates() {
+            const data = {
+                closingDate: document.getElementById('closing-date').value,
+                sixtyDay: document.getElementById('sixty-day').value,
+                elevenMonth: document.getElementById('eleven-month').value,
+                warrantyExpires: document.getElementById('warranty-expires').value
+            };
+            localStorage.setItem(getStorageKey('warrantyDates'), JSON.stringify(data));
+            showSaveStatus('save-status-2');
+        }
+        
+        function saveContacts() {
+            const data = {
+                builderName: document.getElementById('builder-name').value,
+                builderPhone: document.getElementById('builder-phone').value,
+                salesRep: document.getElementById('sales-rep').value,
+                electricCompany: document.getElementById('electric-company').value,
+                gasCompany: document.getElementById('gas-company').value,
+                waterCompany: document.getElementById('water-company').value,
+                internetCompany: document.getElementById('internet-company').value
+            };
+            localStorage.setItem(getStorageKey('contactInfo'), JSON.stringify(data));
+            showSaveStatus('save-status-3');
+        }
+        
+        function saveNotes() {
+            const data = {
+                paintNotes: document.getElementById('paint-notes').value,
+                additionalNotes: document.getElementById('additional-notes').value
+            };
+            localStorage.setItem(getStorageKey('homeNotes'), JSON.stringify(data));
+            showSaveStatus('save-status-4');
+        }
+        
+        function showSaveStatus(elementId) {
+            const status = document.getElementById(elementId);
+            status.classList.add('show');
+            setTimeout(() => {
+                status.classList.remove('show');
+            }, 2000);
+        }
+        
+        // Load saved data on page load
+        window.addEventListener('load', function() {
+            // Load shut-off locations
+            const locations = JSON.parse(localStorage.getItem(getStorageKey('shutoffLocations')) || '{}');
+            if (locations.waterShutoff) document.getElementById('water-shutoff').value = locations.waterShutoff;
+            if (locations.waterMeter) document.getElementById('water-meter').value = locations.waterMeter;
+            if (locations.electricalPanel) document.getElementById('electrical-panel').value = locations.electricalPanel;
+            if (locations.gasShutoff) document.getElementById('gas-shutoff').value = locations.gasShutoff;
+            if (locations.furnaceSwitch) document.getElementById('furnace-switch').value = locations.furnaceSwitch;
+            
+            // Load warranty dates
+            const dates = JSON.parse(localStorage.getItem(getStorageKey('warrantyDates')) || '{}');
+            if (dates.closingDate) document.getElementById('closing-date').value = dates.closingDate;
+            if (dates.sixtyDay) document.getElementById('sixty-day').value = dates.sixtyDay;
+            if (dates.elevenMonth) document.getElementById('eleven-month').value = dates.elevenMonth;
+            if (dates.warrantyExpires) document.getElementById('warranty-expires').value = dates.warrantyExpires;
+            
+            // Load contact info
+            const contacts = JSON.parse(localStorage.getItem(getStorageKey('contactInfo')) || '{}');
+            if (contacts.builderName) document.getElementById('builder-name').value = contacts.builderName;
+            if (contacts.builderPhone) document.getElementById('builder-phone').value = contacts.builderPhone;
+            if (contacts.salesRep) document.getElementById('sales-rep').value = contacts.salesRep;
+            if (contacts.electricCompany) document.getElementById('electric-company').value = contacts.electricCompany;
+            if (contacts.gasCompany) document.getElementById('gas-company').value = contacts.gasCompany;
+            if (contacts.waterCompany) document.getElementById('water-company').value = contacts.waterCompany;
+            if (contacts.internetCompany) document.getElementById('internet-company').value = contacts.internetCompany;
+            
+            // Load notes
+            const notes = JSON.parse(localStorage.getItem(getStorageKey('homeNotes')) || '{}');
+            if (notes.paintNotes) document.getElementById('paint-notes').value = notes.paintNotes;
+            if (notes.additionalNotes) document.getElementById('additional-notes').value = notes.additionalNotes;
+        });
+    </script>
+
+</body>
+</html>

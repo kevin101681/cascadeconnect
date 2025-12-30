@@ -25,7 +25,7 @@
   minify = true
 
 [build.processing.html]
-  pretty_urls = true
+  pretty_urls = false
 
 # Headers for static HTML files to ensure they're served correctly
 [[headers]]

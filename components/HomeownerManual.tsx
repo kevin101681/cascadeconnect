@@ -74,6 +74,8 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
     // Wait for iframe to fully load
     const handleLoad = () => {
       console.log('🔄 Iframe load event fired');
+      console.log('🔗 Iframe src:', iframe.src);
+      console.log('🔗 Iframe contentWindow.location:', iframe.contentWindow?.location.href);
       setTimeout(scrollToSection, 500);
     };
     
@@ -83,7 +85,7 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
     setTimeout(scrollToSection, 500);
 
     return () => iframe.removeEventListener('load', handleLoad);
-  }, [currentPage]);
+  }, [currentPage, homeownerId]);
 
   return (
     <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden flex flex-col h-[90vh]">
@@ -118,9 +120,10 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
       <div className="flex-1 overflow-hidden">
         <iframe 
           ref={iframeRef}
-          src={`/complete_homeowner_manual.html${homeownerId ? `?homeownerId=${homeownerId}` : ''}`}
+          src={`/static/manual.html${homeownerId ? `?homeownerId=${homeownerId}` : ''}`}
           style={{ width: '100%', height: '100%', border: 'none' }}
           title="Homeowner Manual"
+          onError={(e) => console.error('Iframe load error:', e)}
         />
       </div>
     </div>

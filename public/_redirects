@@ -7,8 +7,10 @@
 #
 # Order matters: more specific patterns must come before the catch-all
 
-# Exclude static assets from SPA redirect
-/assets/*    /assets/:splat   200
+# Exclude static assets and manual files from SPA redirect
+/assets/*    /assets/:splat   200!
+/static/*    /static/:splat   200!
+/images/*    /images/:splat   200!
 
 # Serve static HTML files directly (MUST come before API routes and catch-all)
 /complete_homeowner_manual.html    /complete_homeowner_manual.html    200!
