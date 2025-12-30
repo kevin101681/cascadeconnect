@@ -2641,14 +2641,15 @@ const Dashboard: React.FC<DashboardProps> = ({
     return (
       <>
         {renderModals()}
-        <div ref={homeownerCardContainerRef} className="space-y-8 animate-in fade-in slide-in-from-top-4 max-w-7xl mx-auto">
-        {/* HOMEOWNER INFO AND SCHEDULE ROW */}
-        <div className="flex flex-col lg:flex-row gap-6 items-stretch relative w-full">
-          {/* COMPACT HOMEOWNER HEADER CARD */}
-          <div 
-            key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
-            className="w-full lg:flex-1 lg:min-w-0 lg:flex-shrink lg:self-start bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 group relative flex flex-col"
-          >
+        {/* Main Layout Container - Sidebar + Content */}
+        <div className="flex flex-col lg:flex-row gap-6 max-w-7xl mx-auto animate-in fade-in slide-in-from-top-4">
+          {/* LEFT SIDEBAR - Homeowner Info Card */}
+          <div className="lg:w-80 lg:flex-shrink-0">
+            <div 
+              ref={homeownerCardContainerRef}
+              key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
+              className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 sticky top-6"
+            >
             <div className="flex flex-col p-6">
              
              {/* Two-Line Layout with Even Spacing - Center Aligned */}
@@ -2791,46 +2792,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                     >
                       Invite
                     </Button>
-                    <Button
-                      onClick={() => {
-                        console.log('New Claim button clicked, setting showNewClaimModal to true');
-                        setShowNewClaimModal(true);
-                        console.log('showNewClaimModal should now be true');
-                      }}
-                      variant="filled"
-                      icon={<Plus className="h-4 w-4" />}
-                      className="!h-9 !px-4"
-                    >
-                      New Claim
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        console.log('New Task button clicked');
-                        setNewTaskTitle(`Task for ${displayHomeowner.name}`);
-                        setNewTaskAssignee(currentUser.id);
-                        setNewTaskNotes('');
-                        setSelectedClaimIds([]);
-                        setShowNewTaskModal(true);
-                        console.log('showNewTaskModal should now be true');
-                      }}
-                      variant="filled"
-                      icon={<CheckSquare className="h-4 w-4" />}
-                      className="!h-9 !px-4"
-                    >
-                      New Task
-                    </Button>
-                    <Button 
-                      onClick={() => {
-                        // Open new message modal and switch to messages tab
-                        setShowNewMessageModal(true);
-                        setCurrentTab('MESSAGES');
-                      }}
-                      variant="filled" 
-                      icon={<Mail className="h-4 w-4" />}
-                      className="!h-9 !px-4"
-                    >
-                      New Message
-                    </Button>
                   </>
                 )}
               </div>
@@ -2917,18 +2878,22 @@ const Dashboard: React.FC<DashboardProps> = ({
               );
             })()}
           </div>
-        </div>
+          </div>
+          </div>
+          {/* END LEFT SIDEBAR */}
 
-        {/* Navigation Tabs (Context Specific) */}
-        <div 
-          ref={tabsContainerRef}
-          className="flex gap-2 max-w-7xl mx-auto overflow-x-auto scrollbar-hide"
-          style={{
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch'
-          } as React.CSSProperties}
-        >
+          {/* RIGHT CONTENT AREA */}
+          <div className="flex-1 min-w-0 space-y-6">
+            {/* Navigation Tabs at Top */}
+            <div 
+              ref={tabsContainerRef}
+              className="flex gap-2 overflow-x-auto scrollbar-hide"
+              style={{
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+                WebkitOverflowScrolling: 'touch'
+              } as React.CSSProperties}
+            >
            {/* HOMEOWNER-SPECIFIC TABS */}
            <button 
               data-tab="CLAIMS"
@@ -3527,6 +3492,10 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
 
         </AnimatePresence>
+        </div>
+        {/* END RIGHT CONTENT AREA */}
+        </div>
+        {/* END MAIN LAYOUT CONTAINER */}
         </div>
 
         {/* DOCUMENTS MODAL - Removed, now using tab */}
