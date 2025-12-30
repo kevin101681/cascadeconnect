@@ -6,22 +6,20 @@ import html2canvas from 'html2canvas';
 const HomeownerManual: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const [sectionHeight, setSectionHeight] = useState<number | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Define pages based on logical sections in the manual
+  // Define pages based on actual HTML structure
+  // Structure: .cover, then .page elements in order
   const pages = [
     { id: 1, title: 'Cover & Quick Reference', selector: '.cover' },
-    { id: 2, title: 'Understanding Your Warranty Team', selector: '.page:nth-of-type(1)' },
-    { id: 3, title: 'Emergency: No Heat', selector: '.page:nth-of-type(2)' },
-    { id: 4, title: 'Emergency: Plumbing Leaks', selector: '.page:nth-of-type(3)' },
-    { id: 5, title: 'Glossary & Contacts', selector: '.page:nth-of-type(4)' },
-    { id: 6, title: 'Notes', selector: '.page:nth-of-type(5)' },
+    { id: 2, title: 'Understanding Your Warranty Team', selector: 'body > .page:nth-of-type(2)' }, // Second .page div in body
+    { id: 3, title: 'Emergency: No Heat', selector: 'body > .page:nth-of-type(3)' },
+    { id: 4, title: 'Emergency: Plumbing Leaks', selector: 'body > .page:nth-of-type(4)' },
+    { id: 5, title: 'Glossary & Contacts', selector: 'body > .page:nth-of-type(5)' },
+    { id: 6, title: 'Notes', selector: 'body > .page:nth-of-type(6)' },
   ];
 
-  const totalPages = pages.length;
-
-  // Scroll to the correct section when page changes and measure height
+  // Scroll to the correct section when page changes
   useEffect(() => {
     const scrollToSection = () => {
       const iframe = iframeRef.current;
@@ -37,12 +35,9 @@ const HomeownerManual: React.FC = () => {
       if (element) {
         // Scroll to element
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        
-        // Measure and set height
-        setTimeout(() => {
-          const height = element.scrollHeight;
-          setSectionHeight(Math.min(height + 100, window.innerHeight - 150));
-        }, 100);
+        console.log(`Scrolled to section ${currentPage}: ${page.title}`, element);
+      } else {
+        console.error(`Element not found for selector: ${page.selector}`);
       }
     };
 
@@ -51,10 +46,11 @@ const HomeownerManual: React.FC = () => {
 
     // If iframe is already loaded, scroll immediately
     if (iframe.contentDocument?.readyState === 'complete') {
-      scrollToSection();
+      // Small delay to ensure rendering is complete
+      setTimeout(scrollToSection, 50);
     } else {
       // Otherwise wait for load
-      const handleLoad = () => scrollToSection();
+      const handleLoad = () => setTimeout(scrollToSection, 50);
       iframe.addEventListener('load', handleLoad);
       return () => iframe.removeEventListener('load', handleLoad);
     }
@@ -133,7 +129,7 @@ const HomeownerManual: React.FC = () => {
   };
 
   return (
-    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden flex flex-col">
+    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden flex flex-col" style={{ height: 'calc(100vh - 180px)' }}>
       {/* Header with Download Button */}
       <div className="px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
         <div className="flex items-center justify-between">
@@ -187,15 +183,8 @@ const HomeownerManual: React.FC = () => {
         </div>
       </div>
       
-      {/* Manual Content - Dynamic Height */}
-      <div 
-        className="flex-1 overflow-hidden"
-        style={{ 
-          height: sectionHeight ? `${sectionHeight}px` : 'calc(100vh - 280px)',
-          minHeight: '400px',
-          maxHeight: 'calc(100vh - 200px)'
-        }}
-      >
+      {/* Manual Content - Full Height */}
+      <div className="flex-1 overflow-hidden">
         <iframe 
           ref={iframeRef}
           src="/complete_homeowner_manual.html" 
