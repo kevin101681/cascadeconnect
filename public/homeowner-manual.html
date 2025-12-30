@@ -54,11 +54,11 @@
         <!-- Main Container -->
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-200">
             <!-- Header -->
-            <div class="px-6 py-4 border-b border-gray-200" style="background-color: #3C6B80;">
+            <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
                 <div class="flex items-center justify-between mb-4">
                     <div class="flex-1">
-                        <h1 class="text-2xl font-semibold text-white">Homeowner Manual</h1>
-                        <p class="text-sm text-white/80 mt-1" id="sectionTitle">Cover & Quick Reference</p>
+                        <h1 class="text-2xl font-semibold text-gray-800">Homeowner Manual</h1>
+                        <p class="text-sm text-gray-600 mt-1" id="sectionTitle">Cover & Quick Reference</p>
                     </div>
                     
                     <!-- Logo -->
@@ -74,7 +74,8 @@
                     <button
                         id="downloadBtn"
                         onclick="downloadPDF()"
-                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-white bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium shadow-md hover:shadow-lg border border-white/30"
+                        class="flex items-center gap-2 px-4 py-2 rounded-lg text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm font-medium shadow-md hover:shadow-lg"
+                        style="background-color: #3C6B80;"
                         title="Download as PDF"
                     >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -86,22 +87,22 @@
 
                 <!-- Section Navigation Tabs -->
                 <div class="flex items-center gap-2 flex-wrap">
-                    <button onclick="navigateToSection(1)" class="tab-button active px-3 py-1.5 rounded-lg text-xs font-medium bg-white" style="color: #3C6B80;" data-section="1">
+                    <button onclick="navigateToSection(1)" class="tab-button active px-3 py-1.5 rounded-lg text-xs font-medium text-white" style="background-color: #3C6B80;" data-section="1">
                         Cover & Quick Reference
                     </button>
-                    <button onclick="navigateToSection(2)" class="tab-button px-3 py-1.5 rounded-lg text-xs font-medium bg-white/20 text-white/90 hover:bg-white/30 border border-white/30" data-section="2">
+                    <button onclick="navigateToSection(2)" class="tab-button px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-section="2">
                         Understanding Your Warranty Team
                     </button>
-                    <button onclick="navigateToSection(3)" class="tab-button px-3 py-1.5 rounded-lg text-xs font-medium bg-white/20 text-white/90 hover:bg-white/30 border border-white/30" data-section="3">
+                    <button onclick="navigateToSection(3)" class="tab-button px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-section="3">
                         Emergency: No Heat
                     </button>
-                    <button onclick="navigateToSection(4)" class="tab-button px-3 py-1.5 rounded-lg text-xs font-medium bg-white/20 text-white/90 hover:bg-white/30 border border-white/30" data-section="4">
+                    <button onclick="navigateToSection(4)" class="tab-button px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-section="4">
                         Emergency: Plumbing Leaks
                     </button>
-                    <button onclick="navigateToSection(5)" class="tab-button px-3 py-1.5 rounded-lg text-xs font-medium bg-white/20 text-white/90 hover:bg-white/30 border border-white/30" data-section="5">
+                    <button onclick="navigateToSection(5)" class="tab-button px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-section="5">
                         Glossary & Contacts
                     </button>
-                    <button onclick="navigateToSection(6)" class="tab-button px-3 py-1.5 rounded-lg text-xs font-medium bg-white/20 text-white/90 hover:bg-white/30 border border-white/30" data-section="6">
+                    <button onclick="navigateToSection(6)" class="tab-button px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200" data-section="6">
                         Notes
                     </button>
                 </div>
@@ -142,15 +143,15 @@
             document.querySelectorAll('.tab-button').forEach(btn => {
                 const btnSection = parseInt(btn.getAttribute('data-section'));
                 if (btnSection === sectionId) {
-                    btn.classList.remove('bg-white/20', 'text-white/90', 'hover:bg-white/30', 'border', 'border-white/30');
-                    btn.classList.add('active', 'bg-white');
-                    btn.style.color = '#3C6B80';
-                    btn.style.backgroundColor = 'white';
+                    btn.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+                    btn.classList.add('active');
+                    btn.style.backgroundColor = '#3C6B80';
+                    btn.style.color = 'white';
                 } else {
-                    btn.classList.remove('active', 'bg-white');
-                    btn.classList.add('bg-white/20', 'text-white/90', 'hover:bg-white/30', 'border', 'border-white/30');
-                    btn.style.color = '';
+                    btn.classList.remove('active');
+                    btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
                     btn.style.backgroundColor = '';
+                    btn.style.color = '';
                 }
             });
 
