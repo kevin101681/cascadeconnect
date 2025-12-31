@@ -5545,10 +5545,14 @@ const Dashboard: React.FC<DashboardProps> = ({
             <button 
               className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full hover:bg-surface-container-highest dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
               onClick={() => {
-                // Focus the search input in the Layout header
-                const searchInput = document.querySelector<HTMLInputElement>('input[type="text"]');
-                if (searchInput) {
-                  searchInput.focus();
+                // Focus the search input - try homeowner card search first, then header search
+                const homeownerSearch = document.querySelector<HTMLInputElement>('input[placeholder="Search homeowners..."]');
+                const headerSearch = document.querySelector<HTMLInputElement>('input[type="text"]');
+                const targetInput = homeownerSearch || headerSearch;
+                if (targetInput) {
+                  targetInput.focus();
+                  // Scroll into view if needed
+                  targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
               }}
               title="Click to search for a homeowner"
@@ -5581,10 +5585,14 @@ const Dashboard: React.FC<DashboardProps> = ({
           <button 
             className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full hover:bg-surface-container-highest dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
             onClick={() => {
-              // Focus the search input in the Layout header
-              const searchInput = document.querySelector<HTMLInputElement>('input[type="text"]');
-              if (searchInput) {
-                searchInput.focus();
+              // Focus the search input - try homeowner card search first, then header search
+              const homeownerSearch = document.querySelector<HTMLInputElement>('input[placeholder="Search homeowners..."]');
+              const headerSearch = document.querySelector<HTMLInputElement>('input[type="text"]');
+              const targetInput = homeownerSearch || headerSearch;
+              if (targetInput) {
+                targetInput.focus();
+                // Scroll into view if needed
+                targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
               }
             }}
             title="Click to search for a homeowner"
@@ -5611,10 +5619,14 @@ const Dashboard: React.FC<DashboardProps> = ({
         <button 
           className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full hover:bg-surface-container-highest dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
           onClick={() => {
-            // Focus the search input in the Layout header
-            const searchInput = document.querySelector<HTMLInputElement>('input[type="text"]');
-            if (searchInput) {
-              searchInput.focus();
+            // Focus the search input - try homeowner card search first, then header search
+            const homeownerSearch = document.querySelector<HTMLInputElement>('input[placeholder="Search homeowners..."]');
+            const headerSearch = document.querySelector<HTMLInputElement>('input[type="text"]');
+            const targetInput = homeownerSearch || headerSearch;
+            if (targetInput) {
+              targetInput.focus();
+              // Scroll into view if needed
+              targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
           }}
           title="Click to search for a homeowner"
