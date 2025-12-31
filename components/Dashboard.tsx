@@ -3214,68 +3214,70 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Card Content - Hidden when collapsed */}
             <div className={`flex flex-col p-6 transition-all duration-300 ${isHomeownerCardCollapsed ? 'opacity-0 invisible absolute inset-0' : 'opacity-100 visible relative'}`}>
              
-             {/* Two-Line Layout with Even Spacing - Left Aligned */}
-             <div className="flex flex-col gap-3 mb-4 w-full">
-                {/* Line 1: Name, Address - Even Spacing */}
-                <div className="flex items-center justify-start gap-4 flex-wrap">
-                  {/* Name with Edit Button on Left */}
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {/* Edit Button - Admin Only - Left of Name */}
-                    {isAdmin && !isHomeownerView && (
-                      <button 
-                         onClick={handleOpenEditHomeowner}
-                         className="p-1.5 text-surface-outline-variant dark:text-gray-400 hover:text-primary bg-transparent hover:bg-primary/10 rounded-full transition-colors flex-shrink-0"
-                         title="Edit Homeowner Info"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </button>
-                    )}
-                    <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 truncate">{displayHomeowner.name}</h2>
-                  </div>
-                  
-                  {/* Address */}
-                  <a 
-                    href={`https://maps.google.com/?q=${encodeURIComponent(displayHomeowner.address)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1.5 text-surface-on-variant dark:text-gray-400 hover:text-primary transition-colors truncate flex-shrink-0"
-                  >
-                    <MapPin className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                    <span className="truncate">{displayHomeowner.address}</span>
-                  </a>
+             {/* Vertical Layout - Left Aligned */}
+             <div className="flex flex-col gap-2 mb-4 w-full">
+                {/* Line 1: Name with Edit Button */}
+                <div className="flex items-center gap-2">
+                  {/* Edit Button - Admin Only - Left of Name */}
+                  {isAdmin && !isHomeownerView && (
+                    <button 
+                       onClick={handleOpenEditHomeowner}
+                       className="p-1.5 text-surface-outline-variant dark:text-gray-400 hover:text-primary bg-transparent hover:bg-primary/10 rounded-full transition-colors flex-shrink-0"
+                       title="Edit Homeowner Info"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                  )}
+                  <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 truncate">{displayHomeowner.name}</h2>
+                </div>
+                
+                {/* Line 2: Street Address */}
+                <a 
+                  href={`https://maps.google.com/?q=${encodeURIComponent(displayHomeowner.address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-400 hover:text-primary transition-colors"
+                >
+                  <MapPin className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
+                  <span>{displayHomeowner.street}</span>
+                </a>
+                
+                {/* Line 3: City, State ZIP */}
+                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 pl-5">
+                  <span>{displayHomeowner.city}, {displayHomeowner.state} {displayHomeowner.zip}</span>
                 </div>
 
-                {/* Line 2: Builder, Project, Closing Date, Phone, Email - Even Spacing */}
-                <div className="flex items-center justify-start gap-4 flex-wrap">
+                {/* Line 4: Builder and Project */}
+                <div className="flex items-center gap-4 flex-wrap text-sm">
                   {/* Builder */}
-                  <span className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 flex-shrink-0">
+                  <span className="flex items-center gap-1.5 text-surface-on-variant dark:text-gray-300">
                     <Building2 className="h-3.5 w-3.5" />
                     {displayHomeowner.builder}
                   </span>
                   
                   {/* Project */}
-                  <div className="flex items-center gap-1.5 text-sm flex-shrink-0">
-                     <Home className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                     <span className="text-surface-on-variant dark:text-gray-300 truncate">{displayHomeowner.jobName || 'N/A'}</span>
+                  <div className="flex items-center gap-1.5">
+                     <Home className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
+                     <span className="text-surface-on-variant dark:text-gray-300">{displayHomeowner.jobName || 'N/A'}</span>
                   </div>
-                  
-                  {/* Closing Date */}
-                  <span className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 flex-shrink-0">
-                     <Clock className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
-                     Closing: {displayHomeowner.closingDate ? new Date(displayHomeowner.closingDate).toLocaleDateString() : 'N/A'}
-                  </span>
-                  
-                  {/* Phone */}
-                  <a href={`tel:${displayHomeowner.phone}`} className="flex items-center gap-1.5 hover:text-primary transition-colors flex-shrink-0 text-sm text-surface-on-variant dark:text-gray-300">
-                    <Phone className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                    <span className="whitespace-nowrap">{displayHomeowner.phone}</span>
-                  </a>
-                  
-                  {/* Email */}
-                  <div className="flex items-center gap-1.5 min-w-0 flex-shrink-0 text-sm text-surface-on-variant dark:text-gray-300">
-                    <Mail className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                    <a href={`mailto:${displayHomeowner.email}`} className="hover:text-primary transition-colors truncate min-w-0">{displayHomeowner.email}</a>
-                  </div>
+                </div>
+                
+                {/* Line 5: Closing Date */}
+                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
+                   <Clock className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
+                   <span>Closing: {displayHomeowner.closingDate ? new Date(displayHomeowner.closingDate).toLocaleDateString() : 'N/A'}</span>
+                </div>
+                
+                {/* Line 6: Phone */}
+                <a href={`tel:${displayHomeowner.phone}`} className="flex items-center gap-1.5 hover:text-primary transition-colors text-sm text-surface-on-variant dark:text-gray-300">
+                  <Phone className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
+                  <span>{displayHomeowner.phone}</span>
+                </a>
+                
+                {/* Line 7: Email */}
+                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
+                  <Mail className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
+                  <a href={`mailto:${displayHomeowner.email}`} className="hover:text-primary transition-colors truncate">{displayHomeowner.email}</a>
                 </div>
              </div>
 
