@@ -561,7 +561,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
         doc.setFont(undefined, 'bold');
         doc.text("Address:", 14, 62);
         doc.setFont(undefined, 'normal');
-        doc.text(invoice.projectDetails, 40, 62);
+        doc.text(invoice.projectDetails, 32, 62); // Reduced from 40 to 32 to bring closer
     }
 
     // Table Header with Rounded Corners (Pill style)
