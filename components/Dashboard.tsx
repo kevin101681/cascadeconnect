@@ -3192,19 +3192,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                       )}
                     </div>
                     
-                    {/* Collapse Button */}
-                    <button
-                      onClick={() => setIsHomeownerCardCollapsed(true)}
-                      className="hidden lg:flex items-center justify-center w-full mt-2 p-1 hover:bg-surface-container/50 dark:hover:bg-gray-700/50 rounded transition-all"
-                      title="Collapse homeowner info"
-                    >
-                      <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-500" />
-                    </button>
                   </div>
                 )}
                 
-            {/* Card Content */}
-            <div className="flex flex-col p-6">
+            {/* Card Content - Clickable to collapse */}
+            <div 
+              className="flex flex-col p-6 cursor-pointer"
+              onClick={() => setIsHomeownerCardCollapsed(true)}
+              title="Click to collapse"
+            >
              
              {/* Vertical Layout - Left Aligned */}
              <div className="flex flex-col gap-2 mb-4 w-full">
@@ -3214,7 +3210,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   {/* Edit Button - Admin Only - Right of Name */}
                   {isAdmin && !isHomeownerView && (
                     <button 
-                       onClick={handleOpenEditHomeowner}
+                       onClick={(e) => { e.stopPropagation(); handleOpenEditHomeowner(); }}
                        className="p-1.5 text-surface-outline-variant dark:text-gray-400 hover:text-primary bg-transparent hover:bg-primary/10 rounded-full transition-colors flex-shrink-0"
                        title="Edit Homeowner Info"
                     >
@@ -3228,6 +3224,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   href={`https://maps.google.com/?q=${encodeURIComponent(displayHomeowner.address)}`}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
                   className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-400 hover:text-primary transition-colors"
                 >
                   <MapPin className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
@@ -3261,7 +3258,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
                 
                 {/* Line 6: Phone */}
-                <a href={`tel:${displayHomeowner.phone}`} className="flex items-center gap-1.5 hover:text-primary transition-colors text-sm text-surface-on-variant dark:text-gray-300">
+                <a 
+                  href={`tel:${displayHomeowner.phone}`} 
+                  onClick={(e) => e.stopPropagation()}
+                  className="flex items-center gap-1.5 hover:text-primary transition-colors text-sm text-surface-on-variant dark:text-gray-300"
+                >
                   <Phone className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
                   <span>{displayHomeowner.phone}</span>
                 </a>
@@ -3269,12 +3270,21 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {/* Line 7: Email */}
                 <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
                   <Mail className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
-                  <a href={`mailto:${displayHomeowner.email}`} className="hover:text-primary transition-colors truncate">{displayHomeowner.email}</a>
+                  <a 
+                    href={`mailto:${displayHomeowner.email}`} 
+                    onClick={(e) => e.stopPropagation()}
+                    className="hover:text-primary transition-colors truncate"
+                  >
+                    {displayHomeowner.email}
+                  </a>
                 </div>
              </div>
 
              {/* Actions Positioned Left */}
-             <div className="mt-4 pt-4 border-t border-surface-outline-variant/50 dark:border-gray-700/50 flex items-center justify-start gap-2 flex-wrap">
+             <div 
+               className="mt-4 pt-4 border-t border-surface-outline-variant/50 dark:border-gray-700/50 flex items-center justify-start gap-2 flex-wrap"
+               onClick={(e) => e.stopPropagation()}
+             >
                 {/* Buttons removed from homeowner view - now in tabs */}
                 {!isHomeownerView && (
                   <>
