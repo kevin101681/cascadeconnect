@@ -3214,10 +3214,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Card Content - Hidden when collapsed */}
             <div className={`flex flex-col p-6 transition-all duration-300 ${isHomeownerCardCollapsed ? 'opacity-0 invisible absolute inset-0' : 'opacity-100 visible relative'}`}>
              
-             {/* Two-Line Layout with Even Spacing - Center Aligned */}
+             {/* Two-Line Layout with Even Spacing - Left Aligned */}
              <div className="flex flex-col gap-3 mb-4 w-full">
                 {/* Line 1: Name, Address - Even Spacing */}
-                <div className="flex items-center justify-center gap-4 flex-wrap">
+                <div className="flex items-center justify-start gap-4 flex-wrap">
                   {/* Name with Edit Button on Left */}
                   <div className="flex items-center gap-2 flex-shrink-0">
                     {/* Edit Button - Admin Only - Left of Name */}
@@ -3246,7 +3246,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
 
                 {/* Line 2: Builder, Project, Closing Date, Phone, Email - Even Spacing */}
-                <div className="flex items-center justify-center gap-4 flex-wrap">
+                <div className="flex items-center justify-start gap-4 flex-wrap">
                   {/* Builder */}
                   <span className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 flex-shrink-0">
                     <Building2 className="h-3.5 w-3.5" />
@@ -3279,8 +3279,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
              </div>
 
-             {/* Actions Positioned Centered */}
-             <div className="mt-4 pt-4 border-t border-surface-outline-variant/50 dark:border-gray-700/50 flex items-center justify-center gap-2 flex-wrap">
+             {/* Actions Positioned Left */}
+             <div className="mt-4 pt-4 border-t border-surface-outline-variant/50 dark:border-gray-700/50 flex items-center justify-start gap-2 flex-wrap">
                 {/* Buttons removed from homeowner view - now in tabs */}
                 {!isHomeownerView && (
                   <>
