@@ -3112,7 +3112,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Main Layout Container - Sidebar + Content */}
         <div className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 animate-in fade-in slide-in-from-top-4">
           {/* LEFT SIDEBAR - Search + Homeowner Info Card */}
-          <div className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 ${isHomeownerCardCollapsed ? 'w-full lg:w-16 space-y-2' : 'w-full lg:w-80 space-y-4'}`}>
+          <div className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 ${isHomeownerCardCollapsed ? 'w-full lg:w-auto space-y-2' : 'w-full lg:w-80 space-y-4'}`}>
             {/* Homeowner Search Bar - Admin & Builder Only - Always Visible (Static) */}
             {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
               <div className={`relative transition-all duration-300 w-full`}>
@@ -3189,30 +3189,21 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div 
               ref={homeownerCardContainerRef}
               key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
-              className={`bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 transition-all duration-300 ease-in-out overflow-hidden relative ${isHomeownerCardCollapsed ? 'cursor-pointer hover:bg-primary/20 dark:hover:bg-gray-700' : ''}`}
-              onClick={() => {
-                if (isHomeownerCardCollapsed) {
-                  setIsHomeownerCardCollapsed(false);
-                }
-              }}
+              className={`bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 transition-all duration-300 ease-in-out overflow-hidden relative ${isHomeownerCardCollapsed ? 'hidden' : ''}`}
             >
-              {/* Collapse/Expand Button - Hidden on mobile, visible on desktop - Subtle design */}
+              {/* Collapse Button - Hidden on mobile, visible on desktop - Subtle design */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  setIsHomeownerCardCollapsed(!isHomeownerCardCollapsed);
+                  setIsHomeownerCardCollapsed(true);
                 }}
-                className={`hidden lg:flex absolute top-16 ${isHomeownerCardCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-4'} z-10 p-1 hover:bg-surface-container/50 dark:hover:bg-gray-700/50 rounded transition-all items-center justify-center`}
-                title={isHomeownerCardCollapsed ? "Expand homeowner info" : "Collapse homeowner info"}
+                className="hidden lg:flex absolute top-16 right-4 z-10 p-1 hover:bg-surface-container/50 dark:hover:bg-gray-700/50 rounded transition-all items-center justify-center"
+                title="Collapse homeowner info"
               >
-                {isHomeownerCardCollapsed ? (
-                  <ChevronRight className="h-4 w-4 text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-300" />
-                ) : (
-                  <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-300" />
-                )}
+                <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-300" />
               </button>
-            {/* Card Content - Hidden when collapsed */}
-            <div className={`flex flex-col p-6 transition-all duration-300 ${isHomeownerCardCollapsed ? 'opacity-0 invisible absolute inset-0' : 'opacity-100 visible relative'}`}>
+            {/* Card Content */}
+            <div className="flex flex-col p-6">
              
              {/* Vertical Layout - Left Aligned */}
              <div className="flex flex-col gap-2 mb-4 w-full">
@@ -3370,7 +3361,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {/* Next Appointment Card - Below Homeowner Info within sidebar */}
-            <div className={`mt-4 bg-primary/5 dark:bg-gray-700/50 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-600 overflow-hidden transition-all duration-300 ${isHomeownerCardCollapsed ? 'opacity-0 invisible absolute' : 'opacity-100 visible relative'}`}>
+            <div className="mt-4 bg-primary/5 dark:bg-gray-700/50 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-600 overflow-hidden">
               <div className="p-4 bg-surface-container/30 dark:bg-gray-700/30 border-b border-surface-outline-variant/50 dark:border-gray-600">
                 <h3 className="font-medium text-sm flex items-center text-secondary-on-container dark:text-gray-100">
                   <Calendar className="h-4 w-4 mr-2" />
@@ -3446,19 +3437,19 @@ const Dashboard: React.FC<DashboardProps> = ({
               })()}
             </div>
 
-            {/* Collapsed State - Vertical Text/Indicator */}
-            {isHomeownerCardCollapsed && (
-              <div className="hidden lg:flex items-center justify-center py-6 h-full absolute inset-0">
-                <div 
-                  className="text-sm font-medium text-surface-on dark:text-gray-300 whitespace-nowrap select-none pointer-events-none"
-                  style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
-                >
-                  {displayHomeowner.name}
-                </div>
-              </div>
-            )}
             </div>
-            {/* End Homeowner Info Card Container */}
+            </div>
+            
+            {/* Collapsed State - Show expand button */}
+            {isHomeownerCardCollapsed && (
+              <button
+                onClick={() => setIsHomeownerCardCollapsed(false)}
+                className="hidden lg:flex items-center justify-center p-2 hover:bg-surface-container/50 dark:hover:bg-gray-700/50 rounded transition-all"
+                title="Expand homeowner info"
+              >
+                <ChevronRight className="h-4 w-4 text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-300" />
+              </button>
+            )}
           </div>
           {/* END LEFT SIDEBAR */}
 
