@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * VAPI WEBHOOK TEST SCRIPT (JavaScript)
+ * VAPI WEBHOOK TEST SCRIPT (JavaScript ES Modules)
  * Date: December 31, 2025
  * Purpose: Test the new Vapi "Structured Output" payload format (Late-2025 update)
  * 
@@ -11,7 +11,16 @@
  * artifact.structuredOutputs location (as opposed to the old analysis.structuredData).
  */
 
-require('dotenv').config();
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load environment variables from .env file
+dotenv.config({ path: resolve(__dirname, '../.env') });
 
 // ==========================================
 // CONFIGURATION
