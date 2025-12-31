@@ -14,7 +14,7 @@ import TasksSheet from './components/TasksSheet';
 import MessageSummaryModal, { ClaimMessage, TaskMessage } from './components/MessageSummaryModal';
 import InvoicesModal from './components/InvoicesModal';
 import HomeownersList from './components/HomeownersList';
-import { X, Info, CheckCircle } from 'lucide-react';
+import { X, Info, CheckCircle, User } from 'lucide-react';
 import EmailHistory from './components/EmailHistory';
 import BackendDashboard from './components/BackendDashboard';
 import AIIntakeDashboard from './components/AIIntakeDashboard';
