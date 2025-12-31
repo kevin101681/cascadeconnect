@@ -3189,7 +3189,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div 
               ref={homeownerCardContainerRef}
               key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
-              className={`bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-[64px] transition-all duration-300 ease-in-out overflow-hidden relative ${isHomeownerCardCollapsed ? 'cursor-pointer hover:bg-primary/20 dark:hover:bg-gray-700' : ''}`}
+              className={`bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 transition-all duration-300 ease-in-out overflow-hidden relative ${isHomeownerCardCollapsed ? 'cursor-pointer hover:bg-primary/20 dark:hover:bg-gray-700' : ''}`}
               onClick={() => {
                 if (isHomeownerCardCollapsed) {
                   setIsHomeownerCardCollapsed(false);
@@ -3212,16 +3212,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                 )}
               </button>
             {/* Card Content - Hidden when collapsed */}
-            <div className={`flex flex-col p-6 transition-all duration-300 ${isHomeownerCardCollapsed ? 'opacity-0 w-0 p-0 overflow-hidden' : 'opacity-100'}`}>
+            <div className={`flex flex-col p-6 transition-all duration-300 ${isHomeownerCardCollapsed ? 'opacity-0 invisible absolute inset-0' : 'opacity-100 visible relative'}`}>
              
              {/* Two-Line Layout with Even Spacing - Center Aligned */}
              <div className="flex flex-col gap-3 mb-4 w-full">
                 {/* Line 1: Name, Address - Even Spacing */}
                 <div className="flex items-center justify-center gap-4 flex-wrap">
-                  {/* Name */}
+                  {/* Name with Edit Button on Left */}
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 truncate">{displayHomeowner.name}</h2>
-                    {/* Edit Button - Admin Only */}
+                    {/* Edit Button - Admin Only - Left of Name */}
                     {isAdmin && !isHomeownerView && (
                       <button 
                          onClick={handleOpenEditHomeowner}
@@ -3231,6 +3230,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <Edit2 className="h-4 w-4" />
                       </button>
                     )}
+                    <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 truncate">{displayHomeowner.name}</h2>
                   </div>
                   
                   {/* Address */}
@@ -3368,7 +3368,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {/* Next Appointment Card - Below Homeowner Info within sidebar */}
-            <div className={`mt-4 bg-primary/5 dark:bg-gray-700/50 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-600 overflow-hidden transition-all duration-300 ${isHomeownerCardCollapsed ? 'opacity-0 h-0 mt-0 overflow-hidden' : 'opacity-100'}`}>
+            <div className={`mt-4 bg-primary/5 dark:bg-gray-700/50 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-600 overflow-hidden transition-all duration-300 ${isHomeownerCardCollapsed ? 'opacity-0 invisible absolute' : 'opacity-100 visible relative'}`}>
               <div className="p-4 bg-surface-container/30 dark:bg-gray-700/30 border-b border-surface-outline-variant/50 dark:border-gray-600">
                 <h3 className="font-medium text-sm flex items-center text-secondary-on-container dark:text-gray-100">
                   <Calendar className="h-4 w-4 mr-2" />
@@ -3446,7 +3446,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             {/* Collapsed State - Vertical Text/Indicator */}
             {isHomeownerCardCollapsed && (
-              <div className="hidden lg:flex items-center justify-center py-12 h-full min-h-[400px]">
+              <div className="hidden lg:flex items-center justify-center py-6 h-full absolute inset-0">
                 <div 
                   className="text-sm font-medium text-surface-on dark:text-gray-300 whitespace-nowrap select-none pointer-events-none"
                   style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
