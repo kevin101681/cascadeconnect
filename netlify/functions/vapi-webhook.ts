@@ -112,6 +112,9 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       };
     }
 
+    // DEBUG: Log the FULL payload to see exactly what Vapi is sending
+    console.log('📦 FULL VAPI PAYLOAD:', JSON.stringify(body, null, 2));
+
     // ==========================================
     // STEP 1: EXTRACTION
     // ==========================================
