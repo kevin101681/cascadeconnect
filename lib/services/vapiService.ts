@@ -236,9 +236,17 @@ export function extractStructuredData(payload: VapiWebhookPayload): VapiStructur
         console.log(`🔍 Checking value ${index}:`, typeof val, val ? Object.keys(val) : 'null/undefined');
       });
       
+      // Define interface for Vapi's wrapped structure
+      interface VapiWrappedData {
+        name?: string;
+        result?: Record<string, any>;
+        compliancePlan?: any;
+        [key: string]: any;
+      }
+      
       // Find the first value that looks like our structured data
       // Check both direct properties AND nested under 'result' key (Vapi 2025 format)
-      const unwrappedData = values.find((val: any) => {
+      const unwrappedData = values.find((val: any): val is VapiWrappedData | Record<string, any> => {
         if (!val || typeof val !== 'object') {
           console.log(`🔍 Value is not an object, skipping`);
           return false;
@@ -346,16 +354,22 @@ export function extractCallData(payload: VapiWebhookPayload): Partial<ExtractedC
     structuredData?.intent ||
     null;
 
-  const isUrgent = 
-    structuredData?.isUrgent === true || 
-    structuredData?.is_urgent === true ||
-    structuredData?.urgent === true ||
-    structuredData?.isUrgent === 'true' ||  // Handle string "true"
-    structuredData?.isUrgent === 'TRUE' ||  // Handle string "TRUE"
-    structuredData?.is_urgent === 'true' ||
-    structuredData?.is_urgent === 'TRUE' ||
-    callIntent === 'urgent' ||
-    false;
+  // Parse isUrgent - handle both boolean and string values
+  let isUrgent = false;
+  const urgentValue = structuredData?.isUrgent ?? structuredData?.is_urgent ?? structuredData?.urgent;
+  
+  if (typeof urgentValue === 'boolean') {
+    isUrgent = urgentValue;
+  } else if (urgentValue !== null && urgentValue !== undefined) {
+    // Handle string values like "TRUE", "FALSE", "true", "false"
+    const stringValue = String(urgentValue).toLowerCase();
+    isUrgent = stringValue === 'true';
+  }
+  
+  // Override with callIntent if present
+  if (callIntent === 'urgent') {
+    isUrgent = true;
+  }
 
   const transcript = getProperty(callData, 'transcript', 'transcription') || getProperty(message, 'transcript') || null;
   const recordingUrl = getProperty(callData, 'recordingUrl', 'recording_url') || null;
