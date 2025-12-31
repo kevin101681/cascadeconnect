@@ -9,7 +9,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor, Call } from '../types';
 import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User } from 'lucide-react';
 import { useTaskStore } from '../stores/useTaskStore';
 import { calls } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -547,6 +547,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Claims filter state
   const [claimsFilter, setClaimsFilter] = useState<'All' | 'Open' | 'Closed'>('Open');
+  
+  // Tasks filter state
+  const [tasksFilter, setTasksFilter] = useState<'all' | 'open' | 'closed'>('open');
   
   // Invite Modal State
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -1342,6 +1345,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // Animation state for homeowner card
   const [homeownerCardKey, setHomeownerCardKey] = useState(0);
+  
+  // Homeowner card collapse state
+  const [isHomeownerCardCollapsed, setIsHomeownerCardCollapsed] = useState(false);
   useEffect(() => {
     if (effectiveHomeowner) {
       setHomeownerCardKey(prev => prev + 1);
@@ -1855,8 +1861,244 @@ const Dashboard: React.FC<DashboardProps> = ({
       : 'No claims found.';
 
     return (
-      <div>
-        {renderClaimGroup('Warranty Claims', filteredClaims, emptyMsg, false, isHomeownerView, claimsFilter, setClaimsFilter, () => handleExportToExcel(claimsList), claimsList, isAdmin)}
+      <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden">
+        {/* Left Column: Claims List */}
+        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
+          <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-auto shrink-0 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none">
+            <div className="flex items-center w-full md:w-auto">
+              <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                {filteredClaims.length > 0 && (
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                    {filteredClaims.length}
+                  </span>
+                )}
+                Warranty Claims
+              </h3>
+            </div>
+            {/* New Claim button */}
+            <div className="flex items-center justify-end md:justify-end">
+              {isHomeownerView ? (
+                <Button
+                  variant="filled"
+                  onClick={() => onNewClaim()}
+                  icon={<Plus className="h-4 w-4" />}
+                  className="!h-9 !px-4 md:!h-8 md:!px-3 md:text-xs"
+                >
+                  Add Claim
+                </Button>
+              ) : isAdmin && (
+                <Button
+                  variant="filled"
+                  onClick={() => setShowNewClaimModal(true)}
+                  icon={<Plus className="h-4 w-4" />}
+                  className="!h-9 !px-4 md:!h-8 md:!px-3 md:text-xs"
+                >
+                  New Claim
+                </Button>
+              )}
+            </div>
+          </div>
+          
+          {/* Filter Pills */}
+          <div className="px-4 py-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setClaimsFilter('Open')}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  claimsFilter === 'Open'
+                    ? 'bg-primary text-primary-on'
+                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                }`}
+              >
+                Open
+              </button>
+              <button
+                onClick={() => setClaimsFilter('Closed')}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  claimsFilter === 'Closed'
+                    ? 'bg-primary text-primary-on'
+                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                }`}
+              >
+                Closed
+              </button>
+              <button
+                onClick={() => setClaimsFilter('All')}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  claimsFilter === 'All'
+                    ? 'bg-primary text-primary-on'
+                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                }`}
+              >
+                All
+              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => handleExportToExcel(claimsList)}
+                  className="ml-auto p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
+                  title="Export to Excel"
+                >
+                  <FileSpreadsheet className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div 
+            className="flex-1 overflow-y-auto p-4 min-h-0"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            {filteredClaims.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
+                <ClipboardList className="h-8 w-8 opacity-20 dark:opacity-40 text-surface-on dark:text-gray-400" />
+                <span className="text-sm">{emptyMsg}</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {filteredClaims.map((claim) => {
+                  const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
+                  const isCompleted = claim.status === ClaimStatus.COMPLETED;
+                  const serviceOrderMessages = claimMessages
+                    .filter(m => m.claimId === claim.id && 
+                                 m.type === 'SUBCONTRACTOR' && 
+                                 m.subject.toLowerCase().includes('service order'))
+                    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                  const serviceOrderDate = serviceOrderMessages.length > 0 ? serviceOrderMessages[0].timestamp : null;
+                  const isReviewed = claim.reviewed || false;
+                  const isSelected = selectedClaimForModal?.id === claim.id;
+                  
+                  return (
+                    <div
+                      key={claim.id}
+                      onClick={() => setSelectedClaimForModal(claim)}
+                      className={`group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer ${
+                        isSelected
+                          ? 'bg-primary-container/20 dark:bg-primary/20 border-primary ring-1 ring-primary'
+                          : isCompleted 
+                          ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75 hover:shadow-sm' 
+                          : isReviewed
+                          ? 'bg-green-50 dark:bg-green-950/20 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
+                          : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
+                      }`}
+                    >
+                      <div className="px-4 py-4">
+                        <div className="flex flex-wrap gap-2">
+                          {/* Claim # */}
+                          <span className="inline-flex items-center h-6 text-xs font-medium tracking-wide bg-primary text-primary-on px-3 rounded-full whitespace-nowrap w-fit">
+                            #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
+                          </span>
+                          {/* Status */}
+                          <div className="w-fit h-6 flex items-center"><StatusBadge status={claim.status} /></div>
+                          {/* Title */}
+                          {claim.title && (
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
+                              {claim.title}
+                            </span>
+                          )}
+                          {/* Classification */}
+                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
+                            {claim.classification}
+                          </span>
+                          {/* Homeowner Name */}
+                          {(isAdmin || isBuilder) && !effectiveHomeowner && (
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
+                              <Building2 className="h-3 w-3 flex-shrink-0" />
+                              <span>{claim.homeownerName}</span>
+                            </span>
+                          )}
+                          {/* Contractor */}
+                          {claim.contractorName ? (
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
+                              <HardHat className="h-3 w-3 flex-shrink-0" />
+                              <span>{claim.contractorName}</span>
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant/60 dark:text-gray-400 gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600 w-fit">
+                              <HardHat className="h-3 w-3 flex-shrink-0 opacity-50" />
+                              <span>No Sub</span>
+                            </span>
+                          )}
+                          {/* Date Submitted */}
+                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
+                            {new Date(claim.dateSubmitted).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Claim Detail View */}
+        <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedClaimForModal ? 'hidden md:flex' : 'flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
+          {selectedClaimForModal ? (
+            <>
+              {/* Claim Header Toolbar */}
+              <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 sticky top-0 z-10 rounded-tr-3xl">
+                <div className="flex items-center gap-4">
+                  <button 
+                    onClick={() => setSelectedClaimForModal(null)} 
+                    className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <h3 className="text-sm font-medium text-surface-on dark:text-gray-100">
+                    {selectedClaimForModal.title}
+                  </h3>
+                </div>
+                <button 
+                  onClick={() => setSelectedClaimForModal(null)}
+                  className="hidden md:block p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Scrollable Claim Editor Content */}
+              <div className="flex-1 overflow-y-auto p-4">
+                <Suspense fallback={
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                }>
+                  <ClaimInlineEditor
+                    claim={selectedClaimForModal}
+                    onUpdateClaim={(updatedClaim) => {
+                      if (onUpdateClaim) {
+                        onUpdateClaim(updatedClaim);
+                      }
+                      setSelectedClaimForModal(updatedClaim);
+                    }}
+                    contractors={contractors}
+                    currentUser={currentUser}
+                    userRole={userRole}
+                    onAddInternalNote={onAddInternalNote}
+                    claimMessages={claimMessages.filter(m => m.claimId === selectedClaimForModal.id)}
+                    onTrackClaimMessage={onTrackClaimMessage}
+                    onSendMessage={() => {
+                      if (selectedClaimForModal) {
+                        setNewMessageSubject(selectedClaimForModal.title);
+                      }
+                      setShowNewMessageModal(true);
+                    }}
+                    onCancel={() => setSelectedClaimForModal(null)}
+                    onNavigate={onNavigate}
+                  />
+                </Suspense>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-surface-on-variant dark:text-gray-400 gap-4 bg-surface-container/10 dark:bg-gray-700/10">
+              <div className="w-20 h-20 bg-surface-container dark:bg-gray-700 rounded-full flex items-center justify-center">
+                <ClipboardList className="h-10 w-10 text-surface-outline/50 dark:text-gray-500/50" />
+              </div>
+              <p className="text-sm font-medium">Select a claim to view details</p>
+            </div>
+          )}
+        </div>
       </div>
     );
   };
@@ -2013,6 +2255,222 @@ const Dashboard: React.FC<DashboardProps> = ({
       </div>
     </div>
   );
+
+  const renderTasksTab = () => {
+    // Filter tasks to show only current user's tasks
+    const userTasks = tasks.filter(t => t.assignedToId === currentUser.id);
+    
+    let filteredTasks = userTasks;
+    if (tasksFilter === 'open') {
+      filteredTasks = userTasks.filter(t => !t.isCompleted);
+    } else if (tasksFilter === 'closed') {
+      filteredTasks = userTasks.filter(t => t.isCompleted);
+    }
+
+    return (
+      <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden">
+        {/* Left Column: Tasks List */}
+        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedTaskForModal ? 'hidden md:flex' : 'flex'}`}>
+          <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-auto shrink-0 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none">
+            <div className="flex items-center w-full md:w-auto">
+              <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                {filteredTasks.length > 0 && (
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                    {filteredTasks.length}
+                  </span>
+                )}
+                My Tasks
+              </h3>
+            </div>
+            {/* Add Task button removed - will be in full TaskList if needed */}
+          </div>
+          
+          {/* Filter Pills */}
+          <div className="px-4 py-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setTasksFilter('open')}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  tasksFilter === 'open'
+                    ? 'bg-primary text-primary-on'
+                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                }`}
+              >
+                Open
+              </button>
+              <button
+                onClick={() => setTasksFilter('closed')}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  tasksFilter === 'closed'
+                    ? 'bg-primary text-primary-on'
+                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                }`}
+              >
+                Closed
+              </button>
+              <button
+                onClick={() => setTasksFilter('all')}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  tasksFilter === 'all'
+                    ? 'bg-primary text-primary-on'
+                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                }`}
+              >
+                All
+              </button>
+            </div>
+          </div>
+
+          <div 
+            className="flex-1 overflow-y-auto p-4 min-h-0"
+            style={{ WebkitOverflowScrolling: 'touch' }}
+          >
+            {filteredTasks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
+                <CheckSquare className="h-8 w-8 opacity-20 dark:opacity-40 text-surface-on dark:text-gray-400" />
+                <span className="text-sm">No tasks found.</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {filteredTasks.map((task) => {
+                  const assignee = employees.find(e => e.id === task.assignedToId);
+                  const taskClaims = task.relatedClaimIds 
+                    ? claims.filter(c => task.relatedClaimIds?.includes(c.id))
+                    : [];
+                  const isSelected = selectedTaskForModal?.id === task.id;
+                  
+                  return (
+                    <div
+                      key={task.id}
+                      onClick={() => setSelectedTaskForModal(task)}
+                      className={`group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer ${
+                        isSelected
+                          ? 'bg-primary-container/20 dark:bg-primary/20 border-primary ring-1 ring-primary'
+                          : task.isCompleted 
+                          ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75 hover:shadow-sm' 
+                          : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
+                      }`}
+                    >
+                      <div className="px-4 py-4">
+                        <div className="flex flex-wrap gap-2 items-center">
+                          {/* Checkbox */}
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onToggleTask(task.id);
+                            }}
+                            className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                              task.isCompleted 
+                                ? 'bg-primary border-primary text-white' 
+                                : 'border-surface-outline dark:border-gray-600 hover:border-primary'
+                            }`}
+                          >
+                            {task.isCompleted && <Check className="h-3 w-3" />}
+                          </button>
+
+                          {/* Title */}
+                          <span className={`inline-flex items-center h-6 text-xs font-medium px-3 rounded-full whitespace-nowrap w-fit ${
+                            task.isCompleted 
+                              ? 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 line-through' 
+                              : 'bg-primary text-primary-on'
+                          }`}>
+                            {task.title}
+                          </span>
+
+                          {/* Related Claims Count */}
+                          {taskClaims.length > 0 && (
+                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                              {taskClaims.length}
+                            </span>
+                          )}
+
+                          {/* Assignee */}
+                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit gap-1">
+                            <User className="h-3 w-3" />
+                            {assignee?.name || 'Unknown'}
+                          </span>
+
+                          {/* Date */}
+                          {task.dateAssigned && (
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(task.dateAssigned).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Task Detail View */}
+        <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedTaskForModal ? 'hidden md:flex' : 'flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
+          {selectedTaskForModal ? (
+            <>
+              {/* Task Header Toolbar */}
+              <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 sticky top-0 z-10 rounded-tr-3xl">
+                <div className="flex items-center gap-4">
+                  <button 
+                    onClick={() => setSelectedTaskForModal(null)} 
+                    className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <h3 className="text-sm font-medium text-surface-on dark:text-gray-100">
+                    {selectedTaskForModal.title}
+                  </h3>
+                </div>
+                <button 
+                  onClick={() => setSelectedTaskForModal(null)}
+                  className="hidden md:block p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Scrollable Task Detail Content */}
+              <div className="flex-1 overflow-y-auto p-6">
+                <Suspense fallback={
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                }>
+                  <TaskDetail
+                    task={selectedTaskForModal}
+                    employees={employees}
+                    currentUser={currentUser}
+                    claims={claims}
+                    homeowners={homeowners}
+                    onToggleTask={onToggleTask}
+                    onDeleteTask={onDeleteTask}
+                    onUpdateTask={onUpdateTask}
+                    onSelectClaim={(claim) => {
+                      setSelectedTaskForModal(null);
+                      setSelectedClaimForModal(claim);
+                      setCurrentTab('CLAIMS');
+                    }}
+                    taskMessages={taskMessages.filter(m => m.taskId === selectedTaskForModal.id)}
+                    onBack={() => setSelectedTaskForModal(null)}
+                  />
+                </Suspense>
+              </div>
+            </>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-surface-on-variant dark:text-gray-400 gap-4 bg-surface-container/10 dark:bg-gray-700/10">
+              <div className="w-20 h-20 bg-surface-container dark:bg-gray-700 rounded-full flex items-center justify-center">
+                <CheckSquare className="h-10 w-10 text-surface-outline/50 dark:text-gray-500/50" />
+              </div>
+              <p className="text-sm font-medium">Select a task to view details</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const renderMessagesTab = () => (
     <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden">
@@ -2311,8 +2769,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Helper function to render modals using Portal
   const renderModals = () => (
     <>
-      {/* TASK DETAIL MODAL */}
-      {selectedTaskForModal && createPortal(
+      {/* TASK DETAIL MODAL - Only show when not on TASKS tab (tasks tab has inline view) */}
+      {selectedTaskForModal && currentTab !== 'TASKS' && createPortal(
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out] overflow-y-auto"
           style={{ overscrollBehavior: 'contain' }}
@@ -2348,8 +2806,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         document.body
       )}
 
-      {/* CLAIM DETAIL MODAL */}
-      {selectedClaimForModal && onUpdateClaim && createPortal(
+      {/* CLAIM DETAIL MODAL - Only show when not on CLAIMS tab (claims tab has inline view) */}
+      {selectedClaimForModal && currentTab !== 'CLAIMS' && onUpdateClaim && createPortal(
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out] overflow-y-auto"
           style={{ overscrollBehavior: 'contain' }}
@@ -2654,26 +3112,42 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Main Layout Container - Sidebar + Content */}
         <div className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 animate-in fade-in slide-in-from-top-4">
           {/* LEFT SIDEBAR - Search + Homeowner Info Card */}
-          <div className="w-full lg:w-80 lg:flex-shrink-0 space-y-4">
-            {/* Homeowner Search Bar - Admin & Builder Only */}
+          <div className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 ${isHomeownerCardCollapsed ? 'w-full lg:w-16 space-y-2' : 'w-full lg:w-80 space-y-4'}`}>
+            {/* Homeowner Search Bar - Admin & Builder Only - Always Visible (Static) */}
             {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" />
-                <input 
-                  type="text" 
-                  placeholder="Search homeowners..."
-                  className="w-full bg-white dark:bg-gray-700 rounded-full pl-9 pr-8 py-2 text-sm border border-surface-outline-variant dark:border-gray-600 focus:ring-2 focus:ring-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all"
-                  value={searchQuery}
-                  onChange={(e) => onSearchChange(e.target.value)}
-                />
-                {searchQuery && (
-                  <button 
-                    onClick={() => onSearchChange('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-outline-variant hover:text-surface-on"
+              <div className={`relative transition-all duration-300 w-full`}>
+                {isHomeownerCardCollapsed ? (
+                  // Collapsed state: Show search icon button
+                  <button
+                    onClick={() => setIsHomeownerCardCollapsed(false)}
+                    className="w-full flex items-center justify-center bg-white dark:bg-gray-700 rounded-full p-2 border border-surface-outline-variant dark:border-gray-600 hover:border-primary hover:ring-2 hover:ring-primary/20 transition-all"
+                    title="Search homeowners (click to expand)"
                   >
-                    <X className="h-3 w-3" />
+                    <Search className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
                   </button>
+                ) : (
+                  // Expanded state: Show full search input
+                  <>
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" />
+                    <input 
+                      type="text" 
+                      placeholder="Search homeowners..."
+                      className="w-full bg-white dark:bg-gray-700 rounded-full pl-9 pr-8 py-2 text-sm border border-surface-outline-variant dark:border-gray-600 focus:ring-2 focus:ring-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all"
+                      value={searchQuery}
+                      onChange={(e) => onSearchChange(e.target.value)}
+                      title="Search homeowners"
+                    />
+                    {searchQuery && (
+                      <button 
+                        onClick={() => onSearchChange('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-outline-variant hover:text-surface-on"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </>
                 )}
+                
                 
                 {/* Dropdown Results */}
                 {searchQuery && searchResults.length > 0 && (
@@ -2715,9 +3189,30 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div 
               ref={homeownerCardContainerRef}
               key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
-              className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-[64px]"
+              className={`bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-[64px] transition-all duration-300 ease-in-out overflow-hidden relative ${isHomeownerCardCollapsed ? 'cursor-pointer hover:bg-primary/20 dark:hover:bg-gray-700' : ''}`}
+              onClick={() => {
+                if (isHomeownerCardCollapsed) {
+                  setIsHomeownerCardCollapsed(false);
+                }
+              }}
             >
-            <div className="flex flex-col p-6">
+              {/* Collapse/Expand Button - Hidden on mobile, visible on desktop */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsHomeownerCardCollapsed(!isHomeownerCardCollapsed);
+                }}
+                className={`hidden lg:flex absolute top-4 ${isHomeownerCardCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-4'} z-10 p-2 bg-surface dark:bg-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-600 rounded-full transition-all shadow-md border border-surface-outline-variant dark:border-gray-600 items-center justify-center`}
+                title={isHomeownerCardCollapsed ? "Expand homeowner info" : "Collapse homeowner info"}
+              >
+                {isHomeownerCardCollapsed ? (
+                  <ChevronRight className="h-4 w-4 text-surface-on dark:text-gray-100" />
+                ) : (
+                  <ChevronLeft className="h-4 w-4 text-surface-on dark:text-gray-100" />
+                )}
+              </button>
+            {/* Card Content - Hidden when collapsed */}
+            <div className={`flex flex-col p-6 transition-all duration-300 ${isHomeownerCardCollapsed ? 'opacity-0 w-0 p-0 overflow-hidden' : 'opacity-100'}`}>
              
              {/* Two-Line Layout with Even Spacing - Center Aligned */}
              <div className="flex flex-col gap-3 mb-4 w-full">
@@ -2873,7 +3368,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             {/* Next Appointment Card - Below Homeowner Info within sidebar */}
-            <div className="mt-4 bg-primary/5 dark:bg-gray-700/50 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-600 overflow-hidden">
+            <div className={`mt-4 bg-primary/5 dark:bg-gray-700/50 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-600 overflow-hidden transition-all duration-300 ${isHomeownerCardCollapsed ? 'opacity-0 h-0 mt-0 overflow-hidden' : 'opacity-100'}`}>
               <div className="p-4 bg-surface-container/30 dark:bg-gray-700/30 border-b border-surface-outline-variant/50 dark:border-gray-600">
                 <h3 className="font-medium text-sm flex items-center text-secondary-on-container dark:text-gray-100">
                   <Calendar className="h-4 w-4 mr-2" />
@@ -2948,6 +3443,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                 );
               })()}
             </div>
+
+            {/* Collapsed State - Vertical Text/Indicator */}
+            {isHomeownerCardCollapsed && (
+              <div className="hidden lg:flex items-center justify-center py-12 h-full min-h-[400px]">
+                <div 
+                  className="text-sm font-medium text-surface-on dark:text-gray-300 whitespace-nowrap select-none pointer-events-none"
+                  style={{ writingMode: 'vertical-rl', textOrientation: 'mixed' }}
+                >
+                  {displayHomeowner.name}
+                </div>
+              </div>
+            )}
             </div>
             {/* End Homeowner Info Card Container */}
           </div>
@@ -3147,22 +3654,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
-                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col">
-                      <TaskList
-                        tasks={tasks}
-                        employees={employees}
-                        currentUser={currentUser}
-                        claims={claims}
-                        homeowners={homeowners}
-                        onAddTask={onAddTask}
-                        onToggleTask={onToggleTask}
-                        onDeleteTask={onDeleteTask}
-                        onUpdateTask={onUpdateTask}
-                        preSelectedHomeowner={targetHomeowner}
-                        onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
-                        onSelectTask={(task) => setSelectedTaskForModal(task)}
-                      />
-                    </div>
+                    {renderTasksTab()}
                   </div>
                 </div>
               </div>
@@ -3402,22 +3894,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
               <div className="max-w-7xl mx-auto pb-4">
-                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col">
-                      <TaskList
-                      tasks={tasks}
-                      employees={employees}
-                      currentUser={currentUser}
-                      claims={claims}
-                      homeowners={homeowners}
-                      onAddTask={onAddTask}
-                      onToggleTask={onToggleTask}
-                      onDeleteTask={onDeleteTask}
-                      onUpdateTask={onUpdateTask}
-                      preSelectedHomeowner={targetHomeowner}
-                      onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
-                      onSelectTask={(task) => setSelectedTaskForModal(task)}
-                    />
-                </div>
+                {renderTasksTab()}
               </div>
             </motion.div>
           )}
@@ -3440,22 +3917,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0 }}
             >
               <div className="max-w-7xl mx-auto pb-4">
-                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col">
-                    <TaskList
-                      tasks={tasks}
-                      employees={employees}
-                      currentUser={currentUser}
-                      claims={claims}
-                      homeowners={homeowners}
-                      onAddTask={onAddTask}
-                      onToggleTask={onToggleTask}
-                      onDeleteTask={onDeleteTask}
-                      onUpdateTask={onUpdateTask}
-                      preSelectedHomeowner={targetHomeowner}
-                      onSelectClaim={(claim) => setSelectedClaimForModal(claim)}
-                      onSelectTask={(task) => setSelectedTaskForModal(task)}
-                    />
-                </div>
+                {renderTasksTab()}
               </div>
             </motion.div>
           )}
