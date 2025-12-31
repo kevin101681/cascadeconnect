@@ -1576,7 +1576,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, filter?: 'All' | 'Open' | 'Closed', setFilter?: (filter: 'All' | 'Open' | 'Closed') => void, onExportExcel?: () => void, allClaims?: Claim[], isAdminView: boolean = false) => (
     <div 
-      className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col md:shadow-elevation-1"
+      className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col"
     >
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
         <div className="flex items-center justify-between md:justify-start gap-4 w-full md:w-auto">
@@ -1862,7 +1862,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const renderDocumentsTab = () => (
-    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 md:shadow-elevation-1 flex flex-col">
+    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col">
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
         <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
@@ -2015,7 +2015,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   );
 
   const renderMessagesTab = () => (
-    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:shadow-elevation-1 overflow-hidden">
+    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden">
        {/* Left Column: Inbox List (Gmail Style) */}
        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-16 shrink-0 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none">
@@ -2691,15 +2691,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{homeowner.name}</p>
                             {homeowner.builder && (
-                              <span className="inline-block text-xs px-2 py-0.5 mt-1 bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-300 border border-surface-outline-variant dark:border-gray-600 rounded-full">
+                              <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">
                                 {homeowner.builder}
-                              </span>
+                              </p>
                             )}
                             {homeowner.jobName && (
-                              <p className="text-xs text-surface-on-variant dark:text-gray-400 truncate mt-0.5">{homeowner.jobName}</p>
+                              <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">{homeowner.jobName}</p>
                             )}
                             {homeowner.closingDate && (
-                              <p className="text-xs text-surface-on-variant dark:text-gray-400 truncate mt-0.5">
+                              <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">
                                 Closing: {new Date(homeowner.closingDate).toLocaleDateString()}
                               </p>
                             )}
@@ -2715,7 +2715,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div 
               ref={homeownerCardContainerRef}
               key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
-              className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 lg:sticky lg:top-[64px]"
+              className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-[64px]"
             >
             <div className="flex flex-col p-6">
              
@@ -2753,31 +2753,31 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {/* Line 2: Builder, Project, Closing Date, Phone, Email - Even Spacing */}
                 <div className="flex items-center justify-center gap-4 flex-wrap">
                   {/* Builder */}
-                  <span className="flex items-center gap-1.5 text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-2.5 py-0.5 rounded-full border border-surface-outline-variant dark:border-gray-600 flex-shrink-0">
-                    <Building2 className="h-3 w-3" />
+                  <span className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 flex-shrink-0">
+                    <Building2 className="h-3.5 w-3.5" />
                     {displayHomeowner.builder}
                   </span>
                   
                   {/* Project */}
                   <div className="flex items-center gap-1.5 text-sm flex-shrink-0">
-                     <Home className="h-4 w-4 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                     <span className="font-medium text-surface-on dark:text-gray-100 truncate">{displayHomeowner.jobName || 'N/A'}</span>
+                     <Home className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
+                     <span className="text-surface-on-variant dark:text-gray-300 truncate">{displayHomeowner.jobName || 'N/A'}</span>
                   </div>
                   
                   {/* Closing Date */}
-                  <span className="flex items-center gap-1.5 text-xs text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-2.5 py-0.5 rounded-full border border-surface-outline-variant dark:border-gray-600 flex-shrink-0">
-                     <Clock className="h-3 w-3 text-surface-outline dark:text-gray-500" />
+                  <span className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 flex-shrink-0">
+                     <Clock className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
                      Closing: {displayHomeowner.closingDate ? new Date(displayHomeowner.closingDate).toLocaleDateString() : 'N/A'}
                   </span>
                   
                   {/* Phone */}
-                  <a href={`tel:${displayHomeowner.phone}`} className="flex items-center gap-1.5 hover:text-primary transition-colors flex-shrink-0 text-sm text-surface-on-variant dark:text-gray-400">
+                  <a href={`tel:${displayHomeowner.phone}`} className="flex items-center gap-1.5 hover:text-primary transition-colors flex-shrink-0 text-sm text-surface-on-variant dark:text-gray-300">
                     <Phone className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
                     <span className="whitespace-nowrap">{displayHomeowner.phone}</span>
                   </a>
                   
                   {/* Email */}
-                  <div className="flex items-center gap-1.5 min-w-0 flex-shrink-0 text-sm text-surface-on-variant dark:text-gray-400">
+                  <div className="flex items-center gap-1.5 min-w-0 flex-shrink-0 text-sm text-surface-on-variant dark:text-gray-300">
                     <Mail className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
                     <a href={`mailto:${displayHomeowner.email}`} className="hover:text-primary transition-colors truncate min-w-0">{displayHomeowner.email}</a>
                   </div>
@@ -3147,7 +3147,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
-                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col md:shadow-elevation-1">
+                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col">
                       <TaskList
                         tasks={tasks}
                         employees={employees}
@@ -3254,7 +3254,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
                     {currentTab === 'INVOICES' ? (
-                      <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 md:shadow-elevation-1 flex flex-col min-h-[calc(100vh-300px)]">
+                      <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-[calc(100vh-300px)]">
                         <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
                           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                             <FileText className="h-5 w-5 text-primary" />
@@ -3300,7 +3300,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
                     {currentTab === 'INVOICES' ? (
-                      <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 md:shadow-elevation-1 flex flex-col min-h-[calc(100vh-300px)]">
+                      <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-[calc(100vh-300px)]">
                         <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
                           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                             <FileText className="h-5 w-5 text-primary" />
@@ -3402,7 +3402,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
               <div className="max-w-7xl mx-auto pb-4">
-                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1">
+                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col">
                       <TaskList
                       tasks={tasks}
                       employees={employees}
@@ -3440,7 +3440,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0 }}
             >
               <div className="max-w-7xl mx-auto pb-4">
-                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1">
+                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col">
                     <TaskList
                       tasks={tasks}
                       employees={employees}
@@ -3539,7 +3539,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="max-w-7xl mx-auto pb-4">
-                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 md:shadow-elevation-1 flex flex-col">
+                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col">
                   <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
                     <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                       <FileText className="h-5 w-5 text-primary" />
