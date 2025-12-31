@@ -3202,13 +3202,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.stopPropagation();
                   setIsHomeownerCardCollapsed(!isHomeownerCardCollapsed);
                 }}
-                className={`hidden lg:flex absolute top-4 ${isHomeownerCardCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-4'} z-10 p-1 hover:bg-surface-container/50 dark:hover:bg-gray-700/50 rounded transition-all items-center justify-center`}
+                className={`hidden lg:flex absolute top-16 ${isHomeownerCardCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-4'} z-10 p-1 hover:bg-surface-container/50 dark:hover:bg-gray-700/50 rounded transition-all items-center justify-center`}
                 title={isHomeownerCardCollapsed ? "Expand homeowner info" : "Collapse homeowner info"}
               >
                 {isHomeownerCardCollapsed ? (
-                  <ChevronRight className="h-4 w-4 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100" />
+                  <ChevronRight className="h-4 w-4 text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-300" />
                 ) : (
-                  <ChevronLeft className="h-4 w-4 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100" />
+                  <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-300" />
                 )}
               </button>
             {/* Card Content - Hidden when collapsed */}
