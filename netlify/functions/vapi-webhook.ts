@@ -334,7 +334,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
             builderName: matchedHomeowner.builder || null,
             jobName: matchedHomeowner.jobName || null,
             address: matchedHomeowner.address,
-            title: issueDescription || 'Voice Service Request',
+            title: 'Call in',
             description: issueDescription || 'Service request from AI voice intake',
             category: 'General',
             claimNumber: claimNumber,
