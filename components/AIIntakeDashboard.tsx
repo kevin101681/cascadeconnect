@@ -163,7 +163,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
     if (filteredCalls.length > 0 && !selectedCall) {
       setSelectedCall(filteredCalls[0]);
     }
-  }, [filteredCalls.length]);
+  }, [filteredCalls.length, selectedCall]);
 
   return (
     <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 flex flex-col h-[calc(100vh-12rem)]">
