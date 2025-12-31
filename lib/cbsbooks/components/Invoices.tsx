@@ -510,7 +510,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
     // Add CBS Logo in top right corner (adjusted aspect ratio to prevent squishing)
     try {
         const logoPath = '/images/manual/cbslogo.png';
-        doc.addImage(logoPath, 'PNG', 160, 10, 30, 25); // x, y, width, height - smaller overall but better aspect ratio (1.2:1)
+        doc.addImage(logoPath, 'PNG', 162, 10, 25, 28); // x, y, width, height - increased height significantly (aspect ratio 0.89:1, nearly square to tall)
     } catch (e) {
         console.warn('Could not load CBS logo:', e);
     }
