@@ -4685,127 +4685,234 @@ const Dashboard: React.FC<DashboardProps> = ({
           document.body
         )}
 
-        {/* HOMEOWNER CALLS MODAL */}
-        {showCallsModal && displayHomeowner && homeownerCalls.length > 0 && createPortal(
-          <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                setShowCallsModal(false);
-              }
-            }}
-          >
-            <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl max-h-[85vh] rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 flex flex-col">
-              {/* Header */}
-              <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center sticky top-0 z-10 flex-shrink-0">
-                <div>
-                  <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                    <Phone className="h-6 w-6 text-primary" />
-                    Calls - {displayHomeowner.name}
-                  </h2>
-                  <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
-                    {homeownerCalls.length} call{homeownerCalls.length !== 1 ? 's' : ''} found
-                  </p>
+        {/* HOMEOWNER CALLS MODAL - Two Column Layout */}
+        {showCallsModal && displayHomeowner && homeownerCalls.length > 0 && (() => {
+          const [selectedCallId, setSelectedCallId] = useState<string | null>(homeownerCalls[0]?.id || null);
+          const selectedCall = homeownerCalls.find(c => c.id === selectedCallId);
+          
+          return createPortal(
+            <div 
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  setShowCallsModal(false);
+                }
+              }}
+            >
+              <div className="bg-surface dark:bg-gray-800 w-full max-w-7xl max-h-[85vh] rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 flex flex-col">
+                {/* Header */}
+                <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center sticky top-0 z-10 flex-shrink-0">
+                  <div>
+                    <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                      <Phone className="h-6 w-6 text-primary" />
+                      AI Calls - {displayHomeowner.name}
+                    </h2>
+                    <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
+                      {homeownerCalls.length} call{homeownerCalls.length !== 1 ? 's' : ''} found
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => setShowCallsModal(false)} 
+                    className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 p-2 rounded-full hover:bg-white/10 dark:hover:bg-gray-600/50"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
                 </div>
-                <button 
-                  onClick={() => setShowCallsModal(false)} 
-                  className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 p-2 rounded-full hover:bg-white/10 dark:hover:bg-gray-600/50"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-              
-              {/* Content */}
-              <div className="p-6 overflow-y-auto flex-1 min-h-0">
-                <div className="space-y-4">
-                          {homeownerCalls.map((call) => (
-                    <div
-                      key={call.id}
-                      className="bg-surface-container dark:bg-gray-700 rounded-xl p-4 border border-surface-outline-variant dark:border-gray-600"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="font-semibold text-surface-on dark:text-gray-100">
+                
+                {/* Two Column Layout */}
+                <div className="flex-1 min-h-0 flex overflow-hidden">
+                  {/* LEFT COLUMN - Call Cards List */}
+                  <div className="w-full md:w-96 border-r border-surface-outline-variant dark:border-gray-700 overflow-y-auto flex-shrink-0">
+                    <div className="p-4 space-y-2">
+                      {homeownerCalls.map((call) => (
+                        <button
+                          key={call.id}
+                          onClick={() => setSelectedCallId(call.id)}
+                          className={`w-full text-left p-4 rounded-xl border transition-all ${
+                            selectedCallId === call.id
+                              ? 'bg-primary/10 dark:bg-primary/20 border-primary shadow-sm'
+                              : 'bg-surface-container dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <span className="font-semibold text-sm text-surface-on dark:text-gray-100 truncate">
                               {new Date(call.createdAt).toLocaleString('en-US', {
                                 month: 'short',
                                 day: 'numeric',
-                                year: 'numeric',
                                 hour: 'numeric',
                                 minute: '2-digit',
                               })}
                             </span>
-                            {call.isUrgent && (
-                              <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              {call.isUrgent && (
+                                <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                                  URGENT
+                                </span>
+                              )}
+                              {call.isVerified ? (
+                                <span className="bg-green-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                                  ✓
+                                </span>
+                              ) : (
+                                <span className="bg-orange-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                                  ?
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {call.issueDescription && (
+                            <p className="text-xs text-surface-on-variant dark:text-gray-400 line-clamp-2">
+                              {call.issueDescription}
+                            </p>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* RIGHT COLUMN - Call Details */}
+                  <div className="flex-1 overflow-y-auto p-6">
+                    {selectedCall ? (
+                      <div className="space-y-6">
+                        {/* Date & Status Header */}
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-2xl font-normal text-surface-on dark:text-gray-100">
+                            {new Date(selectedCall.createdAt).toLocaleString('en-US', {
+                              month: 'long',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: 'numeric',
+                              minute: '2-digit',
+                            })}
+                          </h3>
+                          <div className="flex items-center gap-2">
+                            {selectedCall.isUrgent && (
+                              <span className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">
                                 URGENT
                               </span>
                             )}
-                            {call.isVerified ? (
-                              <span className="bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-full">
-                                Verified
+                            {selectedCall.isVerified ? (
+                              <span className="bg-green-500 text-white text-sm font-medium px-3 py-1 rounded-full">
+                                Verified Match
                               </span>
                             ) : (
-                              <span className="bg-orange-500 text-white text-xs font-medium px-2 py-1 rounded-full">
+                              <span className="bg-orange-500 text-white text-sm font-medium px-3 py-1 rounded-full">
                                 Unverified
                               </span>
                             )}
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-surface-on-variant dark:text-gray-400">
-                            {call.phoneNumber && (
-                              <div className="flex items-center gap-2">
-                                <Phone className="h-4 w-4" />
-                                <span>{call.phoneNumber}</span>
+                        </div>
+
+                        {/* Contact Info */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {selectedCall.phoneNumber && (
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-surface-container dark:bg-gray-700 rounded-lg">
+                                <Phone className="h-5 w-5 text-primary" />
                               </div>
-                            )}
-                            {call.propertyAddress && (
-                              <div className="flex items-center gap-2">
-                                <MapPin className="h-4 w-4" />
-                                <span>{call.propertyAddress}</span>
+                              <div>
+                                <p className="text-xs text-surface-on-variant dark:text-gray-400">Phone</p>
+                                <p className="text-sm font-medium text-surface-on dark:text-gray-100">
+                                  {selectedCall.phoneNumber}
+                                </p>
                               </div>
-                            )}
-                          </div>
-                          {call.issueDescription && (
-                            <div className="mt-3 p-3 bg-surface dark:bg-gray-900 rounded-lg">
-                              <p className="text-sm text-surface-on dark:text-gray-100">{call.issueDescription}</p>
+                            </div>
+                          )}
+                          {selectedCall.propertyAddress && (
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-surface-container dark:bg-gray-700 rounded-lg">
+                                <MapPin className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="text-xs text-surface-on-variant dark:text-gray-400">Address</p>
+                                <p className="text-sm font-medium text-surface-on dark:text-gray-100">
+                                  {selectedCall.propertyAddress}
+                                </p>
+                              </div>
                             </div>
                           )}
                         </div>
-                        {call.recordingUrl && (
-                          <a
-                            href={call.recordingUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="ml-4 p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                            title="Listen to Recording"
-                          >
-                            <Play className="h-5 w-5" />
-                          </a>
+
+                        {/* Issue Description */}
+                        {selectedCall.issueDescription && (
+                          <div>
+                            <h4 className="text-sm font-semibold text-surface-on-variant dark:text-gray-400 mb-2 uppercase tracking-wide">
+                              Issue Description
+                            </h4>
+                            <div className="p-4 bg-surface-container dark:bg-gray-700 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+                              <p className="text-base text-surface-on dark:text-gray-100 whitespace-pre-wrap">
+                                {selectedCall.issueDescription}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Recording Link */}
+                        {selectedCall.recordingUrl && (
+                          <div>
+                            <h4 className="text-sm font-semibold text-surface-on-variant dark:text-gray-400 mb-2 uppercase tracking-wide">
+                              Call Recording
+                            </h4>
+                            <a
+                              href={selectedCall.recordingUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors"
+                            >
+                              <Play className="h-4 w-4" />
+                              Listen to Recording
+                            </a>
+                          </div>
+                        )}
+
+                        {/* Match Similarity (if available) */}
+                        {selectedCall.addressMatchSimilarity && (
+                          <div>
+                            <h4 className="text-sm font-semibold text-surface-on-variant dark:text-gray-400 mb-2 uppercase tracking-wide">
+                              Match Confidence
+                            </h4>
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 h-2 bg-surface-container dark:bg-gray-700 rounded-full overflow-hidden">
+                                <div 
+                                  className="h-full bg-green-500 transition-all"
+                                  style={{ width: `${parseFloat(selectedCall.addressMatchSimilarity) * 100}%` }}
+                                />
+                              </div>
+                              <span className="text-sm font-medium text-surface-on dark:text-gray-100">
+                                {Math.round(parseFloat(selectedCall.addressMatchSimilarity) * 100)}%
+                              </span>
+                            </div>
+                          </div>
                         )}
                       </div>
-                    </div>
-                  ))}
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-surface-on-variant dark:text-gray-400">
+                        Select a call to view details
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Footer */}
+                <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-3 flex-shrink-0">
+                  <Button 
+                    onClick={() => {
+                      setShowCallsModal(false);
+                      setCurrentTab('CALLS');
+                    }} 
+                    variant="outlined"
+                  >
+                    View All Calls
+                  </Button>
+                  <Button onClick={() => setShowCallsModal(false)} variant="filled">
+                    Close
+                  </Button>
                 </div>
               </div>
-              
-              {/* Footer */}
-              <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-3 flex-shrink-0">
-                <Button 
-                  onClick={() => {
-                    setShowCallsModal(false);
-                    setCurrentTab('CALLS');
-                  }} 
-                  variant="outlined"
-                >
-                  View All Calls
-                </Button>
-                <Button onClick={() => setShowCallsModal(false)} variant="filled">
-                  Close
-                </Button>
-              </div>
-            </div>
-          </div>,
-          document.body
-        )}
+            </div>,
+            document.body
+          );
+        })()}
 
         {/* PUNCH LIST APP MODAL */}
         {showPunchListApp && effectiveHomeowner && createPortal(
