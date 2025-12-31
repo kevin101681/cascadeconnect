@@ -183,15 +183,32 @@ export function extractStructuredData(payload: VapiWebhookPayload): VapiStructur
   const analysis = message?.analysis || (callData && 'analysis' in callData ? callData.analysis : undefined) || payload?.analysis || {};
   const artifact = message?.artifact || (callData && 'artifact' in callData ? callData.artifact : undefined) || payload?.artifact || {};
   
-  // Try multiple possible locations for structured data
+  // 🔍 PAYLOAD SNIFFER: Log the actual structure for debugging
+  console.log('🔍 PAYLOAD SNIFFER - Checking structured data locations:');
+  console.log('  message?.analysis?.structuredData:', !!message?.analysis?.structuredData);
+  console.log('  message?.artifact?.structuredOutputs:', !!message?.artifact?.structuredOutputs);
+  console.log('  message?.artifact?.structuredData:', !!(artifact && 'structuredData' in artifact));
+  console.log('  payload?.artifact?.structuredOutputs:', !!(payload?.artifact && 'structuredOutputs' in payload.artifact));
+  console.log('  analysis?.structuredData:', !!(analysis && 'structuredData' in analysis));
+  
+  // Try multiple possible locations for structured data (UPDATED FOR LATE-2025 VAPI)
   const structuredData = 
-    message?.analysis?.structuredData ||
-    message?.artifact?.structuredOutputs ||
+    message?.artifact?.structuredOutputs ||  // 🆕 NEW LOCATION (Late-2025 Vapi)
+    message?.artifact?.structuredData ||     // 🆕 ALTERNATE NEW LOCATION
+    message?.analysis?.structuredData ||     // Legacy location
     (message && 'structuredData' in message ? message.structuredData : undefined) ||
-    (analysis && 'structuredData' in analysis ? analysis.structuredData : undefined) || 
     (artifact && 'structuredOutputs' in artifact ? artifact.structuredOutputs : undefined) ||
     (artifact && 'structuredData' in artifact ? artifact.structuredData : undefined) ||
+    (analysis && 'structuredData' in analysis ? analysis.structuredData : undefined) || 
     {};
+
+  // 🚨 MISSING DATA ALERT
+  if (!structuredData || Object.keys(structuredData).length === 0) {
+    console.error('🚨 STRUCTURED DATA IS EMPTY OR MISSING!');
+    console.log('📦 Full payload structure:', JSON.stringify(payload, null, 2));
+  } else {
+    console.log('✅ Found structured data with keys:', Object.keys(structuredData));
+  }
 
   return structuredData as VapiStructuredData;
 }
@@ -318,6 +335,39 @@ export async function extractCallDataWithFallback(
       if (apiStructuredData?.isUrgent !== undefined && !callData.isUrgent) {
         callData.isUrgent = apiStructuredData.isUrgent === true;
       }
+      
+      // 🆘 EMERGENCY EXTRACTION: If still missing data after API call, try Gemini extraction
+      const stillMissingFields = requiredFields.filter(field => !callData[field]);
+      if (stillMissingFields.length > 0) {
+        console.log(`🆘 Still missing fields after API call: ${stillMissingFields.join(', ')}`);
+        console.log(`🔄 Attempting emergency Gemini extraction from transcript...`);
+        
+        const message = payload.message || payload;
+        const rawCallData = message?.call || payload.call || message;
+        const transcript = callData.transcript || 
+                          (rawCallData && typeof rawCallData === 'object' && 'transcript' in rawCallData ? rawCallData.transcript : null) ||
+                          (rawCallData && typeof rawCallData === 'object' && 'transcription' in rawCallData ? rawCallData.transcription : null);
+        
+        if (transcript) {
+          const emergencyData = await emergencyExtractFromTranscript(transcript as string);
+          
+          // Merge emergency extracted data
+          if (emergencyData.propertyAddress && !callData.propertyAddress) {
+            callData.propertyAddress = emergencyData.propertyAddress;
+            console.log(`✅ Emergency extracted propertyAddress: ${callData.propertyAddress}`);
+          }
+          if (emergencyData.homeownerName && !callData.homeownerName) {
+            callData.homeownerName = emergencyData.homeownerName;
+            console.log(`✅ Emergency extracted homeownerName: ${callData.homeownerName}`);
+          }
+          if (emergencyData.issueDescription && !callData.issueDescription) {
+            callData.issueDescription = emergencyData.issueDescription;
+            console.log(`✅ Emergency extracted issueDescription`);
+          }
+        } else {
+          console.error('❌ No transcript available for emergency extraction');
+        }
+      }
     } catch (apiError: unknown) {
       const errorMessage = apiError instanceof Error ? apiError.message : 'Unknown error';
       console.error(`❌ API fallback failed:`, errorMessage);
@@ -373,6 +423,81 @@ export function isFinalEvent(payload: VapiWebhookPayload, callData: Partial<Extr
 // ==========================================
 // HELPER FUNCTIONS
 // ==========================================
+
+/**
+ * Emergency extraction from transcript using Gemini
+ * Used when Vapi structured data is missing
+ */
+async function emergencyExtractFromTranscript(transcript: string): Promise<Partial<ExtractedCallData>> {
+  console.log('🆘 EMERGENCY EXTRACTION: Using Gemini to extract from transcript');
+  
+  const geminiApiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
+  
+  if (!geminiApiKey) {
+    console.error('❌ GEMINI_API_KEY not configured, cannot perform emergency extraction');
+    return {};
+  }
+  
+  try {
+    const prompt = `Extract the following information from this phone call transcript. Return ONLY valid JSON with these fields:
+{
+  "propertyAddress": "the full property address mentioned",
+  "homeownerName": "the caller's name",
+  "issueDescription": "brief description of the issue or request",
+  "callIntent": "warranty_issue, billing_question, scheduling, or general_inquiry"
+}
+
+If a field is not mentioned, use null. Do not include any explanation, only return the JSON object.
+
+Transcript:
+${transcript}`;
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{ text: prompt }]
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 500,
+          }
+        })
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    
+    // Parse JSON from response (handle markdown code blocks)
+    const jsonMatch = textResponse.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error('❌ Could not extract JSON from Gemini response');
+      return {};
+    }
+    
+    const extracted = JSON.parse(jsonMatch[0]);
+    console.log('✅ Emergency extraction successful:', extracted);
+    
+    return {
+      propertyAddress: extracted.propertyAddress || null,
+      homeownerName: extracted.homeownerName || null,
+      issueDescription: extracted.issueDescription || null,
+      callIntent: extracted.callIntent || null,
+    };
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ Emergency extraction failed:', errorMessage);
+    return {};
+  }
+}
 
 /**
  * Log extracted call data for debugging
