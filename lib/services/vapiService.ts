@@ -237,19 +237,45 @@ export function extractStructuredData(payload: VapiWebhookPayload): VapiStructur
       });
       
       // Find the first value that looks like our structured data
+      // Check both direct properties AND nested under 'result' key (Vapi 2025 format)
       const unwrappedData = values.find((val: any) => {
-        const isValid = val && 
-               typeof val === 'object' && 
-               (val.propertyAddress || val.homeownerName || val.phoneNumber || val.issueDescription || 'isUrgent' in val);
-        console.log(`🔍 Value is valid structured data:`, isValid);
+        if (!val || typeof val !== 'object') {
+          console.log(`🔍 Value is not an object, skipping`);
+          return false;
+        }
+        
+        // Check if data is directly on the object
+        const hasDirectKeys = val.propertyAddress || val.homeownerName || val.phoneNumber || val.issueDescription || 'isUrgent' in val;
+        
+        // Check if data is nested under 'result' key (Vapi's new format)
+        const hasResultKey = val.result && typeof val.result === 'object';
+        const hasKeysInResult = hasResultKey && (
+          val.result.propertyAddress || 
+          val.result.homeownerName || 
+          val.result.phoneNumber || 
+          val.result.issueDescription || 
+          'isUrgent' in val.result
+        );
+        
+        const isValid = hasDirectKeys || hasKeysInResult;
+        console.log(`🔍 Value is valid structured data:`, isValid, hasResultKey ? '(found in result key)' : '');
+        
         return isValid;
       });
       
       if (unwrappedData) {
         console.log('✅ Found UUID-wrapped structured data! Unwrapping...');
         console.log('🔑 UUID keys in structuredOutputs:', Object.keys(structuredData));
-        console.log('📦 Unwrapped data keys:', Object.keys(unwrappedData));
-        structuredData = unwrappedData;
+        
+        // Check if data is nested under 'result' key and extract it
+        if (unwrappedData.result && typeof unwrappedData.result === 'object') {
+          console.log('📦 Data is nested under "result" key - extracting...');
+          console.log('📦 Unwrapped data keys:', Object.keys(unwrappedData.result));
+          structuredData = unwrappedData.result;
+        } else {
+          console.log('📦 Unwrapped data keys:', Object.keys(unwrappedData));
+          structuredData = unwrappedData;
+        }
       } else {
         console.error('❌ UUID key found but no valid data inside!');
         console.error('📦 Raw structuredData:', JSON.stringify(structuredData, null, 2));
@@ -324,6 +350,10 @@ export function extractCallData(payload: VapiWebhookPayload): Partial<ExtractedC
     structuredData?.isUrgent === true || 
     structuredData?.is_urgent === true ||
     structuredData?.urgent === true ||
+    structuredData?.isUrgent === 'true' ||  // Handle string "true"
+    structuredData?.isUrgent === 'TRUE' ||  // Handle string "TRUE"
+    structuredData?.is_urgent === 'true' ||
+    structuredData?.is_urgent === 'TRUE' ||
     callIntent === 'urgent' ||
     false;
 
