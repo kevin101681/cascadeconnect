@@ -116,14 +116,15 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
     });
   }, [statusFilteredCalls, searchQuery]);
 
-  // Auto-select first call - only when filteredCalls array actually changes
-  useEffect(() => {
-    if (filteredCalls.length > 0 && (!selectedCall || !filteredCalls.find(c => c.id === selectedCall.id))) {
-      setSelectedCall(filteredCalls[0]);
-    } else if (filteredCalls.length === 0) {
-      setSelectedCall(null);
+  // Derive the actual selected call or fallback to first call
+  // This avoids useEffect infinite loops
+  const actualSelectedCall = useMemo(() => {
+    if (filteredCalls.length === 0) return null;
+    if (selectedCall && filteredCalls.find(c => c.id === actualSelectedCall.id)) {
+      return selectedCall;
     }
-  }, [filteredCalls]); // Now safe because filteredCalls is memoized
+    return filteredCalls[0];
+  }, [filteredCalls, selectedCall]);
 
   // Pagination
   const totalPages = Math.ceil(filteredCalls.length / ITEMS_PER_PAGE);
@@ -232,7 +233,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                   key={call.id}
                   onClick={() => setSelectedCall(call)}
                   className={`w-full text-left p-4 rounded-xl border transition-all ${
-                    selectedCall?.id === call.id
+                    actualSelectedCall?.id === call.id
                       ? 'bg-primary/10 dark:bg-primary/20 border-primary shadow-sm'
                       : 'bg-surface dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 hover:bg-surface-container-high dark:hover:bg-gray-600'
                   }`}
@@ -302,20 +303,20 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
 
           {/* RIGHT COLUMN - Call Details */}
           <div className="flex-1 overflow-y-auto p-6">
-            {selectedCall ? (
+            {actualSelectedCall ? (
               <div className="space-y-6">
                 {/* Date & Status Header */}
                 <div className="flex items-center justify-between">
                   <h3 className="text-2xl font-normal text-surface-on dark:text-gray-100">
-                    {formatDate(selectedCall.createdAt)}
+                    {formatDate(actualSelectedCall.createdAt)}
                   </h3>
                   <div className="flex items-center gap-2">
-                    {selectedCall.isUrgent && (
+                    {actualSelectedCall.isUrgent && (
                       <span className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">
                         URGENT
                       </span>
                     )}
-                    {selectedCall.isVerified ? (
+                    {actualSelectedCall.isVerified ? (
                       <span className="bg-green-500 text-white text-sm font-medium px-3 py-1 rounded-full">
                         Verified Match
                       </span>
@@ -336,12 +337,12 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                     <div>
                       <p className="text-xs text-surface-on-variant dark:text-gray-400">Homeowner</p>
                       <p className="text-sm font-medium text-surface-on dark:text-gray-100">
-                        {selectedCall.homeownerName || 'Not provided'}
+                        {actualSelectedCall.homeownerName || 'Not provided'}
                       </p>
                     </div>
                   </div>
 
-                  {selectedCall.phoneNumber && (
+                  {actualSelectedCall.phoneNumber && (
                     <div className="flex items-center gap-3 p-4 bg-surface-container dark:bg-gray-700 rounded-lg">
                       <div className="p-2 bg-surface dark:bg-gray-600 rounded-lg">
                         <Phone className="h-5 w-5 text-primary" />
@@ -349,13 +350,13 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                       <div>
                         <p className="text-xs text-surface-on-variant dark:text-gray-400">Phone</p>
                         <p className="text-sm font-medium text-surface-on dark:text-gray-100">
-                          {selectedCall.phoneNumber}
+                          {actualSelectedCall.phoneNumber}
                         </p>
                       </div>
                     </div>
                   )}
 
-                  {selectedCall.propertyAddress && (
+                  {actualSelectedCall.propertyAddress && (
                     <div className="flex items-center gap-3 p-4 bg-surface-container dark:bg-gray-700 rounded-lg md:col-span-2">
                       <div className="p-2 bg-surface dark:bg-gray-600 rounded-lg">
                         <MapPin className="h-5 w-5 text-primary" />
@@ -363,13 +364,13 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                       <div>
                         <p className="text-xs text-surface-on-variant dark:text-gray-400">Address</p>
                         <p className="text-sm font-medium text-surface-on dark:text-gray-100">
-                          {selectedCall.propertyAddress}
+                          {actualSelectedCall.propertyAddress}
                         </p>
                       </div>
                     </div>
                   )}
 
-                  {selectedCall.verifiedBuilderName && (
+                  {actualSelectedCall.verifiedBuilderName && (
                     <div className="flex items-center gap-3 p-4 bg-surface-container dark:bg-gray-700 rounded-lg">
                       <div className="p-2 bg-surface dark:bg-gray-600 rounded-lg">
                         <Building2 className="h-5 w-5 text-primary" />
@@ -377,13 +378,13 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                       <div>
                         <p className="text-xs text-surface-on-variant dark:text-gray-400">Builder</p>
                         <p className="text-sm font-bold text-surface-on dark:text-gray-100">
-                          {selectedCall.verifiedBuilderName}
+                          {actualSelectedCall.verifiedBuilderName}
                         </p>
                       </div>
                     </div>
                   )}
 
-                  {selectedCall.verifiedClosingDate && (
+                  {actualSelectedCall.verifiedClosingDate && (
                     <div className="flex items-center gap-3 p-4 bg-surface-container dark:bg-gray-700 rounded-lg">
                       <div className="p-2 bg-surface dark:bg-gray-600 rounded-lg">
                         <Calendar className="h-5 w-5 text-primary" />
@@ -391,7 +392,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                       <div>
                         <p className="text-xs text-surface-on-variant dark:text-gray-400">Closing Date</p>
                         <p className="text-sm font-bold text-surface-on dark:text-gray-100">
-                          {new Date(selectedCall.verifiedClosingDate).toLocaleDateString()}
+                          {new Date(actualSelectedCall.verifiedClosingDate).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
@@ -399,7 +400,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                 </div>
 
                 {/* Match Confidence */}
-                {selectedCall.addressMatchSimilarity !== null && selectedCall.addressMatchSimilarity !== undefined && typeof selectedCall.addressMatchSimilarity === 'number' && (
+                {actualSelectedCall.addressMatchSimilarity !== null && actualSelectedCall.addressMatchSimilarity !== undefined && typeof actualSelectedCall.addressMatchSimilarity === 'number' && (
                   <div>
                     <label className="text-sm text-surface-on-variant dark:text-gray-400 mb-2 block">
                       Match Confidence
@@ -408,46 +409,46 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                       <div className="flex-1 h-2 bg-surface-container dark:bg-gray-700 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-primary transition-all"
-                          style={{ width: `${Math.round(selectedCall.addressMatchSimilarity * 100)}%` }}
+                          style={{ width: `${Math.round(actualSelectedCall.addressMatchSimilarity * 100)}%` }}
                         />
                       </div>
                       <span className="text-sm font-medium text-surface-on dark:text-gray-100">
-                        {Math.round(selectedCall.addressMatchSimilarity * 100)}%
+                        {Math.round(actualSelectedCall.addressMatchSimilarity * 100)}%
                       </span>
                     </div>
                   </div>
                 )}
 
                 {/* Issue Description */}
-                {selectedCall.issueDescription && (
+                {actualSelectedCall.issueDescription && (
                   <div>
                     <label className="text-sm text-surface-on-variant dark:text-gray-400 mb-2 block">Issue Description</label>
                     <div className="p-4 bg-surface-container dark:bg-gray-700 rounded-lg">
                       <p className="text-base text-surface-on dark:text-gray-100 whitespace-pre-wrap">
-                        {selectedCall.issueDescription}
+                        {actualSelectedCall.issueDescription}
                       </p>
                     </div>
                   </div>
                 )}
 
                 {/* Transcript */}
-                {selectedCall.transcript && (
+                {actualSelectedCall.transcript && (
                   <div>
                     <label className="text-sm text-surface-on-variant dark:text-gray-400 mb-2 block">Call Transcript</label>
                     <div className="p-4 bg-surface-container dark:bg-gray-700 rounded-lg max-h-64 overflow-y-auto">
                       <p className="text-sm text-surface-on dark:text-gray-100 whitespace-pre-wrap">
-                        {selectedCall.transcript}
+                        {actualSelectedCall.transcript}
                       </p>
                     </div>
                   </div>
                 )}
 
                 {/* Recording */}
-                {selectedCall.recordingUrl && (
+                {actualSelectedCall.recordingUrl && (
                   <div>
                     <label className="text-sm text-surface-on-variant dark:text-gray-400 mb-2 block">Recording</label>
                     <a
-                      href={selectedCall.recordingUrl}
+                      href={actualSelectedCall.recordingUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors"
@@ -459,22 +460,22 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                 )}
 
                 {/* SMS Chat - Show if homeowner is verified and has phone number */}
-                {selectedCall.homeownerId && selectedCall.phoneNumber && (
+                {actualSelectedCall.homeownerId && actualSelectedCall.phoneNumber && (
                   <div className="mt-6">
                     <SMSChatView
-                      homeownerId={selectedCall.homeownerId}
-                      homeownerName={selectedCall.homeownerName}
-                      homeownerPhone={selectedCall.phoneNumber}
+                      homeownerId={actualSelectedCall.homeownerId}
+                      homeownerName={actualSelectedCall.homeownerName}
+                      homeownerPhone={actualSelectedCall.phoneNumber}
                     />
                   </div>
                 )}
 
                 {/* Actions */}
-                {selectedCall.homeownerId && (
+                {actualSelectedCall.homeownerId && (
                   <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700">
                     <button
                       onClick={() => {
-                        handleViewHomeowner(selectedCall.homeownerId);
+                        handleViewHomeowner(actualSelectedCall.homeownerId);
                       }}
                       className="px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
                     >
