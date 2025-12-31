@@ -3719,9 +3719,47 @@ Assigned By: ${assignerName}
 
   // Determine if user is logged in as admin account (has activeEmployee)
   const isAdminAccount = !!activeEmployee && activeEmployee.id !== 'placeholder';
+  
+  // Check if in development mode with bypass login and no homeowner selected
+  const isDevelopmentBypass = typeof window !== 'undefined' && 
+    sessionStorage.getItem('cascade_bypass_login') === 'true';
+  const showDevHomeownerSelector = isDevelopmentBypass && 
+    userRole === UserRole.ADMIN && 
+    !selectedAdminHomeownerId &&
+    availableHomeowners.length > 0;
 
   return (
     <>
+      {/* Development-Only: Floating Homeowner Selector */}
+      {showDevHomeownerSelector && (
+        <div className="fixed bottom-6 right-6 z-[150]">
+          <button
+            onClick={() => {
+              // Show homeowners list modal
+              const homeownersList = availableHomeowners.map((h, i) => `${i + 1}. ${h.name} - ${h.jobName || h.address}`).join('\n');
+              const selection = prompt(`🔧 DEV MODE: Select Homeowner\n\n${homeownersList}\n\nEnter number (1-${availableHomeowners.length}):`);
+              
+              if (selection) {
+                const index = parseInt(selection) - 1;
+                if (index >= 0 && index < availableHomeowners.length) {
+                  handleSelectHomeowner(availableHomeowners[index]);
+                }
+              }
+            }}
+            className="group bg-yellow-500 hover:bg-yellow-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all flex items-center gap-2 animate-pulse hover:animate-none"
+            title="Development Mode: Select a homeowner to test with"
+          >
+            <User className="h-6 w-6" />
+            <span className="text-sm font-medium whitespace-nowrap">
+              Select Homeowner
+            </span>
+          </button>
+          <p className="text-xs text-center mt-2 text-gray-600 dark:text-gray-400">
+            🔧 Dev Only
+          </p>
+        </div>
+      )}
+
       {/* Custom Alert Modal */}
       {alertMessage && (
         <div 

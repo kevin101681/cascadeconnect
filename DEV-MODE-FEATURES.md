@@ -42,6 +42,66 @@ Clicking the button:
 
 ---
 
+## 👤 Floating Homeowner Selector (Development Only)
+
+### What It Does
+A yellow floating button appears in the bottom-right corner when:
+- ✅ Skip Login is active (bypass mode)
+- ✅ User role is Admin
+- ✅ No homeowner is currently selected
+- ✅ Homeowners exist in the database
+
+### How It Works
+```
+┌─────────────────────────────────────┐
+│  Bottom-Right Corner                │
+│                                     │
+│              [👤 Select Homeowner]  │  ← Floating button
+│              🔧 Dev Only            │
+└─────────────────────────────────────┘
+```
+
+Clicking the button:
+1. Shows a prompt with numbered list of all homeowners
+2. User enters a number to select
+3. Selected homeowner becomes active
+4. Dashboard loads with selected homeowner's data
+5. Button disappears (homeowner is now selected)
+
+### Example Flow
+```
+1. Click "Skip Login" on auth screen
+2. App loads in admin view (no homeowner selected)
+3. Yellow floating button appears: "Select Homeowner"
+4. Click button
+5. Prompt shows:
+   🔧 DEV MODE: Select Homeowner
+   
+   1. John Smith - 123 Main St
+   2. Jane Doe - Oak View Estates
+   3. Bob Johnson - Maple Ridge
+   
+   Enter number (1-3):
+6. Enter "2" and press OK
+7. Jane Doe becomes active homeowner
+8. Button disappears
+9. Can now test claims, messages, etc. for Jane Doe
+```
+
+### Selecting Another Homeowner
+To switch homeowners during development:
+1. Click homeowner name in the navbar (opens homeowner info card)
+2. Use the search field in the card to find another homeowner
+3. Select from search results
+
+OR
+
+1. Clear current selection (click X in navbar)
+2. Floating button reappears
+3. Select different homeowner from list
+
+---
+
 ## 📋 Development Checklist
 
 ### Before Testing
@@ -50,6 +110,9 @@ Clicking the button:
 - [ ] Verify "🔧 Skip Login (Dev Only)" button appears
 - [ ] Click button to bypass authentication
 - [ ] App should load without Clerk login
+- [ ] Verify floating "Select Homeowner" button appears
+- [ ] Click to select a homeowner from the list
+- [ ] Verify homeowner data loads correctly
 
 ### Returning to Normal Login
 To test the actual login flow:
