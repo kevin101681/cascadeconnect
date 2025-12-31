@@ -175,7 +175,17 @@ export function extractCallId(payload: VapiWebhookPayload): string | null {
 
 /**
  * Extract structured data from webhook payload
- * Handles various payload structures
+ * Handles various payload structures INCLUDING UUID-wrapped structured outputs
+ * 
+ * VAPI 2025 UPDATE: Structured outputs may be nested under a UUID key like:
+ * {
+ *   "structuredOutputs": {
+ *     "so-1234-5678-abcd-efgh": {
+ *       "propertyAddress": "...",
+ *       "homeownerName": "..."
+ *     }
+ *   }
+ * }
  */
 export function extractStructuredData(payload: VapiWebhookPayload): VapiStructuredData {
   const message = payload.message || payload;
@@ -192,7 +202,7 @@ export function extractStructuredData(payload: VapiWebhookPayload): VapiStructur
   console.log('  analysis?.structuredData:', !!(analysis && 'structuredData' in analysis));
   
   // Try multiple possible locations for structured data (UPDATED FOR LATE-2025 VAPI)
-  const structuredData = 
+  let structuredData: any = 
     message?.artifact?.structuredOutputs ||  // 🆕 NEW LOCATION (Late-2025 Vapi)
     message?.artifact?.structuredData ||     // 🆕 ALTERNATE NEW LOCATION
     message?.analysis?.structuredData ||     // Legacy location
@@ -201,6 +211,38 @@ export function extractStructuredData(payload: VapiWebhookPayload): VapiStructur
     (artifact && 'structuredData' in artifact ? artifact.structuredData : undefined) ||
     (analysis && 'structuredData' in analysis ? analysis.structuredData : undefined) || 
     {};
+
+  // 🆕 DYNAMIC UUID UNWRAPPING
+  // If structuredData is an object but doesn't have our expected keys,
+  // check if it's a UUID-wrapped object and unwrap it
+  if (structuredData && typeof structuredData === 'object' && Object.keys(structuredData).length > 0) {
+    const hasExpectedKeys = 
+      'propertyAddress' in structuredData ||
+      'homeownerName' in structuredData ||
+      'phoneNumber' in structuredData ||
+      'issueDescription' in structuredData ||
+      'isUrgent' in structuredData;
+    
+    if (!hasExpectedKeys) {
+      console.log('🔍 Structured data found but missing expected keys - checking for UUID wrapping...');
+      
+      // Get all values from the object
+      const values = Object.values(structuredData);
+      
+      // Find the first value that looks like our structured data
+      const unwrappedData = values.find((val: any) => {
+        return val && 
+               typeof val === 'object' && 
+               (val.propertyAddress || val.homeownerName || val.phoneNumber || val.issueDescription || 'isUrgent' in val);
+      });
+      
+      if (unwrappedData) {
+        console.log('✅ Found UUID-wrapped structured data! Unwrapping...');
+        console.log('🔑 UUID keys in structuredOutputs:', Object.keys(structuredData));
+        structuredData = unwrappedData;
+      }
+    }
+  }
 
   // 🚨 MISSING DATA ALERT
   if (!structuredData || Object.keys(structuredData).length === 0) {

@@ -59,6 +59,14 @@ async function hasRecentOpenClaim(
 export const handler = async (event: any): Promise<HandlerResponse> => {
   const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
   
+  // 🔍 BLIND LOGGING: Log EVERYTHING before any processing
+  console.log(`\n${'='.repeat(80)}`);
+  console.log(`🚀 [VAPI WEBHOOK] [${requestId}] New webhook received`);
+  console.log(`⏰ Timestamp: ${new Date().toISOString()}`);
+  console.log(`📍 HTTP Method: ${event.httpMethod}`);
+  console.log(`📦 Headers:`, JSON.stringify(event.headers, null, 2));
+  console.log(`${'='.repeat(80)}\n`);
+  
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -66,8 +74,6 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       body: JSON.stringify({ error: 'Method not allowed' }),
     };
   }
-
-  console.log(`\n🚀 [VAPI WEBHOOK] [${requestId}] New webhook received at ${new Date().toISOString()}`);
 
   try {
     // Security: Verify Vapi Secret
@@ -112,8 +118,18 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       };
     }
 
-    // DEBUG: Log the FULL payload to see exactly what Vapi is sending
-    console.log('📦 FULL VAPI PAYLOAD:', JSON.stringify(body, null, 2));
+    // 🔍 BLIND LOGGING: Log the COMPLETE payload structure
+    console.log('📦 ========== FULL VAPI PAYLOAD ==========');
+    console.log(JSON.stringify(body, null, 2));
+    console.log('📦 =========================================\n');
+    
+    // 🔍 Log specific critical fields
+    console.log('🔍 Payload Analysis:');
+    console.log('  - message.type:', body?.message?.type || 'NOT FOUND');
+    console.log('  - call.id:', body?.message?.call?.id || body?.call?.id || 'NOT FOUND');
+    console.log('  - artifact exists:', !!(body?.message?.call?.artifact || body?.call?.artifact));
+    console.log('  - structuredOutputs exists:', !!(body?.message?.call?.artifact?.structuredOutputs || body?.call?.artifact?.structuredOutputs));
+    console.log('');
 
     // ==========================================
     // STEP 1: EXTRACTION
