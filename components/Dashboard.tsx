@@ -5545,16 +5545,15 @@ const Dashboard: React.FC<DashboardProps> = ({
             <button 
               className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full hover:bg-surface-container-highest dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
               onClick={() => {
-                // Focus the search input - try calls search by ID first
-                const callsSearch = document.querySelector<HTMLInputElement>('#calls-search-input');
-                const homeownerSearch = document.querySelector<HTMLInputElement>('input[placeholder="Search homeowners..."]');
-                const headerSearch = document.querySelector<HTMLInputElement>('input[type="text"]');
-                const targetInput = callsSearch || homeownerSearch || headerSearch;
-                if (targetInput) {
-                  targetInput.focus();
-                  // Scroll into view if needed
-                  targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
+                // Navigate to CALLS tab and focus search
+                setCurrentTab('CALLS');
+                setTimeout(() => {
+                  const callsSearch = document.querySelector<HTMLInputElement>('#calls-search-input');
+                  if (callsSearch) {
+                    callsSearch.focus();
+                    callsSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }
+                }, 100); // Small delay to ensure tab renders
               }}
               title="Click to search for a homeowner"
             >
@@ -5586,16 +5585,15 @@ const Dashboard: React.FC<DashboardProps> = ({
           <button 
             className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full hover:bg-surface-container-highest dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
             onClick={() => {
-              // Focus the search input - try calls search by ID first
-              const callsSearch = document.querySelector<HTMLInputElement>('#calls-search-input');
-              const homeownerSearch = document.querySelector<HTMLInputElement>('input[placeholder="Search homeowners..."]');
-              const headerSearch = document.querySelector<HTMLInputElement>('input[type="text"]');
-              const targetInput = callsSearch || homeownerSearch || headerSearch;
-              if (targetInput) {
-                targetInput.focus();
-                // Scroll into view if needed
-                targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }
+              // Navigate to CALLS tab and focus search
+              setCurrentTab('CALLS');
+              setTimeout(() => {
+                const callsSearch = document.querySelector<HTMLInputElement>('#calls-search-input');
+                if (callsSearch) {
+                  callsSearch.focus();
+                  callsSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }, 100); // Small delay to ensure tab renders
             }}
             title="Click to search for a homeowner"
           >
@@ -5621,16 +5619,15 @@ const Dashboard: React.FC<DashboardProps> = ({
         <button 
           className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full hover:bg-surface-container-highest dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
           onClick={() => {
-            // Focus the search input - try calls search by ID first
-            const callsSearch = document.querySelector<HTMLInputElement>('#calls-search-input');
-            const homeownerSearch = document.querySelector<HTMLInputElement>('input[placeholder="Search homeowners..."]');
-            const headerSearch = document.querySelector<HTMLInputElement>('input[type="text"]');
-            const targetInput = callsSearch || homeownerSearch || headerSearch;
-            if (targetInput) {
-              targetInput.focus();
-              // Scroll into view if needed
-              targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
+            // Navigate to CALLS tab and focus search
+            setCurrentTab('CALLS');
+            setTimeout(() => {
+              const callsSearch = document.querySelector<HTMLInputElement>('#calls-search-input');
+              if (callsSearch) {
+                callsSearch.focus();
+                callsSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }, 100); // Small delay to ensure tab renders
           }}
           title="Click to search for a homeowner"
         >
