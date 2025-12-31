@@ -152,7 +152,8 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     console.log(`🆔 Call ID: ${vapiCallId}`);
     logCallData(callData);
 
-    const {
+    // 📞 PHONE NUMBER FALLBACK: Use Caller ID if extracted phone is missing
+    let {
       propertyAddress,
       homeownerName,
       phoneNumber,
@@ -162,6 +163,31 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       transcript,
       recordingUrl
     } = callData;
+    
+    // Fallback to caller ID if phone number wasn't extracted
+    if (!phoneNumber || phoneNumber === 'not provided' || phoneNumber === 'Not Provided') {
+      const callerId = body?.message?.call?.customer?.number || 
+                       body?.call?.customer?.number ||
+                       body?.message?.call?.phoneNumber ||
+                       body?.call?.phoneNumber ||
+                       body?.message?.call?.from ||
+                       body?.call?.from;
+      
+      if (callerId) {
+        console.log(`📞 Using Caller ID as fallback: ${callerId}`);
+        phoneNumber = callerId;
+      }
+    }
+    
+    // 🎯 CALL INTENT SMART DEFAULT: If missing but has robust issue description, default to 'new_claim'
+    if (!callIntent || callIntent === 'not provided') {
+      if (issueDescription && issueDescription.length > 20 && issueDescription !== 'not provided') {
+        console.log(`🎯 Defaulting callIntent to 'new_claim' (robust issue description detected)`);
+        callIntent = 'new_claim';
+      } else {
+        callIntent = 'other';
+      }
+    }
 
     // Connect to database
     const databaseUrl = process.env.DATABASE_URL || process.env.VITE_DATABASE_URL || process.env.NETLIFY_DATABASE_URL;
@@ -247,8 +273,11 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     let claimNumber: string | null = null;
     let claimId: string | null = null;
 
-    if (matchedHomeowner && callIntent === 'warranty_issue') {
-      console.log(`📦 [${requestId}] STEP 3: Creating claim`);
+    // Create claim if homeowner matched AND call intent indicates a new claim or emergency
+    const shouldCreateClaim = matchedHomeowner && (callIntent === 'new_claim' || callIntent === 'emergency');
+    
+    if (shouldCreateClaim) {
+      console.log(`📦 [${requestId}] STEP 3: Creating claim (intent: ${callIntent})`);
       
       try {
         const hasDuplicate = await hasRecentOpenClaim(db, matchedHomeowner.id);
@@ -297,7 +326,11 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
         console.error(`❌ Claim creation error:`, claimError.message);
       }
     } else {
-      console.log(`⏭️ Skipping claim - ${!matchedHomeowner ? 'no match' : `intent is '${callIntent}'`}`);
+      if (!matchedHomeowner) {
+        console.log(`⏭️ Skipping claim - no homeowner match found`);
+      } else {
+        console.log(`⏭️ Skipping claim - intent is '${callIntent}' (requires 'new_claim' or 'emergency')`);
+      }
     }
 
     // ==========================================

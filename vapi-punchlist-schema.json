@@ -60,6 +60,25 @@
         true,
         false
       ]
+    },
+    "callIntent": {
+      "type": "string",
+      "description": "The primary reason or intent of the call. Determine based on what the caller is requesting. Choose ONE of the following: 'new_claim' (reporting a new issue/defect for the first time), 'existing_claim_status' (asking about status of previously reported issue), 'scheduling' (wants to schedule or reschedule an appointment), 'emergency' (immediate urgent safety issue requiring same-day response), 'other' (general inquiry, billing question, or anything else). Default to 'new_claim' if the caller is describing a construction problem or defect.",
+      "enum": [
+        "new_claim",
+        "existing_claim_status",
+        "scheduling",
+        "emergency",
+        "other"
+      ],
+      "default": "new_claim",
+      "examples": [
+        "new_claim",
+        "existing_claim_status",
+        "scheduling",
+        "emergency",
+        "other"
+      ]
     }
   },
   "required": [
@@ -67,7 +86,8 @@
     "homeownerName",
     "phoneNumber",
     "issueDescription",
-    "isUrgent"
+    "isUrgent",
+    "callIntent"
   ],
   "additionalProperties": false,
   "examples": [
@@ -76,21 +96,24 @@
       "homeownerName": "Sarah Mitchell",
       "phoneNumber": "(206) 555-0187",
       "issueDescription": "Master bedroom ceiling has a water stain and is starting to bubble. Appears to be coming from the roof or attic. Noticed it after last week's heavy rain.",
-      "isUrgent": false
+      "isUrgent": false,
+      "callIntent": "new_claim"
     },
     {
       "propertyAddress": "5678 Elm Street, Redmond, Washington",
       "homeownerName": "David Thompson",
       "phoneNumber": "425-555-0234",
       "issueDescription": "Active water leak in the basement utility room. Water is pooling on the floor and the sump pump doesn't seem to be working. Caller says it's flooding.",
-      "isUrgent": true
+      "isUrgent": true,
+      "callIntent": "emergency"
     },
     {
       "propertyAddress": "910 Oak Avenue, Bellevue, WA 98004",
       "homeownerName": "Jennifer Lee",
       "phoneNumber": "Not Provided",
       "issueDescription": "Front door doesn't close properly. There's a gap at the bottom and cold air is coming in. Lock mechanism is also sticking.",
-      "isUrgent": false
+      "isUrgent": false,
+      "callIntent": "new_claim"
     }
   ]
 }
