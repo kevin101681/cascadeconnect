@@ -3112,7 +3112,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Main Layout Container - Sidebar + Content */}
         <div className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 animate-in fade-in slide-in-from-top-4">
           {/* LEFT SIDEBAR - Search + Homeowner Info Card */}
-          <div className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 ${isHomeownerCardCollapsed ? 'w-full lg:w-auto space-y-2' : 'w-full lg:w-80 space-y-4'}`}>
+          <div className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 ${isHomeownerCardCollapsed ? 'w-full lg:w-fit space-y-2' : 'w-full lg:w-80 space-y-4'}`}>
             {/* Homeowner Search Bar - Admin & Builder Only - Always Visible (Static) */}
             {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
               <div className={`relative transition-all duration-300 w-full`}>
@@ -3186,11 +3186,12 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             )}
             
-            <div 
-              ref={homeownerCardContainerRef}
-              key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
-              className={`bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 transition-all duration-300 ease-in-out overflow-hidden relative ${isHomeownerCardCollapsed ? 'hidden' : ''}`}
-            >
+            {!isHomeownerCardCollapsed && (
+              <div 
+                ref={homeownerCardContainerRef}
+                key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
+                className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 transition-all duration-300 ease-in-out overflow-hidden relative"
+              >
               {/* Collapse Button - Hidden on mobile, visible on desktop - Subtle design */}
               <button
                 onClick={(e) => {
@@ -3438,7 +3439,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             </div>
-            </div>
+            )}
             
             {/* Collapsed State - Show expand button */}
             {isHomeownerCardCollapsed && (
@@ -4029,6 +4030,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </AnimatePresence>
         </div>
         {/* END RIGHT CONTENT AREA */}
+        </div>
         </div>
         {/* END MAIN LAYOUT CONTAINER */}
 
