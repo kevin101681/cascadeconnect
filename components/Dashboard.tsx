@@ -3538,36 +3538,38 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             {/* CALLS TAB - Admin Only (hidden in homeowner view) */}
             {isAdmin && !isHomeownerView && (
-              <>
-                <button 
-                  data-tab="CALLS"
-                  onClick={() => setCurrentTab('CALLS')}
-                  className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'CALLS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
-                >
-                  <Phone className="h-4 w-4" />
-                  Calls
-                </button>
-                
-                {/* PAYROLL TAB - Admin Only (hidden in homeowner view) */}
-                <button 
-                  data-tab="PAYROLL"
-                  onClick={() => setCurrentTab('PAYROLL')}
-                  className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'PAYROLL' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
-                >
-                  <DollarSign className="h-4 w-4" />
-                  Payroll
-                </button>
-                
-                {/* INVOICES TAB - Admin Only (hidden in homeowner view) */}
-                <button 
-                  data-tab="INVOICES"
-                  onClick={() => setCurrentTab('INVOICES')}
-                  className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
-                >
-                  <FileText className="h-4 w-4" />
-                  Invoices
-                </button>
-              </>
+              <button 
+                data-tab="CALLS"
+                onClick={() => setCurrentTab('CALLS')}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'CALLS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+              >
+                <Phone className="h-4 w-4" />
+                Calls
+              </button>
+            )}
+            
+            {/* PAYROLL TAB - Administrator Only (hidden for employees and homeowner view) */}
+            {isAdmin && !isHomeownerView && currentUser?.role !== 'Employee' && (
+              <button 
+                data-tab="PAYROLL"
+                onClick={() => setCurrentTab('PAYROLL')}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'PAYROLL' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+              >
+                <DollarSign className="h-4 w-4" />
+                Payroll
+              </button>
+            )}
+            
+            {/* INVOICES TAB - Administrator Only (hidden for employees and homeowner view) */}
+            {isAdmin && !isHomeownerView && currentUser?.role !== 'Employee' && (
+              <button 
+                data-tab="INVOICES"
+                onClick={() => setCurrentTab('INVOICES')}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+              >
+                <FileText className="h-4 w-4" />
+                Invoices
+              </button>
             )}
         </div>
 
@@ -3880,8 +3882,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             )}
 
-            {/* PAYROLL Tab - Admin Only */}
-            {isAdmin && (
+            {/* PAYROLL Tab - Administrator Only (hidden for employees) */}
+            {isAdmin && currentUser?.role !== 'Employee' && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
                 style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
@@ -3894,8 +3896,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             )}
 
-            {/* INVOICES Tab - Admin Only */}
-            {isAdmin && (
+            {/* INVOICES Tab - Administrator Only (hidden for employees) */}
+            {isAdmin && currentUser?.role !== 'Employee' && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
                 style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
@@ -3926,8 +3928,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             )}
 
-            {/* PAYROLL Tab - Admin Only */}
-            {isAdmin && (
+            {/* PAYROLL Tab - Administrator Only (hidden for employees) - Duplicate for carousel */}
+            {isAdmin && currentUser?.role !== 'Employee' && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
                 style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
@@ -3940,8 +3942,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             )}
 
-            {/* INVOICES Tab - Admin Only */}
-            {isAdmin && (
+            {/* INVOICES Tab - Administrator Only (hidden for employees) - Duplicate for carousel */}
+            {isAdmin && currentUser?.role !== 'Employee' && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
                 style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
@@ -4135,7 +4137,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </motion.div>
           )}
 
-          {currentTab === 'PAYROLL' && isAdmin && (
+          {currentTab === 'PAYROLL' && isAdmin && currentUser?.role !== 'Employee' && (
             <motion.div 
               key="payroll"
               className="max-w-7xl mx-auto md:relative"
@@ -4148,7 +4150,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </motion.div>
           )}
 
-          {currentTab === 'INVOICES' && isAdmin && (
+          {currentTab === 'INVOICES' && isAdmin && currentUser?.role !== 'Employee' && (
             <motion.div 
               key="invoices"
               className="max-w-7xl mx-auto md:relative"
