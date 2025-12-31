@@ -5542,13 +5542,23 @@ const Dashboard: React.FC<DashboardProps> = ({
       <>
         {renderModals()}
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 animate-in fade-in slide-in-from-bottom-4">
-            <div className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full">
+            <button 
+              className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full hover:bg-surface-container-highest dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+              onClick={() => {
+                // Focus the search input in the Layout header
+                const searchInput = document.querySelector<HTMLInputElement>('input[type="text"]');
+                if (searchInput) {
+                  searchInput.focus();
+                }
+              }}
+              title="Click to search for a homeowner"
+            >
                 <Search className="h-12 w-12 text-surface-outline dark:text-gray-400" />
-            </div>
+            </button>
             <div>
                 <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">Select a Homeowner</h2>
                 <p className="text-surface-on-variant dark:text-gray-400 mt-2 max-w-sm mx-auto">
-                    Search for a homeowner in the top bar to view their warranty claims, tasks, and account details.
+                    Click the search icon or use the search bar above to find a homeowner and view their warranty claims, tasks, and account details.
                 </p>
                 {isBuilder && (
                    <p className="text-surface-on-variant dark:text-gray-400 mt-1 text-xs">
@@ -5568,13 +5578,23 @@ const Dashboard: React.FC<DashboardProps> = ({
       <>
         {renderModals()}
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 animate-in fade-in slide-in-from-bottom-4">
-          <div className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full">
+          <button 
+            className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full hover:bg-surface-container-highest dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+            onClick={() => {
+              // Focus the search input in the Layout header
+              const searchInput = document.querySelector<HTMLInputElement>('input[type="text"]');
+              if (searchInput) {
+                searchInput.focus();
+              }
+            }}
+            title="Click to search for a homeowner"
+          >
             <Search className="h-12 w-12 text-surface-outline dark:text-gray-400" />
-          </div>
+          </button>
           <div>
             <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">Select a Homeowner</h2>
             <p className="text-surface-on-variant dark:text-gray-400 mt-2 max-w-sm mx-auto">
-              Please select a homeowner from the search bar above before switching to homeowner view.
+              Click the search icon or use the search bar above to find a homeowner before switching to homeowner view.
             </p>
           </div>
         </div>
@@ -5588,13 +5608,23 @@ const Dashboard: React.FC<DashboardProps> = ({
     <>
       {renderModals()}
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 animate-in fade-in slide-in-from-bottom-4">
-        <div className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full">
+        <button 
+          className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full hover:bg-surface-container-highest dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
+          onClick={() => {
+            // Focus the search input in the Layout header
+            const searchInput = document.querySelector<HTMLInputElement>('input[type="text"]');
+            if (searchInput) {
+              searchInput.focus();
+            }
+          }}
+          title="Click to search for a homeowner"
+        >
           <Search className="h-12 w-12 text-surface-outline dark:text-gray-400" />
-        </div>
+        </button>
         <div>
           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">Select a Homeowner</h2>
           <p className="text-surface-on-variant dark:text-gray-400 mt-2 max-w-sm mx-auto">
-            Search for a homeowner in the top bar to view their warranty claims, tasks, and account details.
+            Click the search icon or use the search bar above to find a homeowner and view their warranty claims, tasks, and account details.
           </p>
         </div>
       </div>
