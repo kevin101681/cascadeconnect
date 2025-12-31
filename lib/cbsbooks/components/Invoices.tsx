@@ -507,10 +507,10 @@ export const Invoices: React.FC<InvoicesProps> = ({
         return currentY;
     };
 
-    // Add CBS Logo in top right corner
+    // Add CBS Logo in top right corner (adjusted aspect ratio to prevent squishing)
     try {
         const logoPath = '/images/manual/cbslogo.png';
-        doc.addImage(logoPath, 'PNG', 160, 10, 35, 15); // x, y, width, height
+        doc.addImage(logoPath, 'PNG', 160, 10, 35, 20); // x, y, width, height - increased height from 15 to 20
     } catch (e) {
         console.warn('Could not load CBS logo:', e);
     }
@@ -570,10 +570,11 @@ export const Invoices: React.FC<InvoicesProps> = ({
 
     doc.setFont(undefined, 'bold');
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    doc.text("Description", 16, y);
-    doc.text("Qty", 110, y, { align: 'center' });
-    doc.text("Rate", 135, y, { align: 'right' });
-    doc.text("Amount", 185, y, { align: 'right' });
+    // Vertically center text in pill: pill top is y-5, height is 8, so center is y-1
+    doc.text("Description", 16, y-0.5);
+    doc.text("Qty", 110, y-0.5, { align: 'center' });
+    doc.text("Rate", 135, y-0.5, { align: 'right' });
+    doc.text("Amount", 185, y-0.5, { align: 'right' });
     doc.setFont(undefined, 'normal');
     doc.setTextColor(0);
     
