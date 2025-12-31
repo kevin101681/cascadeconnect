@@ -507,6 +507,14 @@ export const Invoices: React.FC<InvoicesProps> = ({
         return currentY;
     };
 
+    // Add CBS Logo in top right corner
+    try {
+        const logoPath = '/images/manual/cbslogo.png';
+        doc.addImage(logoPath, 'PNG', 160, 10, 35, 15); // x, y, width, height
+    } catch (e) {
+        console.warn('Could not load CBS logo:', e);
+    }
+
     // Header
     doc.setFontSize(24);
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
@@ -525,7 +533,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
         doc.text(`Date Paid: ${formatDate(invoice.datePaid)}`, 140, 32, { align: 'right' });
     }
 
-    // Client Info
+    // Bill To section
     doc.setFontSize(12);
     doc.setFont(undefined, 'bold');
     doc.text("Bill To:", 14, 40);
@@ -533,6 +541,16 @@ export const Invoices: React.FC<InvoicesProps> = ({
     doc.setFontSize(10);
     doc.text(invoice.clientName || '', 14, 46);
     if(invoice.clientEmail) doc.text(invoice.clientEmail, 14, 51);
+    
+    // Sent From section (right side, aligned with Bill To)
+    doc.setFontSize(12);
+    doc.setFont(undefined, 'bold');
+    doc.text("Sent From:", 120, 40);
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(10);
+    doc.text("Cascade Builder Services", 120, 46);
+    doc.text("3519 Fox Ct.", 120, 51);
+    doc.text("Gig Harbor, WA 98335", 120, 56);
     
     // Items Table Header Y Position
     let y = 75;
