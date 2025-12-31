@@ -136,22 +136,6 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
           </SignedIn>
         </div>
       </div>
-      
-      {/* Skip Login Button for Testing - Outside Auth Card */}
-      <button 
-        onClick={() => {
-          // Set a flag in sessionStorage to bypass authentication
-          sessionStorage.setItem('cascade_bypass_login', 'true');
-          // Clear any logout flags
-          sessionStorage.removeItem('cascade_logged_out');
-          sessionStorage.removeItem('cascade_force_login');
-          // Reload the page to trigger App.tsx to re-evaluate auth state
-          window.location.reload();
-        }}
-        className="mt-4 w-full max-w-md bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-3 px-4 rounded-lg transition-colors text-sm border-2 border-yellow-600 shadow-lg"
-      >
-        Skip Login (Testing)
-      </button>
     </div>
   );
 };
