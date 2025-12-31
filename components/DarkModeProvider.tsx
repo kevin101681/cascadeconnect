@@ -22,13 +22,14 @@ interface DarkModeProviderProps {
 export const DarkModeProvider: React.FC<DarkModeProviderProps> = ({ children }) => {
   // Initialize synchronously to prevent flash
   const getInitialDarkMode = () => {
-    // Check localStorage first, then system preference
+    // Check localStorage first, default to light mode (false)
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('darkMode');
       if (stored !== null) {
         return stored === 'true';
       }
-      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+      // Default to light mode instead of system preference
+      return false;
     }
     return false;
   };
@@ -55,21 +56,6 @@ export const DarkModeProvider: React.FC<DarkModeProviderProps> = ({ children }) 
     }
     localStorage.setItem('darkMode', String(isDarkMode));
   }, [isDarkMode]);
-
-  // Listen for system preference changes
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = (e: MediaQueryListEvent) => {
-        // Only update if user hasn't manually set a preference
-        if (localStorage.getItem('darkMode') === null) {
-          setIsDarkMode(e.matches);
-        }
-      };
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
-  }, []);
 
   const toggleDarkMode = () => {
     setIsDarkMode(prev => !prev);
