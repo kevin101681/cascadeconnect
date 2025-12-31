@@ -606,19 +606,19 @@ export const Invoices: React.FC<InvoicesProps> = ({
     doc.line(14, y, 196, y);
     y += 10;
     
-    // Total Background with Rounded Corners (Pill style)
+    // Total Background with Rounded Corners (Pill style) - Reduced width and padding
     doc.setFillColor(surfaceContainerColor[0], surfaceContainerColor[1], surfaceContainerColor[2]);
-    doc.roundedRect(125, y-6, 70, 10, 5, 5, 'F');
+    doc.roundedRect(135, y-6, 60, 10, 5, 5, 'F'); // Reduced from 70 to 60, moved from x=125 to x=135
 
     doc.setFontSize(12);
     doc.setFont(undefined, 'bold');
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     
-    // Align Total label and Amount
-    doc.text("Total", 140, y); 
+    // Align Total label and Amount - closer together
+    doc.text("Total", 142, y-0.5); // Vertically centered, moved right
     // Ensure total is a number safe for toFixed
     const safeTotal = typeof invoice.total === 'number' ? invoice.total : 0;
-    doc.text(`$${safeTotal.toFixed(0)}`, 185, y, { align: 'right' });
+    doc.text(`$${safeTotal.toFixed(0)}`, 188, y-0.5, { align: 'right' }); // Vertically centered, moved right
 
     // Payment Button
     // Only render if paymentLink exists
@@ -636,12 +636,13 @@ export const Invoices: React.FC<InvoicesProps> = ({
         // x=155, width=40 (approx center under total)
         doc.roundedRect(155, y-7, 40, 10, 5, 5, 'F');
         
-        // Button Text - White
+        // Button Text - White, centered horizontally and vertically
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(10);
         doc.setFont(undefined, 'bold');
         
-        doc.text("PAY ONLINE", 175, y, { align: 'center' });
+        // Pill center: x=175 (155 + 40/2), y center: y-2 (pill top is y-7, height 10, so center is y-2)
+        doc.text("PAY ONLINE", 175, y-1.5, { align: 'center' });
         
         // Clickable Link
         doc.link(155, y-7, 40, 10, { url: invoice.paymentLink });
