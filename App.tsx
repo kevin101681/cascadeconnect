@@ -3809,6 +3809,7 @@ Assigned By: ${assignerName}
         if (typeof window !== 'undefined') {
           sessionStorage.setItem('cascade_logged_out', 'true');
           sessionStorage.setItem('cascade_force_login', 'true'); // Force show login screen
+          sessionStorage.removeItem('cascade_bypass_login'); // Clear bypass flag to show login screen
         }
         await signOut();
       }}

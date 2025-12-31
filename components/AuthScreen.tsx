@@ -93,6 +93,22 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
                 >
                   Create Account
                 </button>
+                
+                {/* Skip Login Button for Testing */}
+                <button 
+                  onClick={() => {
+                    // Set a flag in sessionStorage to bypass authentication
+                    sessionStorage.setItem('cascade_bypass_login', 'true');
+                    // Clear any logout flags
+                    sessionStorage.removeItem('cascade_logged_out');
+                    sessionStorage.removeItem('cascade_force_login');
+                    // Reload the page to trigger App.tsx to re-evaluate auth state
+                    window.location.reload();
+                  }}
+                  className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm border-2 border-yellow-600"
+                >
+                  Skip Login (Testing)
+                </button>
               </div>
             ) : showSignIn ? (
               <div>
