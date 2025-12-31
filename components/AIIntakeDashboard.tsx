@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Call, Homeowner } from '../types';
 import { Phone, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Building2, User, Mail, ExternalLink, Play, Download, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { db, isDbConfigured } from '../db';
@@ -89,28 +89,41 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
     }
   };
 
-  // Filter calls by status filter
-  const statusFilteredCalls = callsData.filter(call => {
-    if (filter === 'verified') return call.isVerified;
-    if (filter === 'unverified') return !call.isVerified;
-    if (filter === 'urgent') return call.isUrgent;
-    return true;
-  });
+  // Filter calls by status filter - memoized to prevent recreation
+  const statusFilteredCalls = useMemo(() => {
+    return callsData.filter(call => {
+      if (filter === 'verified') return call.isVerified;
+      if (filter === 'unverified') return !call.isVerified;
+      if (filter === 'urgent') return call.isUrgent;
+      return true;
+    });
+  }, [callsData, filter]);
 
-  // Search across all fields
-  const filteredCalls = statusFilteredCalls.filter(call => {
-    if (!searchQuery.trim()) return true;
-    
-    const query = searchQuery.toLowerCase();
-    return (
-      call.homeownerName?.toLowerCase().includes(query) ||
-      call.phoneNumber?.toLowerCase().includes(query) ||
-      call.propertyAddress?.toLowerCase().includes(query) ||
-      call.issueDescription?.toLowerCase().includes(query) ||
-      call.verifiedBuilderName?.toLowerCase().includes(query) ||
-      call.transcript?.toLowerCase().includes(query)
-    );
-  });
+  // Search across all fields - memoized to prevent recreation
+  const filteredCalls = useMemo(() => {
+    return statusFilteredCalls.filter(call => {
+      if (!searchQuery.trim()) return true;
+      
+      const query = searchQuery.toLowerCase();
+      return (
+        call.homeownerName?.toLowerCase().includes(query) ||
+        call.phoneNumber?.toLowerCase().includes(query) ||
+        call.propertyAddress?.toLowerCase().includes(query) ||
+        call.issueDescription?.toLowerCase().includes(query) ||
+        call.verifiedBuilderName?.toLowerCase().includes(query) ||
+        call.transcript?.toLowerCase().includes(query)
+      );
+    });
+  }, [statusFilteredCalls, searchQuery]);
+
+  // Auto-select first call - only when filteredCalls array actually changes
+  useEffect(() => {
+    if (filteredCalls.length > 0 && (!selectedCall || !filteredCalls.find(c => c.id === selectedCall.id))) {
+      setSelectedCall(filteredCalls[0]);
+    } else if (filteredCalls.length === 0) {
+      setSelectedCall(null);
+    }
+  }, [filteredCalls]); // Now safe because filteredCalls is memoized
 
   // Pagination
   const totalPages = Math.ceil(filteredCalls.length / ITEMS_PER_PAGE);
@@ -122,29 +135,6 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, filter]);
-
-  // Auto-select first call when filtered calls change
-  // Use a ref to prevent infinite loops since filteredCalls is recalculated on every render
-  const filteredCallsLengthRef = useRef(0);
-  const selectedCallIdRef = useRef<string | null>(null);
-  
-  useEffect(() => {
-    const currentLength = filteredCalls.length;
-    const currentSelectedId = selectedCall?.id || null;
-    
-    // Only update if the length changed or selection is null
-    if (currentLength > 0 && !currentSelectedId) {
-      // Auto-select first call
-      setSelectedCall(filteredCalls[0]);
-      selectedCallIdRef.current = filteredCalls[0]?.id || null;
-    } else if (currentLength === 0 && currentSelectedId) {
-      // Clear selection if no calls
-      setSelectedCall(null);
-      selectedCallIdRef.current = null;
-    }
-    
-    filteredCallsLengthRef.current = currentLength;
-  }, [filteredCalls.length, searchQuery, filter, callsData.length]); // Depend on stable values only
 
   const stats = {
     total: callsData.length,
