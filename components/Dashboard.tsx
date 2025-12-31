@@ -395,7 +395,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual)
-  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'>(initialTab || 'CLAIMS');
+  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'>(initialTab || 'CLAIMS');
   
   // Update currentTab when initialTab prop changes
   useEffect(() => {
@@ -418,25 +418,26 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [swipeProgress, setSwipeProgress] = useState<number>(0); // 0 to 1, represents swipe completion
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
-  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | null>(null);
+  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | null>(null);
   
   // Minimum swipe distance (in pixels)
   const minSwipeDistance = 50;
   
   // Get available tabs in order
-  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> => {
+  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> => {
     const isHomeownerViewRole = userRole === UserRole.HOMEOWNER;
     const isEmployee = currentUser?.role === 'Employee';
     console.log('🔍 Dashboard getAvailableTabs - currentUser:', currentUser?.name, 'role:', currentUser?.role, 'isEmployee:', isEmployee);
-    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> = ['CLAIMS'];
+    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> = ['CLAIMS'];
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('TASKS');
       tabs.push('NOTES'); // NOTES tab between TASKS and MESSAGES
     }
     tabs.push('MESSAGES');
-    // Homeowner Manual tab - only show for homeowners
+    // Homeowner tabs - only show for homeowners
     if (isHomeownerViewRole) {
-      tabs.push('MANUAL'); // Homeowner Manual tab between MESSAGES and previous DOCUMENTS position
+      tabs.push('DOCUMENTS'); // DOCUMENTS tab for homeowners
+      tabs.push('MANUAL'); // Homeowner Manual tab
     }
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('CALLS'); // CALLS tab (admin only)
@@ -446,7 +447,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         tabs.push('INVOICES'); // INVOICES tab (administrator only)
       }
     }
-    // DOCUMENTS tab removed - now a button in homeowner info card
+    // DOCUMENTS tab for homeowners is now in the tabs, but for admin it's still a button in homeowner info card
     console.log('📋 Available tabs:', tabs);
     return tabs;
   };
@@ -3112,97 +3113,96 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Main Layout Container - Sidebar + Content */}
         <div className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 animate-in fade-in slide-in-from-top-4">
           {/* LEFT SIDEBAR - Homeowner Info Card with Search */}
-          <div className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 w-full lg:w-80`}>
-            {/* Homeowner Info Card - Always visible container */}
-            <div 
-              ref={homeownerCardContainerRef}
-              key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
-              className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 overflow-hidden relative"
-            >
-              {/* Search Bar - Admin & Builder Only - Always visible at top */}
-              {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
-                <div className="p-4 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" />
-                    <input 
-                      type="text" 
-                      placeholder="Search homeowners..."
-                      className="w-full bg-white dark:bg-gray-700 rounded-full pl-9 pr-8 py-2 text-sm border border-surface-outline-variant dark:border-gray-600 focus:ring-2 focus:ring-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all"
-                      value={searchQuery}
-                      onChange={(e) => onSearchChange(e.target.value)}
-                      onClick={() => {
-                        if (isHomeownerCardCollapsed) {
-                          setIsHomeownerCardCollapsed(false);
-                        }
-                      }}
-                      title="Search homeowners"
-                    />
-                    {searchQuery && (
-                      <button 
-                        onClick={() => onSearchChange('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-outline-variant hover:text-surface-on"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    )}
-                    
-                    {/* Dropdown Results */}
-                    {searchQuery && searchResults.length > 0 && (
-                      <div className="absolute z-50 w-full mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 max-h-96 overflow-y-auto">
-                        {searchResults.map((homeowner) => (
-                          <button
-                            key={homeowner.id}
-                            onClick={() => {
-                              onSelectHomeowner(homeowner);
-                              onSearchChange('');
-                            }}
-                            className="w-full text-left px-4 py-3 hover:bg-surface-container dark:hover:bg-gray-700 border-b border-surface-outline-variant dark:border-gray-700 last:border-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{homeowner.name}</p>
-                                {homeowner.builder && (
-                                  <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">
-                                    {homeowner.builder}
-                                  </p>
-                                )}
-                                {homeowner.jobName && (
-                                  <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">{homeowner.jobName}</p>
-                                )}
-                                {homeowner.closingDate && (
-                                  <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">
-                                    Closing: {new Date(homeowner.closingDate).toLocaleDateString()}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  
-                  {/* Collapse/Expand Button */}
-                  <button
-                    onClick={() => setIsHomeownerCardCollapsed(!isHomeownerCardCollapsed)}
-                    className="hidden lg:flex items-center justify-center w-full mt-2 p-1 hover:bg-surface-container/50 dark:hover:bg-gray-700/50 rounded transition-all"
-                    title={isHomeownerCardCollapsed ? "Expand homeowner info" : "Collapse homeowner info"}
-                  >
-                    {isHomeownerCardCollapsed ? (
-                      <ChevronDown className="h-4 w-4 text-gray-600 dark:text-gray-500" />
-                    ) : (
-                      <ChevronUp className="h-4 w-4 text-gray-600 dark:text-gray-500" />
-                    )}
-                  </button>
-                </div>
-              )}
-              
-              {/* Collapsible Content with Smooth Animation */}
+          <div className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 ${isHomeownerCardCollapsed ? 'w-full lg:w-16' : 'w-full lg:w-80'}`}>
+            {/* Collapsed State - Show expand button */}
+            {isHomeownerCardCollapsed && (
+              <div className="hidden lg:block bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 p-2">
+                <button
+                  onClick={() => setIsHomeownerCardCollapsed(false)}
+                  className="flex items-center justify-center w-full p-2 hover:bg-surface-container/50 dark:hover:bg-gray-700/50 rounded transition-all"
+                  title="Expand homeowner info"
+                >
+                  <ChevronRight className="h-5 w-5 text-gray-600 dark:text-gray-500" />
+                </button>
+              </div>
+            )}
+            
+            {/* Expanded State - Full Card */}
+            {!isHomeownerCardCollapsed && (
               <div 
-                className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                  isHomeownerCardCollapsed ? 'max-h-0 opacity-0' : 'max-h-[2000px] opacity-100'
-                }`}
+                ref={homeownerCardContainerRef}
+                key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
+                className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 overflow-hidden relative"
               >
+                {/* Search Bar - Admin & Builder Only - Always visible at top */}
+                {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
+                  <div className="p-4 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" />
+                      <input 
+                        type="text" 
+                        placeholder="Search homeowners..."
+                        className="w-full bg-white dark:bg-gray-700 rounded-full pl-9 pr-8 py-2 text-sm border border-surface-outline-variant dark:border-gray-600 focus:ring-2 focus:ring-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all"
+                        value={searchQuery}
+                        onChange={(e) => onSearchChange(e.target.value)}
+                        title="Search homeowners"
+                      />
+                      {searchQuery && (
+                        <button 
+                          onClick={() => onSearchChange('')}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-outline-variant hover:text-surface-on"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                      
+                      {/* Dropdown Results */}
+                      {searchQuery && searchResults.length > 0 && (
+                        <div className="absolute z-50 w-full mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 max-h-96 overflow-y-auto">
+                          {searchResults.map((homeowner) => (
+                            <button
+                              key={homeowner.id}
+                              onClick={() => {
+                                onSelectHomeowner(homeowner);
+                                onSearchChange('');
+                              }}
+                              className="w-full text-left px-4 py-3 hover:bg-surface-container dark:hover:bg-gray-700 border-b border-surface-outline-variant dark:border-gray-700 last:border-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{homeowner.name}</p>
+                                  {homeowner.builder && (
+                                    <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">
+                                      {homeowner.builder}
+                                    </p>
+                                  )}
+                                  {homeowner.jobName && (
+                                    <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">{homeowner.jobName}</p>
+                                  )}
+                                  {homeowner.closingDate && (
+                                    <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">
+                                      Closing: {new Date(homeowner.closingDate).toLocaleDateString()}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Collapse Button */}
+                    <button
+                      onClick={() => setIsHomeownerCardCollapsed(true)}
+                      className="hidden lg:flex items-center justify-center w-full mt-2 p-1 hover:bg-surface-container/50 dark:hover:bg-gray-700/50 rounded transition-all"
+                      title="Collapse homeowner info"
+                    >
+                      <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-500" />
+                    </button>
+                  </div>
+                )}
+                
             {/* Card Content */}
             <div className="flex flex-col p-6">
              
@@ -3438,8 +3438,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               })()}
             </div>
             </div>
-            {/* End Collapsible Content */}
-            </div>
+            )}
             {/* End Homeowner Card */}
           </div>
           {/* END LEFT SIDEBAR */}
@@ -3486,6 +3485,21 @@ const Dashboard: React.FC<DashboardProps> = ({
               <Mail className="h-4 w-4" />
               Messages
             </button>
+
+            {/* Homeowner Documents Tab - Only show for homeowners */}
+            {userRole === UserRole.HOMEOWNER && (
+              <button 
+                data-tab="DOCUMENTS"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setCurrentTab('DOCUMENTS');
+                }}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+              >
+                <FileText className="h-4 w-4" />
+                Documents
+              </button>
+            )}
 
             {/* Homeowner Manual Tab - Only show for homeowners */}
             {userRole === UserRole.HOMEOWNER && (
@@ -3678,6 +3692,165 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
               </div>
             </div>
+
+            {/* DOCUMENTS Tab - Homeowner Only */}
+            {userRole === UserRole.HOMEOWNER && (
+              <div 
+                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+              >
+                <div className="w-full min-h-[calc(100vh-300px)]">
+                  <div className="max-w-7xl mx-auto pb-4">
+                    <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden">
+                      <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700">
+                        <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                          <FileText className="h-5 w-5 text-primary" />
+                          Account Documents
+                        </h2>
+                      </div>
+                      
+                      <div className="p-6 bg-surface dark:bg-gray-800">
+                        {displayDocuments.length === 0 ? (
+                          <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-12 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
+                            No documents uploaded for this account.
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            {displayDocuments.map(doc => {
+                              const isPDF = doc.type === 'PDF' || doc.name.toLowerCase().endsWith('.pdf') || 
+                                           doc.url.startsWith('data:application/pdf') || 
+                                           doc.url.includes('pdf');
+                              
+                              return (
+                                <div key={doc.id} className="flex flex-col bg-surface-container dark:bg-gray-700 rounded-xl overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-lg transition-all relative group">
+                                  <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent p-2 flex items-center justify-end gap-1">
+                                    {isPDF && (
+                                      <>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            const link = document.createElement('a');
+                                            link.href = `https://drive.google.com/drive/folders`;
+                                            link.target = '_blank';
+                                            link.click();
+                                            if (doc.url.startsWith('data:')) {
+                                              const downloadLink = document.createElement('a');
+                                              downloadLink.href = doc.url;
+                                              downloadLink.download = doc.name;
+                                              document.body.appendChild(downloadLink);
+                                              downloadLink.click();
+                                              document.body.removeChild(downloadLink);
+                                            }
+                                          }}
+                                          className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
+                                          title="Save to Google Drive"
+                                        >
+                                          <Share2 className="h-3.5 w-3.5" />
+                                        </button>
+                                        
+                                        {doc.url.startsWith('data:') ? (
+                                          <a 
+                                            href={doc.url} 
+                                            download={doc.name} 
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
+                                            title="Download"
+                                          >
+                                            <Download className="h-3.5 w-3.5" />
+                                          </a>
+                                        ) : (
+                                          <button 
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              window.open(doc.url, '_blank');
+                                            }}
+                                            className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
+                                            title="Download"
+                                          >
+                                            <Download className="h-3.5 w-3.5" />
+                                          </button>
+                                        )}
+                                        
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            const printWindow = window.open('', '_blank');
+                                            if (printWindow && doc.url) {
+                                              printWindow.document.write(`
+                                                <html>
+                                                  <head><title>${doc.name}</title></head>
+                                                  <body style="margin:0;">
+                                                    <iframe src="${doc.url}" style="width:100%;height:100vh;border:none;"></iframe>
+                                                  </body>
+                                                </html>
+                                              `);
+                                              printWindow.document.close();
+                                              printWindow.onload = () => {
+                                                setTimeout(() => {
+                                                  printWindow.print();
+                                                }, 250);
+                                              };
+                                            }
+                                          }}
+                                          className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
+                                          title="Print"
+                                        >
+                                          <Printer className="h-3.5 w-3.5" />
+                                        </button>
+                                      </>
+                                    )}
+                                  </div>
+                                  
+                                  <div 
+                                    className="w-full aspect-[3/4] bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden cursor-pointer relative group"
+                                    onClick={() => {
+                                      if (isPDF) {
+                                        setSelectedDocument(doc);
+                                        setIsPDFViewerOpen(true);
+                                      } else if (doc.type === 'IMAGE' || doc.url?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) || doc.url?.startsWith('data:image/')) {
+                                        window.open(doc.url, '_blank');
+                                      } else {
+                                        window.open(doc.url, '_blank');
+                                      }
+                                    }}
+                                  >
+                                    {isPDF ? (
+                                      <div className="relative w-full h-full">
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                          <FileText className="h-16 w-16 text-primary mb-2" />
+                                          <span className="text-xs text-surface-on-variant dark:text-gray-400 font-medium">PDF</span>
+                                        </div>
+                                      </div>
+                                    ) : doc.type === 'IMAGE' || doc.url?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) || doc.url?.startsWith('data:image/') ? (
+                                      <img src={doc.url} alt={doc.name} className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="flex flex-col items-center justify-center">
+                                        <FileText className="h-12 w-12 text-blue-600 mb-2" />
+                                        <span className="text-xs text-surface-on-variant dark:text-gray-400">File</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="p-3 bg-surface-container dark:bg-gray-700">
+                                    <p className="text-xs font-medium text-surface-on dark:text-gray-100 truncate" title={doc.name}>
+                                      {doc.name}
+                                    </p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* MANUAL Tab - Homeowner Only */}
             {userRole === UserRole.HOMEOWNER && (
@@ -3996,6 +4169,177 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
                       <CBSBooksApp />
                     </Suspense>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {currentTab === 'DOCUMENTS' && (
+            <motion.div 
+              key="documents"
+              className="max-w-7xl mx-auto md:relative"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+              <div className="max-w-7xl mx-auto pb-4">
+                <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden">
+                  <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700">
+                    <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-primary" />
+                      Account Documents
+                    </h2>
+                  </div>
+                  
+                  <div className="p-6 bg-surface dark:bg-gray-800">
+                    {/* Thumbnail Grid */}
+                    {displayDocuments.length === 0 ? (
+                      <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-12 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
+                        No documents uploaded for this account.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        {displayDocuments.map(doc => {
+                          const isPDF = doc.type === 'PDF' || doc.name.toLowerCase().endsWith('.pdf') || 
+                                       doc.url.startsWith('data:application/pdf') || 
+                                       doc.url.includes('pdf');
+                          
+                          return (
+                            <div key={doc.id} className="flex flex-col bg-surface-container dark:bg-gray-700 rounded-xl overflow-hidden border border-surface-outline-variant dark:border-gray-600 hover:shadow-lg transition-all relative group">
+                              {/* Header with Action Buttons */}
+                              <div className="absolute top-0 left-0 right-0 z-20 bg-gradient-to-b from-black/70 to-transparent p-2 flex items-center justify-end gap-1">
+                                {isPDF && (
+                                  <>
+                                    {/* Save to Google Drive */}
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        // Create a link that opens Google Drive
+                                        const link = document.createElement('a');
+                                        link.href = `https://drive.google.com/drive/folders`;
+                                        link.target = '_blank';
+                                        link.click();
+                                        // Also trigger download as fallback
+                                        if (doc.url.startsWith('data:')) {
+                                          const downloadLink = document.createElement('a');
+                                          downloadLink.href = doc.url;
+                                          downloadLink.download = doc.name;
+                                          document.body.appendChild(downloadLink);
+                                          downloadLink.click();
+                                          document.body.removeChild(downloadLink);
+                                        }
+                                      }}
+                                      className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
+                                      title="Save to Google Drive"
+                                    >
+                                      <Share2 className="h-3.5 w-3.5" />
+                                    </button>
+                                    
+                                    {/* Download */}
+                                    {doc.url.startsWith('data:') ? (
+                                      <a 
+                                        href={doc.url} 
+                                        download={doc.name} 
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
+                                        title="Download"
+                                      >
+                                        <Download className="h-3.5 w-3.5" />
+                                      </a>
+                                    ) : (
+                                      <button 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          window.open(doc.url, '_blank');
+                                        }}
+                                        className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
+                                        title="Download"
+                                      >
+                                        <Download className="h-3.5 w-3.5" />
+                                      </button>
+                                    )}
+                                    
+                                    {/* Print */}
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        const printWindow = window.open('', '_blank');
+                                        if (printWindow && doc.url) {
+                                          printWindow.document.write(`
+                                            <html>
+                                              <head><title>${doc.name}</title></head>
+                                              <body style="margin:0;">
+                                                <iframe src="${doc.url}" style="width:100%;height:100vh;border:none;"></iframe>
+                                              </body>
+                                            </html>
+                                          `);
+                                          printWindow.document.close();
+                                          printWindow.onload = () => {
+                                            setTimeout(() => {
+                                              printWindow.print();
+                                            }, 250);
+                                          };
+                                        }
+                                      }}
+                                      className="p-1.5 bg-white dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg shadow-md transition-all flex items-center justify-center"
+                                      title="Print"
+                                    >
+                                      <Printer className="h-3.5 w-3.5" />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                              
+                              {/* Thumbnail */}
+                              <div 
+                                className="w-full aspect-[3/4] bg-white dark:bg-gray-800 flex items-center justify-center overflow-hidden cursor-pointer relative group"
+                                onClick={() => {
+                                  if (isPDF) {
+                                    setSelectedDocument(doc);
+                                    setIsPDFViewerOpen(true);
+                                  } else if (doc.type === 'IMAGE' || doc.url?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) || doc.url?.startsWith('data:image/')) {
+                                    // Open image in new tab or image viewer
+                                    window.open(doc.url, '_blank');
+                                  } else {
+                                    // For other types, try to open in new tab
+                                    window.open(doc.url, '_blank');
+                                  }
+                                }}
+                              >
+                                {isPDF ? (
+                                  <div className="relative w-full h-full">
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                      <FileText className="h-16 w-16 text-primary mb-2" />
+                                      <span className="text-xs text-surface-on-variant dark:text-gray-400 font-medium">PDF</span>
+                                    </div>
+                                  </div>
+                                ) : doc.type === 'IMAGE' || doc.url?.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) || doc.url?.startsWith('data:image/') ? (
+                                  <img src={doc.url} alt={doc.name} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="flex flex-col items-center justify-center">
+                                    <FileText className="h-12 w-12 text-blue-600 mb-2" />
+                                    <span className="text-xs text-surface-on-variant dark:text-gray-400">File</span>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* Document Name */}
+                              <div className="p-3 bg-surface-container dark:bg-gray-700">
+                                <p className="text-xs font-medium text-surface-on dark:text-gray-100 truncate" title={doc.name}>
+                                  {doc.name}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
