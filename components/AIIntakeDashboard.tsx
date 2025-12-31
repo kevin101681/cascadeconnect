@@ -120,7 +120,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
   // This avoids useEffect infinite loops
   const actualSelectedCall = useMemo(() => {
     if (filteredCalls.length === 0) return null;
-    if (selectedCall && filteredCalls.find(c => c.id === actualSelectedCall.id)) {
+    if (selectedCall && filteredCalls.find(c => c.id === selectedCall.id)) {
       return selectedCall;
     }
     return filteredCalls[0];
@@ -171,18 +171,6 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
       </div>
     );
   }
-
-  // Auto-select first call when filtered calls change (not just length)
-  // Only select if no call is currently selected
-  useEffect(() => {
-    if (filteredCalls.length > 0 && !selectedCall) {
-      setSelectedCall(filteredCalls[0]);
-    } else if (filteredCalls.length === 0 && selectedCall) {
-      // Clear selection if filtered calls becomes empty
-      setSelectedCall(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredCalls]);
 
   return (
     <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 flex flex-col h-[calc(100vh-12rem)]">
