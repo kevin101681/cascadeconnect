@@ -57,7 +57,7 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
       
       {/* Brand Header */}
       <div className="flex flex-col items-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="bg-primary-container dark:bg-primary/20 p-3 rounded-xl border border-surface-outline-variant dark:border-gray-600 shadow-elevation-1 flex items-center justify-center mb-4">
+        <div className="bg-gray-100 dark:bg-primary/20 p-3 rounded-xl border border-surface-outline-variant dark:border-gray-600 shadow-elevation-1 flex items-center justify-center mb-4">
           <img 
             src="/logo.svg" 
             alt="CASCADE CONNECT Logo" 
