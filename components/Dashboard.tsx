@@ -4030,7 +4030,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
         {/* END RIGHT CONTENT AREA */}
         </div>
-        </div>
         {/* END MAIN LAYOUT CONTAINER */}
 
         {/* DOCUMENTS MODAL - Now opened via button in homeowner card */}
