@@ -3111,23 +3111,18 @@ const Dashboard: React.FC<DashboardProps> = ({
         {renderModals()}
         {/* Main Layout Container - Sidebar + Content */}
         <div className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 animate-in fade-in slide-in-from-top-4">
-          {/* LEFT SIDEBAR - Search + Homeowner Info Card */}
-          <div className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 ${isHomeownerCardCollapsed ? 'w-full lg:w-fit space-y-2' : 'w-full lg:w-80 space-y-4'}`}>
-            {/* Homeowner Search Bar - Admin & Builder Only - Always Visible (Static) */}
-            {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
-              <div className={`relative transition-all duration-300 w-full`}>
-                {isHomeownerCardCollapsed ? (
-                  // Collapsed state: Show search icon button
-                  <button
-                    onClick={() => setIsHomeownerCardCollapsed(false)}
-                    className="w-full flex items-center justify-center bg-white dark:bg-gray-700 rounded-full p-2 border border-surface-outline-variant dark:border-gray-600 hover:border-primary hover:ring-2 hover:ring-primary/20 transition-all"
-                    title="Search homeowners (click to expand)"
-                  >
-                    <Search className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-                  </button>
-                ) : (
-                  // Expanded state: Show full search input
-                  <>
+          {/* LEFT SIDEBAR - Homeowner Info Card with Search */}
+          <div className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 w-full lg:w-80`}>
+            {/* Homeowner Info Card - Always visible container */}
+            <div 
+              ref={homeownerCardContainerRef}
+              key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
+              className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 overflow-hidden relative"
+            >
+              {/* Search Bar - Admin & Builder Only - Always visible at top */}
+              {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
+                <div className="p-4 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
+                  <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" />
                     <input 
                       type="text" 
@@ -3135,6 +3130,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                       className="w-full bg-white dark:bg-gray-700 rounded-full pl-9 pr-8 py-2 text-sm border border-surface-outline-variant dark:border-gray-600 focus:ring-2 focus:ring-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all"
                       value={searchQuery}
                       onChange={(e) => onSearchChange(e.target.value)}
+                      onClick={() => {
+                        if (isHomeownerCardCollapsed) {
+                          setIsHomeownerCardCollapsed(false);
+                        }
+                      }}
                       title="Search homeowners"
                     />
                     {searchQuery && (
@@ -3145,64 +3145,64 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <X className="h-3 w-3" />
                       </button>
                     )}
-                  </>
-                )}
-                
-                
-                {/* Dropdown Results */}
-                {searchQuery && searchResults.length > 0 && (
-                  <div className="absolute z-50 w-full mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 max-h-96 overflow-y-auto">
-                    {searchResults.map((homeowner) => (
-                      <button
-                        key={homeowner.id}
-                        onClick={() => {
-                          onSelectHomeowner(homeowner);
-                          onSearchChange('');
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-surface-container dark:hover:bg-gray-700 border-b border-surface-outline-variant dark:border-gray-700 last:border-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{homeowner.name}</p>
-                            {homeowner.builder && (
-                              <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">
-                                {homeowner.builder}
-                              </p>
-                            )}
-                            {homeowner.jobName && (
-                              <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">{homeowner.jobName}</p>
-                            )}
-                            {homeowner.closingDate && (
-                              <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">
-                                Closing: {new Date(homeowner.closingDate).toLocaleDateString()}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </button>
-                    ))}
+                    
+                    {/* Dropdown Results */}
+                    {searchQuery && searchResults.length > 0 && (
+                      <div className="absolute z-50 w-full mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 max-h-96 overflow-y-auto">
+                        {searchResults.map((homeowner) => (
+                          <button
+                            key={homeowner.id}
+                            onClick={() => {
+                              onSelectHomeowner(homeowner);
+                              onSearchChange('');
+                            }}
+                            className="w-full text-left px-4 py-3 hover:bg-surface-container dark:hover:bg-gray-700 border-b border-surface-outline-variant dark:border-gray-700 last:border-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{homeowner.name}</p>
+                                {homeowner.builder && (
+                                  <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">
+                                    {homeowner.builder}
+                                  </p>
+                                )}
+                                {homeowner.jobName && (
+                                  <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">{homeowner.jobName}</p>
+                                )}
+                                {homeowner.closingDate && (
+                                  <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">
+                                    Closing: {new Date(homeowner.closingDate).toLocaleDateString()}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
-            
-            {!isHomeownerCardCollapsed && (
+                  
+                  {/* Collapse/Expand Button */}
+                  <button
+                    onClick={() => setIsHomeownerCardCollapsed(!isHomeownerCardCollapsed)}
+                    className="hidden lg:flex items-center justify-center w-full mt-2 p-1 hover:bg-surface-container/50 dark:hover:bg-gray-700/50 rounded transition-all"
+                    title={isHomeownerCardCollapsed ? "Expand homeowner info" : "Collapse homeowner info"}
+                  >
+                    {isHomeownerCardCollapsed ? (
+                      <ChevronDown className="h-4 w-4 text-gray-600 dark:text-gray-500" />
+                    ) : (
+                      <ChevronUp className="h-4 w-4 text-gray-600 dark:text-gray-500" />
+                    )}
+                  </button>
+                </div>
+              )}
+              
+              {/* Collapsible Content with Smooth Animation */}
               <div 
-                ref={homeownerCardContainerRef}
-                key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
-                className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 transition-all duration-300 ease-in-out overflow-hidden relative"
+                className={`transition-all duration-300 ease-in-out overflow-hidden ${
+                  isHomeownerCardCollapsed ? 'max-h-0 opacity-0' : 'max-h-[2000px] opacity-100'
+                }`}
               >
-              {/* Collapse Button - Hidden on mobile, visible on desktop - Subtle design */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsHomeownerCardCollapsed(true);
-                }}
-                className="hidden lg:flex absolute top-16 right-4 z-10 p-1 hover:bg-surface-container/50 dark:hover:bg-gray-700/50 rounded transition-all items-center justify-center"
-                title="Collapse homeowner info"
-              >
-                <ChevronLeft className="h-4 w-4 text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-300" />
-              </button>
             {/* Card Content */}
             <div className="flex flex-col p-6">
              
@@ -3437,20 +3437,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                 );
               })()}
             </div>
-
             </div>
-            )}
-            
-            {/* Collapsed State - Show expand button */}
-            {isHomeownerCardCollapsed && (
-              <button
-                onClick={() => setIsHomeownerCardCollapsed(false)}
-                className="hidden lg:flex items-center justify-center p-2 hover:bg-surface-container/50 dark:hover:bg-gray-700/50 rounded transition-all"
-                title="Expand homeowner info"
-              >
-                <ChevronRight className="h-4 w-4 text-gray-600 dark:text-gray-500 hover:text-gray-800 dark:hover:text-gray-300" />
-              </button>
-            )}
+            {/* End Collapsible Content */}
+            </div>
+            {/* End Homeowner Card */}
           </div>
           {/* END LEFT SIDEBAR */}
 
@@ -3634,7 +3624,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
             >
               <div className="w-full min-h-[calc(100vh-300px)]">
-                <div className="max-w-7xl mx-auto py-4">
+                <div className="max-w-7xl mx-auto">
                   {renderClaimsList(displayClaims, isHomeownerView)}
                 </div>
               </div>
@@ -3647,7 +3637,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
-                  <div className="max-w-7xl mx-auto py-4">
+                  <div className="max-w-7xl mx-auto">
                     {renderTasksTab()}
                   </div>
                 </div>
@@ -3661,7 +3651,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
-                  <div className="max-w-7xl mx-auto py-4">
+                  <div className="max-w-7xl mx-auto">
                     <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
                       <TasksSheet 
                         isInline={true}
@@ -3683,7 +3673,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
             >
               <div className="w-full min-h-[calc(100vh-300px)]">
-                <div className="max-w-7xl mx-auto py-4">
+                <div className="max-w-7xl mx-auto">
                   {renderMessagesTab()}
                 </div>
               </div>
@@ -3696,7 +3686,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
-                  <div className="max-w-7xl mx-auto py-4">
+                  <div className="max-w-7xl mx-auto">
                     <HomeownerManual homeownerId={activeHomeowner?.id} />
                   </div>
                 </div>
