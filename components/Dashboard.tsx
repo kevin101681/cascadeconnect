@@ -5541,35 +5541,86 @@ const Dashboard: React.FC<DashboardProps> = ({
     return (
       <>
         {renderModals()}
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 animate-in fade-in slide-in-from-bottom-4">
-            <button 
-              className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full hover:bg-surface-container-highest dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
-              onClick={() => {
-                // Navigate to CALLS tab and focus search
-                setCurrentTab('CALLS');
-                setTimeout(() => {
-                  const callsSearch = document.querySelector<HTMLInputElement>('#calls-search-input');
-                  if (callsSearch) {
-                    callsSearch.focus();
-                    callsSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }
-                }, 100); // Small delay to ensure tab renders
-              }}
-              title="Click to search for a homeowner"
-            >
-                <Search className="h-12 w-12 text-surface-outline dark:text-gray-400" />
-            </button>
-            <div>
-                <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">Select a Homeowner</h2>
-                <p className="text-surface-on-variant dark:text-gray-400 mt-2 max-w-sm mx-auto">
-                    Click the search icon or use the search bar above to find a homeowner and view their warranty claims, tasks, and account details.
-                </p>
-                {isBuilder && (
-                   <p className="text-surface-on-variant dark:text-gray-400 mt-1 text-xs">
-                     You are logged in as a Builder. Access is limited to your homeowners.
-                   </p>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 px-4">
+          <div className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full">
+            <Search className="h-12 w-12 text-surface-outline dark:text-gray-400" />
+          </div>
+          <div>
+            <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">Select a Homeowner</h2>
+            <p className="text-surface-on-variant dark:text-gray-400 mt-2 max-w-sm mx-auto">
+              Search for a homeowner to view their warranty claims, tasks, and account details.
+            </p>
+            {isBuilder && (
+              <p className="text-surface-on-variant dark:text-gray-400 mt-1 text-xs">
+                You are logged in as a Builder. Access is limited to your homeowners.
+              </p>
+            )}
+          </div>
+          
+          {/* Homeowner Search Input */}
+          {searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
+            <div className="w-full max-w-md relative">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-surface-outline-variant dark:text-gray-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search homeowners..."
+                  className="w-full bg-white dark:bg-gray-700 rounded-2xl pl-12 pr-10 py-4 text-base border-2 border-surface-outline-variant dark:border-gray-600 focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  autoFocus
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => onSearchChange('')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-outline-variant hover:text-surface-on dark:hover:text-gray-300 transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
                 )}
+              </div>
+              
+              {/* Search Results Dropdown */}
+              {searchQuery && searchResults.length > 0 && (
+                <div className="absolute z-50 w-full mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 max-h-96 overflow-y-auto">
+                  {searchResults.map((homeowner) => (
+                    <button
+                      key={homeowner.id}
+                      onClick={() => {
+                        onSelectHomeowner(homeowner);
+                        onSearchChange('');
+                      }}
+                      className="w-full text-left px-6 py-4 hover:bg-surface-container dark:hover:bg-gray-700 border-b border-surface-outline-variant dark:border-gray-700 last:border-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base font-medium text-surface-on dark:text-gray-100 truncate">{homeowner.name}</p>
+                          {homeowner.builder && (
+                            <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-1">
+                              {homeowner.builder}
+                            </p>
+                          )}
+                          {homeowner.jobName && (
+                            <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">{homeowner.jobName}</p>
+                          )}
+                          {homeowner.address && (
+                            <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">{homeowner.address}</p>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {/* No Results Message */}
+              {searchQuery && searchResults.length === 0 && (
+                <div className="absolute z-50 w-full mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 p-6 text-center">
+                  <p className="text-surface-on-variant dark:text-gray-400">No homeowners found</p>
+                </div>
+              )}
             </div>
+          )}
         </div>
       </>
     );
@@ -5581,30 +5632,81 @@ const Dashboard: React.FC<DashboardProps> = ({
     return (
       <>
         {renderModals()}
-        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 animate-in fade-in slide-in-from-bottom-4">
-          <button 
-            className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full hover:bg-surface-container-highest dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
-            onClick={() => {
-              // Navigate to CALLS tab and focus search
-              setCurrentTab('CALLS');
-              setTimeout(() => {
-                const callsSearch = document.querySelector<HTMLInputElement>('#calls-search-input');
-                if (callsSearch) {
-                  callsSearch.focus();
-                  callsSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-              }, 100); // Small delay to ensure tab renders
-            }}
-            title="Click to search for a homeowner"
-          >
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 px-4">
+          <div className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full">
             <Search className="h-12 w-12 text-surface-outline dark:text-gray-400" />
-          </button>
+          </div>
           <div>
             <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">Select a Homeowner</h2>
             <p className="text-surface-on-variant dark:text-gray-400 mt-2 max-w-sm mx-auto">
-              Click the search icon or use the search bar above to find a homeowner before switching to homeowner view.
+              You are in Homeowner View. Search for a homeowner to view their account.
             </p>
           </div>
+          
+          {/* Homeowner Search Input */}
+          {searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
+            <div className="w-full max-w-md relative">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-surface-outline-variant dark:text-gray-400" />
+                <input 
+                  type="text" 
+                  placeholder="Search homeowners..."
+                  className="w-full bg-white dark:bg-gray-700 rounded-2xl pl-12 pr-10 py-4 text-base border-2 border-surface-outline-variant dark:border-gray-600 focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  autoFocus
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => onSearchChange('')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-outline-variant hover:text-surface-on dark:hover:text-gray-300 transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+              
+              {/* Search Results Dropdown */}
+              {searchQuery && searchResults.length > 0 && (
+                <div className="absolute z-50 w-full mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 max-h-96 overflow-y-auto">
+                  {searchResults.map((homeowner) => (
+                    <button
+                      key={homeowner.id}
+                      onClick={() => {
+                        onSelectHomeowner(homeowner);
+                        onSearchChange('');
+                      }}
+                      className="w-full text-left px-6 py-4 hover:bg-surface-container dark:hover:bg-gray-700 border-b border-surface-outline-variant dark:border-gray-700 last:border-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base font-medium text-surface-on dark:text-gray-100 truncate">{homeowner.name}</p>
+                          {homeowner.builder && (
+                            <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-1">
+                              {homeowner.builder}
+                            </p>
+                          )}
+                          {homeowner.jobName && (
+                            <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">{homeowner.jobName}</p>
+                          )}
+                          {homeowner.address && (
+                            <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">{homeowner.address}</p>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {/* No Results Message */}
+              {searchQuery && searchResults.length === 0 && (
+                <div className="absolute z-50 w-full mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 p-6 text-center">
+                  <p className="text-surface-on-variant dark:text-gray-400">No homeowners found</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </>
     );
@@ -5615,30 +5717,81 @@ const Dashboard: React.FC<DashboardProps> = ({
   return (
     <>
       {renderModals()}
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4 animate-in fade-in slide-in-from-bottom-4">
-        <button 
-          className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full hover:bg-surface-container-highest dark:hover:bg-gray-600 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary"
-          onClick={() => {
-            // Navigate to CALLS tab and focus search
-            setCurrentTab('CALLS');
-            setTimeout(() => {
-              const callsSearch = document.querySelector<HTMLInputElement>('#calls-search-input');
-              if (callsSearch) {
-                callsSearch.focus();
-                callsSearch.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }
-            }, 100); // Small delay to ensure tab renders
-          }}
-          title="Click to search for a homeowner"
-        >
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 px-4">
+        <div className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full">
           <Search className="h-12 w-12 text-surface-outline dark:text-gray-400" />
-        </button>
+        </div>
         <div>
           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">Select a Homeowner</h2>
           <p className="text-surface-on-variant dark:text-gray-400 mt-2 max-w-sm mx-auto">
-            Click the search icon or use the search bar above to find a homeowner and view their warranty claims, tasks, and account details.
+            Search for a homeowner to view their warranty claims, tasks, and account details.
           </p>
         </div>
+        
+        {/* Homeowner Search Input */}
+        {searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
+          <div className="w-full max-w-md relative">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-surface-outline-variant dark:text-gray-400" />
+              <input 
+                type="text" 
+                placeholder="Search homeowners..."
+                className="w-full bg-white dark:bg-gray-700 rounded-2xl pl-12 pr-10 py-4 text-base border-2 border-surface-outline-variant dark:border-gray-600 focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all"
+                value={searchQuery}
+                onChange={(e) => onSearchChange(e.target.value)}
+                autoFocus
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => onSearchChange('')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-outline-variant hover:text-surface-on dark:hover:text-gray-300 transition-colors"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+            
+            {/* Search Results Dropdown */}
+            {searchQuery && searchResults.length > 0 && (
+              <div className="absolute z-50 w-full mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 max-h-96 overflow-y-auto">
+                {searchResults.map((homeowner) => (
+                  <button
+                    key={homeowner.id}
+                    onClick={() => {
+                      onSelectHomeowner(homeowner);
+                      onSearchChange('');
+                    }}
+                    className="w-full text-left px-6 py-4 hover:bg-surface-container dark:hover:bg-gray-700 border-b border-surface-outline-variant dark:border-gray-700 last:border-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-base font-medium text-surface-on dark:text-gray-100 truncate">{homeowner.name}</p>
+                        {homeowner.builder && (
+                          <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-1">
+                            {homeowner.builder}
+                          </p>
+                        )}
+                        {homeowner.jobName && (
+                          <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">{homeowner.jobName}</p>
+                        )}
+                        {homeowner.address && (
+                          <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">{homeowner.address}</p>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            {/* No Results Message */}
+            {searchQuery && searchResults.length === 0 && (
+              <div className="absolute z-50 w-full mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 p-6 text-center">
+                <p className="text-surface-on-variant dark:text-gray-400">No homeowners found</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
     </>
