@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Call, Homeowner } from '../types';
 import { Phone, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Building2, User, Mail, ExternalLink, Play, Download, Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { db, isDbConfigured } from '../db';
 import { calls, homeowners } from '../db/schema';
 import { eq, desc, sql } from 'drizzle-orm';
@@ -200,11 +199,8 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {paginatedCalls.map((call, index) => (
-              <motion.div
+              <div
                 key={call.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.02 }}
                 className="bg-surface dark:bg-gray-700 rounded-xl p-4 border border-surface-outline-variant dark:border-gray-600 hover:shadow-elevation-1 transition-all cursor-pointer group"
                 onClick={() => setSelectedCall(call)}
               >
@@ -276,7 +272,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                     <p className="text-xs text-surface-on dark:text-gray-100 line-clamp-2">{call.issueDescription}</p>
                   </div>
                 )}
-              </motion.div>
+              </div>
             ))}
           </div>
 
@@ -332,9 +328,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={() => setSelectedCall(null)}
         >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+            <div
               className="bg-surface dark:bg-gray-800 rounded-2xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
               onClick={(e) => e.stopPropagation()}
             >
@@ -478,7 +472,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         )}
     </div>
