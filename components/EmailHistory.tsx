@@ -516,11 +516,15 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-surface-outline-variant dark:divide-gray-600">
-                      {filteredActivity.map((email, idx) => (
-                        <React.Fragment key={email.id || email.msg_id || idx}>
+                      {filteredActivity.map((email, idx) => {
+                        const emailKey = email.id || email.msg_id || idx;
+                        const isSelected = selectedEmail && (selectedEmail.id === email.id || (selectedEmail.msg_id && selectedEmail.msg_id === email.msg_id));
+                        
+                        return (
+                        <React.Fragment key={emailKey}>
                           <tr 
-                            className={`hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors cursor-pointer ${selectedEmail?.msg_id === email.msg_id ? 'bg-surface-container-high dark:bg-gray-600' : ''}`}
-                            onClick={() => setSelectedEmail(selectedEmail?.msg_id === email.msg_id ? null : email)}
+                            className={`hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors cursor-pointer ${isSelected ? 'bg-surface-container-high dark:bg-gray-600' : ''}`}
+                            onClick={() => setSelectedEmail(isSelected ? null : email)}
                           >
                             <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
                               {formatDateTime(email.created_at)}
@@ -558,7 +562,7 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
                               )}
                             </td>
                             <td className="px-4 py-3 text-center">
-                              {selectedEmail?.id === email.id ? (
+                              {isSelected ? (
                                 <ChevronUp className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
                               ) : (
                                 <ChevronDown className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
@@ -566,9 +570,9 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
                             </td>
                           </tr>
                           {/* Expanded Details Row */}
-                          {selectedEmail?.id === email.id && (
+                          {isSelected && (
                             <tr className="bg-surface-container-high/50 dark:bg-gray-600/50">
-                              <td colSpan={5} className="px-4 py-4">
+                              <td colSpan={6} className="px-4 py-4">
                                 <div className="space-y-4">
                                   <div className="grid grid-cols-2 gap-4">
                                     <div>
@@ -614,7 +618,8 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
                             </tr>
                           )}
                         </React.Fragment>
-                      ))}
+                      );
+                      })}
                     </tbody>
                   </table>
                 </div>

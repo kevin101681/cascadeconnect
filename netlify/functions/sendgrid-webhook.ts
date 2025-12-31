@@ -162,6 +162,27 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           VALUES (${sgMessageId}, ${email}, ${eventType}, ${timestamp.toISOString()}, ${JSON.stringify(eventData)}, NOW())
         `;
 
+        // If this is an "open" event, update the original email log with opened_at timestamp
+        // Only update if opened_at is NULL (to preserve the first open time)
+        if (eventType === 'open' && sgMessageId) {
+          try {
+            const updateResult = await sql`
+              UPDATE email_logs
+              SET opened_at = ${timestamp.toISOString()}
+              WHERE sendgrid_message_id = ${sgMessageId}
+                AND opened_at IS NULL
+            `;
+            if (updateResult && updateResult.length > 0) {
+              console.log(`📖 Updated opened_at for email ${sgMessageId}`);
+            } else {
+              console.log(`📖 No unopened email found with sendgrid_message_id ${sgMessageId} (may already be marked as opened)`);
+            }
+          } catch (updateError: any) {
+            console.warn(`⚠️ Could not update opened_at for ${sgMessageId}:`, updateError.message);
+            // Don't fail the webhook if update fails
+          }
+        }
+
         processedEvents.push({
           sg_message_id: sgMessageId,
           email,
