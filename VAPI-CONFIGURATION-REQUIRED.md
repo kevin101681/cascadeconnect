@@ -10,6 +10,15 @@
 
 **Root Cause:** The Vapi Assistant is NOT configured to extract structured data using the JSON Schema.
 
+## 📝 Vapi Dashboard Terminology
+
+**Important:** Vapi uses different terminology in their dashboard:
+
+- ✅ **"Server URL"** = Webhook URL (where to send call data)
+- ✅ **"Server URL Secret"** = Webhook Secret (authentication)
+- ✅ **"Structured Outputs"** or **"Artifact Plan"** = Data extraction configuration
+- ✅ **"Model"** = The AI model used for extraction (use Gemini 1.5 Flash)
+
 ## ✅ Solution: Configure Vapi Dashboard
 
 ### Step 1: Upload JSON Schema to Vapi Dashboard
@@ -104,13 +113,32 @@ Be conversational but ensure you collect all 5 pieces of information before endi
 Important: Always ask for the complete address including city and state.
 ```
 
-### Step 4: Configure Webhook Settings
+### Step 4: Configure Webhook Settings (Server URL)
 
-In Vapi Dashboard → Webhooks:
+In Vapi Dashboard → Assistant Settings → Server URL:
 
-1. **Webhook URL:** `https://your-domain.netlify.app/.netlify/functions/vapi-webhook`
-2. **Secret:** (the value from your `.env` file: `ferguson1228`)
-3. **Enable:** `end-of-call-report` event
+1. **Server URL:** `https://your-domain.netlify.app/.netlify/functions/vapi-webhook`
+   - For local testing: `http://localhost:8888/.netlify/functions/vapi-webhook`
+   - Or use ngrok for local testing: `https://your-ngrok-url.ngrok.io/.netlify/functions/vapi-webhook`
+2. **Server URL Secret:** (the value from your `.env` file: `ferguson1228`)
+3. Make sure the assistant is configured to send the `end-of-call-report` event
+
+**Note:** In Vapi, "Webhook URL" is called "Server URL" in the dashboard.
+
+**Where to find this in Vapi Dashboard:**
+```
+Dashboard → Assistants → [Your Assistant] → Server URL (tab or section)
+```
+
+### Step 4a: (Alternative) Configure at Phone Number Level
+
+You can also configure the Server URL at the Phone Number level:
+
+```
+Dashboard → Phone Numbers → [Your Number] → Server URL
+```
+
+This is useful if you want different webhooks for different phone numbers.
 
 ### Step 5: Test with a Real Call
 
