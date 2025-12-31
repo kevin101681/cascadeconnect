@@ -225,21 +225,34 @@ export function extractStructuredData(payload: VapiWebhookPayload): VapiStructur
     
     if (!hasExpectedKeys) {
       console.log('🔍 Structured data found but missing expected keys - checking for UUID wrapping...');
+      console.log('🔑 Current keys in structuredData:', Object.keys(structuredData));
       
       // Get all values from the object
       const values = Object.values(structuredData);
+      console.log('📊 Number of values to check:', values.length);
+      
+      // Log each value for debugging
+      values.forEach((val: any, index: number) => {
+        console.log(`🔍 Checking value ${index}:`, typeof val, val ? Object.keys(val) : 'null/undefined');
+      });
       
       // Find the first value that looks like our structured data
       const unwrappedData = values.find((val: any) => {
-        return val && 
+        const isValid = val && 
                typeof val === 'object' && 
                (val.propertyAddress || val.homeownerName || val.phoneNumber || val.issueDescription || 'isUrgent' in val);
+        console.log(`🔍 Value is valid structured data:`, isValid);
+        return isValid;
       });
       
       if (unwrappedData) {
         console.log('✅ Found UUID-wrapped structured data! Unwrapping...');
         console.log('🔑 UUID keys in structuredOutputs:', Object.keys(structuredData));
+        console.log('📦 Unwrapped data keys:', Object.keys(unwrappedData));
         structuredData = unwrappedData;
+      } else {
+        console.error('❌ UUID key found but no valid data inside!');
+        console.error('📦 Raw structuredData:', JSON.stringify(structuredData, null, 2));
       }
     }
   }
