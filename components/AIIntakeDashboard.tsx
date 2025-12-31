@@ -173,7 +173,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
   }
 
   return (
-    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 flex flex-col h-[calc(100vh-12rem)]">
+    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 flex flex-col">
       {/* Header */}
       <div className="flex-shrink-0 px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
         <div className="flex items-center justify-between mb-4">
@@ -229,22 +229,31 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                 >
                   <div className="flex items-center justify-between gap-2 mb-2">
                     <span className="font-semibold text-sm text-surface-on dark:text-gray-100 truncate">
-                      {call.homeownerName || 'Unknown Caller'}
+                      {call.homeownerName || (
+                        <span className="inline-flex items-center gap-1">
+                          <span>Unknown Caller</span>
+                          <span className="bg-blue-500/30 text-blue-700 dark:text-blue-300 text-xs font-medium px-2 py-0.5 rounded-full">
+                            ?
+                          </span>
+                        </span>
+                      )}
                     </span>
                     <div className="flex items-center gap-1 flex-shrink-0">
                       {call.isUrgent && (
-                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                        <span className="bg-red-500/30 text-red-700 dark:text-red-300 text-xs font-bold px-2 py-0.5 rounded-full">
                           URGENT
                         </span>
                       )}
-                      {call.isVerified ? (
-                        <span className="bg-green-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
-                          ✓
-                        </span>
-                      ) : (
-                        <span className="bg-orange-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
-                          ?
-                        </span>
+                      {call.homeownerName && (
+                        call.isVerified ? (
+                          <span className="bg-green-500/30 text-green-700 dark:text-green-300 text-xs font-medium px-2 py-0.5 rounded-full">
+                            ✓
+                          </span>
+                        ) : (
+                          <span className="bg-orange-500/30 text-orange-700 dark:text-orange-300 text-xs font-medium px-2 py-0.5 rounded-full">
+                            ?
+                          </span>
+                        )
                       )}
                     </div>
                   </div>
@@ -291,7 +300,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
           </div>
 
           {/* RIGHT COLUMN - Call Details */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className="flex-1 p-6">
             {actualSelectedCall ? (
               <div className="space-y-6">
                 {/* Date & Status Header */}
@@ -301,16 +310,16 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                   </h3>
                   <div className="flex items-center gap-2">
                     {actualSelectedCall.isUrgent && (
-                      <span className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">
+                      <span className="bg-red-500/30 text-red-700 dark:text-red-300 text-sm font-bold px-3 py-1 rounded-full">
                         URGENT
                       </span>
                     )}
                     {actualSelectedCall.isVerified ? (
-                      <span className="bg-green-500 text-white text-sm font-medium px-3 py-1 rounded-full">
-                        Verified Match
+                      <span className="bg-green-500/30 text-green-700 dark:text-green-300 text-sm font-medium px-3 py-1 rounded-full whitespace-nowrap">
+                        Verified
                       </span>
                     ) : (
-                      <span className="bg-orange-500 text-white text-sm font-medium px-3 py-1 rounded-full">
+                      <span className="bg-orange-500/30 text-orange-700 dark:text-orange-300 text-sm font-medium px-3 py-1 rounded-full">
                         Unverified
                       </span>
                     )}
