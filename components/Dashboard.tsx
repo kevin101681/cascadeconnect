@@ -3353,7 +3353,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-7xl mx-auto py-4">
+              <div className="max-w-7xl mx-auto pb-4">
                 {renderClaimsList(displayClaims, isHomeownerView)}
               </div>
             </motion.div>
@@ -3376,7 +3376,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               animate={{ opacity: 1 }}
               transition={{ duration: 0 }}
             >
-              <div className="max-w-7xl mx-auto py-4">
+              <div className="max-w-7xl mx-auto pb-4">
                 {renderClaimsList(displayClaims, isHomeownerView)}
               </div>
             </motion.div>
@@ -3401,7 +3401,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-7xl mx-auto py-4">
+              <div className="max-w-7xl mx-auto pb-4">
                 <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1">
                       <TaskList
                       tasks={tasks}
@@ -3439,7 +3439,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               animate={{ opacity: 1 }}
               transition={{ duration: 0 }}
             >
-              <div className="max-w-7xl mx-auto py-4">
+              <div className="max-w-7xl mx-auto pb-4">
                 <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col shadow-elevation-1">
                     <TaskList
                       tasks={tasks}
@@ -3470,7 +3470,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-7xl mx-auto py-4">
+              <div className="max-w-7xl mx-auto pb-4">
                 <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
                   <TasksSheet 
                     isInline={true}
@@ -3494,7 +3494,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-7xl mx-auto py-4">
+              <div className="max-w-7xl mx-auto pb-4">
                 {renderMessagesTab()}
               </div>
             </motion.div>
@@ -3510,7 +3510,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-7xl mx-auto py-4">
+              <div className="max-w-7xl mx-auto pb-4">
                 <AIIntakeDashboard />
               </div>
             </motion.div>
@@ -3538,7 +3538,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-7xl mx-auto py-4">
+              <div className="max-w-7xl mx-auto pb-4">
                 <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 md:shadow-elevation-1 flex flex-col">
                   <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
                     <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
@@ -3565,7 +3565,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-7xl mx-auto py-4">
+              <div className="max-w-7xl mx-auto pb-4">
                 <HomeownerManual homeownerId={activeHomeowner?.id} />
               </div>
             </motion.div>
