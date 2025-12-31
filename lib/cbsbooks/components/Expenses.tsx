@@ -150,81 +150,51 @@ export const Expenses: React.FC<ExpensesProps> = ({ expenses, onAdd, onDelete, o
   return (
     <div className="flex flex-col gap-6 relative min-h-[calc(100vh-100px)]">
       {/* Navigation Bar */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4 items-center justify-between">
+        {/* Left-aligned navigation buttons */}
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => onNavigate('invoices')}
+            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+          >
+            <Receipt size={18} />
+            <span className="text-sm font-medium">Invoices</span>
+          </button>
+          <button
+            onClick={() => onNavigate('clients')}
+            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+          >
+            <Users size={18} />
+            <span className="text-sm font-medium">Builders</span>
+          </button>
+          <button
+            onClick={() => onNavigate('reports')}
+            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+          >
+            <PieChart size={18} />
+            <span className="text-sm font-medium">Profit and Loss</span>
+          </button>
+          <button
+            onClick={() => onNavigate('expenses')}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg transition-opacity"
+          >
+            <CreditCard size={18} />
+            <span className="text-sm font-medium">Expenses</span>
+          </button>
+        </div>
+        {/* Right-aligned Import CSV Button */}
         <button
-          onClick={() => onNavigate('invoices')}
-          className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+          onClick={() => fileInputRef.current?.click()}
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:opacity-90 transition-opacity"
         >
-          <Receipt size={18} />
-          <span className="text-sm font-medium">Invoices</span>
-        </button>
-        <button
-          onClick={() => onNavigate('clients')}
-          className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
-        >
-          <Users size={18} />
-          <span className="text-sm font-medium">Builders</span>
-        </button>
-        <button
-          onClick={() => onNavigate('reports')}
-          className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
-        >
-          <PieChart size={18} />
-          <span className="text-sm font-medium">Profit and Loss</span>
-        </button>
-        <button
-          onClick={() => onNavigate('expenses')}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg transition-opacity"
-        >
-          <CreditCard size={18} />
-          <span className="text-sm font-medium">Expenses</span>
+          <Upload size={18} />
+          <span className="text-sm font-medium">Import CSV</span>
         </button>
       </div>
 
       <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleFileUpload}/>
       
-      {/* FAB GROUP */}
-      <div className="fixed bottom-8 right-8 z-50 flex items-end gap-3">
-        <FloatingMenu 
-          currentView="expenses" 
-          onNavigate={onNavigate} 
-          customActions={menuActions} 
-          isOpen={activeFab === 'menu'}
-          onToggle={(open) => setActiveFab(open ? 'menu' : 'none')}
-        />
-        
-        {/* Mobile Filter FAB */}
-        <div className="relative md:hidden">
-            {activeFab === 'filter' && (
-                <div className="
-                    fixed bottom-28 left-1/2 -translate-x-1/2 w-[calc(100vw-32px)] max-w-xs flex flex-col gap-4 bg-surface-container dark:bg-gray-700 rounded-2xl p-4 shadow-xl border border-surfaceContainerHigh animate-slide-up origin-bottom z-[60]
-                    md:absolute md:bottom-full md:mb-4 md:right-0 md:left-auto md:w-auto md:min-w-[200px] md:origin-bottom-right md:translate-x-0
-                ">
-                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider">Filters</span>
-                     </div>
-                     {/* Mobile Stacked Filters */}
-                     <div className="flex flex-col gap-2 w-full">
-                        {(['all', 'month', 'year'] as const).map((time) => (
-                        <button key={time} onClick={() => setFilterTime(time)} className={`px-4 h-10 rounded-full text-sm font-medium transition-all capitalize flex items-center justify-start ${filterTime === time ? 'bg-primary text-primary-on' : 'bg-surface-container-high dark:bg-gray-600 text-gray-900 dark:text-gray-100 hover:bg-opacity-80'}`}>
-                            {time === 'all' ? 'All Time' : time === 'month' ? 'This Month' : 'This Year'}
-                        </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-            <button
-                onClick={() => toggleFab('filter')}
-                className={`w-14 h-14 rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 bg-primary text-primary-on`}
-            >
-                <SlidersHorizontal size={24} />
-            </button>
-        </div>
-
-        <button onClick={() => setIsAdding(true)} className="w-14 h-14 bg-primary text-primary-on rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95" title="Add Expense"><Plus size={24} /></button>
-      </div>
-
-      <div className="hidden md:block">
+      <div className="block">
         {renderFilters()}
       </div>
 

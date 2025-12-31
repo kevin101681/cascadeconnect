@@ -2711,7 +2711,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <div 
               ref={homeownerCardContainerRef}
               key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
-              className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 lg:sticky lg:top-[72px]"
+              className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 lg:sticky lg:top-[64px]"
             >
             <div className="flex flex-col p-6">
              

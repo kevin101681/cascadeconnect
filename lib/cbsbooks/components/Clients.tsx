@@ -175,74 +175,57 @@ export const Clients: React.FC<ClientsProps> = ({ clients, invoices, onAdd, onUp
   return (
     <div className="space-y-6 relative min-h-[calc(100vh-100px)]">
       {/* Navigation Bar */}
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4 items-center justify-between">
+        {/* Left-aligned navigation buttons */}
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => onNavigate('invoices')}
+            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+          >
+            <Receipt size={18} />
+            <span className="text-sm font-medium">Invoices</span>
+          </button>
+          <button
+            onClick={() => onNavigate('clients')}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg transition-opacity"
+          >
+            <Users size={18} />
+            <span className="text-sm font-medium">Builders</span>
+          </button>
+          <button
+            onClick={() => onNavigate('reports')}
+            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+          >
+            <PieChart size={18} />
+            <span className="text-sm font-medium">Profit and Loss</span>
+          </button>
+          <button
+            onClick={() => onNavigate('expenses')}
+            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+          >
+            <CreditCard size={18} />
+            <span className="text-sm font-medium">Expenses</span>
+          </button>
+        </div>
+        {/* Right-aligned Add Builder Button */}
         <button
-          onClick={() => onNavigate('invoices')}
-          className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+          onClick={() => {
+            setEditingId(null);
+            setNewClient({});
+            setIsAdding(true);
+          }}
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:opacity-90 transition-opacity"
         >
-          <Receipt size={18} />
-          <span className="text-sm font-medium">Invoices</span>
-        </button>
-        <button
-          onClick={() => onNavigate('clients')}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg transition-opacity"
-        >
-          <Users size={18} />
-          <span className="text-sm font-medium">Builders</span>
-        </button>
-        <button
-          onClick={() => onNavigate('reports')}
-          className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
-        >
-          <PieChart size={18} />
-          <span className="text-sm font-medium">Profit and Loss</span>
-        </button>
-        <button
-          onClick={() => onNavigate('expenses')}
-          className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
-        >
-          <CreditCard size={18} />
-          <span className="text-sm font-medium">Expenses</span>
+          <Plus size={18} />
+          <span className="text-sm font-medium">Add Builder</span>
         </button>
       </div>
 
       <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleFileUpload}/>
       
-      {/* FAB GROUP */}
-      <div className="fixed bottom-8 right-8 z-50 flex items-end gap-3">
-        {/* Search FAB */}
-        <button 
-            onClick={() => toggleFab('search')}
-            className="md:hidden w-14 h-14 bg-primary text-primary-on rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-        >
-            {activeFab === 'search' ? <X size={24} /> : <Search size={24} />}
-        </button>
-
-        {/* Menu FAB */}
-        <FloatingMenu 
-          currentView="clients" 
-          onNavigate={onNavigate} 
-          customActions={menuActions}
-          isOpen={activeFab === 'menu'}
-          onToggle={(open) => setActiveFab(open ? 'menu' : 'none')}
-        />
-
-        <button 
-            onClick={() => {
-                setEditingId(null);
-                setNewClient({});
-                setIsAdding(true);
-            }} 
-            className="w-14 h-14 bg-primary text-primary-on rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95" 
-            title="Add Builder"
-        >
-            <Plus size={24} />
-        </button>
-      </div>
-
-      {/* Search Bar - Hidden on Mobile unless Toggled */}
-      <div className={`transition-all duration-300 -mt-2 ${activeFab === 'search' ? 'block' : 'hidden md:block'}`}>
-          <div className="relative">
+      {/* Search Bar */}
+      <div className="transition-all duration-300 -mt-2">
+          <div className="relative max-w-md">
             <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
                 <Search size={20} className="text-surface-outline dark:text-gray-400" />
             </div>

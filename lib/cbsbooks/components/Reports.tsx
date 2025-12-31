@@ -138,84 +138,48 @@ export const Reports: React.FC<ReportsProps> = ({ invoices, expenses, onNavigate
   return (
     <div className="space-y-6 relative min-h-[calc(100vh-100px)]">
       {/* Navigation Bar */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        <button
-          onClick={() => onNavigate('invoices')}
-          className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
-        >
-          <Receipt size={18} />
-          <span className="text-sm font-medium">Invoices</span>
-        </button>
-        <button
-          onClick={() => onNavigate('clients')}
-          className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
-        >
-          <Users size={18} />
-          <span className="text-sm font-medium">Builders</span>
-        </button>
-        <button
-          onClick={() => onNavigate('reports')}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg transition-opacity"
-        >
-          <PieChart size={18} />
-          <span className="text-sm font-medium">Profit and Loss</span>
-        </button>
-        <button
-          onClick={() => onNavigate('expenses')}
-          className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
-        >
-          <CreditCard size={18} />
-          <span className="text-sm font-medium">Expenses</span>
-        </button>
-      </div>
-
-      {/* FAB GROUP */}
-      <div className="fixed bottom-8 right-8 z-50 flex items-end gap-3">
-        {/* Mobile Filter FAB */}
-        <div className="relative md:hidden">
-            {activeFab === 'filter' && (
-                <div className="
-                    fixed bottom-28 left-1/2 -translate-x-1/2 w-[calc(100vw-32px)] max-w-xs flex flex-col gap-4 bg-surface-container dark:bg-gray-700 rounded-2xl p-4 shadow-xl border border-surfaceContainerHigh animate-slide-up origin-bottom z-[60]
-                    md:absolute md:bottom-full md:mb-4 md:right-0 md:left-auto md:w-auto md:min-w-[300px] md:origin-bottom-right md:translate-x-0
-                ">
-                     <div className="flex justify-between items-center mb-2">
-                        <span className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider">Filters</span>
-                     </div>
-                     <div className="flex flex-col gap-4">
-                         {/* Stacked Mobile Filters */}
-                         <div className="flex flex-col gap-2 w-full">
-                            {(['Monthly', 'Quarterly', 'YTD', 'Yearly'] as FilterType[]).map((t) => (
-                            <button key={t} onClick={() => setFilterType(t)} className={`px-4 h-10 rounded-full text-sm font-medium transition-all capitalize flex items-center justify-start ${filterType === t ? 'bg-primary text-primary-on' : 'bg-surface-container-high dark:bg-gray-600 text-gray-900 dark:text-gray-100 hover:bg-opacity-80'}`}>{t}</button>
-                            ))}
-                        </div>
-                        <div className="flex flex-col gap-2 w-full">
-                            {(filterType === 'Monthly' || filterType === 'Quarterly' || filterType === 'Yearly') && <div className="w-full"><Dropdown value={selectedYear} onChange={setSelectedYear} options={years} placeholder="Year" align="right"/></div>}
-                            {filterType === 'Monthly' && <div className="w-full"><Dropdown value={selectedMonth} onChange={setSelectedMonth} options={months} placeholder="Month" align="right"/></div>}
-                            {filterType === 'Quarterly' && <div className="w-full"><Dropdown value={selectedQuarter} onChange={setSelectedQuarter} options={quarters} placeholder="Quarter" align="right"/></div>}
-                        </div>
-                     </div>
-                </div>
-            )}
-            <button
-                onClick={() => toggleFab('filter')}
-                className={`w-14 h-14 rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-105 active:scale-95 bg-primary text-primary-on`}
-            >
-                <SlidersHorizontal size={24} />
-            </button>
+      <div className="flex flex-wrap gap-2 mb-4 items-center justify-between">
+        {/* Left-aligned navigation buttons */}
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => onNavigate('invoices')}
+            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+          >
+            <Receipt size={18} />
+            <span className="text-sm font-medium">Invoices</span>
+          </button>
+          <button
+            onClick={() => onNavigate('clients')}
+            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+          >
+            <Users size={18} />
+            <span className="text-sm font-medium">Builders</span>
+          </button>
+          <button
+            onClick={() => onNavigate('reports')}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg transition-opacity"
+          >
+            <PieChart size={18} />
+            <span className="text-sm font-medium">Profit and Loss</span>
+          </button>
+          <button
+            onClick={() => onNavigate('expenses')}
+            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+          >
+            <CreditCard size={18} />
+            <span className="text-sm font-medium">Expenses</span>
+          </button>
         </div>
-
-        <button onClick={handleDownloadPDF} className="w-14 h-14 bg-primary text-primary-on rounded-2xl shadow-lg hover:shadow-xl flex items-center justify-center transition-all hover:scale-105 active:scale-95" title="Download PDF"><Download size={24} /></button>
-        
-        {/* Menu FAB - rightmost */}
-        <FloatingMenu 
-          currentView="reports" 
-          onNavigate={onNavigate} 
-          customActions={menuActions} 
-          isOpen={activeFab === 'menu'}
-          onToggle={(open) => setActiveFab(open ? 'menu' : 'none')}
-        />
+        {/* Right-aligned Download PDF Button */}
+        <button
+          onClick={handleDownloadPDF}
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:opacity-90 transition-opacity"
+        >
+          <Download size={18} />
+          <span className="text-sm font-medium">Download PDF</span>
+        </button>
       </div>
-      
+
       <div className="max-w-4xl mx-auto pt-6">
         <div className="hidden md:flex flex-col md:flex-row gap-4 mb-6 items-start md:items-center justify-between">
            {renderFilters()}
