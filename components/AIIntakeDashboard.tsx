@@ -381,7 +381,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                 </div>
 
                 {/* Match Confidence */}
-                {selectedCall.addressMatchSimilarity !== null && selectedCall.addressMatchSimilarity !== undefined && (
+                {selectedCall.addressMatchSimilarity !== null && selectedCall.addressMatchSimilarity !== undefined && typeof selectedCall.addressMatchSimilarity === 'number' && (
                   <div>
                     <label className="text-sm text-surface-on-variant dark:text-gray-400 mb-2 block">
                       Match Confidence

@@ -4875,11 +4875,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                               <div className="flex-1 h-2 bg-surface-container dark:bg-gray-700 rounded-full overflow-hidden">
                                 <div 
                                   className="h-full bg-green-500 transition-all"
-                                  style={{ width: `${parseFloat(selectedCall.addressMatchSimilarity) * 100}%` }}
+                                  style={{ width: `${selectedCall.addressMatchSimilarity * 100}%` }}
                                 />
                               </div>
                               <span className="text-sm font-medium text-surface-on dark:text-gray-100">
-                                {Math.round(parseFloat(selectedCall.addressMatchSimilarity) * 100)}%
+                                {Math.round(selectedCall.addressMatchSimilarity * 100)}%
                               </span>
                             </div>
                           </div>

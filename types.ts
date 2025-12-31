@@ -238,7 +238,7 @@ export interface Call {
   transcript?: string | null;
   recordingUrl?: string | null;
   isVerified: boolean;
-  addressMatchSimilarity?: string | null;
+  addressMatchSimilarity?: number | null;
   createdAt: Date;
   // Joined from homeowners table (when matched)
   verifiedBuilderName?: string | null;
