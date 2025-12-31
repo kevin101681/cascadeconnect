@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Call, Homeowner } from '../types';
 import { Phone, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Building2, User, Mail, ExternalLink, Play, Download, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { db, isDbConfigured } from '../db';
@@ -122,6 +122,29 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, filter]);
+
+  // Auto-select first call when filtered calls change
+  // Use a ref to prevent infinite loops since filteredCalls is recalculated on every render
+  const filteredCallsLengthRef = useRef(0);
+  const selectedCallIdRef = useRef<string | null>(null);
+  
+  useEffect(() => {
+    const currentLength = filteredCalls.length;
+    const currentSelectedId = selectedCall?.id || null;
+    
+    // Only update if the length changed or selection is null
+    if (currentLength > 0 && !currentSelectedId) {
+      // Auto-select first call
+      setSelectedCall(filteredCalls[0]);
+      selectedCallIdRef.current = filteredCalls[0]?.id || null;
+    } else if (currentLength === 0 && currentSelectedId) {
+      // Clear selection if no calls
+      setSelectedCall(null);
+      selectedCallIdRef.current = null;
+    }
+    
+    filteredCallsLengthRef.current = currentLength;
+  }, [filteredCalls.length, searchQuery, filter, callsData.length]); // Depend on stable values only
 
   const stats = {
     total: callsData.length,
