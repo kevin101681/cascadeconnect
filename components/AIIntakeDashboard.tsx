@@ -158,18 +158,26 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
     );
   }
 
+  // Auto-select first call when data loads
+  useEffect(() => {
+    if (filteredCalls.length > 0 && !selectedCall) {
+      setSelectedCall(filteredCalls[0]);
+    }
+  }, [filteredCalls.length]);
+
   return (
-    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1">
+    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 flex flex-col h-[calc(100vh-12rem)]">
       {/* Header */}
-      <div className="flex-shrink-0 px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col gap-4 bg-surface-container/30 dark:bg-gray-700/30">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex-shrink-0 px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
+        <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+            <Phone className="h-6 w-6 text-primary" />
+            Calls
             {stats.total > 0 && (
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+              <span className="inline-flex items-center justify-center px-2 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
                 {stats.total}
               </span>
             )}
-            Calls
           </h2>
         </div>
 
@@ -186,218 +194,211 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
         </div>
       </div>
 
-      <div className="p-6">
-        {/* Calls List */}
-        {filteredCalls.length === 0 ? (
+      {/* Two Column Layout */}
+      {filteredCalls.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center p-6">
           <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-12 text-center border border-surface-outline-variant dark:border-gray-600">
             <Phone className="h-12 w-12 text-surface-outline-variant dark:text-gray-500 mx-auto mb-4" />
             <p className="text-surface-on-variant dark:text-gray-400">
               {searchQuery ? 'No calls match your search' : 'No calls found'}
             </p>
           </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {paginatedCalls.map((call, index) => (
-              <div
-                key={call.id}
-                className="bg-surface dark:bg-gray-700 rounded-xl p-4 border border-surface-outline-variant dark:border-gray-600 hover:shadow-elevation-1 transition-all cursor-pointer group"
-                onClick={() => setSelectedCall(call)}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <h3 className="text-base font-semibold text-surface-on dark:text-gray-100 mb-2 line-clamp-1 group-hover:text-primary transition-colors">
+        </div>
+      ) : (
+        <div className="flex-1 min-h-0 flex overflow-hidden">
+          {/* LEFT COLUMN - Call Cards List */}
+          <div className="w-full md:w-96 border-r border-surface-outline-variant dark:border-gray-700 overflow-y-auto flex-shrink-0">
+            <div className="p-4 space-y-2">
+              {paginatedCalls.map((call) => (
+                <button
+                  key={call.id}
+                  onClick={() => setSelectedCall(call)}
+                  className={`w-full text-left p-4 rounded-xl border transition-all ${
+                    selectedCall?.id === call.id
+                      ? 'bg-primary/10 dark:bg-primary/20 border-primary shadow-sm'
+                      : 'bg-surface dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="font-semibold text-sm text-surface-on dark:text-gray-100 truncate">
                       {call.homeownerName || 'Unknown Caller'}
-                    </h3>
-                    <div className="flex flex-wrap gap-1 mb-2">
+                    </span>
+                    <div className="flex items-center gap-1 flex-shrink-0">
                       {call.isUrgent && (
-                        <span className="bg-red-500/20 dark:bg-red-500/30 text-red-700 dark:text-red-300 text-xs font-bold px-2 py-0.5 rounded-full">
+                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                           URGENT
                         </span>
                       )}
                       {call.isVerified ? (
-                        <span className="bg-green-500/20 dark:bg-green-500/30 text-green-700 dark:text-green-300 text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <CheckCircle className="h-3 w-3" />
-                          Verified
+                        <span className="bg-green-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                          ✓
                         </span>
                       ) : (
-                        <span className="bg-blue-500/20 dark:bg-blue-500/30 text-blue-700 dark:text-blue-300 text-xs font-medium px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          Unverified
+                        <span className="bg-orange-500 text-white text-xs font-medium px-2 py-0.5 rounded-full">
+                          ?
                         </span>
                       )}
                     </div>
                   </div>
-                  {call.homeownerId && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewHomeowner(call.homeownerId);
-                      }}
-                      className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                      title="View Homeowner"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                    </button>
+                  <p className="text-xs text-surface-on-variant dark:text-gray-400 mb-2">
+                    {formatDate(call.createdAt)}
+                  </p>
+                  {call.issueDescription && (
+                    <p className="text-xs text-surface-on-variant dark:text-gray-400 line-clamp-2">
+                      {call.issueDescription}
+                    </p>
                   )}
+                </button>
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="p-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
+                <div className="flex items-center justify-between gap-2">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="p-2 rounded-lg bg-surface dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    title="Previous page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  
+                  <span className="text-xs text-surface-on-variant dark:text-gray-400">
+                    {currentPage} / {totalPages}
+                  </span>
+
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="p-2 rounded-lg bg-surface dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                    title="Next page"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
                 </div>
-                
-                <div className="space-y-2 text-xs text-surface-on-variant dark:text-gray-400">
-                  {call.phoneNumber && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-3.5 w-3.5 flex-shrink-0" />
-                      <span className="truncate">{call.phoneNumber}</span>
-                    </div>
-                  )}
-                  {call.propertyAddress && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-3.5 w-3.5 flex-shrink-0" />
-                      <span className="truncate">{call.propertyAddress}</span>
-                    </div>
-                  )}
-                  {call.verifiedBuilderName && (
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
-                      <span className="truncate font-medium text-surface-on dark:text-gray-300">{call.verifiedBuilderName}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-3.5 w-3.5 flex-shrink-0" />
-                    <span>{formatDate(call.createdAt)}</span>
-                  </div>
-                </div>
-                
-                {call.issueDescription && (
-                  <div className="mt-3 p-2 bg-surface-container/50 dark:bg-gray-600/50 rounded-lg">
-                    <p className="text-xs text-surface-on dark:text-gray-100 line-clamp-2">{call.issueDescription}</p>
-                  </div>
-                )}
               </div>
-            ))}
+            )}
           </div>
 
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2 mt-6">
-              <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="p-2 rounded-lg bg-surface dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                title="Previous page"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-              
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    className={`min-w-[2rem] h-8 px-2 rounded-lg text-sm font-medium transition-all ${
-                      currentPage === page
-                        ? 'bg-primary text-primary-on'
-                        : 'bg-surface dark:bg-gray-700 text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className="p-2 rounded-lg bg-surface dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-                title="Next page"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-
-              <span className="ml-4 text-sm text-surface-on-variant dark:text-gray-400">
-                Showing {startIndex + 1}-{Math.min(endIndex, filteredCalls.length)} of {filteredCalls.length}
-              </span>
-            </div>
-          )}
-          </>
-        )}
-      </div>
-
-      {/* Call Detail Modal */}
-      {selectedCall && (
-        <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-          onClick={() => setSelectedCall(null)}
-        >
-            <div
-              className="bg-surface dark:bg-gray-800 rounded-2xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-surface-on dark:text-gray-100">
-                  Call Details
-                </h2>
-                <button
-                  onClick={() => setSelectedCall(null)}
-                  className="p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <XCircle className="h-6 w-6 text-surface-on-variant dark:text-gray-400" />
-                </button>
-              </div>
-
+          {/* RIGHT COLUMN - Call Details */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {selectedCall ? (
               <div className="space-y-6">
-                {/* Call Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-surface-on-variant dark:text-gray-400">Homeowner Name</label>
-                    <p className="text-base font-medium text-surface-on dark:text-gray-100">{selectedCall.homeownerName || 'Not provided'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm text-surface-on-variant dark:text-gray-400">Phone Number</label>
-                    <p className="text-base font-medium text-surface-on dark:text-gray-100">{selectedCall.phoneNumber || 'Not provided'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm text-surface-on-variant dark:text-gray-400">Property Address</label>
-                    <p className="text-base font-medium text-surface-on dark:text-gray-100">{selectedCall.propertyAddress || 'Not provided'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm text-surface-on-variant dark:text-gray-400">Status</label>
-                    <p className="text-base font-medium">
-                      {selectedCall.isVerified ? (
-                        <span className="text-green-600 dark:text-green-400">✓ Verified</span>
-                      ) : (
-                        <span className="text-orange-600 dark:text-orange-400">⚠ Unverified</span>
-                      )}
-                    </p>
-                  </div>
-                  {selectedCall.verifiedBuilderName && (
-                    <div>
-                      <label className="text-sm text-surface-on-variant dark:text-gray-400">Verified Builder</label>
-                      <p className="text-base font-bold text-surface-on dark:text-gray-100">{selectedCall.verifiedBuilderName}</p>
-                    </div>
-                  )}
-                  {selectedCall.verifiedClosingDate && (
-                    <div>
-                      <label className="text-sm text-surface-on-variant dark:text-gray-400">Verified Closing Date</label>
-                      <p className="text-base font-bold text-surface-on dark:text-gray-100">
-                        {new Date(selectedCall.verifiedClosingDate).toLocaleDateString()}
-                      </p>
-                    </div>
-                  )}
-                  <div>
-                    <label className="text-sm text-surface-on-variant dark:text-gray-400">Call Date</label>
-                    <p className="text-base text-surface-on dark:text-gray-100">{formatDate(selectedCall.createdAt)}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm text-surface-on-variant dark:text-gray-400">Urgent</label>
-                    <p className="text-base font-medium">
-                      {selectedCall.isUrgent ? (
-                        <span className="text-red-600 dark:text-red-400">Yes</span>
-                      ) : (
-                        <span className="text-surface-on-variant dark:text-gray-400">No</span>
-                      )}
-                    </p>
+                {/* Date & Status Header */}
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-normal text-surface-on dark:text-gray-100">
+                    {formatDate(selectedCall.createdAt)}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {selectedCall.isUrgent && (
+                      <span className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">
+                        URGENT
+                      </span>
+                    )}
+                    {selectedCall.isVerified ? (
+                      <span className="bg-green-500 text-white text-sm font-medium px-3 py-1 rounded-full">
+                        Verified Match
+                      </span>
+                    ) : (
+                      <span className="bg-orange-500 text-white text-sm font-medium px-3 py-1 rounded-full">
+                        Unverified
+                      </span>
+                    )}
                   </div>
                 </div>
+
+                {/* Contact Info Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center gap-3 p-4 bg-surface-container dark:bg-gray-700 rounded-lg">
+                    <div className="p-2 bg-surface dark:bg-gray-600 rounded-lg">
+                      <User className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-surface-on-variant dark:text-gray-400">Homeowner</p>
+                      <p className="text-sm font-medium text-surface-on dark:text-gray-100">
+                        {selectedCall.homeownerName || 'Not provided'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {selectedCall.phoneNumber && (
+                    <div className="flex items-center gap-3 p-4 bg-surface-container dark:bg-gray-700 rounded-lg">
+                      <div className="p-2 bg-surface dark:bg-gray-600 rounded-lg">
+                        <Phone className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-surface-on-variant dark:text-gray-400">Phone</p>
+                        <p className="text-sm font-medium text-surface-on dark:text-gray-100">
+                          {selectedCall.phoneNumber}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedCall.propertyAddress && (
+                    <div className="flex items-center gap-3 p-4 bg-surface-container dark:bg-gray-700 rounded-lg md:col-span-2">
+                      <div className="p-2 bg-surface dark:bg-gray-600 rounded-lg">
+                        <MapPin className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-surface-on-variant dark:text-gray-400">Address</p>
+                        <p className="text-sm font-medium text-surface-on dark:text-gray-100">
+                          {selectedCall.propertyAddress}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedCall.verifiedBuilderName && (
+                    <div className="flex items-center gap-3 p-4 bg-surface-container dark:bg-gray-700 rounded-lg">
+                      <div className="p-2 bg-surface dark:bg-gray-600 rounded-lg">
+                        <Building2 className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-surface-on-variant dark:text-gray-400">Builder</p>
+                        <p className="text-sm font-bold text-surface-on dark:text-gray-100">
+                          {selectedCall.verifiedBuilderName}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedCall.verifiedClosingDate && (
+                    <div className="flex items-center gap-3 p-4 bg-surface-container dark:bg-gray-700 rounded-lg">
+                      <div className="p-2 bg-surface dark:bg-gray-600 rounded-lg">
+                        <Calendar className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-surface-on-variant dark:text-gray-400">Closing Date</p>
+                        <p className="text-sm font-bold text-surface-on dark:text-gray-100">
+                          {new Date(selectedCall.verifiedClosingDate).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Match Confidence */}
+                {selectedCall.addressMatchSimilarity !== null && selectedCall.addressMatchSimilarity !== undefined && (
+                  <div>
+                    <label className="text-sm text-surface-on-variant dark:text-gray-400 mb-2 block">
+                      Match Confidence
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 h-2 bg-surface-container dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary transition-all"
+                          style={{ width: `${Math.round(selectedCall.addressMatchSimilarity * 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-sm font-medium text-surface-on dark:text-gray-100">
+                        {Math.round(selectedCall.addressMatchSimilarity * 100)}%
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 {/* Issue Description */}
                 {selectedCall.issueDescription && (
@@ -415,7 +416,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                 {selectedCall.transcript && (
                   <div>
                     <label className="text-sm text-surface-on-variant dark:text-gray-400 mb-2 block">Call Transcript</label>
-                    <div className="p-4 bg-surface-container dark:bg-gray-700 rounded-lg max-h-96 overflow-y-auto">
+                    <div className="p-4 bg-surface-container dark:bg-gray-700 rounded-lg max-h-64 overflow-y-auto">
                       <p className="text-sm text-surface-on dark:text-gray-100 whitespace-pre-wrap">
                         {selectedCall.transcript}
                       </p>
@@ -451,30 +452,28 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                 )}
 
                 {/* Actions */}
-                <div className="flex gap-4 pt-4 border-t border-surface-outline-variant dark:border-gray-700">
-                  {selectedCall.homeownerId && (
+                {selectedCall.homeownerId && (
+                  <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700">
                     <button
                       onClick={() => {
                         handleViewHomeowner(selectedCall.homeownerId);
-                        setSelectedCall(null);
                       }}
                       className="px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
                     >
                       <ExternalLink className="h-4 w-4" />
                       View Homeowner
                     </button>
-                  )}
-                  <button
-                    onClick={() => setSelectedCall(null)}
-                    className="px-4 py-2 bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 rounded-lg hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors"
-                  >
-                    Close
-                  </button>
-                </div>
+                  </div>
+                )}
               </div>
-            </div>
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-surface-on-variant dark:text-gray-400">Select a call to view details</p>
+              </div>
+            )}
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 };
