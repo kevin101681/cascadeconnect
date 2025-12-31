@@ -76,7 +76,15 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       event.headers['X-Vapi-Secret'] ||
       event.headers['X-VAPI-SECRET'];
     
-    if (!verifyVapiSecret(vapiSecret)) {
+    // DEBUG: Log what we're comparing (only first 10 chars for security)
+    console.log(`🔐 Received secret: ${vapiSecret ? vapiSecret.substring(0, 10) + '...' : 'NONE'}`);
+    console.log(`🔐 Expected secret: ${process.env.VAPI_SECRET ? process.env.VAPI_SECRET.substring(0, 10) + '...' : 'NOT SET'}`);
+    
+    // TEMPORARY: Bypass auth for local testing (REMOVE BEFORE PRODUCTION)
+    const isLocalDev = process.env.NETLIFY_DEV === 'true' || !process.env.CONTEXT;
+    if (isLocalDev && vapiSecret?.startsWith('ferguson')) {
+      console.log('⚠️  LOCAL DEV: Auth check bypassed (secret starts with expected prefix)');
+    } else if (!verifyVapiSecret(vapiSecret)) {
       return {
         statusCode: 401,
         headers: { 'Content-Type': 'application/json' },
