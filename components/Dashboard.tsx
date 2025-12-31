@@ -1720,24 +1720,24 @@ const Dashboard: React.FC<DashboardProps> = ({
                           <div className="w-fit h-6 flex items-center"><StatusBadge status={claim.status} /></div>
                           {/* Title */}
                           {claim.title && (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on dark:text-gray-100 bg-gray-300 dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant/50 dark:border-gray-600 whitespace-nowrap w-fit">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
                               {claim.title}
                             </span>
                           )}
                           {/* Classification */}
-                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-gray-300 dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
+                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
                             {claim.classification}
                           </span>
                           {/* Homeowner Name */}
                           {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-gray-300 dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
                               <Building2 className="h-3 w-3 flex-shrink-0" />
                               <span>{claim.homeownerName}</span>
                             </span>
                           )}
                           {/* Contractor */}
                           {claim.contractorName ? (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-gray-300 dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
                               <HardHat className="h-3 w-3 flex-shrink-0" />
                               <span>{claim.contractorName}</span>
                             </span>
@@ -1748,7 +1748,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             </span>
                           )}
                           {/* Date Submitted (Created) */}
-                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-gray-300 dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
+                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
                             Created: {new Date(claim.dateSubmitted).toLocaleDateString()}
                           </span>
                           {/* Scheduled Date */}
@@ -1760,7 +1760,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           )}
                           {/* Service Order Date */}
                           {serviceOrderDate ? (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-gray-300 dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
                               <Mail className="h-3 w-3 flex-shrink-0" />
                               <span>S.O. Sent: {new Date(serviceOrderDate).toLocaleDateString()}</span>
                             </span>
@@ -1772,13 +1772,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                           )}
                           {/* Date Evaluated */}
                           {claim.dateEvaluated && (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-gray-300 dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
                               Eval: {new Date(claim.dateEvaluated).toLocaleDateString()}
                             </span>
                           )}
                           {/* Attachments count */}
                           {claim.attachments && claim.attachments.length > 0 && (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
+                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
                               <Paperclip className="h-3 w-3 flex-shrink-0" />
                               {claim.attachments.length}
                             </span>
@@ -2690,16 +2690,20 @@ const Dashboard: React.FC<DashboardProps> = ({
                         <div className="flex items-start gap-3">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{homeowner.name}</p>
-                            <p className="text-xs text-surface-on-variant dark:text-gray-400 truncate">{homeowner.email}</p>
+                            {homeowner.builder && (
+                              <span className="inline-block text-xs px-2 py-0.5 mt-1 bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-300 border border-surface-outline-variant dark:border-gray-600 rounded-full">
+                                {homeowner.builder}
+                              </span>
+                            )}
                             {homeowner.jobName && (
                               <p className="text-xs text-surface-on-variant dark:text-gray-400 truncate mt-0.5">{homeowner.jobName}</p>
                             )}
+                            {homeowner.closingDate && (
+                              <p className="text-xs text-surface-on-variant dark:text-gray-400 truncate mt-0.5">
+                                Closing: {new Date(homeowner.closingDate).toLocaleDateString()}
+                              </p>
+                            )}
                           </div>
-                          {homeowner.builder && (
-                            <span className="flex-shrink-0 text-xs px-2 py-1 bg-primary/10 text-primary rounded-full">
-                              {homeowner.builder}
-                            </span>
-                          )}
                         </div>
                       </button>
                     ))}
