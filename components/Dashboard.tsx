@@ -3551,9 +3551,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="CALLS"
                 onClick={() => setCurrentTab('CALLS')}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'CALLS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                className={`text-sm font-medium transition-all px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'CALLS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
               >
-                <Phone className="h-4 w-4" />
                 Calls
               </button>
             )}
@@ -3563,9 +3562,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="PAYROLL"
                 onClick={() => setCurrentTab('PAYROLL')}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'PAYROLL' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                className={`text-sm font-medium transition-all px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'PAYROLL' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
               >
-                <DollarSign className="h-4 w-4" />
                 Payroll
               </button>
             )}
@@ -3575,9 +3573,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="INVOICES"
                 onClick={() => setCurrentTab('INVOICES')}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                className={`text-sm font-medium transition-all px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
               >
-                <FileText className="h-4 w-4" />
                 Invoices
               </button>
             )}
