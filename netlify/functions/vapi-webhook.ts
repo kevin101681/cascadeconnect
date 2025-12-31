@@ -23,6 +23,28 @@ import { findMatchingHomeowner } from '../../lib/services/homeownerMatchingServi
  * - Scenario C: No match / unknown caller
  */
 
+/**
+ * Extended type for Vapi call payload with customer information
+ * The customer object may not be in official SDK types but appears in actual payloads
+ */
+interface VapiCustomer {
+  number?: string;
+  id?: string;
+  name?: string;
+  phoneNumber?: string;
+}
+
+interface VapiCallWithCustomer {
+  id?: string;
+  customer?: VapiCustomer;
+  phoneNumber?: string;
+  from?: string;
+  artifact?: any;
+  transcript?: string;
+  recordingUrl?: string;
+  [key: string]: any;
+}
+
 interface HandlerResponse {
   statusCode: number;
   headers: Record<string, string>;
@@ -166,12 +188,16 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     
     // Fallback to caller ID if phone number wasn't extracted
     if (!phoneNumber || phoneNumber === 'not provided' || phoneNumber === 'Not Provided') {
-      const callerId = body?.message?.call?.customer?.number || 
-                       body?.call?.customer?.number ||
-                       body?.message?.call?.phoneNumber ||
-                       body?.call?.phoneNumber ||
-                       body?.message?.call?.from ||
-                       body?.call?.from;
+      // Safely access call data with proper typing
+      const messageCall = body?.message?.call as VapiCallWithCustomer | undefined;
+      const payloadCall = body?.call as VapiCallWithCustomer | undefined;
+      
+      const callerId = messageCall?.customer?.number || 
+                       payloadCall?.customer?.number ||
+                       messageCall?.phoneNumber ||
+                       payloadCall?.phoneNumber ||
+                       messageCall?.from ||
+                       payloadCall?.from;
       
       if (callerId) {
         console.log(`📞 Using Caller ID as fallback: ${callerId}`);
