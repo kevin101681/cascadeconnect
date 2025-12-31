@@ -3196,19 +3196,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                 }
               }}
             >
-              {/* Collapse/Expand Button - Hidden on mobile, visible on desktop */}
+              {/* Collapse/Expand Button - Hidden on mobile, visible on desktop - Subtle design */}
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsHomeownerCardCollapsed(!isHomeownerCardCollapsed);
                 }}
-                className={`hidden lg:flex absolute top-4 ${isHomeownerCardCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-4'} z-10 p-2 bg-surface dark:bg-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-600 rounded-full transition-all shadow-md border border-surface-outline-variant dark:border-gray-600 items-center justify-center`}
+                className={`hidden lg:flex absolute top-4 ${isHomeownerCardCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-4'} z-10 p-1 hover:bg-surface-container/50 dark:hover:bg-gray-700/50 rounded transition-all items-center justify-center`}
                 title={isHomeownerCardCollapsed ? "Expand homeowner info" : "Collapse homeowner info"}
               >
                 {isHomeownerCardCollapsed ? (
-                  <ChevronRight className="h-4 w-4 text-surface-on dark:text-gray-100" />
+                  <ChevronRight className="h-4 w-4 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100" />
                 ) : (
-                  <ChevronLeft className="h-4 w-4 text-surface-on dark:text-gray-100" />
+                  <ChevronLeft className="h-4 w-4 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100" />
                 )}
               </button>
             {/* Card Content - Hidden when collapsed */}
@@ -3217,8 +3217,9 @@ const Dashboard: React.FC<DashboardProps> = ({
              {/* Vertical Layout - Left Aligned */}
              <div className="flex flex-col gap-2 mb-4 w-full">
                 {/* Line 1: Name with Edit Button */}
-                <div className="flex items-center gap-2">
-                  {/* Edit Button - Admin Only - Left of Name */}
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 truncate">{displayHomeowner.name}</h2>
+                  {/* Edit Button - Admin Only - Right of Name */}
                   {isAdmin && !isHomeownerView && (
                     <button 
                        onClick={handleOpenEditHomeowner}
@@ -3228,7 +3229,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <Edit2 className="h-4 w-4" />
                     </button>
                   )}
-                  <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 truncate">{displayHomeowner.name}</h2>
                 </div>
                 
                 {/* Line 2: Street Address */}
