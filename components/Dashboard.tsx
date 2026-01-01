@@ -393,6 +393,46 @@ const Dashboard: React.FC<DashboardProps> = ({
     };
   }, [selectedClaimForModal, selectedTaskForModal]);
   
+  // Handle browser back button for mobile claim modal
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (selectedClaimForModal && isMobile) {
+      // Push a history state when modal opens
+      window.history.pushState({ modalOpen: 'claimDetails' }, '');
+
+      const handlePopState = (e: PopStateEvent) => {
+        // Close modal when back button is pressed
+        setSelectedClaimForModal(null);
+      };
+
+      window.addEventListener('popstate', handlePopState);
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [selectedClaimForModal]);
+
+  // Handle browser back button for mobile task modal
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (selectedTaskForModal && isMobile) {
+      // Push a history state when modal opens
+      window.history.pushState({ modalOpen: 'taskDetails' }, '');
+
+      const handlePopState = (e: PopStateEvent) => {
+        // Close modal when back button is pressed
+        setSelectedTaskForModal(null);
+      };
+
+      window.addEventListener('popstate', handlePopState);
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [selectedTaskForModal]);
+  
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual)
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'>(initialTab || 'CLAIMS');
@@ -592,6 +632,26 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [showSubListModal, setShowSubListModal] = useState(false);
   const [showCallsModal, setShowCallsModal] = useState(false);
   const [newMessageSubject, setNewMessageSubject] = useState('');
+
+  // Handle browser back button for mobile message thread modal
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (selectedThreadId && isMobile) {
+      // Push a history state when modal opens
+      window.history.pushState({ modalOpen: 'messageThread' }, '');
+
+      const handlePopState = (e: PopStateEvent) => {
+        // Close modal when back button is pressed
+        setSelectedThreadId(null);
+      };
+
+      window.addEventListener('popstate', handlePopState);
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [selectedThreadId]);
   const [newMessageContent, setNewMessageContent] = useState('');
   const [newMessageRecipientId, setNewMessageRecipientId] = useState<string>('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);

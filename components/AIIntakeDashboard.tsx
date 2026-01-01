@@ -55,6 +55,25 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
     }
   }, [selectedCall, isMobile]);
 
+  // Handle browser back button for mobile modal
+  useEffect(() => {
+    if (selectedCall && isMobile) {
+      // Push a history state when modal opens
+      window.history.pushState({ modalOpen: 'callDetails' }, '');
+
+      const handlePopState = (e: PopStateEvent) => {
+        // Close modal when back button is pressed
+        setSelectedCall(null);
+      };
+
+      window.addEventListener('popstate', handlePopState);
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [selectedCall, isMobile]);
+
   const loadCalls = async () => {
     if (!isDbConfigured) {
       console.warn('Database not configured');
