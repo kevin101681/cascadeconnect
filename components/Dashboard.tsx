@@ -2871,11 +2871,14 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* CLAIM DETAIL MODAL - Only show when not on CLAIMS tab (claims tab has inline view) */}
       {selectedClaimForModal && currentTab !== 'CLAIMS' && onUpdateClaim && createPortal(
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out] overflow-y-auto"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-0 md:p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out] md:overflow-y-auto"
           style={{ overscrollBehavior: 'contain' }}
         >
-          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] my-auto flex flex-col max-h-[90vh]">
-            <div className="overflow-y-auto overflow-x-hidden flex-1">
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-none md:rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] my-auto flex flex-col h-[100dvh] md:h-auto md:max-h-[90vh]">
+            <div 
+              className="overflow-y-auto overflow-x-hidden flex-1 overscroll-contain"
+              style={{ WebkitOverflowScrolling: 'touch' } as React.CSSProperties}
+            >
               <div className="p-4">
                 <Suspense fallback={
                   <div className="flex items-center justify-center py-12">
