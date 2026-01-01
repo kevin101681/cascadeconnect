@@ -2318,7 +2318,33 @@ const Dashboard: React.FC<DashboardProps> = ({
                 My Tasks
               </h3>
             </div>
-            {/* Add Task button removed - will be in full TaskList if needed */}
+            {/* New Task button */}
+            <div className="flex items-center justify-end md:justify-end">
+              <Button
+                variant="filled"
+                onClick={() => {
+                  if (onAddTask) {
+                    const newTask = {
+                      id: crypto.randomUUID(),
+                      title: '',
+                      description: '',
+                      assignedToId: currentUser.id,
+                      assignedToName: currentUser.name,
+                      dateAssigned: new Date(),
+                      isCompleted: false,
+                      dueDate: undefined,
+                      claimIds: [],
+                      homeownerId: effectiveHomeowner?.id
+                    };
+                    onAddTask(newTask);
+                  }
+                }}
+                icon={<Plus className="h-4 w-4" />}
+                className="!h-9 !px-4 md:!h-8 md:!px-3 md:text-xs"
+              >
+                New Task
+              </Button>
+            </div>
           </div>
           
           {/* Filter Pills */}
