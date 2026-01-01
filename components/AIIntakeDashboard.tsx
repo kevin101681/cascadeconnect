@@ -251,7 +251,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                 <div key={call.id} className="relative">
                   <button
                     onClick={() => setSelectedCall(call)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all ${
+                    className={`w-full text-left p-4 pb-10 rounded-xl border transition-all ${
                       actualSelectedCall?.id === call.id
                         ? 'bg-primary/10 dark:bg-primary/20 border-primary shadow-sm'
                         : 'bg-surface dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 hover:bg-surface-container-high dark:hover:bg-gray-600'
@@ -297,10 +297,10 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                     )}
                   </button>
                   
-                  {/* Delete Button - Positioned absolutely in top-right */}
+                  {/* Delete Button - Positioned in bottom-right corner */}
                   <button
                     onClick={(e) => handleDeleteCall(call.id, e)}
-                    className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors z-10"
+                    className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors z-10"
                     title="Delete call"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
