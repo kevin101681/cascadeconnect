@@ -253,31 +253,31 @@ function buildUniversalNotificationContent(
   // SCENARIO A: CLAIM CREATED
   // ====================================
   if (scenario === 'CLAIM_CREATED') {
-    subject = `🚨 New Warranty Claim: ${data.propertyAddress || 'Unknown Address'}`;
-    headerTitle = '🚨 New Warranty Claim Created';
+    subject = `New Warranty Claim: ${data.propertyAddress || 'Unknown Address'}`;
+    headerTitle = 'New Warranty Claim Created';
     scenarioDescription = `A warranty claim has been automatically created for ${data.matchedHomeownerName || data.homeownerName || 'this homeowner'}.`;
-    statusBadge = '<span style="background-color: #dc3545; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block;">✓ Claim Created</span>';
-    primaryCta = { text: 'View Claim', link: claimLink || callsLink, color: '#dc3545' };
+    statusBadge = '<span style="background-color: #1565C0; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Claim Created</span>';
+    primaryCta = { text: 'View Claim', link: claimLink || callsLink, color: '#26A69A' };
   }
   // ====================================
   // SCENARIO B: MATCH FOUND, NO CLAIM
   // ====================================
   else if (scenario === 'MATCH_NO_CLAIM') {
-    subject = `📞 Homeowner Call: ${data.propertyAddress || 'Unknown Address'}`;
-    headerTitle = '📞 Homeowner Call Received';
-    scenarioDescription = `${data.matchedHomeownerName || data.homeownerName || 'A homeowner'} called, but no claim was automatically created. Intent: ${data.callIntent || 'unknown'}.`;
-    statusBadge = '<span style="background-color: #ffc107; color: #333; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block;">✓ Matched - No Claim</span>';
-    primaryCta = { text: 'View Homeowner', link: homeownerLink || callsLink, color: '#4CAF50' };
+    subject = `Homeowner Call: ${data.propertyAddress || 'Unknown Address'}`;
+    headerTitle = 'Homeowner Call Received';
+    scenarioDescription = `${data.matchedHomeownerName || data.homeownerName || 'A homeowner'} called.`;
+    statusBadge = '<span style="background-color: #26A69A; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Matched - No Claim</span>';
+    primaryCta = { text: 'View Homeowner', link: homeownerLink || callsLink, color: '#26A69A' };
   }
   // ====================================
   // SCENARIO C: NO MATCH / UNKNOWN
   // ====================================
   else {
-    subject = `⚠️ Unknown Caller: ${data.phoneNumber || 'No Phone'}`;
-    headerTitle = '⚠️ Unknown Caller - Manual Review Required';
+    subject = `Unknown Caller: ${data.phoneNumber || 'No Phone'}`;
+    headerTitle = 'Unknown Caller - Manual Review Required';
     scenarioDescription = `The AI could not match this address to any homeowner in the database. Please review manually and create a homeowner record if needed.`;
-    statusBadge = '<span style="background-color: #ff5722; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block;">⚠ Unmatched</span>';
-    primaryCta = { text: 'Review Call', link: callsLink, color: '#ff5722' };
+    statusBadge = '<span style="background-color: #26A69A; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Unmatched</span>';
+    primaryCta = { text: 'Review Call', link: callsLink, color: '#26A69A' };
   }
 
   // Add urgency flag to subject if urgent
@@ -291,7 +291,7 @@ function buildUniversalNotificationContent(
       <div style="background-color: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
         
         <!-- Header -->
-        <h2 style="color: #6750A4; margin-bottom: 10px; margin-top: 0;">${headerTitle}</h2>
+        <h2 style="color: #1565C0; margin-bottom: 10px; margin-top: 0;">${headerTitle}</h2>
         <div style="margin-bottom: 20px;">${statusBadge}</div>
         <p style="color: #666; font-size: 15px; line-height: 1.6;">${scenarioDescription}</p>
         
@@ -327,13 +327,9 @@ function buildUniversalNotificationContent(
             </tr>
             `}
             <tr>
-              <td style="padding: 10px 0; font-weight: bold; color: #666;">Call Intent:</td>
-              <td style="padding: 10px 0; color: #333;">${data.callIntent || 'Not specified'}</td>
-            </tr>
-            <tr>
               <td style="padding: 10px 0; font-weight: bold; color: #666;">Urgency:</td>
               <td style="padding: 10px 0; color: #333;">
-                ${data.isUrgent ? '<span style="color: #dc3545; font-weight: bold;">🔥 URGENT</span>' : 'Normal'}
+                ${data.isUrgent ? '<span style="color: #dc3545; font-weight: bold;">URGENT</span>' : 'Normal'}
               </td>
             </tr>
             ${scenario === 'CLAIM_CREATED' ? `
@@ -342,19 +338,13 @@ function buildUniversalNotificationContent(
               <td style="padding: 10px 0; color: #333;"><strong>#${data.claimNumber}</strong></td>
             </tr>
             ` : ''}
-            ${scenario !== 'NO_MATCH' && data.similarity ? `
-            <tr>
-              <td style="padding: 10px 0; font-weight: bold; color: #666;">Match Quality:</td>
-              <td style="padding: 10px 0; color: #333;">${Math.round((data.similarity || 0) * 100)}% similar</td>
-            </tr>
-            ` : ''}
           </table>
         </div>
 
         <!-- Issue Description -->
         ${data.issueDescription ? `
-        <div style="background-color: ${scenario === 'CLAIM_CREATED' ? '#fff3cd' : '#e3f2fd'}; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid ${scenario === 'CLAIM_CREATED' ? '#ffc107' : '#2196F3'};">
-          <h3 style="margin-top: 0; color: #333; font-size: 16px;">${scenario === 'CLAIM_CREATED' ? '🔧 Issue Description' : '💬 Caller Message'}</h3>
+        <div style="background-color: #E3F2FD; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2196F3;">
+          <h3 style="margin-top: 0; color: #333; font-size: 16px;">${scenario === 'CLAIM_CREATED' ? 'Issue Description' : 'Caller Message'}</h3>
           <p style="margin: 0; color: #333; white-space: pre-wrap; line-height: 1.6;">${data.issueDescription}</p>
         </div>
         ` : ''}
@@ -362,7 +352,7 @@ function buildUniversalNotificationContent(
         <!-- Action Needed (for NO_MATCH scenario) -->
         ${scenario === 'NO_MATCH' ? `
         <div style="background-color: #ffebee; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f44336;">
-          <h3 style="margin-top: 0; color: #d32f2f; font-size: 16px;">⚠️ Action Required</h3>
+          <h3 style="margin-top: 0; color: #d32f2f; font-size: 16px;">Action Required</h3>
           <p style="margin: 0; color: #666; line-height: 1.6;">
             This caller could not be matched to a homeowner in the database. Please:
           </p>
@@ -375,25 +365,19 @@ function buildUniversalNotificationContent(
         </div>
         ` : ''}
 
-        <!-- Primary CTA Button -->
+        <!-- CTA Buttons - Pill Shaped -->
         <div style="margin-top: 30px; text-align: center;">
-          <a href="${primaryCta.link}" style="display: inline-block; background-color: ${primaryCta.color}; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 5px;">
+          <a href="${primaryCta.link}" style="display: inline-block; background-color: ${primaryCta.color}; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
             ${primaryCta.text}
           </a>
           ${scenario !== 'NO_MATCH' && homeownerLink && scenario !== 'CLAIM_CREATED' ? `
-          <a href="${homeownerLink}" style="display: inline-block; background-color: #4CAF50; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 5px;">
+          <a href="${homeownerLink}" style="display: inline-block; background-color: #26A69A; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
             View Homeowner
           </a>
           ` : ''}
-          <a href="${callsLink}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px; margin: 5px;">
+          <a href="${callsLink}" style="display: inline-block; background-color: #26A69A; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
             View All Calls
           </a>
-        </div>
-
-        <!-- Footer -->
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #e0e0e0; text-align: center; color: #999; font-size: 12px;">
-          <p style="margin: 5px 0;">Vapi Call ID: ${data.vapiCallId}</p>
-          <p style="margin: 5px 0;">Powered by Cascade Connect AI Intake</p>
         </div>
 
       </div>
@@ -411,10 +395,8 @@ ${scenario === 'NO_MATCH' ? `Phone Number: ${data.phoneNumber || 'Not provided'}
 Property Address: ${data.propertyAddress || 'Not provided'}
 ${scenario !== 'NO_MATCH' ? `Homeowner: ${data.matchedHomeownerName || data.homeownerName || 'Not provided'}` : `Caller Name: ${data.homeownerName || 'Not provided'}`}
 ${scenario !== 'NO_MATCH' ? `Phone: ${data.phoneNumber || 'Not provided'}` : ''}
-Call Intent: ${data.callIntent || 'Not specified'}
 Urgency: ${data.isUrgent ? 'URGENT' : 'Normal'}
 ${scenario === 'CLAIM_CREATED' ? `Claim Number: #${data.claimNumber}` : ''}
-${scenario !== 'NO_MATCH' && data.similarity ? `Match Quality: ${Math.round((data.similarity || 0) * 100)}%` : ''}
 
 ${data.issueDescription ? `\nISSUE DESCRIPTION\n${data.issueDescription}\n` : ''}
 
@@ -431,10 +413,6 @@ LINKS
 ${primaryCta.text}: ${primaryCta.link}
 ${scenario !== 'NO_MATCH' && homeownerLink ? `View Homeowner: ${homeownerLink}` : ''}
 View All Calls: ${callsLink}
-
----
-Vapi Call ID: ${data.vapiCallId}
-Powered by Cascade Connect AI Intake
   `.trim();
 
   return { subject, html, text };
