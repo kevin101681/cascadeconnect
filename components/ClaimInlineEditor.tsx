@@ -639,7 +639,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
   };
   
   return (
-    <div className="space-y-6 flex flex-col h-full">
+    <div className="space-y-6 flex flex-col">
       {/* Header */}
       <div className="pb-4 border-b border-surface-outline-variant dark:border-gray-700 flex flex-wrap justify-between items-center gap-2">
         <h2 className="text-lg font-normal text-surface-on dark:text-gray-100">
