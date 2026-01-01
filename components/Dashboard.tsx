@@ -2718,7 +2718,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                                             const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
                                             const contextLabel = `${selectedThread.subject} • ${project}`;
                                             setCurrentTab('NOTES');
-                                            useTaskStore.setState({ contextLabel, contextType: 'message' });
+                                            useTaskStore.setState({ activeClaimId: associatedClaim?.id || null, contextLabel, contextType: 'message' });
                                           }}
                                           className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
                                           title={`Add a note about: ${selectedThread.subject}`}

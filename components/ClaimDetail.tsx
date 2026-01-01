@@ -332,20 +332,20 @@ If this repair work is billable, please let me know prior to scheduling.`);
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-           <Button 
-             variant="outlined" 
-             onClick={() => {
-               // Navigate to the Notes tab and store context
-               const contextLabel = `${claim.title || 'Untitled'} • Claim #${claim.claimNumber || claim.id.substring(0, 8)} • ${claim.jobName || claim.address}`;
-               if (onNavigate) {
-                 onNavigate('DASHBOARD', { initialTab: 'NOTES' });
-               }
-               // Store context for when user adds a note
-               useTaskStore.setState({ contextLabel, contextType: 'claim' });
-             }}
-             icon={<StickyNote className="h-4 w-4" />}
-             title={`Add a note for ${claim.claimNumber || 'this claim'}`}
-           >
+          <Button 
+            variant="outlined" 
+            onClick={() => {
+              // Navigate to the Notes tab and store context
+              const contextLabel = `${claim.title || 'Untitled'} • Claim #${claim.claimNumber || claim.id.substring(0, 8)} • ${claim.jobName || claim.address}`;
+              if (onNavigate) {
+                onNavigate('DASHBOARD', { initialTab: 'NOTES' });
+              }
+              // Store context for when user adds a note
+              useTaskStore.setState({ activeClaimId: claim.id, contextLabel, contextType: 'claim' });
+            }}
+            icon={<StickyNote className="h-4 w-4" />}
+            title={`Add a note for ${claim.claimNumber || 'this claim'}`}
+          >
              +Note
            </Button>
            <Button 
@@ -656,7 +656,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                                   onNavigate('DASHBOARD', { initialTab: 'NOTES' });
                                 }
                                 // Store context for when user adds a note
-                                useTaskStore.setState({ contextLabel, contextType: 'message' });
+                                useTaskStore.setState({ activeClaimId: claim.id, contextLabel, contextType: 'message' });
                               }}
                               className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
                               title={`Add a note about: ${msg.subject}`}

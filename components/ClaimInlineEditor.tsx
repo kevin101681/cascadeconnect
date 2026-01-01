@@ -656,7 +656,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 onNavigate('DASHBOARD', { initialTab: 'NOTES' });
               }
               // Store context for when user adds a note
-              useTaskStore.setState({ contextLabel, contextType: 'claim' });
+              useTaskStore.setState({ activeClaimId: claim.id, contextLabel, contextType: 'claim' });
             }}
             title={`Add a note for ${claim.claimNumber || 'this claim'}`}
           >
@@ -960,7 +960,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                                   onNavigate('DASHBOARD', { initialTab: 'NOTES' });
                                 }
                                 // Store context for when user adds a note
-                                useTaskStore.setState({ contextLabel, contextType: 'message' });
+                                useTaskStore.setState({ activeClaimId: claim.id, contextLabel, contextType: 'message' });
                               }}
                               className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
                               title={`Add a note about: ${msg.subject}`}
