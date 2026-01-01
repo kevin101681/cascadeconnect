@@ -340,7 +340,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
           </div>
 
           {/* RIGHT COLUMN - Call Details */}
-          <div className="flex-1 p-6">
+          <div className="flex-1 overflow-y-auto p-6 pr-8">
             {actualSelectedCall ? (
               <div className="space-y-6">
                 {/* Date & Status Header */}
