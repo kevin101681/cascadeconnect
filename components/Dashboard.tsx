@@ -3950,7 +3950,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-[calc(100vh-300px)]">
                         <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
                           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                            <FileText className="h-5 w-5 text-primary" />
                             Invoices & Billing
                           </h2>
                         </div>
@@ -3996,7 +3995,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-[calc(100vh-300px)]">
                         <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
                           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                            <FileText className="h-5 w-5 text-primary" />
                             Invoices & Billing
                           </h2>
                         </div>

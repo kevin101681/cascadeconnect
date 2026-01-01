@@ -216,7 +216,6 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
       <div className="flex-shrink-0 px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-            <Phone className="h-6 w-6 text-primary" />
             Calls
             {stats.total > 0 && (
               <span className="inline-flex items-center justify-center px-2 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">

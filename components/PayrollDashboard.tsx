@@ -266,7 +266,6 @@ const PayrollDashboard: React.FC = () => {
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl flex items-center justify-between">
         <div>
           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-primary" />
             Payroll Dashboard
           </h2>
         </div>
