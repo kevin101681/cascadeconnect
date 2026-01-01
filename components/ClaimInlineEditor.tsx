@@ -713,7 +713,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     value={editDescription}
                     onChange={e => setEditDescription(e.target.value)}
                     rows={4}
-                    className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-y"
+                    className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-none overflow-hidden"
                   />
                 ) : (
                   <p className="text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
@@ -897,7 +897,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                         value={editInternalNotes}
                         onChange={e => setEditInternalNotes(e.target.value)}
                   rows={4}
-                  className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors"
+                  className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-none overflow-hidden"
                 />
               ) : (
                 <div className="text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
@@ -1381,7 +1381,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Message</label>
                 <textarea 
                   rows={8}
-                  className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
+                  className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none overflow-hidden"
                   value={soBody}
                   onChange={e => setSoBody(e.target.value)}
                 />
@@ -1492,7 +1492,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Message Body</label>
                 <textarea 
                   rows={10}
-                  className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
+                  className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none overflow-hidden"
                   value={editingTemplateId ? templateEditBody : soBody}
                   onChange={e => editingTemplateId ? setTemplateEditBody(e.target.value) : setSoBody(e.target.value)}
                 />
