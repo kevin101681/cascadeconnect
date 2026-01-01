@@ -1887,6 +1887,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       : 'No claims found.';
 
     return (
+      <>
       <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden max-h-[calc(100vh-8rem)]">
         {/* Left Column: Claims List */}
         <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
@@ -2071,8 +2072,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
 
-        {/* Right Column: Claim Detail View */}
-        <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedClaimForModal ? 'hidden md:flex' : 'flex'} h-full md:h-auto rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
+        {/* Right Column: Claim Detail View - Desktop Only */}
+        <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedClaimForModal ? 'hidden md:flex' : 'hidden md:flex'} h-full rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
           {selectedClaimForModal ? (
             <>
               {/* Claim Header Toolbar */}
@@ -2139,6 +2140,60 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
         </div>
       </div>
+      
+      {/* Mobile Full-Screen Overlay for Claim Modal */}
+      {selectedClaimForModal && (
+        <div className="md:hidden fixed inset-0 z-50 bg-surface dark:bg-gray-900 flex flex-col">
+          {/* Claim Header Toolbar */}
+          <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setSelectedClaimForModal(null)} 
+                className="p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Scrollable Claim Editor Content */}
+          <div 
+            className="flex-1 overflow-y-auto p-6 overscroll-contain"
+            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+          >
+            <Suspense fallback={
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            }>
+              <ClaimInlineEditor
+                claim={selectedClaimForModal}
+                onUpdateClaim={(updatedClaim) => {
+                  if (onUpdateClaim) {
+                    onUpdateClaim(updatedClaim);
+                  }
+                  setSelectedClaimForModal(updatedClaim);
+                }}
+                contractors={contractors}
+                currentUser={currentUser}
+                userRole={userRole}
+                onAddInternalNote={onAddInternalNote}
+                claimMessages={claimMessages.filter(m => m.claimId === selectedClaimForModal.id)}
+                onTrackClaimMessage={onTrackClaimMessage}
+                onSendMessage={() => {
+                  if (selectedClaimForModal) {
+                    setNewMessageSubject(selectedClaimForModal.title);
+                  }
+                  setShowNewMessageModal(true);
+                }}
+                onCancel={() => setSelectedClaimForModal(null)}
+                onNavigate={onNavigate}
+              />
+            </Suspense>
+          </div>
+        </div>
+      )}
+      </>
     );
   };
 
