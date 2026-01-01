@@ -3587,9 +3587,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               </button>
             )}
 
-            {/* VISUAL DIVIDER - Only show for admin */}
+            {/* VISUAL DIVIDER - Only show for admin on desktop */}
             {isAdmin && !isHomeownerView && (
-              <div className="flex items-center px-2 flex-shrink-0">
+              <div className="hidden md:flex items-center px-2 flex-shrink-0">
                 <div className="h-8 w-px bg-surface-outline-variant dark:bg-gray-600"></div>
               </div>
             )}

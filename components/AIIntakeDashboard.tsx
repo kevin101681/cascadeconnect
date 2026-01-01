@@ -18,8 +18,21 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
   const [selectedCall, setSelectedCall] = useState<Call | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
   const ITEMS_PER_PAGE = 9;
   const callDetailsRef = useRef<HTMLDivElement>(null);
+
+  // Detect mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     loadCalls();
@@ -154,15 +167,20 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
     });
   }, [statusFilteredCalls, searchQuery]);
 
-  // Derive the actual selected call or fallback to first call
-  // This avoids useEffect infinite loops
+  // Derive the actual selected call or fallback to first call on desktop only
+  // On mobile, only show selected call if user explicitly selected one
+  // This avoids useEffect infinite loops and prevents auto-showing details on mobile
   const actualSelectedCall = useMemo(() => {
     if (filteredCalls.length === 0) return null;
     if (selectedCall && filteredCalls.find(c => c.id === selectedCall.id)) {
       return selectedCall;
     }
-    return filteredCalls[0];
-  }, [filteredCalls, selectedCall]);
+    // Only auto-select first call on desktop
+    if (!isMobile) {
+      return filteredCalls[0];
+    }
+    return null; // No auto-selection on mobile
+  }, [filteredCalls, selectedCall, isMobile]);
 
   // Pagination
   const totalPages = Math.ceil(filteredCalls.length / ITEMS_PER_PAGE);
