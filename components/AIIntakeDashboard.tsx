@@ -45,12 +45,15 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
     return () => clearInterval(interval);
   }, []);
 
-  // Scroll to top of call details when a new call is selected
+  // Scroll to top of call details when a new call is selected (desktop only)
   useEffect(() => {
-    if (callDetailsRef.current && selectedCall) {
-      callDetailsRef.current.scrollTop = 0;
+    if (selectedCall && !isMobile) {
+      // Desktop: scroll the right column to top
+      if (callDetailsRef.current) {
+        callDetailsRef.current.scrollTop = 0;
+      }
     }
-  }, [selectedCall]);
+  }, [selectedCall, isMobile]);
 
   const loadCalls = async () => {
     if (!isDbConfigured) {
