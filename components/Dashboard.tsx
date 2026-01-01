@@ -3242,6 +3242,66 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 animate-in fade-in slide-in-from-top-4">
           {/* LEFT SIDEBAR - Homeowner Info Card with Search */}
           <div className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 ${isHomeownerCardCollapsed ? 'w-full lg:w-16' : 'w-full lg:w-80'}`}>
+            {/* Search Bar - Admin & Builder Only - Always visible on mobile, top of card on desktop */}
+            {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
+              <div className={`lg:hidden mb-4 ${isHomeownerCardCollapsed ? 'block' : 'block'}`}>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" />
+                  <input 
+                    type="text" 
+                    placeholder="Search homeowners..."
+                    className="w-full bg-white dark:bg-gray-700 rounded-full pl-9 pr-8 py-2 text-sm border border-surface-outline-variant dark:border-gray-600 focus:ring-2 focus:ring-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all"
+                    value={searchQuery}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    title="Search homeowners"
+                  />
+                  {searchQuery && (
+                    <button 
+                      onClick={() => onSearchChange('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-outline-variant hover:text-surface-on"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
+                  
+                  {/* Dropdown Results */}
+                  {searchQuery && searchResults.length > 0 && (
+                    <div className="absolute z-50 w-full mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 max-h-96 overflow-y-auto">
+                      {searchResults.map((homeowner) => (
+                        <button
+                          key={homeowner.id}
+                          onClick={() => {
+                            onSelectHomeowner(homeowner);
+                            onSearchChange('');
+                          }}
+                          className="w-full text-left px-4 py-3 hover:bg-surface-container dark:hover:bg-gray-700 border-b border-surface-outline-variant dark:border-gray-700 last:border-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{homeowner.name}</p>
+                              {homeowner.builder && (
+                                <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">
+                                  {homeowner.builder}
+                                </p>
+                              )}
+                              {homeowner.jobName && (
+                                <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">{homeowner.jobName}</p>
+                              )}
+                              {homeowner.closingDate && (
+                                <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">
+                                  Closing: {new Date(homeowner.closingDate).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Collapsed State - Show expand button */}
             {isHomeownerCardCollapsed && (
               <div className="hidden lg:block bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 p-2">
@@ -3262,9 +3322,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
                 className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 overflow-hidden relative"
               >
-                {/* Search Bar - Admin & Builder Only - Always visible at top */}
+                {/* Search Bar - Admin & Builder Only - Desktop only (inside card) */}
                 {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
-                  <div className="p-4 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
+                  <div className="hidden lg:block p-4 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" />
                       <input 
