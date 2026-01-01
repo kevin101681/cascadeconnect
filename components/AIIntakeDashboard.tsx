@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Call, Homeowner } from '../types';
-import { Phone, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Building2, User, Mail, ExternalLink, Play, Download, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Phone, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Building2, User, Mail, ExternalLink, Play, Download, Search, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { db, isDbConfigured } from '../db';
 import { calls, homeowners } from '../db/schema';
 import { eq, desc, sql } from 'drizzle-orm';
@@ -86,6 +86,36 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
       console.error('Error loading calls:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteCall = async (callId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card selection when clicking delete
+    
+    if (!window.confirm('Are you sure you want to delete this call? This action cannot be undone.')) {
+      return;
+    }
+
+    if (!isDbConfigured) {
+      console.warn('Database not configured');
+      return;
+    }
+
+    try {
+      await db.delete(calls).where(eq(calls.id, callId));
+      
+      // Remove from local state
+      setCallsData(prev => prev.filter(c => c.id !== callId));
+      
+      // Clear selection if deleted call was selected
+      if (selectedCall?.id === callId) {
+        setSelectedCall(null);
+      }
+      
+      console.log(`✅ Call ${callId} deleted successfully`);
+    } catch (error) {
+      console.error('Error deleting call:', error);
+      alert('Failed to delete call. Please try again.');
     }
   };
 
@@ -218,54 +248,64 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
           <div className="w-full md:w-96 border-r border-surface-outline-variant dark:border-gray-700 overflow-y-auto flex-shrink-0">
             <div className="p-4 space-y-2">
               {paginatedCalls.map((call) => (
-                <button
-                  key={call.id}
-                  onClick={() => setSelectedCall(call)}
-                  className={`w-full text-left p-4 rounded-xl border transition-all ${
-                    actualSelectedCall?.id === call.id
-                      ? 'bg-primary/10 dark:bg-primary/20 border-primary shadow-sm'
-                      : 'bg-surface dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 hover:bg-surface-container-high dark:hover:bg-gray-600'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="font-semibold text-sm text-surface-on dark:text-gray-100 truncate">
-                      {call.homeownerName || (
-                        <span className="inline-flex items-center gap-1">
-                          <span>Unknown Caller</span>
-                          <span className="bg-blue-500/30 text-blue-700 dark:text-blue-300 text-xs font-medium px-2 py-0.5 rounded-full">
-                            ?
+                <div key={call.id} className="relative">
+                  <button
+                    onClick={() => setSelectedCall(call)}
+                    className={`w-full text-left p-4 rounded-xl border transition-all ${
+                      actualSelectedCall?.id === call.id
+                        ? 'bg-primary/10 dark:bg-primary/20 border-primary shadow-sm'
+                        : 'bg-surface dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <span className="font-semibold text-sm text-surface-on dark:text-gray-100 truncate">
+                        {call.homeownerName || (
+                          <span className="inline-flex items-center gap-1">
+                            <span>Unknown Caller</span>
+                            <span className="bg-blue-500/30 text-blue-700 dark:text-blue-300 text-xs font-medium px-2 py-0.5 rounded-full">
+                              ?
+                            </span>
                           </span>
-                        </span>
-                      )}
-                    </span>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      {call.isUrgent && (
-                        <span className="bg-red-500/30 text-red-700 dark:text-red-300 text-xs font-bold px-2 py-0.5 rounded-full">
-                          URGENT
-                        </span>
-                      )}
-                      {call.homeownerName && (
-                        call.isVerified ? (
-                          <span className="bg-green-500/30 text-green-700 dark:text-green-300 text-xs font-medium px-2 py-0.5 rounded-full">
-                            ✓
+                        )}
+                      </span>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {call.isUrgent && (
+                          <span className="bg-red-500/30 text-red-700 dark:text-red-300 text-xs font-bold px-2 py-0.5 rounded-full">
+                            URGENT
                           </span>
-                        ) : (
-                          <span className="bg-orange-500/30 text-orange-700 dark:text-orange-300 text-xs font-medium px-2 py-0.5 rounded-full">
-                            ?
-                          </span>
-                        )
-                      )}
+                        )}
+                        {call.homeownerName && (
+                          call.isVerified ? (
+                            <span className="bg-green-500/30 text-green-700 dark:text-green-300 text-xs font-medium px-2 py-0.5 rounded-full">
+                              ✓
+                            </span>
+                          ) : (
+                            <span className="bg-orange-500/30 text-orange-700 dark:text-orange-300 text-xs font-medium px-2 py-0.5 rounded-full">
+                              ?
+                            </span>
+                          )
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <p className="text-xs text-surface-on-variant dark:text-gray-400 mb-2">
-                    {formatDate(call.createdAt)}
-                  </p>
-                  {call.issueDescription && (
-                    <p className="text-xs text-surface-on-variant dark:text-gray-400 line-clamp-2">
-                      {call.issueDescription}
+                    <p className="text-xs text-surface-on-variant dark:text-gray-400 mb-2">
+                      {formatDate(call.createdAt)}
                     </p>
-                  )}
-                </button>
+                    {call.issueDescription && (
+                      <p className="text-xs text-surface-on-variant dark:text-gray-400 line-clamp-2">
+                        {call.issueDescription}
+                      </p>
+                    )}
+                  </button>
+                  
+                  {/* Delete Button - Positioned absolutely in top-right */}
+                  <button
+                    onClick={(e) => handleDeleteCall(call.id, e)}
+                    className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors z-10"
+                    title="Delete call"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               ))}
             </div>
 
