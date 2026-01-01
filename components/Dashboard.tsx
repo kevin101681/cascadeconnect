@@ -2362,6 +2362,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
 
     return (
+      <>
       <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden">
         {/* Left Column: Tasks List */}
         <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedTaskForModal ? 'hidden md:flex' : 'flex'}`}>
@@ -2527,8 +2528,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
 
-        {/* Right Column: Task Detail View */}
-        <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedTaskForModal ? 'hidden md:flex' : 'flex'} h-full md:h-auto rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
+        {/* Right Column: Task Detail View - Desktop Only */}
+        <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedTaskForModal ? 'hidden md:flex' : 'hidden md:flex'} h-full rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
           {selectedTaskForModal ? (
             <>
               {/* Task Header Toolbar */}
@@ -2592,10 +2593,55 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
         </div>
       </div>
+      
+      {/* Mobile Full-Screen Overlay for Task Detail */}
+      {selectedTaskForModal && (
+        <div className="md:hidden fixed inset-0 z-50 bg-surface dark:bg-gray-900 flex flex-col">
+          {/* Task Header Toolbar */}
+          <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30">
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setSelectedTaskForModal(null)} 
+                className="p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <h3 className="text-sm font-medium text-surface-on dark:text-gray-100">
+                {selectedTaskForModal.title}
+              </h3>
+            </div>
+          </div>
+
+          {/* Scrollable Task Detail Content */}
+          <div 
+            className="flex-1 overflow-y-auto p-6 overscroll-contain"
+            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+          >
+            <Suspense fallback={
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            }>
+              <TaskDetail
+                task={selectedTaskForModal}
+                employees={employees}
+                currentUser={currentUser}
+                claims={claims}
+                homeowners={homeowners}
+                onToggleTask={onToggleTask}
+                onDeleteTask={onDeleteTask}
+                onBack={() => setSelectedTaskForModal(null)}
+              />
+            </Suspense>
+          </div>
+        </div>
+      )}
+      </>
     );
   };
 
   const renderMessagesTab = () => (
+    <>
     <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden">
        {/* Left Column: Inbox List (Gmail Style) */}
        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
@@ -2723,8 +2769,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
        </div>
 
-       {/* Right Column: Email Thread View */}
-       <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'flex'} h-full md:h-auto rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
+       {/* Right Column: Email Thread View - Desktop Only */}
+       <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'hidden md:flex'} h-full rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
           {selectedThread ? (
             <>
                {/* Thread Header Toolbar */}
@@ -2888,6 +2934,160 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
        </div>
     </div>
+    
+    {/* Mobile Full-Screen Overlay for Message Thread */}
+    {selectedThread && (
+      <div className="md:hidden fixed inset-0 z-50 bg-surface dark:bg-gray-900 flex flex-col">
+        {/* Thread Header Toolbar */}
+        <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30">
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => setSelectedThreadId(null)} 
+              className="p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable Thread Content */}
+        <div 
+          className="flex-1 overflow-y-auto overscroll-contain"
+          style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+        >
+          <div className="px-8 py-6 bg-white dark:bg-white rounded-2xl mx-4 my-4">
+            {/* Subject Line */}
+            <div className="flex items-start justify-between mb-8">
+              <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 leading-tight">{selectedThread.subject}</h2>
+              <button className="p-2 -mr-2 text-surface-outline-variant dark:text-gray-500 hover:text-yellow-500 rounded-full">
+                <Star className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Messages Loop */}
+            <div className="space-y-8">
+              {selectedThread.messages.map((msg, idx) => {
+                const isMe = isAdmin ? msg.senderRole === UserRole.ADMIN : msg.senderRole === UserRole.HOMEOWNER;
+                return (
+                  <div key={msg.id} className="group">
+                    <div className="flex items-start gap-4 mb-3">
+                      {/* Avatar */}
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm shrink-0 ${
+                        isMe ? 'bg-primary text-primary-on' : 'bg-tertiary-container text-tertiary-on-container'
+                      }`}>
+                        {msg.senderName.charAt(0)}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline justify-between">
+                          <div className="flex items-baseline gap-2">
+                            <span className="font-bold text-surface-on dark:text-gray-100 text-sm">{msg.senderName}</span>
+                            <span className="text-xs text-surface-on-variant dark:text-gray-400">&lt;{isMe ? 'me' : msg.senderRole.toLowerCase()}&gt;</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => {
+                                const associatedClaim = claims.find(c => c.title === selectedThread.subject);
+                                const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
+                                const contextLabel = `${selectedThread.subject} • ${project}`;
+                                setCurrentTab('NOTES');
+                                useTaskStore.setState({ activeClaimId: associatedClaim?.id || null, contextLabel, contextType: 'message' });
+                              }}
+                              className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
+                              title={`Add a note about: ${selectedThread.subject}`}
+                            >
+                              <StickyNote className="h-3.5 w-3.5" />
+                              <span>+Note</span>
+                            </button>
+                            <div className="text-xs text-surface-on-variant dark:text-gray-400 transition-colors">
+                              {new Date(msg.timestamp).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-surface-on-variant dark:text-gray-400">to {isMe ? (effectiveHomeowner?.name || 'Homeowner') : 'Me'}</div>
+                      </div>
+                    </div>
+                    
+                    {/* Message Body */}
+                    <div className="pl-14 text-sm text-surface-on/90 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+                      {msg.content}
+                    </div>
+                    
+                    {/* Divider if not last */}
+                    {idx < selectedThread.messages.length - 1 && (
+                      <div className="mt-8 border-b border-surface-outline-variant/30 dark:border-gray-700/30 ml-14"></div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Bottom Padding */}
+            <div className="h-32"></div>
+          </div>
+        </div>
+
+        {/* Reply Box */}
+        <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
+          {isBuilder ? (
+            <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600 border-dashed">
+              <LockIcon className="h-4 w-4 mx-auto mb-2 opacity-50"/>
+              Read-only access. You cannot reply to threads.
+            </div>
+          ) : (
+            !replyExpanded ? (
+              <button 
+                onClick={() => setReplyExpanded(true)}
+                className="w-full flex items-center gap-3 p-4 rounded-full border border-surface-outline-variant dark:border-gray-600 text-surface-on-variant dark:text-gray-400 hover:shadow-elevation-1 hover:bg-surface dark:hover:bg-gray-700 transition-all group"
+              >
+                <div className="w-8 h-8 rounded-full bg-surface-container dark:bg-gray-700 flex items-center justify-center">
+                  <Reply className="h-4 w-4 text-surface-outline dark:text-gray-500" />
+                </div>
+                <span className="text-sm font-medium group-hover:text-surface-on dark:group-hover:text-gray-100">Reply to this conversation...</span>
+              </button>
+            ) : (
+              <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200">
+                <div className="flex items-center gap-2 p-3 border-b border-surface-outline-variant/50 dark:border-gray-700/50 bg-surface-container/20 dark:bg-gray-700/20">
+                  <CornerUpLeft className="h-4 w-4 text-surface-outline-variant dark:text-gray-500"/>
+                  <span className="text-xs font-medium text-surface-on-variant dark:text-gray-400">Replying to {selectedThread.participants.filter(p => p !== (isAdmin ? currentUser.name : activeHomeowner.name)).join(', ')}</span>
+                </div>
+                <textarea
+                  rows={6}
+                  autoFocus
+                  className="w-full bg-transparent dark:bg-transparent outline-none text-sm p-4 resize-none leading-relaxed text-surface-on dark:text-gray-100 overflow-hidden"
+                  value={replyContent}
+                  onChange={(e) => setReplyContent(e.target.value)}
+                />
+                <div className="flex justify-between items-center p-3 bg-surface-container/10 dark:bg-gray-700/10">
+                  <div className="flex gap-2">
+                    <button className="p-2 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Paperclip className="h-4 w-4"/></button>
+                    <button className="p-2 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Building2 className="h-4 w-4"/></button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => setReplyExpanded(false)}
+                      className="p-2 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 text-sm font-medium"
+                    >
+                      Discard
+                    </button>
+                    <Button 
+                      onClick={handleSendReply} 
+                      disabled={!replyContent.trim()} 
+                      variant="filled" 
+                      className="!h-9 !px-6"
+                      icon={<Send className="h-3 w-3" />}
+                    >
+                      Send
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )
+          )}
+        </div>
+      </div>
+    )}
+    </>
   );
 
   // --- Main Render Logic ---
