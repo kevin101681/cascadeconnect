@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Call, Homeowner } from '../types';
 import { Phone, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Building2, User, Mail, ExternalLink, Play, Download, Search, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import { db, isDbConfigured } from '../db';
@@ -19,6 +19,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 9;
+  const callDetailsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadCalls();
@@ -30,6 +31,13 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
     
     return () => clearInterval(interval);
   }, []);
+
+  // Scroll to top of call details when a new call is selected
+  useEffect(() => {
+    if (callDetailsRef.current && selectedCall) {
+      callDetailsRef.current.scrollTop = 0;
+    }
+  }, [selectedCall]);
 
   const loadCalls = async () => {
     if (!isDbConfigured) {
@@ -340,7 +348,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
           </div>
 
           {/* RIGHT COLUMN - Call Details */}
-          <div className="flex-1 overflow-y-auto p-6 pr-8">
+          <div ref={callDetailsRef} className="flex-1 overflow-y-auto p-6 pr-8">
             {actualSelectedCall ? (
               <div className="space-y-6">
                 {/* Date & Status Header */}
