@@ -1887,7 +1887,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       : 'No claims found.';
 
     return (
-      <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden">
+      <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden max-h-[calc(100vh-8rem)]">
         {/* Left Column: Claims List */}
         <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
           <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-auto shrink-0 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none">
