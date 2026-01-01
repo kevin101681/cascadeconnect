@@ -157,7 +157,7 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
 
       {/* Input Area */}
       <div className="flex-shrink-0 px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700">
-        <form onSubmit={handleAddTask} className="flex gap-2">
+        <form onSubmit={handleAddTask} className="flex gap-2 items-start">
           <div className="flex-1">
             <input
               ref={inputRef}
@@ -179,7 +179,7 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
           </div>
           <button
             type="submit"
-            className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-on rounded-lg transition-colors font-medium"
+            className="flex-shrink-0 px-4 py-2 h-10 bg-primary hover:bg-primary/90 text-primary-on rounded-lg transition-colors font-medium"
           >
             Add
           </button>
