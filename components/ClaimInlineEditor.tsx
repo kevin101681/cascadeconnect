@@ -648,7 +648,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
         <div className="flex flex-wrap items-center gap-2">
           <Button 
             type="button" 
-            variant="outlined"
+            variant="filled"
             onClick={() => {
               // Navigate to the Notes tab and store context
               const contextLabel = `${claim.title || 'Untitled'} • Claim #${claim.claimNumber || claim.id.substring(0, 8)} • ${claim.jobName || claim.address}`;
@@ -658,7 +658,6 @@ If this repair work is billable, please let me know prior to scheduling.`);
               // Store context for when user adds a note
               useTaskStore.setState({ contextLabel, contextType: 'claim' });
             }}
-            icon={<StickyNote className="h-4 w-4" />}
             title={`Add a note for ${claim.claimNumber || 'this claim'}`}
           >
             +Note
@@ -689,10 +688,8 @@ If this repair work is billable, please let me know prior to scheduling.`);
         </div>
       </div>
       
-      {/* Two Column Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left Column */}
-        <div className="space-y-6">
+      {/* Single Column Layout */}
+      <div className="space-y-6">
           {/* Title and Description Card */}
           <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
             <div className="space-y-4">
@@ -1008,9 +1005,6 @@ If this repair work is billable, please let me know prior to scheduling.`);
               </div>
             )}
           </div>
-        </div>
-        {/* Right Column: Sub Assignment, Scheduling, Warranty Assessment */}
-        <div className="space-y-6">
           {/* Sub Assignment (Admin Only) */}
           {isAdmin && (
             <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
@@ -1210,7 +1204,6 @@ If this repair work is billable, please let me know prior to scheduling.`);
               </div>
             </div>
           )}
-        </div>
       </div>
       
       {/* Calendar Picker */}

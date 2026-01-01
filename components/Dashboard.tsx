@@ -11,7 +11,7 @@ import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
 import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User } from 'lucide-react';
 import { useTaskStore } from '../stores/useTaskStore';
-import { calls } from '../db/schema';
+import { calls, claims as claimsSchema } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { db, isDbConfigured } from '../db';
 import Button from './Button';
@@ -715,6 +715,31 @@ const Dashboard: React.FC<DashboardProps> = ({
       if (selectedMessageTemplateId === templateId) {
         setSelectedMessageTemplateId('');
       }
+    }
+  };
+
+  // Delete claim
+  const handleDeleteClaim = async (claimId: string) => {
+    try {
+      if (!isDbConfigured) {
+        console.warn('Database not configured');
+        return;
+      }
+
+      // Delete from database
+      await db.delete(claimsSchema).where(eq(claimsSchema.id, claimId));
+      
+      // If the deleted claim was selected, clear the selection
+      if (selectedClaimForModal?.id === claimId) {
+        setSelectedClaimForModal(null);
+      }
+      
+      // Refresh claims list by triggering a re-render
+      // The parent component will re-fetch claims data
+      console.log('Claim deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete claim:', error);
+      alert('Failed to delete claim. Please try again.');
     }
   };
 
@@ -1969,19 +1994,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                   const isSelected = selectedClaimForModal?.id === claim.id;
                   
                   return (
-                    <div
-                      key={claim.id}
-                      onClick={() => setSelectedClaimForModal(claim)}
-                      className={`group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer ${
-                        isSelected
-                          ? 'bg-primary-container/20 dark:bg-primary/20 border-primary ring-1 ring-primary'
-                          : isCompleted 
-                          ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75 hover:shadow-sm' 
-                          : isReviewed
-                          ? 'bg-green-50 dark:bg-green-950/20 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
-                          : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
-                      }`}
-                    >
+                    <div key={claim.id} className="relative">
+                      <button
+                        onClick={() => setSelectedClaimForModal(claim)}
+                        className={`w-full text-left group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer pb-10 ${
+                          isSelected
+                            ? 'bg-primary-container/20 dark:bg-primary/20 border-primary ring-1 ring-primary'
+                            : isCompleted 
+                            ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75 hover:shadow-sm' 
+                            : isReviewed
+                            ? 'bg-green-50 dark:bg-green-950/20 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
+                            : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
+                        }`}
+                      >
                       <div className="px-4 py-4">
                         <div className="flex flex-wrap gap-2">
                           {/* Claim # */}
@@ -2025,6 +2050,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                           </span>
                         </div>
                       </div>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm('Are you sure you want to delete this claim? This action cannot be undone.')) {
+                            handleDeleteClaim(claim.id);
+                          }
+                        }}
+                        className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors z-10"
+                        title="Delete claim"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   );
                 })}
@@ -2046,9 +2084,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
-                  <h3 className="text-sm font-medium text-surface-on dark:text-gray-100">
-                    {selectedClaimForModal.title}
-                  </h3>
                 </div>
                 <button 
                   onClick={() => setSelectedClaimForModal(null)}
@@ -2059,7 +2094,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
 
               {/* Scrollable Claim Editor Content */}
-              <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex-1 overflow-y-auto p-6">
                 <Suspense fallback={
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
