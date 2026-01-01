@@ -324,7 +324,6 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
           <Database className="h-5 w-5 text-primary" />
           Backend Dashboard
         </h3>
-        <p className="text-sm text-surface-on-variant dark:text-gray-400">Neon Database Overview & Management</p>
       </div>
       <div className="flex items-center gap-2">
         {actions}
@@ -412,7 +411,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
         <div className="p-6 space-y-6 overflow-y-auto flex-1" style={{ height: 'calc(85vh - 120px)' }}>
           {/* Tabs */}
           <div className="flex gap-2 mb-6 border-b border-surface-outline-variant dark:border-gray-700 overflow-x-auto">
-            {(['NETLIFY', 'OVERVIEW', 'USERS', 'HOMEOWNERS', 'CLAIMS', 'DOCUMENTS', 'TASKS', 'MESSAGES', 'NEON'] as const).map(tab => (
+            {(['NETLIFY', 'NEON', 'OVERVIEW', 'USERS', 'HOMEOWNERS', 'CLAIMS', 'DOCUMENTS', 'TASKS', 'MESSAGES'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
