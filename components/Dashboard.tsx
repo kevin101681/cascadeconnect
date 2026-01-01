@@ -2528,7 +2528,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Right Column: Task Detail View */}
-        <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedTaskForModal ? 'hidden md:flex' : 'flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
+        <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedTaskForModal ? 'hidden md:flex' : 'flex'} h-full md:h-auto rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
           {selectedTaskForModal ? (
             <>
               {/* Task Header Toolbar */}
@@ -2553,7 +2553,10 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
 
               {/* Scrollable Task Detail Content */}
-              <div className="flex-1 overflow-y-auto p-6">
+              <div 
+                className="flex-1 overflow-y-auto p-6 overscroll-contain"
+                style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+              >
                 <Suspense fallback={
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -2721,7 +2724,7 @@ const Dashboard: React.FC<DashboardProps> = ({
        </div>
 
        {/* Right Column: Email Thread View */}
-       <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
+       <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'flex'} h-full md:h-auto rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
           {selectedThread ? (
             <>
                {/* Thread Header Toolbar */}
@@ -2738,7 +2741,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                </div>
 
                {/* Scrollable Thread Content */}
-               <div className="flex-1 overflow-y-auto">
+               <div 
+                 className="flex-1 overflow-y-auto overscroll-contain"
+                 style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+               >
                  <div className="px-8 py-6 bg-white dark:bg-white rounded-2xl mx-4 my-4">
                     {/* Subject Line */}
                     <div className="flex items-start justify-between mb-8">
