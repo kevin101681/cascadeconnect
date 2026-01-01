@@ -3519,7 +3519,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Navigation Tabs at Top */}
             <div 
               ref={tabsContainerRef}
-              className="flex gap-2 overflow-x-auto scrollbar-hide"
+              className="flex flex-wrap md:flex-nowrap gap-2 md:overflow-x-auto scrollbar-hide"
               style={{
                 scrollbarWidth: 'none',
                 msOverflowStyle: 'none',

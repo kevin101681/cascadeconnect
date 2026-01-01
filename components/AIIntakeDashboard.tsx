@@ -252,7 +252,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
       ) : (
         <div className="flex-1 min-h-0 flex overflow-hidden">
           {/* LEFT COLUMN - Call Cards List */}
-          <div className="w-full md:w-96 border-r border-surface-outline-variant dark:border-gray-700 overflow-y-auto flex-shrink-0">
+          <div className={`w-full md:w-96 border-r border-surface-outline-variant dark:border-gray-700 overflow-y-auto flex-shrink-0 ${actualSelectedCall ? 'hidden md:block' : 'block'}`}>
             <div className="p-4 space-y-2">
               {paginatedCalls.map((call) => (
                 <div key={call.id} className="relative">
@@ -347,9 +347,18 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
           </div>
 
           {/* RIGHT COLUMN - Call Details */}
-          <div ref={callDetailsRef} className="flex-1 overflow-y-auto p-6 pr-8">
+          <div ref={callDetailsRef} className={`flex-1 overflow-y-auto p-6 pr-8 ${actualSelectedCall ? 'block' : 'hidden md:block'}`}>
             {actualSelectedCall ? (
               <div className="space-y-6">
+                {/* Back Button for Mobile */}
+                <button
+                  onClick={() => setSelectedCall(null)}
+                  className="md:hidden flex items-center gap-2 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 mb-4"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                  <span className="text-sm font-medium">Back to calls</span>
+                </button>
+
                 {/* Date & Status Header */}
                 <div className="flex items-center justify-between">
                   <h3 className="text-2xl font-normal text-surface-on dark:text-gray-100">
