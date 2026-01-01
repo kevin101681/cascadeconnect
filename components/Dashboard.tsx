@@ -3473,6 +3473,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           onClick={() => {
                             onSelectHomeowner(homeowner);
                             onSearchChange('');
+                            setIsHomeownerCardCollapsed(false);
                           }}
                           className="w-full text-left px-4 py-3 hover:bg-surface-container dark:hover:bg-gray-700 border-b border-surface-outline-variant dark:border-gray-700 last:border-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
                         >
@@ -3553,6 +3554,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                               onClick={() => {
                                 onSelectHomeowner(homeowner);
                                 onSearchChange('');
+                                setIsHomeownerCardCollapsed(false);
                               }}
                               className="w-full text-left px-4 py-3 hover:bg-surface-container dark:hover:bg-gray-700 border-b border-surface-outline-variant dark:border-gray-700 last:border-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
                             >
@@ -5972,6 +5974,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       onClick={() => {
                         onSelectHomeowner(homeowner);
                         onSearchChange('');
+                        setIsHomeownerCardCollapsed(false);
                       }}
                       className="w-full text-left px-6 py-4 hover:bg-surface-container dark:hover:bg-gray-700 border-b border-surface-outline-variant dark:border-gray-700 last:border-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
                     >
@@ -6058,6 +6061,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       onClick={() => {
                         onSelectHomeowner(homeowner);
                         onSearchChange('');
+                        setIsHomeownerCardCollapsed(false);
                       }}
                       className="w-full text-left px-6 py-4 hover:bg-surface-container dark:hover:bg-gray-700 border-b border-surface-outline-variant dark:border-gray-700 last:border-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
                     >
