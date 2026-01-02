@@ -3709,25 +3709,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
                 
                 {/* Line 6: Phone */}
-                <a 
-                  href={`tel:${displayHomeowner.phone}`} 
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1.5 hover:text-primary transition-colors text-sm text-surface-on-variant dark:text-gray-300"
-                >
+                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
                   <Phone className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
                   <span>{displayHomeowner.phone}</span>
-                </a>
+                </div>
                 
                 {/* Line 7: Email */}
                 <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
                   <Mail className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
-                  <a 
-                    href={`mailto:${displayHomeowner.email}`} 
-                    onClick={(e) => e.stopPropagation()}
-                    className="hover:text-primary transition-colors truncate"
-                  >
-                    {displayHomeowner.email}
-                  </a>
+                  <span className="truncate">{displayHomeowner.email}</span>
                 </div>
              </div>
 
