@@ -251,7 +251,76 @@ export async function uploadFile(
 }
 
 /**
- * Upload multiple files in parallel
+ * Detect if the user is on a mobile device
+ */
+function isMobileDevice(): boolean {
+  if (typeof window === 'undefined') return false;
+  
+  // Check user agent
+  const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
+  const mobileRegex = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+  
+  // Also check for touch support and screen size
+  const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  const isSmallScreen = window.innerWidth <= 768;
+  
+  return mobileRegex.test(userAgent) || (hasTouch && isSmallScreen);
+}
+
+/**
+ * Upload files with concurrency limit
+ * Prevents overwhelming mobile connections
+ */
+async function uploadFilesWithConcurrency(
+  files: File[],
+  options: UploadOptions,
+  maxConcurrent: number
+): Promise<UploadResult[]> {
+  const results: UploadResult[] = new Array(files.length);
+  const executing: Promise<void>[] = [];
+
+  console.log(`🔄 Uploading with concurrency limit: ${maxConcurrent}`);
+
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const index = i;
+
+    // Create upload promise
+    const uploadPromise = uploadFile(file, options)
+      .then(result => {
+        results[index] = result;
+        console.log(`✅ [${index + 1}/${files.length}] ${file.name} uploaded`);
+      })
+      .catch(error => {
+        // This shouldn't happen since uploadFile handles errors internally
+        results[index] = {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error'
+        };
+        console.error(`❌ [${index + 1}/${files.length}] ${file.name} failed:`, error);
+      });
+
+    // Add to executing queue
+    executing.push(uploadPromise);
+
+    // If we've hit the concurrency limit, wait for one to finish
+    if (executing.length >= maxConcurrent) {
+      await Promise.race(executing);
+      // Remove completed promises (they're settled, so filter won't affect them)
+      executing.splice(0, executing.length - maxConcurrent + 1);
+    }
+  }
+
+  // Wait for remaining uploads
+  await Promise.all(executing);
+
+  return results;
+}
+
+/**
+ * Upload multiple files with smart concurrency control
+ * - On mobile: uploads sequentially or with low concurrency (2 at a time)
+ * - On desktop: uploads in parallel
  * Returns results for all files (both successes and failures)
  */
 export async function uploadMultipleFiles(
@@ -263,9 +332,34 @@ export async function uploadMultipleFiles(
 }> {
   console.log(`📤 Starting batch upload of ${files.length} file(s)`);
 
-  const results = await Promise.all(
-    files.map(file => uploadFile(file, options))
-  );
+  const isMobile = isMobileDevice();
+  
+  // Adjust timeouts and concurrency for mobile
+  const adjustedOptions = {
+    ...options,
+    // Increase timeout on mobile to handle slower connections
+    timeoutMs: isMobile 
+      ? Math.max(options.timeoutMs || DEFAULT_OPTIONS.timeoutMs, 120000) // 2 min for mobile
+      : (options.timeoutMs || DEFAULT_OPTIONS.timeoutMs),
+  };
+
+  console.log(`📱 Device type: ${isMobile ? 'Mobile' : 'Desktop'}`);
+
+  let results: UploadResult[];
+
+  if (isMobile && files.length > 1) {
+    // On mobile, limit concurrent uploads to prevent connection issues
+    // Upload 2 files at a time to balance speed and reliability
+    const maxConcurrent = files.length <= 2 ? 1 : 2;
+    console.log(`📱 Using mobile upload strategy: ${maxConcurrent} concurrent upload(s)`);
+    results = await uploadFilesWithConcurrency(files, adjustedOptions, maxConcurrent);
+  } else {
+    // On desktop, upload all in parallel for speed
+    console.log(`💻 Using desktop upload strategy: parallel uploads`);
+    results = await Promise.all(
+      files.map(file => uploadFile(file, adjustedOptions))
+    );
+  }
 
   const successes: Attachment[] = [];
   const failures: Array<{ file: File; error: string }> = [];

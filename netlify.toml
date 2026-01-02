@@ -10,6 +10,11 @@
   node_bundler = "esbuild"
   included_files = ["netlify/functions/**"]
 
+# Extended timeout for upload function (especially for mobile uploads)
+[[functions]]
+  name = "upload"
+  timeout = 120  # 2 minutes for large file uploads on mobile
+
 # Note: Environment variables should be set in Netlify dashboard, not here
 # This file only contains build configuration, no secrets
 

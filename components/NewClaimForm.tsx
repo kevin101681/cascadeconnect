@@ -77,6 +77,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
   // Attachments State
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number }>({ current: 0, total: 0 });
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [imageViewerIndex, setImageViewerIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -399,15 +400,27 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
               isUploading ? 'bg-surface-container dark:bg-gray-700 border-primary/30 cursor-wait' : 'bg-surface-container/30 dark:bg-gray-700/30 border-surface-outline-variant dark:border-gray-600 hover:border-primary hover:bg-surface-container/50 dark:hover:bg-gray-700/50'
             }`}>
               {isUploading ? (
-                <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+                <>
+                  <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+                  {uploadProgress.total > 0 && (
+                    <span className="text-sm text-surface-on-variant dark:text-gray-400">
+                      Uploading {uploadProgress.current}/{uploadProgress.total}...
+                    </span>
+                  )}
+                </>
               ) : (
-                <Upload className="h-8 w-8 text-surface-outline-variant dark:text-gray-500" />
+                <>
+                  <Upload className="h-8 w-8 text-surface-outline-variant dark:text-gray-500" />
+                  <span className="text-sm text-surface-on-variant dark:text-gray-400">
+                    Click to upload or drag and drop
+                  </span>
+                  <span className="text-xs text-surface-on-variant dark:text-gray-500">
+                    Images, PDFs, and documents (max 10MB)
+                  </span>
+                </>
               )}
-              <span className="text-sm text-surface-on-variant dark:text-gray-400">
-                {isUploading ? 'Uploading...' : 'Click to upload or drag and drop'}
-              </span>
-              <span className="text-xs text-surface-on-variant dark:text-gray-500">
-                Images, PDFs, and documents (max 10MB)
+              <span className="text-xs text-surface-on-variant dark:text-gray-400 font-medium">
+                {isUploading ? 'Optimized for mobile uploads' : 'Multiple files supported'}
               </span>
               <input 
                 type="file" 
@@ -419,28 +432,39 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                   const files = e.target.files;
                   if (!files || files.length === 0) return;
                   
+                  const fileArray = Array.from(files);
                   setIsUploading(true);
+                  setUploadProgress({ current: 0, total: fileArray.length });
                   
                   try {
-                    // Use centralized upload service
-                    const { successes, failures } = await uploadMultipleFiles(Array.from(files), {
+                    console.log(`📤 Starting upload of ${fileArray.length} file(s) on ${/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent) ? 'mobile' : 'desktop'}`);
+                    
+                    // Use centralized upload service with progress tracking
+                    // The service will automatically adjust strategy for mobile vs desktop
+                    const { successes, failures } = await uploadMultipleFiles(fileArray, {
                       maxRetries: 3,
-                      timeoutMs: 60000,
+                      timeoutMs: 120000, // 2 minutes for mobile compatibility
                       maxFileSizeMB: 10,
                     });
                     
                     // Handle successes
                     if (successes.length > 0) {
                       setAttachments([...attachments, ...successes]);
-                      addToast(`Successfully uploaded ${successes.length} file${successes.length > 1 ? 's' : ''}`, 'success');
+                      addToast(`✓ Successfully uploaded ${successes.length} file${successes.length > 1 ? 's' : ''}`, 'success');
                     }
                     
-                    // Handle failures
+                    // Handle failures with detailed info
                     if (failures.length > 0) {
+                      console.error('Upload failures:', failures);
                       const errorMessage = failures.length === 1 
-                        ? `${failures[0].file.name}: ${failures[0].error}` 
-                        : `${failures.length} files failed to upload:\n${failures.slice(0, 5).map(f => `${f.file.name}: ${f.error}`).join('\n')}${failures.length > 5 ? `\n...and ${failures.length - 5} more` : ''}`;
+                        ? `Failed to upload ${failures[0].file.name}: ${failures[0].error}` 
+                        : `${failures.length} of ${fileArray.length} files failed to upload. Check console for details.`;
                       addToast(errorMessage, 'error');
+                      
+                      // Log detailed error info to console
+                      failures.forEach(f => {
+                        console.error(`❌ ${f.file.name} (${(f.file.size / 1024 / 1024).toFixed(2)}MB): ${f.error}`);
+                      });
                     }
                   } catch (error: unknown) {
                     const errorMessage = error instanceof Error ? error.message : 'Unknown upload error';
@@ -448,6 +472,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                     addToast(`Upload failed: ${errorMessage}`, 'error');
                   } finally {
                     setIsUploading(false);
+                    setUploadProgress({ current: 0, total: 0 });
                     // Reset input
                     e.target.value = '';
                   }
