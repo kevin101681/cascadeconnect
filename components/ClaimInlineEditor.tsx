@@ -826,12 +826,16 @@ If this repair work is billable, please let me know prior to scheduling.`);
                         if (!files || files.length === 0) return;
                         
                         setIsUploading(true);
-                        const newAttachments: Attachment[] = [];
+                        let successCount = 0;
+                        let failCount = 0;
+                        const failedFiles: string[] = [];
                         
                         try {
                           for (const file of Array.from(files)) {
                             if (file.size > 10 * 1024 * 1024) {
                               alert(`File ${file.name} is too large (>10MB). Please upload a smaller file.`);
+                              failCount++;
+                              failedFiles.push(file.name);
                               continue;
                             }
                             
@@ -854,24 +858,38 @@ If this repair work is billable, please let me know prior to scheduling.`);
                               const result = await response.json();
                               
                               if (result.success && result.url) {
-                                newAttachments.push({
+                                const newAttachment: Attachment = {
                                   id: result.publicId || crypto.randomUUID(),
                                   url: result.url,
                                   name: file.name,
                                   type: result.type || 'DOCUMENT'
+                                };
+                                
+                                // Immediately save to database after each successful upload
+                                onUpdateClaim({
+                                  ...claim,
+                                  attachments: [...(claim.attachments || []), newAttachment]
                                 });
+                                
+                                // Update local claim reference for next iteration
+                                claim.attachments = [...(claim.attachments || []), newAttachment];
+                                
+                                successCount++;
                               }
                             } catch (error) {
                               console.error(`Failed to upload ${file.name}:`, error);
-                              alert(`Failed to upload ${file.name}. Please try again.`);
+                              failCount++;
+                              failedFiles.push(file.name);
                             }
                           }
                           
-                          if (newAttachments.length > 0) {
-                            onUpdateClaim({
-                              ...claim,
-                              attachments: [...(claim.attachments || []), ...newAttachments]
-                            });
+                          // Show summary message
+                          if (successCount > 0 && failCount > 0) {
+                            alert(`Upload complete: ${successCount} file(s) succeeded, ${failCount} file(s) failed.\n\nFailed files:\n${failedFiles.join('\n')}`);
+                          } else if (failCount > 0) {
+                            alert(`All ${failCount} file(s) failed to upload:\n${failedFiles.join('\n')}\n\nPlease try again.`);
+                          } else if (successCount > 0) {
+                            // Success - no alert needed, attachments are visible
                           }
                         } finally {
                           setIsUploading(false);
