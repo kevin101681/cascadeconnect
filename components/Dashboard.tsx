@@ -449,6 +449,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const carouselInnerRef = useRef<HTMLDivElement>(null);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
   const isUserScrollingRef = useRef(false);
+  const isProgrammaticScrollRef = useRef(false); // Track when we're scrolling from tab click
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastScrollIndexRef = useRef<number>(0);
   const hasInitializedScrollRef = useRef(false);
@@ -3918,7 +3919,10 @@ const Dashboard: React.FC<DashboardProps> = ({
            {/* HOMEOWNER-SPECIFIC TABS */}
            <button 
               data-tab="CLAIMS"
-              onClick={() => setCurrentTab('CLAIMS')}
+              onClick={() => {
+                isProgrammaticScrollRef.current = true;
+                setCurrentTab('CLAIMS');
+              }}
               className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'CLAIMS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
             >
               <ClipboardList className="h-4 w-4" />
@@ -3929,7 +3933,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && !isHomeownerView && (
               <button 
                 data-tab="TASKS"
-                onClick={() => setCurrentTab('TASKS')}
+                onClick={() => {
+                  isProgrammaticScrollRef.current = true;
+                  setCurrentTab('TASKS');
+                }}
                 className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'TASKS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
               >
                 <CheckSquare className="h-4 w-4" />
@@ -3939,7 +3946,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             <button 
               data-tab="MESSAGES"
-              onClick={() => setCurrentTab('MESSAGES')}
+              onClick={() => {
+                isProgrammaticScrollRef.current = true;
+                setCurrentTab('MESSAGES');
+              }}
               className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'MESSAGES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
             >
               <Mail className="h-4 w-4" />
@@ -3952,6 +3962,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 data-tab="DOCUMENTS"
                 onClick={(e) => {
                   e.preventDefault();
+                  isProgrammaticScrollRef.current = true;
                   setCurrentTab('DOCUMENTS');
                 }}
                 className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
@@ -3967,6 +3978,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 data-tab="MANUAL"
                 onClick={(e) => {
                   e.preventDefault();
+                  isProgrammaticScrollRef.current = true;
                   setCurrentTab('MANUAL');
                 }}
                 className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'MANUAL' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
@@ -3988,7 +4000,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && !isHomeownerView && (
               <button 
                 data-tab="NOTES"
-                onClick={() => setCurrentTab('NOTES')}
+                onClick={() => {
+                  isProgrammaticScrollRef.current = true;
+                  setCurrentTab('NOTES');
+                }}
                 className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'NOTES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
               >
                 <StickyNote className="h-4 w-4" />
@@ -4000,7 +4015,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && !isHomeownerView && (
               <button 
                 data-tab="CALLS"
-                onClick={() => setCurrentTab('CALLS')}
+                onClick={() => {
+                  isProgrammaticScrollRef.current = true;
+                  setCurrentTab('CALLS');
+                }}
                 className={`text-sm font-medium transition-all px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'CALLS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
               >
                 Calls
@@ -4011,7 +4029,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && !isHomeownerView && currentUser?.role !== 'Employee' && (
               <button 
                 data-tab="PAYROLL"
-                onClick={() => setCurrentTab('PAYROLL')}
+                onClick={() => {
+                  isProgrammaticScrollRef.current = true;
+                  setCurrentTab('PAYROLL');
+                }}
                 className={`text-sm font-medium transition-all px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'PAYROLL' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
               >
                 Payroll
@@ -4022,7 +4043,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && !isHomeownerView && currentUser?.role !== 'Employee' && (
               <button 
                 data-tab="INVOICES"
-                onClick={() => setCurrentTab('INVOICES')}
+                onClick={() => {
+                  isProgrammaticScrollRef.current = true;
+                  setCurrentTab('INVOICES');
+                }}
                 className={`text-sm font-medium transition-all px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
               >
                 Invoices
@@ -4054,32 +4078,36 @@ const Dashboard: React.FC<DashboardProps> = ({
               clearTimeout(scrollTimeoutRef.current);
             }
             
-            // Update currentTab based on scroll position, but limit to one card movement
-            const container = e.currentTarget;
-            const scrollLeft = container.scrollLeft;
-            const viewportWidth = container.clientWidth;
-            const availableTabs = getAvailableTabs();
-            const currentTabIndex = availableTabs.indexOf(currentTab);
-            const calculatedIndex = Math.round(scrollLeft / viewportWidth);
-            
-            // Clamp the index to be at most ±1 from the current tab index to prevent skipping cards
-            const clampedIndex = Math.max(
-              0,
-              Math.min(
-                availableTabs.length - 1,
-                Math.max(currentTabIndex - 1, Math.min(currentTabIndex + 1, calculatedIndex))
-              )
-            );
-            
-            // Only update if the clamped index is different from current tab
-            if (clampedIndex >= 0 && clampedIndex < availableTabs.length && clampedIndex !== currentTabIndex) {
-              setCurrentTab(availableTabs[clampedIndex]);
-              lastScrollIndexRef.current = clampedIndex;
+            // Skip updating currentTab if this is a programmatic scroll (from clicking a tab button)
+            if (!isProgrammaticScrollRef.current) {
+              // Update currentTab based on scroll position, but limit to one card movement
+              const container = e.currentTarget;
+              const scrollLeft = container.scrollLeft;
+              const viewportWidth = container.clientWidth;
+              const availableTabs = getAvailableTabs();
+              const currentTabIndex = availableTabs.indexOf(currentTab);
+              const calculatedIndex = Math.round(scrollLeft / viewportWidth);
+              
+              // Clamp the index to be at most ±1 from the current tab index to prevent skipping cards
+              const clampedIndex = Math.max(
+                0,
+                Math.min(
+                  availableTabs.length - 1,
+                  Math.max(currentTabIndex - 1, Math.min(currentTabIndex + 1, calculatedIndex))
+                )
+              );
+              
+              // Only update if the clamped index is different from current tab
+              if (clampedIndex >= 0 && clampedIndex < availableTabs.length && clampedIndex !== currentTabIndex) {
+                setCurrentTab(availableTabs[clampedIndex]);
+                lastScrollIndexRef.current = clampedIndex;
+              }
             }
             
-            // Reset user scrolling flag after scroll ends
+            // Reset user scrolling flag and programmatic scroll flag after scroll ends
             scrollTimeoutRef.current = setTimeout(() => {
               isUserScrollingRef.current = false;
+              isProgrammaticScrollRef.current = false;
             }, 150);
           }}
         >
