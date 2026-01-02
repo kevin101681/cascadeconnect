@@ -12,6 +12,7 @@ import { sendEmail } from '../services/emailService';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
 import { generatePDFThumbnail } from '../lib/pdfThumbnail';
 import { useTaskStore } from '../stores/useTaskStore';
+import { uploadMultipleFiles } from '../lib/services/uploadService';
 
 interface ClaimInlineEditorProps {
   claim: Claim;
@@ -75,6 +76,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   const [showClassificationSelect, setShowClassificationSelect] = useState(false);
   const classificationSelectRef = useRef<HTMLDivElement>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<{ current: number; total: number }>({ current: 0, total: 0 });
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [imageViewerIndex, setImageViewerIndex] = useState(0);
   
@@ -805,15 +807,27 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     isUploading ? 'bg-surface-container dark:bg-gray-700 border-primary/30 cursor-wait' : 'bg-surface-container/30 dark:bg-gray-700/30 border-surface-outline-variant dark:border-gray-600 hover:border-primary hover:bg-surface-container/50 dark:hover:bg-gray-700/50'
                   }`}>
                     {isUploading ? (
-                      <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+                      <>
+                        <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+                        {uploadProgress.total > 0 && (
+                          <span className="text-sm text-surface-on-variant dark:text-gray-400">
+                            Uploading {uploadProgress.current}/{uploadProgress.total}...
+                          </span>
+                        )}
+                      </>
                     ) : (
-                      <Upload className="h-8 w-8 text-surface-outline-variant dark:text-gray-500" />
+                      <>
+                        <Upload className="h-8 w-8 text-surface-outline-variant dark:text-gray-500" />
+                        <span className="text-sm text-surface-on-variant dark:text-gray-400">
+                          Click to upload or drag and drop
+                        </span>
+                        <span className="text-xs text-surface-on-variant dark:text-gray-500">
+                          Images, PDFs, and documents (max 10MB)
+                        </span>
+                      </>
                     )}
-                    <span className="text-sm text-surface-on-variant dark:text-gray-400">
-                      {isUploading ? 'Uploading...' : 'Click to upload or drag and drop'}
-                    </span>
-                    <span className="text-xs text-surface-on-variant dark:text-gray-500">
-                      Images, PDFs, and documents (max 10MB)
+                    <span className="text-xs text-surface-on-variant dark:text-gray-400 font-medium">
+                      {isUploading ? 'Optimized for mobile uploads' : 'Multiple files supported'}
                     </span>
                     <input 
                       type="file" 
@@ -825,113 +839,60 @@ If this repair work is billable, please let me know prior to scheduling.`);
                         const files = e.target.files;
                         if (!files || files.length === 0) return;
                         
+                        const fileArray = Array.from(files);
                         setIsUploading(true);
-                        let successCount = 0;
-                        let failCount = 0;
-                        const failedFiles: string[] = [];
-                        
-                        // Detect if on mobile
-                        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                        setUploadProgress({ current: 0, total: fileArray.length });
                         
                         try {
-                          // Process files sequentially with a small delay to prevent overwhelming the system
-                          for (const file of Array.from(files)) {
-                            if (file.size > 10 * 1024 * 1024) {
-                              alert(`File ${file.name} is too large (>10MB). Please upload a smaller file.`);
-                              failCount++;
-                              failedFiles.push(file.name);
-                              continue;
-                            }
+                          console.log(`📤 Starting upload of ${fileArray.length} file(s) on ${/android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent) ? 'mobile' : 'desktop'}`);
+                          
+                          // Use centralized upload service with smart concurrency control
+                          const { successes, failures } = await uploadMultipleFiles(fileArray, {
+                            maxRetries: 3,
+                            timeoutMs: 120000, // 2 minutes for mobile compatibility
+                            maxFileSizeMB: 10,
+                          });
+                          
+                          // Handle successes
+                          if (successes.length > 0) {
+                            const updatedAttachments = [...(claim.attachments || []), ...successes];
                             
-                            try {
-                              console.log(`📤 Starting upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
-                              
-                              const formData = new FormData();
-                              formData.append('file', file);
-                              
-                              // Always use Netlify functions endpoint
-                              const apiEndpoint = '/.netlify/functions/upload';
-                              
-                              // Use longer timeout for mobile (slower networks)
-                              const timeoutDuration = isMobile ? 120000 : 60000; // 2 minutes for mobile, 1 minute for desktop
-                              const controller = new AbortController();
-                              const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
-                              
-                              const response = await fetch(apiEndpoint, {
-                                method: 'POST',
-                                body: formData,
-                                signal: controller.signal
-                              });
-                              
-                              clearTimeout(timeoutId);
-                              
-                              if (!response.ok) {
-                                const errorText = await response.text();
-                                console.error(`Upload failed for ${file.name}:`, response.status, errorText);
-                                throw new Error(`Upload failed: ${response.statusText}`);
-                              }
-                              
-                              const result = await response.json();
-                              
-                              if (result.success && result.url) {
-                                const newAttachment: Attachment = {
-                                  id: result.publicId || crypto.randomUUID(),
-                                  url: result.url,
-                                  name: file.name,
-                                  type: result.type || 'DOCUMENT'
-                                };
-                                
-                                console.log(`✅ Upload successful: ${file.name}`);
-                                
-                                // Update local claim reference first
-                                const updatedAttachments = [...(claim.attachments || []), newAttachment];
-                                claim.attachments = updatedAttachments;
-                                
-                                // CRITICAL: Await the database update to prevent race conditions
-                                console.log(`💾 Saving to database: ${file.name}`);
-                                await onUpdateClaim({
-                                  ...claim,
-                                  attachments: updatedAttachments
-                                });
-                                console.log(`✅ Saved to database: ${file.name}`);
-                                
-                                successCount++;
-                                
-                                // Add a longer delay on mobile to help with slower connections
-                                const delayDuration = isMobile ? 1000 : 500;
-                                await new Promise(resolve => setTimeout(resolve, delayDuration));
-                              } else {
-                                throw new Error('Upload succeeded but no URL returned');
-                              }
-                            } catch (error) {
-                              if (error.name === 'AbortError') {
-                                console.error(`Upload timed out for ${file.name}`);
-                                failedFiles.push(`${file.name} (timeout - try uploading fewer files at once)`);
-                              } else {
-                                console.error(`Failed to upload ${file.name}:`, error);
-                                failedFiles.push(file.name);
-                              }
-                              failCount++;
-                            }
+                            console.log(`💾 Saving ${successes.length} attachment(s) to database`);
+                            await onUpdateClaim({
+                              ...claim,
+                              attachments: updatedAttachments
+                            });
+                            console.log(`✅ Saved to database`);
+                            
+                            alert(`✓ Successfully uploaded ${successes.length} file${successes.length > 1 ? 's' : ''}`);
                           }
                           
-                          // Show summary message
-                          if (successCount > 0 && failCount > 0) {
-                            const mobileHint = isMobile ? '\n\nTip: On mobile, try uploading 1-2 files at a time for better reliability.' : '';
-                            alert(`Upload complete: ${successCount} file(s) succeeded, ${failCount} file(s) failed.\n\nFailed files:\n${failedFiles.join('\n')}${mobileHint}`);
-                          } else if (failCount > 0) {
-                            const mobileHint = isMobile ? '\n\nTip: On mobile, try uploading 1-2 files at a time for better reliability.' : '';
-                            alert(`All ${failCount} file(s) failed to upload:\n${failedFiles.join('\n')}\n\nPlease try again.${mobileHint}`);
-                          } else if (successCount > 0) {
-                            // Success - no alert needed, attachments are visible
+                          // Handle failures with detailed info
+                          if (failures.length > 0) {
+                            console.error('Upload failures:', failures);
+                            const errorMessage = failures.length === 1 
+                              ? `Failed to upload ${failures[0].file.name}: ${failures[0].error}` 
+                              : `${failures.length} of ${fileArray.length} files failed to upload. Check console for details.`;
+                            
+                            alert(errorMessage);
+                            
+                            // Log detailed error info to console
+                            failures.forEach(f => {
+                              console.error(`❌ ${f.file.name} (${(f.file.size / 1024 / 1024).toFixed(2)}MB): ${f.error}`);
+                            });
                           }
+                        } catch (error: unknown) {
+                          const errorMessage = error instanceof Error ? error.message : 'Unknown upload error';
+                          console.error('❌ Upload error:', errorMessage);
+                          alert(`Upload failed: ${errorMessage}`);
                         } finally {
                           setIsUploading(false);
-                          // Reset input
+                          setUploadProgress({ current: 0, total: 0 });
                           e.target.value = '';
                         }
                       }}
                     />
+                  </label>
                   </label>
                 </div>
               )}
