@@ -56,119 +56,126 @@ exports.handler = async (event, context) => {
     // Parse multipart form data
     return new Promise((resolve) => {
       const busboy = Busboy({ headers: event.headers });
-      const chunks = [];
       let filename = '';
       let mimetype = '';
 
       busboy.on('file', (fieldname, file, info) => {
         filename = info.filename;
         mimetype = info.mimeType;
-
-        file.on('data', (data) => {
-          chunks.push(data);
+        
+        console.log('📦 File started:', {
+          name: filename,
+          mimetype: mimetype
         });
 
-        file.on('end', async () => {
-          try {
-            const buffer = Buffer.concat(chunks);
-            const fileSizeMB = (buffer.length / 1024 / 1024).toFixed(2);
-
-            console.log('📦 File received:', {
-              name: filename,
-              size: `${buffer.length} bytes (${fileSizeMB}MB)`,
-              mimetype: mimetype,
-              chunkCount: chunks.length
-            });
-
-            // Check file size (10MB limit)
-            if (buffer.length > 10 * 1024 * 1024) {
-              throw new Error(`File too large: ${fileSizeMB}MB (max 10MB)`);
+        // Stream directly to Cloudinary instead of buffering in memory
+        console.log('☁️ Streaming to Cloudinary...');
+        
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: 'warranty-claims',
+            resource_type: 'auto',
+            allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'pdf', 'doc', 'docx'],
+            timeout: 120000, // 2 minute timeout
+          },
+          async (error, result) => {
+            if (error) {
+              console.error('❌ Cloudinary upload error:', {
+                message: error.message,
+                http_code: error.http_code,
+                name: error.name,
+                filename: filename
+              });
+              
+              const errorMsg = error.http_code 
+                ? `Cloudinary error (${error.http_code}): ${error.message}`
+                : `Cloudinary error: ${error.message || 'Unknown error'}`;
+              
+              resolve({
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({
+                  error: 'Upload failed',
+                  message: errorMsg,
+                  filename: filename
+                })
+              });
+              return;
+            }
+            
+            if (!result) {
+              console.error('❌ No result from Cloudinary');
+              resolve({
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({
+                  error: 'Upload failed',
+                  message: 'Cloudinary upload returned no result',
+                  filename: filename
+                })
+              });
+              return;
             }
 
-            console.log('☁️ Uploading to Cloudinary...');
+            // Upload successful
+            try {
+              // Determine file type
+              let fileType = 'DOCUMENT';
+              if (result.resource_type === 'image') {
+                fileType = 'IMAGE';
+              } else if (result.resource_type === 'video') {
+                fileType = 'VIDEO';
+              }
 
-            // Upload to Cloudinary
-            const uploadResult = await new Promise((resolve, reject) => {
-              const uploadStream = cloudinary.uploader.upload_stream(
-                {
-                  folder: 'warranty-claims',
-                  resource_type: 'auto',
-                  allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'pdf', 'doc', 'docx'],
-                },
-                (error, result) => {
-                  if (error) {
-                    console.error('❌ Cloudinary upload error:', {
-                      message: error.message,
-                      http_code: error.http_code,
-                      name: error.name,
-                      error: error
-                    });
-                    // Create more descriptive error
-                    const errorMsg = error.http_code 
-                      ? `Cloudinary error (${error.http_code}): ${error.message}`
-                      : `Cloudinary error: ${error.message || 'Unknown error'}`;
-                    reject(new Error(errorMsg));
-                  } else if (!result) {
-                    reject(new Error('Cloudinary upload failed: No result returned'));
-                  } else {
-                    resolve(result);
-                  }
-                }
-              );
-
-              uploadStream.on('error', (error) => {
-                console.error('Upload stream error:', error);
-                reject(error);
+              const fileSizeMB = (result.bytes / 1024 / 1024).toFixed(2);
+              console.log('✅ File uploaded successfully:', {
+                url: result.secure_url,
+                size: `${result.bytes} bytes (${fileSizeMB}MB)`,
+                type: fileType
               });
 
-              uploadStream.end(buffer);
-            });
-
-            // Determine file type
-            let fileType = 'DOCUMENT';
-            if (uploadResult.resource_type === 'image') {
-              fileType = 'IMAGE';
-            } else if (uploadResult.resource_type === 'video') {
-              fileType = 'VIDEO';
+              resolve({
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({
+                  success: true,
+                  url: result.secure_url,
+                  publicId: result.public_id,
+                  type: fileType,
+                  name: filename,
+                  size: result.bytes,
+                })
+              });
+            } catch (error) {
+              console.error('❌ Error processing result:', error);
+              resolve({
+                statusCode: 500,
+                headers,
+                body: JSON.stringify({
+                  error: 'Upload failed',
+                  message: error.message || 'Error processing upload result',
+                  filename: filename
+                })
+              });
             }
-
-            console.log('✅ File uploaded successfully:', uploadResult.secure_url);
-
-            // Clear chunks array to free memory
-            chunks.length = 0;
-
-            resolve({
-              statusCode: 200,
-              headers,
-              body: JSON.stringify({
-                success: true,
-                url: uploadResult.secure_url,
-                publicId: uploadResult.public_id,
-                type: fileType,
-                name: filename,
-                size: uploadResult.bytes,
-              })
-            });
-          } catch (error) {
-            console.error('❌ Upload error:', error);
-            console.error('Error details:', {
-              message: error.message,
-              stack: error.stack,
-              name: error.name,
-              code: error.code
-            });
-            resolve({
-              statusCode: 500,
-              headers,
-              body: JSON.stringify({
-                error: 'Upload failed',
-                message: error.message || 'Unknown error occurred during upload',
-                details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
-                code: error.code || error.http_code
-              })
-            });
           }
+        );
+
+        uploadStream.on('error', (error) => {
+          console.error('❌ Upload stream error:', error);
+          resolve({
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({
+              error: 'Upload failed',
+              message: error.message || 'Stream error',
+              filename: filename
+            })
+          });
         });
+
+        // Pipe the file stream directly to Cloudinary
+        file.pipe(uploadStream);
       });
 
       busboy.on('error', (error) => {
