@@ -830,6 +830,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
                         let failCount = 0;
                         const failedFiles: string[] = [];
                         
+                        // Detect if on mobile
+                        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                        
                         try {
                           // Process files sequentially with a small delay to prevent overwhelming the system
                           for (const file of Array.from(files)) {
@@ -841,7 +844,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                             }
                             
                             try {
-                              console.log(`📤 Starting upload: ${file.name}`);
+                              console.log(`📤 Starting upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
                               
                               const formData = new FormData();
                               formData.append('file', file);
@@ -849,9 +852,10 @@ If this repair work is billable, please let me know prior to scheduling.`);
                               // Always use Netlify functions endpoint
                               const apiEndpoint = '/.netlify/functions/upload';
                               
-                              // Add timeout to fetch request
+                              // Use longer timeout for mobile (slower networks)
+                              const timeoutDuration = isMobile ? 120000 : 60000; // 2 minutes for mobile, 1 minute for desktop
                               const controller = new AbortController();
-                              const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+                              const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
                               
                               const response = await fetch(apiEndpoint, {
                                 method: 'POST',
@@ -890,15 +894,16 @@ If this repair work is billable, please let me know prior to scheduling.`);
                                 
                                 successCount++;
                                 
-                                // Add a small delay between uploads to prevent rate limiting
-                                await new Promise(resolve => setTimeout(resolve, 500));
+                                // Add a longer delay on mobile to help with slower connections
+                                const delayDuration = isMobile ? 1000 : 500;
+                                await new Promise(resolve => setTimeout(resolve, delayDuration));
                               } else {
                                 throw new Error('Upload succeeded but no URL returned');
                               }
                             } catch (error) {
                               if (error.name === 'AbortError') {
                                 console.error(`Upload timed out for ${file.name}`);
-                                failedFiles.push(`${file.name} (timeout)`);
+                                failedFiles.push(`${file.name} (timeout - try uploading fewer files at once)`);
                               } else {
                                 console.error(`Failed to upload ${file.name}:`, error);
                                 failedFiles.push(file.name);
@@ -909,9 +914,11 @@ If this repair work is billable, please let me know prior to scheduling.`);
                           
                           // Show summary message
                           if (successCount > 0 && failCount > 0) {
-                            alert(`Upload complete: ${successCount} file(s) succeeded, ${failCount} file(s) failed.\n\nFailed files:\n${failedFiles.join('\n')}`);
+                            const mobileHint = isMobile ? '\n\nTip: On mobile, try uploading 1-2 files at a time for better reliability.' : '';
+                            alert(`Upload complete: ${successCount} file(s) succeeded, ${failCount} file(s) failed.\n\nFailed files:\n${failedFiles.join('\n')}${mobileHint}`);
                           } else if (failCount > 0) {
-                            alert(`All ${failCount} file(s) failed to upload:\n${failedFiles.join('\n')}\n\nPlease try again.`);
+                            const mobileHint = isMobile ? '\n\nTip: On mobile, try uploading 1-2 files at a time for better reliability.' : '';
+                            alert(`All ${failCount} file(s) failed to upload:\n${failedFiles.join('\n')}\n\nPlease try again.${mobileHint}`);
                           } else if (successCount > 0) {
                             // Success - no alert needed, attachments are visible
                           }
