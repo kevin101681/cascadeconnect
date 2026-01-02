@@ -43,18 +43,11 @@ const DEFAULT_OPTIONS: Required<UploadOptions> = {
 
 /**
  * Get the API endpoint for uploads
- * Handles both local dev and production environments
+ * Always uses Netlify functions endpoint (works in both dev and production)
  */
 export function getUploadEndpoint(): string {
-  const isLocalDev = 
-    typeof window !== 'undefined' && 
-    (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-
-  if (isLocalDev) {
-    return 'http://localhost:3000/api/upload';
-  }
-
-  // Production: use Netlify functions endpoint
+  // Always use Netlify functions endpoint
+  // netlify dev will route this correctly locally
   return '/.netlify/functions/upload';
 }
 

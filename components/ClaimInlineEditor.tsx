@@ -839,10 +839,8 @@ If this repair work is billable, please let me know prior to scheduling.`);
                               const formData = new FormData();
                               formData.append('file', file);
                               
-                              const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                              const apiEndpoint = isLocalDev 
-                                ? 'http://localhost:3000/api/upload'
-                                : '/.netlify/functions/upload';
+                              // Always use Netlify functions endpoint
+                              const apiEndpoint = '/.netlify/functions/upload';
                               
                               const response = await fetch(apiEndpoint, {
                                 method: 'POST',
