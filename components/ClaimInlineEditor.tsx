@@ -883,14 +883,17 @@ If this repair work is billable, please let me know prior to scheduling.`);
                                 
                                 console.log(`✅ Upload successful: ${file.name}`);
                                 
-                                // Immediately save to database after each successful upload
-                                onUpdateClaim({
-                                  ...claim,
-                                  attachments: [...(claim.attachments || []), newAttachment]
-                                });
+                                // Update local claim reference first
+                                const updatedAttachments = [...(claim.attachments || []), newAttachment];
+                                claim.attachments = updatedAttachments;
                                 
-                                // Update local claim reference for next iteration
-                                claim.attachments = [...(claim.attachments || []), newAttachment];
+                                // CRITICAL: Await the database update to prevent race conditions
+                                console.log(`💾 Saving to database: ${file.name}`);
+                                await onUpdateClaim({
+                                  ...claim,
+                                  attachments: updatedAttachments
+                                });
+                                console.log(`✅ Saved to database: ${file.name}`);
                                 
                                 successCount++;
                                 
