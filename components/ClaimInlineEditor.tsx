@@ -893,7 +893,6 @@ If this repair work is billable, please let me know prior to scheduling.`);
                       }}
                     />
                   </label>
-                  </label>
                 </div>
               )}
             </div>

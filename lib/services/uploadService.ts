@@ -277,42 +277,42 @@ async function uploadFilesWithConcurrency(
   maxConcurrent: number
 ): Promise<UploadResult[]> {
   const results: UploadResult[] = new Array(files.length);
-  const executing: Promise<void>[] = [];
 
   console.log(`🔄 Uploading with concurrency limit: ${maxConcurrent}`);
 
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i];
-    const index = i;
-
-    // Create upload promise
-    const uploadPromise = uploadFile(file, options)
-      .then(result => {
-        results[index] = result;
-        console.log(`✅ [${index + 1}/${files.length}] ${file.name} uploaded`);
-      })
-      .catch(error => {
-        // This shouldn't happen since uploadFile handles errors internally
-        results[index] = {
+  // Process files in chunks
+  for (let i = 0; i < files.length; i += maxConcurrent) {
+    const chunk = files.slice(i, i + maxConcurrent);
+    const chunkPromises = chunk.map(async (file, chunkIndex) => {
+      const fileIndex = i + chunkIndex;
+      console.log(`📤 [${fileIndex + 1}/${files.length}] Starting upload: ${file.name}`);
+      
+      try {
+        const result = await uploadFile(file, options);
+        results[fileIndex] = result;
+        
+        if (result.success) {
+          console.log(`✅ [${fileIndex + 1}/${files.length}] ${file.name} uploaded successfully`);
+        } else {
+          console.error(`❌ [${fileIndex + 1}/${files.length}] ${file.name} failed: ${result.error}`);
+        }
+        
+        return result;
+      } catch (error) {
+        // Failsafe - uploadFile should handle errors internally
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`❌ [${fileIndex + 1}/${files.length}] ${file.name} exception:`, errorMsg);
+        results[fileIndex] = {
           success: false,
-          error: error instanceof Error ? error.message : 'Unknown error'
+          error: errorMsg
         };
-        console.error(`❌ [${index + 1}/${files.length}] ${file.name} failed:`, error);
-      });
+        return results[fileIndex];
+      }
+    });
 
-    // Add to executing queue
-    executing.push(uploadPromise);
-
-    // If we've hit the concurrency limit, wait for one to finish
-    if (executing.length >= maxConcurrent) {
-      await Promise.race(executing);
-      // Remove completed promises (they're settled, so filter won't affect them)
-      executing.splice(0, executing.length - maxConcurrent + 1);
-    }
+    // Wait for this chunk to complete before starting the next
+    await Promise.all(chunkPromises);
   }
-
-  // Wait for remaining uploads
-  await Promise.all(executing);
 
   return results;
 }
