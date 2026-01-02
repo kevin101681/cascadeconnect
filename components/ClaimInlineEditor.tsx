@@ -1060,7 +1060,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     icon={<FileText className="h-4 w-4" />}
                     className="!h-12 whitespace-nowrap flex-shrink-0"
                   >
-                    Email S.O.
+                    Email SO
                   </Button>
                 </div>
               )}
