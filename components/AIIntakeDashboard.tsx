@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Call, Homeowner } from '../types';
-import { Phone, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Building2, User, Mail, ExternalLink, Play, Download, Search, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { Phone, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Building2, User, Mail, ExternalLink, Play, Download, Search, ChevronLeft, ChevronRight, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { db, isDbConfigured } from '../db';
 import { calls, homeowners } from '../db/schema';
 import { eq, desc, sql } from 'drizzle-orm';
@@ -19,6 +19,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
+  const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
   const ITEMS_PER_PAGE = 9;
   const callDetailsRef = useRef<HTMLDivElement>(null);
 
@@ -402,7 +403,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
 
                 {/* Date & Status Header */}
                 <div className="flex items-center justify-between">
-                  <h3 className="text-2xl font-normal text-surface-on dark:text-gray-100">
+                  <h3 className="text-lg md:text-2xl font-normal text-surface-on dark:text-gray-100">
                     {formatDate(actualSelectedCall.createdAt)}
                   </h3>
                   <div className="flex items-center gap-2">
@@ -529,12 +530,24 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                 {/* Transcript */}
                 {actualSelectedCall.transcript && (
                   <div>
-                    <label className="text-sm text-surface-on-variant dark:text-gray-400 mb-2 block">Call Transcript</label>
-                    <div className="p-4 bg-surface-container dark:bg-gray-700 rounded-lg max-h-64 overflow-y-auto">
-                      <p className="text-sm text-surface-on dark:text-gray-100 whitespace-pre-wrap">
-                        {actualSelectedCall.transcript}
-                      </p>
-                    </div>
+                    <button
+                      onClick={() => setIsTranscriptExpanded(!isTranscriptExpanded)}
+                      className="w-full flex items-center justify-between text-sm text-surface-on-variant dark:text-gray-400 mb-2 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
+                    >
+                      <span>Call Transcript</span>
+                      {isTranscriptExpanded ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </button>
+                    {isTranscriptExpanded && (
+                      <div className="p-4 bg-surface-container dark:bg-gray-700 rounded-lg max-h-64 overflow-y-auto">
+                        <p className="text-sm text-surface-on dark:text-gray-100 whitespace-pre-wrap">
+                          {actualSelectedCall.transcript}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -616,7 +629,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
           <div className="space-y-6">
             {/* Date & Status Header */}
             <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-normal text-surface-on dark:text-gray-100">
+              <h3 className="text-lg md:text-2xl font-normal text-surface-on dark:text-gray-100">
                 {formatDate(actualSelectedCall.createdAt)}
               </h3>
               <div className="flex items-center gap-2">
@@ -743,12 +756,24 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
             {/* Transcript */}
             {actualSelectedCall.transcript && (
               <div>
-                <label className="text-sm text-surface-on-variant dark:text-gray-400 mb-2 block">Call Transcript</label>
-                <div className="p-4 bg-surface-container dark:bg-gray-700 rounded-lg max-h-64 overflow-y-auto">
-                  <p className="text-sm text-surface-on dark:text-gray-100 whitespace-pre-wrap">
-                    {actualSelectedCall.transcript}
-                  </p>
-                </div>
+                <button
+                  onClick={() => setIsTranscriptExpanded(!isTranscriptExpanded)}
+                  className="w-full flex items-center justify-between text-sm text-surface-on-variant dark:text-gray-400 mb-2 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
+                >
+                  <span>Call Transcript</span>
+                  {isTranscriptExpanded ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </button>
+                {isTranscriptExpanded && (
+                  <div className="p-4 bg-surface-container dark:bg-gray-700 rounded-lg max-h-64 overflow-y-auto">
+                    <p className="text-sm text-surface-on dark:text-gray-100 whitespace-pre-wrap">
+                      {actualSelectedCall.transcript}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
