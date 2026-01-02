@@ -71,12 +71,21 @@ exports.handler = async (event, context) => {
         file.on('end', async () => {
           try {
             const buffer = Buffer.concat(chunks);
+            const fileSizeMB = (buffer.length / 1024 / 1024).toFixed(2);
 
-            console.log('Uploading file to Cloudinary:', {
+            console.log('📦 File received:', {
               name: filename,
-              size: buffer.length,
-              mimetype: mimetype
+              size: `${buffer.length} bytes (${fileSizeMB}MB)`,
+              mimetype: mimetype,
+              chunkCount: chunks.length
             });
+
+            // Check file size (10MB limit)
+            if (buffer.length > 10 * 1024 * 1024) {
+              throw new Error(`File too large: ${fileSizeMB}MB (max 10MB)`);
+            }
+
+            console.log('☁️ Uploading to Cloudinary...');
 
             // Upload to Cloudinary
             const uploadResult = await new Promise((resolve, reject) => {
@@ -88,8 +97,17 @@ exports.handler = async (event, context) => {
                 },
                 (error, result) => {
                   if (error) {
-                    console.error('Cloudinary upload error:', error);
-                    reject(error);
+                    console.error('❌ Cloudinary upload error:', {
+                      message: error.message,
+                      http_code: error.http_code,
+                      name: error.name,
+                      error: error
+                    });
+                    // Create more descriptive error
+                    const errorMsg = error.http_code 
+                      ? `Cloudinary error (${error.http_code}): ${error.message}`
+                      : `Cloudinary error: ${error.message || 'Unknown error'}`;
+                    reject(new Error(errorMsg));
                   } else if (!result) {
                     reject(new Error('Cloudinary upload failed: No result returned'));
                   } else {
@@ -116,6 +134,9 @@ exports.handler = async (event, context) => {
 
             console.log('✅ File uploaded successfully:', uploadResult.secure_url);
 
+            // Clear chunks array to free memory
+            chunks.length = 0;
+
             resolve({
               statusCode: 200,
               headers,
@@ -130,12 +151,20 @@ exports.handler = async (event, context) => {
             });
           } catch (error) {
             console.error('❌ Upload error:', error);
+            console.error('Error details:', {
+              message: error.message,
+              stack: error.stack,
+              name: error.name,
+              code: error.code
+            });
             resolve({
               statusCode: 500,
               headers,
               body: JSON.stringify({
                 error: 'Upload failed',
-                message: error.message || 'Unknown error occurred during upload'
+                message: error.message || 'Unknown error occurred during upload',
+                details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+                code: error.code || error.http_code
               })
             });
           }
@@ -180,6 +209,7 @@ exports.handler = async (event, context) => {
     };
   }
 };
+
 
 
 
