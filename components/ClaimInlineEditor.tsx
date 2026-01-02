@@ -831,6 +831,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                         const failedFiles: string[] = [];
                         
                         try {
+                          // Process files sequentially with a small delay to prevent overwhelming the system
                           for (const file of Array.from(files)) {
                             if (file.size > 10 * 1024 * 1024) {
                               alert(`File ${file.name} is too large (>10MB). Please upload a smaller file.`);
@@ -840,18 +841,29 @@ If this repair work is billable, please let me know prior to scheduling.`);
                             }
                             
                             try {
+                              console.log(`📤 Starting upload: ${file.name}`);
+                              
                               const formData = new FormData();
                               formData.append('file', file);
                               
                               // Always use Netlify functions endpoint
                               const apiEndpoint = '/.netlify/functions/upload';
                               
+                              // Add timeout to fetch request
+                              const controller = new AbortController();
+                              const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+                              
                               const response = await fetch(apiEndpoint, {
                                 method: 'POST',
-                                body: formData
+                                body: formData,
+                                signal: controller.signal
                               });
                               
+                              clearTimeout(timeoutId);
+                              
                               if (!response.ok) {
+                                const errorText = await response.text();
+                                console.error(`Upload failed for ${file.name}:`, response.status, errorText);
                                 throw new Error(`Upload failed: ${response.statusText}`);
                               }
                               
@@ -865,6 +877,8 @@ If this repair work is billable, please let me know prior to scheduling.`);
                                   type: result.type || 'DOCUMENT'
                                 };
                                 
+                                console.log(`✅ Upload successful: ${file.name}`);
+                                
                                 // Immediately save to database after each successful upload
                                 onUpdateClaim({
                                   ...claim,
@@ -875,11 +889,21 @@ If this repair work is billable, please let me know prior to scheduling.`);
                                 claim.attachments = [...(claim.attachments || []), newAttachment];
                                 
                                 successCount++;
+                                
+                                // Add a small delay between uploads to prevent rate limiting
+                                await new Promise(resolve => setTimeout(resolve, 500));
+                              } else {
+                                throw new Error('Upload succeeded but no URL returned');
                               }
                             } catch (error) {
-                              console.error(`Failed to upload ${file.name}:`, error);
+                              if (error.name === 'AbortError') {
+                                console.error(`Upload timed out for ${file.name}`);
+                                failedFiles.push(`${file.name} (timeout)`);
+                              } else {
+                                console.error(`Failed to upload ${file.name}:`, error);
+                                failedFiles.push(file.name);
+                              }
                               failCount++;
-                              failedFiles.push(file.name);
                             }
                           }
                           
