@@ -54,16 +54,8 @@ export function getUploadEndpoint(): string {
     return 'http://localhost:3000/api/upload';
   }
 
-  // Production: use current hostname with www prefix
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    const protocol = window.location.protocol;
-    const domain = hostname.startsWith('www.') ? hostname : `www.${hostname}`;
-    return `${protocol}//${domain}/api/upload`;
-  }
-
-  // Fallback (shouldn't happen in browser context)
-  return '/api/upload';
+  // Production: use Netlify functions endpoint
+  return '/.netlify/functions/upload';
 }
 
 // ==========================================

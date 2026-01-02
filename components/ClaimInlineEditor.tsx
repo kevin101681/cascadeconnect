@@ -842,7 +842,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                               const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
                               const apiEndpoint = isLocalDev 
                                 ? 'http://localhost:3000/api/upload'
-                                : `${window.location.protocol}//${window.location.hostname.startsWith('www.') ? window.location.hostname : `www.${window.location.hostname}`}/api/upload`;
+                                : '/.netlify/functions/upload';
                               
                               const response = await fetch(apiEndpoint, {
                                 method: 'POST',

@@ -2034,7 +2034,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           <div 
             className="flex-1 overflow-y-auto p-4 min-h-0"
-            style={{ WebkitOverflowScrolling: 'touch' }}
+            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
           >
             {filteredClaims.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
