@@ -2192,7 +2192,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-surface-on-variant dark:text-gray-400 gap-4 bg-surface-container/10 dark:bg-gray-700/10">
+            <div className="flex-1 flex flex-col items-center justify-center text-surface-on-variant dark:text-gray-400 gap-4 bg-surface-container/10 dark:bg-gray-700/10">
               <div className="w-20 h-20 bg-surface-container dark:bg-gray-700 rounded-full flex items-center justify-center">
                 <ClipboardList className="h-10 w-10 text-surface-outline/50 dark:text-gray-500/50" />
               </div>
@@ -2645,7 +2645,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-surface-on-variant dark:text-gray-400 gap-4 bg-surface-container/10 dark:bg-gray-700/10">
+            <div className="flex-1 flex flex-col items-center justify-center text-surface-on-variant dark:text-gray-400 gap-4 bg-surface-container/10 dark:bg-gray-700/10">
               <div className="w-20 h-20 bg-surface-container dark:bg-gray-700 rounded-full flex items-center justify-center">
                 <CheckSquare className="h-10 w-10 text-surface-outline/50 dark:text-gray-500/50" />
               </div>
@@ -2986,7 +2986,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                </div>
             </>
           ) : (
-            <div className="flex flex-col items-center justify-center h-full text-surface-on-variant dark:text-gray-400 gap-4 bg-surface-container/10 dark:bg-gray-700/10">
+            <div className="flex-1 flex flex-col items-center justify-center text-surface-on-variant dark:text-gray-400 gap-4 bg-surface-container/10 dark:bg-gray-700/10">
                <div className="w-20 h-20 bg-surface-container dark:bg-gray-700 rounded-full flex items-center justify-center">
                  <Mail className="h-10 w-10 text-surface-outline/50 dark:text-gray-500/50" />
                </div>

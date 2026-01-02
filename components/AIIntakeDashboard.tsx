@@ -594,7 +594,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                 )}
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full">
+              <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)]">
                 <p className="text-surface-on-variant dark:text-gray-400">Select a call to view details</p>
               </div>
             )}
