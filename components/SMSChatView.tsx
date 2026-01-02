@@ -44,15 +44,20 @@ const SMSChatView: React.FC<SMSChatViewProps> = ({
   const [sending, setSending] = useState(false);
   const [messageText, setMessageText] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [hasInitialLoad, setHasInitialLoad] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive (but not on initial load)
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (hasInitialLoad) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 0 && !loading) {
+      scrollToBottom();
+    }
   }, [messages]);
 
   // Load messages from database
@@ -94,6 +99,11 @@ const SMSChatView: React.FC<SMSChatViewProps> = ({
 
       setMessages(mappedMessages.reverse()); // Show oldest first
       setLoading(false);
+      
+      // Mark initial load as complete after a short delay
+      setTimeout(() => {
+        setHasInitialLoad(true);
+      }, 500);
     } catch (err) {
       console.error('❌ Error loading SMS messages:', err);
       setError('Failed to load messages');
@@ -200,11 +210,6 @@ const SMSChatView: React.FC<SMSChatViewProps> = ({
             </p>
           </div>
         </div>
-        {messages.length > 0 && (
-          <span className="text-xs text-surface-on-variant dark:text-gray-400 px-3 py-1 bg-surface-container dark:bg-gray-700 rounded-full">
-            {messages.length} message{messages.length !== 1 ? 's' : ''}
-          </span>
-        )}
       </div>
 
       {/* Messages Area */}
@@ -278,7 +283,7 @@ const SMSChatView: React.FC<SMSChatViewProps> = ({
           <button
             type="submit"
             disabled={!messageText.trim() || sending}
-            className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-on rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="flex-shrink-0 px-4 py-2 bg-primary hover:bg-primary/90 text-primary-on rounded-lg transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {sending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
