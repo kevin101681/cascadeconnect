@@ -348,11 +348,31 @@ export async function uploadMultipleFiles(
   let results: UploadResult[];
 
   if (isMobile && files.length > 1) {
-    // On mobile, limit concurrent uploads to prevent connection issues
-    // Upload 2 files at a time to balance speed and reliability
-    const maxConcurrent = files.length <= 2 ? 1 : 2;
-    console.log(`📱 Using mobile upload strategy: ${maxConcurrent} concurrent upload(s)`);
-    results = await uploadFilesWithConcurrency(files, adjustedOptions, maxConcurrent);
+    // On mobile, upload files one at a time to prevent connection issues
+    // Mobile browsers have strict limits and can drop concurrent connections
+    console.log(`📱 Using mobile upload strategy: sequential uploads (one at a time)`);
+    console.log(`📱 This is slower but much more reliable on mobile devices`);
+    
+    results = new Array(files.length);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      console.log(`📤 [${i + 1}/${files.length}] Uploading: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+      
+      const result = await uploadFile(file, adjustedOptions);
+      results[i] = result;
+      
+      if (result.success) {
+        console.log(`✅ [${i + 1}/${files.length}] Success: ${file.name}`);
+      } else {
+        console.error(`❌ [${i + 1}/${files.length}] Failed: ${file.name} - ${result.error}`);
+      }
+      
+      // Small delay between uploads on mobile to prevent throttling
+      if (i < files.length - 1) {
+        console.log(`⏳ Waiting 500ms before next upload...`);
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
   } else {
     // On desktop, upload all in parallel for speed
     console.log(`💻 Using desktop upload strategy: parallel uploads`);

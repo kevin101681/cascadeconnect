@@ -870,9 +870,14 @@ If this repair work is billable, please let me know prior to scheduling.`);
                           // Handle failures with detailed info
                           if (failures.length > 0) {
                             console.error('Upload failures:', failures);
-                            const errorMessage = failures.length === 1 
-                              ? `Failed to upload ${failures[0].file.name}: ${failures[0].error}` 
-                              : `${failures.length} of ${fileArray.length} files failed to upload. Check console for details.`;
+                            
+                            // Show detailed error message with file names and reasons
+                            let errorMessage = `⚠️ ${failures.length} of ${fileArray.length} file(s) failed:\n\n`;
+                            failures.forEach((f, idx) => {
+                              const sizeMB = (f.file.size / 1024 / 1024).toFixed(1);
+                              errorMessage += `${idx + 1}. ${f.file.name} (${sizeMB}MB)\n   Error: ${f.error}\n\n`;
+                            });
+                            errorMessage += `💡 Tip: Try uploading files one at a time, or check your connection.`;
                             
                             alert(errorMessage);
                             
