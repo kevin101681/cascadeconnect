@@ -1169,6 +1169,7 @@ function App() {
           contractorName: updatedClaim.contractorName || null,
           contractorEmail: updatedClaim.contractorEmail || null,
           proposedDates: updatedClaim.proposedDates,
+          attachments: updatedClaim.attachments || [],
         } as any).where(eq(claimsTable.id, updatedClaim.id));
       } catch (e) {
         console.error("Failed to update claim in DB:", e);
