@@ -660,7 +660,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
             }}
             title={`Add a note for ${claim.claimNumber || 'this claim'}`}
           >
-            +Note
+            Note
           </Button>
           <Button 
             type="button" 
@@ -966,7 +966,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                               title={`Add a note about: ${msg.subject}`}
                             >
                               <StickyNote className="h-3.5 w-3.5" />
-                              <span>+Note</span>
+                              <span>Note</span>
                             </button>
                             <span className="text-xs text-secondary-on-container dark:text-gray-400 opacity-70">
                               {new Date(msg.timestamp).toLocaleString()}
