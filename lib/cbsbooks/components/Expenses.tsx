@@ -155,28 +155,28 @@ export const Expenses: React.FC<ExpensesProps> = ({ expenses, onAdd, onDelete, o
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => onNavigate('invoices')}
-            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-full hover:bg-opacity-80 transition-all"
           >
             <Receipt size={18} />
             <span className="text-sm font-medium">Invoices</span>
           </button>
           <button
             onClick={() => onNavigate('clients')}
-            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-full hover:bg-opacity-80 transition-all"
           >
             <Users size={18} />
             <span className="text-sm font-medium">Builders</span>
           </button>
           <button
             onClick={() => onNavigate('reports')}
-            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-lg hover:bg-opacity-80 transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-full hover:bg-opacity-80 transition-all"
           >
             <PieChart size={18} />
-            <span className="text-sm font-medium">Profit and Loss</span>
+            <span className="text-sm font-medium">P&L</span>
           </button>
           <button
             onClick={() => onNavigate('expenses')}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg transition-opacity"
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-full transition-opacity"
           >
             <CreditCard size={18} />
             <span className="text-sm font-medium">Expenses</span>
