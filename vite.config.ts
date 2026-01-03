@@ -76,7 +76,7 @@ export default defineConfig(({ mode }) => {
           short_name: 'CASCADE',
           description: 'The premier warranty management platform for builders and homeowners',
           theme_color: '#3c6b80',
-          background_color: '#ffffff',
+          background_color: '#f3f4f6', // Light gray background for splash screen
           display: 'standalone',
           orientation: 'portrait',
           scope: '/',
@@ -86,13 +86,25 @@ export default defineConfig(({ mode }) => {
               src: '/logo.svg',
               sizes: '192x192',
               type: 'image/svg+xml',
-              purpose: 'any maskable'
+              purpose: 'any'
             },
             {
               src: '/logo.svg',
               sizes: '512x512',
               type: 'image/svg+xml',
-              purpose: 'any maskable'
+              purpose: 'any'
+            },
+            {
+              src: '/logo.svg',
+              sizes: '192x192',
+              type: 'image/svg+xml',
+              purpose: 'maskable'
+            },
+            {
+              src: '/logo.svg',
+              sizes: '512x512',
+              type: 'image/svg+xml',
+              purpose: 'maskable'
             }
           ]
         },
