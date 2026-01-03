@@ -110,7 +110,7 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-          maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MB
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB (increased for large vendor bundle)
           cleanupOutdatedCaches: true,
           skipWaiting: true,
           clientsClaim: true,
@@ -169,8 +169,30 @@ export default defineConfig(({ mode }) => {
             if (id.includes('lib/cbsbooks/App')) {
               return 'cbsbooks-app';
             }
-            // Create a separate chunk for node_modules
+            
+            // Split large vendor libraries into separate chunks
             if (id.includes('node_modules')) {
+              // React and related libraries
+              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+                return 'vendor-react';
+              }
+              // Clerk authentication
+              if (id.includes('@clerk')) {
+                return 'vendor-clerk';
+              }
+              // UI libraries
+              if (id.includes('framer-motion') || id.includes('lucide-react')) {
+                return 'vendor-ui';
+              }
+              // Pusher real-time
+              if (id.includes('pusher')) {
+                return 'vendor-pusher';
+              }
+              // PDF/document libraries
+              if (id.includes('pdfjs') || id.includes('pdf') || id.includes('react-pageflip')) {
+                return 'vendor-pdf';
+              }
+              // All other vendor code
               return 'vendor';
             }
           },
