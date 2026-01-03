@@ -4353,7 +4353,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <>
               <button
                 onClick={() => setCurrentTab(null)}
-                className="md:hidden fixed bottom-6 right-4 z-[1010] w-14 h-14 bg-surface-container dark:bg-gray-700 rounded-full shadow-lg flex items-center justify-center text-surface-on dark:text-gray-100 hover:bg-surface-container-high dark:hover:bg-gray-600 transition-all"
+                className="md:hidden fixed bottom-6 right-4 z-[1010] w-14 h-14 bg-primary hover:bg-primary/90 rounded-full shadow-lg flex items-center justify-center text-primary-on transition-all"
               >
                 <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
