@@ -6320,19 +6320,23 @@ const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       {/* Invoices Modal - Full screen on mobile */}
+      {console.log('🖼️ Rendering modal section, isInvoicesModalOpen:', isInvoicesModalOpen)}
       <Suspense fallback={
         <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center">
           <div className="text-white">Loading Invoices...</div>
         </div>
       }>
         {isInvoicesModalOpen && (
-          <InvoicesModal 
-            isOpen={isInvoicesModalOpen}
-            onClose={() => {
-              console.log('Closing invoices modal');
-              setIsInvoicesModalOpen(false);
-            }}
-          />
+          <>
+            {console.log('✨ About to render InvoicesModal component')}
+            <InvoicesModal 
+              isOpen={isInvoicesModalOpen}
+              onClose={() => {
+                console.log('Closing invoices modal');
+                setIsInvoicesModalOpen(false);
+              }}
+            />
+          </>
         )}
       </Suspense>
 
