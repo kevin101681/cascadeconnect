@@ -4325,7 +4325,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Content Area - Full-screen overlay on mobile (when tab is active), inline on desktop */}
         {currentTab && (
         <div
-          className={`fixed inset-0 z-[100] bg-surface dark:bg-gray-900 overflow-y-auto md:relative md:z-auto md:bg-transparent md:inset-auto min-h-[calc(100vh-300px)] md:min-h-0 ${currentTab === 'CLAIMS' ? 'md:-mx-6' : ''}`}
+          className={`fixed inset-0 z-[100] bg-surface dark:bg-gray-900 md:relative md:z-auto md:bg-transparent md:inset-auto min-h-[calc(100vh-300px)] md:min-h-0 ${currentTab === 'CLAIMS' ? 'md:-mx-6' : ''}`}
+          style={{ height: '100dvh' }}
         >
         <AnimatePresence mode="wait" initial={false}>
           {/* Mobile Close FAB - shown on all tabs as overlay */}
@@ -4345,7 +4346,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'CLAIMS' && (
             <motion.div 
               key="claims"
-              className="w-full md:max-w-7xl md:mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4360,7 +4361,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'TASKS' && isAdmin && (
             <motion.div 
               key="tasks"
-              className="w-full md:max-w-7xl md:mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4376,7 +4377,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'NOTES' && isAdmin && (
             <motion.div 
               key="notes"
-              className="w-full md:max-w-7xl md:mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4400,7 +4401,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'MESSAGES' && (
             <motion.div 
               key="messages"
-              className="w-full md:max-w-7xl md:mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4416,7 +4417,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'CALLS' && isAdmin && (
             <motion.div 
               key="calls"
-              className="w-full md:max-w-7xl md:mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4439,7 +4440,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'PAYROLL' && isAdmin && currentUser?.role !== 'Employee' && (
             <motion.div 
               key="payroll"
-              className="w-full md:max-w-7xl md:mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4452,7 +4453,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'INVOICES' && isAdmin && currentUser?.role !== 'Employee' && (
             <motion.div 
               key="invoices"
-              className="w-full md:max-w-7xl md:mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4479,7 +4480,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'DOCUMENTS' && (
             <motion.div 
               key="documents"
-              className="w-full md:max-w-7xl md:mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4650,7 +4651,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'MANUAL' && (
             <motion.div 
               key="manual"
-              className="w-full md:max-w-7xl md:mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
