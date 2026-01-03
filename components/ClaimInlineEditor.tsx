@@ -1089,38 +1089,41 @@ If this repair work is billable, please let me know prior to scheduling.`);
           <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
             <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Scheduling</h4>
             <div className="space-y-3">
-              <div>
-                <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Scheduled Date</label>
-                {isAdmin && isEditing && !isReadOnly ? (
-                  <Button
-                        type="button"
-                    variant="filled"
-                        onClick={() => setShowCalendarPicker(true)}
-                  >
-                    {proposeDate || scheduledDate ? (proposeDate ? new Date(proposeDate).toLocaleDateString() : scheduledDate ? new Date(scheduledDate.date).toLocaleDateString() : 'Add') : 'Add'}
-                  </Button>
-                ) : scheduledDate ? (
-                  <span className="text-sm text-surface-on dark:text-gray-100">{new Date(scheduledDate.date).toLocaleDateString()}</span>
-                ) : (
-                  <span className="text-sm text-surface-on-variant dark:text-gray-400">No appointment scheduled</span>
-                )}
-                    </div>
-              <div>
-                <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Time Slot</label>
-                {isAdmin && isEditing && !isReadOnly ? (
-                      <MaterialSelect
-                    value={proposeTime || scheduledDate?.timeSlot || 'AM'}
-                    onChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
-                        options={[
-                      { value: 'AM', label: 'AM (8am-12pm)' },
-                      { value: 'PM', label: 'PM (12pm-4pm)' },
-                      { value: 'All Day', label: 'All Day' }
-                    ]}
-                  />
-                ) : scheduledDate?.timeSlot ? (
-                  <span className="text-sm text-surface-on dark:text-gray-100">{scheduledDate.timeSlot === 'AM' ? 'AM (8am-12pm)' : scheduledDate.timeSlot === 'PM' ? 'PM (12pm-4pm)' : 'All Day'}</span>
-                ) : null}
-                    </div>
+              {/* Date and Time Slot on same line */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Scheduled Date</label>
+                  {isAdmin && isEditing && !isReadOnly ? (
+                    <Button
+                          type="button"
+                      variant="filled"
+                          onClick={() => setShowCalendarPicker(true)}
+                    >
+                      {proposeDate || scheduledDate ? (proposeDate ? new Date(proposeDate).toLocaleDateString() : scheduledDate ? new Date(scheduledDate.date).toLocaleDateString() : 'Add') : 'Add'}
+                    </Button>
+                  ) : scheduledDate ? (
+                    <span className="text-sm text-surface-on dark:text-gray-100">{new Date(scheduledDate.date).toLocaleDateString()}</span>
+                  ) : (
+                    <span className="text-sm text-surface-on-variant dark:text-gray-400">No appointment scheduled</span>
+                  )}
+                </div>
+                <div>
+                  <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Time Slot</label>
+                  {isAdmin && isEditing && !isReadOnly ? (
+                        <MaterialSelect
+                      value={proposeTime || scheduledDate?.timeSlot || 'AM'}
+                      onChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
+                          options={[
+                        { value: 'AM', label: 'AM (8am-12pm)' },
+                        { value: 'PM', label: 'PM (12pm-4pm)' },
+                        { value: 'All Day', label: 'All Day' }
+                      ]}
+                    />
+                  ) : scheduledDate?.timeSlot ? (
+                    <span className="text-sm text-surface-on dark:text-gray-100">{scheduledDate.timeSlot === 'AM' ? 'AM (8am-12pm)' : scheduledDate.timeSlot === 'PM' ? 'PM (12pm-4pm)' : 'All Day'}</span>
+                  ) : null}
+                </div>
+              </div>
               {isAdmin && isEditing && !isReadOnly && (proposeDate || scheduledDate) && (
                     <Button
                   type="button"
@@ -1164,7 +1167,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           {isAdmin && (
             <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Warranty Assessment</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="relative" ref={classificationSelectRef}>
                   <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Classification</label>
                   {isEditing && !isReadOnly ? (

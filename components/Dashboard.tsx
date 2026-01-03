@@ -2873,21 +2873,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         <span className="text-xs text-surface-on-variant dark:text-gray-400">&lt;{isMe ? 'me' : msg.senderRole.toLowerCase()}&gt;</span>
                                       </div>
                                       <div className="flex items-center gap-2">
-                                        <button
-                                          onClick={() => {
-                                            // Find associated claim by matching thread subject to claim title
-                                            const associatedClaim = claims.find(c => c.title === selectedThread.subject);
-                                            const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
-                                            const contextLabel = `${selectedThread.subject} • ${project}`;
-                                            setCurrentTab('NOTES');
-                                            useTaskStore.setState({ activeClaimId: associatedClaim?.id || null, contextLabel, contextType: 'message' });
-                                          }}
-                                          className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
-                                          title={`Add a note about: ${selectedThread.subject}`}
-                                        >
-                                          <StickyNote className="h-3.5 w-3.5" />
-                                          <span>+Note</span>
-                                        </button>
                                         <div className="text-xs text-surface-on-variant dark:text-gray-400 transition-colors">
                                           {new Date(msg.timestamp).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                                         </div>
@@ -2909,6 +2894,25 @@ const Dashboard: React.FC<DashboardProps> = ({
                           </div>
                         );
                       })}
+                    </div>
+                    
+                    {/* Add Note Button - Bottom of messages */}
+                    <div className="flex justify-center pb-4">
+                      <button
+                        onClick={() => {
+                          const associatedClaim = claims.find(c => c.title === selectedThread.subject);
+                          const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
+                          const claimNum = associatedClaim?.claimNumber ? `Claim #${associatedClaim.claimNumber}` : '';
+                          const contextLabel = [selectedThread.subject, claimNum, project].filter(Boolean).join(' • ');
+                          setCurrentTab('NOTES');
+                          useTaskStore.setState({ activeClaimId: associatedClaim?.id || null, contextLabel, contextType: 'message' });
+                        }}
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-on text-sm font-medium rounded-full hover:bg-primary/90 transition-all shadow-sm"
+                        title={`Add a note about: ${selectedThread.subject}`}
+                      >
+                        <StickyNote className="h-4 w-4" />
+                        <span>Add Note</span>
+                      </button>
                     </div>
                     
                     {/* Bottom Padding for Reply Box visibility */}
@@ -3037,20 +3041,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                             <span className="text-xs text-surface-on-variant dark:text-gray-400">&lt;{isMe ? 'me' : msg.senderRole.toLowerCase()}&gt;</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => {
-                                const associatedClaim = claims.find(c => c.title === selectedThread.subject);
-                                const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
-                                const contextLabel = `${selectedThread.subject} • ${project}`;
-                                setCurrentTab('NOTES');
-                                useTaskStore.setState({ activeClaimId: associatedClaim?.id || null, contextLabel, contextType: 'message' });
-                              }}
-                              className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
-                              title={`Add a note about: ${selectedThread.subject}`}
-                            >
-                              <StickyNote className="h-3.5 w-3.5" />
-                              <span>+Note</span>
-                            </button>
                             <div className="text-xs text-surface-on-variant dark:text-gray-400 transition-colors">
                               {new Date(msg.timestamp).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                             </div>
@@ -3072,6 +3062,26 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                 );
               })}
+            </div>
+            
+            {/* Add Note Button - Bottom of messages */}
+            <div className="flex justify-center pb-4">
+              <button
+                onClick={() => {
+                  const associatedClaim = claims.find(c => c.title === selectedThread.subject);
+                  const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
+                  const claimNum = associatedClaim?.claimNumber ? `Claim #${associatedClaim.claimNumber}` : '';
+                  const contextLabel = [selectedThread.subject, claimNum, project].filter(Boolean).join(' • ');
+                  setCurrentTab('NOTES');
+                  setSelectedThreadId(null);
+                  useTaskStore.setState({ activeClaimId: associatedClaim?.id || null, contextLabel, contextType: 'message' });
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-on text-sm font-medium rounded-full hover:bg-primary/90 transition-all shadow-sm"
+                title={`Add a note about: ${selectedThread.subject}`}
+              >
+                <StickyNote className="h-4 w-4" />
+                <span>Add Note</span>
+              </button>
             </div>
             
             {/* Bottom Padding */}

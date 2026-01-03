@@ -67,6 +67,9 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
       const createdTask = await createTask(newContent, activeClaimId || null);
       // Replace optimistic task with real one
       setTasks((prev) => prev.map((t) => (t.id === optimisticTask.id ? createdTask : t)));
+      
+      // Clear the context after successfully adding the note
+      useTaskStore.setState({ activeClaimId: null, contextLabel: '', contextType: undefined });
     } catch (error) {
       console.error('Failed to create task:', error);
       // Remove optimistic task on error
@@ -170,8 +173,6 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
             {contextLabel && (
               <div className="mt-2 flex items-center gap-2">
                 <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">
-                  {contextType === 'claim' && '🏠'}
-                  {contextType === 'message' && '💬'}
                   {contextLabel}
                 </span>
               </div>
