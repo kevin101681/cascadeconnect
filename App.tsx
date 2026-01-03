@@ -960,6 +960,9 @@ function App() {
 
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
   
+  // Invoices Modal State (moved to App level to persist across Dashboard re-renders)
+  const [isInvoicesModalOpen, setIsInvoicesModalOpen] = useState(false);
+  
   // Alert modal state
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<'info' | 'success' | 'error'>('info');
@@ -3904,6 +3907,8 @@ Assigned By: ${assignerName}
           onDeleteTask={handleDeleteTask}
           onUpdateTask={handleUpdateTask}
           onNavigate={setCurrentView}
+          isInvoicesModalOpen={isInvoicesModalOpen}
+          onSetInvoicesModalOpen={setIsInvoicesModalOpen}
         />
       )}
       {currentView === 'TASKS' && (
@@ -3951,6 +3956,8 @@ Assigned By: ${assignerName}
           onDeleteTask={handleDeleteTask}
           onUpdateTask={handleUpdateTask}
           onNavigate={setCurrentView}
+          isInvoicesModalOpen={isInvoicesModalOpen}
+          onSetInvoicesModalOpen={setIsInvoicesModalOpen}
         />
       )}
       {currentView === 'TEAM' && (

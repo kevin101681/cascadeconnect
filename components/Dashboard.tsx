@@ -317,6 +317,10 @@ interface DashboardProps {
   onDeleteTask: (taskId: string) => void;
   onUpdateTask?: (taskId: string, updates: Partial<Task>) => void;
   onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS') => void;
+  
+  // Invoices Modal State (controlled by parent to persist across re-renders)
+  isInvoicesModalOpen?: boolean;
+  onSetInvoicesModalOpen?: (open: boolean) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -361,7 +365,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   onToggleTask,
   onDeleteTask,
   onUpdateTask,
-  onNavigate
+  onNavigate,
+  isInvoicesModalOpen: isInvoicesModalOpenProp,
+  onSetInvoicesModalOpen
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
@@ -443,8 +449,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual)
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'>(initialTab || 'CLAIMS');
   
-  // Invoices Modal State (for mobile full-screen view)
-  const [isInvoicesModalOpen, setIsInvoicesModalOpen] = useState(false);
+  // Invoices Modal State - use prop from parent if provided, otherwise use local state
+  const [isInvoicesModalOpenLocal, setIsInvoicesModalOpenLocal] = useState(false);
+  const isInvoicesModalOpen = isInvoicesModalOpenProp !== undefined ? isInvoicesModalOpenProp : isInvoicesModalOpenLocal;
+  const setIsInvoicesModalOpen = onSetInvoicesModalOpen || setIsInvoicesModalOpenLocal;
   
   // Debug: Log when modal state changes
   useEffect(() => {
@@ -459,7 +467,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       console.log('⏰ Setting isInvoicesModalOpen to true in setTimeout');
       setIsInvoicesModalOpen(true);
     }, 0);
-  }, []);
+  }, [setIsInvoicesModalOpen]);
   
   // Update currentTab when initialTab prop changes
   useEffect(() => {
