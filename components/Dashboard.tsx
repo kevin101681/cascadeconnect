@@ -435,30 +435,31 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual)
-  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | null>(null);
+  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | null>('CLAIMS');
+  const previousTabRef = useRef<typeof currentTab>(null);
   
-  // Handle browser back button to close modal
+  // Handle browser back button to close modal (mobile only, and only when first opening a tab)
   useEffect(() => {
-    if (currentTab) {
-      // Push a history state when tab opens
-      window.history.pushState({ tabOpen: currentTab }, '');
+    const isMobile = window.innerWidth < 768;
+    const isOpeningTab = previousTabRef.current === null && currentTab !== null;
+    
+    if (isMobile && isOpeningTab) {
+      // Push a history state when tab first opens on mobile
+      window.history.pushState({ tabOpen: true }, '');
       
       const handlePopState = (e: PopStateEvent) => {
-        if (e.state && e.state.tabOpen) {
-          setCurrentTab(null);
-        }
+        setCurrentTab(null);
       };
       
       window.addEventListener('popstate', handlePopState);
       
       return () => {
         window.removeEventListener('popstate', handlePopState);
-        // Clean up history state if modal closes normally
-        if (window.history.state && window.history.state.tabOpen) {
-          window.history.back();
-        }
       };
     }
+    
+    // Update previous tab ref
+    previousTabRef.current = currentTab;
   }, [currentTab]);
   
   // Prevent body scroll when mobile tab modal is open
@@ -3909,7 +3910,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => {
                 setCurrentTab('CLAIMS');
               }}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'CLAIMS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+              className={`text-xs md:text-sm font-medium transition-all flex items-center gap-2 px-4 md:px-6 h-9 md:h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'CLAIMS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
             >
               <ClipboardList className="h-4 w-4" />
               Warranty
@@ -3922,7 +3923,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('TASKS');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'TASKS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-xs md:text-sm font-medium transition-all flex items-center gap-2 px-4 md:px-6 h-9 md:h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'TASKS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <CheckSquare className="h-4 w-4" />
                 Tasks
@@ -3934,7 +3935,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => {
                 setCurrentTab('MESSAGES');
               }}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'MESSAGES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+              className={`text-xs md:text-sm font-medium transition-all flex items-center gap-2 px-4 md:px-6 h-9 md:h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'MESSAGES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
             >
               <Mail className="h-4 w-4" />
               Messages
@@ -3948,7 +3949,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.preventDefault();
                   setCurrentTab('DOCUMENTS');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-xs md:text-sm font-medium transition-all flex items-center gap-2 px-4 md:px-6 h-9 md:h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <FileText className="h-4 w-4" />
                 Documents
@@ -3963,7 +3964,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.preventDefault();
                   setCurrentTab('MANUAL');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'MANUAL' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-xs md:text-sm font-medium transition-all flex items-center gap-2 px-4 md:px-6 h-9 md:h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'MANUAL' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <BookOpen className="h-4 w-4" />
                 Manual
@@ -3978,7 +3979,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('NOTES');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'NOTES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-xs md:text-sm font-medium transition-all flex items-center gap-2 px-4 md:px-6 h-9 md:h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'NOTES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <StickyNote className="h-4 w-4" />
                 Notes
@@ -3992,7 +3993,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('CALLS');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'CALLS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-xs md:text-sm font-medium transition-all flex items-center gap-2 px-4 md:px-6 h-9 md:h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'CALLS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <Phone className="h-4 w-4" />
                 Calls
@@ -4006,7 +4007,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('PAYROLL');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'PAYROLL' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-xs md:text-sm font-medium transition-all flex items-center gap-2 px-4 md:px-6 h-9 md:h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'PAYROLL' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <DollarSign className="h-4 w-4" />
                 Payroll
@@ -4020,7 +4021,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('INVOICES');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-xs md:text-sm font-medium transition-all flex items-center gap-2 px-4 md:px-6 h-9 md:h-12 rounded-full w-full md:w-auto justify-center border ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <Receipt className="h-4 w-4" />
                 Invoices
@@ -4387,7 +4388,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Content Area - Full-screen overlay on mobile (when tab is active), inline on desktop */}
         {currentTab && (
         <div 
-          className={`fixed top-16 left-0 right-0 bottom-0 z-[1000] bg-surface dark:bg-gray-900 flex flex-col pt-4 md:pt-0 md:relative md:top-auto md:left-auto md:right-auto md:bottom-auto md:z-auto md:bg-transparent md:block ${currentTab === 'CLAIMS' ? 'md:-mx-6' : ''}`}
+          className={`fixed top-16 left-0 right-0 bottom-0 z-[1000] bg-surface dark:bg-gray-900 flex flex-col pt-4 md:pt-0 md:relative md:top-auto md:left-auto md:right-auto md:bottom-auto md:z-auto md:bg-transparent md:block`}
         >
         <AnimatePresence mode="wait" initial={false}>
           {/* Mobile Close FAB - shown on tab list view, hidden when nested modals are open */}
