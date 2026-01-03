@@ -4372,8 +4372,10 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <div className="flex flex-col h-full md:h-auto [&>div]:max-h-none [&>div]:h-full">
-                  {renderClaimsList(displayClaims, isHomeownerView)}
+                <div className="flex flex-col h-full md:h-auto">
+                  <div className="flex-1 overflow-y-auto md:overflow-visible">
+                    {renderClaimsList(displayClaims, isHomeownerView)}
+                  </div>
                 </div>
               </div>
             </motion.div>
