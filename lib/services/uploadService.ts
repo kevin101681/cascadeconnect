@@ -155,11 +155,12 @@ export async function uploadFile(
 
   // Retry loop with error tracking
   return captureException(async () => {
-    // For large files (>4MB), use Cloudinary direct upload to bypass Netlify's 6MB limit
-    const useDirectUpload = file.size > 4 * 1024 * 1024;
+    // For large files (>2MB), use Cloudinary direct upload to bypass Netlify's 6MB limit
+    // Lower threshold on mobile due to slower streaming through Netlify function
+    const useDirectUpload = file.size > 2 * 1024 * 1024;
     
     if (useDirectUpload) {
-      console.log(`📤 Large file detected (${(file.size / 1024 / 1024).toFixed(2)}MB) - using direct Cloudinary upload`);
+      console.log(`📤 File >2MB (${(file.size / 1024 / 1024).toFixed(2)}MB) - using direct Cloudinary upload for faster/more reliable upload`);
       
       try {
         const formData = new FormData();
@@ -430,29 +431,38 @@ export async function uploadMultipleFiles(
   let results: UploadResult[];
 
   if (isMobile && files.length > 1) {
-    // On mobile, upload files one at a time to prevent connection issues
-    // Mobile browsers have strict limits and can drop concurrent connections
-    console.log(`📱 Using mobile upload strategy: sequential uploads (one at a time)`);
-    console.log(`📱 This is slower but much more reliable on mobile devices`);
+    // Check if most files will use direct upload (>2MB)
+    const largeFiles = files.filter(f => f.size > 2 * 1024 * 1024).length;
+    const useConcurrent = largeFiles > files.length / 2; // More than half are large
     
-    results = new Array(files.length);
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      console.log(`📤 [${i + 1}/${files.length}] Uploading: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+    if (useConcurrent && files.length > 2) {
+      // Most files will use direct upload - can do 2 at a time safely
+      console.log(`📱 Using mobile upload strategy: 2 concurrent uploads (most files >2MB using direct upload)`);
+      results = await uploadFilesWithConcurrency(files, adjustedOptions, 2);
+    } else {
+      // Mix of small/large or mostly small - sequential is safer
+      console.log(`📱 Using mobile upload strategy: sequential uploads (one at a time)`);
+      console.log(`📱 This is slower but much more reliable on mobile devices`);
       
-      const result = await uploadFile(file, adjustedOptions);
-      results[i] = result;
-      
-      if (result.success) {
-        console.log(`✅ [${i + 1}/${files.length}] Success: ${file.name}`);
-      } else {
-        console.error(`❌ [${i + 1}/${files.length}] Failed: ${file.name} - ${result.error}`);
-      }
-      
-      // Small delay between uploads on mobile to prevent throttling
-      if (i < files.length - 1) {
-        console.log(`⏳ Waiting 500ms before next upload...`);
-        await new Promise(resolve => setTimeout(resolve, 500));
+      results = new Array(files.length);
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        console.log(`📤 [${i + 1}/${files.length}] Uploading: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+        
+        const result = await uploadFile(file, adjustedOptions);
+        results[i] = result;
+        
+        if (result.success) {
+          console.log(`✅ [${i + 1}/${files.length}] Success: ${file.name}`);
+        } else {
+          console.error(`❌ [${i + 1}/${files.length}] Failed: ${file.name} - ${result.error}`);
+        }
+        
+        // Small delay between uploads on mobile to prevent throttling
+        if (i < files.length - 1) {
+          console.log(`⏳ Waiting 500ms before next upload...`);
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
       }
     }
   } else {
