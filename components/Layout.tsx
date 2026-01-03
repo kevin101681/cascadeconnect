@@ -376,75 +376,75 @@ const Layout: React.FC<LayoutProps> = ({
                   </button>
 
                 {isMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-surface dark:bg-gray-800 rounded-xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100 origin-top-right max-h-[calc(100vh-5rem)] flex flex-col">
+                  <div className="absolute right-0 top-full mt-2 w-64 bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100 origin-top-right max-h-[calc(100vh-5rem)] flex flex-col">
                     {/* User Info Header */}
-                    <div className="px-4 py-3 bg-surface-container-high/30 dark:bg-gray-700/30 border-b border-surface-outline-variant dark:border-gray-700 flex-shrink-0">
-                      <p className="text-sm font-bold text-surface-on dark:text-gray-100">
+                    <div className="px-6 py-4 bg-surface dark:bg-gray-800 border-b border-surface-outline-variant dark:border-gray-700 flex-shrink-0">
+                      <p className="text-sm font-semibold text-surface-on dark:text-gray-100">
                         {isAdmin ? 'Administrator' : isBuilder ? 'Builder Account' : activeHomeowner.name}
                       </p>
-                      <p className="text-xs text-surface-on-variant dark:text-gray-400">
+                      <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-0.5">
                         {isAdmin ? 'Internal Portal' : isBuilder ? 'Access: Read Only' : 'Homeowner Portal'}
                       </p>
                     </div>
 
-                    <div className="py-2 overflow-y-auto flex-1 min-h-0">
+                    <div className="p-3 overflow-y-auto flex-1 min-h-0 space-y-1">
                       {/* Admin Only Links */}
                       {isAdmin && (
                         <>
                           <button 
                             onClick={() => handleMenuAction(() => onNavigate('TEAM'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
                           >
-                            <Users className="h-4 w-4 text-surface-outline dark:text-gray-500" />
+                            <Users className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
                             Internal Users
                           </button>
                            <button 
                             onClick={() => handleMenuAction(() => onNavigate('BUILDERS'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
                           >
-                            <Building2 className="h-4 w-4 text-surface-outline dark:text-gray-500" />
+                            <Building2 className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
                             Builders
                           </button>
                           <button 
                             onClick={() => handleMenuAction(() => onNavigate('HOMEOWNERS'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
                           >
-                            <Home className="h-4 w-4 text-surface-outline dark:text-gray-500" />
+                            <Home className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
                             Homeowners
                           </button>
                           {isAdministrator && (
                             <>
                               <button 
                                 onClick={() => handleMenuAction(() => onNavigate('DATA'))}
-                                className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                                className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
                               >
-                                <Database className="h-4 w-4 text-surface-outline dark:text-gray-500" />
+                                <Database className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
                                 Data Import
                               </button>
                             </>
                           )}
                           <button 
                             onClick={() => handleMenuAction(() => onNavigate('EMAIL_HISTORY'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
                           >
-                            <Mail className="h-4 w-4 text-surface-outline dark:text-gray-500" />
+                            <Mail className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
                             Email History
                           </button>
                           {isAdministrator && (
                             <button 
                               onClick={() => handleMenuAction(() => onNavigate('BACKEND'))}
-                              className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                              className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
                             >
-                              <Server className="h-4 w-4 text-surface-outline dark:text-gray-500" />
+                              <Server className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
                               Backend
                             </button>
                           )}
                           
-                          <div className="my-1 border-t border-surface-outline-variant/50 dark:border-gray-700/50"></div>
+                          <div className="my-2"></div>
                           
                           <button 
                             onClick={() => handleMenuAction(onOpenEnrollment)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-primary font-medium hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                            className="w-full text-left px-4 py-2.5 text-sm text-primary font-medium hover:bg-primary/10 dark:hover:bg-primary/20 rounded-full flex items-center gap-3 transition-colors"
                           >
                             <UserPlus className="h-4 w-4 text-primary" />
                             Enroll Homeowner
@@ -452,17 +452,17 @@ const Layout: React.FC<LayoutProps> = ({
                         </>
                       )}
 
-                      <div className="my-1 border-t border-surface-outline-variant dark:border-gray-700"></div>
+                      <div className="my-2"></div>
 
                       {/* Switch Role */}
                       <button 
                         onClick={() => handleMenuAction(onSwitchRole)}
-                        className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center gap-3"
+                        className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
                       >
                         {userRole === UserRole.ADMIN ? (
-                          <><UserCircle className="h-4 w-4 text-surface-outline dark:text-gray-500" /> Switch to Homeowner View</>
+                          <><UserCircle className="h-4 w-4 text-surface-on-variant dark:text-gray-400" /> Switch to Homeowner View</>
                         ) : (
-                          <><Users className="h-4 w-4 text-surface-outline dark:text-gray-500" /> Switch to Admin View</>
+                          <><Users className="h-4 w-4 text-surface-on-variant dark:text-gray-400" /> Switch to Admin View</>
                         )}
                       </button>
                     </div>
