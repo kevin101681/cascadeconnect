@@ -51,6 +51,22 @@ export function getUploadEndpoint(): string {
   return '/.netlify/functions/upload';
 }
 
+/**
+ * Get Cloudinary unsigned upload endpoint for large files
+ * Bypasses Netlify's 6MB function payload limit
+ */
+export function getCloudinaryDirectEndpoint(): string {
+  const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+  return `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
+}
+
+/**
+ * Get Cloudinary upload preset for unsigned uploads
+ */
+export function getCloudinaryUploadPreset(): string {
+  return import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || 'cascade-unsigned';
+}
+
 // ==========================================
 // VALIDATION
 // ==========================================
@@ -139,6 +155,72 @@ export async function uploadFile(
 
   // Retry loop with error tracking
   return captureException(async () => {
+    // For large files (>4MB), use Cloudinary direct upload to bypass Netlify's 6MB limit
+    const useDirectUpload = file.size > 4 * 1024 * 1024;
+    
+    if (useDirectUpload) {
+      console.log(`📤 Large file detected (${(file.size / 1024 / 1024).toFixed(2)}MB) - using direct Cloudinary upload`);
+      
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', getCloudinaryUploadPreset());
+        formData.append('folder', 'warranty-claims');
+        
+        const endpoint = getCloudinaryDirectEndpoint();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), opts.timeoutMs);
+        
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          body: formData,
+          signal: controller.signal,
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+          const errorText = await response.text().catch(() => response.statusText);
+          throw new Error(`Direct upload failed (${response.status}): ${errorText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.secure_url) {
+          throw new Error('Direct upload failed: No URL returned');
+        }
+        
+        console.log(`✅ Direct upload successful: ${file.name}`);
+        addBreadcrumb('uploadFile:directSuccess', { fileName: file.name, url: result.secure_url });
+        
+        return {
+          success: true,
+          attachment: {
+            id: result.public_id || crypto.randomUUID(),
+            url: result.secure_url,
+            name: file.name,
+            type: determineFileType(file),
+          },
+        };
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`❌ Direct upload failed:`, errorMessage);
+        
+        logError(`Direct upload failed: ${errorMessage}`, {
+          service: 'uploadService',
+          operation: 'directUpload',
+          fileName: file.name,
+          fileSize: file.size,
+        }, 'error');
+        
+        return {
+          success: false,
+          error: `Direct upload failed: ${errorMessage}`,
+        };
+      }
+    }
+    
+    // For smaller files (<= 4MB), use Netlify function
     for (let attempt = 1; attempt <= opts.maxRetries; attempt++) {
       try {
         console.log(`🔄 Upload attempt ${attempt}/${opts.maxRetries} for ${file.name}`);
