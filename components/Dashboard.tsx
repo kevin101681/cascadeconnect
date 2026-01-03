@@ -672,16 +672,24 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [showCallsModal, setShowCallsModal] = useState(false);
   const [newMessageSubject, setNewMessageSubject] = useState('');
 
-  // Handle browser back button for mobile message thread modal
+  // Handle browser back button for nested modals (claims, tasks, message threads)
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
-    if (selectedThreadId && isMobile) {
+    const hasNestedModal = selectedClaimForModal || selectedTaskForModal || selectedThreadId;
+    
+    if (hasNestedModal && isMobile) {
       // Push a history state when modal opens
-      window.history.pushState({ modalOpen: 'messageThread' }, '');
+      window.history.pushState({ nestedModal: true }, '');
 
       const handlePopState = (e: PopStateEvent) => {
-        // Close modal when back button is pressed
-        setSelectedThreadId(null);
+        // Close the appropriate modal when back button is pressed
+        if (selectedClaimForModal) {
+          setSelectedClaimForModal(null);
+        } else if (selectedTaskForModal) {
+          setSelectedTaskForModal(null);
+        } else if (selectedThreadId) {
+          setSelectedThreadId(null);
+        }
       };
 
       window.addEventListener('popstate', handlePopState);
@@ -690,7 +698,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         window.removeEventListener('popstate', handlePopState);
       };
     }
-  }, [selectedThreadId]);
+  }, [selectedClaimForModal, selectedTaskForModal, selectedThreadId]);
   const [newMessageContent, setNewMessageContent] = useState('');
   const [newMessageRecipientId, setNewMessageRecipientId] = useState<string>('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
@@ -1911,39 +1919,38 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
         {/* Left Column: Claims List */}
         <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
-          <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-auto shrink-0 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none">
-            <div className="flex items-center w-full md:w-auto">
-              <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                {filteredClaims.length > 0 && (
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-                    {filteredClaims.length}
-                  </span>
-                )}
-                Warranty Claims
-              </h3>
-            </div>
-            {/* New Claim button */}
-            <div className="flex items-center justify-end md:justify-end">
-              {isHomeownerView ? (
-                <Button
-                  variant="filled"
-                  onClick={() => onNewClaim()}
-                  icon={<Plus className="h-4 w-4" />}
-                  className="!h-9 !px-4 md:!h-8 md:!px-3 md:text-xs"
-                >
-                  Add Claim
-                </Button>
-              ) : isAdmin && (
-                <Button
-                  variant="filled"
-                  onClick={() => setShowNewClaimModal(true)}
-                  icon={<Plus className="h-4 w-4" />}
-                  className="!h-9 !px-4 md:!h-8 md:!px-3 md:text-xs"
-                >
-                  New Claim
-                </Button>
+          <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/95 dark:bg-gray-700/95 backdrop-blur-sm flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none">
+            <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+              {filteredClaims.length > 0 && (
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                  {filteredClaims.length}
+                </span>
               )}
-            </div>
+              <span className="hidden sm:inline">Warranty Claims</span>
+              <span className="sm:hidden">Claims</span>
+            </h3>
+            {/* New Claim button */}
+            {isHomeownerView ? (
+              <Button
+                variant="filled"
+                onClick={() => onNewClaim()}
+                icon={<Plus className="h-4 w-4" />}
+                className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
+              >
+                <span className="hidden sm:inline">Add Claim</span>
+                <span className="sm:hidden">Add</span>
+              </Button>
+            ) : isAdmin && (
+              <Button
+                variant="filled"
+                onClick={() => setShowNewClaimModal(true)}
+                icon={<Plus className="h-4 w-4" />}
+                className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
+              >
+                <span className="hidden sm:inline">New Claim</span>
+                <span className="sm:hidden">New</span>
+              </Button>
+            )}
           </div>
           
           {/* Filter Pills */}
@@ -2164,21 +2171,9 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* Mobile Full-Screen Overlay for Claim Modal */}
       {selectedClaimForModal && (
         <div className="md:hidden fixed inset-0 z-50 bg-surface dark:bg-gray-900 flex flex-col">
-          {/* Claim Header Toolbar */}
-          <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30">
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setSelectedClaimForModal(null)} 
-                className="p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-
           {/* Scrollable Claim Editor Content */}
           <div 
-            className="flex-1 overflow-y-auto p-6 overscroll-contain"
+            className="flex-1 overflow-y-auto p-6 pb-24 overscroll-contain"
             style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
           >
             <Suspense fallback={
@@ -2210,6 +2205,58 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onNavigate={onNavigate}
               />
             </Suspense>
+          </div>
+
+          {/* Mobile Footer with Actions */}
+          <div className="sticky bottom-0 left-0 right-0 z-20 bg-surface-container/95 dark:bg-gray-800/95 backdrop-blur-sm border-t border-surface-outline-variant dark:border-gray-700 p-4 flex gap-2 shadow-lg">
+            <Button 
+              type="button" 
+              variant="filled"
+              onClick={() => {
+                // Add Note - Navigate to Notes tab
+                const contextLabel = `${selectedClaimForModal.title || 'Untitled'} • Claim #${selectedClaimForModal.claimNumber || selectedClaimForModal.id.substring(0, 8)} • ${selectedClaimForModal.jobName || selectedClaimForModal.address}`;
+                setCurrentTab('NOTES');
+                setSelectedClaimForModal(null);
+                useTaskStore.setState({ activeClaimId: selectedClaimForModal.id, contextLabel, contextType: 'claim' });
+              }}
+              icon={<StickyNote className="h-4 w-4" />}
+              className="flex-1"
+            >
+              Note
+            </Button>
+            <Button 
+              type="button" 
+              variant="filled"
+              onClick={() => {
+                setNewMessageSubject(selectedClaimForModal.title);
+                setShowNewMessageModal(true);
+              }}
+              icon={<Mail className="h-4 w-4" />}
+              className="flex-1"
+            >
+              Message
+            </Button>
+            <Button 
+              type="button" 
+              variant="filled" 
+              onClick={() => setSelectedClaimForModal(null)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              variant="filled"
+              onClick={() => {
+                if (onUpdateClaim) {
+                  onUpdateClaim(selectedClaimForModal);
+                }
+              }}
+              icon={<Save className="h-4 w-4" />}
+              className="flex-1 !bg-primary hover:!bg-primary/90"
+            >
+              Save
+            </Button>
           </div>
         </div>
       )}
@@ -2386,44 +2433,42 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
         {/* Left Column: Tasks List */}
         <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedTaskForModal ? 'hidden md:flex' : 'flex'}`}>
-          <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-auto shrink-0 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none">
-            <div className="flex items-center w-full md:w-auto">
-              <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                {filteredTasks.length > 0 && (
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-                    {filteredTasks.length}
-                  </span>
-                )}
-                My Tasks
-              </h3>
-            </div>
+          <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/95 dark:bg-gray-700/95 backdrop-blur-sm flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none">
+            <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+              {filteredTasks.length > 0 && (
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                  {filteredTasks.length}
+                </span>
+              )}
+              <span className="hidden sm:inline">My Tasks</span>
+              <span className="sm:hidden">Tasks</span>
+            </h3>
             {/* New Task button */}
-            <div className="flex items-center justify-end md:justify-end">
-              <Button
-                variant="filled"
-                onClick={() => {
-                  if (onAddTask) {
-                    const newTask = {
-                      id: crypto.randomUUID(),
-                      title: '',
-                      description: '',
-                      assignedToId: currentUser.id,
-                      assignedToName: currentUser.name,
-                      dateAssigned: new Date(),
-                      isCompleted: false,
-                      dueDate: undefined,
-                      claimIds: [],
-                      homeownerId: effectiveHomeowner?.id
-                    };
-                    onAddTask(newTask);
-                  }
-                }}
-                icon={<Plus className="h-4 w-4" />}
-                className="!h-9 !px-4 md:!h-8 md:!px-3 md:text-xs"
-              >
-                New Task
-              </Button>
-            </div>
+            <Button
+              variant="filled"
+              onClick={() => {
+                if (onAddTask) {
+                  const newTask = {
+                    id: crypto.randomUUID(),
+                    title: '',
+                    description: '',
+                    assignedToId: currentUser.id,
+                    assignedToName: currentUser.name,
+                    dateAssigned: new Date(),
+                    isCompleted: false,
+                    dueDate: undefined,
+                    claimIds: [],
+                    homeownerId: effectiveHomeowner?.id
+                  };
+                  onAddTask(newTask);
+                }
+              }}
+              icon={<Plus className="h-4 w-4" />}
+              className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
+            >
+              <span className="hidden sm:inline">New Task</span>
+              <span className="sm:hidden">New</span>
+            </Button>
           </div>
           
           {/* Filter Pills */}
@@ -2665,43 +2710,30 @@ const Dashboard: React.FC<DashboardProps> = ({
     <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
        {/* Left Column: Inbox List (Gmail Style) */}
        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
-          <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-16 shrink-0 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none">
-            <div className="flex items-center w-full md:w-auto">
-              <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                {displayThreads.filter(t => !t.isRead).length > 0 && (
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-                    {displayThreads.filter(t => !t.isRead).length}
-                  </span>
-                )}
-                Inbox
-              </h3>
-            </div>
-            {/* Compose button - right side on desktop */}
-            <div className="flex items-center justify-end md:justify-end">
-              <Button
-                variant="filled"
-                onClick={() => {
-                  setShowNewMessageModal(true);
-                }}
-                icon={<Plus className="h-4 w-4" />}
-                className="!h-9 !px-4 md:!h-8 md:!px-3 md:text-xs"
-              >
-                Compose
-              </Button>
-            </div>
-            {/* Search box - in header on mobile, separate on desktop */}
-            <div className="md:hidden">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-500" />
-                <input 
-                  type="text" 
-                  placeholder="Search mail..." 
-                  className="w-full bg-surface-container dark:bg-gray-700 rounded-full pl-9 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant dark:placeholder-gray-500"
-                />
-              </div>
-            </div>
+          <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/95 dark:bg-gray-700/95 backdrop-blur-sm flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none">
+            <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+              {displayThreads.filter(t => !t.isRead).length > 0 && (
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                  {displayThreads.filter(t => !t.isRead).length}
+                </span>
+              )}
+              Inbox
+            </h3>
+            {/* Compose button */}
+            <Button
+              variant="filled"
+              onClick={() => {
+                setShowNewMessageModal(true);
+              }}
+              icon={<Plus className="h-4 w-4" />}
+              className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
+            >
+              <span className="hidden sm:inline">Compose</span>
+              <span className="sm:hidden">New</span>
+            </Button>
           </div>
           
+          {/* Search box on desktop only */}
           <div className="hidden md:block p-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
              <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-500" />
