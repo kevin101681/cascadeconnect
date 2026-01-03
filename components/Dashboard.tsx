@@ -24,6 +24,7 @@ import TasksSheet from './TasksSheet';
 import AIIntakeDashboard from './AIIntakeDashboard';
 import HomeownerManual from './HomeownerManual';
 import PayrollDashboard from './PayrollDashboard';
+import ScheduleTab from './ScheduleTab';
 
 // Import CBS Books App directly for inline rendering in tab
 const CBSBooksApp = React.lazy(() => import('../lib/cbsbooks/App'));
@@ -301,7 +302,7 @@ interface DashboardProps {
   currentUserEmail?: string; // Current user's email for contractor matching
 
   // Initial State Control (Optional)
-  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'INVOICES';
+  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'INVOICES' | 'SCHEDULE';
   initialThreadId?: string | null;
 
   // Tasks Widget Support
@@ -434,8 +435,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, [selectedTaskForModal]);
   
   
-  // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual)
-  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | null>('CLAIMS');
+  // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual vs Schedule)
+  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | null>('CLAIMS');
   const previousTabRef = useRef<typeof currentTab>('CLAIMS'); // Initialize with default tab to prevent treating it as "opening"
   
   // Handle browser back button to close modal (mobile only, and only when first opening a tab)
@@ -498,7 +499,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [swipeProgress, setSwipeProgress] = useState<number>(0); // 0 to 1, represents swipe completion
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
-  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | null>(null);
+  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | null>(null);
   
   // Minimum swipe distance (in pixels)
   const minSwipeDistance = 50;
@@ -521,6 +522,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('CALLS'); // CALLS tab (admin only)
+      tabs.push('SCHEDULE'); // SCHEDULE tab (admin only)
       // Only show Payroll and Invoices for Administrator role, not Employee role
       if (!isEmployee) {
         tabs.push('PAYROLL'); // PAYROLL tab (administrator only)
@@ -3996,6 +3998,20 @@ const Dashboard: React.FC<DashboardProps> = ({
               </button>
             )}
             
+            {/* SCHEDULE TAB - Admin Only (hidden in homeowner view) */}
+            {isAdmin && !isHomeownerView && (
+              <button 
+                data-tab="SCHEDULE"
+                onClick={() => {
+                  setCurrentTab('SCHEDULE');
+                }}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'SCHEDULE' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+              >
+                <Calendar className="h-4 w-4" />
+                Schedule
+              </button>
+            )}
+            
             {/* PAYROLL TAB - Administrator Only (hidden for employees and homeowner view) */}
             {isAdmin && !isHomeownerView && currentUser?.role !== 'Employee' && (
               <button 
@@ -4495,6 +4511,27 @@ const Dashboard: React.FC<DashboardProps> = ({
                         onSelectHomeowner(homeowner);
                       }
                     }}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* SCHEDULE Tab - Admin Only */}
+          {currentTab === 'SCHEDULE' && isAdmin && (
+            <motion.div 
+              key="schedule"
+              className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+                <div className="flex flex-col h-full md:h-auto">
+                  <ScheduleTab 
+                    homeowners={homeowners}
+                    currentUserId={currentUser?.id}
                   />
                 </div>
               </div>

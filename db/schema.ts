@@ -4,6 +4,8 @@ import { pgTable, text, timestamp, boolean, uuid, pgEnum, json } from 'drizzle-o
 // Enums
 export const userRoleEnum = pgEnum('user_role', ['ADMIN', 'HOMEOWNER', 'BUILDER']);
 export const claimStatusEnum = pgEnum('claim_status', ['SUBMITTED', 'REVIEWING', 'SCHEDULING', 'SCHEDULED', 'COMPLETED']);
+export const appointmentVisibilityEnum = pgEnum('appointment_visibility', ['internal_only', 'shared_with_homeowner']);
+export const appointmentTypeEnum = pgEnum('appointment_type', ['repair', 'inspection', 'phone_call', 'other']);
 
 // --- 1. Builder Groups (Companies) ---
 export const builderGroups = pgTable('builder_groups', {
@@ -257,4 +259,37 @@ export const smsMessages = pgTable('sms_messages', {
   twilioSid: text('twilio_sid'), // Twilio message SID for tracking
   status: text('status').default('sent'), // 'sent' | 'delivered' | 'failed' | 'received'
   createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// --- 12. Appointments (Calendar System) ---
+export const appointments = pgTable('appointments', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  title: text('title').notNull(),
+  description: text('description'),
+  startTime: timestamp('start_time').notNull(),
+  endTime: timestamp('end_time').notNull(),
+  
+  // Link to homeowner
+  homeownerId: uuid('homeowner_id').references(() => homeowners.id),
+  
+  // Visibility control
+  visibility: appointmentVisibilityEnum('visibility').default('shared_with_homeowner'),
+  
+  // Type of appointment
+  type: appointmentTypeEnum('type').default('other'),
+  
+  // Created by (admin/staff user)
+  createdById: uuid('created_by_id').references(() => users.id),
+  
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Appointment Guests: External invitees (email + optional role)
+export const appointmentGuests = pgTable('appointment_guests', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  appointmentId: uuid('appointment_id').references(() => appointments.id).notNull(),
+  email: text('email').notNull(),
+  role: text('role'), // Optional: 'contractor', 'inspector', 'homeowner', etc.
+  createdAt: timestamp('created_at').defaultNow(),
 });

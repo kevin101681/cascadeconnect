@@ -1,0 +1,209 @@
+/* Custom styles for react-big-calendar with dark mode support */
+
+/* Main calendar container */
+.rbc-calendar {
+  @apply font-sans text-foreground;
+}
+
+/* Off-range (prev/next month) dates */
+.rbc-off-range-bg {
+  @apply bg-muted/30;
+}
+
+/* Today's date highlight */
+.rbc-today {
+  @apply bg-accent/20;
+}
+
+/* Calendar header (day names) */
+.rbc-header {
+  @apply border-border p-2 font-medium text-surface-on dark:text-gray-200;
+  background-color: transparent;
+}
+
+/* Views (month, week, day, agenda) */
+.rbc-month-view,
+.rbc-time-view,
+.rbc-agenda-view {
+  @apply border-border bg-surface-container dark:bg-gray-800;
+  border: 1px solid;
+}
+
+/* Day cells border */
+.rbc-day-bg + .rbc-day-bg {
+  @apply border-l border-border;
+}
+
+.rbc-month-row + .rbc-month-row {
+  @apply border-t border-border;
+}
+
+/* Event styling */
+.rbc-event {
+  @apply bg-primary text-primary-on rounded-md shadow-sm border-0;
+  padding: 2px 5px;
+}
+
+.rbc-event:hover {
+  @apply opacity-90;
+}
+
+.rbc-event.rbc-selected {
+  @apply ring-2 ring-primary;
+}
+
+/* Internal event override (darker color with lock icon) */
+.rbc-event.internal-event {
+  @apply bg-slate-600 text-white dark:bg-slate-700;
+}
+
+/* Event labels in agenda view */
+.rbc-agenda-event-cell {
+  @apply text-surface-on dark:text-gray-200;
+}
+
+/* Agenda view date cells */
+.rbc-agenda-date-cell,
+.rbc-agenda-time-cell {
+  @apply text-surface-on-variant dark:text-gray-400;
+}
+
+/* Time slots */
+.rbc-time-slot {
+  @apply border-border;
+}
+
+.rbc-timeslot-group {
+  @apply border-b border-border;
+}
+
+/* Current time indicator */
+.rbc-current-time-indicator {
+  @apply bg-primary;
+}
+
+/* Day slot (week/day view) */
+.rbc-day-slot .rbc-time-slot {
+  @apply border-t border-border;
+}
+
+/* Time gutter (time labels in week/day view) */
+.rbc-time-gutter,
+.rbc-time-header-gutter {
+  @apply bg-surface-container-high dark:bg-gray-700 text-surface-on-variant dark:text-gray-400;
+}
+
+.rbc-time-content {
+  @apply border-t border-border;
+}
+
+/* Date header in week/day view */
+.rbc-time-header-content {
+  @apply border-l border-border;
+}
+
+/* Allday cell */
+.rbc-allday-cell {
+  @apply border-b border-border;
+}
+
+/* Show more link */
+.rbc-show-more {
+  @apply text-primary hover:underline bg-transparent;
+}
+
+/* Selected date cell */
+.rbc-selected-cell {
+  @apply bg-primary/10;
+}
+
+/* Overlay (for show more events) */
+.rbc-overlay {
+  @apply bg-surface-container dark:bg-gray-800 border border-border rounded-lg shadow-lg;
+  z-index: 10;
+}
+
+.rbc-overlay-header {
+  @apply border-b border-border p-2 font-semibold text-surface-on dark:text-gray-100;
+}
+
+/* Agenda table styling */
+.rbc-agenda-table {
+  @apply border-0;
+}
+
+.rbc-agenda-table tbody > tr > td {
+  @apply p-2 border-b border-border;
+}
+
+.rbc-agenda-table tbody > tr > td + td {
+  @apply border-l border-border;
+}
+
+.rbc-agenda-table tbody > tr:last-child > td {
+  @apply border-b-0;
+}
+
+/* No events message in agenda */
+.rbc-agenda-empty {
+  @apply text-surface-on-variant dark:text-gray-400 text-center p-4;
+}
+
+/* Week/Day view event wrapper */
+.rbc-event-content {
+  @apply text-xs;
+}
+
+/* Time range labels */
+.rbc-time-header-content > .rbc-row:first-child {
+  @apply border-b border-border;
+}
+
+/* Date content cell */
+.rbc-date-cell {
+  @apply text-surface-on dark:text-gray-200;
+  padding: 4px;
+}
+
+.rbc-date-cell.rbc-now {
+  @apply font-bold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .rbc-toolbar {
+    @apply flex-col gap-2;
+  }
+  
+  .rbc-toolbar > * {
+    @apply w-full justify-center;
+  }
+}
+
+/* Fix for dark mode text contrast */
+.dark .rbc-month-view,
+.dark .rbc-time-view,
+.dark .rbc-agenda-view {
+  color: rgb(229 231 235); /* gray-200 */
+}
+
+.dark .rbc-off-range {
+  color: rgb(156 163 175); /* gray-400 */
+}
+
+/* Toolbar button styling (if not using custom toolbar) */
+.rbc-toolbar button {
+  @apply text-surface-on dark:text-gray-200 border border-surface-outline dark:border-gray-600 rounded px-3 py-1;
+  background-color: transparent;
+}
+
+.rbc-toolbar button:hover,
+.rbc-toolbar button:active,
+.rbc-toolbar button.rbc-active {
+  @apply bg-primary text-primary-on border-primary;
+}
+
+.rbc-toolbar button:focus {
+  @apply ring-2 ring-primary/50;
+}
+
