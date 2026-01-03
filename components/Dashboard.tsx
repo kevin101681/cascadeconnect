@@ -4372,7 +4372,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                {renderClaimsList(displayClaims, isHomeownerView)}
+                <div className="flex flex-col h-full md:h-auto">
+                  {renderClaimsList(displayClaims, isHomeownerView)}
+                </div>
               </div>
             </motion.div>
           )}
@@ -4387,7 +4389,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                {renderTasksTab()}
+                <div className="flex flex-col h-full md:h-auto">
+                  {renderTasksTab()}
+                </div>
               </div>
             </motion.div>
           )}
@@ -4403,16 +4407,18 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
-                  <TasksSheet 
-                    isInline={true}
-                    onNavigateToClaim={(claimId) => {
-                      const claim = claims.find(c => c.id === claimId);
-                      if (claim) setSelectedClaimForModal(claim);
-                    }} 
-                    claims={claims} 
-                  />
-                </Suspense>
+                <div className="flex flex-col h-full md:h-auto">
+                  <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
+                    <TasksSheet 
+                      isInline={true}
+                      onNavigateToClaim={(claimId) => {
+                        const claim = claims.find(c => c.id === claimId);
+                        if (claim) setSelectedClaimForModal(claim);
+                      }} 
+                      claims={claims} 
+                    />
+                  </Suspense>
+                </div>
               </div>
             </motion.div>
           )}
@@ -4427,7 +4433,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                {renderMessagesTab()}
+                <div className="flex flex-col h-full md:h-auto">
+                  {renderMessagesTab()}
+                </div>
               </div>
             </motion.div>
           )}
@@ -4443,15 +4451,17 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <AIIntakeDashboard 
-                  onNavigate={onNavigate}
-                  onSelectHomeowner={(homeownerId) => {
-                    const homeowner = homeowners.find(h => h.id === homeownerId);
-                    if (homeowner && onSelectHomeowner) {
-                      onSelectHomeowner(homeowner);
-                    }
-                  }}
-                />
+                <div className="flex flex-col h-full md:h-auto">
+                  <AIIntakeDashboard 
+                    onNavigate={onNavigate}
+                    onSelectHomeowner={(homeownerId) => {
+                      const homeowner = homeowners.find(h => h.id === homeownerId);
+                      if (homeowner && onSelectHomeowner) {
+                        onSelectHomeowner(homeowner);
+                      }
+                    }}
+                  />
+                </div>
               </div>
             </motion.div>
           )}
@@ -4466,7 +4476,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible">
-                <PayrollDashboard />
+                <div className="flex flex-col h-full md:h-auto">
+                  <PayrollDashboard />
+                </div>
               </div>
             </motion.div>
           )}
@@ -4508,13 +4520,14 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden">
-                  <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700">
-                    <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-primary" />
-                      Account Documents
-                    </h2>
-                  </div>
+                <div className="flex flex-col h-full md:h-auto">
+                  <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden">
+                    <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700">
+                      <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-primary" />
+                        Account Documents
+                      </h2>
+                    </div>
                   
                   <div className="p-6 bg-surface dark:bg-gray-800">
                     {/* Thumbnail Grid */}
@@ -4665,6 +4678,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     )}
                   </div>
                 </div>
+                </div>
               </div>
             </motion.div>
           )}
@@ -4679,7 +4693,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <HomeownerManual homeownerId={activeHomeowner?.id} />
+                <div className="flex flex-col h-full md:h-auto">
+                  <HomeownerManual homeownerId={activeHomeowner?.id} />
+                </div>
               </div>
             </motion.div>
           )}
