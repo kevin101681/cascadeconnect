@@ -256,7 +256,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
     <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col max-h-[calc(100vh-8rem)]">
       {/* Header */}
       <div className="flex-shrink-0 px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
             Calls
             {stats.total > 0 && (
@@ -265,19 +265,6 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
               </span>
             )}
           </h2>
-        </div>
-
-        {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-          <input
-            id="calls-search-input"
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder=""
-            className="w-full pl-10 pr-4 py-2 bg-surface dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 rounded-lg text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-          />
         </div>
       </div>
 
@@ -295,7 +282,21 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
         <div className="flex-1 min-h-0 flex overflow-hidden">
           {/* LEFT COLUMN - Call Cards List */}
           <div className={`w-full md:w-96 border-r border-surface-outline-variant dark:border-gray-700 overflow-y-auto flex-shrink-0 ${actualSelectedCall ? 'hidden md:block' : 'block'}`}>
-            <div className="p-4 space-y-2">
+            {/* Search Bar - Pill shaped */}
+            <div className="p-4 pb-2">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                <input
+                  id="calls-search-input"
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search calls..."
+                  className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 rounded-full text-sm text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+            </div>
+            <div className="px-4 pb-4 space-y-2">
               {paginatedCalls.map((call) => (
                 <div key={call.id} className="relative">
                   <button
