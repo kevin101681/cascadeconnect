@@ -308,57 +308,57 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
   };
 
   return (
-    <div className="h-full flex flex-col bg-surface-container dark:bg-gray-800 rounded-3xl p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-2xl font-bold text-surface-on dark:text-gray-100">Schedule</h2>
-          <p className="text-sm text-surface-on-variant dark:text-gray-400">
-            Manage appointments and send calendar invites
-          </p>
-        </div>
+    <div className="h-full flex flex-col">
+      {/* Header - Fixed at top, matches Invoices modal */}
+      <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-800/50">
+        <h2 className="text-xl md:text-2xl font-semibold text-surface-on dark:text-gray-100">
+          Schedule
+        </h2>
         <button
           onClick={openCreateModal}
-          className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-on rounded-full hover:bg-primary/90 transition-colors shadow-sm"
+          className="p-2 md:p-3 rounded-full bg-primary text-primary-on hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+          title="New Appointment"
         >
-          <Plus className="h-4 w-4" />
-          New Appointment
+          <Plus className="h-5 w-5 md:h-6 md:w-6" />
         </button>
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center gap-4 mb-4 text-xs text-surface-on-variant dark:text-gray-400">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-primary rounded"></div>
-          <span>Shared</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-slate-600 rounded flex items-center justify-center">
-            <Lock className="h-2 w-2 text-white" />
+      {/* Content Area - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-6 bg-surface-container dark:bg-gray-800">
+        {/* Legend */}
+        <div className="flex items-center gap-4 mb-4 text-xs text-surface-on-variant dark:text-gray-400">
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-primary rounded"></div>
+            <span>Shared</span>
           </div>
-          <span>Internal Only</span>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-slate-600 rounded flex items-center justify-center">
+              <Lock className="h-2 w-2 text-white" />
+            </div>
+            <span>Internal Only</span>
+          </div>
         </div>
-      </div>
 
-      {/* Calendar */}
-      <div className="flex-1 min-h-[600px] bg-surface dark:bg-gray-900 rounded-2xl p-4">
-        <Calendar
-          localizer={localizer}
-          events={events}
-          startAccessor="start"
-          endAccessor="end"
-          style={{ height: '100%' }}
-          view={view}
-          date={date}
-          onView={setView}
-          onNavigate={setDate}
-          onSelectEvent={openViewModal}
-          eventPropGetter={eventStyleGetter}
-          components={{
-            toolbar: CustomToolbar,
-            event: EventComponent,
-          }}
-        />
+        {/* Calendar */}
+        <div className="min-h-[600px] bg-surface dark:bg-gray-900 rounded-2xl p-4">
+          <Calendar
+            localizer={localizer}
+            events={events}
+            startAccessor="start"
+            endAccessor="end"
+            style={{ height: '100%' }}
+            view={view}
+            date={date}
+            onView={setView}
+            onNavigate={setDate}
+            onSelectEvent={openViewModal}
+            eventPropGetter={eventStyleGetter}
+            components={{
+              toolbar: CustomToolbar,
+              event: EventComponent,
+            }}
+          />
+        </div>
       </div>
 
       {/* Modal - Create/View Appointment */}

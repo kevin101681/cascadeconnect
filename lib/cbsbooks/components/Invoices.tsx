@@ -1644,12 +1644,12 @@ export const Invoices: React.FC<InvoicesProps> = ({
         {/* Row 1: Metrics - Evenly spaced */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {statusFilter !== 'paid' && (
-            <div className="bg-primary text-primary-on px-4 h-10 rounded-full flex items-center justify-between gap-2">
+            <div className="bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 border border-surface-outline-variant/50 dark:border-gray-600 px-4 h-10 rounded-full flex items-center justify-between gap-2">
               <p className="text-xs font-bold uppercase tracking-wider">Outstanding</p>
               <p className="text-lg font-bold">${stats.outstanding.toFixed(0)}</p>
             </div>
           )}
-          <div className="bg-primary text-primary-on px-4 h-10 rounded-full flex items-center justify-between gap-2">
+          <div className="bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 border border-surface-outline-variant/50 dark:border-gray-600 px-4 h-10 rounded-full flex items-center justify-between gap-2">
             <p className="text-xs font-bold uppercase tracking-wider">Revenue YTD</p>
             <p className="text-lg font-bold">${stats.ytd.toFixed(0)}</p>
           </div>
