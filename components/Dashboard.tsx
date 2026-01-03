@@ -28,7 +28,11 @@ import PayrollDashboard from './PayrollDashboard';
 // Import CBS Books App directly for inline rendering in tab
 const CBSBooksApp = React.lazy(() => import('../lib/cbsbooks/App'));
 // Import Invoices Modal for mobile full-screen view
-const InvoicesModal = React.lazy(() => import('./InvoicesModal'));
+const InvoicesModal = React.lazy(() => import('./InvoicesModal').catch(err => {
+  console.error('Failed to load InvoicesModal:', err);
+  // Return a fallback component
+  return { default: () => <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center text-white">Failed to load Invoices. Please refresh the page.</div> };
+}));
 // Lazy load heavy components to improve initial load time
 // Add error handling for failed dynamic imports
 const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err => {
@@ -441,6 +445,11 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Invoices Modal State (for mobile full-screen view)
   const [isInvoicesModalOpen, setIsInvoicesModalOpen] = useState(false);
+  
+  // Debug: Log when modal state changes
+  useEffect(() => {
+    console.log('isInvoicesModalOpen changed to:', isInvoicesModalOpen);
+  }, [isInvoicesModalOpen]);
   
   // Update currentTab when initialTab prop changes
   useEffect(() => {
@@ -6293,11 +6302,20 @@ const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       {/* Invoices Modal - Full screen on mobile */}
-      <Suspense fallback={null}>
-        <InvoicesModal 
-          isOpen={isInvoicesModalOpen}
-          onClose={() => setIsInvoicesModalOpen(false)}
-        />
+      <Suspense fallback={
+        <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center">
+          <div className="text-white">Loading Invoices...</div>
+        </div>
+      }>
+        {isInvoicesModalOpen && (
+          <InvoicesModal 
+            isOpen={isInvoicesModalOpen}
+            onClose={() => {
+              console.log('Closing invoices modal');
+              setIsInvoicesModalOpen(false);
+            }}
+          />
+        )}
       </Suspense>
 
     </>
