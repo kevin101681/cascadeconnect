@@ -27,6 +27,8 @@ import PayrollDashboard from './PayrollDashboard';
 
 // Import CBS Books App directly for inline rendering in tab
 const CBSBooksApp = React.lazy(() => import('../lib/cbsbooks/App'));
+// Import Invoices Modal for mobile full-screen view
+const InvoicesModal = React.lazy(() => import('./InvoicesModal'));
 // Lazy load heavy components to improve initial load time
 // Add error handling for failed dynamic imports
 const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err => {
@@ -436,6 +438,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual)
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'>(initialTab || 'CLAIMS');
+  
+  // Invoices Modal State (for mobile full-screen view)
+  const [isInvoicesModalOpen, setIsInvoicesModalOpen] = useState(false);
   
   // Update currentTab when initialTab prop changes
   useEffect(() => {
@@ -4035,8 +4040,13 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="INVOICES"
                 onClick={() => {
-                  isProgrammaticScrollRef.current = true;
-                  setCurrentTab('INVOICES');
+                  // On mobile, open full-screen modal instead of carousel
+                  if (window.innerWidth < 768) {
+                    setIsInvoicesModalOpen(true);
+                  } else {
+                    isProgrammaticScrollRef.current = true;
+                    setCurrentTab('INVOICES');
+                  }
                 }}
                 className={`text-sm font-medium transition-all px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
               >
@@ -6275,6 +6285,14 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
         )}
       </div>
+
+      {/* Invoices Modal - Full screen on mobile */}
+      <Suspense fallback={null}>
+        <InvoicesModal 
+          isOpen={isInvoicesModalOpen}
+          onClose={() => setIsInvoicesModalOpen(false)}
+        />
+      </Suspense>
 
     </>
   );
