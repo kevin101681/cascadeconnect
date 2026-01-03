@@ -86,6 +86,25 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
     };
   }, [isOpen, handleKeyDown, handleFocusTrap]);
 
+  // Handle browser back button
+  useEffect(() => {
+    if (isOpen) {
+      // Push a history state when modal opens
+      window.history.pushState({ modalOpen: 'invoices' }, '');
+
+      const handlePopState = (e: PopStateEvent) => {
+        // Close modal when back button is pressed
+        onClose();
+      };
+
+      window.addEventListener('popstate', handlePopState);
+
+      return () => {
+        window.removeEventListener('popstate', handlePopState);
+      };
+    }
+  }, [isOpen, onClose]);
+
   // Handle backdrop click
   const handleBackdropClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {

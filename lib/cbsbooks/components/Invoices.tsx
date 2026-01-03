@@ -1474,7 +1474,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
             onClick={() => onNavigate('reports')}
             className="px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-full hover:bg-opacity-80 transition-all"
           >
-            <span className="text-sm font-medium">Profit and Loss</span>
+            <span className="text-sm font-medium">P&L</span>
           </button>
           <button
             onClick={() => onNavigate('expenses')}
@@ -1487,7 +1487,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
         {/* New Invoice Button - Right side */}
         <button
           onClick={handleCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:opacity-90 transition-opacity"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-full hover:opacity-90 transition-opacity"
         >
           <Plus size={18} />
           <span className="text-sm font-medium">New Invoice</span>
@@ -1663,9 +1663,9 @@ export const Invoices: React.FC<InvoicesProps> = ({
       {/* Removed FAB GROUP - Actions now in header dropdown menus */}
 
       {/* Header Stats & Controls - Reorganized for even distribution */}
-      <div className="space-y-4 mb-6">
+      <div className="space-y-3 mb-6">
         {/* Row 1: Metrics - Evenly spaced */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {statusFilter !== 'paid' && (
             <div className="bg-primary text-primary-on px-4 h-10 rounded-full flex items-center justify-between gap-2">
               <p className="text-xs font-bold uppercase tracking-wider">Outstanding</p>
