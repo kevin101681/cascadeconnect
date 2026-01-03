@@ -461,6 +461,28 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [currentTab]);
   
+  // Prevent body scroll when mobile tab modal is open
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (currentTab && isMobile) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = '0';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+    };
+  }, [currentTab]);
+  
   // Invoices Modal State - use prop from parent if provided, otherwise use local state
   
   // Handler to open invoices modal
