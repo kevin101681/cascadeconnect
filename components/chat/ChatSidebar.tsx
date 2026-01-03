@@ -1,17 +1,17 @@
 /**
  * CHAT SIDEBAR COMPONENT
- * Channel list with auto-discovery DM logic
+ * Direct messages list with auto-discovery
  * January 3, 2026
  * 
  * Features:
- * - Public channels list
  * - Auto-discovered DM list (all team members)
  * - Unread counts
- * - Channel switching
+ * - Material 3 design
+ * - No public channels (DMs only)
  */
 
 import React, { useState, useEffect } from 'react';
-import { Hash, Users, Plus, Loader2, MessageSquare } from 'lucide-react';
+import { Users, Loader2, MessageSquare, Search } from 'lucide-react';
 import {
   getUserChannels,
   getAllTeamMembers,
@@ -39,13 +39,15 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const [isLoadingChannels, setIsLoadingChannels] = useState(true);
   const [isLoadingTeam, setIsLoadingTeam] = useState(true);
   const [isCreatingDm, setIsCreatingDm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Load user's channels
+  // Load user's channels (only DMs)
   const loadChannels = async () => {
     try {
       setIsLoadingChannels(true);
       const userChannels = await getUserChannels(currentUserId);
-      setChannels(userChannels);
+      // Filter to only show DM channels
+      setChannels(userChannels.filter(ch => ch.type === 'dm'));
     } catch (error) {
       console.error('Error loading channels:', error);
     } finally {
@@ -78,7 +80,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
     try {
       setIsCreatingDm(true);
       
-      // Check if DM channel already exists in the channels list
+      // Check if DM channel already exists
       const existingDm = channels.find(
         (ch) =>
           ch.type === 'dm' &&
@@ -92,7 +94,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
         // Create new DM channel
         const channelId = await findOrCreateDmChannel(currentUserId, userId, currentUserId);
         
-        // Reload channels to get the new one
+        // Reload channels
         await loadChannels();
         
         // Find and select the new channel
@@ -100,7 +102,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
         if (newChannel) {
           onSelectChannel(newChannel);
         } else {
-          // If not found yet, create a temporary channel object
+          // Temporary channel object
           onSelectChannel({
             id: channelId,
             name: userName,
@@ -124,133 +126,136 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
     }
   };
 
-  // Separate public channels and DM channels
-  const publicChannels = channels.filter((ch) => ch.type === 'public');
-  const dmChannels = channels.filter((ch) => ch.type === 'dm');
-
-  // Get DM channel IDs for users we already have channels with
+  // Get user IDs we already have DMs with
   const existingDmUserIds = new Set(
-    dmChannels.flatMap((ch) => ch.dmParticipants || []).filter((id) => id !== currentUserId)
+    channels.flatMap((ch) => ch.dmParticipants || []).filter((id) => id !== currentUserId)
+  );
+
+  // Filter team members by search
+  const filteredTeamMembers = teamMembers.filter((member) =>
+    member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    member.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className={`flex flex-col h-full bg-gray-50 dark:bg-gray-800 ${isCompact ? '' : 'border-r border-gray-200 dark:border-gray-700'}`}>
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-          <MessageSquare className="h-5 w-5" />
-          Team Chat
+    <div className={`flex flex-col h-full bg-surface dark:bg-gray-800 ${isCompact ? '' : 'border-r border-surface-outline-variant dark:border-gray-700'}`}>
+      {/* Header - Material 3 */}
+      <div className="px-4 py-4 border-b border-surface-outline-variant dark:border-gray-700">
+        <h2 className="text-lg font-medium text-surface-on dark:text-white flex items-center gap-2">
+          <MessageSquare className="h-5 w-5 text-primary" />
+          Direct Messages
         </h2>
       </div>
 
-      {/* Channel lists */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Public Channels */}
-        <div className="py-2">
-          <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            Channels
-          </div>
-          {isLoadingChannels ? (
-            <div className="px-4 py-2 flex items-center gap-2 text-gray-500">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading...
-            </div>
-          ) : publicChannels.length === 0 ? (
-            <div className="px-4 py-2 text-sm text-gray-500">No channels yet</div>
-          ) : (
-            publicChannels.map((channel) => (
-              <button
-                key={channel.id}
-                onClick={() => onSelectChannel(channel)}
-                className={`w-full px-4 py-2 flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                  selectedChannelId === channel.id
-                    ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
-                    : 'text-gray-700 dark:text-gray-300'
-                }`}
-              >
-                <Hash className="h-4 w-4 flex-shrink-0" />
-                <span className="flex-1 text-left truncate">{channel.name}</span>
-                {channel.unreadCount && channel.unreadCount > 0 && (
-                  <span className="flex-shrink-0 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
-                    {channel.unreadCount}
-                  </span>
-                )}
-              </button>
-            ))
-          )}
-        </div>
-
-        {/* Direct Messages - Auto-Discovery */}
-        <div className="py-2 border-t border-gray-200 dark:border-gray-700">
-          <div className="px-4 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            Direct Messages
-          </div>
-          
-          {isLoadingTeam ? (
-            <div className="px-4 py-2 flex items-center gap-2 text-gray-500">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading team...
-            </div>
-          ) : teamMembers.length === 0 ? (
-            <div className="px-4 py-2 text-sm text-gray-500">No team members found</div>
-          ) : (
-            <>
-              {/* Show existing DM channels first */}
-              {dmChannels.map((channel) => (
-                <button
-                  key={channel.id}
-                  onClick={() => onSelectChannel(channel)}
-                  className={`w-full px-4 py-2 flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                    selectedChannelId === channel.id
-                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200'
-                      : 'text-gray-700 dark:text-gray-300'
-                  }`}
-                >
-                  <Users className="h-4 w-4 flex-shrink-0" />
-                  <span className="flex-1 text-left truncate">
-                    {channel.otherUser?.name || channel.name}
-                  </span>
-                  {channel.unreadCount && channel.unreadCount > 0 && (
-                    <span className="flex-shrink-0 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full">
-                      {channel.unreadCount}
-                    </span>
-                  )}
-                </button>
-              ))}
-
-              {/* Show all other team members (auto-discovery) */}
-              {teamMembers
-                .filter((member) => !existingDmUserIds.has(member.id))
-                .map((member) => (
-                  <button
-                    key={member.id}
-                    onClick={() => handleDmClick(member.id, member.name)}
-                    disabled={isCreatingDm}
-                    className="w-full px-4 py-2 flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-400 disabled:opacity-50"
-                  >
-                    <Users className="h-4 w-4 flex-shrink-0" />
-                    <span className="flex-1 text-left truncate">{member.name}</span>
-                    {member.internalRole && (
-                      <span className="text-xs text-gray-500">{member.internalRole}</span>
-                    )}
-                  </button>
-                ))}
-            </>
-          )}
+      {/* Search - Material 3 */}
+      <div className="px-4 py-3 border-b border-surface-outline-variant dark:border-gray-700">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search team members..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-3 py-2 bg-surface-container dark:bg-gray-700 border border-surface-outline dark:border-gray-600 rounded-full text-sm text-surface-on dark:text-white placeholder-surface-on-variant dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+          />
         </div>
       </div>
 
-      {/* Footer with create channel button (optional) */}
-      <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
-        <button
-          onClick={() => alert('Channel creation coming soon!')}
-          className="w-full px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 text-sm"
-        >
-          <Plus className="h-4 w-4" />
-          New Channel
-        </button>
+      {/* DM Lists */}
+      <div className="flex-1 overflow-y-auto">
+        {isLoadingChannels || isLoadingTeam ? (
+          <div className="px-4 py-8 flex flex-col items-center gap-2 text-surface-on-variant dark:text-gray-400">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <span className="text-sm">Loading conversations...</span>
+          </div>
+        ) : (
+          <>
+            {/* Active Conversations */}
+            {channels.length > 0 && (
+              <div className="py-2">
+                <div className="px-4 py-2 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">
+                  Recent
+                </div>
+                {channels.map((channel) => (
+                  <button
+                    key={channel.id}
+                    onClick={() => onSelectChannel(channel)}
+                    className={`w-full px-4 py-3 flex items-center gap-3 transition-all ${
+                      selectedChannelId === channel.id
+                        ? 'bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary border-l-4 border-primary'
+                        : 'text-surface-on dark:text-gray-300 hover:bg-surface-container dark:hover:bg-gray-700/50'
+                    }`}
+                  >
+                    {/* Avatar - Material 3 */}
+                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-secondary-container dark:bg-secondary/20 flex items-center justify-center text-secondary-on-container dark:text-secondary font-medium">
+                      {channel.otherUser?.name.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1 min-w-0 text-left">
+                      <div className="font-medium truncate">
+                        {channel.otherUser?.name || channel.name}
+                      </div>
+                      {channel.lastMessage && (
+                        <div className="text-xs text-surface-on-variant dark:text-gray-400 truncate">
+                          {channel.lastMessage.content}
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Unread badge - Material 3 */}
+                    {channel.unreadCount && channel.unreadCount > 0 && (
+                      <div className="flex-shrink-0 h-5 min-w-[20px] px-1.5 bg-error text-error-on rounded-full flex items-center justify-center text-xs font-medium">
+                        {channel.unreadCount > 9 ? '9+' : channel.unreadCount}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* All Team Members */}
+            <div className={`py-2 ${channels.length > 0 ? 'border-t border-surface-outline-variant dark:border-gray-700' : ''}`}>
+              <div className="px-4 py-2 text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">
+                {channels.length > 0 ? 'Start New Conversation' : 'Team Members'}
+              </div>
+              {filteredTeamMembers.length === 0 ? (
+                <div className="px-4 py-8 text-center text-sm text-surface-on-variant dark:text-gray-400">
+                  {searchQuery ? 'No team members found' : 'No other team members'}
+                </div>
+              ) : (
+                filteredTeamMembers
+                  .filter((member) => !existingDmUserIds.has(member.id))
+                  .map((member) => (
+                    <button
+                      key={member.id}
+                      onClick={() => handleDmClick(member.id, member.name)}
+                      disabled={isCreatingDm}
+                      className="w-full px-4 py-3 flex items-center gap-3 text-surface-on dark:text-gray-300 hover:bg-surface-container dark:hover:bg-gray-700/50 transition-all disabled:opacity-50"
+                    >
+                      {/* Avatar - Material 3 */}
+                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-tertiary-container dark:bg-tertiary/20 flex items-center justify-center text-tertiary-on-container dark:text-tertiary font-medium">
+                        {member.name.charAt(0).toUpperCase()}
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="flex-1 min-w-0 text-left">
+                        <div className="font-medium">{member.name}</div>
+                        {member.internalRole && (
+                          <div className="text-xs text-surface-on-variant dark:text-gray-400">
+                            {member.internalRole}
+                          </div>
+                        )}
+                      </div>
+                      
+                      <Users className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
+                    </button>
+                  ))
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 };
-
