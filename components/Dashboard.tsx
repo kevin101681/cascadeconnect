@@ -454,7 +454,11 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Handler to open invoices modal
   const handleOpenInvoicesModal = React.useCallback(() => {
     console.log('🚀 handleOpenInvoicesModal called');
-    setIsInvoicesModalOpen(true);
+    // Use setTimeout to ensure state update happens after current render cycle
+    setTimeout(() => {
+      console.log('⏰ Setting isInvoicesModalOpen to true in setTimeout');
+      setIsInvoicesModalOpen(true);
+    }, 0);
   }, []);
   
   // Update currentTab when initialTab prop changes
