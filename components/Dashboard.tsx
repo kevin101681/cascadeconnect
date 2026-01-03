@@ -4529,11 +4529,20 @@ const Dashboard: React.FC<DashboardProps> = ({
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
                 <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col h-full">
-                  <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 md:rounded-t-3xl flex items-center justify-between">
+                  <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex-shrink-0 md:rounded-t-3xl flex items-center justify-between">
                     <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-primary" />
-                      Invoices & Billing
+                      Invoices
                     </h2>
+                    <button
+                      onClick={() => {
+                        // Trigger new invoice creation in CBSBooksApp
+                        const event = new CustomEvent('cbsbooks-create-invoice');
+                        window.dispatchEvent(event);
+                      }}
+                      className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-full hover:opacity-90 transition-opacity text-sm font-medium"
+                    >
+                      New Invoice
+                    </button>
                   </div>
                   <div className="flex-1 overflow-y-auto">
                     <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>

@@ -141,6 +141,17 @@ export const Invoices: React.FC<InvoicesProps> = ({
 
   const rateOptions = [25, 35, 50, 75, 100, 150];
 
+  // Listen for external create invoice event from Dashboard header
+  useEffect(() => {
+    const handleCreateInvoice = () => {
+      handleCreate();
+    };
+    window.addEventListener('cbsbooks-create-invoice', handleCreateInvoice);
+    return () => {
+      window.removeEventListener('cbsbooks-create-invoice', handleCreateInvoice);
+    };
+  }, []);
+
   // Sorting Options
   const sortOptions = [
     { value: 'date-desc', label: 'Date: Newest' },
@@ -1458,14 +1469,6 @@ export const Invoices: React.FC<InvoicesProps> = ({
       {/* Navigation Bar */}
       <div className="flex flex-wrap gap-2 mb-4 items-center justify-between">
         <TabBar activeView="invoices" onNavigate={onNavigate} />
-        
-        {/* New Invoice Button - Right side */}
-        <button
-          onClick={handleCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-full hover:opacity-90 transition-opacity"
-        >
-          <span className="text-sm font-medium">New Invoice</span>
-        </button>
       </div>
 
       <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleCsvUpload}/>
