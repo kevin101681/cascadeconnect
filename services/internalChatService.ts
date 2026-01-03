@@ -375,7 +375,7 @@ export async function sendMessage(params: {
     };
 
     // Trigger Pusher event
-    await triggerPusherEvent('private-team-chat', 'new-message', {
+    await triggerPusherEvent('team-chat', 'new-message', {
       channelId,
       message: messageWithSender,
     });
@@ -463,7 +463,7 @@ export async function sendTypingIndicator(params: {
   isTyping: boolean;
 }): Promise<void> {
   try {
-    await triggerPusherEvent('private-team-chat', 'typing-indicator', params);
+    await triggerPusherEvent('team-chat', 'typing-indicator', params);
   } catch (error) {
     console.error('❌ Error sending typing indicator:', error);
     // Don't throw - typing indicators are not critical

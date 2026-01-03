@@ -100,7 +100,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   // Pusher: Listen for new messages
   useEffect(() => {
     const pusher = getPusherClient();
-    const channel = pusher.subscribe('private-team-chat');
+    const channel = pusher.subscribe('team-chat');
 
     channel.bind('new-message', (data: { channelId: string; message: Message }) => {
       if (data.channelId === channelId) {
@@ -134,7 +134,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     return () => {
       channel.unbind('new-message');
       channel.unbind('typing-indicator');
-      pusher.unsubscribe('private-team-chat');
+      pusher.unsubscribe('team-chat');
     };
   }, [channelId, currentUserId]);
 

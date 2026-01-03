@@ -56,7 +56,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   // Listen for new messages to update unread count
   useEffect(() => {
     const pusher = getPusherClient();
-    const channel = pusher.subscribe('private-team-chat');
+    const channel = pusher.subscribe('team-chat');
 
     channel.bind('new-message', () => {
       loadUnreadCounts();
@@ -64,7 +64,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
     return () => {
       channel.unbind('new-message');
-      pusher.unsubscribe('private-team-chat');
+      pusher.unsubscribe('team-chat');
     };
   }, []);
 

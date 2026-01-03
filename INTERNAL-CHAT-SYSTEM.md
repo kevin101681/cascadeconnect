@@ -208,7 +208,7 @@ import { ChatWidget } from './components/chat/ChatWidget';
 3. New employees automatically appear in the list without manual setup
 
 ### Pusher Events
-**Channel:** `private-team-chat`
+**Channel:** `team-chat` (public channel)
 
 **Events:**
 - `new-message` - Broadcast when someone sends a message
@@ -219,6 +219,8 @@ import { ChatWidget } from './components/chat/ChatWidget';
   ```js
   { channelId: string, userId: string, userName: string, isTyping: boolean }
   ```
+
+**Note:** We use a public Pusher channel since the chat is already protected by app-level authentication (admin/employee only). This avoids needing a separate Pusher auth endpoint.
 
 ### Message Format with Mentions
 Messages are stored as plain text with special syntax:
