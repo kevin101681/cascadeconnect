@@ -107,11 +107,11 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
           bg-surface dark:bg-gray-800 shadow-elevation-3 overflow-hidden flex flex-col
           
           /* Mobile: Full screen takeover */
-          w-full h-full rounded-none
+          fixed inset-0 w-screen h-screen rounded-none
           
           /* Desktop: Centered modal with breathing room */
-          md:w-[95vw] md:h-[90vh] md:max-w-7xl md:rounded-3xl
-          md:absolute md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2
+          md:relative md:w-[95vw] md:h-[90vh] md:max-w-7xl md:rounded-3xl
+          md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2
         " 
         onClick={(e) => e.stopPropagation()}
       >
