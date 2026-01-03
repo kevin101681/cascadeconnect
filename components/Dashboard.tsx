@@ -4348,8 +4348,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           className={`fixed top-16 left-0 right-0 bottom-0 z-[1000] bg-surface dark:bg-gray-900 flex flex-col pt-4 md:pt-0 md:relative md:top-auto md:left-auto md:right-auto md:bottom-auto md:z-auto md:bg-transparent md:block ${currentTab === 'CLAIMS' ? 'md:-mx-6' : ''}`}
         >
         <AnimatePresence mode="wait" initial={false}>
-          {/* Mobile Close FAB - shown on all tabs as overlay */}
-          {currentTab && (
+          {/* Mobile Close FAB - shown on tab list view, hidden when nested modals are open */}
+          {currentTab && !selectedClaimForModal && !selectedTaskForModal && !selectedThreadId && (
             <>
               <button
                 onClick={() => setCurrentTab(null)}
