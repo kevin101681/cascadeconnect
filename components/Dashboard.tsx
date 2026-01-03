@@ -436,7 +436,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual)
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | null>('CLAIMS');
-  const previousTabRef = useRef<typeof currentTab>(null);
+  const previousTabRef = useRef<typeof currentTab>('CLAIMS'); // Initialize with default tab to prevent treating it as "opening"
   
   // Handle browser back button to close modal (mobile only, and only when first opening a tab)
   useEffect(() => {
@@ -1935,7 +1935,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               <Button
                 variant="filled"
                 onClick={() => onNewClaim()}
-                icon={<Plus className="h-4 w-4" />}
                 className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
               >
                 <span className="hidden sm:inline">Add Claim</span>
@@ -1945,7 +1944,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               <Button
                 variant="filled"
                 onClick={() => setShowNewClaimModal(true)}
-                icon={<Plus className="h-4 w-4" />}
                 className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
               >
                 <span className="hidden sm:inline">New Claim</span>
@@ -2464,7 +2462,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                   onAddTask(newTask);
                 }
               }}
-              icon={<Plus className="h-4 w-4" />}
               className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
             >
               <span className="hidden sm:inline">New Task</span>
@@ -2726,7 +2723,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => {
                 setShowNewMessageModal(true);
               }}
-              icon={<Plus className="h-4 w-4" />}
               className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
             >
               <span className="hidden sm:inline">Compose</span>

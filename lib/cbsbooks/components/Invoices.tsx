@@ -1464,7 +1464,6 @@ export const Invoices: React.FC<InvoicesProps> = ({
           onClick={handleCreate}
           className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-full hover:opacity-90 transition-opacity"
         >
-          <Plus size={18} />
           <span className="text-sm font-medium">New Invoice</span>
         </button>
       </div>

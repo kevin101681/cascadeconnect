@@ -404,7 +404,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
 
                 {/* Date & Status Header */}
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg md:text-2xl font-normal text-surface-on dark:text-gray-100">
+                  <h3 className="text-xl font-normal text-surface-on dark:text-gray-100">
                     {formatDate(actualSelectedCall.createdAt)}
                   </h3>
                   <div className="flex items-center gap-2">

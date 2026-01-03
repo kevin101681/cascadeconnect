@@ -138,7 +138,7 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
   const renderContent = () => (
     <>
       {/* Header */}
-      <div className="flex-shrink-0 px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface-container/30 dark:bg-gray-700/30">
+      <div className="flex-shrink-0 px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface dark:bg-gray-800">
         <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
           {activeTasks.length > 0 && (
             <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
@@ -180,7 +180,7 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
           </div>
           <button
             type="submit"
-            className="flex-shrink-0 px-4 py-2 h-10 bg-primary hover:bg-primary/90 text-primary-on rounded-lg transition-colors font-medium"
+            className="flex-shrink-0 px-4 py-2 h-10 bg-primary hover:bg-primary/90 text-primary-on rounded-full transition-colors font-medium"
           >
             Add
           </button>
@@ -308,8 +308,10 @@ const TaskItem: React.FC<TaskItemProps> = ({
   const claimDisplay = claim?.claimNumber || task.claimId?.substring(0, 8);
   return (
     <div
-      className={`flex items-start gap-3 p-3 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 transition-colors group ${
-        task.isCompleted ? 'opacity-50' : ''
+      className={`group flex items-start gap-3 p-4 rounded-2xl border transition-all ${
+        task.isCompleted 
+          ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75' 
+          : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
       }`}
     >
       <button
