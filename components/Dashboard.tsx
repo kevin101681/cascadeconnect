@@ -2662,7 +2662,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const renderMessagesTab = () => (
     <>
-    <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full md:max-h-[calc(100vh-8rem)]">
+    <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
        {/* Left Column: Inbox List (Gmail Style) */}
        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-16 shrink-0 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none">
