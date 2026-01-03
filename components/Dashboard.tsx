@@ -448,8 +448,14 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Debug: Log when modal state changes
   useEffect(() => {
-    console.log('isInvoicesModalOpen changed to:', isInvoicesModalOpen);
+    console.log('🎯 isInvoicesModalOpen changed to:', isInvoicesModalOpen);
   }, [isInvoicesModalOpen]);
+  
+  // Handler to open invoices modal
+  const handleOpenInvoicesModal = React.useCallback(() => {
+    console.log('🚀 handleOpenInvoicesModal called');
+    setIsInvoicesModalOpen(true);
+  }, []);
   
   // Update currentTab when initialTab prop changes
   useEffect(() => {
@@ -4049,14 +4055,14 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="INVOICES"
                 onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
                   // On mobile, open full-screen modal instead of carousel
                   const isMobile = window.innerWidth < 768;
                   console.log('Invoices tab clicked, isMobile:', isMobile);
                   if (isMobile) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     console.log('Opening invoices modal');
-                    setIsInvoicesModalOpen(true);
+                    handleOpenInvoicesModal();
                   } else {
                     console.log('Setting tab to INVOICES');
                     isProgrammaticScrollRef.current = true;
