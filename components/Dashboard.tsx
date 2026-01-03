@@ -465,12 +465,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Handler to open invoices modal
   
-  // Update currentTab when initialTab prop changes
-  useEffect(() => {
-    if (initialTab) {
-      setCurrentTab(initialTab);
-    }
-  }, [initialTab]);
+  // Note: Removed initialTab effect - tabs only open when user clicks them
   
   // Ref for tabs container  
   const tabsContainerRef = useRef<HTMLDivElement>(null);
@@ -4330,7 +4325,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Content Area - Full-screen overlay on mobile (when tab is active), inline on desktop */}
         {currentTab && (
         <div
-          className={`fixed inset-0 z-50 bg-surface dark:bg-gray-900 overflow-y-auto md:relative md:z-auto md:bg-transparent md:inset-auto min-h-[calc(100vh-300px)] md:min-h-0 ${currentTab === 'CLAIMS' ? 'md:-mx-6' : ''}`}
+          className={`fixed inset-0 z-[100] bg-surface dark:bg-gray-900 overflow-y-auto md:relative md:z-auto md:bg-transparent md:inset-auto min-h-[calc(100vh-300px)] md:min-h-0 ${currentTab === 'CLAIMS' ? 'md:-mx-6' : ''}`}
         >
         <AnimatePresence mode="wait" initial={false}>
           {/* Mobile Close FAB - shown on all tabs as overlay */}
@@ -4338,7 +4333,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <>
               <button
                 onClick={() => setCurrentTab(null)}
-                className="md:hidden fixed top-4 right-4 z-[60] w-12 h-12 bg-surface-container dark:bg-gray-700 rounded-full shadow-lg flex items-center justify-center text-surface-on dark:text-gray-100 hover:bg-surface-container-high dark:hover:bg-gray-600 transition-all"
+                className="md:hidden fixed top-4 right-4 z-[110] w-12 h-12 bg-surface-container dark:bg-gray-700 rounded-full shadow-lg flex items-center justify-center text-surface-on dark:text-gray-100 hover:bg-surface-container-high dark:hover:bg-gray-600 transition-all"
               >
                 <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
