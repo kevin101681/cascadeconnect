@@ -960,20 +960,6 @@ function App() {
 
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
   
-  // Invoices Modal State (moved to App level to persist across Dashboard re-renders)
-  const [isInvoicesModalOpen, setIsInvoicesModalOpen] = useState(false);
-  
-  // Debug wrapper for setter
-  const handleSetInvoicesModalOpen = useCallback((open: boolean) => {
-    console.log('🔧 APP.TSX - handleSetInvoicesModalOpen called with:', open);
-    setIsInvoicesModalOpen(open);
-  }, []);
-  
-  // Debug: Log when App-level modal state changes
-  useEffect(() => {
-    console.log('📱 APP.TSX - isInvoicesModalOpen changed to:', isInvoicesModalOpen);
-  }, [isInvoicesModalOpen]);
-  
   // Alert modal state
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<'info' | 'success' | 'error'>('info');
@@ -3918,8 +3904,6 @@ Assigned By: ${assignerName}
           onDeleteTask={handleDeleteTask}
           onUpdateTask={handleUpdateTask}
           onNavigate={setCurrentView}
-          isInvoicesModalOpen={isInvoicesModalOpen}
-          onSetInvoicesModalOpen={handleSetInvoicesModalOpen}
         />
       )}
       {currentView === 'TASKS' && (
@@ -3967,8 +3951,6 @@ Assigned By: ${assignerName}
           onDeleteTask={handleDeleteTask}
           onUpdateTask={handleUpdateTask}
           onNavigate={setCurrentView}
-          isInvoicesModalOpen={isInvoicesModalOpen}
-          onSetInvoicesModalOpen={handleSetInvoicesModalOpen}
         />
       )}
       {currentView === 'TEAM' && (

@@ -27,12 +27,6 @@ import PayrollDashboard from './PayrollDashboard';
 
 // Import CBS Books App directly for inline rendering in tab
 const CBSBooksApp = React.lazy(() => import('../lib/cbsbooks/App'));
-// Import Invoices Modal for mobile full-screen view
-const InvoicesModal = React.lazy(() => import('./InvoicesModal').catch(err => {
-  console.error('Failed to load InvoicesModal:', err);
-  // Return a fallback component
-  return { default: () => <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center text-white">Failed to load Invoices. Please refresh the page.</div> };
-}));
 // Lazy load heavy components to improve initial load time
 // Add error handling for failed dynamic imports
 const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err => {
@@ -317,10 +311,6 @@ interface DashboardProps {
   onDeleteTask: (taskId: string) => void;
   onUpdateTask?: (taskId: string, updates: Partial<Task>) => void;
   onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS') => void;
-  
-  // Invoices Modal State (controlled by parent to persist across re-renders)
-  isInvoicesModalOpen?: boolean;
-  onSetInvoicesModalOpen?: (open: boolean) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -365,9 +355,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   onToggleTask,
   onDeleteTask,
   onUpdateTask,
-  onNavigate,
-  isInvoicesModalOpen: isInvoicesModalOpenProp,
-  onSetInvoicesModalOpen
+  onNavigate
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
@@ -450,24 +438,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'>(initialTab || 'CLAIMS');
   
   // Invoices Modal State - use prop from parent if provided, otherwise use local state
-  const [isInvoicesModalOpenLocal, setIsInvoicesModalOpenLocal] = useState(false);
-  const isInvoicesModalOpen = isInvoicesModalOpenProp !== undefined ? isInvoicesModalOpenProp : isInvoicesModalOpenLocal;
-  const setIsInvoicesModalOpen = onSetInvoicesModalOpen || setIsInvoicesModalOpenLocal;
-  
-  // Debug: Log when modal state changes
-  useEffect(() => {
-    console.log('🎯 isInvoicesModalOpen changed to:', isInvoicesModalOpen);
-  }, [isInvoicesModalOpen]);
   
   // Handler to open invoices modal
-  const handleOpenInvoicesModal = React.useCallback(() => {
-    console.log('🚀 handleOpenInvoicesModal called');
-    // Use setTimeout to ensure state update happens after current render cycle
-    setTimeout(() => {
-      console.log('⏰ Setting isInvoicesModalOpen to true in setTimeout');
-      setIsInvoicesModalOpen(true);
-    }, 0);
-  }, [setIsInvoicesModalOpen]);
   
   // Update currentTab when initialTab prop changes
   useEffect(() => {
@@ -476,17 +448,10 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [initialTab]);
   
-  // Carousel ref for mobile
-  const carouselRef = useRef<HTMLDivElement>(null);
-  const carouselInnerRef = useRef<HTMLDivElement>(null);
+  // Ref for tabs container  
   const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const isUserScrollingRef = useRef(false);
-  const isProgrammaticScrollRef = useRef(false); // Track when we're scrolling from tab click
-  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastScrollIndexRef = useRef<number>(0);
-  const hasInitializedScrollRef = useRef(false);
   
-  // Swipe gesture state for mobile (kept for desktop compatibility, but not used on mobile)
+  // Swipe gesture state for desktop swipe navigation
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [swipeProgress, setSwipeProgress] = useState<number>(0); // 0 to 1, represents swipe completion
@@ -918,78 +883,10 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [currentTab]);
 
-  // Sync carousel scroll position with currentTab on mobile (only when not user-scrolling)
-  useEffect(() => {
-    if (!carouselRef.current || isUserScrollingRef.current) return;
-    const availableTabs = getAvailableTabs();
-    const currentIndex = availableTabs.indexOf(currentTab);
-    if (currentIndex >= 0) {
-      const container = carouselRef.current;
-      const cardWidth = carouselContainerWidth > 0 ? carouselContainerWidth : container.clientWidth;
-      const slideWidth = cardWidth + 16; // card width + gap
-      const targetScroll = currentIndex * slideWidth;
-      const currentScroll = container.scrollLeft;
-      // Only scroll if we're significantly off target (more than 10px)
-      if (Math.abs(currentScroll - targetScroll) > 10) {
-        // Use immediate scroll on initial load, smooth for tab changes
-        const isInitialLoad = currentScroll === 0 && currentIndex > 0;
-        container.scrollTo({
-          left: targetScroll,
-          behavior: isInitialLoad ? 'auto' : 'smooth'
-        });
-      }
-    }
-  }, [currentTab]);
-
-  // Calculate container width for carousel slides to match homeowner info card
+  // Calculate container width for homeowner info card
   // Use refs to measure the actual homeowner info card container width
   const homeownerCardContainerRef = useRef<HTMLDivElement>(null);
-  const [carouselContainerWidth, setCarouselContainerWidth] = useState<number>(0);
   
-  useEffect(() => {
-    // Measure the homeowner info card container width to match carousel cards
-    const updateContainerWidth = () => {
-      if (homeownerCardContainerRef.current) {
-        const width = homeownerCardContainerRef.current.clientWidth;
-        if (width > 0) {
-          setCarouselContainerWidth(width);
-        }
-      }
-    };
-    
-    // Initial measurement
-    updateContainerWidth();
-    
-    // Update on resize to match dynamic homeowner card width
-    window.addEventListener('resize', updateContainerWidth);
-    return () => window.removeEventListener('resize', updateContainerWidth);
-  }, []);
-
-  // Ensure carousel starts at correct position on initial load
-  useEffect(() => {
-    if (carouselRef.current && carouselContainerWidth > 0 && !hasInitializedScrollRef.current) {
-      const container = carouselRef.current;
-      
-      const setInitialScroll = () => {
-        if (container) {
-          // Ensure scroll starts at 0
-          if (container.scrollLeft !== 0) {
-            container.scrollLeft = 0;
-          }
-        }
-      };
-      
-      // Try multiple times to ensure it works
-      requestAnimationFrame(() => {
-        setInitialScroll();
-        setTimeout(() => {
-          setInitialScroll();
-          hasInitializedScrollRef.current = true;
-        }, 50);
-      });
-    }
-  }, [carouselContainerWidth]);
-
   // Prevent page scroll when switching to Manual tab
   useEffect(() => {
     if (currentTab === 'MANUAL') {
@@ -1001,15 +898,6 @@ const Dashboard: React.FC<DashboardProps> = ({
       });
     }
   }, [currentTab]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (scrollTimeoutRef.current) {
-        clearTimeout(scrollTimeoutRef.current);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (initialThreadId) setSelectedThreadId(initialThreadId);
@@ -3943,7 +3831,6 @@ const Dashboard: React.FC<DashboardProps> = ({
            <button 
               data-tab="CLAIMS"
               onClick={() => {
-                isProgrammaticScrollRef.current = true;
                 setCurrentTab('CLAIMS');
               }}
               className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'CLAIMS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
@@ -3957,7 +3844,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="TASKS"
                 onClick={() => {
-                  isProgrammaticScrollRef.current = true;
                   setCurrentTab('TASKS');
                 }}
                 className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'TASKS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
@@ -3970,7 +3856,6 @@ const Dashboard: React.FC<DashboardProps> = ({
             <button 
               data-tab="MESSAGES"
               onClick={() => {
-                isProgrammaticScrollRef.current = true;
                 setCurrentTab('MESSAGES');
               }}
               className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'MESSAGES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
@@ -3985,7 +3870,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 data-tab="DOCUMENTS"
                 onClick={(e) => {
                   e.preventDefault();
-                  isProgrammaticScrollRef.current = true;
                   setCurrentTab('DOCUMENTS');
                 }}
                 className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
@@ -4001,7 +3885,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 data-tab="MANUAL"
                 onClick={(e) => {
                   e.preventDefault();
-                  isProgrammaticScrollRef.current = true;
                   setCurrentTab('MANUAL');
                 }}
                 className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'MANUAL' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
@@ -4024,7 +3907,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="NOTES"
                 onClick={() => {
-                  isProgrammaticScrollRef.current = true;
                   setCurrentTab('NOTES');
                 }}
                 className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'NOTES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
@@ -4039,7 +3921,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="CALLS"
                 onClick={() => {
-                  isProgrammaticScrollRef.current = true;
                   setCurrentTab('CALLS');
                 }}
                 className={`text-sm font-medium transition-all px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'CALLS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
@@ -4053,7 +3934,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="PAYROLL"
                 onClick={() => {
-                  isProgrammaticScrollRef.current = true;
                   setCurrentTab('PAYROLL');
                 }}
                 className={`text-sm font-medium transition-all px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'PAYROLL' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
@@ -4066,20 +3946,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && !isHomeownerView && currentUser?.role !== 'Employee' && (
               <button 
                 data-tab="INVOICES"
-                onClick={(e) => {
-                  // On mobile, open full-screen modal instead of carousel
-                  const isMobile = window.innerWidth < 768;
-                  console.log('Invoices tab clicked, isMobile:', isMobile);
-                  if (isMobile) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Opening invoices modal');
-                    handleOpenInvoicesModal();
-                  } else {
-                    console.log('Setting tab to INVOICES');
-                    isProgrammaticScrollRef.current = true;
-                    setCurrentTab('INVOICES');
-                  }
+                onClick={() => {
+                  setCurrentTab('INVOICES');
                 }}
                 className={`text-sm font-medium transition-all px-4 py-2 rounded-full flex-shrink-0 ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
               >
@@ -4088,75 +3956,18 @@ const Dashboard: React.FC<DashboardProps> = ({
             )}
         </div>
 
-        {/* Content Area */}
-        {/* Mobile Carousel - All tabs pre-loaded */}
+        {/* Content Area - Mobile Carousel (HIDDEN - now using desktop view for all) */}
         <div
-          ref={carouselRef}
-          className="md:hidden min-h-[calc(100vh-300px)] relative overflow-x-auto overflow-y-visible snap-x snap-mandatory"
-          style={{
-            scrollSnapType: 'x mandatory',
-            scrollPaddingLeft: '0px',
-            scrollPaddingRight: '0px',
-            WebkitOverflowScrolling: 'touch',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            paddingLeft: '6px',
-            paddingRight: '6px'
-          } as React.CSSProperties}
-          onScroll={(e) => {
-            // Mark that user is scrolling
-            isUserScrollingRef.current = true;
-            
-            // Clear existing timeout
-            if (scrollTimeoutRef.current) {
-              clearTimeout(scrollTimeoutRef.current);
-            }
-            
-            // Skip updating currentTab if this is a programmatic scroll (from clicking a tab button)
-            if (!isProgrammaticScrollRef.current) {
-              // Update currentTab based on scroll position, but limit to one card movement
-              const container = e.currentTarget;
-              const scrollLeft = container.scrollLeft;
-              const viewportWidth = container.clientWidth;
-              const availableTabs = getAvailableTabs();
-              const currentTabIndex = availableTabs.indexOf(currentTab);
-              const calculatedIndex = Math.round(scrollLeft / viewportWidth);
-              
-              // Clamp the index to be at most ±1 from the current tab index to prevent skipping cards
-              const clampedIndex = Math.max(
-                0,
-                Math.min(
-                  availableTabs.length - 1,
-                  Math.max(currentTabIndex - 1, Math.min(currentTabIndex + 1, calculatedIndex))
-                )
-              );
-              
-              // Only update if the clamped index is different from current tab
-              if (clampedIndex >= 0 && clampedIndex < availableTabs.length && clampedIndex !== currentTabIndex) {
-                setCurrentTab(availableTabs[clampedIndex]);
-                lastScrollIndexRef.current = clampedIndex;
-              }
-            }
-            
-            // Reset user scrolling flag and programmatic scroll flag after scroll ends
-            scrollTimeoutRef.current = setTimeout(() => {
-              isUserScrollingRef.current = false;
-              isProgrammaticScrollRef.current = false;
-            }, 150);
-          }}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          className="hidden min-h-[calc(100vh-300px)] md:min-h-0 relative overflow-hidden"
         >
-          <div 
-            ref={carouselInnerRef} 
-            className="flex h-full gap-4 px-6"
-            style={{ 
-              width: carouselContainerWidth > 0 ? `${getAvailableTabs().length * carouselContainerWidth + (getAvailableTabs().length - 1) * 16}px` : 'auto',
-              minWidth: '100%'
-            }}
-          >
+        <AnimatePresence mode={swipeProgress > 0 ? undefined : "wait"} initial={false}>
             {/* CLAIMS Tab */}
             <div 
               className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
             >
               <div className="w-full min-h-[calc(100vh-300px)]">
                 <div className="max-w-7xl mx-auto">
@@ -4169,7 +3980,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto">
@@ -4183,7 +3994,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto">
@@ -4205,7 +4016,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* MESSAGES Tab */}
             <div 
               className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+              style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
             >
               <div className="w-full min-h-[calc(100vh-300px)]">
                 <div className="max-w-7xl mx-auto">
@@ -4218,7 +4029,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {userRole === UserRole.HOMEOWNER && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto pb-4">
@@ -4377,7 +4188,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {userRole === UserRole.HOMEOWNER && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto">
@@ -4391,7 +4202,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
@@ -4413,7 +4224,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && currentUser?.role !== 'Employee' && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
@@ -4427,7 +4238,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && currentUser?.role !== 'Employee' && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
@@ -4458,7 +4269,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && currentUser?.role !== 'Employee' && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
@@ -4472,7 +4283,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && currentUser?.role !== 'Employee' && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: carouselContainerWidth > 0 ? `${carouselContainerWidth}px` : '100%' }}
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
@@ -4498,15 +4309,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
               </div>
             )}
-          </div>
+        </AnimatePresence>
         </div>
 
-        {/* Desktop Content Area - Keep existing behavior */}
+        {/* Desktop Content Area - Now used for both mobile and desktop */}
         <div
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
-          className="hidden md:block md:touch-none min-h-[calc(100vh-300px)] md:min-h-0 relative overflow-hidden"
+          className="md:touch-none min-h-[calc(100vh-300px)] md:min-h-0 relative overflow-hidden"
         >
         <AnimatePresence mode={swipeProgress > 0 ? undefined : "wait"} initial={false}>
           {currentTab === 'CLAIMS' && (
@@ -6055,27 +5866,6 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>,
           document.body
         )}
-        
-        {/* Invoices Modal - Full screen on mobile */}
-        {console.log('🖼️ [ADMIN VIEW] Rendering modal section, isInvoicesModalOpen:', isInvoicesModalOpen)}
-        <Suspense fallback={
-          <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center">
-            <div className="text-white">Loading Invoices...</div>
-          </div>
-        }>
-          {isInvoicesModalOpen && (
-            <>
-              {console.log('✨ [ADMIN VIEW] About to render InvoicesModal component')}
-              <InvoicesModal 
-                isOpen={isInvoicesModalOpen}
-                onClose={() => {
-                  console.log('Closing invoices modal');
-                  setIsInvoicesModalOpen(false);
-                }}
-              />
-            </>
-          )}
-        </Suspense>
       </>
     );
   }
@@ -6340,26 +6130,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         )}
       </div>
 
-      {/* Invoices Modal - Full screen on mobile */}
-      {console.log('🖼️ Rendering modal section, isInvoicesModalOpen:', isInvoicesModalOpen)}
-      <Suspense fallback={
-        <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center">
-          <div className="text-white">Loading Invoices...</div>
-        </div>
-      }>
-        {isInvoicesModalOpen && (
-          <>
-            {console.log('✨ About to render InvoicesModal component')}
-            <InvoicesModal 
-              isOpen={isInvoicesModalOpen}
-              onClose={() => {
-                console.log('Closing invoices modal');
-                setIsInvoicesModalOpen(false);
-              }}
-            />
-          </>
-        )}
-      </Suspense>
 
     </>
   );
