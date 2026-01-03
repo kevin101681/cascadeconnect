@@ -4020,6 +4020,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             )}
             
             {/* CHAT TAB - Admin Only (Team Messaging) */}
+            {/* HIDDEN: Using floating widget instead. Uncomment to restore tab.
             {isAdmin && !isHomeownerView && (
               <button 
                 data-tab="CHAT"
@@ -4032,6 +4033,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 Chat
               </button>
             )}
+            */}
             
             {/* PAYROLL TAB - Administrator Only (hidden for employees and homeowner view) */}
             {isAdmin && !isHomeownerView && currentUser?.role !== 'Employee' && (
@@ -4559,6 +4561,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </motion.div>
           )}
 
+          {/* HIDDEN: CHAT tab content - Using floating widget instead. Uncomment to restore.
           {currentTab === 'CHAT' && isAdmin && (
             <motion.div 
               key="chat"
@@ -4585,6 +4588,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             </motion.div>
           )}
+          */}
 
           {currentTab === 'PAYROLL' && isAdmin && currentUser?.role !== 'Employee' && (
             <motion.div 
