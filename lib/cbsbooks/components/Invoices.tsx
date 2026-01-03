@@ -4,7 +4,7 @@ import { Invoice, Client, InvoiceItem, ViewState } from '../types';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { TabBar } from './ui/TabBar';
-import { Plus, Trash2, Download, Search, X, Upload, Database, SlidersHorizontal, Camera, ArrowUpDown, Share2, Check, Sparkles, Loader2, ScanText, Link as LinkIcon, Mail, Send, CreditCard, Pencil, Calendar } from 'lucide-react';
+import { Plus, Trash2, Download, Search, X, Upload, Database, SlidersHorizontal, Camera, ArrowUpDown, Share2, Check, Sparkles, Loader2, ScanText, Link as LinkIcon, Mail, Send, CreditCard, Pencil, Calendar as CalendarIcon } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { FloatingMenu, ActionItem } from './ui/FloatingMenu';
 import { api } from '../services/api';
@@ -12,7 +12,6 @@ import { CheckScanner } from './CheckScanner';
 import { InvoiceScanner } from './InvoiceScanner';
 import { Dropdown } from './ui/Dropdown';
 import { parseInvoiceFromText } from '../services/geminiService';
-import { Calendar } from 'lucide-react';
 import CalendarPicker from './CalendarPicker';
 
 interface InvoicesProps {
@@ -977,7 +976,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                       className="w-full bg-transparent dark:bg-transparent rounded-lg px-3 py-2.5 text-sm text-surface-on dark:text-gray-100 border-2 border-surface-outline-variant dark:border-gray-600 hover:border-surface-on dark:hover:border-gray-500 focus-within:border-primary dark:focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 dark:focus-within:ring-primary/20 outline-none transition-all cursor-pointer flex items-center justify-between"
                     >
                       <span>{currentInvoice.date ? new Date(currentInvoice.date).toLocaleDateString() : 'Select date'}</span>
-                      <Calendar className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
+                      <CalendarIcon className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
                     </button>
                 </div>
                 <div>
@@ -988,7 +987,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                       className="w-full bg-transparent dark:bg-transparent rounded-lg px-3 py-2.5 text-sm text-surface-on dark:text-gray-100 border-2 border-surface-outline-variant dark:border-gray-600 hover:border-surface-on dark:hover:border-gray-500 focus-within:border-primary dark:focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 dark:focus-within:ring-primary/20 outline-none transition-all cursor-pointer flex items-center justify-between"
                     >
                       <span>{currentInvoice.dueDate ? new Date(currentInvoice.dueDate).toLocaleDateString() : 'Select date'}</span>
-                      <Calendar className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
+                      <CalendarIcon className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
                     </button>
                 </div>
                 {/* Date Paid - Visible only if Paid */}
@@ -1001,7 +1000,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                           className="w-full bg-transparent dark:bg-transparent rounded-lg px-3 py-2.5 text-sm text-surface-on dark:text-gray-100 border-2 border-surface-outline-variant dark:border-gray-600 hover:border-surface-on dark:hover:border-gray-500 focus-within:border-primary dark:focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20 dark:focus-within:ring-primary/20 outline-none transition-all cursor-pointer flex items-center justify-between"
                         >
                           <span>{currentInvoice.datePaid ? new Date(currentInvoice.datePaid).toLocaleDateString() : 'Select date'}</span>
-                          <Calendar className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
+                          <CalendarIcon className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
                         </button>
                     </div>
                 )}
