@@ -170,29 +170,17 @@ export default defineConfig(({ mode }) => {
               return 'cbsbooks-app';
             }
             
-            // Split large vendor libraries into separate chunks
+            // Split only truly independent large libraries
             if (id.includes('node_modules')) {
-              // React and related libraries
-              if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-                return 'vendor-react';
-              }
-              // Clerk authentication
-              if (id.includes('@clerk')) {
-                return 'vendor-clerk';
-              }
-              // UI libraries
-              if (id.includes('framer-motion') || id.includes('lucide-react')) {
-                return 'vendor-ui';
-              }
-              // Pusher real-time
-              if (id.includes('pusher')) {
-                return 'vendor-pusher';
-              }
-              // PDF/document libraries
-              if (id.includes('pdfjs') || id.includes('pdf') || id.includes('react-pageflip')) {
+              // PDF libraries are large and independent
+              if (id.includes('pdfjs') || id.includes('pdf-dist')) {
                 return 'vendor-pdf';
               }
-              // All other vendor code
+              // Pusher is independent
+              if (id.includes('pusher-js')) {
+                return 'vendor-pusher';
+              }
+              // Keep everything else together (React, UI libs, etc.)
               return 'vendor';
             }
           },
