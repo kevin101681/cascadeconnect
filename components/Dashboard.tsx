@@ -4312,56 +4312,19 @@ const Dashboard: React.FC<DashboardProps> = ({
         </AnimatePresence>
         </div>
 
-        {/* Desktop Content Area - Now used for both mobile and desktop */}
+        {/* Content Area - Now used for both mobile and desktop */}
         <div
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-          className="md:touch-none min-h-[calc(100vh-300px)] md:min-h-0 relative overflow-hidden"
+          className="min-h-[calc(100vh-300px)] md:min-h-0"
         >
-        <AnimatePresence mode={swipeProgress > 0 ? undefined : "wait"} initial={false}>
+        <AnimatePresence mode="wait" initial={false}>
           {currentTab === 'CLAIMS' && (
             <motion.div 
               key="claims"
-              className="max-w-7xl mx-auto md:relative"
-              style={{
-                position: swipeProgress > 0 ? 'absolute' : 'relative',
-                width: '100%',
-                transform: swipeProgress > 0 && swipeDirection === 'left' 
-                  ? `translateX(${-swipeProgress * 100}%)` 
-                  : swipeProgress > 0 && swipeDirection === 'right'
-                  ? `translateX(${swipeProgress * 100}%)`
-                  : 'translateX(0)',
-                zIndex: swipeProgress > 0 ? 1 : 0,
-                willChange: swipeProgress > 0 ? 'transform' : 'auto'
-              }}
+              className="max-w-7xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
-            >
-              <div className="max-w-7xl mx-auto pb-4">
-                {renderClaimsList(displayClaims, isHomeownerView)}
-              </div>
-            </motion.div>
-          )}
-          
-          {/* Target tab during swipe - CLAIMS */}
-          {swipeProgress > 0 && targetTab === 'CLAIMS' && currentTab !== 'CLAIMS' && (
-            <motion.div 
-              key="claims-target"
-              className="max-w-7xl mx-auto min-h-[calc(100vh-300px)] md:min-h-0 absolute inset-0"
-              style={{
-                width: '100%',
-                transform: swipeDirection === 'left'
-                  ? `translateX(${(1 - swipeProgress) * 100}%)`
-                  : `translateX(${-(1 - swipeProgress) * 100}%)`,
-                zIndex: 2,
-                willChange: 'transform'
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="max-w-7xl mx-auto pb-4">
                 {renderClaimsList(displayClaims, isHomeownerView)}
@@ -4372,44 +4335,11 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'TASKS' && isAdmin && (
             <motion.div 
               key="tasks"
-              className="max-w-7xl mx-auto md:relative"
-              style={{ 
-                position: swipeProgress > 0 ? 'absolute' : 'relative',
-                width: '100%',
-                transform: swipeProgress > 0 && swipeDirection === 'left' 
-                  ? `translateX(${-swipeProgress * 100}%)` 
-                  : swipeProgress > 0 && swipeDirection === 'right'
-                  ? `translateX(${swipeProgress * 100}%)`
-                  : 'translateX(0)',
-                zIndex: swipeProgress > 0 ? 1 : 0
-              }}
+              className="max-w-7xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: swipeProgress > 0 ? 0 : 0.35, ease: "easeOut" }}
-            >
-              <div className="max-w-7xl mx-auto pb-4">
-                {renderTasksTab()}
-              </div>
-            </motion.div>
-          )}
-          
-          {/* Target tab during swipe - TASKS */}
-          {swipeProgress > 0 && targetTab === 'TASKS' && currentTab !== 'TASKS' && isAdmin && (
-            <motion.div 
-              key="tasks-target"
-              className="max-w-7xl mx-auto absolute inset-0"
-              style={{
-                width: '100%',
-                transform: swipeDirection === 'left'
-                  ? `translateX(${(1 - swipeProgress) * 100}%)`
-                  : `translateX(${-(1 - swipeProgress) * 100}%)`,
-                zIndex: 2,
-                willChange: 'transform'
-              }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="max-w-7xl mx-auto pb-4">
                 {renderTasksTab()}
@@ -4421,7 +4351,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'NOTES' && isAdmin && (
             <motion.div 
               key="notes"
-              className="max-w-7xl mx-auto md:relative"
+              className="max-w-7xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4445,7 +4375,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'MESSAGES' && (
             <motion.div 
               key="messages"
-              className="max-w-7xl mx-auto md:relative"
+              className="max-w-7xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4461,7 +4391,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'CALLS' && isAdmin && (
             <motion.div 
               key="calls"
-              className="max-w-7xl mx-auto md:relative"
+              className="max-w-7xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4484,7 +4414,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'PAYROLL' && isAdmin && currentUser?.role !== 'Employee' && (
             <motion.div 
               key="payroll"
-              className="max-w-7xl mx-auto md:relative"
+              className="max-w-7xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4497,7 +4427,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'INVOICES' && isAdmin && currentUser?.role !== 'Employee' && (
             <motion.div 
               key="invoices"
-              className="max-w-7xl mx-auto md:relative"
+              className="max-w-7xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4524,7 +4454,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'DOCUMENTS' && (
             <motion.div 
               key="documents"
-              className="max-w-7xl mx-auto md:relative"
+              className="max-w-7xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4695,7 +4625,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'MANUAL' && (
             <motion.div 
               key="manual"
-              className="max-w-7xl mx-auto md:relative"
+              className="max-w-7xl mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
