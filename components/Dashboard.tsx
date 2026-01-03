@@ -9,7 +9,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor, Call } from '../types';
 import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle } from 'lucide-react';
 import { useTaskStore } from '../stores/useTaskStore';
 import { calls, claims as claimsSchema } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -25,6 +25,12 @@ import AIIntakeDashboard from './AIIntakeDashboard';
 import HomeownerManual from './HomeownerManual';
 import PayrollDashboard from './PayrollDashboard';
 import ScheduleTab from './ScheduleTab';
+
+// Lazy load TeamChat component
+const TeamChat = React.lazy(() => import('./TeamChat').catch(err => {
+  console.error('Failed to load TeamChat:', err);
+  return { default: () => <div className="p-4 text-red-500">Failed to load Team Chat. Please refresh the page.</div> };
+}));
 
 // Import CBS Books App directly for inline rendering in tab
 const CBSBooksApp = React.lazy(() => import('../lib/cbsbooks/App'));
@@ -436,7 +442,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual vs Schedule)
-  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | null>('CLAIMS');
+  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | null>('CLAIMS');
   const previousTabRef = useRef<typeof currentTab>('CLAIMS'); // Initialize with default tab to prevent treating it as "opening"
   
   // Handle browser back button to close modal (mobile only, and only when first opening a tab)
@@ -4012,6 +4018,20 @@ const Dashboard: React.FC<DashboardProps> = ({
               </button>
             )}
             
+            {/* CHAT TAB - Admin Only (Team Messaging) */}
+            {isAdmin && !isHomeownerView && (
+              <button 
+                data-tab="CHAT"
+                onClick={() => {
+                  setCurrentTab('CHAT');
+                }}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'CHAT' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+              >
+                <MessageCircle className="h-4 w-4" />
+                Chat
+              </button>
+            )}
+            
             {/* PAYROLL TAB - Administrator Only (hidden for employees and homeowner view) */}
             {isAdmin && !isHomeownerView && currentUser?.role !== 'Employee' && (
               <button 
@@ -4534,6 +4554,33 @@ const Dashboard: React.FC<DashboardProps> = ({
                     currentUserId={currentUser?.id}
                   />
                 </div>
+              </div>
+            </motion.div>
+          )}
+
+          {currentTab === 'CHAT' && isAdmin && (
+            <motion.div 
+              key="chat"
+              className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+            >
+              <div className="flex-1 overflow-hidden md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4" style={{ height: 'calc(100vh - 200px)' }}>
+                <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                  <TeamChat 
+                    currentUserId={currentUser?.id || ''}
+                    currentUserName={currentUser?.name || 'Unknown User'}
+                    onOpenHomeownerModal={(homeownerId) => {
+                      const homeowner = homeowners.find(h => h.id === homeownerId);
+                      if (homeowner) {
+                        setTargetHomeownerInternal(homeowner);
+                        setCurrentTab('CLAIMS');
+                      }
+                    }}
+                  />
+                </Suspense>
               </div>
             </motion.div>
           )}

@@ -293,3 +293,7 @@ export const appointmentGuests = pgTable('appointment_guests', {
   role: text('role'), // Optional: 'contractor', 'inspector', 'homeowner', etc.
   createdAt: timestamp('created_at').defaultNow(),
 });
+
+// --- 13. Internal Chat System (Team Messaging) ---
+// Import and export internal chat tables
+export * from './schema/internal-chat';

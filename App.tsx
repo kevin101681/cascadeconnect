@@ -19,6 +19,7 @@ import EmailHistory from './components/EmailHistory';
 import BackendDashboard from './components/BackendDashboard';
 import AIIntakeDashboard from './components/AIIntakeDashboard';
 import HomeownerSelector from './components/HomeownerSelector';
+import { ChatWidget } from './components/chat/ChatWidget';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS, MOCK_CLAIM_MESSAGES } from './constants';
 import { sendEmail, generateNotificationBody } from './services/emailService';
@@ -4062,6 +4063,23 @@ Assigned By: ${assignerName}
         }}
         claims={claims}
       />
+      
+      {/* Floating Chat Widget - Only for Admin/Employee Users */}
+      {activeEmployee && activeEmployee.id !== 'placeholder' && userRole === UserRole.ADMIN && (
+        <ChatWidget
+          currentUserId={activeEmployee.id}
+          currentUserName={activeEmployee.name}
+          onOpenHomeownerModal={(homeownerId) => {
+            const homeowner = availableHomeowners.find(h => h.id === homeownerId);
+            if (homeowner) {
+              setSelectedHomeownerId(homeownerId);
+              setActiveHomeowner(homeowner);
+              setTargetHomeowner(homeowner);
+              setCurrentView('DASHBOARD');
+            }
+          }}
+        />
+      )}
     </Layout>
     </>
   );
