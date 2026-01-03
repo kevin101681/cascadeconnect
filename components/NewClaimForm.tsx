@@ -348,9 +348,14 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                         {attachmentType === 'IMAGE' && attachmentUrl ? (
                           <>
                             <img 
-                              src={attachmentUrl} 
+                              src={attachmentUrl.includes('cloudinary.com') 
+                                ? attachmentUrl.replace('/upload/', '/upload/w_200,h_200,c_fill,q_auto,f_auto/')
+                                : attachmentUrl
+                              }
                               alt={attachmentName} 
                               className="w-full h-full object-cover"
+                              loading="lazy"
+                              decoding="async"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
                                 target.style.display = 'none';

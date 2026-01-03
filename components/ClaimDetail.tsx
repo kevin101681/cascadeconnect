@@ -424,9 +424,14 @@ If this repair work is billable, please let me know prior to scheduling.`);
                       {attachmentType === 'IMAGE' && attachmentUrl ? (
                         <>
                           <img 
-                            src={attachmentUrl} 
+                            src={attachmentUrl.includes('cloudinary.com') 
+                              ? attachmentUrl.replace('/upload/', '/upload/w_200,h_200,c_fill,q_auto,f_auto/')
+                              : attachmentUrl
+                            }
                             alt={attachmentName} 
                             className="w-full h-full object-cover"
+                            loading="lazy"
+                            decoding="async"
                             onError={(e) => {
                               // Fallback if image fails to load
                               const target = e.target as HTMLImageElement;
