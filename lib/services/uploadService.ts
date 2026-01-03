@@ -155,177 +155,84 @@ export async function uploadFile(
 
   // Retry loop with error tracking
   return captureException(async () => {
-    // For large files (>2MB), use Cloudinary direct upload to bypass Netlify's 6MB limit
-    // Lower threshold on mobile due to slower streaming through Netlify function
-    const useDirectUpload = file.size > 2 * 1024 * 1024;
+    // Always use Cloudinary direct upload for speed and reliability
+    // Bypasses Netlify's 6MB limit and timeout issues
+    console.log(`📤 Uploading to Cloudinary: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
     
-    if (useDirectUpload) {
-      console.log(`📤 File >2MB (${(file.size / 1024 / 1024).toFixed(2)}MB) - using direct Cloudinary upload for faster/more reliable upload`);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', getCloudinaryUploadPreset());
+      formData.append('folder', 'warranty-claims');
       
-      try {
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('upload_preset', getCloudinaryUploadPreset());
-        formData.append('folder', 'warranty-claims');
-        
-        const endpoint = getCloudinaryDirectEndpoint();
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), opts.timeoutMs);
-        
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          body: formData,
-          signal: controller.signal,
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-          const errorText = await response.text().catch(() => response.statusText);
-          throw new Error(`Direct upload failed (${response.status}): ${errorText}`);
-        }
-        
-        const result = await response.json();
-        
-        if (!result.secure_url) {
-          throw new Error('Direct upload failed: No URL returned');
-        }
-        
-        console.log(`✅ Direct upload successful: ${file.name}`);
-        addBreadcrumb('uploadFile:directSuccess', { fileName: file.name, url: result.secure_url });
-        
-        return {
-          success: true,
-          attachment: {
-            id: result.public_id || crypto.randomUUID(),
-            url: result.secure_url,
-            name: file.name,
-            type: determineFileType(file),
-          },
-        };
-      } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.error(`❌ Direct upload failed:`, errorMessage);
-        
-        logError(`Direct upload failed: ${errorMessage}`, {
-          service: 'uploadService',
-          operation: 'directUpload',
-          fileName: file.name,
-          fileSize: file.size,
-        }, 'error');
-        
-        return {
-          success: false,
-          error: `Direct upload failed: ${errorMessage}`,
-        };
+      const endpoint = getCloudinaryDirectEndpoint();
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), opts.timeoutMs);
+      
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        body: formData,
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => response.statusText);
+        throw new Error(`Upload failed (${response.status}): ${errorText}`);
       }
-    }
-    
-    // For smaller files (<= 4MB), use Netlify function
-    for (let attempt = 1; attempt <= opts.maxRetries; attempt++) {
-      try {
-        console.log(`🔄 Upload attempt ${attempt}/${opts.maxRetries} for ${file.name}`);
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        const endpoint = getUploadEndpoint();
-
-        // Create abort controller for timeout
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), opts.timeoutMs);
-
-        try {
-          const response = await fetch(endpoint, {
-            method: 'POST',
-            body: formData,
-            signal: controller.signal,
-          });
-
-          clearTimeout(timeoutId);
-
-          // Handle HTTP errors
-          if (!response.ok) {
-            const errorText = await response.text().catch(() => response.statusText);
-            throw new Error(`Upload failed (${response.status}): ${errorText}`);
-          }
-
-          // Parse response
-          const result = await response.json();
-
-          // Validate response structure
-          if (!result.success || !result.url) {
-            throw new Error(result.error || 'Upload failed: No URL returned');
-          }
-
-          // Success!
-          console.log(`✅ Upload successful: ${file.name}`);
-          addBreadcrumb('uploadFile:success', { fileName: file.name, url: result.url });
-          
-          return {
-            success: true,
-            attachment: {
-              id: result.publicId || crypto.randomUUID(),
-              url: result.url,
-              name: file.name,
-              type: result.type || determineFileType(file),
-          },
-        };
-
-      } catch (fetchError: unknown) {
-        clearTimeout(timeoutId);
-        
-        // Handle abort/timeout
-        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
-          const timeoutError = `Upload timed out after ${opts.timeoutMs / 1000} seconds`;
-          logError(timeoutError, {
-            service: 'uploadService',
-            operation: 'uploadFile',
-            fileName: file.name,
-            attempt,
-          }, 'error');
-          throw new Error(timeoutError);
-        }
-        
-        throw fetchError;
+      
+      const result = await response.json();
+      
+      if (!result.secure_url) {
+        throw new Error('Upload failed: No URL returned');
       }
-
+      
+      console.log(`✅ Upload successful: ${file.name}`);
+      addBreadcrumb('uploadFile:success', { fileName: file.name, url: result.secure_url });
+      
+      return {
+        success: true,
+        attachment: {
+          id: result.public_id || crypto.randomUUID(),
+          url: result.secure_url,
+          name: file.name,
+          type: determineFileType(file),
+        },
+      };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       
-      console.error(`❌ Upload attempt ${attempt} failed:`, errorMessage);
-      
-      // Log error on final attempt
-      if (attempt === opts.maxRetries) {
-        logError(`Upload failed after ${opts.maxRetries} retries: ${errorMessage}`, {
+      // Handle timeout
+      if (error instanceof Error && error.name === 'AbortError') {
+        const timeoutError = `Upload timed out after ${opts.timeoutMs / 1000} seconds`;
+        console.error(`❌ ${timeoutError}`);
+        logError(timeoutError, {
           service: 'uploadService',
           operation: 'uploadFile',
           fileName: file.name,
-          fileSize: file.size,
-          attempts: opts.maxRetries,
         }, 'error');
-      }
-      
-      // If this was the last attempt, return failure
-      if (attempt === opts.maxRetries) {
+        
         return {
           success: false,
-          error: `Upload failed after ${opts.maxRetries} retries: ${errorMessage}`,
+          error: timeoutError,
         };
       }
       
-      // Wait before retry (exponential backoff)
-      const backoffMs = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
-      console.log(`⏳ Waiting ${backoffMs}ms before retry...`);
-      await new Promise(resolve => setTimeout(resolve, backoffMs));
+      console.error(`❌ Upload failed:`, errorMessage);
+      
+      logError(`Upload failed: ${errorMessage}`, {
+        service: 'uploadService',
+        operation: 'directUpload',
+        fileName: file.name,
+        fileSize: file.size,
+      }, 'error');
+      
+      return {
+        success: false,
+        error: errorMessage,
+      };
     }
-  }
-  
-  // Should never reach here, but TypeScript needs it
-  return {
-    success: false,
-    error: 'Upload failed: Unexpected error',
-  };
   }, {
     service: 'uploadService',
     operation: 'uploadFile',
@@ -402,8 +309,9 @@ async function uploadFilesWithConcurrency(
 
 /**
  * Upload multiple files with smart concurrency control
- * - On mobile: uploads sequentially or with low concurrency (2 at a time)
- * - On desktop: uploads in parallel
+ * All files upload directly to Cloudinary for speed and reliability
+ * - On mobile: uploads 3 at a time (direct upload is reliable)
+ * - On desktop: uploads all in parallel
  * Returns results for all files (both successes and failures)
  */
 export async function uploadMultipleFiles(
@@ -431,40 +339,10 @@ export async function uploadMultipleFiles(
   let results: UploadResult[];
 
   if (isMobile && files.length > 1) {
-    // Check if most files will use direct upload (>2MB)
-    const largeFiles = files.filter(f => f.size > 2 * 1024 * 1024).length;
-    const useConcurrent = largeFiles > files.length / 2; // More than half are large
-    
-    if (useConcurrent && files.length > 2) {
-      // Most files will use direct upload - can do 2 at a time safely
-      console.log(`📱 Using mobile upload strategy: 2 concurrent uploads (most files >2MB using direct upload)`);
-      results = await uploadFilesWithConcurrency(files, adjustedOptions, 2);
-    } else {
-      // Mix of small/large or mostly small - sequential is safer
-      console.log(`📱 Using mobile upload strategy: sequential uploads (one at a time)`);
-      console.log(`📱 This is slower but much more reliable on mobile devices`);
-      
-      results = new Array(files.length);
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        console.log(`📤 [${i + 1}/${files.length}] Uploading: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
-        
-        const result = await uploadFile(file, adjustedOptions);
-        results[i] = result;
-        
-        if (result.success) {
-          console.log(`✅ [${i + 1}/${files.length}] Success: ${file.name}`);
-        } else {
-          console.error(`❌ [${i + 1}/${files.length}] Failed: ${file.name} - ${result.error}`);
-        }
-        
-        // Small delay between uploads on mobile to prevent throttling
-        if (i < files.length - 1) {
-          console.log(`⏳ Waiting 500ms before next upload...`);
-          await new Promise(resolve => setTimeout(resolve, 500));
-        }
-      }
-    }
+    // Direct uploads to Cloudinary are reliable - can do 3 concurrent on mobile
+    const maxConcurrent = Math.min(3, files.length);
+    console.log(`📱 Using mobile upload strategy: ${maxConcurrent} concurrent direct uploads`);
+    results = await uploadFilesWithConcurrency(files, adjustedOptions, maxConcurrent);
   } else {
     // On desktop, upload all in parallel for speed
     console.log(`💻 Using desktop upload strategy: parallel uploads`);
