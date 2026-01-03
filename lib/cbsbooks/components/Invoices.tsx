@@ -3,7 +3,8 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Invoice, Client, InvoiceItem, ViewState } from '../types';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
-import { Plus, Trash2, Download, Search, X, Upload, Database, SlidersHorizontal, Camera, ArrowUpDown, Share2, Check, Sparkles, Loader2, ScanText, Link as LinkIcon, Mail, Send, CreditCard, Pencil, PieChart, Users, Receipt } from 'lucide-react';
+import { TabBar } from './ui/TabBar';
+import { Plus, Trash2, Download, Search, X, Upload, Database, SlidersHorizontal, Camera, ArrowUpDown, Share2, Check, Sparkles, Loader2, ScanText, Link as LinkIcon, Mail, Send, CreditCard, Pencil, Calendar } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { FloatingMenu, ActionItem } from './ui/FloatingMenu';
 import { api } from '../services/api';
@@ -1457,36 +1458,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
     <div className="space-y-4 relative min-h-[calc(100vh-100px)] pb-24 max-w-7xl mx-auto">
       {/* Navigation Bar */}
       <div className="flex flex-wrap gap-2 mb-4 items-center justify-between">
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => onNavigate('invoices')}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-full transition-opacity"
-          >
-            <Receipt size={18} />
-            <span className="text-sm font-medium">Invoices</span>
-          </button>
-          <button
-            onClick={() => onNavigate('clients')}
-            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-full hover:bg-opacity-80 transition-all"
-          >
-            <Users size={18} />
-            <span className="text-sm font-medium">Builders</span>
-          </button>
-          <button
-            onClick={() => onNavigate('reports')}
-            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-full hover:bg-opacity-80 transition-all"
-          >
-            <PieChart size={18} />
-            <span className="text-sm font-medium">P&L</span>
-          </button>
-          <button
-            onClick={() => onNavigate('expenses')}
-            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-full hover:bg-opacity-80 transition-all"
-          >
-            <CreditCard size={18} />
-            <span className="text-sm font-medium">Expenses</span>
-          </button>
-        </div>
+        <TabBar activeView="invoices" onNavigate={onNavigate} />
         
         {/* New Invoice Button - Right side */}
         <button

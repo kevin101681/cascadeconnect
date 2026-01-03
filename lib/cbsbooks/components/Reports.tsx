@@ -3,7 +3,8 @@ import React, { useMemo, useState } from 'react';
 import { Invoice, Expense, ViewState } from '../types';
 import { Card } from './ui/Card';
 import { Dropdown } from './ui/Dropdown';
-import { Download, Database, SlidersHorizontal, X, PieChart, Users, Receipt, CreditCard } from 'lucide-react';
+import { TabBar } from './ui/TabBar';
+import { Download, Database, SlidersHorizontal, X } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { FloatingMenu, ActionItem } from './ui/FloatingMenu';
 
@@ -140,36 +141,7 @@ export const Reports: React.FC<ReportsProps> = ({ invoices, expenses, onNavigate
       {/* Navigation Bar */}
       <div className="flex flex-wrap gap-2 mb-4 items-center justify-between">
         {/* Left-aligned navigation buttons */}
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={() => onNavigate('invoices')}
-            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-full hover:bg-opacity-80 transition-all"
-          >
-            <Receipt size={18} />
-            <span className="text-sm font-medium">Invoices</span>
-          </button>
-          <button
-            onClick={() => onNavigate('clients')}
-            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-full hover:bg-opacity-80 transition-all"
-          >
-            <Users size={18} />
-            <span className="text-sm font-medium">Builders</span>
-          </button>
-          <button
-            onClick={() => onNavigate('reports')}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-full transition-opacity"
-          >
-            <PieChart size={18} />
-            <span className="text-sm font-medium">P&L</span>
-          </button>
-          <button
-            onClick={() => onNavigate('expenses')}
-            className="flex items-center gap-2 px-4 py-2 bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 rounded-full hover:bg-opacity-80 transition-all"
-          >
-            <CreditCard size={18} />
-            <span className="text-sm font-medium">Expenses</span>
-          </button>
-        </div>
+        <TabBar activeView="reports" onNavigate={onNavigate} />
         {/* Right-aligned Download PDF Button */}
         <button
           onClick={handleDownloadPDF}
