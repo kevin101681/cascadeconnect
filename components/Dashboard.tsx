@@ -4039,11 +4039,17 @@ const Dashboard: React.FC<DashboardProps> = ({
             {isAdmin && !isHomeownerView && currentUser?.role !== 'Employee' && (
               <button 
                 data-tab="INVOICES"
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   // On mobile, open full-screen modal instead of carousel
-                  if (window.innerWidth < 768) {
+                  const isMobile = window.innerWidth < 768;
+                  console.log('Invoices tab clicked, isMobile:', isMobile);
+                  if (isMobile) {
+                    console.log('Opening invoices modal');
                     setIsInvoicesModalOpen(true);
                   } else {
+                    console.log('Setting tab to INVOICES');
                     isProgrammaticScrollRef.current = true;
                     setCurrentTab('INVOICES');
                   }
