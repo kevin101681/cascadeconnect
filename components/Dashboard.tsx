@@ -4431,9 +4431,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <div className="flex flex-col h-full md:h-auto">
-                  {renderMessagesTab()}
-                </div>
+                {renderMessagesTab()}
               </div>
             </motion.div>
           )}
