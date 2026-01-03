@@ -3852,7 +3852,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => {
                 setCurrentTab('CLAIMS');
               }}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full w-full justify-center ${currentTab === 'CLAIMS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'CLAIMS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
             >
               <ClipboardList className="h-4 w-4" />
               Warranty
@@ -3865,7 +3865,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('TASKS');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full w-full justify-center ${currentTab === 'TASKS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'TASKS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <CheckSquare className="h-4 w-4" />
                 Tasks
@@ -3877,7 +3877,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => {
                 setCurrentTab('MESSAGES');
               }}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full w-full justify-center ${currentTab === 'MESSAGES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'MESSAGES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
             >
               <Mail className="h-4 w-4" />
               Messages
@@ -3891,7 +3891,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.preventDefault();
                   setCurrentTab('DOCUMENTS');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full w-full justify-center ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <FileText className="h-4 w-4" />
                 Documents
@@ -3906,7 +3906,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.preventDefault();
                   setCurrentTab('MANUAL');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full w-full justify-center ${currentTab === 'MANUAL' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'MANUAL' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <BookOpen className="h-4 w-4" />
                 Manual
@@ -3921,7 +3921,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('NOTES');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full w-full justify-center ${currentTab === 'NOTES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'NOTES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <StickyNote className="h-4 w-4" />
                 Notes
@@ -3935,7 +3935,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('CALLS');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full w-full justify-center ${currentTab === 'CALLS' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'CALLS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <Phone className="h-4 w-4" />
                 Calls
@@ -3949,7 +3949,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('PAYROLL');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full w-full justify-center ${currentTab === 'PAYROLL' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'PAYROLL' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <DollarSign className="h-4 w-4" />
                 Payroll
@@ -3963,7 +3963,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('INVOICES');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 py-2 rounded-full w-full justify-center ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on' : 'text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <Receipt className="h-4 w-4" />
                 Invoices
