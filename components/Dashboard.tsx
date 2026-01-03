@@ -3598,11 +3598,11 @@ const Dashboard: React.FC<DashboardProps> = ({
               title="Click to collapse"
             >
              
-             {/* Vertical Layout - Left Aligned */}
-             <div className="flex flex-col gap-2 mb-4 w-full">
+             {/* Vertical Layout - Center on mobile, left on desktop */}
+             <div className="flex flex-col gap-2 mb-4 w-full items-center lg:items-start">
                 {/* Line 1: Name with Edit Button */}
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 truncate">{displayHomeowner.name}</h2>
+                <div className="flex items-center justify-between gap-2 w-full">
+                  <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 truncate text-center lg:text-left flex-1">{displayHomeowner.name}</h2>
                   {/* Edit Button - Admin Only - Right of Name */}
                   {isAdmin && !isHomeownerView && (
                     <button 
@@ -3621,19 +3621,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-400 hover:text-primary transition-colors"
+                  className="flex items-center justify-center lg:justify-start gap-1.5 text-sm text-surface-on-variant dark:text-gray-400 hover:text-primary transition-colors"
                 >
                   <MapPin className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
                   <span>{displayHomeowner.street}</span>
                 </a>
                 
                 {/* Line 3: City, State ZIP */}
-                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 pl-5">
+                <div className="flex items-center justify-center lg:justify-start gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 lg:pl-5">
                   <span>{displayHomeowner.city}, {displayHomeowner.state} {displayHomeowner.zip}</span>
                 </div>
 
                 {/* Line 4: Builder and Project */}
-                <div className="flex items-center gap-4 flex-wrap text-sm">
+                <div className="flex items-center justify-center lg:justify-start gap-4 flex-wrap text-sm">
                   {/* Builder */}
                   <span className="flex items-center gap-1.5 text-surface-on-variant dark:text-gray-300">
                     <Building2 className="h-3.5 w-3.5" />
@@ -3648,19 +3648,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
                 
                 {/* Line 5: Closing Date */}
-                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
+                <div className="flex items-center justify-center lg:justify-start gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
                    <Clock className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
                    <span>Closing: {displayHomeowner.closingDate ? new Date(displayHomeowner.closingDate).toLocaleDateString() : 'N/A'}</span>
                 </div>
                 
                 {/* Line 6: Phone */}
-                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
+                <div className="flex items-center justify-center lg:justify-start gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
                   <Phone className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
                   <span>{displayHomeowner.phone}</span>
                 </div>
                 
                 {/* Line 7: Email */}
-                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
+                <div className="flex items-center justify-center lg:justify-start gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
                   <Mail className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
                   <span className="truncate">{displayHomeowner.email}</span>
                 </div>
@@ -3759,8 +3759,8 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             {/* Next Appointment Card - Below Homeowner Info within sidebar */}
             <div className="mt-4 bg-primary/5 dark:bg-gray-700/50 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-600 overflow-hidden">
-              <div className="p-4 bg-surface-container/30 dark:bg-gray-700/30 border-b border-surface-outline-variant/50 dark:border-gray-600">
-                <h3 className="font-medium text-sm flex items-center text-secondary-on-container dark:text-gray-100">
+              <div className="p-4 bg-surface-container/30 dark:bg-gray-700/30 border-b border-surface-outline-variant/50 dark:border-gray-600 text-center lg:text-left">
+                <h3 className="font-medium text-sm flex items-center justify-center lg:justify-start text-secondary-on-container dark:text-gray-100">
                   <Calendar className="h-4 w-4 mr-2" />
                   Next Appointment
                 </h3>
@@ -3784,7 +3784,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 
                 if (upcomingClaims.length === 0) {
                   return (
-                    <div className="p-4">
+                    <div className="p-4 text-center lg:text-left">
                       <p className="text-xs opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No upcoming appointments.</p>
                     </div>
                   );
@@ -3807,24 +3807,24 @@ const Dashboard: React.FC<DashboardProps> = ({
                 const acceptedDate = claimsOnNextDate[0].acceptedDate;
                 
                 return (
-                  <div className="p-4">
+                  <div className="p-4 flex flex-col items-center lg:items-start">
                     <div 
-                      className="bg-surface/50 dark:bg-gray-700/50 p-3 rounded-lg text-xs backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors"
+                      className="bg-surface/50 dark:bg-gray-700/50 p-3 rounded-lg text-xs backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors w-full"
                       onClick={() => setSelectedClaimForModal(firstClaim)}
                     >
                       <div className="flex items-center justify-between gap-2 mb-1">
-                        <p className="font-medium text-secondary-on-container dark:text-gray-200 truncate">{firstClaim.title}</p>
+                        <p className="font-medium text-secondary-on-container dark:text-gray-200 truncate text-center lg:text-left flex-1">{firstClaim.title}</p>
                         {claimsOnNextDate.length > 1 && (
                           <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-on text-[10px] font-medium flex-shrink-0">
                             {claimsOnNextDate.length}
                           </span>
                         )}
                       </div>
-                      <p className="opacity-80 dark:opacity-70 text-secondary-on-container dark:text-gray-300">
+                      <p className="opacity-80 dark:opacity-70 text-secondary-on-container dark:text-gray-300 text-center lg:text-left">
                         {new Date(acceptedDate.date).toLocaleDateString()} - {acceptedDate?.timeSlot}
                       </p>
                       {firstClaim.contractorName && (
-                        <p className="opacity-70 dark:opacity-60 mt-1 text-secondary-on-container dark:text-gray-400 text-[10px]">
+                        <p className="opacity-70 dark:opacity-60 mt-1 text-secondary-on-container dark:text-gray-400 text-[10px] text-center lg:text-left">
                           {firstClaim.contractorName}
                         </p>
                       )}
