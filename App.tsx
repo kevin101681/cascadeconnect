@@ -4074,7 +4074,7 @@ Assigned By: ${assignerName}
             if (homeowner) {
               setSelectedHomeownerId(homeownerId);
               setActiveHomeowner(homeowner);
-              setTargetHomeowner(homeowner);
+              setSelectedAdminHomeownerId(homeownerId);
               setCurrentView('DASHBOARD');
             }
           }}

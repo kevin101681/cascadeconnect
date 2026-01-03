@@ -505,17 +505,17 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [swipeProgress, setSwipeProgress] = useState<number>(0); // 0 to 1, represents swipe completion
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
-  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | null>(null);
+  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'CHAT' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | null>(null);
   
   // Minimum swipe distance (in pixels)
   const minSwipeDistance = 50;
   
   // Get available tabs in order
-  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> => {
+  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'CHAT' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> => {
     const isHomeownerViewRole = userRole === UserRole.HOMEOWNER;
     const isEmployee = currentUser?.role === 'Employee';
     console.log('🔍 Dashboard getAvailableTabs - currentUser:', currentUser?.name, 'role:', currentUser?.role, 'isEmployee:', isEmployee);
-    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> = ['CLAIMS'];
+    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'CHAT' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> = ['CLAIMS'];
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('TASKS');
       tabs.push('NOTES'); // NOTES tab between TASKS and MESSAGES
@@ -529,6 +529,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('CALLS'); // CALLS tab (admin only)
       tabs.push('SCHEDULE'); // SCHEDULE tab (admin only)
+      tabs.push('CHAT'); // CHAT tab (admin only)
       // Only show Payroll and Invoices for Administrator role, not Employee role
       if (!isEmployee) {
         tabs.push('PAYROLL'); // PAYROLL tab (administrator only)
@@ -4574,8 +4575,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                     currentUserName={currentUser?.name || 'Unknown User'}
                     onOpenHomeownerModal={(homeownerId) => {
                       const homeowner = homeowners.find(h => h.id === homeownerId);
-                      if (homeowner) {
-                        setTargetHomeownerInternal(homeowner);
+                      if (homeowner && onSelectHomeowner) {
+                        onSelectHomeowner(homeowner);
                         setCurrentTab('CLAIMS');
                       }
                     }}
