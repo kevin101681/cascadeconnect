@@ -4312,11 +4312,36 @@ const Dashboard: React.FC<DashboardProps> = ({
         </AnimatePresence>
         </div>
 
-        {/* Content Area - Full screen on mobile, constrained on desktop */}
+        {/* Content Area - Full-screen on mobile (except CLAIMS), inline on desktop */}
         <div
-          className="min-h-[calc(100vh-300px)] md:min-h-0 -mx-6 md:mx-0"
+          className={`${currentTab !== 'CLAIMS' ? 'fixed inset-0 z-50 bg-surface dark:bg-gray-900 md:relative md:z-auto md:bg-transparent' : ''} min-h-[calc(100vh-300px)] md:min-h-0 ${currentTab === 'CLAIMS' ? '-mx-6 md:mx-0' : ''}`}
         >
         <AnimatePresence mode="wait" initial={false}>
+          {/* Mobile Back Header - shown on all tabs except CLAIMS */}
+          {currentTab !== 'CLAIMS' && (
+            <div className="md:hidden sticky top-0 z-10 bg-surface dark:bg-gray-900 border-b border-surface-outline-variant dark:border-gray-700 px-4 py-3 flex items-center gap-3">
+              <button
+                onClick={() => setCurrentTab('CLAIMS')}
+                className="flex items-center gap-2 text-surface-on dark:text-gray-100 hover:text-primary transition-colors"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="font-medium">Back</span>
+              </button>
+              <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">
+                {currentTab === 'TASKS' && 'Tasks'}
+                {currentTab === 'NOTES' && 'Notes'}
+                {currentTab === 'MESSAGES' && 'Messages'}
+                {currentTab === 'DOCUMENTS' && 'Documents'}
+                {currentTab === 'MANUAL' && 'Homeowner Manual'}
+                {currentTab === 'CALLS' && 'AI Calls'}
+                {currentTab === 'PAYROLL' && 'Payroll'}
+                {currentTab === 'INVOICES' && 'Invoices'}
+              </h2>
+            </div>
+          )}
+          
           {currentTab === 'CLAIMS' && (
             <motion.div 
               key="claims"
