@@ -4323,7 +4323,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Content Area - Full-screen overlay on mobile (when tab is active), inline on desktop */}
         {currentTab && (
         <div 
-          className={`fixed inset-0 z-[1000] bg-surface dark:bg-gray-900 md:relative md:z-auto md:bg-transparent md:inset-auto pt-16 md:pt-0 ${currentTab === 'CLAIMS' ? 'md:-mx-6' : ''}`}
+          className={`fixed top-16 left-0 right-0 bottom-0 z-[1000] bg-surface dark:bg-gray-900 md:relative md:top-auto md:left-auto md:right-auto md:bottom-auto md:z-auto md:bg-transparent ${currentTab === 'CLAIMS' ? 'md:-mx-6' : ''}`}
         >
         <AnimatePresence mode="wait" initial={false}>
           {/* Mobile Close FAB - shown on all tabs as overlay */}
