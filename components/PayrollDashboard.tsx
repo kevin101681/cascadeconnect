@@ -261,9 +261,9 @@ const PayrollDashboard: React.FC = () => {
   }
 
   return (
-    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col">
+    <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col">
       {/* Header */}
-      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl flex items-center justify-between">
+      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 md:rounded-t-3xl flex items-center justify-between">
         <div>
           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
             Payroll Dashboard
