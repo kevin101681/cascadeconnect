@@ -4,6 +4,37 @@
 .rbc-calendar {
   font-family: inherit;
   color: inherit;
+  height: 100%;
+}
+
+/* Month view specific */
+.rbc-month-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.rbc-month-header {
+  display: flex;
+  flex-direction: row;
+}
+
+.rbc-month-row {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 0;
+  overflow: hidden;
+}
+
+.rbc-row-bg {
+  display: flex;
+  flex-direction: row;
+  flex: 1 0 0;
+  overflow: hidden;
+}
+
+.rbc-day-bg {
+  flex: 1 0 0%;
 }
 
 /* Off-range (prev/next month) dates */
