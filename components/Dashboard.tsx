@@ -4323,7 +4323,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Content Area - Full-screen overlay on mobile (when tab is active), inline on desktop */}
         {currentTab && (
         <div 
-          className={`fixed inset-0 z-[1000] bg-surface dark:bg-gray-900 md:relative md:z-auto md:bg-transparent md:inset-auto flex flex-col ${currentTab === 'CLAIMS' ? 'md:-mx-6' : ''}`}
+          className={`fixed inset-0 z-[1000] bg-surface dark:bg-gray-900 md:relative md:z-auto md:bg-transparent md:inset-auto pt-16 md:pt-0 ${currentTab === 'CLAIMS' ? 'md:-mx-6' : ''}`}
         >
         <AnimatePresence mode="wait" initial={false}>
           {/* Mobile Close FAB - shown on all tabs as overlay */}
@@ -4331,7 +4331,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <>
               <button
                 onClick={() => setCurrentTab(null)}
-                className="md:hidden fixed top-20 right-4 z-[1010] w-14 h-14 bg-surface-container dark:bg-gray-700 rounded-full shadow-lg flex items-center justify-center text-surface-on dark:text-gray-100 hover:bg-surface-container-high dark:hover:bg-gray-600 transition-all"
+                className="md:hidden fixed bottom-6 right-4 z-[1010] w-14 h-14 bg-surface-container dark:bg-gray-700 rounded-full shadow-lg flex items-center justify-center text-surface-on dark:text-gray-100 hover:bg-surface-container-high dark:hover:bg-gray-600 transition-all"
               >
                 <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -4343,13 +4343,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'CLAIMS' && (
             <motion.div 
               key="claims"
-              className="w-full h-full flex flex-col pt-16 md:pt-0 md:max-w-7xl md:mx-auto md:h-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto md:h-auto md:overflow-visible"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
                 {renderClaimsList(displayClaims, isHomeownerView)}
               </div>
             </motion.div>
@@ -4358,13 +4358,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'TASKS' && isAdmin && (
             <motion.div 
               key="tasks"
-              className="w-full h-full flex flex-col pt-16 md:pt-0 md:max-w-7xl md:mx-auto md:h-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto md:h-auto md:overflow-visible"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
                 {renderTasksTab()}
               </div>
             </motion.div>
@@ -4374,13 +4374,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'NOTES' && isAdmin && (
             <motion.div 
               key="notes"
-              className="w-full h-full flex flex-col pt-16 md:pt-0 md:max-w-7xl md:mx-auto md:h-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto md:h-auto md:overflow-visible"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
                 <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
                   <TasksSheet 
                     isInline={true}
@@ -4398,13 +4398,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'MESSAGES' && (
             <motion.div 
               key="messages"
-              className="w-full h-full flex flex-col pt-16 md:pt-0 md:max-w-7xl md:mx-auto md:h-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto md:h-auto md:overflow-visible"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
                 {renderMessagesTab()}
               </div>
             </motion.div>
@@ -4414,13 +4414,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'CALLS' && isAdmin && (
             <motion.div 
               key="calls"
-              className="w-full h-full flex flex-col pt-16 md:pt-0 md:max-w-7xl md:mx-auto md:h-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto md:h-auto md:overflow-visible"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
                 <AIIntakeDashboard 
                   onNavigate={onNavigate}
                   onSelectHomeowner={(homeownerId) => {
@@ -4437,29 +4437,27 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'PAYROLL' && isAdmin && currentUser?.role !== 'Employee' && (
             <motion.div 
               key="payroll"
-              className="w-full h-full flex flex-col pt-16 md:pt-0 md:max-w-7xl md:mx-auto md:h-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto md:h-auto md:overflow-visible"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="flex-1 overflow-y-auto md:overflow-visible">
-                <PayrollDashboard />
-              </div>
+              <PayrollDashboard />
             </motion.div>
           )}
 
           {currentTab === 'INVOICES' && isAdmin && currentUser?.role !== 'Employee' && (
             <motion.div 
               key="invoices"
-              className="w-full h-full flex flex-col pt-16 md:pt-0 md:max-w-7xl md:mx-auto md:h-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto md:h-auto md:overflow-visible"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col h-full">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
+                <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col">
                   <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 md:rounded-t-3xl">
                     <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                       <FileText className="h-5 w-5 text-primary" />
@@ -4479,13 +4477,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'DOCUMENTS' && (
             <motion.div 
               key="documents"
-              className="w-full h-full flex flex-col pt-16 md:pt-0 md:max-w-7xl md:mx-auto md:h-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto md:h-auto md:overflow-visible"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
                 <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden">
                   <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700">
                     <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
@@ -4650,13 +4648,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'MANUAL' && (
             <motion.div 
               key="manual"
-              className="w-full h-full flex flex-col pt-16 md:pt-0 md:max-w-7xl md:mx-auto md:h-auto"
+              className="w-full md:max-w-7xl md:mx-auto h-full overflow-y-auto md:h-auto md:overflow-visible"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
                 <HomeownerManual homeownerId={activeHomeowner?.id} />
               </div>
             </motion.div>
