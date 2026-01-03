@@ -495,7 +495,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {/* Input area */}
       <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-end gap-2">
+        <div className="flex items-center gap-2">
           {/* File upload */}
           <input
             ref={fileInputRef}
@@ -508,7 +508,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploadingMedia}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
+            className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-50 flex-shrink-0"
           >
             {isUploadingMedia ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -525,15 +525,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             onKeyPress={handleKeyPress}
             placeholder={`Message ${channelName}...`}
             rows={1}
-            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-primary"
             style={{ minHeight: '40px', maxHeight: '120px' }}
           />
 
-          {/* Send button */}
+          {/* Send button - Material 3 colors */}
           <button
             onClick={handleSendMessage}
             disabled={isSending || (!inputValue.trim() && attachments.length === 0)}
-            className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
           >
             {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
           </button>
