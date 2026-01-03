@@ -212,14 +212,14 @@ export const handler: Handler = async (event) => {
         .insert(appointments)
         .values({
           title,
-          description,
+          description: description || null,
           startTime: new Date(startTime),
           endTime: new Date(endTime),
           homeownerId: homeownerId || null,
-          visibility: visibility || 'shared_with_homeowner',
-          type: type || 'other',
+          visibility: (visibility || 'shared_with_homeowner') as any,
+          type: (type || 'other') as any,
           createdById: createdById || null,
-        })
+        } as any)
         .returning();
 
       // Create guests
@@ -234,8 +234,8 @@ export const handler: Handler = async (event) => {
             .values({
               appointmentId: newAppointment.id,
               email,
-              role,
-            })
+              role: role || null,
+            } as any)
             .returning();
           
           guestRecords.push(guest);
@@ -280,7 +280,6 @@ export const handler: Handler = async (event) => {
           ...(homeownerId !== undefined && { homeownerId }),
           ...(visibility && { visibility }),
           ...(type && { type }),
-          updatedAt: new Date(),
         })
         .where(eq(appointments.id, id))
         .returning();

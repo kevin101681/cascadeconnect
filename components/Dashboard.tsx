@@ -505,11 +505,11 @@ const Dashboard: React.FC<DashboardProps> = ({
   const minSwipeDistance = 50;
   
   // Get available tabs in order
-  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> => {
+  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> => {
     const isHomeownerViewRole = userRole === UserRole.HOMEOWNER;
     const isEmployee = currentUser?.role === 'Employee';
     console.log('🔍 Dashboard getAvailableTabs - currentUser:', currentUser?.name, 'role:', currentUser?.role, 'isEmployee:', isEmployee);
-    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> = ['CLAIMS'];
+    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> = ['CLAIMS'];
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('TASKS');
       tabs.push('NOTES'); // NOTES tab between TASKS and MESSAGES

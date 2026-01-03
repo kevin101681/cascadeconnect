@@ -24,6 +24,9 @@ interface Appointment {
 // Transform appointment to calendar event
 interface AppointmentEvent extends CalendarEvent {
   id: string;
+  title: string; // Required by react-big-calendar
+  start: Date;
+  end: Date;
   visibility: 'internal_only' | 'shared_with_homeowner';
   type: string;
   appointment: Appointment;
