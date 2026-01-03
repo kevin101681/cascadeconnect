@@ -1869,9 +1869,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     return (
       <>
-      <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden max-h-[calc(100vh-8rem)]">
+      <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden max-h-[calc(100vh-8rem)]">
         {/* Left Column: Claims List */}
-        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
+        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
           <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-auto shrink-0 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none">
             <div className="flex items-center w-full md:w-auto">
               <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
@@ -2179,8 +2179,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const renderDocumentsTab = () => (
-    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col">
-      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
+    <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col">
+      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 md:rounded-t-3xl">
         <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
           Account Documents
@@ -2344,9 +2344,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     return (
       <>
-      <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden max-h-[calc(100vh-8rem)]">
+      <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden max-h-[calc(100vh-8rem)]">
         {/* Left Column: Tasks List */}
-        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedTaskForModal ? 'hidden md:flex' : 'flex'}`}>
+        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedTaskForModal ? 'hidden md:flex' : 'flex'}`}>
           <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-auto shrink-0 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none">
             <div className="flex items-center w-full md:w-auto">
               <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
@@ -2623,9 +2623,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const renderMessagesTab = () => (
     <>
-    <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden max-h-[calc(100vh-8rem)]">
+    <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden max-h-[calc(100vh-8rem)]">
        {/* Left Column: Inbox List (Gmail Style) */}
-       <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
+       <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           <div className="px-6 py-6 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:h-16 shrink-0 rounded-tl-3xl rounded-tr-3xl md:rounded-tr-none">
             <div className="flex items-center w-full md:w-auto">
               <h3 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
@@ -4032,7 +4032,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
-                  <div className="max-w-7xl mx-auto pb-4">
+                  <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
                     <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden">
                       <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700">
                         <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
@@ -4312,21 +4312,21 @@ const Dashboard: React.FC<DashboardProps> = ({
         </AnimatePresence>
         </div>
 
-        {/* Content Area - Now used for both mobile and desktop */}
+        {/* Content Area - Full screen on mobile, constrained on desktop */}
         <div
-          className="min-h-[calc(100vh-300px)] md:min-h-0"
+          className="min-h-[calc(100vh-300px)] md:min-h-0 -mx-6 md:mx-0"
         >
         <AnimatePresence mode="wait" initial={false}>
           {currentTab === 'CLAIMS' && (
             <motion.div 
               key="claims"
-              className="max-w-7xl mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-7xl mx-auto pb-4">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
                 {renderClaimsList(displayClaims, isHomeownerView)}
               </div>
             </motion.div>
@@ -4335,13 +4335,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'TASKS' && isAdmin && (
             <motion.div 
               key="tasks"
-              className="max-w-7xl mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-7xl mx-auto pb-4">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
                 {renderTasksTab()}
               </div>
             </motion.div>
@@ -4351,13 +4351,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'NOTES' && isAdmin && (
             <motion.div 
               key="notes"
-              className="max-w-7xl mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-7xl mx-auto pb-4">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
                 <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
                   <TasksSheet 
                     isInline={true}
@@ -4375,13 +4375,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'MESSAGES' && (
             <motion.div 
               key="messages"
-              className="max-w-7xl mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-7xl mx-auto pb-4">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
                 {renderMessagesTab()}
               </div>
             </motion.div>
@@ -4391,13 +4391,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'CALLS' && isAdmin && (
             <motion.div 
               key="calls"
-              className="max-w-7xl mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-7xl mx-auto pb-4">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
                 <AIIntakeDashboard 
                   onNavigate={onNavigate}
                   onSelectHomeowner={(homeownerId) => {
@@ -4414,7 +4414,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'PAYROLL' && isAdmin && currentUser?.role !== 'Employee' && (
             <motion.div 
               key="payroll"
-              className="max-w-7xl mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -4427,15 +4427,15 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'INVOICES' && isAdmin && currentUser?.role !== 'Employee' && (
             <motion.div 
               key="invoices"
-              className="max-w-7xl mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-7xl mx-auto pb-4">
-                <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col">
-                  <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
+                <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col">
+                  <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 md:rounded-t-3xl">
                     <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                       <FileText className="h-5 w-5 text-primary" />
                       Invoices & Billing
@@ -4454,13 +4454,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'DOCUMENTS' && (
             <motion.div 
               key="documents"
-              className="max-w-7xl mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-7xl mx-auto pb-4">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
                 <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden">
                   <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700">
                     <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
@@ -4625,13 +4625,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'MANUAL' && (
             <motion.div 
               key="manual"
-              className="max-w-7xl mx-auto"
+              className="w-full md:max-w-7xl md:mx-auto"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-7xl mx-auto pb-4">
+              <div className="w-full md:max-w-7xl md:mx-auto md:pb-4">
                 <HomeownerManual homeownerId={activeHomeowner?.id} />
               </div>
             </motion.div>
