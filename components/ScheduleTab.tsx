@@ -309,14 +309,15 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header - Fixed at top, matches Invoices modal */}
-      <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-800/50">
-        <h2 className="text-xl md:text-2xl font-semibold text-surface-on dark:text-gray-100">
+      {/* Header - matches other modals */}
+      <div className="flex-shrink-0 flex items-center justify-between px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 md:rounded-t-3xl">
+        <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+          <CalendarIcon className="h-5 w-5 text-primary" />
           Schedule
         </h2>
         <button
           onClick={openCreateModal}
-          className="p-2 md:p-3 rounded-full bg-primary text-primary-on hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
+          className="p-2 md:p-3 rounded-full bg-primary text-primary-on hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 flex items-center justify-center shadow-sm"
           title="New Appointment"
         >
           <Plus className="h-5 w-5 md:h-6 md:w-6" />
@@ -324,7 +325,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
       </div>
 
       {/* Content Area - Scrollable */}
-      <div className="flex-1 overflow-y-auto p-6 bg-surface-container dark:bg-gray-800">
+      <div className="flex-1 overflow-y-auto p-6 bg-surface-container/50 dark:bg-gray-800/50">
         {/* Legend */}
         <div className="flex items-center gap-4 mb-4 text-xs text-surface-on-variant dark:text-gray-400">
           <div className="flex items-center gap-2">

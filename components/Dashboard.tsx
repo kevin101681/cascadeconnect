@@ -4551,7 +4551,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <div className="flex flex-col h-full md:h-auto">
+                <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col h-full">
                   <ScheduleTab 
                     homeowners={homeowners}
                     currentUserId={currentUser?.id}
