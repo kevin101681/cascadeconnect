@@ -6055,6 +6055,27 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>,
           document.body
         )}
+        
+        {/* Invoices Modal - Full screen on mobile */}
+        {console.log('🖼️ [ADMIN VIEW] Rendering modal section, isInvoicesModalOpen:', isInvoicesModalOpen)}
+        <Suspense fallback={
+          <div className="fixed inset-0 z-[200] bg-black/50 flex items-center justify-center">
+            <div className="text-white">Loading Invoices...</div>
+          </div>
+        }>
+          {isInvoicesModalOpen && (
+            <>
+              {console.log('✨ [ADMIN VIEW] About to render InvoicesModal component')}
+              <InvoicesModal 
+                isOpen={isInvoicesModalOpen}
+                onClose={() => {
+                  console.log('Closing invoices modal');
+                  setIsInvoicesModalOpen(false);
+                }}
+              />
+            </>
+          )}
+        </Suspense>
       </>
     );
   }
