@@ -2133,7 +2133,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-surface-on-variant dark:text-gray-400 gap-4 bg-surface-container/10 dark:bg-gray-700/10">
               <div className="w-20 h-20 bg-surface-container dark:bg-gray-700 rounded-full flex items-center justify-center">
-                <ClipboardList className="h-10 w-10 text-surface-outline/50 dark:text-gray-500/50" />
+                <ClipboardList className="h-9 w-10 text-surface-outline/50 dark:text-gray-500/50" />
               </div>
               <p className="text-sm font-medium">Select a claim to view details</p>
             </div>
@@ -2586,7 +2586,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-surface-on-variant dark:text-gray-400 gap-4 bg-surface-container/10 dark:bg-gray-700/10">
               <div className="w-20 h-20 bg-surface-container dark:bg-gray-700 rounded-full flex items-center justify-center">
-                <CheckSquare className="h-10 w-10 text-surface-outline/50 dark:text-gray-500/50" />
+                <CheckSquare className="h-9 w-10 text-surface-outline/50 dark:text-gray-500/50" />
               </div>
               <p className="text-sm font-medium">Select a task to view details</p>
             </div>
@@ -2808,7 +2808,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           <div key={msg.id} className="group">
                              <div className="flex items-start gap-4 mb-3">
                                 {/* Avatar */}
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm shrink-0 ${
+                                <div className={`w-10 h-9 rounded-full flex items-center justify-center text-sm font-bold shadow-sm shrink-0 ${
                                    isMe ? 'bg-primary text-primary-on' : 'bg-tertiary-container text-tertiary-on-container'
                                 }`}>
                                    {msg.senderName.charAt(0)}
@@ -2927,7 +2927,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-surface-on-variant dark:text-gray-400 gap-4 bg-surface-container/10 dark:bg-gray-700/10">
                <div className="w-20 h-20 bg-surface-container dark:bg-gray-700 rounded-full flex items-center justify-center">
-                 <Mail className="h-10 w-10 text-surface-outline/50 dark:text-gray-500/50" />
+                 <Mail className="h-9 w-10 text-surface-outline/50 dark:text-gray-500/50" />
                </div>
                <p className="text-sm font-medium">Select a conversation to read</p>
             </div>
@@ -2972,7 +2972,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <div key={msg.id} className="group">
                     <div className="flex items-start gap-4 mb-3">
                       {/* Avatar */}
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shadow-sm shrink-0 ${
+                      <div className={`w-10 h-9 rounded-full flex items-center justify-center text-sm font-bold shadow-sm shrink-0 ${
                         isMe ? 'bg-primary text-primary-on' : 'bg-tertiary-container text-tertiary-on-container'
                       }`}>
                         {msg.senderName.charAt(0)}
@@ -3847,7 +3847,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => {
                 setCurrentTab('CLAIMS');
               }}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'CLAIMS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-9 rounded-full w-full justify-center border ${currentTab === 'CLAIMS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
             >
               <ClipboardList className="h-4 w-4" />
               Warranty
@@ -3860,7 +3860,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('TASKS');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'TASKS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-9 rounded-full w-full justify-center border ${currentTab === 'TASKS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <CheckSquare className="h-4 w-4" />
                 Tasks
@@ -3872,7 +3872,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => {
                 setCurrentTab('MESSAGES');
               }}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'MESSAGES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-9 rounded-full w-full justify-center border ${currentTab === 'MESSAGES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
             >
               <Mail className="h-4 w-4" />
               Messages
@@ -3886,7 +3886,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.preventDefault();
                   setCurrentTab('DOCUMENTS');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-9 rounded-full w-full justify-center border ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <FileText className="h-4 w-4" />
                 Documents
@@ -3901,7 +3901,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.preventDefault();
                   setCurrentTab('MANUAL');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'MANUAL' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-9 rounded-full w-full justify-center border ${currentTab === 'MANUAL' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <BookOpen className="h-4 w-4" />
                 Manual
@@ -3916,7 +3916,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('NOTES');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'NOTES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-9 rounded-full w-full justify-center border ${currentTab === 'NOTES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <StickyNote className="h-4 w-4" />
                 Notes
@@ -3930,7 +3930,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('CALLS');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'CALLS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-9 rounded-full w-full justify-center border ${currentTab === 'CALLS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <Phone className="h-4 w-4" />
                 Calls
@@ -3944,7 +3944,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('PAYROLL');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'PAYROLL' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-9 rounded-full w-full justify-center border ${currentTab === 'PAYROLL' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <DollarSign className="h-4 w-4" />
                 Payroll
@@ -3958,7 +3958,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('INVOICES');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-10 rounded-full w-full justify-center border ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-6 h-9 rounded-full w-full justify-center border ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <Receipt className="h-4 w-4" />
                 Invoices
