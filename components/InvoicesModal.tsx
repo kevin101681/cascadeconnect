@@ -28,6 +28,8 @@ interface InvoicesModalProps {
 const CBSBooksApp = lazy(() => import('../lib/cbsbooks/App'));
 
 const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillData }) => {
+  console.log('🏗️ InvoicesModal component rendered, isOpen:', isOpen);
+  
   // Key-based remounting for state cleanup
   const [mountKey, setMountKey] = useState(0);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -91,8 +93,12 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
     }
   }, [onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    console.log('❌ InvoicesModal returning null because isOpen is false');
+    return null;
+  }
 
+  console.log('✅ InvoicesModal rendering portal');
   return createPortal(
     <div 
       className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
