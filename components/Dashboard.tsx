@@ -3902,7 +3902,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Navigation Tabs at Top - Horizontal on desktop, stacked on mobile */}
             <div 
               ref={tabsContainerRef}
-              className="flex flex-col md:flex-row md:flex-wrap gap-2"
+              className="flex flex-col md:flex-row md:flex-wrap gap-2 md:gap-4"
             >
            {/* HOMEOWNER-SPECIFIC TABS */}
            <button 
