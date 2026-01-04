@@ -25,9 +25,9 @@ interface LayoutProps {
   onOpenGlobalSearch?: () => void;
 
   // Navigation & Actions
-  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES') => void;
+  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES') => void;
   onOpenEnrollment: () => void;
-  currentView?: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'DETAIL' | 'NEW';
+  currentView?: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'DETAIL' | 'NEW';
 
   // Auth
   onSignOut: () => Promise<void>;
@@ -418,13 +418,6 @@ const Layout: React.FC<LayoutProps> = ({
                           >
                             <Users className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
                             Internal Users
-                          </button>
-                           <button 
-                            onClick={() => handleMenuAction(() => onNavigate('BUILDERS'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
-                          >
-                            <Building2 className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-                            Builders
                           </button>
                           <button 
                             onClick={() => handleMenuAction(() => onNavigate('HOMEOWNERS'))}

@@ -84,7 +84,8 @@ export const homeowners = pgTable('homeowners', {
   
   // Builder Info
   builder: text('builder'),
-  builderGroupId: uuid('builder_group_id').references(() => builderGroups.id),
+  builderGroupId: uuid('builder_group_id').references(() => builderGroups.id), // Legacy - to be deprecated
+  builderUserId: uuid('builder_user_id').references(() => users.id), // New: Direct link to builder user
   jobName: text('job_name'),
   
   // Agent Info

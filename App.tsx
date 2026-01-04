@@ -7,7 +7,7 @@ import NewClaimForm from './components/NewClaimForm';
 import HomeownerEnrollment from './components/HomeownerEnrollment';
 import AuthScreenWrapper from './components/AuthScreenWrapper';
 import InternalUserManagement from './components/InternalUserManagement';
-import BuilderManagement from './components/BuilderManagement';
+import AdminDataPanel from './components/AdminDataPanel';
 import TaskList from './components/TaskList';
 import TasksSheet from './components/TasksSheet';
 import MessageSummaryModal, { ClaimMessage, TaskMessage } from './components/MessageSummaryModal';
@@ -869,7 +869,7 @@ function App() {
 
   // UI State - Persistent (but reset INVOICES on page load to prevent auto-opening)
   // Check URL hash for invoice creation link
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES'>(() => {
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES'>(() => {
     // Check if URL has invoice creation parameters
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
@@ -1298,7 +1298,7 @@ function App() {
         }
       } else {
         // Simple view navigation
-        if (view === 'DASHBOARD' || view === 'TEAM' || view === 'BUILDERS' || view === 'DATA' || view === 'TASKS' || view === 'HOMEOWNERS' || view === 'EMAIL_HISTORY' || view === 'BACKEND' || view === 'CALLS' || view === 'INVOICES') {
+        if (view === 'DASHBOARD' || view === 'TEAM' || view === 'DATA' || view === 'TASKS' || view === 'HOMEOWNERS' || view === 'EMAIL_HISTORY' || view === 'BACKEND' || view === 'CALLS' || view === 'INVOICES') {
           setCurrentView(view as any);
         }
       }
@@ -4155,18 +4155,10 @@ Assigned By: ${assignerName}
           currentUser={activeEmployee}
         />
       )}
-      {currentView === 'BUILDERS' && (
-        <BuilderManagement 
-          builderGroups={builderGroups} 
-          builderUsers={builderUsers}
-          onAddGroup={handleAddBuilderGroup} 
-          onUpdateGroup={handleUpdateBuilderGroup} 
-          onDeleteGroup={handleDeleteBuilderGroup}
-          onAddUser={handleAddBuilderUser}
-          onUpdateUser={handleUpdateBuilderUser}
-          onDeleteUser={handleDeleteBuilderUser}
+      {currentView === 'DATA' && (
+        <AdminDataPanel 
           onClose={() => setCurrentView('DASHBOARD')}
-          currentUser={activeEmployee}
+          onDataReset={loadData}
         />
       )}
       {currentView === 'HOMEOWNERS' && (
@@ -4183,11 +4175,6 @@ Assigned By: ${assignerName}
       )}
       {currentView === 'BACKEND' && (
         <BackendDashboard onClose={() => setCurrentView('DASHBOARD')} />
-      )}
-      {currentView === 'DATA' && (
-        <SmartCSVImporter
-          onClose={() => setCurrentView('DASHBOARD')}
-        />
       )}
       {currentView === 'NEW' && (
         <div className="max-w-4xl mx-auto bg-surface p-8 rounded-3xl shadow-elevation-1 border border-surface-outline-variant">

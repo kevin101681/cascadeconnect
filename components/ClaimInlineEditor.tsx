@@ -33,7 +33,7 @@ interface ClaimInlineEditorProps {
   }) => void;
   onSendMessage: (claim: Claim) => void;
   onCancel?: () => void;
-  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND', config?: { initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES'; initialThreadId?: string | null }) => void;
+  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS', config?: { initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES'; initialThreadId?: string | null }) => void;
 }
 
 const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({

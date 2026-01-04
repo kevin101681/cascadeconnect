@@ -317,7 +317,7 @@ interface DashboardProps {
   onToggleTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
   onUpdateTask?: (taskId: string, updates: Partial<Task>) => void;
-  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS') => void;
+  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS') => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
