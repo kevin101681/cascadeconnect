@@ -552,9 +552,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Header scroll sync refs
   
-  // Prevent body scroll when modal is open
+  // Prevent body scroll when modal is open (mobile only - desktop uses split-screen)
   useEffect(() => {
-    if (selectedClaimForModal || selectedTaskForModal) {
+    const isMobile = window.innerWidth < 768;
+    if ((selectedClaimForModal || selectedTaskForModal) && isMobile) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
