@@ -7,7 +7,6 @@ import NewClaimForm from './components/NewClaimForm';
 import HomeownerEnrollment from './components/HomeownerEnrollment';
 import AuthScreenWrapper from './components/AuthScreenWrapper';
 import InternalUserManagement from './components/InternalUserManagement';
-import AdminDataPanel from './components/AdminDataPanel';
 import TaskList from './components/TaskList';
 import TasksSheet from './components/TasksSheet';
 import MessageSummaryModal, { ClaimMessage, TaskMessage } from './components/MessageSummaryModal';
@@ -20,7 +19,7 @@ import AIIntakeDashboard from './components/AIIntakeDashboard';
 import HomeownerSelector from './components/HomeownerSelector';
 import { ChatWidget } from './components/chat/ChatWidget';
 import CommandMenu from './components/global/CommandMenu';
-import SmartCSVImporter from './app/dashboard/admin/import/page';
+import UnifiedImportDashboard from './app/dashboard/admin/import/page';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS, MOCK_CLAIM_MESSAGES } from './constants';
 import { sendEmail, generateNotificationBody } from './services/emailService';
@@ -294,7 +293,7 @@ function App() {
   }, [employees]);
 
   // --- REFRESH/RELOAD DATA FUNCTION ---
-  // Exposed function to reload all data from the database (used by AdminDataPanel after reset/import)
+  // Exposed function to reload all data from the database (used by import after reset/import)
   const loadData = useCallback(async () => {
     if (!isDbConfigured) {
       console.warn('Database not configured, skipping data reload');
@@ -4266,9 +4265,8 @@ Assigned By: ${assignerName}
         />
       )}
       {currentView === 'DATA' && (
-        <AdminDataPanel 
+        <UnifiedImportDashboard 
           onClose={() => setCurrentView('DASHBOARD')}
-          onDataReset={loadData}
         />
       )}
       {currentView === 'HOMEOWNERS' && (
