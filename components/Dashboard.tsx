@@ -480,8 +480,18 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual vs Schedule)
   // Declare currentTab early since it's used in useEffects below
-  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | null>('CLAIMS');
-  const previousTabRef = useRef<typeof currentTab>('CLAIMS'); // Initialize with default tab to prevent treating it as "opening"
+  // Default to null (closed) to be safe for mobile - will be set to 'CLAIMS' on desktop via useEffect
+  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | null>(null);
+  const previousTabRef = useRef<typeof currentTab>(null); // Initialize with null to prevent treating it as "opening"
+  
+  // Responsive initialization: Open Claims tab automatically on desktop, keep closed on mobile
+  useEffect(() => {
+    // Only open automatically if we are on a large screen (desktop)
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+      setCurrentTab('CLAIMS');
+      previousTabRef.current = 'CLAIMS';
+    }
+  }, []); // Run only once on mount
   
   // Debug: Log whenever selectedClaimForModal changes
   useEffect(() => {
