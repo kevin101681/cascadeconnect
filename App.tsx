@@ -8,7 +8,6 @@ import HomeownerEnrollment from './components/HomeownerEnrollment';
 import AuthScreenWrapper from './components/AuthScreenWrapper';
 import InternalUserManagement from './components/InternalUserManagement';
 import BuilderManagement from './components/BuilderManagement';
-import DataImport from './components/DataImport';
 import TaskList from './components/TaskList';
 import TasksSheet from './components/TasksSheet';
 import MessageSummaryModal, { ClaimMessage, TaskMessage } from './components/MessageSummaryModal';
@@ -21,6 +20,7 @@ import AIIntakeDashboard from './components/AIIntakeDashboard';
 import HomeownerSelector from './components/HomeownerSelector';
 import { ChatWidget } from './components/chat/ChatWidget';
 import CommandMenu from './components/global/CommandMenu';
+import SmartCSVImporter from './app/dashboard/admin/import/page';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS, MOCK_CLAIM_MESSAGES } from './constants';
 import { sendEmail, generateNotificationBody } from './services/emailService';
@@ -4185,20 +4185,7 @@ Assigned By: ${assignerName}
         <BackendDashboard onClose={() => setCurrentView('DASHBOARD')} />
       )}
       {currentView === 'DATA' && (
-        <DataImport
-          onImportClaims={handleImportClaims}
-          onImportHomeowners={handleImportHomeowners}
-          onClearHomeowners={handleClearHomeowners}
-          onClearClaims={handleClearClaims}
-          onClearContractors={handleClearContractors}
-          onClearTasks={handleClearTasks}
-          onClearMessages={handleClearMessages}
-          onClearBuilders={handleClearBuilders}
-          existingBuilderGroups={builderGroups}
-          onImportBuilderGroups={handleImportBuilderGroups}
-          onImportTasks={handleImportTasks}
-          onImportMessages={handleImportMessages}
-          onImportBuilderUsers={handleImportBuilderUsers}
+        <SmartCSVImporter
           onClose={() => setCurrentView('DASHBOARD')}
         />
       )}
