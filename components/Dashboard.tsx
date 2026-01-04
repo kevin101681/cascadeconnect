@@ -462,6 +462,21 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Use the internal state for reading
   const selectedClaimForModal = selectedClaimForModalInternal;
   
+  // Debug: Log whenever selectedClaimForModal changes
+  useEffect(() => {
+    if (selectedClaimForModal) {
+      console.log('📋 selectedClaimForModal state changed (Dashboard)', {
+        claimId: selectedClaimForModal.id,
+        claimTitle: selectedClaimForModal.title,
+        isMobile: window.innerWidth < 768,
+        currentTab,
+        timeSinceMount: Date.now() - mountTimeRef.current
+      });
+    } else {
+      console.log('📋 selectedClaimForModal cleared (Dashboard)');
+    }
+  }, [selectedClaimForModal, currentTab]);
+  
   // Mark initial load period as complete after 5 seconds
   useEffect(() => {
     if (initialLoadRef.current && !timerRef.current) {
