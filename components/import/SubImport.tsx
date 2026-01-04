@@ -59,16 +59,28 @@ const SubImport: React.FC = () => {
               const companyName = row['Company Name'] || row['Company'] || row['company_name'] || '';
               
               // Extract other fields (OPTIONAL)
-              const contactName = row['Contact'] || row['Contact Name'] || row['contact_name'] || '';
-              const email = row['Email'] || row['email'] || '';
-              const phone = row['Phone'] || row['Phone Number'] || row['phone'] || '';
+              // Use helper to convert empty strings to undefined for cleaner handling
+              const getOptionalField = (value: string) => {
+                const trimmed = value.trim();
+                return trimmed.length > 0 ? trimmed : undefined;
+              };
+              
+              const contactName = getOptionalField(
+                row['Contact'] || row['Contact Name'] || row['contact_name'] || ''
+              );
+              const email = getOptionalField(
+                row['Email'] || row['email'] || ''
+              );
+              const phone = getOptionalField(
+                row['Phone'] || row['Phone Number'] || row['phone'] || ''
+              );
 
               return {
                 rowIndex: index + 1,
                 companyName: companyName.trim(),
-                contactName: contactName.trim(),
-                email: email.trim(),
-                phone: phone.trim(),
+                contactName,
+                email,
+                phone,
               };
             }).filter(row => {
               // Only require company name
