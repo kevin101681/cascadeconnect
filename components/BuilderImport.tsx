@@ -82,7 +82,10 @@ const BuilderImport: React.FC<BuilderImportProps> = ({ onImportComplete }) => {
           Import Builder Users
         </h3>
         <p className="text-sm text-surface-on-variant dark:text-gray-400">
-          Upload a CSV file with builder data. Required columns: <strong>Name</strong>, <strong>Email</strong>. Optional: <strong>Phone</strong>, <strong>Company</strong>.
+          Upload a CSV file with builder data. Required: <strong>Name</strong>. Optional: <strong>Email</strong>, <strong>Phone</strong>, <strong>Company</strong>. 
+          <span className="block mt-1 text-xs text-orange-600 dark:text-orange-400">
+            ⚠️ Missing emails will be auto-generated as placeholder addresses.
+          </span>
         </p>
       </div>
 
@@ -159,8 +162,17 @@ const BuilderImport: React.FC<BuilderImportProps> = ({ onImportComplete }) => {
                     <td className="px-6 py-3 text-sm text-surface-on dark:text-gray-100 font-medium">
                       {builder.name}
                     </td>
-                    <td className="px-6 py-3 text-sm text-surface-on-variant dark:text-gray-400">
-                      {builder.email}
+                    <td className="px-6 py-3 text-sm">
+                      {builder.isPlaceholderEmail ? (
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-full text-xs font-medium">
+                          <AlertCircle className="h-3.5 w-3.5" />
+                          No Email (Generated)
+                        </span>
+                      ) : (
+                        <span className="text-surface-on-variant dark:text-gray-400">
+                          {builder.email}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-3 text-sm text-surface-on-variant dark:text-gray-400">
                       {builder.phone || '-'}

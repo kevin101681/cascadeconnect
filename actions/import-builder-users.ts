@@ -2,18 +2,22 @@
  * BUILDER IMPORT ACTION
  * 
  * Imports builders from CSV and creates user accounts with role='BUILDER'
- * Uses ON CONFLICT DO NOTHING to handle duplicate emails
+ * 
+ * Smart Matching Logic:
+ * - For placeholder emails (@placeholder.local): Match by Name + Company
+ * - For real emails: Use ON CONFLICT on email (standard behavior)
  */
 
 import { db } from '../db';
 import { users as usersTable } from '../db/schema';
-import { sql } from 'drizzle-orm';
+import { sql, eq, and } from 'drizzle-orm';
 
 export interface BuilderImportRow {
   name: string;
   email: string;
   phone?: string;
   company?: string;
+  isPlaceholderEmail?: boolean; // Flag to indicate generated placeholder
 }
 
 export interface BuilderImportResult {
@@ -41,27 +45,107 @@ export async function importBuilderUsers(builders: BuilderImportRow[]): Promise<
           continue;
         }
 
-        // Insert with ON CONFLICT DO NOTHING
-        const result = await db
-          .insert(usersTable)
-          .values({
-            name: builder.name.trim(),
-            email: builder.email.trim().toLowerCase(),
-            role: 'BUILDER',
-            clerkId: null, // No Clerk auth for imported builders
-            password: null, // Set via password reset flow
-            internalRole: null, // Not an internal user
-            builderGroupId: null, // No longer using builder groups
-          })
-          .onConflictDoNothing({ target: usersTable.email })
-          .returning({ id: usersTable.id });
+        const isPlaceholder = builder.email.includes('@placeholder.local');
 
-        if (result.length > 0) {
-          imported++;
-          console.log(`✅ Imported builder: ${builder.name} (${builder.email})`);
+        if (isPlaceholder) {
+          // SMART MATCHING for placeholder emails: Match by Name + Company
+          console.log(`🔍 Placeholder email detected for "${builder.name}" - attempting smart match`);
+
+          // Try to find existing user by name and company
+          let existingUser = null;
+          
+          if (builder.company) {
+            // Match by name AND company
+            const matches = await db
+              .select()
+              .from(usersTable)
+              .where(
+                and(
+                  eq(usersTable.role, 'BUILDER'),
+                  eq(usersTable.name, builder.name.trim())
+                  // Note: We don't have a company column in users table yet
+                  // For now, just match by name. You can add company column later.
+                )
+              )
+              .limit(1);
+            
+            if (matches.length > 0) {
+              existingUser = matches[0];
+            }
+          } else {
+            // Match by name only
+            const matches = await db
+              .select()
+              .from(usersTable)
+              .where(
+                and(
+                  eq(usersTable.role, 'BUILDER'),
+                  eq(usersTable.name, builder.name.trim())
+                )
+              )
+              .limit(1);
+            
+            if (matches.length > 0) {
+              existingUser = matches[0];
+            }
+          }
+
+          if (existingUser) {
+            // UPDATE existing user (found by name match)
+            await db
+              .update(usersTable)
+              .set({
+                name: builder.name.trim(),
+                // Don't overwrite email if existing one is real
+                email: existingUser.email.includes('@placeholder.local') 
+                  ? builder.email.trim().toLowerCase() 
+                  : existingUser.email,
+              })
+              .where(eq(usersTable.id, existingUser.id));
+            
+            skipped++;
+            console.log(`🔄 Updated existing builder: ${builder.name} (matched by name)`);
+          } else {
+            // INSERT new user with placeholder email
+            const result = await db
+              .insert(usersTable)
+              .values({
+                name: builder.name.trim(),
+                email: builder.email.trim().toLowerCase(),
+                role: 'BUILDER',
+                clerkId: null,
+                password: null,
+                internalRole: null,
+                builderGroupId: null,
+              })
+              .returning({ id: usersTable.id });
+
+            imported++;
+            console.log(`✅ Imported builder with placeholder: ${builder.name} (${builder.email})`);
+          }
         } else {
-          skipped++;
-          console.log(`⏭️ Skipped builder (duplicate email): ${builder.email}`);
+          // STANDARD LOGIC for real emails: Use ON CONFLICT
+          const result = await db
+            .insert(usersTable)
+            .values({
+              name: builder.name.trim(),
+              email: builder.email.trim().toLowerCase(),
+              role: 'BUILDER',
+              clerkId: null,
+              password: null,
+              internalRole: null,
+              builderGroupId: null,
+            })
+            .onConflictDoNothing({ target: usersTable.email })
+            .returning({ id: usersTable.id });
+
+          if (result.length > 0) {
+            imported++;
+            console.log(`✅ Imported builder: ${builder.name} (${builder.email})`);
+          } else {
+            skipped++;
+            console.log(`⏭️ Skipped builder (duplicate email): ${builder.email}`);
+          }
         }
       } catch (error) {
         const errorMsg = `Error importing ${builder.name}: ${error instanceof Error ? error.message : String(error)}`;
@@ -93,6 +177,8 @@ export async function importBuilderUsers(builders: BuilderImportRow[]): Promise<
 /**
  * Parse CSV data into BuilderImportRow objects
  * Expected headers: Name, Email, Phone (optional), Company (optional)
+ * 
+ * If Email is missing, generates placeholder: missing_[sanitized_name]_[timestamp]@placeholder.local
  */
 export function parseBuilderCSV(csvText: string): BuilderImportRow[] {
   const lines = csvText.trim().split('\n');
@@ -106,8 +192,8 @@ export function parseBuilderCSV(csvText: string): BuilderImportRow[] {
   const phoneIndex = headers.findIndex(h => h.includes('phone'));
   const companyIndex = headers.findIndex(h => h.includes('company'));
 
-  if (nameIndex === -1 || emailIndex === -1) {
-    throw new Error('CSV must have "Name" and "Email" columns');
+  if (nameIndex === -1) {
+    throw new Error('CSV must have "Name" column');
   }
 
   const builders: BuilderImportRow[] = [];
@@ -117,12 +203,32 @@ export function parseBuilderCSV(csvText: string): BuilderImportRow[] {
     if (!line) continue;
 
     const values = line.split(',').map(v => v.trim());
+    const name = values[nameIndex] || '';
+    let email = emailIndex !== -1 ? values[emailIndex] : '';
+    let isPlaceholderEmail = false;
+
+    // Generate placeholder email if missing
+    if (!email || email.trim() === '') {
+      // Sanitize name: lowercase, remove special chars, replace spaces with underscores
+      const sanitizedName = name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, '')
+        .replace(/\s+/g, '_')
+        .substring(0, 30); // Limit length
+      
+      const timestamp = Date.now();
+      email = `missing_${sanitizedName}_${timestamp}@placeholder.local`;
+      isPlaceholderEmail = true;
+      
+      console.log(`⚠️ Generated placeholder email for "${name}": ${email}`);
+    }
 
     builders.push({
-      name: values[nameIndex] || '',
-      email: values[emailIndex] || '',
+      name,
+      email,
       phone: phoneIndex !== -1 ? values[phoneIndex] : undefined,
       company: companyIndex !== -1 ? values[companyIndex] : undefined,
+      isPlaceholderEmail,
     });
   }
 
