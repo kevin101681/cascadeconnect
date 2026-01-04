@@ -61,9 +61,35 @@ const HomeownerImport: React.FC = () => {
               }
               
               // Extract data from CSV
-              const name = row['First Name'] && row['Last Name']
+              // FALLBACK NAME STRATEGY:
+              // 1. Try standard name fields (First Name + Last Name, Name, Client Name, Clients)
+              // 2. If empty, use Job Name as fallback
+              // 3. If both empty, use "Unnamed Homeowner" (prevents skipping valid data)
+              
+              const rawName = row['First Name'] && row['Last Name']
                 ? `${row['First Name']} ${row['Last Name']}`.trim()
-                : row['Name'] || row['Client Name'] || '';
+                : row['Name'] || row['Client Name'] || row['Clients'] || row['Client'] || '';
+              
+              const jobName = row['Job Name'] || row['Project Name'] || row['Project'] || '';
+              
+              // Apply fallback chain
+              let name = rawName.trim();
+              
+              if (!name && jobName.trim().length > 0) {
+                // Fallback 1: Use Job Name if no client name
+                name = jobName.trim();
+                if (index < 5) {
+                  console.log(`📝 Row ${index + 1}: Using Job Name as name fallback: "${name}"`);
+                }
+              }
+              
+              if (!name) {
+                // Fallback 2: Last resort - prevent row from being skipped
+                name = "Unnamed Homeowner";
+                if (index < 5) {
+                  console.log(`⚠️ Row ${index + 1}: Using "Unnamed Homeowner" as ultimate fallback`);
+                }
+              }
               
               const email = row['Email'] || row['Email Address'] || '';
               const phone = row['Phone'] || row['Phone Number'] || row['Primary Phone'] || '';
@@ -99,8 +125,7 @@ const HomeownerImport: React.FC = () => {
               // Builder info
               const builderGroup = row['Groups'] || row['Builder'] || row['Builder Name'] || '';
               
-              // Job/Property info
-              const jobName = row['Job Name'] || row['Project Name'] || row['Project'] || '';
+              // Job/Property info - Already extracted above for name fallback
               
               // Closing date - SANITIZE Excel "1/0/1900" artifacts
               let closingDate: Date | undefined;
@@ -354,7 +379,13 @@ const HomeownerImport: React.FC = () => {
                       {row.rowIndex}
                     </td>
                     <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100 font-medium">
-                      {row.name}
+                      {row.name === 'Unnamed Homeowner' ? (
+                        <span className="text-surface-on-variant/70 dark:text-gray-500 italic">
+                          {row.name}
+                        </span>
+                      ) : (
+                        <span>{row.name}</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
                       {row.email ? (
