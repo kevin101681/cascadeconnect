@@ -360,11 +360,6 @@ function buildUniversalNotificationContent(
           <a href="${primaryCta.link}" style="display: inline-block; background-color: ${primaryCta.color}; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
             ${primaryCta.text}
           </a>
-          ${scenario !== 'NO_MATCH' && homeownerLink && scenario !== 'CLAIM_CREATED' ? `
-          <a href="${homeownerLink}" style="display: inline-block; background-color: #3c6b80; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
-            View Homeowner
-          </a>
-          ` : ''}
           <a href="${callsLink}" style="display: inline-block; background-color: #3c6b80; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
             View All Calls
           </a>

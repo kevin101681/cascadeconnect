@@ -203,7 +203,7 @@ const SMSChatView: React.FC<SMSChatViewProps> = ({
           <MessageSquare className="h-5 w-5 text-primary" />
           <div>
             <h3 className="text-lg font-medium text-surface-on dark:text-gray-100">
-              SMS Chat
+              Chat
             </h3>
             <p className="text-sm text-surface-on-variant dark:text-gray-400">
               {homeownerName} • {homeownerPhone}
@@ -290,7 +290,6 @@ const SMSChatView: React.FC<SMSChatViewProps> = ({
             ) : (
               <Send className="h-4 w-4" />
             )}
-            Send
           </button>
         </form>
       </div>

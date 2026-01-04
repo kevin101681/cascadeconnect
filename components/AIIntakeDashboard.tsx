@@ -439,7 +439,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                     </div>
                   </div>
 
-                  {actualSelectedCall.phoneNumber && (
+                  {actualSelectedCall.phoneNumber && actualSelectedCall.phoneNumber !== 'CALLER_ID' && actualSelectedCall.phoneNumber !== 'not provided' && actualSelectedCall.phoneNumber !== 'Not Provided' && (
                     <div className="flex items-center gap-3 p-4 bg-surface-container dark:bg-gray-700 rounded-lg">
                       <div className="p-2 bg-surface dark:bg-gray-600 rounded-lg">
                         <Phone className="h-5 w-5 text-primary" />
@@ -662,7 +662,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                 </div>
               </div>
 
-              {actualSelectedCall.phoneNumber && (
+              {actualSelectedCall.phoneNumber && actualSelectedCall.phoneNumber !== 'CALLER_ID' && actualSelectedCall.phoneNumber !== 'not provided' && actualSelectedCall.phoneNumber !== 'Not Provided' && (
                 <div className="flex items-center gap-3 p-4 bg-surface-container dark:bg-gray-700 rounded-lg">
                   <div className="p-2 bg-surface dark:bg-gray-600 rounded-lg">
                     <Phone className="h-5 w-5 text-primary" />
