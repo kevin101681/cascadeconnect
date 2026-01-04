@@ -14,6 +14,7 @@
 import React, { useEffect, useState } from 'react';
 import { useModalStore } from '@/hooks/use-modal-store';
 import type { ModalType } from '@/hooks/use-modal-store';
+import { NoteModal } from '@/components/notes/NoteModal';
 
 // ============================================================================
 // PLACEHOLDER MODAL COMPONENTS
@@ -303,6 +304,7 @@ const MODAL_COMPONENTS: Record<ModalType, React.FC<ModalComponentProps>> = {
   EXPORT_MODAL: ExportModal,
   IMPORT_MODAL: ImportModal,
   SETTINGS_MODAL: SettingsModal,
+  ADD_NOTE: NoteModal,
 };
 
 // ============================================================================

@@ -41,7 +41,8 @@ export type ModalType =
   | 'CONFIRM_DELETE'
   | 'EXPORT_MODAL'
   | 'IMPORT_MODAL'
-  | 'SETTINGS_MODAL';
+  | 'SETTINGS_MODAL'
+  | 'ADD_NOTE';
 
 // Modal Data Interface - Extend this for specific modal data types
 export interface ModalData {
