@@ -72,17 +72,16 @@ export const NoteModal: React.FC<NoteModalProps> = ({ data, modalId }) => {
     <>
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100]"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
       
-      {/* Modal */}
+      {/* Modal Container */}
       <div 
-        className="fixed inset-0 flex items-center justify-center p-4 z-[101]"
-        onClick={onClose}
+        className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none"
       >
         <div 
-          className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-5 w-full max-w-lg"
+          className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-5 w-full max-w-lg pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
