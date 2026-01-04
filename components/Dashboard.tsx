@@ -389,6 +389,18 @@ const Dashboard: React.FC<DashboardProps> = ({
   const userInteractionRef = useRef(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Wrap the internal setter to log ALL state changes (for debugging)
+  const setSelectedClaimForModalInternalWithLogging = useCallback((claim: Claim | null) => {
+    const isMobile = window.innerWidth < 768;
+    console.log('🔧 INTERNAL setter called', {
+      claim: claim ? { id: claim.id, title: claim.title } : null,
+      isMobile,
+      timeSinceMount: Date.now() - mountTimeRef.current,
+      caller: new Error().stack?.split('\n')[2]?.trim()
+    });
+    setSelectedClaimForModalInternal(claim);
+  }, []);
+  
   // Track user interactions (clicks, touches) to distinguish user-initiated vs auto-opens
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
@@ -424,7 +436,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     // On desktop, always allow
     if (!isMobile) {
       console.log('🖥️ Desktop: Allowing modal to open');
-      setSelectedClaimForModalInternal(claim);
+      setSelectedClaimForModalInternalWithLogging(claim);
       return;
     }
     
@@ -456,8 +468,8 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
     
     // Allow setting (either null to close, or claim with user interaction)
-    setSelectedClaimForModalInternal(claim);
-  }, []);
+    setSelectedClaimForModalInternalWithLogging(claim);
+  }, [setSelectedClaimForModalInternalWithLogging]);
   
   // Use the internal state for reading
   const selectedClaimForModal = selectedClaimForModalInternal;
