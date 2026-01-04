@@ -469,14 +469,26 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Debug: Log whenever selectedClaimForModal changes
   useEffect(() => {
+    const isMobile = window.innerWidth < 768;
     if (selectedClaimForModal) {
       console.log('📋 selectedClaimForModal state changed (Dashboard)', {
         claimId: selectedClaimForModal.id,
         claimTitle: selectedClaimForModal.title,
-        isMobile: window.innerWidth < 768,
+        isMobile,
         currentTab,
-        timeSinceMount: Date.now() - mountTimeRef.current
+        timeSinceMount: Date.now() - mountTimeRef.current,
+        willShowMobileOverlay: isMobile && currentTab === 'CLAIMS'
       });
+      
+      // If on mobile and CLAIMS tab, this will show as full-screen overlay
+      if (isMobile && currentTab === 'CLAIMS') {
+        console.log('⚠️ WARNING: Mobile overlay will render - this is the modal the user sees!', {
+          claimId: selectedClaimForModal.id,
+          timeSinceMount: Date.now() - mountTimeRef.current,
+          hasUserInteraction: userInteractionRef.current,
+          isInitialLoad: initialLoadRef.current
+        });
+      }
     } else {
       console.log('📋 selectedClaimForModal cleared (Dashboard)');
     }
