@@ -300,7 +300,13 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     let claimId: string | null = null;
 
     // Create claim if homeowner matched AND call intent indicates a new claim or emergency
-    const shouldCreateClaim = matchedHomeowner && (callIntent === 'new_claim' || callIntent === 'emergency');
+    // Accept multiple intent values: new_claim, emergency, warranty_issue, or urgent
+    const shouldCreateClaim = matchedHomeowner && (
+      callIntent === 'new_claim' || 
+      callIntent === 'emergency' ||
+      callIntent === 'warranty_issue' ||
+      callIntent === 'urgent'
+    );
     
     if (shouldCreateClaim) {
       console.log(`📦 [${requestId}] STEP 3: Creating claim (intent: ${callIntent})`);

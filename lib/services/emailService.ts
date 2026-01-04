@@ -202,17 +202,23 @@ export async function sendBatchEmails(requests: EmailRequest[]): Promise<EmailRe
 // ==========================================
 
 /**
- * Get admin emails from database
+ * Get admin emails from database - only Administrator role
  */
 async function getAdminEmails(db: any): Promise<string[]> {
   try {
     const { users } = await import('../../db/schema');
-    const { eq } = await import('drizzle-orm');
+    const { eq, and } = await import('drizzle-orm');
     
+    // Only get users with role = 'ADMIN' AND internalRole = 'Administrator'
     const admins = await db
       .select()
       .from(users)
-      .where(eq(users.role, 'ADMIN'));
+      .where(
+        and(
+          eq(users.role, 'ADMIN'),
+          eq(users.internalRole, 'Administrator')
+        )
+      );
     
     const adminEmails = admins
       .map((admin: any) => admin.email)
@@ -256,8 +262,8 @@ function buildUniversalNotificationContent(
     subject = `New Warranty Claim: ${data.propertyAddress || 'Unknown Address'}`;
     headerTitle = 'New Warranty Claim Created';
     scenarioDescription = `A warranty claim has been automatically created for ${data.matchedHomeownerName || data.homeownerName || 'this homeowner'}.`;
-    statusBadge = '<span style="background-color: #1565C0; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Claim Created</span>';
-    primaryCta = { text: 'View Claim', link: claimLink || callsLink, color: '#1565C0' };
+    statusBadge = '<span style="background-color: #3c6b80; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Claim Created</span>';
+    primaryCta = { text: 'View Claim', link: claimLink || callsLink, color: '#3c6b80' };
   }
   // ====================================
   // SCENARIO B: MATCH FOUND, NO CLAIM
@@ -266,8 +272,8 @@ function buildUniversalNotificationContent(
     subject = `Homeowner Call: ${data.propertyAddress || 'Unknown Address'}`;
     headerTitle = 'Homeowner Call Received';
     scenarioDescription = `${data.matchedHomeownerName || data.homeownerName || 'A homeowner'} called.`;
-    statusBadge = '<span style="background-color: #1565C0; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Matched - No Claim</span>';
-    primaryCta = { text: 'View Homeowner', link: homeownerLink || callsLink, color: '#1565C0' };
+    statusBadge = '<span style="background-color: #3c6b80; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Matched - No Claim</span>';
+    primaryCta = { text: 'View Homeowner', link: homeownerLink || callsLink, color: '#3c6b80' };
   }
   // ====================================
   // SCENARIO C: NO MATCH / UNKNOWN
@@ -276,8 +282,8 @@ function buildUniversalNotificationContent(
     subject = `Unknown Caller: ${data.phoneNumber || 'No Phone'}`;
     headerTitle = 'Unknown Caller - Manual Review Required';
     scenarioDescription = `A caller could not be matched to a homeowner in the database.`;
-    statusBadge = '<span style="background-color: #1565C0; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Unmatched</span>';
-    primaryCta = { text: 'Review Call', link: callsLink, color: '#1565C0' };
+    statusBadge = '<span style="background-color: #3c6b80; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Unmatched</span>';
+    primaryCta = { text: 'Review Call', link: callsLink, color: '#3c6b80' };
   }
 
   // Add urgency flag to subject if urgent
@@ -343,7 +349,7 @@ function buildUniversalNotificationContent(
 
         <!-- Issue Description -->
         ${data.issueDescription ? `
-        <div style="background-color: #E3F2FD; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #2196F3;">
+        <div style="background-color: #E8F1F5; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3c6b80;">
           <h3 style="margin-top: 0; color: #333; font-size: 16px;">${scenario === 'CLAIM_CREATED' ? 'Issue Description' : 'Caller Message'}</h3>
           <p style="margin: 0; color: #333; white-space: pre-wrap; line-height: 1.6;">${data.issueDescription}</p>
         </div>
@@ -355,11 +361,11 @@ function buildUniversalNotificationContent(
             ${primaryCta.text}
           </a>
           ${scenario !== 'NO_MATCH' && homeownerLink && scenario !== 'CLAIM_CREATED' ? `
-          <a href="${homeownerLink}" style="display: inline-block; background-color: #1565C0; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
+          <a href="${homeownerLink}" style="display: inline-block; background-color: #3c6b80; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
             View Homeowner
           </a>
           ` : ''}
-          <a href="${callsLink}" style="display: inline-block; background-color: #1565C0; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
+          <a href="${callsLink}" style="display: inline-block; background-color: #3c6b80; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
             View All Calls
           </a>
         </div>
