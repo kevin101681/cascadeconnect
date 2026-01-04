@@ -552,22 +552,6 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                   </div>
                 )}
 
-                {/* Recording */}
-                {actualSelectedCall.recordingUrl && (
-                  <div>
-                    <label className="text-sm text-surface-on-variant dark:text-gray-400 mb-2 block">Recording</label>
-                    <a
-                      href={actualSelectedCall.recordingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors"
-                    >
-                      <Play className="h-4 w-4" />
-                      Listen to Recording
-                    </a>
-                  </div>
-                )}
-
                 {/* SMS Chat - Show if homeowner is verified and has phone number */}
                 {actualSelectedCall.homeownerId && actualSelectedCall.phoneNumber && (
                   <div className="mt-6">
@@ -580,19 +564,32 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                 )}
 
                 {/* Actions */}
-                {actualSelectedCall.homeownerId && (
-                  <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700">
+                <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 space-y-3">
+                  {actualSelectedCall.homeownerId && (
                     <button
                       onClick={() => {
                         handleViewHomeowner(actualSelectedCall.homeownerId);
                       }}
-                      className="px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
+                      className="w-full px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
                     >
                       <ExternalLink className="h-4 w-4" />
                       View Homeowner
                     </button>
-                  </div>
-                )}
+                  )}
+                  
+                  {/* Listen to Call Audio Button */}
+                  {actualSelectedCall.recordingUrl && (
+                    <a
+                      href={actualSelectedCall.recordingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                      <Play className="h-4 w-4" />
+                      Listen to Call Audio
+                    </a>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center min-h-[calc(100vh-12rem)]">
@@ -778,22 +775,6 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
               </div>
             )}
 
-            {/* Recording */}
-            {actualSelectedCall.recordingUrl && (
-              <div>
-                <label className="text-sm text-surface-on-variant dark:text-gray-400 mb-2 block">Recording</label>
-                <a
-                  href={actualSelectedCall.recordingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  <Play className="h-4 w-4" />
-                  Listen to Recording
-                </a>
-              </div>
-            )}
-
             {/* SMS Chat */}
             {actualSelectedCall.homeownerId && actualSelectedCall.phoneNumber && (
               <div className="mt-6">
@@ -806,19 +787,32 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
             )}
 
             {/* Actions */}
-            {actualSelectedCall.homeownerId && (
-              <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700">
+            <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 space-y-3">
+              {actualSelectedCall.homeownerId && (
                 <button
                   onClick={() => {
                     handleViewHomeowner(actualSelectedCall.homeownerId);
                   }}
-                  className="px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors flex items-center gap-2"
+                  className="w-full px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
                 >
                   <ExternalLink className="h-4 w-4" />
                   View Homeowner
                 </button>
-              </div>
-            )}
+              )}
+              
+              {/* Listen to Call Audio Button */}
+              {actualSelectedCall.recordingUrl && (
+                <a
+                  href={actualSelectedCall.recordingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors"
+                >
+                  <Play className="h-4 w-4" />
+                  Listen to Call Audio
+                </a>
+              )}
+            </div>
           </div>
         </div>
       </div>

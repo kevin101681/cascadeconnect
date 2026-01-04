@@ -511,12 +511,8 @@ export function verifyVapiSecret(headerSecret: string | undefined): boolean {
 export function isFinalEvent(payload: VapiWebhookPayload, callData: Partial<ExtractedCallData>): boolean {
   const messageType = payload.message?.type || payload.type;
   
-  return (
-    messageType === 'end-of-call-report' || 
-    messageType === 'function-call' ||
-    !!callData.propertyAddress ||
-    !!callData.callIntent
-  );
+  // Only send email on end-of-call-report to prevent duplicates
+  return messageType === 'end-of-call-report';
 }
 
 // ==========================================

@@ -257,7 +257,7 @@ function buildUniversalNotificationContent(
     headerTitle = 'New Warranty Claim Created';
     scenarioDescription = `A warranty claim has been automatically created for ${data.matchedHomeownerName || data.homeownerName || 'this homeowner'}.`;
     statusBadge = '<span style="background-color: #1565C0; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Claim Created</span>';
-    primaryCta = { text: 'View Claim', link: claimLink || callsLink, color: '#26A69A' };
+    primaryCta = { text: 'View Claim', link: claimLink || callsLink, color: '#1565C0' };
   }
   // ====================================
   // SCENARIO B: MATCH FOUND, NO CLAIM
@@ -266,8 +266,8 @@ function buildUniversalNotificationContent(
     subject = `Homeowner Call: ${data.propertyAddress || 'Unknown Address'}`;
     headerTitle = 'Homeowner Call Received';
     scenarioDescription = `${data.matchedHomeownerName || data.homeownerName || 'A homeowner'} called.`;
-    statusBadge = '<span style="background-color: #26A69A; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Matched - No Claim</span>';
-    primaryCta = { text: 'View Homeowner', link: homeownerLink || callsLink, color: '#26A69A' };
+    statusBadge = '<span style="background-color: #1565C0; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Matched - No Claim</span>';
+    primaryCta = { text: 'View Homeowner', link: homeownerLink || callsLink, color: '#1565C0' };
   }
   // ====================================
   // SCENARIO C: NO MATCH / UNKNOWN
@@ -275,9 +275,9 @@ function buildUniversalNotificationContent(
   else {
     subject = `Unknown Caller: ${data.phoneNumber || 'No Phone'}`;
     headerTitle = 'Unknown Caller - Manual Review Required';
-    scenarioDescription = `The AI could not match this address to any homeowner in the database. Please review manually and create a homeowner record if needed.`;
-    statusBadge = '<span style="background-color: #26A69A; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Unmatched</span>';
-    primaryCta = { text: 'Review Call', link: callsLink, color: '#26A69A' };
+    scenarioDescription = `A caller could not be matched to a homeowner in the database.`;
+    statusBadge = '<span style="background-color: #1565C0; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Unmatched</span>';
+    primaryCta = { text: 'Review Call', link: callsLink, color: '#1565C0' };
   }
 
   // Add urgency flag to subject if urgent
@@ -349,33 +349,17 @@ function buildUniversalNotificationContent(
         </div>
         ` : ''}
 
-        <!-- Action Needed (for NO_MATCH scenario) -->
-        ${scenario === 'NO_MATCH' ? `
-        <div style="background-color: #ffebee; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #f44336;">
-          <h3 style="margin-top: 0; color: #d32f2f; font-size: 16px;">Action Required</h3>
-          <p style="margin: 0; color: #666; line-height: 1.6;">
-            This caller could not be matched to a homeowner in the database. Please:
-          </p>
-          <ul style="color: #666; line-height: 1.8; margin-top: 10px;">
-            <li>Verify if this is a valid homeowner</li>
-            <li>Check if the address was captured correctly</li>
-            <li>Add homeowner to database if needed</li>
-            <li>Create a claim manually if this is a warranty issue</li>
-          </ul>
-        </div>
-        ` : ''}
-
         <!-- CTA Buttons - Pill Shaped -->
         <div style="margin-top: 30px; text-align: center;">
           <a href="${primaryCta.link}" style="display: inline-block; background-color: ${primaryCta.color}; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
             ${primaryCta.text}
           </a>
           ${scenario !== 'NO_MATCH' && homeownerLink && scenario !== 'CLAIM_CREATED' ? `
-          <a href="${homeownerLink}" style="display: inline-block; background-color: #26A69A; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
+          <a href="${homeownerLink}" style="display: inline-block; background-color: #1565C0; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
             View Homeowner
           </a>
           ` : ''}
-          <a href="${callsLink}" style="display: inline-block; background-color: #26A69A; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
+          <a href="${callsLink}" style="display: inline-block; background-color: #1565C0; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
             View All Calls
           </a>
         </div>
@@ -399,15 +383,6 @@ Urgency: ${data.isUrgent ? 'URGENT' : 'Normal'}
 ${scenario === 'CLAIM_CREATED' ? `Claim Number: #${data.claimNumber}` : ''}
 
 ${data.issueDescription ? `\nISSUE DESCRIPTION\n${data.issueDescription}\n` : ''}
-
-${scenario === 'NO_MATCH' ? `
-ACTION REQUIRED
-This caller could not be matched to a homeowner. Please:
-- Verify if this is a valid homeowner
-- Check if the address was captured correctly
-- Add homeowner to database if needed
-- Create a claim manually if this is a warranty issue
-` : ''}
 
 LINKS
 ${primaryCta.text}: ${primaryCta.link}
