@@ -95,13 +95,25 @@ const HomeownerImport: React.FC = () => {
               // Job/Property info
               const jobName = row['Job Name'] || row['Project Name'] || row['Project'] || '';
               
-              // Closing date - should already be clean from Excel processing
+              // Closing date - SANITIZE Excel "1/0/1900" artifacts
               let closingDate: Date | undefined;
               const closingDateStr = row['Closing Date'] || row['Close Date'] || '';
               if (closingDateStr) {
                 const parsed = new Date(closingDateStr);
-                if (!isNaN(parsed.getTime())) {
+                // Rule: Date must be valid AND year must be > 2000
+                // Excel empty dates show as "1/0/1900" which parses to 1899/1900
+                // This filters them out safely
+                if (!isNaN(parsed.getTime()) && parsed.getFullYear() > 2000) {
                   closingDate = parsed;
+                  if (index < 3) {
+                    console.log(`Row ${index + 1} Valid closing date:`, closingDate);
+                  }
+                } else {
+                  // Debug: Log rejected dates
+                  if (index < 3 || closingDateStr.includes('1900')) {
+                    console.warn(`Row ${index + 1} Invalid date filtered: "${closingDateStr}" (Year: ${parsed.getFullYear() || 'invalid'})`);
+                  }
+                  closingDate = undefined; // Explicitly set to undefined for clarity
                 }
               }
 
@@ -322,8 +334,20 @@ const HomeownerImport: React.FC = () => {
                     <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100 font-medium">
                       {row.jobName || '-'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
-                      {row.closingDate ? new Date(row.closingDate).toLocaleDateString() : '-'}
+                    <td className="px-4 py-3 text-sm">
+                      {row.closingDate ? (
+                        <span className="text-surface-on dark:text-gray-100">
+                          {new Date(row.closingDate).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric', 
+                            year: 'numeric' 
+                          })}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-surface-container-high dark:bg-gray-700 text-surface-on-variant dark:text-gray-400">
+                          TBD
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className="flex items-center gap-2">
