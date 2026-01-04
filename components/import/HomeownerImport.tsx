@@ -42,8 +42,15 @@ const HomeownerImport: React.FC = () => {
             const rows = results.data as any[];
             console.log(`📊 CSV Parse Complete: ${rows.length} total rows`);
             
+            // 🔍 DEBUG: Log CSV headers from first row
+            if (rows.length > 0) {
+              console.log('🔑 CSV Headers Found:', Object.keys(rows[0]));
+              console.log('📋 First row full data:', rows[0]);
+            }
+            
             setTotalRows(rows.length);
             let skipped = 0;
+            let debugSkippedCount = 0; // Track for limiting console spam
             
             // Transform CSV rows into HomeownerImportRow format
             // CRITICAL: DO NOT de-duplicate by email - allow multiple homes per user
@@ -139,7 +146,21 @@ const HomeownerImport: React.FC = () => {
               
               if (!hasName) {
                 skipped++;
-                console.warn(`⏭️ Skipping row ${row.rowIndex}: Missing name (truly empty row)`);
+                
+                // 🔍 DEBUG: Log first 10 rejected rows with full details
+                if (debugSkippedCount < 10) {
+                  console.warn(`❌ REJECTED Row ${row.rowIndex}:`);
+                  console.log('  • Raw name value:', row.name);
+                  console.log('  • Raw email value:', row.email);
+                  console.log('  • Raw phone value:', row.phone);
+                  console.log('  • Raw address value:', row.address);
+                  console.log('  • Raw jobName value:', row.jobName);
+                  console.log('  • Reason: Missing name (hasName =', hasName, ')');
+                  debugSkippedCount++;
+                } else if (debugSkippedCount === 10) {
+                  console.warn(`... ${skipped - 10} more rows rejected (stopping console spam)`);
+                  debugSkippedCount++;
+                }
               }
               
               return hasName;
@@ -150,6 +171,16 @@ const HomeownerImport: React.FC = () => {
             }
 
             console.log(`✅ Parsed ${parsed.length} valid rows, ${skipped} skipped`);
+            
+            // 🔍 DEBUG: Final summary
+            if (skipped > 0) {
+              console.warn(`⚠️ VALIDATION SUMMARY:`);
+              console.warn(`  • Total rows in CSV: ${rows.length}`);
+              console.warn(`  • Valid rows (have name): ${parsed.length}`);
+              console.warn(`  • Rejected rows (no name): ${skipped}`);
+              console.warn(`  • Check the rejected rows above to see what data they contain`);
+            }
+            
             setSkippedCount(skipped);
             setStagingData(parsed);
           } catch (error) {
