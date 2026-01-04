@@ -1806,7 +1806,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, filter?: 'All' | 'Open' | 'Closed', setFilter?: (filter: 'All' | 'Open' | 'Closed') => void, onExportExcel?: () => void, allClaims?: Claim[], isAdminView: boolean = false) => (
     <div 
-      className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col"
+      className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col"
     >
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
         <div className="flex items-center justify-between md:justify-center gap-4 w-full md:w-auto">
@@ -2086,9 +2086,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     return (
       <>
-      <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
+      <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
         {/* Left Column: Claims List */}
-        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
+        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
           <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-3xl md:rounded-tr-none">
             <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               {filteredClaims.length > 0 && (
@@ -2268,7 +2268,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Right Column: Claim Detail View - Desktop Only */}
-        <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedClaimForModal ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
+        <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedClaimForModal ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
           {selectedClaimForModal ? (
             <>
               {/* Claim Header Toolbar */}
@@ -2474,7 +2474,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const renderDocumentsTab = () => (
-    <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col">
+    <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col">
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 md:rounded-t-3xl">
         <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
@@ -2639,9 +2639,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     return (
       <>
-      <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
+      <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
         {/* Left Column: Tasks List */}
-        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedTaskForModal ? 'hidden md:flex' : 'flex'}`}>
+        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedTaskForModal ? 'hidden md:flex' : 'flex'}`}>
           <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-3xl md:rounded-tr-none">
             <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               {filteredTasks.length > 0 && (
@@ -2802,7 +2802,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Right Column: Task Detail View - Desktop Only */}
-        <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedTaskForModal ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
+        <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedTaskForModal ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
           {selectedTaskForModal ? (
             <>
               {/* Task Header Toolbar */}
@@ -2915,9 +2915,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const renderMessagesTab = () => (
     <>
-    <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
+    <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
        {/* Left Column: Inbox List (Gmail Style) */}
-       <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-primary/10 dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
+       <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-3xl md:rounded-tr-none">
             <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               {displayThreads.filter(t => !t.isRead).length > 0 && (
@@ -3029,7 +3029,7 @@ const Dashboard: React.FC<DashboardProps> = ({
        </div>
 
        {/* Right Column: Email Thread View - Desktop Only */}
-       <div className={`flex-1 flex flex-col bg-primary/10 dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
+       <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
           {selectedThread ? (
             <>
                {/* Thread Header Toolbar */}
@@ -3774,7 +3774,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             {/* Collapsed State - Show expand button */}
             {isHomeownerCardCollapsed && (
-              <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 p-2">
+              <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 p-2">
                 <button
                   onClick={() => setIsHomeownerCardCollapsed(false)}
                   className="flex items-center justify-center w-full p-2 hover:bg-surface-container/50 dark:hover:bg-gray-700/50 rounded transition-all"
@@ -3791,7 +3791,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div 
                 ref={homeownerCardContainerRef}
                 key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
-                className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 overflow-hidden relative"
+                className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 overflow-hidden relative"
               >
                 {/* Search Bar - Admin & Builder Only - Desktop only (inside card) */}
                 {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
@@ -4574,7 +4574,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
                     {currentTab === 'INVOICES' ? (
-                      <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-[calc(100vh-300px)]">
+                      <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-[calc(100vh-300px)]">
                         <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
                           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                             Invoices & Billing
@@ -4619,7 +4619,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
                     {currentTab === 'INVOICES' ? (
-                      <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-[calc(100vh-300px)]">
+                      <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-[calc(100vh-300px)]">
                         <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
                           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                             Invoices & Billing
@@ -4774,7 +4774,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col h-full">
+                <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col h-full">
                   <ScheduleTab 
                     homeowners={homeowners}
                     currentUserId={currentUser?.id}
@@ -4840,7 +4840,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col h-full">
+                <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col h-full">
                   <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex-shrink-0 md:rounded-t-3xl flex items-center justify-between">
                     <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                       Invoices
