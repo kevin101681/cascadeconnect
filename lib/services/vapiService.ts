@@ -103,7 +103,7 @@ export function isVapiConfigured(): boolean {
 }
 
 /**
- * Get Vapi API secret (throws if not configured)
+ * Get Vapi webhook secret for verification (throws if not configured)
  */
 function getVapiSecret(): string {
   const secret = process.env.VAPI_SECRET;
@@ -113,6 +113,13 @@ function getVapiSecret(): string {
   }
   
   return secret;
+}
+
+/**
+ * Get Vapi private API key for API calls (optional - returns null if not configured)
+ */
+function getVapiApiKey(): string | null {
+  return process.env.VAPI_PRIVATE_KEY || process.env.VAPI_API_KEY || null;
 }
 
 // ==========================================
@@ -127,13 +134,19 @@ function getVapiSecret(): string {
 export async function fetchVapiCall(callId: string): Promise<VapiCall> {
   console.log(`🔄 Fetching call data from Vapi API: ${callId}`);
 
-  const vapiSecret = getVapiSecret();
+  const vapiApiKey = getVapiApiKey();
+  
+  // If no API key is configured, skip the API call
+  if (!vapiApiKey) {
+    console.warn('⚠️ VAPI_PRIVATE_KEY not configured - skipping API fallback. Set VAPI_PRIVATE_KEY environment variable to enable API fallback.');
+    throw new Error('VAPI_PRIVATE_KEY not configured');
+  }
 
   try {
     const response = await fetch(`https://api.vapi.ai/call/${callId}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${vapiSecret}`,
+        'Authorization': `Bearer ${vapiApiKey}`,
         'Content-Type': 'application/json',
       },
     });
