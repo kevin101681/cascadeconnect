@@ -443,7 +443,9 @@ export const api = {
         return `https://square.link/u/mock-${Math.random().toString(36).substring(7)}`;
       }
       try {
-        const result = await fetchWithErrors(`${API_BASE}/create-payment-link`, {
+        // Use Netlify function path for payment link creation
+        const endpoint = `/.netlify/functions/create-payment-link`;
+        const result = await fetchWithErrors(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -455,8 +457,8 @@ export const api = {
         });
         return result.url;
       } catch (error) {
-        console.warn('API failed, using mock payment link:', error);
-        return `https://square.link/u/mock-${Math.random().toString(36).substring(7)}`;
+        console.warn('Payment link creation failed:', error);
+        throw new Error(`Failed to create payment link: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     },
     sendEmail: async (to: string, subject: string, text: string, html: string, attachment: { filename: string, data: string }) => {
