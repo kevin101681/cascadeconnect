@@ -271,5 +271,5 @@ export const useModalData = <T = ModalData>(type: ModalType) => {
 };
 
 // Export types for use in components
-export type { ModalStore, ModalInstance };
+export type { ModalStore };
 
