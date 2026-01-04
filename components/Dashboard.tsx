@@ -462,6 +462,11 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Use the internal state for reading
   const selectedClaimForModal = selectedClaimForModalInternal;
   
+  // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual vs Schedule)
+  // Declare currentTab early since it's used in useEffects below
+  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | null>('CLAIMS');
+  const previousTabRef = useRef<typeof currentTab>('CLAIMS'); // Initialize with default tab to prevent treating it as "opening"
+  
   // Debug: Log whenever selectedClaimForModal changes
   useEffect(() => {
     if (selectedClaimForModal) {
@@ -551,11 +556,6 @@ const Dashboard: React.FC<DashboardProps> = ({
       };
     }
   }, [selectedTaskForModal]);
-  
-  
-  // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual vs Schedule)
-  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | null>('CLAIMS');
-  const previousTabRef = useRef<typeof currentTab>('CLAIMS'); // Initialize with default tab to prevent treating it as "opening"
   
   // Handle browser back button to close modal (mobile only, and only when first opening a tab)
   useEffect(() => {
