@@ -347,9 +347,9 @@ const SmartCSVImporter: React.FC<SmartCSVImporterProps> = ({ onClose }) => {
           {/* Action Bar */}
           <div className="flex justify-end items-center gap-4">
             {onClose && (
-              <Button variant="secondary" onClick={onClose} disabled={isProcessing}>
-                Cancel
-              </Button>
+            <Button variant="tonal" onClick={onClose} disabled={isProcessing}>
+              Cancel
+            </Button>
             )}
             <Button
               onClick={handleStartImport}
