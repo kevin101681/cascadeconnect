@@ -3708,7 +3708,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       <>
         {renderModals()}
         {/* Main Layout Container - Sidebar + Content */}
-        <div className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 animate-in fade-in slide-in-from-top-4">
+        <div className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 animate-in fade-in slide-in-from-top-4 bg-white dark:bg-gray-900">
           {/* LEFT SIDEBAR - Homeowner Info Card with Search */}
           <div className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 ${isHomeownerCardCollapsed ? 'w-full lg:w-16' : 'w-full lg:w-80'}`}>
             {/* Search Bar - Admin & Builder Only - Always visible on mobile, top of card on desktop */}
