@@ -133,17 +133,20 @@ const HomeownerImport: React.FC = () => {
                 builderFound: false, // Will be set by server action
               };
             }).filter(row => {
-              // Only skip if BOTH name AND email are missing
-              const isValid = row.name && row.email;
-              if (!isValid) {
+              // PERMISSIVE MODE: Only require Name field
+              // Allow Email, Phone, Address, and Date to be empty
+              const hasName = row.name && row.name.trim().length > 0;
+              
+              if (!hasName) {
                 skipped++;
-                console.warn(`⏭️ Skipping row ${row.rowIndex}: Missing name or email`);
+                console.warn(`⏭️ Skipping row ${row.rowIndex}: Missing name (truly empty row)`);
               }
-              return isValid;
+              
+              return hasName;
             });
 
             if (parsed.length === 0) {
-              throw new Error('No valid rows found. Make sure CSV has Name and Email columns.');
+              throw new Error('No valid rows found. Make sure CSV has a Name column.');
             }
 
             console.log(`✅ Parsed ${parsed.length} valid rows, ${skipped} skipped`);
@@ -212,9 +215,13 @@ const HomeownerImport: React.FC = () => {
           Import Homeowners from CSV
         </h3>
         <p className="text-sm text-surface-on-variant dark:text-gray-400">
-          Upload a CSV with columns: <strong>Name</strong> (or First Name + Last Name), <strong>Email</strong>, 
-          <strong> Phone</strong>, <strong>Address</strong>, <strong>Groups</strong> (builder name), 
-          <strong>Closing Date</strong>, and <strong>Job Name</strong>.
+          Upload a CSV with columns: <strong>Name</strong> (required), 
+          <strong>Email</strong> (optional), <strong>Phone</strong>, <strong>Address</strong>, 
+          <strong>Groups</strong> (builder name), <strong>Closing Date</strong>, and <strong>Job Name</strong>.
+          <br />
+          <span className="text-xs text-surface-on-variant/70 dark:text-gray-500 mt-1 inline-block">
+            💡 Only <strong>Name</strong> is required. Missing emails will be auto-generated as placeholder addresses.
+          </span>
         </p>
       </div>
 
@@ -311,7 +318,7 @@ const HomeownerImport: React.FC = () => {
               </thead>
               <tbody className="divide-y divide-surface-outline-variant dark:divide-gray-700">
                 {stagingData.map((row) => (
-                  <tr key={`${row.email}-${row.jobName}-${row.rowIndex}`} className="hover:bg-surface-container-high dark:hover:bg-gray-700/50 transition-colors">
+                  <tr key={`${row.email || 'no-email'}-${row.jobName}-${row.rowIndex}`} className="hover:bg-surface-container-high dark:hover:bg-gray-700/50 transition-colors">
                     <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
                       {row.rowIndex}
                     </td>
@@ -319,7 +326,11 @@ const HomeownerImport: React.FC = () => {
                       {row.name}
                     </td>
                     <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
-                      {row.email}
+                      {row.email ? (
+                        <span className="text-surface-on dark:text-gray-100">{row.email}</span>
+                      ) : (
+                        <span className="text-surface-on-variant/60 dark:text-gray-500 italic">No email</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
                       {row.phone ? (

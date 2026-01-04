@@ -6,6 +6,7 @@
  * - Matches builders by querying users table (role='BUILDER')
  * - Links homeowners to builder_user_id (new schema)
  * - SUPPORTS MULTIPLE HOMES PER USER: Matches on Email + Job Name
+ * - PERMISSIVE MODE: Only requires Name; generates placeholder emails if missing
  */
 
 import { db, isDbConfigured } from '../db';
@@ -99,10 +100,22 @@ export async function importHomeowners(
 
   for (const row of homeowners) {
     try {
-      // Validate required fields
-      if (!row.name || !row.email) {
-        errors.push(`Row ${row.rowIndex}: Missing name or email`);
+      // Validate required fields - ONLY NAME is required
+      if (!row.name) {
+        errors.push(`Row ${row.rowIndex}: Missing name`);
         continue;
+      }
+
+      // Generate placeholder email if missing (similar to builder import logic)
+      let email = row.email;
+      if (!email || email.trim() === '') {
+        const sanitizedName = row.name
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, '_')
+          .substring(0, 30);
+        const timestamp = Date.now();
+        email = `missing_${sanitizedName}_${timestamp}@placeholder.local`;
+        console.log(`📧 Generated placeholder email for "${row.name}": ${email}`);
       }
 
       // Match builder if provided
@@ -139,7 +152,7 @@ export async function importHomeowners(
           .from(homeownersTable)
           .where(
             and(
-              eq(homeownersTable.email, row.email.trim().toLowerCase()),
+              eq(homeownersTable.email, email.trim().toLowerCase()),
               eq(homeownersTable.jobName, row.jobName)
             )
           )
@@ -153,7 +166,7 @@ export async function importHomeowners(
         const matches = await db
           .select({ id: homeownersTable.id })
           .from(homeownersTable)
-          .where(eq(homeownersTable.email, row.email.trim().toLowerCase()))
+          .where(eq(homeownersTable.email, email.trim().toLowerCase()))
           .limit(1);
         
         if (matches.length > 0) {
@@ -182,14 +195,14 @@ export async function importHomeowners(
           .where(eq(homeownersTable.id, existing.id));
 
         updated++;
-        console.log(`🔄 Updated homeowner: ${row.email} - ${row.jobName || 'No job name'}`);
+        console.log(`🔄 Updated homeowner: ${email} - ${row.jobName || 'No job name'}`);
       } else {
         // Insert new homeowner (even if email exists with different job name)
         await db.insert(homeownersTable).values({
           name: row.name,
           firstName,
           lastName,
-          email: row.email.trim().toLowerCase(),
+          email: email.trim().toLowerCase(),
           phone: row.phone || null,
           street: row.street || null,
           city: row.city || null,
@@ -205,7 +218,7 @@ export async function importHomeowners(
         });
 
         imported++;
-        console.log(`✅ Imported homeowner: ${row.email} - ${row.jobName || 'No job name'}`);
+        console.log(`✅ Imported homeowner: ${email} - ${row.jobName || 'No job name'}`);
       }
     } catch (error) {
       const errorMsg = `Row ${row.rowIndex} (${row.email}): ${
