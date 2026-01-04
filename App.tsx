@@ -20,6 +20,7 @@ import BackendDashboard from './components/BackendDashboard';
 import AIIntakeDashboard from './components/AIIntakeDashboard';
 import HomeownerSelector from './components/HomeownerSelector';
 import { ChatWidget } from './components/chat/ChatWidget';
+import CommandMenu from './components/global/CommandMenu';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS, MOCK_CLAIM_MESSAGES } from './constants';
 import { sendEmail, generateNotificationBody } from './services/emailService';
@@ -1049,6 +1050,9 @@ function App() {
 
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
   
+  // Command Menu state
+  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
+  
   // Alert modal state
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<'info' | 'success' | 'error'>('info');
@@ -1254,6 +1258,70 @@ function App() {
       internalNotes: updatedNotes
     });
   };
+  
+  // Handle navigation from search results
+  const handleSearchNavigate = useCallback((url: string) => {
+    // Parse the URL hash format: #view?param=value
+    if (url.startsWith('#')) {
+      const hash = url.substring(1);
+      const [view, queryString] = hash.split('?');
+      
+      if (queryString) {
+        const params = new URLSearchParams(queryString);
+        
+        // Handle different view types
+        if (view === 'homeowners') {
+          const homeownerId = params.get('homeownerId');
+          if (homeownerId) {
+            const homeowner = availableHomeowners.find(h => h.id === homeownerId);
+            if (homeowner) {
+              setSelectedAdminHomeownerId(homeownerId);
+              setCurrentView('DASHBOARD');
+            }
+          }
+        } else if (view === 'claims') {
+          const claimId = params.get('claimId');
+          if (claimId) {
+            const claim = claims.find(c => c.id === claimId);
+            if (claim) {
+              handleSelectClaim(claim);
+            }
+          }
+        } else if (view === 'schedule') {
+          // Navigate to dashboard - schedule tab is handled by Dashboard component
+          setCurrentView('DASHBOARD');
+          // TODO: Add schedule tab support to dashboardConfig if needed
+        } else if (view === 'chat') {
+          // Navigate to dashboard - chat tab is handled by Dashboard component
+          setCurrentView('DASHBOARD');
+          // TODO: Add chat tab support to dashboardConfig if needed
+        }
+      } else {
+        // Simple view navigation
+        if (view === 'DASHBOARD' || view === 'TEAM' || view === 'BUILDERS' || view === 'DATA' || view === 'TASKS' || view === 'HOMEOWNERS' || view === 'EMAIL_HISTORY' || view === 'BACKEND' || view === 'CALLS' || view === 'INVOICES') {
+          setCurrentView(view as any);
+        }
+      }
+    }
+  }, [availableHomeowners, claims, handleSelectClaim]);
+  
+  // Command+K keyboard shortcut handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Cmd+K on Mac, Ctrl+K on Windows/Linux
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsCommandMenuOpen((prev) => !prev);
+      }
+      // Escape to close
+      if (e.key === 'Escape' && isCommandMenuOpen) {
+        setIsCommandMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isCommandMenuOpen]);
 
   const handleUpdateClaim = async (updatedClaim: Claim) => {
     // Get the previous claim state to detect changes
@@ -4192,6 +4260,13 @@ Assigned By: ${assignerName}
           }}
         />
       )}
+      
+      {/* Global Command Menu (Command+K) */}
+      <CommandMenu
+        isOpen={isCommandMenuOpen}
+        onClose={() => setIsCommandMenuOpen(false)}
+        onNavigate={handleSearchNavigate}
+      />
     </Layout>
     </>
   );
