@@ -4,20 +4,22 @@
  * Location: /dashboard/admin/import
  * 
  * Features:
- * - Tab 1: Builder Users Import (CSV with Name, Email, Phone, Company)
- * - Tab 2: Homeowners Import (CSV with Buildertrend data + builder matching)
+ * - Tab 1: Homeowners Import (CSV with Buildertrend data + builder matching)
+ * - Tab 2: Builders Import (CSV with Name, Email, Phone, Company)
+ * - Tab 3: Subcontractors Import (CSV with Company Name, Contact, Email, Phone)
  */
 
 import React, { useState } from 'react';
 import { Database, X } from 'lucide-react';
 import BuilderImport from '../../../../components/BuilderImport';
 import HomeownerImport from '../../../../components/import/HomeownerImport';
+import SubImport from '../../../../components/import/SubImport';
 
 interface UnifiedImportDashboardProps {
   onClose?: () => void;
 }
 
-type TabType = 'builders' | 'homeowners';
+type TabType = 'homeowners' | 'builders' | 'subcontractors';
 
 const UnifiedImportDashboard: React.FC<UnifiedImportDashboardProps> = ({ onClose }) => {
   const [activeTab, setActiveTab] = useState<TabType>('homeowners');
@@ -33,7 +35,7 @@ const UnifiedImportDashboard: React.FC<UnifiedImportDashboardProps> = ({ onClose
               Data Import Dashboard
             </h2>
             <p className="text-sm text-surface-on-variant dark:text-gray-400">
-              Import builders and homeowners from CSV files
+              Import homeowners, builders, and subcontractors from CSV files
             </p>
           </div>
           {onClose && (
@@ -69,6 +71,16 @@ const UnifiedImportDashboard: React.FC<UnifiedImportDashboardProps> = ({ onClose
           >
             Builders
           </button>
+          <button
+            onClick={() => setActiveTab('subcontractors')}
+            className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl ${
+              activeTab === 'subcontractors'
+                ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary'
+                : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'
+            }`}
+          >
+            Subcontractors
+          </button>
         </div>
 
         {/* Tab Content */}
@@ -81,6 +93,11 @@ const UnifiedImportDashboard: React.FC<UnifiedImportDashboardProps> = ({ onClose
               <BuilderImport onImportComplete={() => {
                 console.log('✅ Builder import complete');
               }} />
+            </div>
+          )}
+          {activeTab === 'subcontractors' && (
+            <div className="p-6">
+              <SubImport />
             </div>
           )}
         </div>

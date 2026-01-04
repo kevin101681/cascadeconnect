@@ -115,9 +115,10 @@ export const contractors = pgTable('contractors', {
   id: uuid('id').defaultRandom().primaryKey(),
   companyName: text('company_name').notNull(),
   contactName: text('contact_name'),
-  email: text('email').notNull(),
+  email: text('email'), // Made optional for import
   phone: text('phone'),
-  specialty: text('specialty').notNull(),
+  specialty: text('specialty'), // Made optional - can be null during import
+  builderUserId: uuid('builder_user_id').references(() => users.id), // Link to builder
   createdAt: timestamp('created_at').defaultNow(),
 });
 
