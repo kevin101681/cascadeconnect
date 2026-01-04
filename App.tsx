@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import ClaimDetail from './components/ClaimDetail';
@@ -960,6 +960,61 @@ function App() {
     return {};
   });
 
+  // Track initial load period for mobile modal prevention
+  const initialLoadRef = useRef(true);
+  const mountTimeRef = useRef(Date.now());
+  const userInteractionRef = useRef(false);
+  
+  // Track user interactions on mobile
+  useEffect(() => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    if (!isMobile) return;
+    
+    const handleUserInteraction = () => {
+      userInteractionRef.current = true;
+      console.log('👆 User interaction detected on mobile (App.tsx)');
+    };
+    
+    window.addEventListener('click', handleUserInteraction, { capture: true });
+    window.addEventListener('touchstart', handleUserInteraction, { capture: true });
+    
+    return () => {
+      window.removeEventListener('click', handleUserInteraction, { capture: true });
+      window.removeEventListener('touchstart', handleUserInteraction, { capture: true });
+    };
+  }, []);
+  
+  // Prevent DETAIL view from opening on mobile during initial load
+  useEffect(() => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    if (!isMobile || currentView !== 'DETAIL') return;
+    
+    const timeSinceMount = Date.now() - mountTimeRef.current;
+    const isInitialLoadPeriod = initialLoadRef.current && timeSinceMount < 5000;
+    const hasNoUserInteraction = !userInteractionRef.current;
+    
+    if (isInitialLoadPeriod || hasNoUserInteraction) {
+      console.log('🚫 BLOCKING DETAIL view on mobile (preventing claim modal auto-open)', {
+        isInitialLoadPeriod,
+        hasNoUserInteraction,
+        timeSinceMount,
+        selectedClaimId
+      });
+      setCurrentView('DASHBOARD');
+      setSelectedClaimId(null);
+    }
+  }, [currentView, selectedClaimId]);
+  
+  // Mark initial load period as complete after 5 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      initialLoadRef.current = false;
+      console.log('⏰ Initial load period complete (App.tsx - 5 seconds)');
+    }, 5000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
   // --- UI PERSISTENCE EFFECTS ---
   useEffect(() => { saveState('cascade_ui_view', currentView); }, [currentView]);
   useEffect(() => { saveState('cascade_ui_claim_id', selectedClaimId); }, [selectedClaimId]);
