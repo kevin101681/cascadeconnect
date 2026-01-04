@@ -4108,7 +4108,9 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Navigation Tabs at Top - Modern tab bar style */}
             <div 
               ref={tabsContainerRef}
-              className="flex gap-1 border-b border-surface-outline-variant dark:border-gray-700 overflow-x-auto"
+              className={`flex border-b border-surface-outline-variant dark:border-gray-700 overflow-x-auto ${
+                isHomeownerCardCollapsed ? 'justify-between gap-0' : 'gap-1'
+              }`}
             >
            {/* HOMEOWNER-SPECIFIC TABS */}
            <button 
@@ -4117,6 +4119,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                 setCurrentTab('CLAIMS');
               }}
               className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
+                isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
+              } ${
                 currentTab === 'CLAIMS'
                   ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary'
                   : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'
@@ -4133,7 +4137,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('TASKS');
                 }}
-                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${currentTab === 'TASKS' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
+                  isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
+                } ${currentTab === 'TASKS' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
                 <CheckSquare className="h-4 w-4" />
                 Tasks
@@ -4145,7 +4151,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => {
                 setCurrentTab('MESSAGES');
               }}
-              className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${currentTab === 'MESSAGES' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+              className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
+                isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
+              } ${currentTab === 'MESSAGES' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
             >
               <Mail className="h-4 w-4" />
               Messages
@@ -4159,7 +4167,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.preventDefault();
                   setCurrentTab('DOCUMENTS');
                 }}
-                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${currentTab === 'DOCUMENTS' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
+                  isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
+                } ${currentTab === 'DOCUMENTS' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
                 <FileText className="h-4 w-4" />
                 Documents
@@ -4174,7 +4184,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.preventDefault();
                   setCurrentTab('MANUAL');
                 }}
-                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${currentTab === 'MANUAL' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
+                  isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
+                } ${currentTab === 'MANUAL' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
                 <BookOpen className="h-4 w-4" />
                 Manual
@@ -4189,7 +4201,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('NOTES');
                 }}
-                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${currentTab === 'NOTES' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
+                  isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
+                } ${currentTab === 'NOTES' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
                 <StickyNote className="h-4 w-4" />
                 Notes
@@ -4203,7 +4217,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('CALLS');
                 }}
-                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${currentTab === 'CALLS' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
+                  isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
+                } ${currentTab === 'CALLS' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
                 <Phone className="h-4 w-4" />
                 Calls
@@ -4217,7 +4233,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('SCHEDULE');
                 }}
-                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${currentTab === 'SCHEDULE' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
+                  isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
+                } ${currentTab === 'SCHEDULE' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
                 <Calendar className="h-4 w-4" />
                 Schedule
