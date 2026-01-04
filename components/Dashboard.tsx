@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, forwardRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, Suspense, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import HTMLFlipBook from 'react-pageflip';
 // Lazy load heavy libraries - only load when needed
@@ -381,51 +381,93 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [expandedDescription, setExpandedDescription] = useState<Claim | null>(null);
   
   // Selected claim for modal
-  const [selectedClaimForModal, setSelectedClaimForModal] = useState<Claim | null>(null);
+  const [selectedClaimForModalInternal, setSelectedClaimForModalInternal] = useState<Claim | null>(null);
   
-  // Track if this is the initial load period (first 2 seconds after mount)
+  // Track if this is the initial load period and user interactions
   const initialLoadRef = useRef(true);
   const mountTimeRef = useRef(Date.now());
+  const userInteractionRef = useRef(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Prevent auto-opening claim modal on mobile app load
+  // Track user interactions (clicks, touches) to distinguish user-initiated vs auto-opens
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
+    if (!isMobile) return; // Only track on mobile
     
-    // On mobile, prevent modal from auto-opening during initial load period
-    if (isMobile && selectedClaimForModal) {
+    const handleUserInteraction = () => {
+      userInteractionRef.current = true;
+      console.log('👆 User interaction detected on mobile');
+    };
+    
+    // Listen for any user interaction
+    window.addEventListener('click', handleUserInteraction, { capture: true, once: false });
+    window.addEventListener('touchstart', handleUserInteraction, { capture: true, once: false });
+    
+    return () => {
+      window.removeEventListener('click', handleUserInteraction, { capture: true });
+      window.removeEventListener('touchstart', handleUserInteraction, { capture: true });
+    };
+  }, []);
+  
+  // Wrapper function to prevent auto-opening on mobile
+  const setSelectedClaimForModal = React.useCallback((claim: Claim | null) => {
+    const isMobile = window.innerWidth < 768;
+    
+    // On desktop, always allow
+    if (!isMobile) {
+      setSelectedClaimForModalInternal(claim);
+      return;
+    }
+    
+    // On mobile, check if we should block
+    if (claim) {
       const timeSinceMount = Date.now() - mountTimeRef.current;
-      const isInitialLoadPeriod = initialLoadRef.current && timeSinceMount < 2000; // 2 second grace period
+      const isInitialLoadPeriod = initialLoadRef.current && timeSinceMount < 5000; // 5 second grace period
+      const hasNoUserInteraction = !userInteractionRef.current;
       
-      if (isInitialLoadPeriod) {
-        console.log('🚫 Preventing auto-open of claim modal on mobile app load');
-        setSelectedClaimForModal(null);
-        // Mark initial load as complete after preventing auto-open
-        initialLoadRef.current = false;
-        // Clear any existing timer
-        if (timerRef.current) {
-          clearTimeout(timerRef.current);
-          timerRef.current = null;
-        }
+      // Block if in initial load period OR no user interaction
+      if (isInitialLoadPeriod || hasNoUserInteraction) {
+        console.log('🚫 BLOCKING auto-open of claim modal on mobile', {
+          isInitialLoadPeriod,
+          hasNoUserInteraction,
+          timeSinceMount,
+          claimId: claim?.id,
+          claimTitle: claim?.title
+        });
+        return; // Don't set the modal
+      } else {
+        console.log('✅ ALLOWING claim modal to open on mobile (user interaction detected)', {
+          timeSinceMount,
+          claimId: claim?.id,
+          claimTitle: claim?.title
+        });
       }
     }
     
-    // Mark initial load period as complete after 2 seconds (only set timer once)
+    // Allow setting (either null to close, or claim with user interaction)
+    setSelectedClaimForModalInternal(claim);
+  }, []);
+  
+  // Use the internal state for reading
+  const selectedClaimForModal = selectedClaimForModalInternal;
+  
+  // Mark initial load period as complete after 5 seconds
+  useEffect(() => {
     if (initialLoadRef.current && !timerRef.current) {
       timerRef.current = setTimeout(() => {
+        console.log('⏰ Initial load period complete (5 seconds)');
         initialLoadRef.current = false;
         timerRef.current = null;
-      }, 2000);
+      }, 5000);
     }
     
-    // Cleanup timer on unmount
     return () => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
         timerRef.current = null;
       }
     };
-  }, [selectedClaimForModal]); // Run whenever selectedClaimForModal changes
+  }, []);
   
   // Selected task for modal
   const [selectedTaskForModal, setSelectedTaskForModal] = useState<Task | null>(null);
