@@ -426,8 +426,10 @@ const HomeownerImport: React.FC = () => {
                   <th className="px-4 py-3 font-medium">Name</th>
                   <th className="px-4 py-3 font-medium">Email</th>
                   <th className="px-4 py-3 font-medium">Phone</th>
-                  <th className="px-4 py-3 font-medium">Address</th>
+                  <th className="px-4 py-3 font-medium">Street</th>
                   <th className="px-4 py-3 font-medium">City</th>
+                  <th className="px-4 py-3 font-medium w-[80px]">State</th>
+                  <th className="px-4 py-3 font-medium w-[80px]">Zip</th>
                   <th className="px-4 py-3 font-medium">Job Name</th>
                   <th className="px-4 py-3 font-medium">Closing Date</th>
                   <th className="px-4 py-3 font-medium">Builder</th>
@@ -463,13 +465,31 @@ const HomeownerImport: React.FC = () => {
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
-                      {row.address || `${row.street}, ${row.city}, ${row.state} ${row.zip}`.trim()}
+                      {row.street ? (
+                        <span className="text-surface-on dark:text-gray-100">{row.street}</span>
+                      ) : (
+                        <span className="text-surface-on-variant/50 dark:text-gray-600">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
                       {row.city ? (
                         <span className="text-surface-on dark:text-gray-100">{row.city}</span>
                       ) : (
-                        <span className="text-orange-500 dark:text-orange-400 italic text-xs">Not parsed</span>
+                        <span className="text-surface-on-variant/50 dark:text-gray-600">—</span>
+                      )}
+                    </td>
+                    <td className="px-2 py-3 text-sm text-surface-on-variant dark:text-gray-400 w-[80px]">
+                      {row.state ? (
+                        <span className="text-surface-on dark:text-gray-100 font-medium">{row.state}</span>
+                      ) : (
+                        <span className="text-surface-on-variant/50 dark:text-gray-600">—</span>
+                      )}
+                    </td>
+                    <td className="px-2 py-3 text-sm text-surface-on-variant dark:text-gray-400 w-[80px]">
+                      {row.zip ? (
+                        <span className="text-surface-on dark:text-gray-100 font-mono text-xs">{row.zip}</span>
+                      ) : (
+                        <span className="text-surface-on-variant/50 dark:text-gray-600">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100 font-medium">
