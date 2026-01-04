@@ -904,13 +904,27 @@ function App() {
       }
     }
     const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'CALLS' | 'INVOICES'>('cascade_ui_view', 'DASHBOARD');
-    // Don't auto-open modals on page load - always start at DASHBOARD
+    // Don't auto-open modals on page load on mobile - always start at DASHBOARD
+    // On desktop, allow restoring saved view
+    if (typeof window !== 'undefined') {
+      const isMobile = window.innerWidth < 768;
+      if (isMobile && saved === 'DETAIL') {
+        return 'DASHBOARD';
+      }
+    }
     return saved;
   });
   
-  const [selectedClaimId, setSelectedClaimId] = useState<string | null>(() => 
-    loadState('cascade_ui_claim_id', null)
-  );
+  const [selectedClaimId, setSelectedClaimId] = useState<string | null>(() => {
+    // Don't restore selected claim on mobile to prevent modal from auto-opening
+    if (typeof window !== 'undefined') {
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
+        return null;
+      }
+    }
+    return loadState('cascade_ui_claim_id', null);
+  });
   
   const [selectedAdminHomeownerId, setSelectedAdminHomeownerId] = useState<string | null>(() => 
     loadState('cascade_ui_homeowner_id', null)
