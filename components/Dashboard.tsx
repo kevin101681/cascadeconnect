@@ -381,7 +381,11 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [expandedDescription, setExpandedDescription] = useState<Claim | null>(null);
   
   // Selected claim for modal
-  const [selectedClaimForModalInternal, setSelectedClaimForModalInternal] = useState<Claim | null>(null);
+  // Initialize with null and log if it's ever set to a non-null value during render
+  const [selectedClaimForModalInternal, setSelectedClaimForModalInternal] = useState<Claim | null>(() => {
+    console.log('🔵 selectedClaimForModalInternal initializing to null');
+    return null;
+  });
   
   // Track if this is the initial load period and user interactions
   const initialLoadRef = useRef(true);
@@ -2322,6 +2326,30 @@ const Dashboard: React.FC<DashboardProps> = ({
       </div>
       
       {/* Mobile Full-Screen Overlay for Claim Modal */}
+      {(() => {
+        if (selectedClaimForModal) {
+          const isMobile = window.innerWidth < 768;
+          console.log('🚨 MOBILE OVERLAY RENDERING!', {
+            claimId: selectedClaimForModal.id,
+            claimTitle: selectedClaimForModal.title,
+            isMobile,
+            currentTab,
+            timeSinceMount: Date.now() - mountTimeRef.current,
+            hasUserInteraction: userInteractionRef.current,
+            isInitialLoad: initialLoadRef.current,
+            shouldBlock: isMobile && (initialLoadRef.current || !userInteractionRef.current)
+          });
+          
+          // Force clear if it shouldn't be showing
+          if (isMobile && (initialLoadRef.current || !userInteractionRef.current)) {
+            console.log('🚫 FORCE CLEARING mobile overlay that should not be visible!');
+            // Use setTimeout to avoid state update during render
+            setTimeout(() => setSelectedClaimForModal(null), 0);
+            return null;
+          }
+        }
+        return null;
+      })()}
       {selectedClaimForModal && (
         <div className="md:hidden fixed inset-0 z-50 bg-surface dark:bg-gray-900 flex flex-col">
           {/* Scrollable Claim Editor Content */}
