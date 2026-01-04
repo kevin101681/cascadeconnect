@@ -411,10 +411,19 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Wrapper function to prevent auto-opening on mobile
   const setSelectedClaimForModal = React.useCallback((claim: Claim | null) => {
+    console.log('🔍 setSelectedClaimForModal called', {
+      claim: claim ? { id: claim.id, title: claim.title } : null,
+      isMobile: window.innerWidth < 768,
+      timeSinceMount: Date.now() - mountTimeRef.current,
+      hasUserInteraction: userInteractionRef.current,
+      isInitialLoad: initialLoadRef.current
+    });
+    
     const isMobile = window.innerWidth < 768;
     
     // On desktop, always allow
     if (!isMobile) {
+      console.log('🖥️ Desktop: Allowing modal to open');
       setSelectedClaimForModalInternal(claim);
       return;
     }
@@ -442,6 +451,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           claimTitle: claim?.title
         });
       }
+    } else {
+      console.log('📱 Mobile: Closing modal (claim is null)');
     }
     
     // Allow setting (either null to close, or claim with user interaction)
