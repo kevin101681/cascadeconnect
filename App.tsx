@@ -984,24 +984,43 @@ function App() {
     };
   }, []);
   
-  // Prevent DETAIL view from opening on mobile during initial load
+  // Prevent DETAIL view from opening on mobile during initial load or without user interaction
   useEffect(() => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-    if (!isMobile || currentView !== 'DETAIL') return;
+    if (!isMobile) return;
     
-    const timeSinceMount = Date.now() - mountTimeRef.current;
-    const isInitialLoadPeriod = initialLoadRef.current && timeSinceMount < 5000;
-    const hasNoUserInteraction = !userInteractionRef.current;
-    
-    if (isInitialLoadPeriod || hasNoUserInteraction) {
-      console.log('🚫 BLOCKING DETAIL view on mobile (preventing claim modal auto-open)', {
+    // Check if DETAIL view should be blocked
+    if (currentView === 'DETAIL') {
+      const timeSinceMount = Date.now() - mountTimeRef.current;
+      const isInitialLoadPeriod = initialLoadRef.current && timeSinceMount < 5000;
+      const hasNoUserInteraction = !userInteractionRef.current;
+      
+      console.log('🔍 Checking DETAIL view on mobile', {
+        currentView,
+        selectedClaimId,
+        timeSinceMount,
         isInitialLoadPeriod,
         hasNoUserInteraction,
+        willBlock: isInitialLoadPeriod || hasNoUserInteraction
+      });
+      
+      // Block if in initial load period OR no user interaction (always block auto-opens)
+      if (isInitialLoadPeriod || hasNoUserInteraction) {
+        console.log('🚫 BLOCKING DETAIL view on mobile (preventing claim modal auto-open)', {
+          isInitialLoadPeriod,
+          hasNoUserInteraction,
+          timeSinceMount,
+          selectedClaimId
+        });
+        setCurrentView('DASHBOARD');
+        setSelectedClaimId(null);
+        return;
+      }
+      
+      console.log('✅ Allowing DETAIL view on mobile (user interaction detected)', {
         timeSinceMount,
         selectedClaimId
       });
-      setCurrentView('DASHBOARD');
-      setSelectedClaimId(null);
     }
   }, [currentView, selectedClaimId]);
   
@@ -1129,6 +1148,30 @@ function App() {
   const [claimEditMode, setClaimEditMode] = useState(false);
   
   const handleSelectClaim = (claim: Claim, startInEditMode: boolean = true) => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    
+    // On mobile, check if this is an auto-open (no user interaction)
+    if (isMobile && !userInteractionRef.current) {
+      const timeSinceMount = Date.now() - mountTimeRef.current;
+      const isInitialLoadPeriod = initialLoadRef.current && timeSinceMount < 5000;
+      
+      if (isInitialLoadPeriod || !userInteractionRef.current) {
+        console.log('🚫 BLOCKING handleSelectClaim on mobile (no user interaction)', {
+          claimId: claim.id,
+          claimTitle: claim.title,
+          isInitialLoadPeriod,
+          timeSinceMount
+        });
+        return; // Don't open the claim detail view
+      }
+    }
+    
+    console.log('✅ Allowing handleSelectClaim', {
+      isMobile,
+      claimId: claim.id,
+      hasUserInteraction: userInteractionRef.current
+    });
+    
     setSelectedClaimId(claim.id);
     setClaimEditMode(startInEditMode);
     setCurrentView('DETAIL');
