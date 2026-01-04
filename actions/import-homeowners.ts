@@ -5,12 +5,12 @@
  * - Imports homeowners from CSV
  * - Matches builders by querying users table (role='BUILDER')
  * - Links homeowners to builder_user_id (new schema)
- * - Uses ON CONFLICT to handle duplicates
+ * - SUPPORTS MULTIPLE HOMES PER USER: Matches on Email + Job Name
  */
 
 import { db, isDbConfigured } from '../db';
 import { homeowners as homeownersTable, users as usersTable } from '../db/schema';
-import { ilike, or, eq } from 'drizzle-orm';
+import { ilike, or, eq, and } from 'drizzle-orm';
 
 export interface HomeownerImportRow {
   rowIndex: number;
@@ -128,15 +128,41 @@ export async function importHomeowners(
         firstName = row.name.trim();
       }
 
-      // Check if homeowner already exists by email
-      const existing = await db
-        .select({ id: homeownersTable.id })
-        .from(homeownersTable)
-        .where(eq(homeownersTable.email, row.email.trim().toLowerCase()))
-        .limit(1);
+      // MULTI-HOME SUPPORT: Check if homeowner already exists by EMAIL + JOB NAME
+      // This allows one user (email) to have multiple home properties
+      let existing = null;
+      
+      if (row.jobName) {
+        // Match on both email AND job name (unique property)
+        const matches = await db
+          .select({ id: homeownersTable.id })
+          .from(homeownersTable)
+          .where(
+            and(
+              eq(homeownersTable.email, row.email.trim().toLowerCase()),
+              eq(homeownersTable.jobName, row.jobName)
+            )
+          )
+          .limit(1);
+        
+        if (matches.length > 0) {
+          existing = matches[0];
+        }
+      } else {
+        // No job name - fall back to email only (original behavior)
+        const matches = await db
+          .select({ id: homeownersTable.id })
+          .from(homeownersTable)
+          .where(eq(homeownersTable.email, row.email.trim().toLowerCase()))
+          .limit(1);
+        
+        if (matches.length > 0) {
+          existing = matches[0];
+        }
+      }
 
-      if (existing.length > 0) {
-        // Update existing homeowner
+      if (existing) {
+        // Update existing homeowner (same email + job name)
         await db
           .update(homeownersTable)
           .set({
@@ -153,11 +179,12 @@ export async function importHomeowners(
             jobName: row.jobName || null,
             closingDate: row.closingDate || null,
           })
-          .where(eq(homeownersTable.id, existing[0].id));
+          .where(eq(homeownersTable.id, existing.id));
 
         updated++;
+        console.log(`🔄 Updated homeowner: ${row.email} - ${row.jobName || 'No job name'}`);
       } else {
-        // Insert new homeowner
+        // Insert new homeowner (even if email exists with different job name)
         await db.insert(homeownersTable).values({
           name: row.name,
           firstName,
@@ -178,6 +205,7 @@ export async function importHomeowners(
         });
 
         imported++;
+        console.log(`✅ Imported homeowner: ${row.email} - ${row.jobName || 'No job name'}`);
       }
     } catch (error) {
       const errorMsg = `Row ${row.rowIndex} (${row.email}): ${

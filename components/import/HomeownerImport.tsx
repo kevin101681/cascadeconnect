@@ -17,6 +17,8 @@ import { importHomeowners, HomeownerImportRow, HomeownerImportResult } from '../
 const HomeownerImport: React.FC = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [stagingData, setStagingData] = useState<HomeownerImportRow[]>([]);
+  const [skippedCount, setSkippedCount] = useState(0);
+  const [totalRows, setTotalRows] = useState(0);
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<HomeownerImportResult | null>(null);
   const [parseError, setParseError] = useState<string | null>(null);
@@ -38,29 +40,60 @@ const HomeownerImport: React.FC = () => {
         complete: (results) => {
           try {
             const rows = results.data as any[];
+            console.log(`📊 CSV Parse Complete: ${rows.length} total rows`);
+            
+            setTotalRows(rows.length);
+            let skipped = 0;
             
             // Transform CSV rows into HomeownerImportRow format
+            // CRITICAL: DO NOT de-duplicate by email - allow multiple homes per user
             const parsed: HomeownerImportRow[] = rows.map((row, index) => {
+              // Debug: Log raw row data for first few rows
+              if (index < 3) {
+                console.log(`Row ${index + 1} raw data:`, row);
+              }
+              
               // Extract data from CSV
               const name = row['First Name'] && row['Last Name']
                 ? `${row['First Name']} ${row['Last Name']}`.trim()
                 : row['Name'] || row['Client Name'] || '';
               
               const email = row['Email'] || row['Email Address'] || '';
-              const phone = row['Phone'] || row['Phone Number'] || '';
+              const phone = row['Phone'] || row['Phone Number'] || row['Primary Phone'] || '';
               
-              // Address components
-              const street = row['Street'] || row['Street Address'] || '';
+              // Address components - Try multiple possible header variations
+              const street = row['Street'] || row['Street Address'] || row['Address 1'] || '';
               const city = row['City'] || '';
               const state = row['State'] || '';
-              const zip = row['Zip'] || row['Zip Code'] || '';
-              const fullAddress = row['Address'] || `${street}, ${city}, ${state} ${zip}`.trim();
+              const zip = row['Zip'] || row['Zip Code'] || row['ZIP'] || '';
+              
+              // Full address - with robust fallback
+              let fullAddress = row['Address'] || row['Property Address'] || '';
+              
+              // Debug address parsing
+              if (index < 3) {
+                console.log(`Row ${index + 1} Address field:`, fullAddress);
+              }
+              
+              // FALLBACK: If no full address, construct from components
+              if (!fullAddress || fullAddress.trim() === '') {
+                if (street) {
+                  fullAddress = `${street}, ${city}, ${state} ${zip}`.trim();
+                  // Clean up extra commas
+                  fullAddress = fullAddress.replace(/,\s*,/g, ',').replace(/,\s*$/g, '');
+                }
+              }
+              
+              // If still empty, use street as fallback
+              if (!fullAddress || fullAddress.trim() === '') {
+                fullAddress = street || 'Address not provided';
+              }
               
               // Builder info
               const builderGroup = row['Groups'] || row['Builder'] || row['Builder Name'] || '';
               
               // Job/Property info
-              const jobName = row['Job Name'] || row['Project Name'] || '';
+              const jobName = row['Job Name'] || row['Project Name'] || row['Project'] || '';
               
               // Closing date - should already be clean from Excel processing
               let closingDate: Date | undefined;
@@ -87,21 +120,33 @@ const HomeownerImport: React.FC = () => {
                 closingDate,
                 builderFound: false, // Will be set by server action
               };
-            }).filter(row => row.name && row.email); // Filter out rows without name/email
+            }).filter(row => {
+              // Only skip if BOTH name AND email are missing
+              const isValid = row.name && row.email;
+              if (!isValid) {
+                skipped++;
+                console.warn(`⏭️ Skipping row ${row.rowIndex}: Missing name or email`);
+              }
+              return isValid;
+            });
 
             if (parsed.length === 0) {
               throw new Error('No valid rows found. Make sure CSV has Name and Email columns.');
             }
 
+            console.log(`✅ Parsed ${parsed.length} valid rows, ${skipped} skipped`);
+            setSkippedCount(skipped);
             setStagingData(parsed);
           } catch (error) {
             setParseError(error instanceof Error ? error.message : 'Failed to parse CSV');
             setStagingData([]);
+            setSkippedCount(0);
           }
         },
         error: (error) => {
           setParseError(`CSV parse error: ${error.message}`);
           setStagingData([]);
+          setSkippedCount(0);
         },
       });
     } catch (error) {
@@ -207,10 +252,20 @@ const HomeownerImport: React.FC = () => {
           <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex justify-between items-center">
             <div>
               <h4 className="text-base font-medium text-surface-on dark:text-gray-100">
-                Preview: {stagingData.length} Homeowners
+                Preview: {stagingData.length} Valid Homeowners
+                {skippedCount > 0 && (
+                  <span className="ml-2 text-sm text-orange-600 dark:text-orange-400">
+                    ({skippedCount} skipped - empty rows)
+                  </span>
+                )}
               </h4>
               <p className="text-sm text-surface-on-variant dark:text-gray-400">
                 Builders will be automatically matched on import
+                {totalRows > 0 && (
+                  <span className="ml-2 font-medium">
+                    • Total CSV rows: {totalRows}
+                  </span>
+                )}
               </p>
             </div>
             <div className="flex gap-2">
@@ -235,14 +290,16 @@ const HomeownerImport: React.FC = () => {
                   <th className="px-4 py-3 font-medium">#</th>
                   <th className="px-4 py-3 font-medium">Name</th>
                   <th className="px-4 py-3 font-medium">Email</th>
+                  <th className="px-4 py-3 font-medium">Phone</th>
                   <th className="px-4 py-3 font-medium">Address</th>
+                  <th className="px-4 py-3 font-medium">Job Name</th>
                   <th className="px-4 py-3 font-medium">Closing Date</th>
-                  <th className="px-4 py-3 font-medium">Builder Group</th>
+                  <th className="px-4 py-3 font-medium">Builder</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-outline-variant dark:divide-gray-700">
                 {stagingData.map((row) => (
-                  <tr key={row.rowIndex} className="hover:bg-surface-container-high dark:hover:bg-gray-700/50 transition-colors">
+                  <tr key={`${row.email}-${row.jobName}-${row.rowIndex}`} className="hover:bg-surface-container-high dark:hover:bg-gray-700/50 transition-colors">
                     <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
                       {row.rowIndex}
                     </td>
@@ -253,7 +310,17 @@ const HomeownerImport: React.FC = () => {
                       {row.email}
                     </td>
                     <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
+                      {row.phone ? (
+                        <span className="text-surface-on dark:text-gray-100">{row.phone}</span>
+                      ) : (
+                        <span className="text-orange-500 dark:text-orange-400 italic">No phone</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
                       {row.address || `${row.street}, ${row.city}, ${row.state} ${row.zip}`.trim()}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100 font-medium">
+                      {row.jobName || '-'}
                     </td>
                     <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
                       {row.closingDate ? new Date(row.closingDate).toLocaleDateString() : '-'}
