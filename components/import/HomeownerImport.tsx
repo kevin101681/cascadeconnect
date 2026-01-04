@@ -14,6 +14,48 @@ import { Upload, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react
 import Button from '../Button';
 import { importHomeowners, HomeownerImportRow, HomeownerImportResult } from '../../actions/import-homeowners';
 
+/**
+ * Parse a single-line address string into components
+ * Assumes format: "123 Main St, City, State 98335"
+ */
+function parseAddress(raw: string): { street: string; city: string; state: string; zip: string } {
+  if (!raw || raw.trim() === '' || raw === 'Address not provided') {
+    return { street: '', city: '', state: '', zip: '' };
+  }
+  
+  // Split by commas
+  const parts = raw.split(',').map(s => s.trim());
+  
+  // Basic heuristic:
+  // Part 0 is usually Street
+  // Part 1 is usually City
+  // Last Part usually contains State + Zip (e.g., "WA 98335")
+  const street = parts[0] || '';
+  const city = parts.length > 1 ? parts[1] : '';
+  const lastPart = parts.length > 2 ? parts[parts.length - 1] : (parts.length === 2 ? parts[1] : '');
+  
+  // Extract Zip (regex for 5-digit zip at end)
+  const zipMatch = lastPart.match(/\b\d{5}\b/);
+  const zip = zipMatch ? zipMatch[0] : '';
+  
+  // State is usually the text before the zip in the last part
+  // e.g., "WA 98335" -> "WA"
+  let state = lastPart.replace(zip, '').trim();
+  
+  // If we only have 2 parts and found a zip, the city should be split from state+zip
+  if (parts.length === 2 && zipMatch) {
+    // Try to extract state from the second part
+    // e.g., "Seattle, WA 98335" -> city="Seattle", state="WA", zip="98335"
+    const secondPartWithoutZip = parts[1].replace(zip, '').trim();
+    const stateParts = secondPartWithoutZip.split(/\s+/);
+    if (stateParts.length > 1) {
+      state = stateParts[stateParts.length - 1]; // Last word is state
+    }
+  }
+  
+  return { street, city, state, zip };
+}
+
 const HomeownerImport: React.FC = () => {
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [stagingData, setStagingData] = useState<HomeownerImportRow[]>([]);
@@ -94,11 +136,15 @@ const HomeownerImport: React.FC = () => {
               const email = row['Email'] || row['Email Address'] || '';
               const phone = row['Phone'] || row['Phone Number'] || row['Primary Phone'] || '';
               
-              // Address components - Try multiple possible header variations
-              const street = row['Street'] || row['Street Address'] || row['Address 1'] || '';
-              const city = row['City'] || '';
-              const state = row['State'] || '';
-              const zip = row['Zip'] || row['Zip Code'] || row['ZIP'] || '';
+              // Address Parsing Strategy:
+              // 1. Try to get components directly from CSV (Street, City, State, Zip columns)
+              // 2. If not available, get full address string and parse it
+              // 3. Parse full address into components for database storage
+              
+              let street = row['Street'] || row['Street Address'] || row['Address 1'] || '';
+              let city = row['City'] || '';
+              let state = row['State'] || '';
+              let zip = row['Zip'] || row['Zip Code'] || row['ZIP'] || '';
               
               // Full address - with robust fallback
               let fullAddress = row['Address'] || row['Property Address'] || '';
@@ -120,6 +166,20 @@ const HomeownerImport: React.FC = () => {
               // If still empty, use street as fallback
               if (!fullAddress || fullAddress.trim() === '') {
                 fullAddress = street || 'Address not provided';
+              }
+              
+              // SMART ADDRESS PARSING: If we have a full address but missing components, parse it
+              if (fullAddress && fullAddress !== 'Address not provided' && (!street || !city || !state || !zip)) {
+                const parsed = parseAddress(fullAddress);
+                // Only use parsed values if we don't already have them
+                street = street || parsed.street;
+                city = city || parsed.city;
+                state = state || parsed.state;
+                zip = zip || parsed.zip;
+                
+                if (index < 3) {
+                  console.log(`Row ${index + 1} Parsed address:`, { street, city, state, zip });
+                }
               }
               
               // Builder info
@@ -367,6 +427,7 @@ const HomeownerImport: React.FC = () => {
                   <th className="px-4 py-3 font-medium">Email</th>
                   <th className="px-4 py-3 font-medium">Phone</th>
                   <th className="px-4 py-3 font-medium">Address</th>
+                  <th className="px-4 py-3 font-medium">City</th>
                   <th className="px-4 py-3 font-medium">Job Name</th>
                   <th className="px-4 py-3 font-medium">Closing Date</th>
                   <th className="px-4 py-3 font-medium">Builder</th>
@@ -403,6 +464,13 @@ const HomeownerImport: React.FC = () => {
                     </td>
                     <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
                       {row.address || `${row.street}, ${row.city}, ${row.state} ${row.zip}`.trim()}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">
+                      {row.city ? (
+                        <span className="text-surface-on dark:text-gray-100">{row.city}</span>
+                      ) : (
+                        <span className="text-orange-500 dark:text-orange-400 italic text-xs">Not parsed</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100 font-medium">
                       {row.jobName || '-'}

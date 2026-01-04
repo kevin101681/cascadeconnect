@@ -7,6 +7,7 @@
  * - Links homeowners to builder_user_id (new schema)
  * - SUPPORTS MULTIPLE HOMES PER USER: Matches on Email + Job Name
  * - PERMISSIVE MODE: Only requires Name; generates placeholder emails if missing
+ * - SMART UPSERT: Updates existing records (address repair job compatible)
  */
 
 import { db, isDbConfigured } from '../db';
@@ -176,6 +177,7 @@ export async function importHomeowners(
 
       if (existing) {
         // Update existing homeowner (same email + job name)
+        // This is crucial for the address repair job - updates existing records with parsed address components
         await db
           .update(homeownersTable)
           .set({
@@ -196,6 +198,7 @@ export async function importHomeowners(
 
         updated++;
         console.log(`🔄 Updated homeowner: ${email} - ${row.jobName || 'No job name'}`);
+        console.log(`   📍 Address: ${row.street}, ${row.city}, ${row.state} ${row.zip}`);
       } else {
         // Insert new homeowner (even if email exists with different job name)
         await db.insert(homeownersTable).values({
@@ -219,6 +222,7 @@ export async function importHomeowners(
 
         imported++;
         console.log(`✅ Imported homeowner: ${email} - ${row.jobName || 'No job name'}`);
+        console.log(`   📍 Address: ${row.street}, ${row.city}, ${row.state} ${row.zip}`);
       }
     } catch (error) {
       const errorMsg = `Row ${row.rowIndex} (${row.email}): ${
