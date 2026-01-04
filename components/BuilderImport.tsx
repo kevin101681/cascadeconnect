@@ -103,11 +103,12 @@ const BuilderImport: React.FC<BuilderImportProps> = ({ onImportComplete }) => {
             className="hidden"
             id="csv-upload"
           />
-          <label htmlFor="csv-upload">
-            <Button as="span" icon={<Upload className="h-4 w-4" />}>
-              Choose File
-            </Button>
-          </label>
+          <Button 
+            onClick={() => document.getElementById('csv-upload')?.click()}
+            icon={<Upload className="h-4 w-4" />}
+          >
+            Choose File
+          </Button>
         </div>
       )}
 

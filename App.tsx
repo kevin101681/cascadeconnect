@@ -293,6 +293,116 @@ function App() {
     }
   }, [employees]);
 
+  // --- REFRESH/RELOAD DATA FUNCTION ---
+  // Exposed function to reload all data from the database (used by AdminDataPanel after reset/import)
+  const loadData = useCallback(async () => {
+    if (!isDbConfigured) {
+      console.warn('Database not configured, skipping data reload');
+      return;
+    }
+
+    try {
+      console.log('🔄 Reloading data from database...');
+
+      // Reload homeowners
+      const dbHomeowners = await db.select().from(homeownersTable);
+      if (dbHomeowners.length > 0) {
+        const mappedHomeowners: Homeowner[] = dbHomeowners.map(h => ({
+          id: h.id,
+          name: h.name,
+          firstName: h.firstName || '',
+          lastName: h.lastName || '',
+          email: h.email,
+          phone: h.phone || '',
+          buyer2Email: h.buyer2Email || '',
+          buyer2Phone: h.buyer2Phone || '',
+          street: h.street || '',
+          city: h.city || '',
+          state: h.state || '',
+          zip: h.zip || '',
+          address: h.address,
+          builder: h.builder || '',
+          builderId: h.builderGroupId || undefined,
+          jobName: h.jobName || '',
+          closingDate: h.closingDate ? new Date(h.closingDate) : new Date(),
+          agentName: h.agentName || '',
+          agentEmail: h.agentEmail || '',
+          agentPhone: h.agentPhone || '',
+          enrollmentComments: h.enrollmentComments || '',
+          password: h.password || undefined
+        }));
+        setHomeowners(mappedHomeowners);
+      } else {
+        setHomeowners([]);
+      }
+
+      // Reload builder groups
+      const dbBuilderGroups = await db.select().from(builderGroupsTable);
+      if (dbBuilderGroups.length > 0) {
+        const mappedGroups = dbBuilderGroups.map(bg => ({
+          id: bg.id,
+          name: bg.name,
+          email: bg.email || ''
+        }));
+        setBuilderGroups(mappedGroups);
+      } else {
+        setBuilderGroups([]);
+      }
+
+      // Reload users (employees & builders)
+      const dbUsers = await db.select({
+        id: usersTable.id,
+        name: usersTable.name,
+        email: usersTable.email,
+        role: usersTable.role,
+        internalRole: usersTable.internalRole,
+        password: usersTable.password,
+        builderGroupId: usersTable.builderGroupId
+      }).from(usersTable);
+
+      const fetchedEmployees: InternalEmployee[] = dbUsers
+        .filter(u => u.role === 'ADMIN')
+        .map(u => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.internalRole || 'Administrator',
+          password: u.password || undefined,
+          emailNotifyClaimSubmitted: true,
+          emailNotifyHomeownerAcceptsAppointment: true,
+          emailNotifySubAcceptsAppointment: true,
+          emailNotifyHomeownerRescheduleRequest: true,
+          emailNotifyTaskAssigned: true,
+          pushNotifyClaimSubmitted: false,
+          pushNotifyHomeownerAcceptsAppointment: false,
+          pushNotifySubAcceptsAppointment: false,
+          pushNotifyHomeownerRescheduleRequest: false,
+          pushNotifyTaskAssigned: false,
+          pushNotifyHomeownerMessage: false,
+          pushNotifyHomeownerEnrollment: false,
+          emailNotifyHomeownerEnrollment: true
+        }));
+
+      const fetchedBuilders: BuilderUser[] = dbUsers
+        .filter(u => u.role === 'BUILDER')
+        .map(u => ({
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: UserRole.BUILDER,
+          builderGroupId: u.builderGroupId || '',
+          password: u.password || undefined
+        }));
+
+      setEmployees(fetchedEmployees);
+      setBuilderUsers(fetchedBuilders);
+
+      console.log('✅ Data reload complete');
+    } catch (error) {
+      console.error('❌ Failed to reload data:', error);
+    }
+  }, []);
+
   // --- DATABASE & USER SYNC ---
   useEffect(() => {
     const syncDataAndUser = async () => {
@@ -904,7 +1014,7 @@ function App() {
         // Note: Invoice navigation handled via dashboardConfig instead of currentView
       }
     }
-    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'CALLS' | 'INVOICES'>('cascade_ui_view', 'DASHBOARD');
+    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'CALLS' | 'INVOICES'>('cascade_ui_view', 'DASHBOARD');
     // Don't auto-open modals on page load on mobile - always start at DASHBOARD
     // On desktop, allow restoring saved view
     if (typeof window !== 'undefined') {
