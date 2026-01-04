@@ -489,7 +489,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         isMobile,
         currentTab,
         timeSinceMount: Date.now() - mountTimeRef.current,
-        willShowMobileOverlay: isMobile && currentTab === 'CLAIMS'
+        willShowMobileOverlay: isMobile && currentTab === 'CLAIMS',
+        hasUserInteraction: userInteractionRef.current,
+        isInitialLoad: initialLoadRef.current
       });
       
       // If on mobile and CLAIMS tab, this will show as full-screen overlay
@@ -498,8 +500,15 @@ const Dashboard: React.FC<DashboardProps> = ({
           claimId: selectedClaimForModal.id,
           timeSinceMount: Date.now() - mountTimeRef.current,
           hasUserInteraction: userInteractionRef.current,
-          isInitialLoad: initialLoadRef.current
+          isInitialLoad: initialLoadRef.current,
+          shouldHaveBeenBlocked: initialLoadRef.current || !userInteractionRef.current
         });
+        
+        // If this shouldn't have been allowed, force clear it
+        if (initialLoadRef.current || !userInteractionRef.current) {
+          console.log('🚫 FORCE CLEARING modal that should have been blocked!');
+          setSelectedClaimForModal(null);
+        }
       }
     } else {
       console.log('📋 selectedClaimForModal cleared (Dashboard)');
