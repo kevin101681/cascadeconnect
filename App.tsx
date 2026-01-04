@@ -20,6 +20,7 @@ import HomeownerSelector from './components/HomeownerSelector';
 import { ChatWidget } from './components/chat/ChatWidget';
 import CommandMenu from './components/global/CommandMenu';
 import UnifiedImportDashboard from './app/dashboard/admin/import/page';
+import { ModalProvider } from './components/providers/modal-provider';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS, MOCK_CLAIM_MESSAGES } from './constants';
 import { sendEmail, generateNotificationBody } from './services/emailService';
@@ -4350,6 +4351,9 @@ Assigned By: ${assignerName}
         onClose={() => setIsCommandMenuOpen(false)}
         onNavigate={handleSearchNavigate}
       />
+      
+      {/* Global Modal Provider - Renders all stacked modals */}
+      <ModalProvider />
     </Layout>
     </>
   );
