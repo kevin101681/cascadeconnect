@@ -4035,6 +4035,7 @@ Assigned By: ${assignerName}
       }}
       isAdminAccount={isAdminAccount}
       currentUser={activeEmployee}
+      onOpenGlobalSearch={() => setIsCommandMenuOpen(true)}
     >
       {currentView === 'DASHBOARD' && (
         <Dashboard 

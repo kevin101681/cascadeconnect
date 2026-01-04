@@ -13,13 +13,16 @@ interface LayoutProps {
   activeHomeowner: Homeowner;
   onSwitchHomeowner: (id: string) => void;
   
-  // Search Props for Admin Header
+  // Search Props for Admin Header (legacy - kept for backward compatibility)
   searchQuery: string;
   onSearchChange: (query: string) => void;
   searchResults: Homeowner[];
   onSelectHomeowner: (homeowner: Homeowner) => void;
   selectedHomeownerId: string | null;
   onClearSelection: () => void;
+  
+  // Global Search Props
+  onOpenGlobalSearch?: () => void;
 
   // Navigation & Actions
   onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'BUILDERS' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES') => void;
@@ -55,7 +58,8 @@ const Layout: React.FC<LayoutProps> = ({
   onSignOut,
   isAdminAccount = false,
   currentUser,
-  currentView
+  currentView,
+  onOpenGlobalSearch
 }) => {
   // Minimal approach: Just ensure avatar is sized correctly, let CSS handle the rest
   useEffect(() => {
@@ -227,8 +231,25 @@ const Layout: React.FC<LayoutProps> = ({
               </div>
             </button>
             
-            {/* Centered Search Bar (Admin & Builder Only) - Hidden on Dashboard */}
-            {(isAdmin || isBuilder) && currentView !== 'DASHBOARD' && (
+            {/* Global Search Bar (Admin & Builder Only) - Always Visible */}
+            {(isAdmin || isBuilder) && onOpenGlobalSearch && (
+              <div className="flex-1 max-w-md relative">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" style={{ top: '50%', transform: 'translateY(-50%)' }} />
+                  <input 
+                    type="text" 
+                    placeholder="Global Search"
+                    className="w-full bg-surface-container dark:bg-gray-700 rounded-full pl-9 pr-8 py-2 text-sm border-none focus:ring-2 focus:ring-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all placeholder:text-surface-on-variant dark:placeholder:text-gray-500"
+                    onFocus={onOpenGlobalSearch}
+                    onClick={onOpenGlobalSearch}
+                    readOnly
+                  />
+                </div>
+              </div>
+            )}
+            
+            {/* Legacy Homeowner Search Bar (Admin & Builder Only) - Hidden on Dashboard - Fallback if global search not available */}
+            {(isAdmin || isBuilder) && currentView !== 'DASHBOARD' && !onOpenGlobalSearch && (
               <div className="flex-1 max-w-sm relative">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" style={{ top: '50%', transform: 'translateY(-50%)' }} />
