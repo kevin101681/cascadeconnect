@@ -1538,8 +1538,8 @@ If this repair work is billable, please let me know prior to scheduling.`);
         </div>
       )}
       
-      {/* Footer with buttons */}
-      <div className="flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700 mt-auto">
+      {/* Footer with buttons - Hidden on mobile */}
+      <div className="hidden md:flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700 mt-auto">
         <Button 
           type="button" 
           variant="filled" 

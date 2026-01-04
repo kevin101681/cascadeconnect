@@ -383,6 +383,25 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Selected claim for modal
   const [selectedClaimForModal, setSelectedClaimForModal] = useState<Claim | null>(null);
   
+  // Prevent auto-opening claim modal on mobile app load
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    const isHomeowner = userRole === UserRole.HOMEOWNER;
+    
+    // If on mobile and homeowner role, ensure modal doesn't auto-open
+    if (isMobile && isHomeowner && selectedClaimForModal) {
+      // Check if this is an intentional selection or auto-open
+      // by checking if we just loaded (no user interaction yet)
+      const isInitialLoad = sessionStorage.getItem('cascade_initial_load_complete') !== 'true';
+      
+      if (isInitialLoad) {
+        console.log('🚫 Preventing auto-open of claim modal on mobile app load');
+        setSelectedClaimForModal(null);
+        sessionStorage.setItem('cascade_initial_load_complete', 'true');
+      }
+    }
+  }, []); // Run only once on mount
+  
   // Selected task for modal
   const [selectedTaskForModal, setSelectedTaskForModal] = useState<Task | null>(null);
   
@@ -2227,7 +2246,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 setSelectedClaimForModal(null);
                 useTaskStore.setState({ activeClaimId: selectedClaimForModal.id, contextLabel, contextType: 'claim' });
               }}
-              icon={<StickyNote className="h-4 w-4" />}
               className="flex-1"
             >
               Note
@@ -2239,11 +2257,30 @@ const Dashboard: React.FC<DashboardProps> = ({
                 setNewMessageSubject(selectedClaimForModal.title);
                 setShowNewMessageModal(true);
               }}
-              icon={<Mail className="h-4 w-4" />}
               className="flex-1"
             >
               Message
             </Button>
+            {!isHomeownerView && (
+              <Button 
+                type="button" 
+                variant="filled" 
+                onClick={() => {
+                  // Toggle reviewed status
+                  const updatedClaim = {
+                    ...selectedClaimForModal,
+                    reviewed: !selectedClaimForModal.reviewed
+                  };
+                  if (onUpdateClaim) {
+                    onUpdateClaim(updatedClaim);
+                  }
+                  setSelectedClaimForModal(updatedClaim);
+                }}
+                className={`flex-1 ${selectedClaimForModal.reviewed ? '!bg-green-600 hover:!bg-green-700 dark:!bg-green-700 dark:hover:!bg-green-800' : ''}`}
+              >
+                {selectedClaimForModal.reviewed ? 'Reviewed' : 'Process'}
+              </Button>
+            )}
             <Button 
               type="button" 
               variant="filled" 
@@ -2260,7 +2297,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                   onUpdateClaim(selectedClaimForModal);
                 }
               }}
-              icon={<Save className="h-4 w-4" />}
               className="flex-1 !bg-primary hover:!bg-primary/90"
             >
               Save
@@ -3915,7 +3951,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => {
                 setCurrentTab('CLAIMS');
               }}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'CLAIMS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-14 md:h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'CLAIMS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
             >
               <ClipboardList className="h-4 w-4" />
               Warranty
@@ -3928,7 +3964,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('TASKS');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'TASKS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-14 md:h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'TASKS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <CheckSquare className="h-4 w-4" />
                 Tasks
@@ -3940,7 +3976,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => {
                 setCurrentTab('MESSAGES');
               }}
-              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'MESSAGES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+              className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-14 md:h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'MESSAGES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
             >
               <Mail className="h-4 w-4" />
               Messages
@@ -3954,7 +3990,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.preventDefault();
                   setCurrentTab('DOCUMENTS');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-14 md:h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'DOCUMENTS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <FileText className="h-4 w-4" />
                 Documents
@@ -3969,7 +4005,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.preventDefault();
                   setCurrentTab('MANUAL');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'MANUAL' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-14 md:h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'MANUAL' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <BookOpen className="h-4 w-4" />
                 Manual
@@ -3984,7 +4020,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('NOTES');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'NOTES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-14 md:h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'NOTES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <StickyNote className="h-4 w-4" />
                 Notes
@@ -3998,7 +4034,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('CALLS');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'CALLS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-14 md:h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'CALLS' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <Phone className="h-4 w-4" />
                 Calls
@@ -4012,7 +4048,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('SCHEDULE');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'SCHEDULE' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-14 md:h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'SCHEDULE' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <Calendar className="h-4 w-4" />
                 Schedule
@@ -4027,7 +4063,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('CHAT');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'CHAT' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-14 md:h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'CHAT' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <MessageCircle className="h-4 w-4" />
                 Chat
@@ -4042,7 +4078,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('PAYROLL');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'PAYROLL' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-14 md:h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'PAYROLL' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <DollarSign className="h-4 w-4" />
                 Payroll
@@ -4056,7 +4092,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('INVOICES');
                 }}
-                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
+                className={`text-sm font-medium transition-all flex items-center gap-2 px-4 h-14 md:h-9 rounded-full w-full md:w-auto justify-center border ${currentTab === 'INVOICES' ? 'bg-primary text-primary-on border-primary' : 'border-surface-outline dark:border-gray-600 text-primary dark:text-primary hover:bg-primary/10 dark:hover:bg-primary/10'}`}
               >
                 <Receipt className="h-4 w-4" />
                 Invoices
