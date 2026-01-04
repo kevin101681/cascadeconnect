@@ -383,24 +383,49 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Selected claim for modal
   const [selectedClaimForModal, setSelectedClaimForModal] = useState<Claim | null>(null);
   
+  // Track if this is the initial load period (first 2 seconds after mount)
+  const initialLoadRef = useRef(true);
+  const mountTimeRef = useRef(Date.now());
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Prevent auto-opening claim modal on mobile app load
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
-    const isHomeowner = userRole === UserRole.HOMEOWNER;
     
-    // If on mobile and homeowner role, ensure modal doesn't auto-open
-    if (isMobile && isHomeowner && selectedClaimForModal) {
-      // Check if this is an intentional selection or auto-open
-      // by checking if we just loaded (no user interaction yet)
-      const isInitialLoad = sessionStorage.getItem('cascade_initial_load_complete') !== 'true';
+    // On mobile, prevent modal from auto-opening during initial load period
+    if (isMobile && selectedClaimForModal) {
+      const timeSinceMount = Date.now() - mountTimeRef.current;
+      const isInitialLoadPeriod = initialLoadRef.current && timeSinceMount < 2000; // 2 second grace period
       
-      if (isInitialLoad) {
+      if (isInitialLoadPeriod) {
         console.log('🚫 Preventing auto-open of claim modal on mobile app load');
         setSelectedClaimForModal(null);
-        sessionStorage.setItem('cascade_initial_load_complete', 'true');
+        // Mark initial load as complete after preventing auto-open
+        initialLoadRef.current = false;
+        // Clear any existing timer
+        if (timerRef.current) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
       }
     }
-  }, []); // Run only once on mount
+    
+    // Mark initial load period as complete after 2 seconds (only set timer once)
+    if (initialLoadRef.current && !timerRef.current) {
+      timerRef.current = setTimeout(() => {
+        initialLoadRef.current = false;
+        timerRef.current = null;
+      }, 2000);
+    }
+    
+    // Cleanup timer on unmount
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [selectedClaimForModal]); // Run whenever selectedClaimForModal changes
   
   // Selected task for modal
   const [selectedTaskForModal, setSelectedTaskForModal] = useState<Task | null>(null);
@@ -6299,3 +6324,4 @@ const Dashboard: React.FC<DashboardProps> = ({
 };
 
 export default Dashboard;
+
