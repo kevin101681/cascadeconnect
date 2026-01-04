@@ -3,14 +3,13 @@
  * 
  * Features:
  * - Imports subcontractors from CSV
- * - Upserts based on company name
+ * - Upserts based on company name (GLOBAL - not tied to builder)
  * - Ignores specialty field (leaves as null)
- * - Links to builder_user_id if needed
  */
 
 import { db, isDbConfigured } from '../db';
 import { contractors as contractorsTable } from '../db/schema';
-import { eq, and } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 export interface SubcontractorImportRow {
   rowIndex: number;
@@ -30,10 +29,10 @@ export interface SubcontractorImportResult {
 
 /**
  * Import subcontractors with upsert logic
+ * Subcontractors are GLOBAL - not tied to specific builders
  */
 export async function importSubcontractors(
-  subcontractors: SubcontractorImportRow[],
-  builderUserId?: string // Optional: Link to specific builder
+  subcontractors: SubcontractorImportRow[]
 ): Promise<SubcontractorImportResult> {
   if (!isDbConfigured) {
     return {
@@ -57,37 +56,14 @@ export async function importSubcontractors(
         continue;
       }
 
-      // Check if subcontractor already exists by company name
-      // If builderUserId provided, match on both company + builder
-      let existing = null;
+      // Check if subcontractor already exists by company name (GLOBAL match)
+      const matches = await db
+        .select({ id: contractorsTable.id })
+        .from(contractorsTable)
+        .where(eq(contractorsTable.companyName, row.companyName.trim()))
+        .limit(1);
       
-      if (builderUserId) {
-        const matches = await db
-          .select({ id: contractorsTable.id })
-          .from(contractorsTable)
-          .where(
-            and(
-              eq(contractorsTable.companyName, row.companyName.trim()),
-              eq(contractorsTable.builderUserId, builderUserId)
-            )
-          )
-          .limit(1);
-        
-        if (matches.length > 0) {
-          existing = matches[0];
-        }
-      } else {
-        // Global match (no builder filter)
-        const matches = await db
-          .select({ id: contractorsTable.id })
-          .from(contractorsTable)
-          .where(eq(contractorsTable.companyName, row.companyName.trim()))
-          .limit(1);
-        
-        if (matches.length > 0) {
-          existing = matches[0];
-        }
-      }
+      const existing = matches.length > 0 ? matches[0] : null;
 
       if (existing) {
         // Update existing subcontractor
@@ -98,7 +74,6 @@ export async function importSubcontractors(
             email: row.email || null,
             phone: row.phone || null,
             // NOTE: specialty is intentionally NOT updated - left as-is
-            // builderUserId is also left as-is
           })
           .where(eq(contractorsTable.id, existing.id));
 
@@ -112,7 +87,6 @@ export async function importSubcontractors(
           email: row.email || null,
           phone: row.phone || null,
           specialty: null, // Ignoring specialty during import
-          builderUserId: builderUserId || null,
         });
 
         imported++;
