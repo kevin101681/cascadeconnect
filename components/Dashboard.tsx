@@ -3399,6 +3399,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   onSelectClaim={(claim) => {
                     setSelectedTaskForModal(null);
                     setSelectedClaimForModal(claim);
+                    setCurrentTab('CLAIMS'); // Switch to CLAIMS tab when selecting a claim
                   }}
                   startInEditMode={true}
                   taskMessages={taskMessages.filter(m => m.taskId === selectedTaskForModal.id)}
