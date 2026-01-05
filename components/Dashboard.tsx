@@ -3885,13 +3885,13 @@ const Dashboard: React.FC<DashboardProps> = ({
              {/* Vertical Layout - Single column, centered on mobile, left-aligned on desktop */}
              <div className="flex flex-col gap-2 mb-4 w-full items-center md:items-start">
                 {/* Line 1: Name with Edit Button */}
-                <div className="flex items-center justify-between gap-2 w-full">
+                <div className="relative flex items-center justify-center md:justify-between gap-2 w-full">
                   <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 truncate flex-1 text-center md:text-left">{displayHomeowner.name}</h2>
-                  {/* Edit Button - Admin Only - Right of Name */}
+                  {/* Edit Button - Admin Only - Absolute positioned on mobile, in flow on desktop */}
                   {isAdmin && !isHomeownerView && (
                     <button 
                        onClick={(e) => { e.stopPropagation(); handleOpenEditHomeowner(); }}
-                       className="p-1.5 text-surface-outline-variant dark:text-gray-400 hover:text-primary bg-transparent hover:bg-primary/10 rounded-full transition-colors flex-shrink-0"
+                       className="absolute right-0 md:relative p-1.5 text-surface-outline-variant dark:text-gray-400 hover:text-primary bg-transparent hover:bg-primary/10 rounded-full transition-colors flex-shrink-0"
                        title="Edit Homeowner Info"
                     >
                       <Edit2 className="h-4 w-4" />
@@ -4244,9 +4244,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('CALLS');
                 }}
-                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
-                  isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
-                } ${currentTab === 'CALLS' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
+                  isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
+                } ${currentTab === 'CALLS' ? 'border border-primary text-primary bg-primary/10 md:border-0 md:border-b-2 md:bg-surface-container md:dark:bg-gray-700' : 'border border-surface-outline dark:border-gray-600 text-surface-on-variant dark:text-gray-400 md:border-0 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
                 <Phone className="h-4 w-4" />
                 Calls
@@ -4260,9 +4260,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('SCHEDULE');
                 }}
-                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
-                  isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
-                } ${currentTab === 'SCHEDULE' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
+                  isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
+                } ${currentTab === 'SCHEDULE' ? 'border border-primary text-primary bg-primary/10 md:border-0 md:border-b-2 md:bg-surface-container md:dark:bg-gray-700' : 'border border-surface-outline dark:border-gray-600 text-surface-on-variant dark:text-gray-400 md:border-0 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
                 <Calendar className="h-4 w-4" />
                 Schedule
@@ -4292,7 +4292,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('PAYROLL');
                 }}
-                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${currentTab === 'PAYROLL' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${currentTab === 'PAYROLL' ? 'border border-primary text-primary bg-primary/10 md:border-0 md:border-b-2 md:bg-surface-container md:dark:bg-gray-700' : 'border border-surface-outline dark:border-gray-600 text-surface-on-variant dark:text-gray-400 md:border-0 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
                 <DollarSign className="h-4 w-4" />
                 Payroll
@@ -4306,7 +4306,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('INVOICES');
                 }}
-                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${currentTab === 'INVOICES' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${currentTab === 'INVOICES' ? 'border border-primary text-primary bg-primary/10 md:border-0 md:border-b-2 md:bg-surface-container md:dark:bg-gray-700' : 'border border-surface-outline dark:border-gray-600 text-surface-on-variant dark:text-gray-400 md:border-0 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
                 <Receipt className="h-4 w-4" />
                 Invoices
