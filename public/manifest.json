@@ -1,0 +1,28 @@
+{
+  "name": "CASCADE CONNECT - Construction Warranty Management",
+  "short_name": "CASCADE CONNECT",
+  "description": "The premier warranty management platform for builders and homeowners",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#3c6b80",
+  "theme_color": "#3c6b80",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/images/manual/cbslogo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "scope": "/",
+  "prefer_related_applications": false
+}
+

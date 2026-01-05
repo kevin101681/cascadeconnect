@@ -112,13 +112,16 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, onNavigate }
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="fixed inset-0 z-[9999] flex items-start justify-center pt-[20vh] px-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-    >
-      <div className="bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-5 border border-surface-outline-variant dark:border-gray-700 w-full max-w-2xl overflow-hidden">
+    <>
+      {/* Backdrop overlay */}
+      <div 
+        className="fixed inset-0 z-[9998]"
+        onClick={onClose}
+      />
+      
+      {/* Dropdown positioned below the header search */}
+      <div className="fixed top-16 left-1/2 -translate-x-1/2 z-[9999] w-full max-w-2xl px-4">
+        <div className="bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-5 border border-surface-outline-variant dark:border-gray-700 w-full overflow-hidden animate-[scale-in_0.15s_ease-out]">
         <Command className="rounded-2xl" shouldFilter={false}>
           <div className="flex items-center border-b border-surface-outline-variant dark:border-gray-700 px-4">
             <Search className="h-5 w-5 text-surface-on-variant dark:text-gray-400 mr-3 flex-shrink-0" />
@@ -225,8 +228,9 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, onNavigate }
             </div>
           )}
         </Command>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
