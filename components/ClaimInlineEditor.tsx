@@ -653,13 +653,8 @@ If this repair work is billable, please let me know prior to scheduling.`);
             type="button" 
             variant="filled"
             onClick={() => {
-              // Navigate to the Notes tab and store context
               const contextLabel = `${claim.title || 'Untitled'} • Claim #${claim.claimNumber || claim.id.substring(0, 8)} • ${claim.jobName || claim.address}`;
-              if (onNavigate) {
-                onNavigate('DASHBOARD', { initialTab: 'NOTES' });
-              }
-              // Store context for when user adds a note
-              useTaskStore.setState({ activeClaimId: claim.id, contextLabel, contextType: 'claim' });
+              useTaskStore.getState().openTasks(claim.id, contextLabel, 'claim');
             }}
             title={`Add a note for ${claim.claimNumber || 'this claim'}`}
           >
@@ -978,16 +973,12 @@ If this repair work is billable, please let me know prior to scheduling.`);
                                 const contextLabel = `${msg.subject} • ${project}`;
                                 const prefilledBody = `Message ${project} back.`;
                                 
-                                if (onNavigate) {
-                                  onNavigate('DASHBOARD', { initialTab: 'NOTES' });
-                                }
-                                // Store context with pre-filled note body
-                                useTaskStore.setState({ 
-                                  activeClaimId: claim.id, 
-                                  contextLabel, 
-                                  contextType: 'message',
-                                  prefilledNoteBody: prefilledBody
-                                });
+                                useTaskStore.getState().openTasks(
+                                  claim.id,
+                                  contextLabel,
+                                  'message',
+                                  prefilledBody
+                                );
                               }}
                               className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
                               title={`Add a note about: ${msg.subject}`}

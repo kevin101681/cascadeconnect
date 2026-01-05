@@ -610,13 +610,13 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, [selectedTaskForModal]);
   
   // Handle browser back button to close modal (mobile only, and only when first opening a tab)
-  // Also clear inline claim selection when navigating away from Claims on desktop to prevent the global modal from opening.
+  // Also clear inline selections when leaving split views on desktop to prevent modals from popping.
   useEffect(() => {
     const previousTab = previousTabRef.current;
     const isMobile = window.innerWidth < 768;
     const isDesktop = !isMobile;
     
-    // Desktop: if a claim is selected in the split view and user switches tabs, clear it so no modal pops.
+    // Desktop: clear selections when leaving their split views to avoid fallback modals.
     if (
       isDesktop &&
       previousTab === 'CLAIMS' &&
@@ -625,6 +625,24 @@ const Dashboard: React.FC<DashboardProps> = ({
       selectedClaimForModal
     ) {
       setSelectedClaimForModal(null);
+    }
+    if (
+      isDesktop &&
+      previousTab === 'TASKS' &&
+      currentTab &&
+      currentTab !== 'TASKS' &&
+      selectedTaskForModal
+    ) {
+      setSelectedTaskForModal(null);
+    }
+    if (
+      isDesktop &&
+      previousTab === 'MESSAGES' &&
+      currentTab &&
+      currentTab !== 'MESSAGES' &&
+      selectedThreadId
+    ) {
+      setSelectedThreadId(null);
     }
     
     const isOpeningTab = previousTab === null && currentTab !== null;
@@ -2427,11 +2445,12 @@ const Dashboard: React.FC<DashboardProps> = ({
               type="button" 
               variant="filled"
               onClick={() => {
-                // Add Note - Navigate to Notes tab
                 const contextLabel = `${selectedClaimForModal.title || 'Untitled'} • Claim #${selectedClaimForModal.claimNumber || selectedClaimForModal.id.substring(0, 8)} • ${selectedClaimForModal.jobName || selectedClaimForModal.address}`;
-                setCurrentTab('NOTES');
-                setSelectedClaimForModal(null);
-                useTaskStore.setState({ activeClaimId: selectedClaimForModal.id, contextLabel, contextType: 'claim' });
+                useTaskStore.getState().openTasks(
+                  selectedClaimForModal.id,
+                  contextLabel,
+                  'claim'
+                );
               }}
               className="flex-1"
             >
@@ -4152,8 +4171,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Navigation Tabs at Top - Two column grid on mobile, horizontal tabs on desktop */}
             <div 
               ref={tabsContainerRef}
-              className={`grid grid-cols-2 gap-2 md:flex md:flex-row md:border-b md:border-surface-outline-variant md:dark:border-gray-700 md:overflow-x-auto ${
-                isHomeownerCardCollapsed ? 'md:justify-between md:gap-0' : 'md:gap-1'
+              className={`grid grid-cols-2 gap-2 md:flex md:flex-row md:border-b md:border-surface-outline-variant md:dark:border-gray-700 md:overflow-x-auto md:mx-auto md:max-w-6xl ${
+                isHomeownerCardCollapsed ? 'md:justify-between md:gap-0' : 'md:gap-0.5'
               }`}
             >
            {/* HOMEOWNER-SPECIFIC TABS */}
