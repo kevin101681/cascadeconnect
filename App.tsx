@@ -456,6 +456,7 @@ function App() {
                 address: h.address,
                 builder: h.builder || '',
                 builderId: h.builderGroupId || undefined,
+                builderUserId: h.builderUserId || undefined, // NEW: Direct link to builder user
                 jobName: h.jobName || '',
                 closingDate: h.closingDate ? new Date(h.closingDate) : new Date(),
                 agentName: h.agentName || '',
@@ -561,6 +562,7 @@ function App() {
                       address: h.address,
                       builder: h.builder || '',
                       builderId: h.builderGroupId || undefined,
+                      builderUserId: h.builderUserId || undefined, // NEW: Direct link to builder user
                       jobName: h.jobName || '',
                       closingDate: h.closingDate ? new Date(h.closingDate) : new Date(),
                       agentName: h.agentName || '',
