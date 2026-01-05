@@ -143,27 +143,21 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
 
     // Process each event
     const processedEvents: any[] = [];
+    let openEventsProcessed = 0;
+    
     for (const sgEvent of events) {
       try {
-        const sgMessageId = sgEvent.sg_message_id || sgEvent['smtp-id'] || 'unknown';
+        const sgMessageId = sgEvent.sg_message_id || sgEvent['smtp-id'];
         const email = sgEvent.email || '';
         const eventType = sgEvent.event || 'unknown';
         const timestamp = sgEvent.timestamp 
           ? new Date(sgEvent.timestamp * 1000) // SendGrid timestamps are in seconds
           : new Date();
 
-        // Store event data as JSON (excluding fields we're storing separately)
-        const { email: _, timestamp: __, event: ___, sg_message_id: ____, 'smtp-id': _____, ...eventData } = sgEvent;
+        console.log(`📊 Event: ${eventType} for ${email} (${sgMessageId})`);
 
-        // Insert email log event using Neon template literal syntax
-        // Note: We insert all events, including duplicates (e.g., multiple opens/clicks)
-        await sql`
-          INSERT INTO email_logs (sg_message_id, email, event, timestamp, event_data, created_at)
-          VALUES (${sgMessageId}, ${email}, ${eventType}, ${timestamp.toISOString()}, ${JSON.stringify(eventData)}, NOW())
-        `;
-
-        // If this is an "open" event, update the original email log with opened_at timestamp
-        // Only update if opened_at is NULL (to preserve the first open time)
+        // We're primarily interested in 'open' events
+        // Update the email_logs table with opened_at timestamp (first open only)
         if (eventType === 'open' && sgMessageId) {
           try {
             const updateResult = await sql`
@@ -172,10 +166,12 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
               WHERE sendgrid_message_id = ${sgMessageId}
                 AND opened_at IS NULL
             `;
+            
             if (updateResult && updateResult.length > 0) {
-              console.log(`📖 Updated opened_at for email ${sgMessageId}`);
+              console.log(`✅ Marked email as opened: ${email} (${sgMessageId})`);
+              openEventsProcessed++;
             } else {
-              console.log(`📖 No unopened email found with sendgrid_message_id ${sgMessageId} (may already be marked as opened)`);
+              console.log(`ℹ️ Email already marked as opened or not found: ${sgMessageId}`);
             }
           } catch (updateError: any) {
             console.warn(`⚠️ Could not update opened_at for ${sgMessageId}:`, updateError.message);
@@ -190,7 +186,6 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           timestamp: timestamp.toISOString(),
         });
 
-        console.log(`✅ Processed event: ${eventType} for ${email} (${sgMessageId})`);
       } catch (eventError: any) {
         console.error(`❌ Error processing event:`, {
           error: eventError.message,
@@ -209,8 +204,9 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       },
       body: JSON.stringify({
         success: true,
-        processed: processedEvents.length,
-        total: events.length,
+        message: `Processed ${openEventsProcessed} open event(s)`,
+        received: events.length,
+        openEventsProcessed,
       }),
     };
   } catch (error: any) {

@@ -90,9 +90,21 @@ function getDefaultFromEmail(): EmailRecipient {
 
 /**
  * Get app URL for links
+ * Ensures HTTPS protocol is always included
  */
 function getAppUrl(): string {
-  return process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://www.cascadeconnect.app';
+  // If NEXT_PUBLIC_APP_URL is set, use it as-is (should include protocol)
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    return process.env.NEXT_PUBLIC_APP_URL;
+  }
+  
+  // If VERCEL_URL is set, add https:// protocol (VERCEL_URL doesn't include it)
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
+  
+  // Fallback to production URL
+  return 'https://www.cascadeconnect.app';
 }
 
 // ==========================================
@@ -133,6 +145,12 @@ export async function sendEmail(request: EmailRequest): Promise<EmailResponse> {
       },
       subject: request.subject,
       text: request.text,
+      // Enable open tracking for read receipts
+      trackingSettings: {
+        openTracking: {
+          enable: true,
+        },
+      },
     };
 
     // Add optional fields
@@ -433,6 +451,25 @@ export async function sendUniversalNotification(
 
     if (result.success) {
       console.log(`✅ Sent '${scenario}' email successfully`);
+      
+      // Log email to database for tracking (non-blocking)
+      try {
+        const { logEmailToDb } = require('../../lib/email-logger.js');
+        await logEmailToDb({
+          recipient: recipientEmail,
+          subject,
+          status: 'sent',
+          metadata: {
+            messageId: result.messageId,
+            scenario,
+            vapiCallId: data.vapiCallId,
+            homeownerId: data.matchedHomeownerId,
+            claimId: data.claimId,
+          },
+        });
+      } catch (logError) {
+        console.error('Failed to log email (non-blocking):', logError);
+      }
     } else {
       console.error(`❌ Failed to send '${scenario}' email:`, result.error);
     }

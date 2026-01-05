@@ -76,8 +76,16 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     const verifiedTag = isVerified ? '[VERIFIED] ' : '[UNVERIFIED] ';
     const subject = `${urgencyTag}${verifiedTag}New AI Intake Call: ${homeownerName || 'Unknown'}`;
 
-    // Build email body
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL || 'https://www.cascadeconnect.app';
+    // Build email body with proper HTTPS protocol
+    // VERCEL_URL doesn't include protocol, so we need to add it
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    if (!appUrl && process.env.VERCEL_URL) {
+      appUrl = `https://${process.env.VERCEL_URL}`;
+    }
+    if (!appUrl) {
+      appUrl = 'https://www.cascadeconnect.app';
+    }
+    
     const callsLink = `${appUrl}#ai-intake`;
     const homeownerLink = matchedHomeownerId ? `${appUrl}#dashboard?homeownerId=${matchedHomeownerId}` : null;
 
