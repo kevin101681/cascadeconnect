@@ -3843,11 +3843,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                               <div className="flex items-start gap-3">
                                 <div className="flex-1 min-w-0">
                                   <p className="text-sm font-medium text-surface-on dark:text-gray-100 truncate">{homeowner.name}</p>
-                                  {homeowner.builder && (
-                                    <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">
-                                      {homeowner.builder}
-                                    </p>
-                                  )}
+                                  {(() => {
+                                    // Prefer linked builder user over legacy text field
+                                    const builderName = homeowner.builderUserId && builderUsers
+                                      ? builderUsers.find(bu => bu.id === homeowner.builderUserId)?.name
+                                      : homeowner.builder;
+                                    
+                                    return builderName ? (
+                                      <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">
+                                        {builderName}
+                                      </p>
+                                    ) : null;
+                                  })()}
                                   {homeowner.jobName && (
                                     <p className="text-sm text-surface-on-variant dark:text-gray-300 truncate mt-0.5">{homeowner.jobName}</p>
                                   )}
@@ -3910,10 +3917,18 @@ const Dashboard: React.FC<DashboardProps> = ({
 
                 {/* Line 4: Builder and Project */}
                 <div className="flex items-center justify-center gap-4 flex-wrap text-sm">
-                  {/* Builder */}
+                  {/* Builder - Prefer relation over text field */}
                   <span className="flex items-center gap-1.5 text-surface-on-variant dark:text-gray-300">
                     <Building2 className="h-3.5 w-3.5" />
-                    {displayHomeowner.builder}
+                    {(() => {
+                      // Prefer linked builder user over legacy text field
+                      if (displayHomeowner.builderUserId && builderUsers) {
+                        const linkedBuilder = builderUsers.find(bu => bu.id === displayHomeowner.builderUserId);
+                        if (linkedBuilder) return linkedBuilder.name;
+                      }
+                      // Fallback to text field for unlinked homeowners
+                      return displayHomeowner.builder || 'N/A';
+                    })()}
                   </span>
                   
                   {/* Project */}
