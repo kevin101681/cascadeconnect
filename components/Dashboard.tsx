@@ -3955,7 +3955,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       onClick={() => setShowDocsModal(true)} 
                       variant="outlined" 
                       icon={<FileText className="h-4 w-4" />}
-                      className="!h-9 !px-4 !bg-surface dark:!bg-gray-800"
+                      className="!h-9 !px-4"
                     >
                       Documents
                     </Button>
@@ -3976,11 +3976,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                       const hasReport = localStorage.getItem(reportKey) !== null;
                       
                       return (
-                        <Button
+                        <Button 
                           onClick={() => setShowPunchListApp(true)}
                           variant="outlined"
                           icon={<ClipboardList className="h-4 w-4" />}
-                          className="!h-9 !px-4 !bg-surface dark:!bg-gray-800"
+                          className="!h-9 !px-4"
                         >
                           <span className="md:hidden">BlueTag</span>
                           <span className="hidden md:inline">{hasReport ? 'BlueTag' : '+ Punch List'}</span>
@@ -3989,11 +3989,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                     })()}
                     {/* Calls Button - Show if homeowner has matched calls */}
                     {homeownerCalls.length > 0 && (
-                      <Button
+                      <Button 
                         onClick={() => setShowCallsModal(true)}
                         variant="outlined"
                         icon={<Phone className="h-4 w-4" />}
-                        className="!h-9 !px-4 !bg-surface dark:!bg-gray-800"
+                        className="!h-9 !px-4"
                       >
                         Calls ({homeownerCalls.length})
                       </Button>
@@ -4024,7 +4024,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       }}
                       variant="outlined"
                       icon={<Mail className="h-4 w-4" />}
-                      className="!h-9 !px-4 !bg-surface dark:!bg-gray-800"
+                      className="!h-9 !px-4"
                     >
                       Invite
                     </Button>
