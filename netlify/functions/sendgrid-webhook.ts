@@ -20,6 +20,15 @@ interface SendGridEvent {
   [key: string]: any; // Allow additional fields
 }
 
+// SendGrid sometimes appends metadata to sg_message_id (e.g., ".filter123")
+// Normalize by stripping angle brackets and trimming everything after the first dot.
+function normalizeMessageId(id?: string | null): string {
+  if (!id) return '';
+  const cleaned = id.replace(/[<>]/g, '');
+  const dotIndex = cleaned.indexOf('.');
+  return dotIndex === -1 ? cleaned : cleaned.slice(0, dotIndex);
+}
+
 interface HandlerResponse {
   statusCode: number;
   headers: Record<string, string>;
@@ -147,40 +156,67 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     
     for (const sgEvent of events) {
       try {
-        const sgMessageId = sgEvent.sg_message_id || sgEvent['smtp-id'];
+        const rawSgMessageId: string = sgEvent.sg_message_id || sgEvent['smtp-id'] || '';
+        const normalizedMessageId = normalizeMessageId(rawSgMessageId);
         const email = sgEvent.email || '';
-        const eventType = sgEvent.event || 'unknown';
+        const eventType = (sgEvent.event || 'unknown').toLowerCase();
         const timestamp = sgEvent.timestamp 
           ? new Date(sgEvent.timestamp * 1000) // SendGrid timestamps are in seconds
           : new Date();
+        const lookupPattern = normalizedMessageId ? `${normalizedMessageId}%` : rawSgMessageId;
 
-        console.log(`📊 Event: ${eventType} for ${email} (${sgMessageId})`);
+        console.log('🪝 Incoming SendGrid payload', {
+          eventType,
+          email,
+          rawSgMessageId,
+          normalizedMessageId,
+          timestamp: timestamp.toISOString(),
+          payload: sgEvent,
+        });
 
-        // We're primarily interested in 'open' events
-        // Update the email_logs table with opened_at timestamp (first open only)
-        if (eventType === 'open' && sgMessageId) {
-          try {
-            const updateResult = await sql`
-              UPDATE email_logs
-              SET opened_at = ${timestamp.toISOString()}
-              WHERE sendgrid_message_id = ${sgMessageId}
-                AND opened_at IS NULL
-            `;
-            
-            if (updateResult && updateResult.length > 0) {
-              console.log(`✅ Marked email as opened: ${email} (${sgMessageId})`);
-              openEventsProcessed++;
-            } else {
-              console.log(`ℹ️ Email already marked as opened or not found: ${sgMessageId}`);
+        switch (eventType) {
+          case 'open':
+            if (!rawSgMessageId) {
+              console.warn('⚠️ Open event missing sg_message_id/smtp-id; skipping update');
+              break;
             }
-          } catch (updateError: any) {
-            console.warn(`⚠️ Could not update opened_at for ${sgMessageId}:`, updateError.message);
-            // Don't fail the webhook if update fails
-          }
+            try {
+              const updateResult = await sql`
+                UPDATE email_logs
+                SET 
+                  opened_at = COALESCE(opened_at, ${timestamp.toISOString()}),
+                  status = 'read'
+                WHERE sendgrid_message_id IS NOT NULL
+                  AND (
+                    sendgrid_message_id = ${rawSgMessageId}
+                    OR sendgrid_message_id LIKE ${lookupPattern}
+                  )
+                RETURNING id, sendgrid_message_id, opened_at, status
+              `;
+              
+              if (updateResult && updateResult.length > 0) {
+                console.log(`✅ Marked email as read/opened for ${email}`, {
+                  matchedIds: updateResult.map((row: any) => row.sendgrid_message_id),
+                });
+                openEventsProcessed += updateResult.length;
+              } else {
+                console.log('ℹ️ No matching email_log found for open event', {
+                  rawSgMessageId,
+                  normalizedMessageId,
+                });
+              }
+            } catch (updateError: any) {
+              console.warn(`⚠️ Could not update opened_at/status for ${rawSgMessageId}:`, updateError.message);
+              // Don't fail the webhook if update fails
+            }
+            break;
+          default:
+            console.log(`ℹ️ Ignoring unsupported event type: ${eventType}`);
+            break;
         }
 
         processedEvents.push({
-          sg_message_id: sgMessageId,
+          sg_message_id: rawSgMessageId,
           email,
           event: eventType,
           timestamp: timestamp.toISOString(),
