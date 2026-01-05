@@ -3882,11 +3882,11 @@ const Dashboard: React.FC<DashboardProps> = ({
               title="Click to collapse"
             >
              
-             {/* Vertical Layout - Single column, no wrapping */}
-             <div className="flex flex-col gap-2 mb-4 w-full">
+             {/* Vertical Layout - Single column, centered on mobile, left-aligned on desktop */}
+             <div className="flex flex-col gap-2 mb-4 w-full items-center md:items-start">
                 {/* Line 1: Name with Edit Button */}
                 <div className="flex items-center justify-between gap-2 w-full">
-                  <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 truncate flex-1">{displayHomeowner.name}</h2>
+                  <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 truncate flex-1 text-center md:text-left">{displayHomeowner.name}</h2>
                   {/* Edit Button - Admin Only - Right of Name */}
                   {isAdmin && !isHomeownerView && (
                     <button 
@@ -3957,9 +3957,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
              </div>
 
-             {/* Actions - Vertical stack, auto-width buttons */}
+             {/* Actions - Vertical stack, auto-width buttons, centered on mobile */}
              <div 
-               className="mt-3 pt-3 border-t border-surface-outline-variant/50 dark:border-gray-700/50 flex flex-col gap-2 items-start"
+               className="mt-3 pt-3 border-t border-surface-outline-variant/50 dark:border-gray-700/50 flex flex-col gap-2 items-center md:items-start"
                onClick={(e) => e.stopPropagation()}
              >
                 {/* Buttons removed from homeowner view - now in tabs */}
@@ -4132,11 +4132,11 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* RIGHT CONTENT AREA */}
           <div className="flex-1 min-w-0 space-y-6">
-            {/* Navigation Tabs at Top - Modern tab bar style */}
+            {/* Navigation Tabs at Top - Stacked pills on mobile, horizontal tabs on desktop */}
             <div 
               ref={tabsContainerRef}
-              className={`flex border-b border-surface-outline-variant dark:border-gray-700 overflow-x-auto ${
-                isHomeownerCardCollapsed ? 'justify-between gap-0' : 'gap-1'
+              className={`flex flex-col gap-2 md:flex-row md:border-b md:border-surface-outline-variant md:dark:border-gray-700 md:overflow-x-auto ${
+                isHomeownerCardCollapsed ? 'md:justify-between md:gap-0' : 'md:gap-1'
               }`}
             >
            {/* HOMEOWNER-SPECIFIC TABS */}
@@ -4145,12 +4145,12 @@ const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => {
                 setCurrentTab('CLAIMS');
               }}
-              className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
-                isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
+              className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
+                isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
               } ${
                 currentTab === 'CLAIMS'
-                  ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary'
-                  : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'
+                  ? 'border border-primary text-primary bg-primary/10 md:border-0 md:border-b-2 md:bg-surface-container md:dark:bg-gray-700'
+                  : 'border border-surface-outline dark:border-gray-600 text-surface-on-variant dark:text-gray-400 md:border-0 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'
               }`}
             >
               <ClipboardList className="h-4 w-4" />
@@ -4164,9 +4164,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('TASKS');
                 }}
-                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
-                  isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
-                } ${currentTab === 'TASKS' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
+                  isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
+                } ${currentTab === 'TASKS' ? 'border border-primary text-primary bg-primary/10 md:border-0 md:border-b-2 md:bg-surface-container md:dark:bg-gray-700' : 'border border-surface-outline dark:border-gray-600 text-surface-on-variant dark:text-gray-400 md:border-0 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
                 <CheckSquare className="h-4 w-4" />
                 Tasks
@@ -4178,9 +4178,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => {
                 setCurrentTab('MESSAGES');
               }}
-              className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
-                isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
-              } ${currentTab === 'MESSAGES' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+              className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
+                isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
+              } ${currentTab === 'MESSAGES' ? 'border border-primary text-primary bg-primary/10 md:border-0 md:border-b-2 md:bg-surface-container md:dark:bg-gray-700' : 'border border-surface-outline dark:border-gray-600 text-surface-on-variant dark:text-gray-400 md:border-0 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
             >
               <Mail className="h-4 w-4" />
               Messages
@@ -4194,9 +4194,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.preventDefault();
                   setCurrentTab('DOCUMENTS');
                 }}
-                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
-                  isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
-                } ${currentTab === 'DOCUMENTS' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
+                  isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
+                } ${currentTab === 'DOCUMENTS' ? 'border border-primary text-primary bg-primary/10 md:border-0 md:border-b-2 md:bg-surface-container md:dark:bg-gray-700' : 'border border-surface-outline dark:border-gray-600 text-surface-on-variant dark:text-gray-400 md:border-0 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
                 <FileText className="h-4 w-4" />
                 Documents
@@ -4211,9 +4211,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.preventDefault();
                   setCurrentTab('MANUAL');
                 }}
-                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
-                  isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
-                } ${currentTab === 'MANUAL' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
+                  isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
+                } ${currentTab === 'MANUAL' ? 'border border-primary text-primary bg-primary/10 md:border-0 md:border-b-2 md:bg-surface-container md:dark:bg-gray-700' : 'border border-surface-outline dark:border-gray-600 text-surface-on-variant dark:text-gray-400 md:border-0 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
                 <BookOpen className="h-4 w-4" />
                 Manual
@@ -4228,9 +4228,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => {
                   setCurrentTab('NOTES');
                 }}
-                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${
-                  isHomeownerCardCollapsed ? 'flex-1 justify-center' : ''
-                } ${currentTab === 'NOTES' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
+                  isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
+                } ${currentTab === 'NOTES' ? 'border border-primary text-primary bg-primary/10 md:border-0 md:border-b-2 md:bg-surface-container md:dark:bg-gray-700' : 'border border-surface-outline dark:border-gray-600 text-surface-on-variant dark:text-gray-400 md:border-0 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
                 <StickyNote className="h-4 w-4" />
                 Notes
