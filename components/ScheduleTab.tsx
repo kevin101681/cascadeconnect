@@ -254,7 +254,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
             onClick={() => toolbar.onView('month')}
             className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
               toolbar.view === 'month'
-                ? 'bg-primary text-primary-on'
+                ? 'border border-primary text-primary bg-primary/10'
                 : 'border border-surface-outline dark:border-gray-600 text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-700'
             }`}
           >
@@ -264,7 +264,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
             onClick={() => toolbar.onView('week')}
             className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
               toolbar.view === 'week'
-                ? 'bg-primary text-primary-on'
+                ? 'border border-primary text-primary bg-primary/10'
                 : 'border border-surface-outline dark:border-gray-600 text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-700'
             }`}
           >
@@ -274,7 +274,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
             onClick={() => toolbar.onView('day')}
             className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
               toolbar.view === 'day'
-                ? 'bg-primary text-primary-on'
+                ? 'border border-primary text-primary bg-primary/10'
                 : 'border border-surface-outline dark:border-gray-600 text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-700'
             }`}
           >
@@ -284,7 +284,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
             onClick={() => toolbar.onView('agenda')}
             className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
               toolbar.view === 'agenda'
-                ? 'bg-primary text-primary-on'
+                ? 'border border-primary text-primary bg-primary/10'
                 : 'border border-surface-outline dark:border-gray-600 text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-700'
             }`}
           >
@@ -317,7 +317,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
         </h2>
         <button
           onClick={openCreateModal}
-          className="p-2 md:p-3 rounded-full bg-primary text-primary-on hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 flex items-center justify-center shadow-sm"
+          className="p-2 md:p-3 rounded-full border border-primary text-primary hover:bg-primary/10 transition-all hover:scale-105 active:scale-95 flex items-center justify-center shadow-sm"
           title="New Appointment"
         >
           <Plus className="h-5 w-5 md:h-6 md:w-6" />
@@ -586,7 +586,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
                     <button
                       onClick={handleCreate}
                       disabled={!formData.title || !formData.startTime || !formData.endTime}
-                      className="px-6 py-3 bg-primary text-primary-on rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                      className="px-6 py-3 border border-primary text-primary rounded-full hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
                     >
                       Create Appointment
                     </button>

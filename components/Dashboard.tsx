@@ -1948,7 +1948,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <div className="px-4 py-4">
                         <div className="flex flex-wrap gap-2">
                             {/* Claim # */}
-                          <span className="inline-flex items-center h-6 text-xs font-medium tracking-wide bg-primary text-primary-on px-3 rounded-full whitespace-nowrap w-fit">
+                          <span className="inline-flex items-center h-6 text-xs font-medium tracking-wide border border-primary text-primary bg-primary/10 px-3 rounded-full whitespace-nowrap w-fit">
                             #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
                           </span>
                           {/* Status */}
@@ -2097,7 +2097,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-3xl md:rounded-tr-none">
             <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               {filteredClaims.length > 0 && (
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-primary text-primary bg-primary/10 text-xs font-medium">
                   {filteredClaims.length}
                 </span>
               )}
@@ -2133,7 +2133,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => setClaimsFilter('Open')}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   claimsFilter === 'Open'
-                    ? 'bg-primary text-primary-on'
+                    ? 'border border-primary text-primary bg-primary/10'
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
@@ -2143,7 +2143,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => setClaimsFilter('Closed')}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   claimsFilter === 'Closed'
-                    ? 'bg-primary text-primary-on'
+                    ? 'border border-primary text-primary bg-primary/10'
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
@@ -2153,7 +2153,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => setClaimsFilter('All')}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   claimsFilter === 'All'
-                    ? 'bg-primary text-primary-on'
+                    ? 'border border-primary text-primary bg-primary/10'
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
@@ -2211,7 +2211,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <div className="px-4 py-4">
                         <div className="flex flex-wrap gap-2">
                           {/* Claim # */}
-                          <span className="inline-flex items-center h-6 text-xs font-medium tracking-wide bg-primary text-primary-on px-3 rounded-full whitespace-nowrap w-fit">
+                          <span className="inline-flex items-center h-6 text-xs font-medium tracking-wide border border-primary text-primary bg-primary/10 px-3 rounded-full whitespace-nowrap w-fit">
                             #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
                           </span>
                           {/* Status */}
@@ -2650,7 +2650,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-3xl md:rounded-tr-none">
             <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               {filteredTasks.length > 0 && (
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-primary text-primary bg-primary/10 text-xs font-medium">
                   {filteredTasks.length}
                 </span>
               )}
@@ -2691,7 +2691,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => setTasksFilter('open')}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   tasksFilter === 'open'
-                    ? 'bg-primary text-primary-on'
+                    ? 'border border-primary text-primary bg-primary/10'
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
@@ -2701,7 +2701,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => setTasksFilter('closed')}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   tasksFilter === 'closed'
-                    ? 'bg-primary text-primary-on'
+                    ? 'border border-primary text-primary bg-primary/10'
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
@@ -2711,7 +2711,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onClick={() => setTasksFilter('all')}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   tasksFilter === 'all'
-                    ? 'bg-primary text-primary-on'
+                    ? 'border border-primary text-primary bg-primary/10'
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
@@ -3119,7 +3119,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           setCurrentTab('NOTES');
                           useTaskStore.setState({ activeClaimId: associatedClaim?.id || null, contextLabel, contextType: 'message' });
                         }}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-on text-sm font-medium rounded-full hover:bg-primary/90 transition-all shadow-sm"
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-primary text-primary text-sm font-medium rounded-full hover:bg-primary/10 transition-all shadow-sm"
                         title={`Add a note about: ${selectedThread.subject}`}
                       >
                         <StickyNote className="h-4 w-4" />
@@ -3295,7 +3295,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     prefilledNoteBody: prefilledBody
                   });
                 }}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-on text-sm font-medium rounded-full hover:bg-primary/90 transition-all shadow-sm"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-primary text-primary text-sm font-medium rounded-full hover:bg-primary/10 transition-all shadow-sm"
                 title={`Add a note about: ${selectedThread.subject}`}
               >
                 <StickyNote className="h-4 w-4" />

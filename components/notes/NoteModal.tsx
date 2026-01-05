@@ -138,7 +138,7 @@ export const NoteModal: React.FC<NoteModalProps> = ({ data, modalId }) => {
               <button
                 type="submit"
                 disabled={!inputValue.trim() || isSubmitting}
-                className="px-6 py-2 bg-primary hover:bg-primary/90 text-primary-on font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2 border border-primary text-primary hover:bg-primary/10 font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Adding...' : 'Add Note'}
               </button>

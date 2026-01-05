@@ -1579,9 +1579,9 @@ export const Invoices: React.FC<InvoicesProps> = ({
 
       {/* Selection Bar */}
       {selectedIds.size > 0 && (
-          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-primary text-primary-on px-4 py-2 rounded-full shadow-xl border border-primary/20 flex items-center gap-2 animate-slide-up max-w-[95vw]">
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 border border-primary text-primary bg-primary/10 px-4 py-2 rounded-full shadow-xl flex items-center gap-2 animate-slide-up max-w-[95vw]">
               <span className="font-medium text-sm whitespace-nowrap">{selectedIds.size} Selected</span>
-              <div className="h-4 w-px bg-white/30"></div>
+              <div className="h-4 w-px bg-primary/30"></div>
               
               {/* Check Input */}
               <input 
@@ -1689,7 +1689,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                 onClick={() => setStatusFilter(s)} 
                 className={`flex-1 h-10 rounded-full text-sm font-medium transition-all ${
                   statusFilter === s 
-                    ? 'bg-primary text-primary-on' 
+                    ? 'border border-primary text-primary bg-primary/10' 
                     : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 hover:bg-opacity-80'
                 }`}
               >
