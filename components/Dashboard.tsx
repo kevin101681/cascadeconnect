@@ -3821,7 +3821,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div 
                 ref={homeownerCardContainerRef}
                 key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
-                className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 overflow-hidden relative"
+                className="bg-surface-container/30 dark:bg-gray-700/30 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 overflow-hidden relative"
               >
                 {/* Search Bar - Admin & Builder Only - Desktop only (inside card) */}
                 {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
@@ -3899,11 +3899,11 @@ const Dashboard: React.FC<DashboardProps> = ({
               title="Click to collapse"
             >
              
-             {/* Vertical Layout - Single column, centered on mobile, left-aligned on desktop */}
-             <div className="flex flex-col gap-2 mb-4 w-full items-center md:items-start">
+             {/* Vertical Layout - Centered on desktop */}
+             <div className="flex flex-col gap-2 mb-4 w-full items-center">
                 {/* Line 1: Name with Edit Button */}
-                <div className="relative flex items-center justify-center md:justify-between gap-2 w-full">
-                  <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 truncate flex-1 text-center md:text-left">{displayHomeowner.name}</h2>
+                <div className="relative flex items-center justify-center gap-2 w-full">
+                  <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 truncate flex-1 text-center">{displayHomeowner.name}</h2>
                   {/* Edit Button - Admin Only - Absolute positioned on mobile, in flow on desktop */}
                   {isAdmin && !isHomeownerView && (
                     <button 
@@ -3922,19 +3922,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-400 hover:text-primary transition-colors"
+                  className="flex items-center justify-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-400 hover:text-primary transition-colors text-center"
                 >
                   <MapPin className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
                   <span className="truncate">{displayHomeowner.street}</span>
                 </a>
                 
                 {/* Line 3: City, State ZIP */}
-                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
+                <div className="flex items-center justify-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 text-center">
                   <span className="truncate">{displayHomeowner.city}, {displayHomeowner.state} {displayHomeowner.zip}</span>
                 </div>
 
                 {/* Line 4: Builder */}
-                <div className="flex items-center gap-1.5 text-sm">
+                <div className="flex items-center justify-center gap-1.5 text-sm text-center">
                   <Building2 className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
                   <span className="text-surface-on-variant dark:text-gray-300 truncate">
                     {(() => {
@@ -3950,33 +3950,33 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
                   
                 {/* Line 5: Project */}
-                <div className="flex items-center gap-1.5 text-sm">
+                <div className="flex items-center justify-center gap-1.5 text-sm text-center">
                   <Home className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
                   <span className="text-surface-on-variant dark:text-gray-300 truncate">{displayHomeowner.jobName || 'N/A'}</span>
                 </div>
                 
                 {/* Line 6: Closing Date */}
-                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
+                <div className="flex items-center justify-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 text-center">
                    <Clock className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
                    <span className="truncate">Closing: {displayHomeowner.closingDate ? new Date(displayHomeowner.closingDate).toLocaleDateString() : 'N/A'}</span>
                 </div>
                 
                 {/* Line 7: Phone */}
-                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
+                <div className="flex items-center justify-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 text-center">
                   <Phone className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
                   <span className="truncate">{displayHomeowner.phone}</span>
                 </div>
                 
                 {/* Line 8: Email */}
-                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
+                <div className="flex items-center justify-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 text-center">
                   <Mail className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
                   <span className="truncate">{displayHomeowner.email}</span>
                 </div>
              </div>
 
-             {/* Actions - Two columns on mobile, single column on desktop */}
+             {/* Actions - Two columns on all viewports */}
              <div 
-               className="mt-3 pt-3 border-t border-surface-outline-variant/50 dark:border-gray-700/50 grid grid-cols-2 md:flex md:flex-col gap-2 items-center md:items-start"
+               className="mt-3 pt-3 border-t border-surface-outline-variant/50 dark:border-gray-700/50 grid grid-cols-2 md:grid-cols-2 gap-2 items-center justify-center"
                onClick={(e) => e.stopPropagation()}
              >
                 {/* Buttons removed from homeowner view - now in tabs */}

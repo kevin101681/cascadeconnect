@@ -310,7 +310,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
   return (
     <div className="h-full flex flex-col">
       {/* Header - matches other modals */}
-      <div className="flex-shrink-0 flex items-center justify-between px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 md:rounded-t-3xl">
+      <div className="flex-shrink-0 flex items-center justify-between px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 md:rounded-t-3xl">
         <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
           <CalendarIcon className="h-5 w-5 text-primary" />
           Schedule
@@ -367,7 +367,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-surface-container dark:bg-gray-800 rounded-3xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-6 border-b border-surface-outline-variant dark:border-gray-700">
+            <div className="flex items-center justify-between p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
               <h3 className="text-xl font-semibold text-surface-on dark:text-gray-100">
                 {isCreateMode ? 'Create Appointment' : selectedAppointment?.title}
               </h3>

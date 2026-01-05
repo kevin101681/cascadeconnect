@@ -129,7 +129,7 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
       <div 
         ref={modalRef}
         className="
-          bg-surface dark:bg-gray-800 shadow-elevation-3 overflow-hidden flex flex-col
+          bg-white dark:bg-white shadow-elevation-3 overflow-hidden flex flex-col
           
           /* Mobile: Full screen takeover */
           fixed inset-0 w-screen h-screen rounded-none
@@ -141,7 +141,7 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header - Fixed at top */}
-        <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-800/50">
+        <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
           <h2 
             id="invoices-modal-title"
             className="text-xl md:text-2xl font-semibold text-surface-on dark:text-gray-100"

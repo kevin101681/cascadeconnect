@@ -81,11 +81,11 @@ export const NoteModal: React.FC<NoteModalProps> = ({ data, modalId }) => {
         className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none"
       >
         <div 
-          className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-5 w-full max-w-lg pointer-events-auto"
+          className="bg-white dark:bg-white rounded-3xl shadow-elevation-5 w-full max-w-lg pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
             <div>
               <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">
                 Add Note
