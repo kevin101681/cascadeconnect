@@ -1935,7 +1935,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <button
                     key={claim.id}
                     type="button"
-                    className={`w-full text-left group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer ${
+                    className={`w-full text-left group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer [-webkit-tap-highlight-color:transparent] ${
                       isCompleted 
                         ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75' 
                         : isReviewed
@@ -2198,8 +2198,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                   return (
                     <div key={claim.id} className="relative">
                       <button
+                        type="button"
                         onClick={() => setSelectedClaimForModal(claim)}
-                        className={`w-full text-left group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer pb-10 ${
+                        className={`w-full text-left group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer pb-10 [-webkit-tap-highlight-color:transparent] ${
                           isSelected
                             ? 'bg-primary-container/20 dark:bg-primary/20 border-primary ring-1 ring-primary'
                             : isCompleted 
@@ -2406,7 +2407,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
 
           {/* Mobile Footer with Actions - Taller for edge-to-edge screens */}
-          <div className="sticky bottom-0 left-0 right-0 z-20 bg-surface-container/95 dark:bg-gray-800/95 backdrop-blur-sm border-t border-surface-outline-variant dark:border-gray-700 p-6 pb-8 flex gap-2 shadow-lg">
+          <div className="sticky bottom-0 left-0 right-0 z-20 bg-surface-container/95 dark:bg-gray-800/95 backdrop-blur-sm border-t border-surface-outline-variant dark:border-gray-700 p-6 pb-10 flex gap-2 shadow-lg">
             <Button 
               type="button" 
               variant="filled"
