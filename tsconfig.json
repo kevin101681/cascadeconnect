@@ -28,6 +28,7 @@
   },
   "exclude": [
     "lib/cbsbooks/netlify/**/*",
-    "lib/bluetag/netlify/**/*"
+    "lib/bluetag/netlify/**/*",
+    "scripts/**/*"
   ]
 }

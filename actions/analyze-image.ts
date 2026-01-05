@@ -14,11 +14,12 @@ let aiInstance: GoogleGenAI | null = null;
 const getAI = (): GoogleGenAI | null => {
   if (aiInstance) return aiInstance;
   
-  // Get API key from environment
-  const apiKey = process.env.VITE_GEMINI_API_KEY;
+  // Get API key from Vite environment (client-side)
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   
   if (!apiKey) {
     console.warn("⚠️ Gemini API key not found. AI image analysis unavailable.");
+    console.warn("Make sure VITE_GEMINI_API_KEY is set in your .env.local file");
     return null;
   }
   

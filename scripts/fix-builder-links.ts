@@ -98,25 +98,40 @@ async function fixBuilderLinks() {
     });
     console.log('');
     
-    // Step 2: Fetch homeowners with NULL builder_user_id but non-NULL builder text
-    console.log('📋 Step 2: Fetching unlinked homeowners...');
-    const unlinkedHomeowners = await db
-      .select()
-      .from(homeowners)
-      .where(
-        and(
-          isNull(homeowners.builderUserId),
-          // Builder text field is not null/empty
-        )
-      );
+    // Step 2: Fetch ALL homeowners with builder text (including already linked ones)
+    // We need to check if they're linked to the CORRECT builder
+    console.log('📋 Step 2: Fetching all homeowners with builder text...');
+    const allHomeowners = await db.select().from(homeowners);
     
     // Filter to only those with non-empty builder field
-    const homeownersToLink = unlinkedHomeowners.filter(h => h.builder && h.builder.trim());
+    const homeownersWithBuilderText = allHomeowners.filter(h => h.builder && h.builder.trim());
     
-    console.log(`✅ Found ${homeownersToLink.length} homeowners with builder text but no link\n`);
+    console.log(`✅ Found ${homeownersWithBuilderText.length} homeowners with builder text\n`);
+    
+    if (homeownersWithBuilderText.length === 0) {
+      console.log('✨ No homeowners with builder text found!');
+      return;
+    }
+    
+    // Check which ones need to be re-linked (either NULL or mismatched)
+    const homeownersToLink = homeownersWithBuilderText.filter(h => {
+      if (!h.builderUserId) return true; // No link at all
+      
+      // Check if currently linked builder matches the text
+      const currentBuilder = builderUsers.find(bu => bu.id === h.builderUserId);
+      if (!currentBuilder) return true; // Linked to non-existent builder
+      
+      // If text doesn't match current link, needs re-linking
+      return !fuzzyMatch(h.builder!, currentBuilder.name);
+    });
+    
+    console.log(`🔍 Analysis:`);
+    console.log(`   - Total with builder text: ${homeownersWithBuilderText.length}`);
+    console.log(`   - Already correctly linked: ${homeownersWithBuilderText.length - homeownersToLink.length}`);
+    console.log(`   - Need re-linking: ${homeownersToLink.length}\n`);
     
     if (homeownersToLink.length === 0) {
-      console.log('✨ All homeowners are already linked or have no builder text!');
+      console.log('✨ All homeowners are correctly linked!');
       return;
     }
     
@@ -147,13 +162,18 @@ async function fixBuilderLinks() {
       }
       
       if (matchedBuilder) {
-        // Update the homeowner with the builder_user_id
+        // Get current link status for logging
+        const currentBuilder = builderUsers.find(bu => bu.id === homeowner.builderUserId);
+        const wasLinked = currentBuilder ? `was "${currentBuilder.name}"` : 'was NULL';
+        
+        // Update the homeowner with the correct builder_user_id
         await db
           .update(homeowners)
           .set({ builderUserId: matchedBuilder.id })
           .where(eq(homeowners.id, homeowner.id));
         
-        console.log(`✅ Linked "${homeowner.name}" → Builder: "${builderText}" → ${matchedBuilder.name} (${matchedBuilder.id})`);
+        console.log(`✅ ${homeowner.name}`);
+        console.log(`   Text: "${builderText}" | ${wasLinked} → NOW: "${matchedBuilder.name}"`);
         matchedCount++;
       } else {
         console.log(`⚠️ No match found for "${homeowner.name}" with builder text: "${builderText}"`);
