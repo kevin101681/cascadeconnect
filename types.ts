@@ -61,8 +61,9 @@ export interface Homeowner {
   zip: string;
   address: string; // Combined Full Address for display/search
   
-  builder: string; // Display Name
-  builderId?: string; // Link to BuilderGroup
+  builder: string; // Display Name (legacy text field)
+  builderId?: string; // Legacy: Link to BuilderGroup (deprecated)
+  builderUserId?: string; // NEW: Direct link to Builder User in users table
   
   jobName: string; // Replaces Lot/Project/LLC
   

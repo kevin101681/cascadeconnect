@@ -1360,7 +1360,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     setEditState(targetHomeowner.state || '');
     setEditZip(targetHomeowner.zip || '');
 
-    setEditBuilderId(targetHomeowner.builderId || '');
+    setEditBuilderId(targetHomeowner.builderUserId || ''); // NEW: Use builderUserId
     setEditJobName(targetHomeowner.jobName || '');
     setEditClosingDate(targetHomeowner.closingDate ? new Date(targetHomeowner.closingDate).toISOString().split('T')[0] : '');
     
@@ -1375,8 +1375,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   const handleSaveHomeowner = (e: React.FormEvent) => {
     e.preventDefault();
     if (targetHomeowner && onUpdateHomeowner) {
-        // Find builder name from ID
-        const selectedGroup = builderGroups.find(g => g.id === editBuilderId);
+        // Find builder name from ID (NEW: from builderUsers instead of builderGroups)
+        const selectedBuilder = builderUsers.find(bu => bu.id === editBuilderId);
 
         onUpdateHomeowner({
             ...targetHomeowner,
@@ -1388,8 +1388,9 @@ const Dashboard: React.FC<DashboardProps> = ({
             state: editState,
             zip: editZip,
             address: `${editStreet}, ${editCity}, ${editState} ${editZip}`,
-            builder: selectedGroup ? selectedGroup.name : targetHomeowner.builder,
-            builderId: editBuilderId,
+            builder: selectedBuilder ? selectedBuilder.name : targetHomeowner.builder, // Display name
+            builderUserId: editBuilderId || undefined, // NEW: Save as builderUserId
+            builderId: undefined, // Clear legacy field
             jobName: editJobName,
             closingDate: editClosingDate ? new Date(editClosingDate) : targetHomeowner.closingDate,
             subcontractorList: editParsedSubs.length > 0 ? editParsedSubs : targetHomeowner.subcontractorList
@@ -5825,8 +5826,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                             onChange={(e) => setEditBuilderId(e.target.value)}
                           >
                             <option value="">Select Builder...</option>
-                            {builderGroups.map(bg => (
-                              <option key={bg.id} value={bg.id}>{bg.name}</option>
+                            {builderUsers.map(bu => (
+                              <option key={bu.id} value={bu.id}>{bu.name}</option>
                             ))}
                           </select>
                           <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">

@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
-import { Homeowner, BuilderGroup } from '../types';
+import { Homeowner, BuilderGroup, BuilderUser } from '../types';
 import Button from './Button';
 import MaterialSelect from './MaterialSelect';
 import { Edit2, Trash2, X, Search, Building2, MapPin, Phone, Mail, Calendar, Filter, Users } from 'lucide-react';
 
 interface HomeownersListProps {
   homeowners: Homeowner[];
-  builderGroups: BuilderGroup[];
+  builderGroups: BuilderGroup[]; // Legacy - kept for backward compatibility
+  builderUsers: BuilderUser[]; // NEW: For filtering by builder users
   onUpdateHomeowner: (homeowner: Homeowner) => void;
   onDeleteHomeowner: (id: string) => void;
   onClose: () => void;
@@ -15,6 +16,7 @@ interface HomeownersListProps {
 const HomeownersList: React.FC<HomeownersListProps> = ({
   homeowners,
   builderGroups,
+  builderUsers,
   onUpdateHomeowner,
   onDeleteHomeowner,
   onClose
@@ -40,9 +42,9 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
   const filteredHomeowners = useMemo(() => {
     let filtered = homeowners;
 
-    // Filter by builder group
+    // Filter by builder user (NEW: uses builderUserId)
     if (selectedBuilderId !== 'all') {
-      filtered = filtered.filter(h => h.builderId === selectedBuilderId);
+      filtered = filtered.filter(h => h.builderUserId === selectedBuilderId);
     }
 
     // Filter by search query
@@ -68,7 +70,7 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
     setEditCity(homeowner.city || '');
     setEditState(homeowner.state || '');
     setEditZip(homeowner.zip || '');
-    setEditBuilderId(homeowner.builderId || '');
+    setEditBuilderId(homeowner.builderUserId || ''); // NEW: Use builderUserId
     setEditJobName(homeowner.jobName || '');
     setEditClosingDate(homeowner.closingDate ? new Date(homeowner.closingDate).toISOString().split('T')[0] : '');
   };
@@ -87,7 +89,8 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
       state: editState,
       zip: editZip,
       address: `${editStreet}, ${editCity}, ${editState} ${editZip}`.trim(),
-      builderId: editBuilderId || undefined,
+      builderUserId: editBuilderId || undefined, // NEW: Save as builderUserId
+      builderId: undefined, // Clear legacy field
       jobName: editJobName,
       closingDate: editClosingDate ? new Date(editClosingDate) : editingHomeowner.closingDate
     };
@@ -146,7 +149,7 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
             onChange={(value) => setSelectedBuilderId(value)}
             options={[
               { value: 'all', label: 'All Builders' },
-              ...builderGroups.map(bg => ({ value: bg.id, label: bg.name }))
+              ...builderUsers.map(bu => ({ value: bu.id, label: bu.name }))
             ]}
             className="min-w-[200px]"
           />
@@ -358,8 +361,8 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
                     onChange={(e) => setEditBuilderId(e.target.value)}
                   >
                     <option value="">Select Builder...</option>
-                    {builderGroups.map(bg => (
-                      <option key={bg.id} value={bg.id}>{bg.name}</option>
+                    {builderUsers.map(bu => (
+                      <option key={bu.id} value={bu.id}>{bu.name}</option>
                     ))}
                   </select>
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">

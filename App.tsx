@@ -322,7 +322,8 @@ function App() {
           zip: h.zip || '',
           address: h.address,
           builder: h.builder || '',
-          builderId: h.builderGroupId || undefined,
+          builderId: h.builderGroupId || undefined, // Legacy
+          builderUserId: h.builderUserId || undefined, // NEW: Direct link to builder user
           jobName: h.jobName || '',
           closingDate: h.closingDate ? new Date(h.closingDate) : new Date(),
           agentName: h.agentName || '',
@@ -3487,7 +3488,8 @@ Assigned By: ${assignerName}
           zip: updatedHomeowner.zip,
           address: updatedHomeowner.address,
           builder: updatedHomeowner.builder || null,
-          builderGroupId: updatedHomeowner.builderId || null,
+          builderGroupId: updatedHomeowner.builderId || null, // Legacy
+          builderUserId: updatedHomeowner.builderUserId || null, // NEW: Direct link to builder user
           jobName: updatedHomeowner.jobName,
           closingDate: updatedHomeowner.closingDate,
         } as any).where(eq(homeownersTable.id, updatedHomeowner.id));
@@ -4257,6 +4259,7 @@ Assigned By: ${assignerName}
           onDeleteContractor={handleDeleteContractor}
           builderUsers={builderUsers}
           builderGroups={builderGroups}
+          homeowners={homeowners}
           onAddBuilderUser={handleAddBuilderUser}
           onUpdateBuilderUser={handleUpdateBuilderUser}
           onDeleteBuilderUser={handleDeleteBuilderUser}
@@ -4274,6 +4277,7 @@ Assigned By: ${assignerName}
         <HomeownersList 
           homeowners={availableHomeowners}
           builderGroups={builderGroups}
+          builderUsers={builderUsers}
           onUpdateHomeowner={handleUpdateHomeowner}
           onDeleteHomeowner={handleDeleteHomeowner}
           onClose={() => setCurrentView('DASHBOARD')}

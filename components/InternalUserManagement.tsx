@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { InternalEmployee, Contractor, BuilderUser, BuilderGroup, UserRole } from '../types';
+import { InternalEmployee, Contractor, BuilderUser, BuilderGroup, Homeowner, UserRole } from '../types';
 import Button from './Button';
 import MaterialSelect from './MaterialSelect';
 import { Plus, Edit2, Mail, Trash2, UserCheck, Shield, X, HardHat, Briefcase, Phone, User, Lock, Bell, Send } from 'lucide-react';
@@ -19,6 +19,7 @@ interface InternalUserManagementProps {
 
   builderUsers?: BuilderUser[];
   builderGroups?: BuilderGroup[];
+  homeowners?: Homeowner[]; // NEW: For counting linked homeowners
   onAddBuilderUser?: (user: BuilderUser, password?: string) => void;
   onUpdateBuilderUser?: (user: BuilderUser, password?: string) => void;
   onDeleteBuilderUser?: (id: string) => void;
@@ -39,6 +40,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
   onDeleteContractor,
   builderUsers = [],
   builderGroups = [],
+  homeowners = [], // NEW: For counting linked homeowners
   onAddBuilderUser,
   onUpdateBuilderUser,
   onDeleteBuilderUser,
@@ -383,6 +385,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                     <th className="px-6 py-4 font-medium">User Name</th>
                     <th className="px-6 py-4 font-medium">Email</th>
                     <th className="px-6 py-4 font-medium">Assigned Group</th>
+                    <th className="px-6 py-4 font-medium">Linked Homeowners</th>
                   </>
                 )}
                 <th className="px-6 py-4 font-medium text-right">Actions</th>
@@ -490,6 +493,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
               ) : (
                 builderUsers.map(user => {
                   const groupName = builderGroups.find(g => g.id === user.builderGroupId)?.name || 'Unknown';
+                  const linkedHomeownersCount = homeowners.filter(h => h.builderUserId === user.id).length;
                   return (
                     <tr key={user.id} className="hover:bg-surface-container-high dark:hover:bg-gray-700 transition-colors group">
                       <td className="px-6 py-4">
@@ -506,6 +510,11 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600">
                           {groupName}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary">
+                          {linkedHomeownersCount} {linkedHomeownersCount === 1 ? 'Homeowner' : 'Homeowners'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">
