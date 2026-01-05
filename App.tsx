@@ -4183,6 +4183,7 @@ Assigned By: ${assignerName}
           onTrackTaskMessage={trackTaskMessage}
           onSendTaskMessage={handleContactAboutTask}
           builderGroups={builderGroups}
+          builderUsers={builderUsers}
           currentBuilderId={currentBuilderId}
           currentUserEmail={
             authUser?.primaryEmailAddress?.emailAddress || 
@@ -4230,6 +4231,7 @@ Assigned By: ${assignerName}
           onTrackTaskMessage={trackTaskMessage}
           onSendTaskMessage={handleContactAboutTask}
           builderGroups={builderGroups}
+          builderUsers={builderUsers}
           currentBuilderId={currentBuilderId}
           currentUserEmail={
             authUser?.primaryEmailAddress?.emailAddress || 

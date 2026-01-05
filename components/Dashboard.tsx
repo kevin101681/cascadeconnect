@@ -6,7 +6,7 @@ import HTMLFlipBook from 'react-pageflip';
 // import Papa from 'papaparse';
 // import * as XLSX from 'xlsx';
 import { motion, AnimatePresence, type Transition, type Variants } from 'framer-motion';
-import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, Task, Contractor, Call } from '../types';
+import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, BuilderUser, Task, Contractor, Call } from '../types';
 import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
 import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle } from 'lucide-react';
@@ -274,6 +274,9 @@ interface DashboardProps {
   messages: MessageThread[];
   onSendMessage: (threadId: string, content: string) => void;
   onCreateThread: (homeownerId: string, subject: string, content: string) => void;
+  
+  // Builder Users (for dropdown selections)
+  builderUsers?: BuilderUser[];
   onUpdateThread?: (threadId: string, updates: Partial<MessageThread>) => void;
   onAddInternalNote?: (claimId: string, noteText: string, userName?: string) => Promise<void>;
   onTrackClaimMessage?: (claimId: string, messageData: {
@@ -353,6 +356,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   onTrackTaskMessage,
   onSendTaskMessage,
   builderGroups = [],
+  builderUsers = [],
   currentBuilderId = null,
   currentUserEmail,
   initialTab = 'CLAIMS',
