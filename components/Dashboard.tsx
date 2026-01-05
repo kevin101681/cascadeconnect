@@ -4002,7 +4002,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         Sub List
                       </Button>
                     )}
-                    {/* Punch List Button - Shows "BlueTag" on mobile, "BlueTag" or "+ Punch List" on desktop */}
+                    {/* Punch List Button - Shows "BlueTag" on mobile and desktop */}
                     {(() => {
                       const reportKey = `bluetag_report_${displayHomeowner.id}`;
                       const hasReport = localStorage.getItem(reportKey) !== null;
@@ -4015,7 +4015,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           className="!h-9 w-full md:w-auto"
                         >
                           <span className="md:hidden">BlueTag</span>
-                          <span className="hidden md:inline">{hasReport ? 'BlueTag' : '+ Punch List'}</span>
+                          <span className="hidden md:inline">BlueTag</span>
                         </Button>
                       );
                     })()}
