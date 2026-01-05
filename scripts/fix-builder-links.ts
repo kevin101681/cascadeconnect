@@ -9,9 +9,27 @@
  * Solution: Link homeowners to BuilderUsers by fuzzy matching builder names
  */
 
-import { db, isDbConfigured } from '../db';
-import { homeowners, users } from '../db/schema';
+// Load environment variables from .env.local
+import { config } from 'dotenv';
+import { resolve } from 'path';
+
+// Load .env.local file from project root
+config({ path: resolve(process.cwd(), '.env.local') });
+
+// Also try .env as fallback
+config({ path: resolve(process.cwd(), '.env') });
+
+// Manually set VITE_DATABASE_URL to DATABASE_URL if needed for Node scripts
+if (!process.env.DATABASE_URL && process.env.VITE_DATABASE_URL) {
+  process.env.DATABASE_URL = process.env.VITE_DATABASE_URL;
+}
+
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import * as schema from '../db/schema';
 import { eq, isNull, and } from 'drizzle-orm';
+
+const { homeowners, users } = schema;
 
 // Simple fuzzy match helper
 function fuzzyMatch(text1: string, text2: string): boolean {
@@ -35,10 +53,23 @@ function fuzzyMatch(text1: string, text2: string): boolean {
 async function fixBuilderLinks() {
   console.log('🔧 Starting Builder Links Migration...\n');
   
-  if (!isDbConfigured) {
-    console.error('❌ Database not configured');
+  // Check for database URL
+  const databaseUrl = process.env.DATABASE_URL || process.env.VITE_DATABASE_URL;
+  
+  if (!databaseUrl) {
+    console.error('❌ Database URL not configured');
+    console.error('Please set DATABASE_URL or VITE_DATABASE_URL in your .env.local file');
+    console.error('Current env keys:', Object.keys(process.env).filter(k => k.includes('DATABASE')));
     process.exit(1);
   }
+  
+  console.log('✅ Database URL found');
+  console.log(`   Connection: ${databaseUrl.substring(0, 30)}...`);
+  console.log('');
+  
+  // Initialize database connection
+  const sql = neon(databaseUrl);
+  const db = drizzle(sql, { schema });
   
   try {
     // Step 1: Fetch all Builder Users
