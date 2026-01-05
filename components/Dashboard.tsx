@@ -1939,8 +1939,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                       isCompleted 
                         ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75' 
                         : isReviewed
-                        ? 'bg-green-50 dark:bg-green-950/20 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
-                        : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
+                        ? 'bg-green-50 dark:bg-green-950/20 border-surface-outline-variant dark:border-gray-600 shadow-sm md:hover:shadow-elevation-1'
+                        : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm md:hover:shadow-elevation-1'
                     }`}
                     onClick={() => {
                       setSelectedClaimForModal(claim);
@@ -2204,10 +2204,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                           isSelected
                             ? 'bg-primary-container/20 dark:bg-primary/20 border-primary ring-1 ring-primary'
                             : isCompleted 
-                            ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75 hover:shadow-sm' 
+                            ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75 md:hover:shadow-sm' 
                             : isReviewed
-                            ? 'bg-green-50 dark:bg-green-950/20 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
-                            : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
+                            ? 'bg-green-50 dark:bg-green-950/20 border-surface-outline-variant dark:border-gray-600 shadow-sm md:hover:shadow-elevation-1'
+                            : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm md:hover:shadow-elevation-1'
                         }`}
                       >
                       <div className="px-4 py-4">
@@ -2748,8 +2748,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                         isSelected
                           ? 'bg-primary-container/20 dark:bg-primary/20 border-primary ring-1 ring-primary'
                           : task.isCompleted 
-                          ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75 hover:shadow-sm' 
-                          : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
+                          ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75 md:hover:shadow-sm' 
+                          : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm md:hover:shadow-elevation-1'
                       }`}
                     >
                       <div className="px-4 py-4">
@@ -2986,8 +2986,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                           isSelected
                             ? 'bg-primary-container/20 dark:bg-primary/20 border-primary ring-1 ring-primary'
                             : isUnread
-                            ? 'bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
-                            : 'bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1 opacity-75'
+                            ? 'bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm md:hover:shadow-elevation-1'
+                            : 'bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm md:hover:shadow-elevation-1 opacity-75'
                         }`}
                       >
                         <div className="px-4 py-4">
