@@ -2404,8 +2404,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             </Suspense>
           </div>
 
-          {/* Mobile Footer with Actions */}
-          <div className="sticky bottom-0 left-0 right-0 z-20 bg-surface-container/95 dark:bg-gray-800/95 backdrop-blur-sm border-t border-surface-outline-variant dark:border-gray-700 p-4 flex gap-2 shadow-lg">
+          {/* Mobile Footer with Actions - Taller for edge-to-edge screens */}
+          <div className="sticky bottom-0 left-0 right-0 z-20 bg-surface-container/95 dark:bg-gray-800/95 backdrop-blur-sm border-t border-surface-outline-variant dark:border-gray-700 p-6 pb-8 flex gap-2 shadow-lg">
             <Button 
               type="button" 
               variant="filled"

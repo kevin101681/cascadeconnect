@@ -647,7 +647,8 @@ If this repair work is billable, please let me know prior to scheduling.`);
         <h2 className="text-lg font-normal text-surface-on dark:text-gray-100">
           Edit Claim
         </h2>
-        <div className="flex flex-wrap items-center gap-2">
+        {/* Action buttons - hidden on mobile as they're in the footer */}
+        <div className="hidden md:flex flex-wrap items-center gap-2">
           <Button 
             type="button" 
             variant="filled"
