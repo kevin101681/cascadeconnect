@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, forwardRef, Suspense, useCallback } from 'react';
+import React, { useState, useEffect, useRef, forwardRef, Suspense, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import HTMLFlipBook from 'react-pageflip';
 // Lazy load heavy libraries - only load when needed
