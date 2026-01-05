@@ -12,7 +12,7 @@ interface TasksSheetProps {
 }
 
 const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [], isInline = false }) => {
-  const { isOpen, activeClaimId, isFilterEnabled, contextLabel, contextType, closeTasks, toggleFilter } = useTaskStore();
+  const { isOpen, activeClaimId, isFilterEnabled, contextLabel, contextType, prefilledNoteBody, closeTasks, toggleFilter } = useTaskStore();
   const [tasks, setTasks] = useState<SimpleTask[]>([]);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -23,14 +23,22 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
   useEffect(() => {
     if (isOpen || isInline) {
       loadTasks();
+      // Pre-fill input with note body if provided
+      if (prefilledNoteBody) {
+        setInputValue(prefilledNoteBody);
+      }
       // Auto-focus input when opened (only for modal, not inline)
       if (!isInline) {
         setTimeout(() => {
           inputRef.current?.focus();
+          // Move cursor to end of pre-filled text
+          if (prefilledNoteBody && inputRef.current) {
+            inputRef.current.setSelectionRange(prefilledNoteBody.length, prefilledNoteBody.length);
+          }
         }, 100);
       }
     }
-  }, [isOpen, isInline]); // Removed activeClaimId and isFilterEnabled from dependencies
+  }, [isOpen, isInline, prefilledNoteBody]); // Added prefilledNoteBody to dependencies
 
   const loadTasks = async () => {
     setLoading(true);

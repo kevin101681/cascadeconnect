@@ -335,13 +335,22 @@ If this repair work is billable, please let me know prior to scheduling.`);
           <Button 
             variant="outlined" 
             onClick={() => {
-              // Navigate to the Notes tab and store context
-              const contextLabel = `${claim.title || 'Untitled'} • Claim #${claim.claimNumber || claim.id.substring(0, 8)} • ${claim.jobName || claim.address}`;
+              // Navigate to the Notes tab and store context with pre-filled body
+              const claimNumber = claim.claimNumber || claim.id.substring(0, 8);
+              const project = claim.jobName || claim.address;
+              const contextLabel = `${claim.title || 'Untitled'} • Claim #${claimNumber} • ${project}`;
+              const prefilledBody = `Follow up on claim #${claimNumber} for ${project}.`;
+              
               if (onNavigate) {
                 onNavigate('DASHBOARD', { initialTab: 'NOTES' });
               }
-              // Store context for when user adds a note
-              useTaskStore.setState({ activeClaimId: claim.id, contextLabel, contextType: 'claim' });
+              // Store context with pre-filled note body
+              useTaskStore.setState({ 
+                activeClaimId: claim.id, 
+                contextLabel, 
+                contextType: 'claim',
+                prefilledNoteBody: prefilledBody
+              });
             }}
             icon={<StickyNote className="h-4 w-4" />}
             title={`Add a note for ${claim.claimNumber || 'this claim'}`}

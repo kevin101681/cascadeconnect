@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Call, Homeowner } from '../types';
-import { Phone, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Building2, User, Mail, ExternalLink, Play, Download, Search, ChevronLeft, ChevronRight, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Phone, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Building2, User, Mail, ExternalLink, Play, Download, Search, ChevronLeft, ChevronRight, Trash2, ChevronDown, ChevronUp, StickyNote } from 'lucide-react';
 import { db, isDbConfigured } from '../db';
 import { calls, homeowners } from '../db/schema';
 import { eq, desc, sql } from 'drizzle-orm';
 import SMSChatView from './SMSChatView';
+import { useTaskStore } from '../stores/useTaskStore';
 
 interface AIIntakeDashboardProps {
   onNavigate?: (view: string) => void;
@@ -565,6 +566,27 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
 
                 {/* Actions */}
                 <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 space-y-3">
+                  {/* Add Note Button */}
+                  <button
+                    onClick={() => {
+                      const callerName = actualSelectedCall.homeownerName || 'Unknown Caller';
+                      const phoneNumber = actualSelectedCall.phoneNumber || 'unknown number';
+                      const contextLabel = `Call • ${callerName} • ${formatDate(actualSelectedCall.createdAt)}`;
+                      const prefilledBody = `Call ${callerName} (${phoneNumber}) back.`;
+                      
+                      useTaskStore.getState().openTasks(
+                        actualSelectedCall.homeownerId || undefined,
+                        contextLabel,
+                        'call',
+                        prefilledBody
+                      );
+                    }}
+                    className="w-full px-4 py-2 bg-primary/10 text-primary border border-primary rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
+                  >
+                    <StickyNote className="h-4 w-4" />
+                    Add Note
+                  </button>
+                  
                   {actualSelectedCall.homeownerId && (
                     <button
                       onClick={() => {
@@ -788,6 +810,27 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
 
             {/* Actions */}
             <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 space-y-3">
+              {/* Add Note Button */}
+              <button
+                onClick={() => {
+                  const callerName = actualSelectedCall.homeownerName || 'Unknown Caller';
+                  const phoneNumber = actualSelectedCall.phoneNumber || 'unknown number';
+                  const contextLabel = `Call • ${callerName} • ${formatDate(actualSelectedCall.createdAt)}`;
+                  const prefilledBody = `Call ${callerName} (${phoneNumber}) back.`;
+                  
+                  useTaskStore.getState().openTasks(
+                    actualSelectedCall.homeownerId || undefined,
+                    contextLabel,
+                    'call',
+                    prefilledBody
+                  );
+                }}
+                className="w-full px-4 py-2 bg-primary/10 text-primary border border-primary rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
+              >
+                <StickyNote className="h-4 w-4" />
+                Add Note
+              </button>
+              
               {actualSelectedCall.homeownerId && (
                 <button
                   onClick={() => {

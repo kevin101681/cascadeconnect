@@ -972,13 +972,21 @@ If this repair work is billable, please let me know prior to scheduling.`);
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => {
-                                // Navigate to the Notes tab with message context
-                                const contextLabel = `${msg.subject} • ${claim.jobName || claim.address}`;
+                                // Navigate to the Notes tab with message context and pre-filled body
+                                const project = claim.jobName || claim.address;
+                                const contextLabel = `${msg.subject} • ${project}`;
+                                const prefilledBody = `Message ${project} back.`;
+                                
                                 if (onNavigate) {
                                   onNavigate('DASHBOARD', { initialTab: 'NOTES' });
                                 }
-                                // Store context for when user adds a note
-                                useTaskStore.setState({ activeClaimId: claim.id, contextLabel, contextType: 'message' });
+                                // Store context with pre-filled note body
+                                useTaskStore.setState({ 
+                                  activeClaimId: claim.id, 
+                                  contextLabel, 
+                                  contextType: 'message',
+                                  prefilledNoteBody: prefilledBody
+                                });
                               }}
                               className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
                               title={`Add a note about: ${msg.subject}`}

@@ -3280,9 +3280,16 @@ const Dashboard: React.FC<DashboardProps> = ({
                   const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
                   const claimNum = associatedClaim?.claimNumber ? `Claim #${associatedClaim.claimNumber}` : '';
                   const contextLabel = [selectedThread.subject, claimNum, project].filter(Boolean).join(' • ');
+                  const prefilledBody = `Message ${project} back.`;
+                  
                   setCurrentTab('NOTES');
                   setSelectedThreadId(null);
-                  useTaskStore.setState({ activeClaimId: associatedClaim?.id || null, contextLabel, contextType: 'message' });
+                  useTaskStore.setState({ 
+                    activeClaimId: associatedClaim?.id || null, 
+                    contextLabel, 
+                    contextType: 'message',
+                    prefilledNoteBody: prefilledBody
+                  });
                 }}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-on text-sm font-medium rounded-full hover:bg-primary/90 transition-all shadow-sm"
                 title={`Add a note about: ${selectedThread.subject}`}
