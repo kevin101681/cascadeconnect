@@ -1638,6 +1638,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Homeowner card collapse state
   const [isHomeownerCardCollapsed, setIsHomeownerCardCollapsed] = useState(false);
+
+  // Homeowner Info Card - quick task creation controls
+  const [homeownerTaskEval, setHomeownerTaskEval] = useState<'' | '60 Day' | '11 Month' | 'Other'>('');
+  const [tasksTabStartInEditMode, setTasksTabStartInEditMode] = useState(false);
   useEffect(() => {
     if (effectiveHomeowner) {
       setHomeownerCardKey(prev => prev + 1);
@@ -2721,31 +2725,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               <span className="hidden sm:inline">My Tasks</span>
               <span className="sm:hidden">Tasks</span>
             </h3>
-            {/* New Task button */}
-            <Button
-              variant="filled"
-              onClick={() => {
-                if (onAddTask) {
-                  const newTask = {
-                    id: crypto.randomUUID(),
-                    title: '',
-                    description: '',
-                    assignedToId: currentUser.id,
-                    assignedToName: currentUser.name,
-                    dateAssigned: new Date(),
-                    isCompleted: false,
-                    dueDate: undefined,
-                    claimIds: [],
-                    homeownerId: effectiveHomeowner?.id
-                  };
-                  onAddTask(newTask);
-                }
-              }}
-              className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
-            >
-              <span className="hidden sm:inline">New Task</span>
-              <span className="sm:hidden">New</span>
-            </Button>
           </div>
           
           {/* Filter Pills */}
@@ -2805,7 +2784,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                   return (
                     <div
                       key={task.id}
-                      onClick={() => setSelectedTaskForModal(task)}
+                      onClick={() => {
+                        setSelectedTaskForModal(task);
+                        setTasksTabStartInEditMode(false);
+                      }}
                       className={`group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer ${
                         isSelected
                           ? 'bg-primary-container/20 dark:bg-primary/20 border-primary ring-1 ring-primary'
@@ -2905,7 +2887,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 }>
-                  <TaskDetail
+                    <TaskDetail
                     task={selectedTaskForModal}
                     employees={employees}
                     currentUser={currentUser}
@@ -2914,13 +2896,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                     onToggleTask={onToggleTask}
                     onDeleteTask={onDeleteTask}
                     onUpdateTask={onUpdateTask}
+                      startInEditMode={tasksTabStartInEditMode}
                     onSelectClaim={(claim) => {
                       setSelectedTaskForModal(null);
+                        setTasksTabStartInEditMode(false);
                       setSelectedClaimForModal(claim);
                       setCurrentTab('CLAIMS');
                     }}
                     taskMessages={taskMessages.filter(m => m.taskId === selectedTaskForModal.id)}
-                    onBack={() => setSelectedTaskForModal(null)}
+                      onBack={() => {
+                        setSelectedTaskForModal(null);
+                        setTasksTabStartInEditMode(false);
+                      }}
                   />
                 </Suspense>
               </div>
@@ -2972,7 +2959,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                 homeowners={homeowners}
                 onToggleTask={onToggleTask}
                 onDeleteTask={onDeleteTask}
-                onBack={() => setSelectedTaskForModal(null)}
+                startInEditMode={tasksTabStartInEditMode}
+                onBack={() => {
+                  setSelectedTaskForModal(null);
+                  setTasksTabStartInEditMode(false);
+                }}
               />
             </Suspense>
           </div>
@@ -3772,6 +3763,97 @@ const Dashboard: React.FC<DashboardProps> = ({
     // Use targetHomeowner if available (preserved from admin view), otherwise use activeHomeowner for homeowner view
     const displayHomeowner = targetHomeowner || activeHomeowner;
     const isHomeownerView = userRole === UserRole.HOMEOWNER;
+    const projectTag = displayHomeowner.jobName || 'N/A';
+    const closingTag = displayHomeowner.closingDate ? new Date(displayHomeowner.closingDate).toLocaleDateString() : 'N/A';
+    const tagsLine = `[${projectTag}] [${closingTag}]`;
+
+    const openClaimsForHomeowner = claims.filter(c => {
+      const claimEmail = c.homeownerEmail?.toLowerCase().trim() || '';
+      const homeownerEmail = displayHomeowner.email?.toLowerCase().trim() || '';
+      return (
+        claimEmail === homeownerEmail &&
+        c.status !== ClaimStatus.COMPLETED &&
+        c.status !== ClaimStatus.SCHEDULED
+      );
+    });
+
+    const createHomeownerTask = async (taskData: Partial<Task>, options?: { openForEdit?: boolean }) => {
+      const id = crypto.randomUUID();
+      const now = new Date();
+      const taskPreview: Task = {
+        id,
+        title: taskData.title ?? 'New Task',
+        description: taskData.description ?? '',
+        assignedToId: taskData.assignedToId || currentUser.id,
+        assignedById: currentUser.id,
+        isCompleted: false,
+        dateAssigned: now,
+        dueDate: taskData.dueDate || new Date(Date.now() + 86400000),
+        relatedClaimIds: taskData.relatedClaimIds || [],
+      };
+
+      try {
+        await onAddTask({ ...taskData, id });
+      } catch (e) {
+        console.error('Failed to create task from homeowner info card:', e);
+      }
+
+      if (options?.openForEdit) {
+        setSelectedTaskForModal(taskPreview);
+        if (currentTab === 'TASKS') {
+          setTasksTabStartInEditMode(true);
+        }
+      }
+    };
+
+    const handleEvalCreate = async (value: '' | '60 Day' | '11 Month' | 'Other') => {
+      if (!value) return;
+
+      if (value === '60 Day') {
+        await createHomeownerTask({
+          title: 'Schedule 60 Day Evaluation',
+          description: `Tags: ${tagsLine}`,
+          relatedClaimIds: [],
+          assignedToId: currentUser.id,
+        });
+      } else if (value === '11 Month') {
+        await createHomeownerTask({
+          title: 'Schedule 11 Month Evaluation',
+          description: `Tags: ${tagsLine}`,
+          relatedClaimIds: [],
+          assignedToId: currentUser.id,
+        });
+      } else {
+        // Other: create a blank-title task and open it immediately for editing
+        await createHomeownerTask(
+          {
+            title: '',
+            description: `Tags: ${tagsLine}`,
+            relatedClaimIds: [],
+            assignedToId: currentUser.id,
+          },
+          { openForEdit: true }
+        );
+      }
+    };
+
+    const handleScheduleCreate = async () => {
+      const x = openClaimsForHomeowner.length;
+      const claimLines = openClaimsForHomeowner
+        .map((c) => {
+          const claimRef = c.claimNumber ? `Claim #${c.claimNumber}` : `Claim ${c.id.substring(0, 8)}`;
+          return `- ${claimRef}: ${c.title} (#claims?claimId=${c.id})`;
+        })
+        .join('\n');
+
+      await createHomeownerTask({
+        title: `Ready to schedule ${x} open claims`,
+        description: `Tags: ${tagsLine}\n\nOpen claims:\n${claimLines || '- (none)'}`,
+        relatedClaimIds: openClaimsForHomeowner.map((c) => c.id),
+        assignedToId: currentUser.id,
+      });
+    };
+
     // Get scheduled claims for this homeowner
     const scheduledClaims = claims
       .filter(c => {
@@ -4020,6 +4102,48 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <span className="truncate">{displayHomeowner.email}</span>
                 </div>
              </div>
+
+             {/* Tasks (Quick Create) */}
+             {!isHomeownerView && (
+               <div className="w-full mt-3" onClick={(e) => e.stopPropagation()}>
+                 <div className="w-full bg-surface dark:bg-gray-800 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-700/50 p-3">
+                   <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-300 uppercase tracking-wide">
+                     Tasks
+                   </div>
+                   <div className="mt-2 flex items-end gap-2">
+                     <div className="flex-1">
+                       <label className="block text-xs text-surface-on-variant dark:text-gray-400 mb-1">
+                         Eval
+                       </label>
+                       <select
+                         value={homeownerTaskEval}
+                         onChange={async (e) => {
+                           const value = e.target.value as '' | '60 Day' | '11 Month' | 'Other';
+                           setHomeownerTaskEval(value);
+                           await handleEvalCreate(value);
+                           setHomeownerTaskEval('');
+                         }}
+                         className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-sm text-surface-on dark:text-gray-100 border border-surface-outline-variant/50 dark:border-gray-600 focus:ring-2 focus:ring-primary focus:outline-none"
+                       >
+                         <option value="">Select…</option>
+                         <option value="60 Day">60 Day</option>
+                         <option value="11 Month">11 Month</option>
+                         <option value="Other">Other</option>
+                       </select>
+                     </div>
+                     <Button
+                       variant="outlined"
+                       onClick={async () => {
+                         await handleScheduleCreate();
+                       }}
+                       className="!h-10 !px-4"
+                     >
+                       Schedule
+                     </Button>
+                   </div>
+                 </div>
+               </div>
+             )}
 
              {/* Actions - Two columns on all viewports */}
              <div 

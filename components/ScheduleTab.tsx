@@ -341,7 +341,8 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
         </div>
 
         {/* Calendar */}
-        <div className="min-h-[600px] bg-surface dark:bg-gray-900 rounded-2xl p-4">
+        {/* react-big-calendar uses percentage heights internally; give the wrapper an explicit height so the month grid can't collapse */}
+        <div className="h-[70vh] min-h-[600px] bg-surface dark:bg-gray-900 rounded-2xl p-4">
           <Calendar
             localizer={localizer}
             events={events}

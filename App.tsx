@@ -18,7 +18,6 @@ import BackendDashboard from './components/BackendDashboard';
 import AIIntakeDashboard from './components/AIIntakeDashboard';
 import HomeownerSelector from './components/HomeownerSelector';
 import { ChatWidget } from './components/chat/ChatWidget';
-import CommandMenu from './components/global/CommandMenu';
 import UnifiedImportDashboard from './app/dashboard/admin/import/page';
 import { ModalProvider } from './components/providers/modal-provider';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
@@ -1163,9 +1162,6 @@ function App() {
 
   const [isEnrollmentOpen, setIsEnrollmentOpen] = useState(false);
   
-  // Command Menu state
-  const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
-  
   // Alert modal state
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<'info' | 'success' | 'error'>('info');
@@ -1445,23 +1441,19 @@ function App() {
     }
   }, [availableHomeowners, claims, handleSelectClaim]);
   
-  // Command+K keyboard shortcut handler
+  // Cmd/Ctrl+K keyboard shortcut: focus/open inline Global Search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Cmd+K on Mac, Ctrl+K on Windows/Linux
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setIsCommandMenuOpen((prev) => !prev);
-      }
-      // Escape to close
-      if (e.key === 'Escape' && isCommandMenuOpen) {
-        setIsCommandMenuOpen(false);
+        window.dispatchEvent(new Event('cascade:global-search-open'));
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isCommandMenuOpen]);
+  }, []);
 
   const handleUpdateClaim = async (updatedClaim: Claim) => {
     // Get the previous claim state to detect changes
@@ -3066,9 +3058,11 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
   // Handlers for Tasks/Employees/Contractors
   const handleAddTask = async (taskData: Partial<Task>): Promise<void> => {
     const newTask: Task = {
-      id: crypto.randomUUID(),
-      title: taskData.title || 'New Task',
-      description: taskData.description || '',
+      // Allow callers to pre-generate an id (so UI can open/select the task immediately)
+      id: taskData.id ?? crypto.randomUUID(),
+      // Allow blank titles (""), but still default if title is undefined/null
+      title: taskData.title ?? 'New Task',
+      description: taskData.description ?? '',
       assignedToId: taskData.assignedToId || activeEmployee.id,
       assignedById: activeEmployee.id,
       isCompleted: false,
@@ -4176,7 +4170,7 @@ Assigned By: ${assignerName}
       }}
       isAdminAccount={isAdminAccount}
       currentUser={activeEmployee}
-      onOpenGlobalSearch={() => setIsCommandMenuOpen(true)}
+      onGlobalSearchNavigate={handleSearchNavigate}
     >
       {currentView === 'DASHBOARD' && (
         <Dashboard 
@@ -4379,13 +4373,6 @@ Assigned By: ${assignerName}
           }}
         />
       )}
-      
-      {/* Global Command Menu (Command+K) */}
-      <CommandMenu
-        isOpen={isCommandMenuOpen}
-        onClose={() => setIsCommandMenuOpen(false)}
-        onNavigate={handleSearchNavigate}
-      />
       
       {/* Global Modal Provider - Renders all stacked modals */}
       <ModalProvider />

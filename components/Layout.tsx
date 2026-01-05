@@ -4,6 +4,7 @@ import { UserRole, Homeowner } from '../types';
 import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2, Phone } from 'lucide-react';
 import { useDarkMode } from './DarkModeProvider';
 import { UserButton, useUser } from '@clerk/clerk-react';
+import GlobalSearch from './global/GlobalSearch';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -21,8 +22,8 @@ interface LayoutProps {
   selectedHomeownerId: string | null;
   onClearSelection: () => void;
   
-  // Global Search Props
-  onOpenGlobalSearch?: () => void;
+  // Global Search
+  onGlobalSearchNavigate?: (url: string) => void;
 
   // Navigation & Actions
   onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES') => void;
@@ -59,7 +60,7 @@ const Layout: React.FC<LayoutProps> = ({
   isAdminAccount = false,
   currentUser,
   currentView,
-  onOpenGlobalSearch
+  onGlobalSearchNavigate
 }) => {
   // Minimal approach: Just ensure avatar is sized correctly, let CSS handle the rest
   useEffect(() => {
@@ -232,24 +233,14 @@ const Layout: React.FC<LayoutProps> = ({
             </button>
             
             {/* Global Search Bar (Admin & Builder Only) - Always Visible */}
-            {(isAdmin || isBuilder) && onOpenGlobalSearch && (
+            {(isAdmin || isBuilder) && onGlobalSearchNavigate && (
               <div className="flex-1 max-w-md relative">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" style={{ top: '50%', transform: 'translateY(-50%)' }} />
-                  <input 
-                    type="text" 
-                    placeholder="Global Search"
-                    className="w-full bg-surface-container dark:bg-gray-700 rounded-full pl-9 pr-8 py-2 text-sm border-none focus:ring-2 focus:ring-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all placeholder:text-gray-400 dark:placeholder:text-gray-500"
-                    onFocus={onOpenGlobalSearch}
-                    onClick={onOpenGlobalSearch}
-                    readOnly
-                  />
-                </div>
+                <GlobalSearch onNavigate={onGlobalSearchNavigate} />
               </div>
             )}
             
             {/* Legacy Homeowner Search Bar (Admin & Builder Only) - Hidden on Dashboard - Fallback if global search not available */}
-            {(isAdmin || isBuilder) && currentView !== 'DASHBOARD' && !onOpenGlobalSearch && (
+            {(isAdmin || isBuilder) && currentView !== 'DASHBOARD' && !onGlobalSearchNavigate && (
               <div className="flex-1 max-w-sm relative">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" style={{ top: '50%', transform: 'translateY(-50%)' }} />

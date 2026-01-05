@@ -318,6 +318,15 @@
   color: #e5e7eb;
 }
 
+/* Day numbers are rendered as button links; force readable contrast (prevents white-on-white) */
+.rbc-button-link {
+  color: #111827;
+}
+
+.dark .rbc-button-link {
+  color: #e5e7eb;
+}
+
 .rbc-date-cell.rbc-now {
   font-weight: 700;
 }

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Homeowner, BuilderGroup, BuilderUser } from '../types';
 import Button from './Button';
 import MaterialSelect from './MaterialSelect';
@@ -21,10 +21,12 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
   onDeleteHomeowner,
   onClose
 }) => {
+  const PAGE_SIZE = 50;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBuilderId, setSelectedBuilderId] = useState<string>('all');
   const [editingHomeowner, setEditingHomeowner] = useState<Homeowner | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [pageIndex, setPageIndex] = useState(0);
 
   // Edit form state
   const [editName, setEditName] = useState('');
@@ -60,6 +62,19 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
 
     return filtered;
   }, [homeowners, selectedBuilderId, searchQuery]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setPageIndex(0);
+  }, [searchQuery, selectedBuilderId]);
+
+  const pageCount = Math.max(1, Math.ceil(filteredHomeowners.length / PAGE_SIZE));
+  const clampedPageIndex = Math.min(pageIndex, pageCount - 1);
+  const pageStart = clampedPageIndex * PAGE_SIZE;
+  const pageEndExclusive = Math.min(pageStart + PAGE_SIZE, filteredHomeowners.length);
+  const pagedHomeowners = useMemo(() => {
+    return filteredHomeowners.slice(pageStart, pageEndExclusive);
+  }, [filteredHomeowners, pageStart, pageEndExclusive]);
 
   const handleOpenEdit = (homeowner: Homeowner) => {
     setEditingHomeowner(homeowner);
@@ -155,6 +170,42 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
           />
       </div>
 
+        {/* Pagination */}
+        {filteredHomeowners.length > 0 && (
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="text-xs text-surface-on-variant dark:text-gray-400">
+              Showing <span className="font-medium text-surface-on dark:text-gray-200">{pageStart + 1}</span>
+              {' '}to{' '}
+              <span className="font-medium text-surface-on dark:text-gray-200">{pageEndExclusive}</span>
+              {' '}of{' '}
+              <span className="font-medium text-surface-on dark:text-gray-200">{filteredHomeowners.length}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+                disabled={clampedPageIndex === 0}
+                className="px-3 py-2 rounded-lg border border-surface-outline-variant dark:border-gray-600 text-sm text-surface-on dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-container-high dark:hover:bg-gray-700 transition-colors"
+              >
+                Prev
+              </button>
+              <div className="text-xs text-surface-on-variant dark:text-gray-400 px-2">
+                Page <span className="font-medium text-surface-on dark:text-gray-200">{clampedPageIndex + 1}</span>
+                {' '}of{' '}
+                <span className="font-medium text-surface-on dark:text-gray-200">{pageCount}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPageIndex((p) => Math.min(pageCount - 1, p + 1))}
+                disabled={clampedPageIndex >= pageCount - 1}
+                className="px-3 py-2 rounded-lg border border-surface-outline-variant dark:border-gray-600 text-sm text-surface-on dark:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-surface-container-high dark:hover:bg-gray-700 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Homeowners List */}
         <div className="space-y-3">
           {filteredHomeowners.length === 0 ? (
@@ -167,7 +218,7 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
               </p>
             </div>
           ) : (
-            filteredHomeowners.map(homeowner => {
+            pagedHomeowners.map(homeowner => {
               const builderGroup = builderGroups.find(bg => bg.id === homeowner.builderId);
               
               return (
@@ -224,18 +275,18 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
 
                     <div className="flex items-center gap-2 ml-4">
                       <Button
-                        variant="filled"
+                        variant="text"
                         onClick={() => handleOpenEdit(homeowner)}
                         icon={<Edit2 className="h-4 w-4" />}
-                        className="bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80"
+                        className="text-gray-600 dark:text-gray-300 hover:text-surface-on dark:hover:text-gray-100 hover:bg-surface-container-high dark:hover:bg-gray-600"
                       >
                         Edit
                       </Button>
                       <Button
-                        variant="filled"
+                        variant="text"
                         onClick={() => setShowDeleteConfirm(homeowner.id)}
                         icon={<Trash2 className="h-4 w-4" />}
-                        className="bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80"
+                        className="text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 hover:bg-surface-container-high dark:hover:bg-gray-600"
                       >
                         Delete
                       </Button>

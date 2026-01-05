@@ -127,6 +127,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
                 type="text" 
                 value={editTaskTitle}
                 onChange={e => setEditTaskTitle(e.target.value)}
+                autoFocus
                 className="text-2xl font-normal bg-surface-container dark:bg-gray-700 border border-primary rounded px-2 py-1 text-surface-on dark:text-gray-100 focus:outline-none w-full"
               />
             ) : (
