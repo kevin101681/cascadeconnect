@@ -610,9 +610,24 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, [selectedTaskForModal]);
   
   // Handle browser back button to close modal (mobile only, and only when first opening a tab)
+  // Also clear inline claim selection when navigating away from Claims on desktop to prevent the global modal from opening.
   useEffect(() => {
+    const previousTab = previousTabRef.current;
     const isMobile = window.innerWidth < 768;
-    const isOpeningTab = previousTabRef.current === null && currentTab !== null;
+    const isDesktop = !isMobile;
+    
+    // Desktop: if a claim is selected in the split view and user switches tabs, clear it so no modal pops.
+    if (
+      isDesktop &&
+      previousTab === 'CLAIMS' &&
+      currentTab &&
+      currentTab !== 'CLAIMS' &&
+      selectedClaimForModal
+    ) {
+      setSelectedClaimForModal(null);
+    }
+    
+    const isOpeningTab = previousTab === null && currentTab !== null;
     
     if (isMobile && isOpeningTab) {
       // Push a history state when tab first opens on mobile
@@ -631,7 +646,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     
     // Update previous tab ref
     previousTabRef.current = currentTab;
-  }, [currentTab]);
+  }, [currentTab, selectedClaimForModal, setSelectedClaimForModal]);
   
   // Prevent body scroll when mobile tab modal is open
   useEffect(() => {
