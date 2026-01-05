@@ -1324,17 +1324,17 @@ export const Invoices: React.FC<InvoicesProps> = ({
                 <div className="shrink-0 flex items-center justify-center gap-1" onClick={(e) => e.stopPropagation()}>
                     <div className="hidden md:flex gap-1 flex-wrap justify-center">
                         {inv.status !== 'paid' && (
-                            <button onClick={() => handleMarkAsPaid(inv)} className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} title="Mark as Paid">
+                            <button onClick={() => handleMarkAsPaid(inv)} className={`${commonBtnClass} border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10`} title="Mark as Paid">
                                 <Check size={16} />
                             </button>
                         )}
-                        <button onClick={() => handlePrepareEmail(inv)} className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} title="Email Invoice">
+                        <button onClick={() => handlePrepareEmail(inv)} className={`${commonBtnClass} border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10`} title="Email Invoice">
                             <Mail size={16} />
                         </button>
-                        <button onClick={() => window.innerWidth > 768 ? handleDownloadPDF(inv) : handleShare(inv)} className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} title="Download PDF">
+                        <button onClick={() => window.innerWidth > 768 ? handleDownloadPDF(inv) : handleShare(inv)} className={`${commonBtnClass} border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10`} title="Download PDF">
                             <Download size={16} />
                         </button>
-                         <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={() => handleDeleteInvoice(inv.id)} title="Delete">
+                         <button className={`${commonBtnClass} border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10`} onClick={() => handleDeleteInvoice(inv.id)} title="Delete">
                             <Trash2 size={16} />
                         </button>
                     </div>
@@ -1434,11 +1434,11 @@ export const Invoices: React.FC<InvoicesProps> = ({
                  {/* Row 3: Paid, Email, Download, Delete (Centered) */}
                  <div className="flex items-center justify-center mt-1 gap-2">
                     {inv.status !== 'paid' && (
-                        <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={() => handleMarkAsPaid(inv)}><Check size={16} /></button>
+                        <button className={`${commonBtnClass} border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10`} onClick={() => handleMarkAsPaid(inv)}><Check size={16} /></button>
                     )}
-                    <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={() => handlePrepareEmail(inv)}><Mail size={16} /></button>
-                    <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={() => handleDownloadPDF(inv)}><Download size={16} /></button>
-                    <button className={`${commonBtnClass} bg-primary text-primary-on hover:bg-primary/90`} onClick={() => handleDeleteInvoice(inv.id)}><Trash2 size={16} /></button>
+                    <button className={`${commonBtnClass} border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10`} onClick={() => handlePrepareEmail(inv)}><Mail size={16} /></button>
+                    <button className={`${commonBtnClass} border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10`} onClick={() => handleDownloadPDF(inv)}><Download size={16} /></button>
+                    <button className={`${commonBtnClass} border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10`} onClick={() => handleDeleteInvoice(inv.id)}><Trash2 size={16} /></button>
                  </div>
             </div>
 
@@ -1618,7 +1618,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
             <div className="flex flex-col gap-2">
               <p className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider mb-1">Status</p>
               {(['all', 'draft', 'sent', 'paid'] as const).map(s => (
-                <button key={s} onClick={() => handleFilterSelection('status', s)} className={`px-4 h-10 rounded-full text-sm font-medium flex items-center justify-start border transition-all ${statusFilter === s ? 'bg-primary text-primary-on border-primary/30' : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 border-surface-outline-variant/50 dark:border-gray-600 hover:bg-surface-container-high/80 dark:hover:bg-gray-500'}`}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>
+                <button key={s} onClick={() => handleFilterSelection('status', s)} className={`px-4 h-10 rounded-full text-sm font-medium flex items-center justify-start border transition-all ${statusFilter === s ? 'border-primary text-primary bg-primary/10' : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 border-surface-outline-variant/50 dark:border-gray-600 hover:bg-surface-container-high/80 dark:hover:bg-gray-500'}`}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>
               ))}
             </div>
             <div className="flex flex-col gap-2 pt-2 border-t border-surface-outline-variant/50 dark:border-gray-600">

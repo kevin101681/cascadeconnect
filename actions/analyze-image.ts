@@ -63,7 +63,13 @@ export async function analyzeWarrantyImage(
     }
     
     const arrayBuffer = await response.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString('base64');
+    // Convert ArrayBuffer to base64 (browser-compatible)
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary);
     
     console.log('🤖 Analyzing image with Gemini AI...');
     

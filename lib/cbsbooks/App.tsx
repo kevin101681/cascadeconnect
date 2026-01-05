@@ -298,7 +298,7 @@ const App: React.FC<CBSBooksAppProps> = ({ prefillInvoice }) => {
           <div className="bg-white/50 p-4 rounded-xl mb-6 text-sm font-mono text-red-800 break-all">{error}</div>
           <div className="space-y-4">
             <p className="text-sm text-red-700"><strong>Possible Fixes:</strong><ul className="list-disc ml-5 mt-1 space-y-1"><li>Check your internet connection.</li><li>Ensure <code>NETLIFY_DATABASE_URL</code> is set.</li></ul></p>
-            <div className="flex flex-col gap-3 mt-6"><button onClick={handleForceOffline} className="w-full bg-surfaceContainerHigh hover:bg-surfaceContainer text-onSurface font-medium py-3 rounded-full flex items-center justify-center gap-2 transition-colors"><WifiOff size={18} /> Switch to Offline Mode</button><button onClick={() => window.location.reload()} className="w-full bg-primary hover:bg-opacity-90 text-onPrimary font-medium py-3 rounded-full transition-colors">Retry Connection</button></div>
+            <div className="flex flex-col gap-3 mt-6"><button onClick={handleForceOffline} className="w-full bg-surfaceContainerHigh hover:bg-surfaceContainer text-onSurface font-medium py-3 rounded-full flex items-center justify-center gap-2 transition-colors"><WifiOff size={18} /> Switch to Offline Mode</button><button onClick={() => window.location.reload()} className="w-full border border-primary text-primary hover:bg-primary/10 font-medium py-3 rounded-full transition-colors">Retry Connection</button></div>
           </div>
         </div>
       </div>

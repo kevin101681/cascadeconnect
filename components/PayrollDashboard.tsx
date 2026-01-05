@@ -269,7 +269,7 @@ const PayrollDashboard: React.FC = () => {
             Payroll Dashboard
           </h2>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:opacity-90 transition-opacity">
+        <button className="flex items-center gap-2 px-4 py-2 rounded-lg hover:opacity-90 transition-opacity border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10">
           <Download className="h-4 w-4" />
           Export Report
         </button>

@@ -647,7 +647,7 @@ export const LocationManagerModal = ({ locations, onUpdate, onClose }: { locatio
                 <div className="p-4 space-y-4 overflow-y-auto flex-1 bg-surface dark:bg-gray-800">
                     <div className="flex gap-2">
                         <input value={newLocName} onChange={e => setNewLocName(e.target.value)} placeholder="New Location..." className="flex-1 p-3 rounded-xl bg-surface-container dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 outline-none dark:text-gray-200" />
-                        <button onClick={handleAdd} className="bg-primary text-white p-3 rounded-xl"><Plus size={24} /></button>
+                        <button onClick={handleAdd} className="border border-primary text-primary hover:bg-primary/10 p-3 rounded-xl"><Plus size={24} /></button>
                     </div>
                     <div className="space-y-2">
                         {localLocations.map(loc => (
@@ -973,7 +973,7 @@ export const ClientInfoEditModal = ({ project, onUpdate, onClose }: { project: P
                     })}
                 </div>
                 <div className="p-4 border-t border-surface-outline-variant dark:border-gray-700">
-                    <button onClick={handleSave} className="w-full bg-primary text-primary-on dark:text-primary-on py-3.5 rounded-[20px] font-bold shadow-sm hover:shadow-md transition-all active:scale-95">Save Changes</button>
+                    <button onClick={handleSave} className="w-full border border-primary text-primary hover:bg-primary/10 py-3.5 rounded-[20px] font-bold shadow-sm hover:shadow-md transition-all active:scale-95">Save Changes</button>
                 </div>
             </div>
         </div>, document.body
@@ -1079,7 +1079,7 @@ export const TemplateEditorModal = ({ templates, onUpdate, onClose }: any) => {
                     ))}
                 </div>
                 <div className="p-4 border-t border-surface-outline-variant dark:border-gray-700">
-                    <button onClick={handleSave} className="w-full bg-primary text-white p-3 rounded-xl font-bold">Save Templates</button>
+                    <button onClick={handleSave} className="w-full border border-primary text-primary hover:bg-primary/10 p-3 rounded-xl font-bold">Save Templates</button>
                 </div>
              </div>
         </div>, document.body
@@ -1202,7 +1202,7 @@ const EmailOptionsModal = ({ onClose, project, locations, companyLogo, signOffTe
             <h3 className="text-xl font-bold text-surface-on dark:text-gray-100 mb-6 text-center">Share Documents</h3>
             {isGenerating ? ( <div className="flex flex-col items-center justify-center py-8"><div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin mb-4"></div><p className="text-surface-on-variant dark:text-gray-400 font-medium">Generating PDFs...</p></div> ) : (
                 <div className="space-y-3">
-                    <button onClick={handleEmailAll} className="w-full py-4 rounded-2xl font-bold text-white bg-primary hover:bg-primary/90 flex items-center justify-center gap-2"><Mail size={20} />Email All Docs</button>
+                    <button onClick={handleEmailAll} className="w-full py-4 rounded-2xl font-bold border border-primary text-primary hover:bg-primary/10 flex items-center justify-center gap-2"><Mail size={20} />Email All Docs</button>
                     <button onClick={handleEmailReport} className="w-full py-4 rounded-2xl font-bold text-surface-on dark:text-gray-100 bg-surface-container dark:bg-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-600 flex items-center justify-center gap-2"><FileText size={20} />Email Report Only</button>
                     <button onClick={handleEmailSignOff} className="w-full py-4 rounded-2xl font-bold text-surface-on dark:text-gray-100 bg-surface-container dark:bg-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-600 flex items-center justify-center gap-2"><PenTool size={20} />Email Sign Off Only</button>
                 </div>

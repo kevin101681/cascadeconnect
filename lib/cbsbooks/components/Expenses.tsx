@@ -141,7 +141,7 @@ export const Expenses: React.FC<ExpensesProps> = ({ expenses, onAdd, onDelete, o
   const renderFilters = () => (
       <div className="flex gap-2 w-full md:w-auto overflow-x-auto no-scrollbar">
         {(['all', 'month', 'year'] as const).map((time) => (
-          <button key={time} onClick={() => setFilterTime(time)} className={`px-4 h-10 rounded-full text-sm font-medium transition-all capitalize whitespace-nowrap flex items-center justify-center ${filterTime === time ? 'bg-primary text-primary-on' : 'bg-surface-container-high dark:bg-gray-600 text-gray-900 dark:text-gray-100 hover:bg-opacity-80'}`}>
+          <button key={time} onClick={() => setFilterTime(time)} className={`px-4 h-10 rounded-full text-sm font-medium transition-all capitalize whitespace-nowrap flex items-center justify-center border ${filterTime === time ? 'border-primary text-primary bg-primary/10' : 'border-surface-outline-variant bg-surface-container-high dark:bg-gray-600 text-gray-900 dark:text-gray-100 hover:bg-opacity-80'}`}>
             {time === 'all' ? 'All Time' : time === 'month' ? 'This Month' : 'This Year'}
           </button>
         ))}
