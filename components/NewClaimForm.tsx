@@ -8,7 +8,8 @@ import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
 import { ToastContainer, Toast } from './Toast';
 import { uploadMultipleFiles } from '../lib/services/uploadService';
-import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar, Briefcase, Trash2, Plus } from 'lucide-react';
+import { analyzeWarrantyImage } from '../actions/analyze-image';
+import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar, Briefcase, Trash2, Plus, Sparkles } from 'lucide-react';
 
 interface StagedClaim {
   id: string;
@@ -81,6 +82,9 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [imageViewerIndex, setImageViewerIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // AI Assistant State
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Toast management
   const addToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
@@ -90,6 +94,48 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
 
   const removeToast = (id: string) => {
     setToasts(prev => prev.filter(t => t.id !== id));
+  };
+  
+  // AI Assistant Handler
+  const handleAnalyze = async () => {
+    // Find first image attachment
+    const firstImage = attachments.find(att => att.type === 'IMAGE' && att.url);
+    
+    if (!firstImage || !firstImage.url) {
+      addToast('Please upload an image first', 'error');
+      return;
+    }
+    
+    setIsAnalyzing(true);
+    
+    try {
+      console.log('🤖 Analyzing image with AI...');
+      const result = await analyzeWarrantyImage(firstImage.url, description);
+      
+      // Update title if empty
+      if (!title.trim() && result.title) {
+        setTitle(result.title);
+      }
+      
+      // Update description based on whether it's empty or not
+      if (!description.trim()) {
+        // Case A: Empty description - just set it
+        setDescription(result.description);
+      } else {
+        // Case B: Existing description - append AI suggestion with separator
+        const separator = "\n\n--- 🤖 AI Suggestion ---\n";
+        const newText = description + separator + result.description;
+        setDescription(newText);
+      }
+      
+      addToast('✨ AI analysis complete!', 'success');
+    } catch (error) {
+      console.error('AI analysis error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to analyze image';
+      addToast(`AI analysis failed: ${errorMessage}`, 'error');
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   // Only show contractors if user has typed something
@@ -314,9 +360,41 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
           <div className="space-y-6">
             {/* Attachments Section */}
             <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-        <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">
-          Attachments
-        </h4>
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="text-sm font-bold text-surface-on dark:text-gray-100">
+            Attachments
+          </h4>
+          {/* AI Assistant Button */}
+          {attachments.some(att => att.type === 'IMAGE' && att.url) && (
+            <div className="flex flex-col items-end gap-1">
+              <p className="text-[10px] text-surface-on-variant dark:text-gray-400 italic">
+                Need help with a description? Have Gemini help!
+              </p>
+              <button
+                type="button"
+                onClick={handleAnalyze}
+                disabled={isAnalyzing || isUploading}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  isAnalyzing
+                    ? 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 cursor-wait'
+                    : 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary hover:bg-primary/20 dark:hover:bg-primary/30 hover:shadow-sm'
+                }`}
+              >
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Analyzing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>{description.trim() ? 'Refine with AI' : 'Auto-Fill with AI'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
+        </div>
         <div className="space-y-4">
           {/* Existing Attachments */}
           {attachments.length > 0 && (
