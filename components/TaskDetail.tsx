@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Task, InternalEmployee, Claim, Homeowner, ClaimStatus } from '../types';
 import Button from './Button';
 import StatusBadge from './StatusBadge';
-import { ArrowLeft, Check, Calendar, User, CheckSquare, Square, HardHat, Edit2, Trash2, X, MessageSquare, Send, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { ArrowLeft, Check, Calendar, User, CheckSquare, Square, HardHat, Edit2, X, MessageSquare, Send, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { TaskMessage } from './MessageSummaryModal';
 
 interface TaskDetailProps {
@@ -179,19 +179,6 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
                   Edit
                 </Button>
               )}
-              <Button
-                variant="text"
-                icon={<Trash2 className="h-4 w-4" />}
-                onClick={() => {
-                  if (confirm('Are you sure you want to delete this task?')) {
-                    onDeleteTask(task.id);
-                    onBack();
-                  }
-                }}
-                className="text-error hover:text-error"
-              >
-                Delete
-              </Button>
             </>
           )}
         </div>

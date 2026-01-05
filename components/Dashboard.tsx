@@ -3579,7 +3579,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 console.error('Failed to create task:', error);
                 alert('Failed to create task. Please try again.');
               }
-            }} className="p-6 space-y-4 bg-surface dark:bg-gray-800 flex-1 overflow-y-auto">
+            }} className="p-6 pb-24 space-y-4 bg-surface dark:bg-gray-800 flex-1 overflow-y-auto">
               <div>
                 <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Task Title</label>
                 <input 
