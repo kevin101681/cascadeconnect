@@ -3959,9 +3959,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </div>
              </div>
 
-             {/* Actions - Vertical stack, auto-width buttons, centered on mobile */}
+             {/* Actions - Two columns on mobile, single column on desktop */}
              <div 
-               className="mt-3 pt-3 border-t border-surface-outline-variant/50 dark:border-gray-700/50 flex flex-col gap-2 items-center md:items-start"
+               className="mt-3 pt-3 border-t border-surface-outline-variant/50 dark:border-gray-700/50 grid grid-cols-2 md:flex md:flex-col gap-2 items-center md:items-start"
                onClick={(e) => e.stopPropagation()}
              >
                 {/* Buttons removed from homeowner view - now in tabs */}
@@ -3972,7 +3972,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       onClick={() => setShowDocsModal(true)} 
                       variant="outlined" 
                       icon={<FileText className="h-4 w-4" />}
-                      className="!h-9"
+                      className="!h-9 w-full md:w-auto"
                     >
                       Documents
                     </Button>
@@ -3982,7 +3982,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         onClick={() => setShowSubListModal(true)} 
                         variant="outlined" 
                         icon={<HardHat className="h-4 w-4" />}
-                        className="!h-9"
+                        className="!h-9 w-full md:w-auto"
                       >
                         Sub List
                       </Button>
@@ -3997,7 +3997,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           onClick={() => setShowPunchListApp(true)}
                           variant="outlined"
                           icon={<ClipboardList className="h-4 w-4" />}
-                          className="!h-9"
+                          className="!h-9 w-full md:w-auto"
                         >
                           <span className="md:hidden">BlueTag</span>
                           <span className="hidden md:inline">{hasReport ? 'BlueTag' : '+ Punch List'}</span>
@@ -4010,7 +4010,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         onClick={() => setShowCallsModal(true)}
                         variant="outlined"
                         icon={<Phone className="h-4 w-4" />}
-                        className="!h-9"
+                        className="!h-9 w-full md:w-auto"
                       >
                         Calls ({homeownerCalls.length})
                       </Button>
@@ -4041,7 +4041,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       }}
                       variant="outlined"
                       icon={<Mail className="h-4 w-4" />}
-                      className="!h-9"
+                      className="!h-9 w-full md:w-auto"
                     >
                       Invite
                     </Button>
