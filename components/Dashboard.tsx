@@ -3722,7 +3722,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Main Layout Container - Sidebar + Content */}
         <div className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 animate-in fade-in slide-in-from-top-4 bg-white dark:bg-gray-900">
           {/* LEFT SIDEBAR - Homeowner Info Card with Search */}
-          <div className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 ${isHomeownerCardCollapsed ? 'w-full lg:w-16' : 'w-full lg:w-80'}`}>
+          <div className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 ${isHomeownerCardCollapsed ? 'w-full lg:w-16' : 'w-full lg:w-72'}`}>
             {/* Search Bar - Admin & Builder Only - Always visible on mobile, top of card on desktop */}
             {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
               <div className={`lg:hidden mb-4 ${isHomeownerCardCollapsed ? 'block' : 'block'}`}>
@@ -3876,16 +3876,16 @@ const Dashboard: React.FC<DashboardProps> = ({
                 
             {/* Card Content - Clickable to collapse */}
             <div 
-              className="flex flex-col p-6 cursor-pointer"
+              className="flex flex-col p-4 cursor-pointer"
               onClick={() => setIsHomeownerCardCollapsed(true)}
               title="Click to collapse"
             >
              
-             {/* Vertical Layout - Center aligned */}
-             <div className="flex flex-col gap-2 mb-4 w-full items-center">
+             {/* Vertical Layout - Single column, no wrapping */}
+             <div className="flex flex-col gap-2 mb-4 w-full">
                 {/* Line 1: Name with Edit Button */}
                 <div className="flex items-center justify-between gap-2 w-full">
-                  <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 truncate text-center flex-1">{displayHomeowner.name}</h2>
+                  <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 truncate flex-1">{displayHomeowner.name}</h2>
                   {/* Edit Button - Admin Only - Right of Name */}
                   {isAdmin && !isHomeownerView && (
                     <button 
@@ -3904,22 +3904,21 @@ const Dashboard: React.FC<DashboardProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="flex items-center justify-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-400 hover:text-primary transition-colors"
+                  className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-400 hover:text-primary transition-colors"
                 >
                   <MapPin className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                  <span>{displayHomeowner.street}</span>
+                  <span className="truncate">{displayHomeowner.street}</span>
                 </a>
                 
                 {/* Line 3: City, State ZIP */}
-                <div className="flex items-center justify-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
-                  <span>{displayHomeowner.city}, {displayHomeowner.state} {displayHomeowner.zip}</span>
+                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
+                  <span className="truncate">{displayHomeowner.city}, {displayHomeowner.state} {displayHomeowner.zip}</span>
                 </div>
 
-                {/* Line 4: Builder and Project */}
-                <div className="flex items-center justify-center gap-4 flex-wrap text-sm">
-                  {/* Builder - Prefer relation over text field */}
-                  <span className="flex items-center gap-1.5 text-surface-on-variant dark:text-gray-300">
-                    <Building2 className="h-3.5 w-3.5" />
+                {/* Line 4: Builder */}
+                <div className="flex items-center gap-1.5 text-sm">
+                  <Building2 className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
+                  <span className="text-surface-on-variant dark:text-gray-300 truncate">
                     {(() => {
                       // Prefer linked builder user over legacy text field
                       if (displayHomeowner.builderUserId && builderUsers) {
@@ -3930,36 +3929,36 @@ const Dashboard: React.FC<DashboardProps> = ({
                       return displayHomeowner.builder || 'N/A';
                     })()}
                   </span>
+                </div>
                   
-                  {/* Project */}
-                  <div className="flex items-center gap-1.5">
-                     <Home className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
-                     <span className="text-surface-on-variant dark:text-gray-300">{displayHomeowner.jobName || 'N/A'}</span>
-                  </div>
+                {/* Line 5: Project */}
+                <div className="flex items-center gap-1.5 text-sm">
+                  <Home className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
+                  <span className="text-surface-on-variant dark:text-gray-300 truncate">{displayHomeowner.jobName || 'N/A'}</span>
                 </div>
                 
-                {/* Line 5: Closing Date */}
-                <div className="flex items-center justify-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
-                   <Clock className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
-                   <span>Closing: {displayHomeowner.closingDate ? new Date(displayHomeowner.closingDate).toLocaleDateString() : 'N/A'}</span>
+                {/* Line 6: Closing Date */}
+                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
+                   <Clock className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
+                   <span className="truncate">Closing: {displayHomeowner.closingDate ? new Date(displayHomeowner.closingDate).toLocaleDateString() : 'N/A'}</span>
                 </div>
                 
-                {/* Line 6: Phone */}
-                <div className="flex items-center justify-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
-                  <Phone className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
-                  <span>{displayHomeowner.phone}</span>
+                {/* Line 7: Phone */}
+                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
+                  <Phone className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
+                  <span className="truncate">{displayHomeowner.phone}</span>
                 </div>
                 
-                {/* Line 7: Email */}
-                <div className="flex items-center justify-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
-                  <Mail className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500" />
+                {/* Line 8: Email */}
+                <div className="flex items-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300">
+                  <Mail className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
                   <span className="truncate">{displayHomeowner.email}</span>
                 </div>
              </div>
 
-             {/* Actions Positioned Left */}
+             {/* Actions - Single column stack */}
              <div 
-               className="mt-4 pt-4 border-t border-surface-outline-variant/50 dark:border-gray-700/50 flex items-center justify-center gap-2 flex-wrap"
+               className="mt-3 pt-3 border-t border-surface-outline-variant/50 dark:border-gray-700/50 flex flex-col gap-2"
                onClick={(e) => e.stopPropagation()}
              >
                 {/* Buttons removed from homeowner view - now in tabs */}
@@ -3970,7 +3969,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       onClick={() => setShowDocsModal(true)} 
                       variant="outlined" 
                       icon={<FileText className="h-4 w-4" />}
-                      className="!h-9 !px-4"
+                      className="!h-9 w-full"
                     >
                       Documents
                     </Button>
@@ -3980,7 +3979,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         onClick={() => setShowSubListModal(true)} 
                         variant="outlined" 
                         icon={<HardHat className="h-4 w-4" />}
-                        className="!h-9 !px-4"
+                        className="!h-9 w-full"
                       >
                         Sub List
                       </Button>
@@ -3995,7 +3994,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           onClick={() => setShowPunchListApp(true)}
                           variant="outlined"
                           icon={<ClipboardList className="h-4 w-4" />}
-                          className="!h-9 !px-4"
+                          className="!h-9 w-full"
                         >
                           <span className="md:hidden">BlueTag</span>
                           <span className="hidden md:inline">{hasReport ? 'BlueTag' : '+ Punch List'}</span>
@@ -4008,7 +4007,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         onClick={() => setShowCallsModal(true)}
                         variant="outlined"
                         icon={<Phone className="h-4 w-4" />}
-                        className="!h-9 !px-4"
+                        className="!h-9 w-full"
                       >
                         Calls ({homeownerCalls.length})
                       </Button>
@@ -4039,7 +4038,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       }}
                       variant="outlined"
                       icon={<Mail className="h-4 w-4" />}
-                      className="!h-9 !px-4"
+                      className="!h-9 w-full"
                     >
                       Invite
                     </Button>
