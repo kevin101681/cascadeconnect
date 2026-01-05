@@ -4134,10 +4134,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* RIGHT CONTENT AREA */}
           <div className="flex-1 min-w-0 space-y-6">
-            {/* Navigation Tabs at Top - Stacked pills on mobile, horizontal tabs on desktop */}
+            {/* Navigation Tabs at Top - Two column grid on mobile, horizontal tabs on desktop */}
             <div 
               ref={tabsContainerRef}
-              className={`flex flex-col gap-2 md:flex-row md:border-b md:border-surface-outline-variant md:dark:border-gray-700 md:overflow-x-auto ${
+              className={`grid grid-cols-2 gap-2 md:flex md:flex-row md:border-b md:border-surface-outline-variant md:dark:border-gray-700 md:overflow-x-auto ${
                 isHomeownerCardCollapsed ? 'md:justify-between md:gap-0' : 'md:gap-1'
               }`}
             >
