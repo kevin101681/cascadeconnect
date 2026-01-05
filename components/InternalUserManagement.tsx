@@ -514,7 +514,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary">
-                          {linkedHomeownersCount} {linkedHomeownersCount === 1 ? 'Homeowner' : 'Homeowners'}
+                          {linkedHomeownersCount}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right">

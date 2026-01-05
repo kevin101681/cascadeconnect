@@ -1173,8 +1173,35 @@ function App() {
   const selectedClaim = claims.find(c => c.id === selectedClaimId);
   const targetHomeowner = selectedAdminHomeownerId ? homeowners.find(h => h.id === selectedAdminHomeownerId) || null : null;
 
+  const builderGroupUserIds = currentBuilderId
+    ? new Set(
+        builderUsers
+          .filter(bu => bu.builderGroupId === currentBuilderId)
+          .map(bu => bu.id)
+      )
+    : null;
+
+  const builderGroupName = currentBuilderId
+    ? (() => {
+        const groupName = builderGroups.find(bg => bg.id === currentBuilderId)?.name;
+        const normalized = groupName?.trim().toLowerCase() || null;
+        return normalized && normalized.length > 0 ? normalized : null;
+      })()
+    : null;
+
+  const builderAccessibleHomeowners = currentBuilderId
+    ? homeowners.filter(h => {
+        const builderIdMatch = h.builderId === currentBuilderId;
+        const builderUserMatch = h.builderUserId ? builderGroupUserIds?.has(h.builderUserId) : false;
+        const builderNameMatch = builderGroupName
+          ? (h.builder || '').trim().toLowerCase() === builderGroupName
+          : false;
+        return builderIdMatch || builderUserMatch || builderNameMatch;
+      })
+    : homeowners;
+
   const availableHomeowners = (userRole === UserRole.BUILDER && currentBuilderId)
-    ? homeowners.filter(h => h.builderId === currentBuilderId)
+    ? builderAccessibleHomeowners
     : homeowners;
 
   const searchResults = searchQuery 

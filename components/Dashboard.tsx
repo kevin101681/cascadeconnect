@@ -373,6 +373,38 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Check if user is actually logged in as admin (has currentUser/activeEmployee)
   const isAdminAccount = !!currentUser;
   
+  const currentBuilderGroupName = useMemo(() => {
+    if (!isBuilder || !currentBuilderId) return null;
+    const groupName = builderGroups.find(bg => bg.id === currentBuilderId)?.name;
+    const normalized = groupName?.trim().toLowerCase() || null;
+    return normalized && normalized.length > 0 ? normalized : null;
+  }, [isBuilder, currentBuilderId, builderGroups]);
+
+  const builderGroupUserIds = useMemo(() => {
+    if (!isBuilder || !currentBuilderId) return new Set<string>();
+    return new Set(
+      builderUsers
+        .filter(bu => bu.builderGroupId === currentBuilderId)
+        .map(bu => bu.id)
+    );
+  }, [isBuilder, currentBuilderId, builderUsers]);
+
+  const builderAccessibleHomeownerIds = useMemo(() => {
+    if (!isBuilder || !currentBuilderId) return new Set<string>();
+    return new Set(
+      homeowners
+        .filter(h => {
+          const builderIdMatch = h.builderId === currentBuilderId;
+          const builderUserMatch = h.builderUserId ? builderGroupUserIds.has(h.builderUserId) : false;
+          const builderNameMatch = currentBuilderGroupName
+            ? (h.builder || '').trim().toLowerCase() === currentBuilderGroupName
+            : false;
+          return builderIdMatch || builderUserMatch || builderNameMatch;
+        })
+        .map(h => h.id)
+    );
+  }, [isBuilder, currentBuilderId, homeowners, builderGroupUserIds, currentBuilderGroupName]);
+  
   // PDF Viewer state
   const [selectedDocument, setSelectedDocument] = useState<HomeownerDocument | null>(null);
   const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false);
@@ -1541,11 +1573,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     // 3. BUILDER: Show only claims for homeowners in their builder group
     if (isBuilder && currentBuilderId) {
       // Find homeowners in this builder's group
-      const builderHomeownerIds = new Set(
-        homeowners
-          .filter(h => h.builderId === currentBuilderId)
-          .map(h => h.id)
-      );
+    const builderHomeownerIds = builderAccessibleHomeownerIds;
       
       // Match by homeownerId if available
       if ((c as any).homeownerId) {
@@ -1555,7 +1583,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       // Fallback to email matching
       const claimEmail = c.homeownerEmail?.toLowerCase().trim() || '';
       return homeowners.some(h => 
-        h.builderId === currentBuilderId && 
+      builderHomeownerIds.has(h.id) && 
         h.email?.toLowerCase().trim() === claimEmail
       );
     }
