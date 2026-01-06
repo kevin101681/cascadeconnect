@@ -61,6 +61,7 @@ const PunchListApp = React.lazy(() => import('./PunchListApp').catch(err => {
   return { default: () => <div className="p-4 text-red-500">Failed to load punch list. Please refresh the page.</div> };
 }));
 import { HOMEOWNER_MANUAL_IMAGES } from '../lib/bluetag/constants';
+import { WarrantyCard } from './ui/WarrantyCard';
 
 // PDF Thumbnail Component - Generates thumbnail on-the-fly if missing
 const PDFThumbnailDisplay: React.FC<{ doc: HomeownerDocument }> = ({ doc }) => {
@@ -2265,59 +2266,21 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <button
                         type="button"
                         onClick={() => setSelectedClaimForModal(claim)}
-                        className={`w-full text-left group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer pb-10 [-webkit-tap-highlight-color:transparent] ${
+                        className={`w-full text-left cursor-pointer [-webkit-tap-highlight-color:transparent] ${
                           isSelected
-                            ? 'bg-primary-container/20 dark:bg-primary/20 border-primary ring-1 ring-primary'
-                            : isCompleted 
-                            ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75 md:hover:shadow-sm' 
-                            : isReviewed
-                            ? 'bg-green-50 dark:bg-green-950/20 border-surface-outline-variant dark:border-gray-600 shadow-sm md:hover:shadow-elevation-1'
-                            : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm md:hover:shadow-elevation-1'
+                            ? 'ring-2 ring-primary ring-offset-2'
+                            : ''
                         }`}
                       >
-                      <div className="px-4 py-4">
-                        <div className="flex flex-wrap gap-2">
-                          {/* Claim # */}
-                          <span className="inline-flex items-center h-6 text-xs font-medium tracking-wide border border-primary text-primary bg-primary/10 px-3 rounded-full whitespace-nowrap w-fit">
-                            #{claim.claimNumber || claim.id.substring(0, 8).toUpperCase()}
-                          </span>
-                          {/* Status */}
-                          <div className="w-fit h-6 flex items-center"><StatusBadge status={claim.status} /></div>
-                          {/* Title */}
-                          {claim.title && (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
-                              {claim.title}
-                            </span>
-                          )}
-                          {/* Classification */}
-                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
-                            {claim.classification}
-                          </span>
-                          {/* Homeowner Name */}
-                          {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
-                              <Building2 className="h-3 w-3 flex-shrink-0" />
-                              <span>{claim.homeownerName}</span>
-                            </span>
-                          )}
-                          {/* Contractor */}
-                          {claim.contractorName ? (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
-                              <HardHat className="h-3 w-3 flex-shrink-0" />
-                              <span>{claim.contractorName}</span>
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant/60 dark:text-gray-400 gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600 w-fit">
-                              <HardHat className="h-3 w-3 flex-shrink-0 opacity-50" />
-                              <span>No Sub</span>
-                            </span>
-                          )}
-                          {/* Date Submitted */}
-                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
-                            {new Date(claim.dateSubmitted).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
+                        <WarrantyCard
+                          title={claim.title}
+                          classification={claim.classification}
+                          createdDate={new Date(claim.dateSubmitted).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          scheduledDate={scheduledDate ? new Date(scheduledDate.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
+                          soSentDate={serviceOrderDate ? new Date(serviceOrderDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
+                          subName={claim.contractorName}
+                          attachmentCount={claim.attachments?.length || 0}
+                        />
                       </button>
                       <button
                         onClick={(e) => {
@@ -2326,7 +2289,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             handleDeleteClaim(claim.id);
                           }
                         }}
-                        className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors z-10"
+                        className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors z-10 opacity-0 hover:opacity-100 focus:opacity-100"
                         title="Delete claim"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
