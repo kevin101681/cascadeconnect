@@ -16,6 +16,7 @@ import { eq, desc } from 'drizzle-orm';
 import { db, isDbConfigured } from '../db';
 import Button from './Button';
 import MaterialSelect from './MaterialSelect';
+import { DropdownButton } from './ui/dropdown-button';
 import { draftInviteEmail } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
@@ -1640,7 +1641,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [isHomeownerCardCollapsed, setIsHomeownerCardCollapsed] = useState(false);
 
   // Homeowner Info Card - quick task creation controls
-  const [homeownerTaskEval, setHomeownerTaskEval] = useState<'' | '60 Day' | '11 Month' | 'Other'>('');
   const [tasksTabStartInEditMode, setTasksTabStartInEditMode] = useState(false);
   useEffect(() => {
     if (effectiveHomeowner) {
@@ -4111,26 +4111,16 @@ const Dashboard: React.FC<DashboardProps> = ({
                      Tasks
                    </div>
                    <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-                     <div className="min-w-[160px]">
-                       <MaterialSelect
-                         value={homeownerTaskEval}
-                         onChange={async (value) => {
-                           const typedValue = value as '' | '60 Day' | '11 Month' | 'Other';
-                           setHomeownerTaskEval(typedValue);
-                           if (typedValue) {
-                             await handleEvalCreate(typedValue);
-                             setHomeownerTaskEval('');
-                           }
-                         }}
-                         options={[
-                           { value: '', label: 'Select…' },
-                           { value: '60 Day', label: '60 Day' },
-                           { value: '11 Month', label: '11 Month' },
-                           { value: 'Other', label: 'Other' },
-                         ]}
-                         className="w-full"
-                       />
-                     </div>
+                    <DropdownButton
+                      label="Eval"
+                      variant="outlined"
+                      className="!h-10 !px-4 min-w-[140px]"
+                      options={[
+                        { label: '60 Day', onClick: () => { void handleEvalCreate('60 Day'); } },
+                        { label: '11 Month', onClick: () => { void handleEvalCreate('11 Month'); } },
+                        { label: 'Other', onClick: () => { void handleEvalCreate('Other'); } },
+                      ]}
+                    />
                      <Button
                        variant="outlined"
                        onClick={async () => {
