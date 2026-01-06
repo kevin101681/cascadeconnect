@@ -4,6 +4,7 @@ import { X, CheckSquare, Square, Trash2, Filter } from 'lucide-react';
 import { format } from 'date-fns';
 import { useTaskStore } from '../stores/useTaskStore';
 import { fetchTasks, createTask, updateTask, deleteTask, SimpleTask } from '../services/taskService';
+import { NoteCard } from './ui/NoteCard';
 
 interface TasksSheetProps {
   onNavigateToClaim?: (claimId: string) => void;
@@ -314,59 +315,14 @@ const TaskItem: React.FC<TaskItemProps> = ({
 }) => {
   const claim = task.claimId ? claims.find((c) => c.id === task.claimId) : null;
   const claimDisplay = claim?.claimNumber || task.claimId?.substring(0, 8);
+  
   return (
-    <div
-      className={`group flex items-start gap-3 p-4 rounded-2xl border transition-all ${
-        task.isCompleted 
-          ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75' 
-          : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
-      }`}
-    >
-      <button
-        onClick={() => onToggle(task)}
-        className="flex-shrink-0 mt-0.5 text-surface-on-variant dark:text-gray-400 hover:text-primary transition-colors"
-        aria-label={task.isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
-      >
-        {task.isCompleted ? (
-          <CheckSquare className="h-5 w-5" />
-        ) : (
-          <Square className="h-5 w-5" />
-        )}
-      </button>
-
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <p
-            className={`text-sm text-surface-on dark:text-gray-100 ${
-              task.isCompleted ? 'line-through' : ''
-            }`}
-          >
-            {task.content}
-          </p>
-          <button
-            onClick={() => onDelete(task.id)}
-            className="flex-shrink-0 p-1 rounded hover:bg-surface-container-hover dark:hover:bg-gray-600 text-surface-on-variant dark:text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
-            aria-label="Delete task"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2 mt-1">
-          <span className="text-xs text-surface-on-variant dark:text-gray-400">
-            {format(new Date(task.createdAt), 'MMM d, yyyy')}
-          </span>
-          {showClaimBadge && task.claimId && claimDisplay && (
-            <button
-              onClick={() => onNavigateToClaim?.(task.claimId!)}
-              className="px-2 py-0.5 text-xs bg-primary/10 hover:bg-primary/20 text-primary rounded transition-colors"
-            >
-              Claim #{claimDisplay}
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
+    <NoteCard
+      content={task.content}
+      dateCreated={format(new Date(task.createdAt), 'MMM d, yyyy')}
+      isCompleted={task.isCompleted}
+      onToggle={(checked) => onToggle(task)}
+    />
   );
 };
 
