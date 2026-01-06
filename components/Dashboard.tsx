@@ -9,7 +9,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, BuilderUser, Task, Contractor, Call } from '../types';
 import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Star, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle } from 'lucide-react';
 import { useTaskStore } from '../stores/useTaskStore';
 import { calls, claims as claimsSchema } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -2269,11 +2269,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <button
                         type="button"
                         onClick={() => setSelectedClaimForModal(claim)}
-                        className={`w-full text-left cursor-pointer [-webkit-tap-highlight-color:transparent] ${
-                          isSelected
-                            ? 'ring-2 ring-primary ring-offset-2'
-                            : ''
-                        }`}
+                        className="w-full text-left cursor-pointer [-webkit-tap-highlight-color:transparent]"
                       >
                         <WarrantyCard
                           title={claim.title}
@@ -2283,6 +2279,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                           soSentDate={serviceOrderDate ? new Date(serviceOrderDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
                           subName={claim.contractorName}
                           attachmentCount={claim.attachments?.length || 0}
+                          isReviewed={isReviewed}
+                          isSelected={isSelected}
                         />
                       </button>
                       <button
@@ -2468,21 +2466,33 @@ const Dashboard: React.FC<DashboardProps> = ({
             {!isHomeownerView && (
               <Button 
                 type="button" 
-                variant="filled" 
-                onClick={() => {
-                  // Toggle reviewed status
+                variant={selectedClaimForModal.reviewed ? "filled" : "outline"}
+                onClick={async () => {
+                  // Optimistic UI update - toggle reviewed status immediately
+                  const previousReviewedStatus = selectedClaimForModal.reviewed;
                   const updatedClaim = {
                     ...selectedClaimForModal,
                     reviewed: !selectedClaimForModal.reviewed
                   };
-                  if (onUpdateClaim) {
-                    onUpdateClaim(updatedClaim);
-                  }
                   setSelectedClaimForModal(updatedClaim);
+                  
+                  try {
+                    if (onUpdateClaim) {
+                      await onUpdateClaim(updatedClaim);
+                    }
+                  } catch (error) {
+                    // Revert on error
+                    console.error('Failed to update reviewed status:', error);
+                    setSelectedClaimForModal({
+                      ...selectedClaimForModal,
+                      reviewed: previousReviewedStatus
+                    });
+                    alert('Failed to update reviewed status. Please try again.');
+                  }
                 }}
-                className={`flex-1 ${selectedClaimForModal.reviewed ? '!bg-green-600 hover:!bg-green-700 dark:!bg-green-700 dark:hover:!bg-green-800' : ''}`}
+                className={`flex-1 ${selectedClaimForModal.reviewed ? '!bg-green-600 hover:!bg-green-700 dark:!bg-green-700 dark:hover:!bg-green-800 !text-white' : ''}`}
               >
-                {selectedClaimForModal.reviewed ? 'Reviewed' : 'Process'}
+                {selectedClaimForModal.reviewed ? '✓ Reviewed' : 'Mark Processed'}
               </Button>
             )}
             <Button 
@@ -2986,8 +2996,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                     {/* Subject Line */}
                     <div className="flex items-start justify-between mb-8">
                        <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 leading-tight">{selectedThread.subject}</h2>
-                       <button className="p-2 -mr-2 text-surface-outline-variant dark:text-gray-500 hover:text-yellow-500 rounded-full">
-                         <Star className="h-5 w-5" />
+                       <button
+                         onClick={() => {
+                           const associatedClaim = claims.find(c => c.title === selectedThread.subject);
+                           const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
+                           const claimNum = associatedClaim?.claimNumber ? `Claim #${associatedClaim.claimNumber}` : '';
+                           const contextLabel = [selectedThread.subject, claimNum, project].filter(Boolean).join(' • ');
+                           setCurrentTab('NOTES');
+                           useTaskStore.setState({ activeClaimId: associatedClaim?.id || null, contextLabel, contextType: 'message' });
+                         }}
+                         className="p-2 -mr-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full transition-colors"
+                         title={`Add a note about: ${selectedThread.subject}`}
+                       >
+                         <StickyNote className="h-5 w-5" />
                        </button>
                     </div>
 
@@ -3033,29 +3054,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                           </div>
                         );
                       })}
-                    </div>
-                    
-                    {/* Add Note Button - Bottom of messages */}
-                    <div className="flex justify-center pb-4">
-                      <button
-                        onClick={() => {
-                          const associatedClaim = claims.find(c => c.title === selectedThread.subject);
-                          const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
-                          const claimNum = associatedClaim?.claimNumber ? `Claim #${associatedClaim.claimNumber}` : '';
-                          const contextLabel = [selectedThread.subject, claimNum, project].filter(Boolean).join(' • ');
-                          setCurrentTab('NOTES');
-                          useTaskStore.setState({ activeClaimId: associatedClaim?.id || null, contextLabel, contextType: 'message' });
-                        }}
-                        className="inline-flex items-center gap-2 px-4 py-2 border border-primary text-primary text-sm font-medium rounded-full hover:bg-primary/10 transition-all shadow-sm"
-                        title={`Add a note about: ${selectedThread.subject}`}
-                      >
-                        <StickyNote className="h-4 w-4" />
-                        <span>Add Note</span>
-                      </button>
-                    </div>
-                    
-                    {/* Bottom Padding for Reply Box visibility */}
-                    <div className="h-32"></div>
+                   </div>
+                   
+                   {/* Bottom Padding for Reply Box visibility */}
+                   <div className="h-32"></div>
                  </div>
                </div>
 
@@ -3154,8 +3156,27 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Subject Line */}
             <div className="flex items-start justify-between mb-8">
               <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 leading-tight">{selectedThread.subject}</h2>
-              <button className="p-2 -mr-2 text-surface-outline-variant dark:text-gray-500 hover:text-yellow-500 rounded-full">
-                <Star className="h-5 w-5" />
+              <button
+                onClick={() => {
+                  const associatedClaim = claims.find(c => c.title === selectedThread.subject);
+                  const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
+                  const claimNum = associatedClaim?.claimNumber ? `Claim #${associatedClaim.claimNumber}` : '';
+                  const contextLabel = [selectedThread.subject, claimNum, project].filter(Boolean).join(' • ');
+                  const prefilledBody = `Message ${project} back.`;
+                  
+                  setCurrentTab('NOTES');
+                  setSelectedThreadId(null);
+                  useTaskStore.setState({ 
+                    activeClaimId: associatedClaim?.id || null, 
+                    contextLabel, 
+                    contextType: 'message',
+                    prefilledNoteBody: prefilledBody
+                  });
+                }}
+                className="p-2 -mr-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full transition-colors"
+                title={`Add a note about: ${selectedThread.subject}`}
+              >
+                <StickyNote className="h-5 w-5" />
               </button>
             </div>
 
@@ -3201,33 +3222,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                 );
               })}
-            </div>
-            
-            {/* Add Note Button - Bottom of messages */}
-            <div className="flex justify-center pb-4">
-              <button
-                onClick={() => {
-                  const associatedClaim = claims.find(c => c.title === selectedThread.subject);
-                  const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
-                  const claimNum = associatedClaim?.claimNumber ? `Claim #${associatedClaim.claimNumber}` : '';
-                  const contextLabel = [selectedThread.subject, claimNum, project].filter(Boolean).join(' • ');
-                  const prefilledBody = `Message ${project} back.`;
-                  
-                  setCurrentTab('NOTES');
-                  setSelectedThreadId(null);
-                  useTaskStore.setState({ 
-                    activeClaimId: associatedClaim?.id || null, 
-                    contextLabel, 
-                    contextType: 'message',
-                    prefilledNoteBody: prefilledBody
-                  });
-                }}
-                className="inline-flex items-center gap-2 px-4 py-2 border border-primary text-primary text-sm font-medium rounded-full hover:bg-primary/10 transition-all shadow-sm"
-                title={`Add a note about: ${selectedThread.subject}`}
-              >
-                <StickyNote className="h-4 w-4" />
-                <span>Add Note</span>
-              </button>
             </div>
             
             {/* Bottom Padding */}
@@ -4055,82 +4049,84 @@ const Dashboard: React.FC<DashboardProps> = ({
             )}
             {/* End Homeowner Card */}
             
-            {/* Next Appointment Card - Below Homeowner Info within sidebar */}
-            <div className="mt-4 bg-primary/5 dark:bg-gray-700/50 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-600 overflow-hidden">
-              <div className="p-4 bg-surface-container/30 dark:bg-gray-700/30 border-b border-surface-outline-variant/50 dark:border-gray-600 text-center">
-                <h3 className="font-medium text-sm flex items-center justify-center text-secondary-on-container dark:text-gray-100">
-                  <Calendar className="h-4 w-4 mr-2" />
-                  Next Appointment
-                </h3>
-              </div>
-              
-              {(() => {
-                // Get the next upcoming appointment date
-                const now = new Date();
-                now.setHours(0, 0, 0, 0);
+            {/* Next Appointment Card - Below Homeowner Info within sidebar - Homeowner View Only */}
+            {isHomeownerView && (
+              <div className="mt-4 bg-primary/5 dark:bg-gray-700/50 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-600 overflow-hidden">
+                <div className="p-4 bg-surface-container/30 dark:bg-gray-700/30 border-b border-surface-outline-variant/50 dark:border-gray-600 text-center">
+                  <h3 className="font-medium text-sm flex items-center justify-center text-secondary-on-container dark:text-gray-100">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Next Appointment
+                  </h3>
+                </div>
                 
-                const upcomingClaims = scheduledClaims
-                  .map(c => {
-                    const acceptedDate = c.proposedDates.find(d => d.status === 'ACCEPTED');
-                    if (!acceptedDate) return null;
-                    const appointmentDate = new Date(acceptedDate.date);
-                    appointmentDate.setHours(0, 0, 0, 0);
-                    if (appointmentDate < now) return null;
-                    return { claim: c, date: appointmentDate, acceptedDate };
-                  })
-                  .filter(Boolean) as Array<{ claim: Claim; date: Date; acceptedDate: any }>;
-                
-                if (upcomingClaims.length === 0) {
+                {(() => {
+                  // Get the next upcoming appointment date
+                  const now = new Date();
+                  now.setHours(0, 0, 0, 0);
+                  
+                  const upcomingClaims = scheduledClaims
+                    .map(c => {
+                      const acceptedDate = c.proposedDates.find(d => d.status === 'ACCEPTED');
+                      if (!acceptedDate) return null;
+                      const appointmentDate = new Date(acceptedDate.date);
+                      appointmentDate.setHours(0, 0, 0, 0);
+                      if (appointmentDate < now) return null;
+                      return { claim: c, date: appointmentDate, acceptedDate };
+                    })
+                    .filter(Boolean) as Array<{ claim: Claim; date: Date; acceptedDate: any }>;
+                  
+                  if (upcomingClaims.length === 0) {
+                    return (
+                      <div className="p-4 text-center">
+                        <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No upcoming appointments.</p>
+                      </div>
+                    );
+                  }
+                  
+                  // Sort by date
+                  upcomingClaims.sort((a, b) => a.date.getTime() - b.date.getTime());
+                  
+                  // Get the next date
+                  const nextDate = upcomingClaims[0].date;
+                  const nextDateStr = nextDate.toISOString().split('T')[0];
+                  
+                  // Count how many claims have this same date
+                  const claimsOnNextDate = upcomingClaims.filter(item => {
+                    const itemDateStr = item.date.toISOString().split('T')[0];
+                    return itemDateStr === nextDateStr;
+                  });
+                  
+                  const firstClaim = claimsOnNextDate[0].claim;
+                  const acceptedDate = claimsOnNextDate[0].acceptedDate;
+                  
                   return (
-                    <div className="p-4 text-center">
-                      <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No upcoming appointments.</p>
-                    </div>
-                  );
-                }
-                
-                // Sort by date
-                upcomingClaims.sort((a, b) => a.date.getTime() - b.date.getTime());
-                
-                // Get the next date
-                const nextDate = upcomingClaims[0].date;
-                const nextDateStr = nextDate.toISOString().split('T')[0];
-                
-                // Count how many claims have this same date
-                const claimsOnNextDate = upcomingClaims.filter(item => {
-                  const itemDateStr = item.date.toISOString().split('T')[0];
-                  return itemDateStr === nextDateStr;
-                });
-                
-                const firstClaim = claimsOnNextDate[0].claim;
-                const acceptedDate = claimsOnNextDate[0].acceptedDate;
-                
-                return (
-                  <div className="p-4 flex flex-col items-center">
-                    <div 
-                      className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-lg text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors w-full"
-                      onClick={() => setSelectedClaimForModal(firstClaim)}
-                    >
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <p className="font-medium text-secondary-on-container dark:text-gray-200 truncate text-center flex-1">{firstClaim.title}</p>
-                        {claimsOnNextDate.length > 1 && (
-                          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-on text-xs font-medium flex-shrink-0">
-                            {claimsOnNextDate.length}
-                          </span>
+                    <div className="p-4 flex flex-col items-center">
+                      <div 
+                        className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-lg text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors w-full"
+                        onClick={() => setSelectedClaimForModal(firstClaim)}
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <p className="font-medium text-secondary-on-container dark:text-gray-200 truncate text-center flex-1">{firstClaim.title}</p>
+                          {claimsOnNextDate.length > 1 && (
+                            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-on text-xs font-medium flex-shrink-0">
+                              {claimsOnNextDate.length}
+                            </span>
+                          )}
+                        </div>
+                        <p className="opacity-80 dark:opacity-70 text-secondary-on-container dark:text-gray-300 text-center">
+                          {new Date(acceptedDate.date).toLocaleDateString()} - {acceptedDate?.timeSlot}
+                        </p>
+                        {firstClaim.contractorName && (
+                          <p className="opacity-70 dark:opacity-60 mt-1 text-secondary-on-container dark:text-gray-400 text-xs text-center">
+                            {firstClaim.contractorName}
+                          </p>
                         )}
                       </div>
-                      <p className="opacity-80 dark:opacity-70 text-secondary-on-container dark:text-gray-300 text-center">
-                        {new Date(acceptedDate.date).toLocaleDateString()} - {acceptedDate?.timeSlot}
-                      </p>
-                      {firstClaim.contractorName && (
-                        <p className="opacity-70 dark:opacity-60 mt-1 text-secondary-on-container dark:text-gray-400 text-xs text-center">
-                          {firstClaim.contractorName}
-                        </p>
-                      )}
                     </div>
-                  </div>
-                );
-              })()}
-            </div>
+                  );
+                })()}
+              </div>
+            )}
           </div>
           {/* END LEFT SIDEBAR */}
 

@@ -9,7 +9,7 @@ import MaterialSelect from './MaterialSelect';
 import { ToastContainer, Toast } from './Toast';
 import { uploadMultipleFiles } from '../lib/services/uploadService';
 import { analyzeWarrantyImage } from '../actions/analyze-image';
-import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar, Briefcase, Trash2, Plus, Sparkles } from 'lucide-react';
+import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar, Trash2, Plus, Sparkles } from 'lucide-react';
 
 interface StagedClaim {
   id: string;
@@ -611,11 +611,9 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                 
                 {selectedContractorId && (
                   <div className="mt-2 flex flex-row items-center gap-3">
-                    <div className="flex items-center gap-3 bg-secondary-container px-4 py-3 rounded-xl text-secondary-on-container flex-1 min-w-0">
-                      <Briefcase className="h-5 w-5 flex-shrink-0" />
+                    <div className="flex items-center bg-secondary-container px-4 py-3 rounded-xl text-secondary-on-container flex-1 min-w-0">
                       <div className="text-sm overflow-hidden min-w-0">
                         <p className="font-bold truncate">{contractors.find(c => c.id === selectedContractorId)?.companyName}</p>
-                        <p className="opacity-80 text-xs truncate">{contractors.find(c => c.id === selectedContractorId)?.email}</p>
                       </div>
                     </div>
                     

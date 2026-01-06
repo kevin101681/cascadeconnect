@@ -6,7 +6,7 @@ import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
 import { ClaimMessage } from './MessageSummaryModal';
 import ImageViewerModal from './ImageViewerModal';
-import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Briefcase, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload, FileEdit, Trash2, StickyNote } from 'lucide-react';
+import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload, FileEdit, Trash2, StickyNote } from 'lucide-react';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
@@ -16,7 +16,7 @@ import { uploadMultipleFiles } from '../lib/services/uploadService';
 
 interface ClaimInlineEditorProps {
   claim: Claim;
-  onUpdateClaim: (claim: Claim) => void;
+  onUpdateClaim: (claim: Claim) => void | Promise<void>;
   contractors: Contractor[];
   currentUser?: InternalEmployee;
   userRole: UserRole;
@@ -308,13 +308,25 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     }
   };
   
-  const handleToggleReviewed = () => {
+  const handleToggleReviewed = async () => {
+    // Optimistic UI update for instant feedback
+    const previousReviewedStatus = isReviewed;
     const newReviewedStatus = !isReviewed;
     setIsReviewed(newReviewedStatus);
-    onUpdateClaim({
-      ...claim,
-      reviewed: newReviewedStatus
-    });
+    
+    try {
+      // Call the update function (which is async in the parent)
+      await onUpdateClaim({
+        ...claim,
+        reviewed: newReviewedStatus
+      });
+    } catch (error) {
+      // Revert on error
+      console.error('Failed to update reviewed status:', error);
+      setIsReviewed(previousReviewedStatus);
+      // Show error feedback (could add toast here if available)
+      alert('Failed to update reviewed status. Please try again.');
+    }
   };
   
   const handleCancelEdit = () => {
@@ -1063,11 +1075,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
               
               {selectedContractorId && (
                 <div className="mt-2 flex flex-row items-center gap-3">
-                  <div className="flex items-center gap-3 bg-secondary-container px-4 py-3 rounded-xl text-secondary-on-container flex-1 min-w-0">
-                    <Briefcase className="h-5 w-5 flex-shrink-0" />
+                  <div className="flex items-center bg-secondary-container px-4 py-3 rounded-xl text-secondary-on-container flex-1 min-w-0">
                     <div className="text-sm overflow-hidden min-w-0">
                       <p className="font-bold truncate">{contractors.find(c => c.id === selectedContractorId)?.companyName}</p>
-                      <p className="opacity-80 text-xs truncate">{contractors.find(c => c.id === selectedContractorId)?.email}</p>
                     </div>
                   </div>
                   
@@ -1550,11 +1560,11 @@ If this repair work is billable, please let me know prior to scheduling.`);
         {!isHomeowner && (
           <Button 
             type="button" 
-            variant="filled" 
+            variant={isReviewed ? "filled" : "outline"}
             onClick={handleToggleReviewed}
-            className={isReviewed ? "!bg-green-600 hover:!bg-green-700 dark:!bg-green-700 dark:hover:!bg-green-800" : ""}
+            className={isReviewed ? "!bg-green-600 hover:!bg-green-700 dark:!bg-green-700 dark:hover:!bg-green-800 !text-white" : ""}
           >
-            {isReviewed ? 'Reviewed' : 'Process'}
+            {isReviewed ? '✓ Reviewed' : 'Mark Processed'}
           </Button>
         )}
         {onCancel && (

@@ -9,7 +9,8 @@ interface WarrantyCardProps {
   soSentDate?: string;
   subName?: string;
   attachmentCount?: number;
-  isReviewed?: boolean; // New Prop
+  isReviewed?: boolean;
+  isSelected?: boolean; // New Prop for selected state
   onClick?: () => void;
 }
 
@@ -21,13 +22,20 @@ export function WarrantyCard({
   soSentDate,
   subName,
   attachmentCount = 0,
-  isReviewed = false, // Default to false
+  isReviewed = false,
+  isSelected = false, // Default to false
   onClick,
 }: WarrantyCardProps) {
   return (
     <div 
       onClick={onClick}
-      className={`group relative bg-white rounded-[28px] border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all hover:border-blue-300 h-full flex flex-col justify-between focus:outline-none ${onClick ? 'cursor-pointer' : ''}`}
+      className={`group relative rounded-[28px] border p-5 transition-all h-full flex flex-col justify-between focus:outline-none ${
+        onClick ? 'cursor-pointer' : ''
+      } ${
+        isSelected 
+          ? 'bg-blue-50 border-blue-500 shadow-md' 
+          : 'bg-white border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300'
+      }`}
     >
       
       {/* 1. HEADER */}
