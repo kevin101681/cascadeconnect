@@ -64,6 +64,7 @@ import { HOMEOWNER_MANUAL_IMAGES } from '../lib/bluetag/constants';
 import { WarrantyCard } from './ui/WarrantyCard';
 import { HomeownerCard } from './ui/HomeownerCard';
 import { TaskCard } from './ui/TaskCard';
+import { MessageCard } from './ui/MessageCard';
 
 // PDF Thumbnail Component - Generates thumbnail on-the-fly if missing
 const PDFThumbnailDisplay: React.FC<{ doc: HomeownerDocument }> = ({ doc }) => {
@@ -2939,61 +2940,19 @@ const Dashboard: React.FC<DashboardProps> = ({
                   {displayThreads.map((thread, index) => {
                     const lastMsg = thread.messages[thread.messages.length - 1];
                     const isUnread = !thread.isRead;
-                    const isSelected = selectedThreadId === thread.id;
                     const participants = isAdmin 
                       ? thread.participants.filter(p => p !== currentUser.name).join(', ') || 'Me'
                       : thread.participants.filter(p => p !== activeHomeowner.name).join(', ') || 'Me';
 
                     return (
-                      <div
+                      <MessageCard
                         key={thread.id}
+                        title={thread.subject}
+                        senderName={participants}
+                        dateSent={new Date(thread.lastMessageAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        isRead={thread.isRead}
                         onClick={() => setSelectedThreadId(thread.id)}
-                        className={`group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer ${
-                          isSelected
-                            ? 'bg-primary-container/20 dark:bg-primary/20 border-primary ring-1 ring-primary'
-                            : isUnread
-                            ? 'bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm md:hover:shadow-elevation-1'
-                            : 'bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm md:hover:shadow-elevation-1 opacity-75'
-                        }`}
-                      >
-                        <div className="px-4 py-4">
-                          <div className="flex flex-wrap gap-2">
-                            {/* Subject/Title */}
-                            <span className={`inline-flex items-center h-6 text-xs font-medium px-3 rounded-full whitespace-nowrap w-fit ${
-                              isUnread
-                                ? 'bg-primary text-primary-on'
-                                : 'bg-surface-container-high dark:bg-gray-700 text-surface-on dark:text-gray-100'
-                            }`}>
-                              {thread.subject}
-                            </span>
-                            
-                            {/* Participants */}
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
-                              {participants}
-                            </span>
-                            
-                            {/* Date */}
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
-                              {new Date(thread.lastMessageAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                            </span>
-                            
-                            {/* Unread indicator */}
-                            {isUnread && (
-                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-                                !
-                              </span>
-                            )}
-                            
-                            {/* Last message preview */}
-                            {lastMsg.content && (
-                              <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant/80 dark:text-gray-200 bg-surface-container/50 dark:bg-gray-700 px-3 rounded-full whitespace-nowrap w-fit">
-                                {lastMsg.senderName === (isAdmin ? currentUser.name : activeHomeowner.name) ? 'You: ' : ''}
-                                {lastMsg.content.substring(0, 30)}{lastMsg.content.length > 30 ? '...' : ''}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                      />
                     );
                   })}
                 </div>
