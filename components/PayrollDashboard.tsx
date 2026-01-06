@@ -11,6 +11,7 @@ import {
   Building2,
   CreditCard
 } from 'lucide-react';
+import GustoConnectButton from './integrations/gusto-connect-button';
 
 // Finch API Type Definitions (matching actual Finch response structure)
 interface PayPeriod {
@@ -269,10 +270,13 @@ const PayrollDashboard: React.FC = () => {
             Payroll Dashboard
           </h2>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-lg hover:opacity-90 transition-opacity border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10">
-          <Download className="h-4 w-4" />
-          Export Report
-        </button>
+          <div className="flex items-center gap-3">
+            <GustoConnectButton />
+            <button className="flex items-center gap-2 px-4 py-2 rounded-lg hover:opacity-90 transition-opacity border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10">
+              <Download className="h-4 w-4" />
+              Export Report
+            </button>
+          </div>
       </div>
       
       {/* Content */}

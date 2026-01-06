@@ -67,7 +67,7 @@ export const handler: Handler = async (event) => {
     const protocol = event.headers['x-forwarded-proto'] || 'https';
     const host = event.headers.host;
     const baseUrl = host ? `${protocol}://${host}` : '';
-    const redirectUrl = `${baseUrl}/integrations?gusto=connected`;
+    const redirectUrl = `${baseUrl}/dashboard?tab=PAYROLL&gusto_connected=true`;
 
     return {
       statusCode: 302,
