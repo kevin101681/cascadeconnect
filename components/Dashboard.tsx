@@ -3300,11 +3300,11 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* TASK DETAIL MODAL - Only show when not on TASKS tab (tasks tab has inline view) */}
       {selectedTaskForModal && currentTab !== 'TASKS' && createPortal(
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out] overflow-y-auto"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
           style={{ overscrollBehavior: 'contain' }}
         >
-          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] my-auto flex flex-col max-h-[90vh]">
-            <div className="overflow-y-auto overflow-x-hidden flex-1">
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] flex flex-col h-[90vh]">
+            <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0">
               <div className="p-4">
                 <TaskDetail
                   task={selectedTaskForModal}
@@ -3338,12 +3338,12 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* CLAIM DETAIL MODAL - Only show when not on CLAIMS tab (claims tab has inline view) */}
       {selectedClaimForModal && currentTab !== 'CLAIMS' && onUpdateClaim && createPortal(
         <div 
-          className="fixed inset-0 z-[100] md:flex md:items-center md:justify-center p-0 md:p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out] md:overflow-y-auto"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
           style={{ overscrollBehavior: 'contain' }}
         >
-          <div className="bg-surface dark:bg-gray-800 w-full h-full md:h-auto max-w-6xl rounded-none md:rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] md:my-auto flex flex-col md:max-h-[90vh]">
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] flex flex-col h-[90vh]">
             <div 
-              className="overflow-y-auto overflow-x-hidden flex-1 overscroll-contain -webkit-overflow-scrolling-touch"
+              className="overflow-y-auto overflow-x-hidden flex-1 min-h-0 overscroll-contain -webkit-overflow-scrolling-touch"
               style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
             >
               <div className="p-4">
@@ -3416,14 +3416,14 @@ const Dashboard: React.FC<DashboardProps> = ({
       {showNewClaimModal && createPortal(
         <div 
           data-new-claim-modal
-          className="fixed inset-0 z-[100] flex items-start justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
-          style={{ zIndex: 1000 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+          style={{ zIndex: 1000, overscrollBehavior: 'contain' }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowNewClaimModal(false);
           }}
         >
-          <div className="bg-surface dark:bg-gray-800 w-full max-w-4xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 max-h-[calc(100vh-4rem)] flex flex-col">
-            <div className="p-6 bg-surface dark:bg-gray-800 overflow-y-auto flex-1">
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-4xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] flex flex-col h-[90vh]">
+            <div className="p-6 bg-surface dark:bg-gray-800 overflow-y-auto flex-1 min-h-0">
               {onCreateClaim ? (
                 <Suspense fallback={
                   <div className="flex items-center justify-center py-12">
@@ -3462,12 +3462,12 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div 
           data-new-task-modal
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
-          style={{ zIndex: 1000 }}
+          style={{ zIndex: 1000, overscrollBehavior: 'contain' }}
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowNewTaskModal(false);
           }}
         >
-          <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] flex flex-col max-h-[90vh]">
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] flex flex-col h-[85vh]">
             <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container/30 dark:bg-gray-700/30 shrink-0">
               <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                 <CheckSquare className="h-5 w-5 text-primary" />
@@ -5992,13 +5992,13 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* NEW MESSAGE MODAL */}
         {showNewMessageModal && createPortal(
           <div 
-            className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out] overflow-y-auto"
+            className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
             style={{ overscrollBehavior: 'contain' }}
             onClick={(e) => {
               if (e.target === e.currentTarget) setShowNewMessageModal(false);
             }}
           >
-             <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 flex flex-col max-h-[90vh]">
+             <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] flex flex-col h-[85vh]">
                 <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700 shrink-0">
                   <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                     <Mail className="h-5 w-5 text-primary" />
