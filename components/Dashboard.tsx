@@ -4107,29 +4107,29 @@ const Dashboard: React.FC<DashboardProps> = ({
              {!isHomeownerView && (
                <div className="w-full mt-3" onClick={(e) => e.stopPropagation()}>
                  <div className="w-full bg-surface dark:bg-gray-800 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-700/50 p-3">
-                   <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-300 uppercase tracking-wide">
+                   <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-300 uppercase tracking-wide text-center">
                      Tasks
                    </div>
-                   <div className="mt-2 flex items-end gap-2">
-                     <div className="flex-1">
-                       <label className="block text-xs text-surface-on-variant dark:text-gray-400 mb-1">
-                         Eval
-                       </label>
-                       <select
+                   <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                     <div className="min-w-[160px]">
+                       <MaterialSelect
                          value={homeownerTaskEval}
-                         onChange={async (e) => {
-                           const value = e.target.value as '' | '60 Day' | '11 Month' | 'Other';
-                           setHomeownerTaskEval(value);
-                           await handleEvalCreate(value);
-                           setHomeownerTaskEval('');
+                         onChange={async (value) => {
+                           const typedValue = value as '' | '60 Day' | '11 Month' | 'Other';
+                           setHomeownerTaskEval(typedValue);
+                           if (typedValue) {
+                             await handleEvalCreate(typedValue);
+                             setHomeownerTaskEval('');
+                           }
                          }}
-                         className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-sm text-surface-on dark:text-gray-100 border border-surface-outline-variant/50 dark:border-gray-600 focus:ring-2 focus:ring-primary focus:outline-none"
-                       >
-                         <option value="">Select…</option>
-                         <option value="60 Day">60 Day</option>
-                         <option value="11 Month">11 Month</option>
-                         <option value="Other">Other</option>
-                       </select>
+                         options={[
+                           { value: '', label: 'Select…' },
+                           { value: '60 Day', label: '60 Day' },
+                           { value: '11 Month', label: '11 Month' },
+                           { value: 'Other', label: 'Other' },
+                         ]}
+                         className="w-full"
+                       />
                      </div>
                      <Button
                        variant="outlined"

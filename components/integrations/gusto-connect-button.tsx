@@ -8,9 +8,13 @@ const GUSTO_AUTH_URL = 'https://api.gusto-demo.com/oauth/authorize';
 const GUSTO_SCOPE = 'employees:read payrolls:read';
 
 const clientId =
-  process.env.NEXT_PUBLIC_GUSTO_CLIENT_ID ?? process.env.GUSTO_CLIENT_ID;
+  import.meta.env.VITE_GUSTO_CLIENT_ID ??
+  process.env.NEXT_PUBLIC_GUSTO_CLIENT_ID ??
+  process.env.GUSTO_CLIENT_ID;
 const redirectUri =
-  process.env.NEXT_PUBLIC_GUSTO_REDIRECT_URI ?? process.env.GUSTO_REDIRECT_URI;
+  import.meta.env.VITE_GUSTO_REDIRECT_URI ??
+  process.env.NEXT_PUBLIC_GUSTO_REDIRECT_URI ??
+  process.env.GUSTO_REDIRECT_URI;
 
 export function GustoConnectButton() {
   const authUrl = React.useMemo(() => {
