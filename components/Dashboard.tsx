@@ -63,6 +63,7 @@ const PunchListApp = React.lazy(() => import('./PunchListApp').catch(err => {
 import { HOMEOWNER_MANUAL_IMAGES } from '../lib/bluetag/constants';
 import { WarrantyCard } from './ui/WarrantyCard';
 import { HomeownerCard } from './ui/HomeownerCard';
+import { TaskCard } from './ui/TaskCard';
 
 // PDF Thumbnail Component - Generates thumbnail on-the-fly if missing
 const PDFThumbnailDisplay: React.FC<{ doc: HomeownerDocument }> = ({ doc }) => {
@@ -2743,72 +2744,20 @@ const Dashboard: React.FC<DashboardProps> = ({
                   const taskClaims = task.relatedClaimIds 
                     ? claims.filter(c => task.relatedClaimIds?.includes(c.id))
                     : [];
-                  const isSelected = selectedTaskForModal?.id === task.id;
                   
                   return (
-                    <div
+                    <TaskCard
                       key={task.id}
+                      title={task.title}
+                      assignedTo={assignee?.name}
+                      subsToScheduleCount={taskClaims.length}
+                      dateAssigned={task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Not set'}
+                      isCompleted={task.isCompleted}
                       onClick={() => {
                         setSelectedTaskForModal(task);
                         setTasksTabStartInEditMode(false);
                       }}
-                      className={`group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer ${
-                        isSelected
-                          ? 'bg-primary-container/20 dark:bg-primary/20 border-primary ring-1 ring-primary'
-                          : task.isCompleted 
-                          ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75 md:hover:shadow-sm' 
-                          : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm md:hover:shadow-elevation-1'
-                      }`}
-                    >
-                      <div className="px-4 py-4">
-                        <div className="flex flex-wrap gap-2 items-center">
-                          {/* Checkbox */}
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onToggleTask(task.id);
-                            }}
-                            className={`flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                              task.isCompleted 
-                                ? 'bg-primary border-primary text-white' 
-                                : 'border-surface-outline dark:border-gray-600 hover:border-primary'
-                            }`}
-                          >
-                            {task.isCompleted && <Check className="h-3 w-3" />}
-                          </button>
-
-                          {/* Title */}
-                          <span className={`inline-flex items-center h-6 text-xs font-medium px-3 rounded-full whitespace-nowrap w-fit ${
-                            task.isCompleted 
-                              ? 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 line-through' 
-                              : 'bg-primary text-primary-on'
-                          }`}>
-                            {task.title}
-                          </span>
-
-                          {/* Related Claims Count */}
-                          {taskClaims.length > 0 && (
-                            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-                              {taskClaims.length}
-                            </span>
-                          )}
-
-                          {/* Assignee */}
-                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit gap-1">
-                            <User className="h-3 w-3" />
-                            {assignee?.name || 'Unknown'}
-                          </span>
-
-                          {/* Date */}
-                          {task.dateAssigned && (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {new Date(task.dateAssigned).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+                    />
                   );
                 })}
               </div>
