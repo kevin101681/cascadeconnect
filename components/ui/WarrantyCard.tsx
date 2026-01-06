@@ -9,6 +9,7 @@ interface WarrantyCardProps {
   soSentDate?: string;
   subName?: string;
   attachmentCount?: number;
+  onClick?: () => void; // Added optional onClick handler
 }
 
 export function WarrantyCard({
@@ -18,10 +19,16 @@ export function WarrantyCard({
   scheduledDate,
   soSentDate,
   subName,
-  attachmentCount = 0, // Default to 0 if undefined
+  attachmentCount = 0,
+  onClick,
 }: WarrantyCardProps) {
   return (
-    <div className="group relative bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-all hover:border-blue-300 h-full flex flex-col justify-between">
+    // Added 'focus:outline-none' to kill the click border.
+    // Added 'cursor-pointer' if an onClick is provided.
+    <div 
+      onClick={onClick}
+      className={`group relative bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-all hover:border-blue-300 h-full flex flex-col justify-between focus:outline-none ${onClick ? 'cursor-pointer' : ''}`}
+    >
       
       {/* 1. HEADER */}
       <div className="flex justify-between items-start mb-3 gap-2">
@@ -34,7 +41,8 @@ export function WarrantyCard({
             {classification}
           </Badge>
         ) : (
-          <div className="h-5 w-16 bg-gray-100 rounded animate-pulse" /> /* Skeleton loader look if needed, or just hide */
+          // Optional: You could hide this div if you don't want the skeleton look
+          <div className="h-5 w-16 bg-gray-100 rounded animate-pulse" /> 
         )}
       </div>
 
@@ -91,4 +99,3 @@ export function WarrantyCard({
     </div>
   );
 }
-
