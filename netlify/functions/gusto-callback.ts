@@ -98,14 +98,23 @@ export const handler: Handler = async (event) => {
       console.warn('⚠️ Failed to persist Gusto tokens; continuing redirect', dbError);
     }
 
-    const redirectUrl = '/gusto-success';
+    const redirectUrl = `/gusto-success?t=${Date.now()}`;
+
+    const html = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="refresh" content="0;url=${redirectUrl}" />
+    <script>window.location.href = ${JSON.stringify(redirectUrl)};</script>
+  </head>
+  <body>
+    <p>Redirecting to Gusto success page...</p>
+  </body>
+</html>`;
 
     return {
-      statusCode: 302,
-      headers: {
-        Location: redirectUrl,
-      },
-      body: '',
+      statusCode: 200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      body: html,
     };
   } catch (error) {
     console.error('Gusto OAuth callback error', error);
