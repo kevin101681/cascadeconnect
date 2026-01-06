@@ -24,14 +24,15 @@ export function HomeownerCard({
   onEdit,
 }: HomeownerCardProps) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group">
+    // CHANGED: rounded-xl -> rounded-[28px] to match Material 3 Dialog specs
+    <div className="bg-white rounded-[28px] border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group">
       
-      {/* 1. EDIT BUTTON (Absolute Top Right) */}
-      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+      {/* 1. EDIT BUTTON */}
+      <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50"
+          className="h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full" // rounded-full on button too
           onClick={onEdit}
           title="Edit Homeowner Info"
         >
@@ -39,8 +40,8 @@ export function HomeownerCard({
         </Button>
       </div>
 
-      {/* 2. HEADER: Name & Project (No Avatar) */}
-      <div className="flex flex-col mb-5 pr-8">
+      {/* 2. HEADER: Name & Project */}
+      <div className="flex flex-col mb-6 pr-8">
         <h3 className={`font-bold text-lg leading-tight ${name ? "text-gray-900" : "text-gray-400 italic"}`}>
           {name || "Unknown Homeowner"}
         </h3>
@@ -82,7 +83,7 @@ export function HomeownerCard({
         {/* Email */}
         <div className="flex items-start group/item">
           <Mail className="w-4 h-4 mt-0.5 mr-3 text-gray-400 group-hover/item:text-blue-500 transition-colors shrink-0" />
-          <div className="flex flex-col min-w-0"> {/* min-w-0 ensures truncation works */}
+          <div className="flex flex-col min-w-0">
             <span className="text-[10px] text-gray-400 uppercase tracking-wider leading-none mb-1">Email</span>
             <span className={`text-sm truncate block ${email ? "text-gray-700" : "text-gray-300 italic"}`} title={email}>
               {email || "--"}
