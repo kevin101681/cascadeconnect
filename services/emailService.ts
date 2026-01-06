@@ -124,14 +124,30 @@ export const generateNotificationBody = (
   contextId: string, 
   link: string
 ) => {
-  // Generate HTML with a button for the messages link
-  // Don't include contextId if it looks like a UUID (long claim ID string)
-  const showContextId = contextId && contextId !== 'new' && contextId.length < 20;
-  const contextLine = showContextId 
-    ? `You have a new message from ${authorName} regarding ${contextType} #${contextId}.`
-    : `You have a new message from ${authorName}.`;
-  
-  return `
+  // Use modern React Email template with unified design system
+  try {
+    const { render } = require('@react-email/render');
+    const MessageNotificationEmail = require('../emails/MessageNotificationEmail').default;
+    
+    return render(
+      MessageNotificationEmail({
+        authorName,
+        content,
+        contextType,
+        contextId,
+        link,
+      })
+    );
+  } catch (error) {
+    console.error('Failed to render email template, falling back to legacy HTML:', error);
+    
+    // Fallback to legacy HTML if React Email fails
+    const showContextId = contextId && contextId !== 'new' && contextId.length < 20;
+    const contextLine = showContextId 
+      ? `You have a new message from ${authorName} regarding ${contextType} #${contextId}.`
+      : `You have a new message from ${authorName}.`;
+    
+    return `
 ${contextLine}
 
 "${content}"
@@ -140,9 +156,10 @@ ${contextLine}
 To reply, simply reply to this email or view your messages in Cascade Connect:
 
 <div style="margin: 20px 0; text-align: center;">
-  <a href="${link}" style="display: inline-block; background-color: #6750A4; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Messages</a>
+  <a href="${link}" style="display: inline-block; background-color: #2563eb; color: #FFFFFF; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 500; font-size: 14px; text-align: center; font-family: Arial, sans-serif; border: none; cursor: pointer;">View Messages</a>
 </div>
-  `;
+    `;
+  }
 };
 
 // Helper to format email body as HTML (for links)

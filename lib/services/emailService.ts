@@ -274,6 +274,7 @@ async function getAdminEmails(db: any): Promise<string[]> {
 
 /**
  * Build email content for universal notification
+ * Uses modern React Email templates with unified design system
  */
 function buildUniversalNotificationContent(
   scenario: NotificationScenario,
@@ -281,44 +282,18 @@ function buildUniversalNotificationContent(
 ): { subject: string; html: string; text: string } {
   const appUrl = getAppUrl();
   const callsLink = `${appUrl}#ai-intake`;
-  const homeownerLink = data.matchedHomeownerId ? `${appUrl}#dashboard?homeownerId=${data.matchedHomeownerId}` : null;
-  const claimLink = data.claimId ? `${appUrl}#claims?claimId=${data.claimId}` : null;
+  const homeownerLink = data.matchedHomeownerId ? `${appUrl}#dashboard?homeownerId=${data.matchedHomeownerId}` : undefined;
+  const claimLink = data.claimId ? `${appUrl}#claims?claimId=${data.claimId}` : undefined;
 
   let subject = '';
-  let headerTitle = '';
-  let scenarioDescription = '';
-  let statusBadge = '';
-  let primaryCta = { text: '', link: '', color: '' };
 
-  // ====================================
-  // SCENARIO A: CLAIM CREATED
-  // ====================================
+  // Determine subject line based on scenario
   if (scenario === 'CLAIM_CREATED') {
     subject = `New Warranty Claim: ${data.propertyAddress || 'Unknown Address'}`;
-    headerTitle = 'New Warranty Claim Created';
-    scenarioDescription = `A warranty claim has been automatically created for ${data.matchedHomeownerName || data.homeownerName || 'this homeowner'}.`;
-    statusBadge = '<span style="background-color: #3c6b80; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Claim Created</span>';
-    primaryCta = { text: 'View Claim', link: claimLink || callsLink, color: '#3c6b80' };
-  }
-  // ====================================
-  // SCENARIO B: MATCH FOUND, NO CLAIM
-  // ====================================
-  else if (scenario === 'MATCH_NO_CLAIM') {
+  } else if (scenario === 'MATCH_NO_CLAIM') {
     subject = `Homeowner Call: ${data.propertyAddress || 'Unknown Address'}`;
-    headerTitle = 'Homeowner Call Received';
-    scenarioDescription = `${data.matchedHomeownerName || data.homeownerName || 'A homeowner'} called.`;
-    statusBadge = '<span style="background-color: #3c6b80; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Matched - No Claim</span>';
-    primaryCta = { text: 'View Homeowner', link: homeownerLink || callsLink, color: '#3c6b80' };
-  }
-  // ====================================
-  // SCENARIO C: NO MATCH / UNKNOWN
-  // ====================================
-  else {
+  } else {
     subject = `Unknown Caller: ${data.phoneNumber || 'No Phone'}`;
-    headerTitle = 'Unknown Caller - Manual Review Required';
-    scenarioDescription = `A caller could not be matched to a homeowner in the database.`;
-    statusBadge = '<span style="background-color: #3c6b80; color: white; padding: 10px 20px; border-radius: 25px; font-weight: bold; display: inline-block;">Unmatched</span>';
-    primaryCta = { text: 'Review Call', link: callsLink, color: '#3c6b80' };
   }
 
   // Add urgency flag to subject if urgent
@@ -326,85 +301,31 @@ function buildUniversalNotificationContent(
     subject = `[URGENT] ${subject}`;
   }
 
-  // Build HTML email body
-  const html = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9;">
-      <div style="background-color: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-        
-        <!-- Header -->
-        <h2 style="color: #1565C0; margin-bottom: 10px; margin-top: 0;">${headerTitle}</h2>
-        <div style="margin-bottom: 20px;">${statusBadge}</div>
-        <p style="color: #666; font-size: 15px; line-height: 1.6;">${scenarioDescription}</p>
-        
-        <hr style="border: none; border-top: 2px solid #e0e0e0; margin: 30px 0;">
-        
-        <!-- Call Information -->
-        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-          <h3 style="margin-top: 0; color: #333; font-size: 16px;">Call Information</h3>
-          <table style="width: 100%; border-collapse: collapse;">
-            ${scenario === 'NO_MATCH' ? `
-            <tr>
-              <td style="padding: 10px 0; font-weight: bold; width: 160px; color: #666;">Phone Number:</td>
-              <td style="padding: 10px 0; color: #333;"><strong>${data.phoneNumber || 'Not provided'}</strong></td>
-            </tr>
-            ` : ''}
-            <tr>
-              <td style="padding: 10px 0; font-weight: bold; width: 160px; color: #666;">Property Address:</td>
-              <td style="padding: 10px 0; color: #333;"><strong>${data.propertyAddress || 'Not provided'}</strong></td>
-            </tr>
-            ${scenario !== 'NO_MATCH' ? `
-            <tr>
-              <td style="padding: 10px 0; font-weight: bold; color: #666;">Homeowner:</td>
-              <td style="padding: 10px 0; color: #333;">${data.matchedHomeownerName || data.homeownerName || 'Not provided'}</td>
-            </tr>
-            <tr>
-              <td style="padding: 10px 0; font-weight: bold; color: #666;">Phone:</td>
-              <td style="padding: 10px 0; color: #333;">${data.phoneNumber || 'Not provided'}</td>
-            </tr>
-            ` : `
-            <tr>
-              <td style="padding: 10px 0; font-weight: bold; color: #666;">Caller Name:</td>
-              <td style="padding: 10px 0; color: #333;">${data.homeownerName || 'Not provided'}</td>
-            </tr>
-            `}
-            <tr>
-              <td style="padding: 10px 0; font-weight: bold; color: #666;">Urgency:</td>
-              <td style="padding: 10px 0; color: #333;">
-                ${data.isUrgent ? '<span style="color: #dc3545; font-weight: bold;">URGENT</span>' : 'Normal'}
-              </td>
-            </tr>
-            ${scenario === 'CLAIM_CREATED' ? `
-            <tr>
-              <td style="padding: 10px 0; font-weight: bold; color: #666;">Claim Number:</td>
-              <td style="padding: 10px 0; color: #333;"><strong>#${data.claimNumber}</strong></td>
-            </tr>
-            ` : ''}
-          </table>
-        </div>
-
-        <!-- Issue Description -->
-        ${data.issueDescription ? `
-        <div style="background-color: #E8F1F5; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #3c6b80;">
-          <h3 style="margin-top: 0; color: #333; font-size: 16px;">${scenario === 'CLAIM_CREATED' ? 'Issue Description' : 'Caller Message'}</h3>
-          <p style="margin: 0; color: #333; white-space: pre-wrap; line-height: 1.6;">${data.issueDescription}</p>
-        </div>
-        ` : ''}
-
-        <!-- CTA Buttons - Pill Shaped -->
-        <div style="margin-top: 30px; text-align: center;">
-          <a href="${primaryCta.link}" style="display: inline-block; background-color: ${primaryCta.color}; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
-            ${primaryCta.text}
-          </a>
-          <a href="${callsLink}" style="display: inline-block; background-color: #3c6b80; color: #FFFFFF; text-decoration: none; padding: 10px 20px; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 5px;">
-            View All Calls
-          </a>
-        </div>
-
-      </div>
-    </div>
-  `;
+  // Render React Email template to HTML
+  const { render } = require('@react-email/render');
+  const UniversalNotificationEmail = require('../../emails/UniversalNotificationEmail').default;
+  
+  const html = render(
+    UniversalNotificationEmail({
+      scenario,
+      data,
+      callsLink,
+      homeownerLink,
+      claimLink,
+    })
+  );
 
   // Build plain text version
+  const headerTitle = scenario === 'CLAIM_CREATED' ? 'New Warranty Claim Created' 
+    : scenario === 'MATCH_NO_CLAIM' ? 'Homeowner Call Received'
+    : 'Unknown Caller - Manual Review Required';
+  
+  const scenarioDescription = scenario === 'CLAIM_CREATED' 
+    ? `A warranty claim has been automatically created for ${data.matchedHomeownerName || data.homeownerName || 'this homeowner'}.`
+    : scenario === 'MATCH_NO_CLAIM'
+    ? `${data.matchedHomeownerName || data.homeownerName || 'A homeowner'} called.`
+    : `A caller could not be matched to a homeowner in the database.`;
+
   const text = `
 ${headerTitle}
 
@@ -421,8 +342,7 @@ ${scenario === 'CLAIM_CREATED' ? `Claim Number: #${data.claimNumber}` : ''}
 ${data.issueDescription ? `\nISSUE DESCRIPTION\n${data.issueDescription}\n` : ''}
 
 LINKS
-${primaryCta.text}: ${primaryCta.link}
-${scenario !== 'NO_MATCH' && homeownerLink ? `View Homeowner: ${homeownerLink}` : ''}
+${scenario === 'CLAIM_CREATED' ? 'View Claim' : scenario === 'MATCH_NO_CLAIM' ? 'View Homeowner' : 'Review Call'}: ${claimLink || homeownerLink || callsLink}
 View All Calls: ${callsLink}
   `.trim();
 
