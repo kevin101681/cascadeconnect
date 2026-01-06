@@ -4052,7 +4052,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 )}
               </div>
             </div>
-
+            )}
+            {/* End Homeowner Card */}
+            
             {/* Next Appointment Card - Below Homeowner Info within sidebar */}
             <div className="mt-4 bg-primary/5 dark:bg-gray-700/50 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-600 overflow-hidden">
               <div className="p-4 bg-surface-container/30 dark:bg-gray-700/30 border-b border-surface-outline-variant/50 dark:border-gray-600 text-center">
@@ -4129,9 +4131,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 );
               })()}
             </div>
-            </div>
-            )}
-            {/* End Homeowner Card */}
           </div>
           {/* END LEFT SIDEBAR */}
 
