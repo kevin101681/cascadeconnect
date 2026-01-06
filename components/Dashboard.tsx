@@ -3935,7 +3935,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <DropdownButton
                       label="Eval"
                       variant="outlined"
-                      className="!h-10 !px-4 flex-1"
+                      className="!h-10 !px-4 !min-w-0 flex-1"
                       options={[
                         { label: '60 Day', onClick: () => { void handleEvalCreate('60 Day'); } },
                         { label: '11 Month', onClick: () => { void handleEvalCreate('11 Month'); } },
@@ -3947,7 +3947,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                        onClick={async () => {
                          await handleScheduleCreate();
                        }}
-                       className="!h-10 !px-4 flex-1"
+                       className="!h-10 !px-4 !min-w-0 flex-1"
                      >
                        Schedule
                      </Button>
@@ -3958,7 +3958,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
              {/* Actions - Two columns on all viewports */}
              <div 
-               className="mt-3 pt-3 border-t border-surface-outline-variant/50 dark:border-gray-700/50 grid grid-cols-2 md:grid-cols-2 gap-2 items-center justify-center"
+               className="mt-3 pt-3 px-3 border-t border-surface-outline-variant/50 dark:border-gray-700/50 grid grid-cols-2 md:grid-cols-2 gap-2 items-center justify-center"
                onClick={(e) => e.stopPropagation()}
              >
                 {/* Buttons removed from homeowner view - now in tabs */}
