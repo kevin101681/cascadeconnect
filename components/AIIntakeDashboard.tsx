@@ -6,6 +6,7 @@ import { calls, homeowners } from '../db/schema';
 import { eq, desc, sql } from 'drizzle-orm';
 import SMSChatView from './SMSChatView';
 import { useTaskStore } from '../stores/useTaskStore';
+import { CallerCard } from './ui/CallerCard';
 
 interface AIIntakeDashboardProps {
   onNavigate?: (view: string) => void;
@@ -299,64 +300,15 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
             </div>
             <div className="px-4 pb-4 space-y-2">
               {paginatedCalls.map((call) => (
-                <div key={call.id} className="relative">
-                  <button
-                    onClick={() => setSelectedCall(call)}
-                    className={`w-full text-left p-4 pb-10 rounded-xl border transition-all ${
-                      actualSelectedCall?.id === call.id
-                        ? 'bg-primary/10 dark:bg-primary/20 border-primary shadow-sm'
-                        : 'bg-surface dark:bg-gray-700 border-surface-outline-variant dark:border-gray-600 hover:bg-surface-container-high dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="font-semibold text-sm text-surface-on dark:text-gray-100 truncate">
-                        {call.homeownerName || (
-                          <span className="inline-flex items-center gap-1">
-                            <span>Unknown Caller</span>
-                            <span className="bg-blue-500/30 text-blue-700 dark:text-blue-300 text-xs font-medium px-2 py-0.5 rounded-full">
-                              ?
-                            </span>
-                          </span>
-                        )}
-                      </span>
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        {call.isUrgent && (
-                          <span className="bg-red-500/30 text-red-700 dark:text-red-300 text-xs font-bold px-2 py-0.5 rounded-full">
-                            URGENT
-                          </span>
-                        )}
-                        {call.homeownerName && (
-                          call.isVerified ? (
-                            <span className="bg-green-500/30 text-green-700 dark:text-green-300 text-xs font-medium px-2 py-0.5 rounded-full">
-                              ✓
-                            </span>
-                          ) : (
-                            <span className="bg-orange-500/30 text-orange-700 dark:text-orange-300 text-xs font-medium px-2 py-0.5 rounded-full">
-                              ?
-                            </span>
-                          )
-                        )}
-                      </div>
-                    </div>
-                    <p className="text-xs text-surface-on-variant dark:text-gray-400 mb-2">
-                      {formatDate(call.createdAt)}
-                    </p>
-                    {call.issueDescription && (
-                      <p className="text-xs text-surface-on-variant dark:text-gray-400 line-clamp-2">
-                        {call.issueDescription}
-                      </p>
-                    )}
-                  </button>
-                  
-                  {/* Delete Button - Positioned in bottom-right corner */}
-                  <button
-                    onClick={(e) => handleDeleteCall(call.id, e)}
-                    className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors z-10"
-                    title="Delete call"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+                <CallerCard
+                  key={call.id}
+                  callerName={call.homeownerName || 'Unknown Caller'}
+                  dateTime={formatDate(call.createdAt)}
+                  description={call.issueDescription || 'No description provided'}
+                  status={call.isVerified ? 'Verified' : 'Unverified'}
+                  onDelete={() => handleDeleteCall(call.id, new MouseEvent('click') as any)}
+                  onClick={() => setSelectedCall(call)}
+                />
               ))}
             </div>
 
