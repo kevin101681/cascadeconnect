@@ -53,8 +53,12 @@ export function GustoConnectButton({ isConnected }: Props) {
   return (
     <Button
       variant={isConnected ? 'filled' : 'outlined'}
-      className={isConnected ? 'bg-green-600 text-white hover:bg-green-700 border border-green-700' : ''}
-      icon={<Building2 className="h-4 w-4" aria-hidden />}
+      className={
+        isConnected
+          ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200'
+          : ''
+      }
+      icon={<Building2 className={`h-4 w-4 ${isConnected ? 'text-green-700' : ''}`} aria-hidden />}
       onClick={handleClick}
       disabled={!authUrl}
     >
