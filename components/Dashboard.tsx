@@ -3937,11 +3937,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                    <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-300 uppercase tracking-wide text-center">
                      Tasks
                    </div>
-                   <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                   <div className="mt-2 flex items-center justify-center gap-2">
                     <DropdownButton
                       label="Eval"
                       variant="outlined"
-                      className="!h-10 !px-4 min-w-[140px]"
+                      className="!h-10 !px-4 flex-1"
                       options={[
                         { label: '60 Day', onClick: () => { void handleEvalCreate('60 Day'); } },
                         { label: '11 Month', onClick: () => { void handleEvalCreate('11 Month'); } },
@@ -3953,7 +3953,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                        onClick={async () => {
                          await handleScheduleCreate();
                        }}
-                       className="!h-10 !px-4"
+                       className="!h-10 !px-4 flex-1"
                      >
                        Schedule
                      </Button>
