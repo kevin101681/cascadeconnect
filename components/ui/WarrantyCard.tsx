@@ -1,4 +1,4 @@
-import { Calendar, Paperclip, Send, Clock, User, FileText, AlertCircle } from "lucide-react";
+import { Calendar, Paperclip, Send, User, FileText, CheckCircle, HelpCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface WarrantyCardProps {
@@ -9,7 +9,7 @@ interface WarrantyCardProps {
   soSentDate?: string;
   subName?: string;
   attachmentCount?: number;
-  onClick?: () => void; // Added optional onClick handler
+  onClick?: () => void;
 }
 
 export function WarrantyCard({
@@ -23,31 +23,29 @@ export function WarrantyCard({
   onClick,
 }: WarrantyCardProps) {
   return (
-    // Added 'focus:outline-none' to kill the click border.
-    // Added 'cursor-pointer' if an onClick is provided.
     <div 
       onClick={onClick}
-      className={`group relative bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-all hover:border-blue-300 h-full flex flex-col justify-between focus:outline-none ${onClick ? 'cursor-pointer' : ''}`}
+      // CHANGED: rounded-lg -> rounded-[28px], p-4 -> p-5
+      className={`group relative bg-white rounded-[28px] border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all hover:border-blue-300 h-full flex flex-col justify-between focus:outline-none ${onClick ? 'cursor-pointer' : ''}`}
     >
       
       {/* 1. HEADER */}
-      <div className="flex justify-between items-start mb-3 gap-2">
+      <div className="flex justify-between items-start mb-4 gap-2">
         <h3 className={`font-semibold text-sm line-clamp-1 ${title ? "text-gray-900" : "text-gray-400 italic"}`} title={title}>
           {title || "Untitled Claim"}
         </h3>
         
         {classification ? (
-          <Badge variant="secondary" className="shrink-0 text-[10px] h-5 px-1.5 font-normal">
+          <Badge variant="secondary" className="shrink-0 text-[10px] h-5 px-1.5 font-normal rounded-md">
             {classification}
           </Badge>
         ) : (
-          // Optional: You could hide this div if you don't want the skeleton look
           <div className="h-5 w-16 bg-gray-100 rounded animate-pulse" /> 
         )}
       </div>
 
       {/* 2. BODY: The Date Grid */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
+      <div className="grid grid-cols-3 gap-2 mb-5">
         {/* Created */}
         <div className="flex flex-col">
           <span className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Created</span>
@@ -58,7 +56,7 @@ export function WarrantyCard({
         </div>
         
         {/* Scheduled */}
-        <div className="flex flex-col border-l border-gray-100 pl-2">
+        <div className="flex flex-col border-l border-gray-100 pl-3">
           <span className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Sched</span>
           <div className={`flex items-center text-xs ${scheduledDate ? "text-gray-600" : "text-gray-300"}`}>
             <Calendar className={`w-3 h-3 mr-1.5 shrink-0 ${scheduledDate ? "text-blue-500" : "text-gray-300"}`} />
@@ -67,7 +65,7 @@ export function WarrantyCard({
         </div>
 
         {/* Sent */}
-        <div className="flex flex-col border-l border-gray-100 pl-2">
+        <div className="flex flex-col border-l border-gray-100 pl-3">
           <span className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">SO Sent</span>
           <div className={`flex items-center text-xs ${soSentDate ? "text-gray-600" : "text-gray-300"}`}>
             <Send className={`w-3 h-3 mr-1.5 shrink-0 ${soSentDate ? "text-green-500" : "text-gray-300"}`} />
