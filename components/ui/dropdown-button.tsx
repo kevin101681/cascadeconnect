@@ -47,7 +47,7 @@ export function DropdownButton({ label, options, className, ...props }: Dropdown
 
       {/* 2. THE MENU */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-50 animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute left-0 mt-2 w-48 origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 z-50 animate-in fade-in zoom-in-95 duration-100">
           <div className="py-1">
             {options.map((option, index) => (
               <button

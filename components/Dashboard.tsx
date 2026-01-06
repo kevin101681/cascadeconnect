@@ -3958,7 +3958,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
              {/* Actions - Two columns on all viewports */}
              <div 
-               className="mt-3 pt-3 px-3 border-t border-surface-outline-variant/50 dark:border-gray-700/50 grid grid-cols-2 md:grid-cols-2 gap-2 items-center justify-center"
+               className="mt-3 pt-3 px-3 pb-3 border-t border-surface-outline-variant/50 dark:border-gray-700/50 grid grid-cols-2 md:grid-cols-2 gap-2 items-center justify-center"
                onClick={(e) => e.stopPropagation()}
              >
                 {/* Buttons removed from homeowner view - now in tabs */}
