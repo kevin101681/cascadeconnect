@@ -13,6 +13,7 @@ import { InvoiceScanner } from './InvoiceScanner';
 import { Dropdown } from './ui/Dropdown';
 import { parseInvoiceFromText } from '../services/geminiService';
 import CalendarPicker from './CalendarPicker';
+import { InvoiceCard } from '../../../components/ui/InvoiceCard';
 
 interface InvoicesProps {
   invoices: Invoice[];
@@ -1709,22 +1710,60 @@ export const Invoices: React.FC<InvoicesProps> = ({
       </div>
 
       <div className="flex flex-col items-start w-full">
-        <div className="grid grid-cols-1 gap-0 inline-block min-w-full md:min-w-0 md:w-fit">
-            {visibleInvoices.map(inv => (
-                <InvoiceRow 
-                    key={inv.id} 
-                    inv={inv} 
-                    expanded={expandedId === inv.id} 
-                    onExpand={() => toggleExpand(inv)}
-                >
-                    {/* Render Inline Form when Expanded */}
-                    {expandedId === inv.id && renderInvoiceForm(true)}
-                </InvoiceRow>
-            ))}
-            {filteredInvoices.length === 0 && <div className="text-center py-12 text-surface-outline dark:text-gray-400">No invoices found.</div>}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+            {visibleInvoices.map(inv => {
+              // Determine status for InvoiceCard
+              let cardStatus: "Draft" | "Sent" | "Overdue" | "Paid" = "Draft";
+              if (inv.status === 'paid') {
+                cardStatus = "Paid";
+              } else if (inv.status === 'sent') {
+                // Check if overdue
+                const today = new Date();
+                const dueDate = new Date(inv.dueDate);
+                if (dueDate < today) {
+                  cardStatus = "Overdue";
+                } else {
+                  cardStatus = "Sent";
+                }
+              }
+
+              return (
+                <InvoiceCard
+                  key={inv.id}
+                  invoiceNumber={inv.invoiceNumber}
+                  status={cardStatus}
+                  amount={`$${inv.total.toFixed(2)}`}
+                  createdDate={formatDateMobile(inv.date)}
+                  dueDate={formatDateMobile(inv.dueDate)}
+                  builder={inv.clientName}
+                  address={inv.projectDetails}
+                  checkNumber={inv.checkNumber}
+                  onMarkPaid={(checkNum) => {
+                    const today = getLocalTodayDate();
+                    const updatedInv = { 
+                      ...inv, 
+                      status: 'paid' as const,
+                      datePaid: today,
+                      checkNumber: checkNum
+                    };
+                    onUpdate(updatedInv);
+                  }}
+                  onEmail={() => {
+                    handlePrepareEmail(inv);
+                  }}
+                  onDownload={() => {
+                    handleDownloadPDF(inv);
+                  }}
+                  onDelete={() => {
+                    handleDeleteInvoice(inv.id);
+                  }}
+                />
+              );
+            })}
+            {filteredInvoices.length === 0 && <div className="col-span-full text-center py-12 text-surface-outline dark:text-gray-400">No invoices found.</div>}
             
             {visibleInvoices.length < filteredInvoices.length && (
-                <div className="text-center pt-4 pb-8">
+                <div className="col-span-full text-center pt-4 pb-8">
                     <Button variant="tonal" onClick={handleShowMore}>Show More</Button>
                 </div>
             )}
