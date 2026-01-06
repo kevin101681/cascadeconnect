@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 interface InvoiceCardProps {
   invoiceNumber: string;
   status: "Draft" | "Sent" | "Overdue" | "Paid";
-  amount: string; // e.g., "$1,200.00"
+  amount: string;
   createdDate: string;
   dueDate: string;
   builder?: string;
@@ -36,13 +36,19 @@ export function InvoiceCard({
   // Helper for Status Badge Colors
   const getStatusColor = (s: string) => {
     switch (s) {
-      case "Paid": return "bg-green-100 text-green-700 hover:bg-green-100";
-      case "Overdue": return "bg-red-100 text-red-700 hover:bg-red-100";
-      case "Sent": return "bg-blue-100 text-blue-700 hover:bg-blue-100";
-      default: return "bg-gray-100 text-gray-700 hover:bg-gray-100";
+      case "Paid": 
+        return "bg-green-100 text-green-700 hover:bg-green-100";
+      case "Draft": 
+        return "bg-gray-100 text-gray-700 hover:bg-gray-100";
+      default: 
+        // "Sent" (and "Overdue" if it slips through) now shares this clean blue style
+        // Fixed: Light background (blue-100) with dark text (blue-700) for readability
+        return "bg-blue-100 text-blue-700 hover:bg-blue-100";
     }
   };
 
+  // Visual Override: If data says "Overdue", we display "Sent"
+  const displayStatus = status === "Overdue" ? "Sent" : status;
   const isPaid = status === "Paid";
 
   return (
@@ -53,8 +59,8 @@ export function InvoiceCard({
         <div className="flex flex-col">
           <div className="flex items-center gap-2 mb-1">
             <span className="font-semibold text-gray-900 text-sm">{invoiceNumber}</span>
-            <Badge className={`rounded-sm px-1.5 py-0 text-[10px] uppercase font-bold border-0 ${getStatusColor(status)}`}>
-              {status}
+            <Badge className={`rounded-md px-2 py-0.5 text-[10px] uppercase font-bold border-0 ${getStatusColor(status)}`}>
+              {displayStatus}
             </Badge>
           </div>
           {/* Big Amount Display */}
@@ -96,8 +102,9 @@ export function InvoiceCard({
         </div>
         <div className="flex flex-col border-l border-gray-100 pl-2">
           <span className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Due Date</span>
-          <div className={`flex items-center text-xs font-medium ${status === 'Overdue' ? 'text-red-600' : 'text-gray-600'}`}>
-            <Calendar className={`w-3 h-3 mr-1.5 ${status === 'Overdue' ? 'text-red-500' : 'text-gray-400'}`} />
+          {/* Removed red text logic. Dates are always neutral gray now. */}
+          <div className="flex items-center text-xs font-medium text-gray-600">
+            <Calendar className="w-3 h-3 mr-1.5 text-gray-400" />
             {dueDate}
           </div>
         </div>
@@ -116,7 +123,7 @@ export function InvoiceCard({
                 defaultValue={checkNumber}
                 disabled={isPaid}
                 placeholder="Enter check number..."
-                className="h-8 text-xs bg-white pr-8"
+                className="h-8 text-xs bg-white pr-8 rounded-md border-gray-300 focus-visible:ring-blue-500"
              />
              {isPaid && <Check className="w-3 h-3 text-green-500 absolute right-3 top-2.5" />}
           </div>
@@ -128,26 +135,26 @@ export function InvoiceCard({
           {!isPaid ? (
             <Button 
               size="sm" 
-              className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white flex-1"
+              className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white flex-1 rounded-md"
               onClick={() => onMarkPaid?.(checkNumber)}
             >
               Mark as Paid
             </Button>
           ) : (
-             <Button size="sm" variant="outline" className="h-8 text-xs flex-1 cursor-default bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-50">
+             <Button size="sm" variant="outline" className="h-8 text-xs flex-1 cursor-default bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-50 rounded-md">
                 Paid
              </Button>
           )}
 
           {/* Secondary Actions (Icon Only) */}
           <div className="flex items-center gap-1">
-             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50" title="Email PDF" onClick={onEmail}>
+             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full" title="Email PDF" onClick={onEmail}>
                 <Mail className="w-3.5 h-3.5" />
              </Button>
-             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50" title="Download PDF" onClick={onDownload}>
+             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full" title="Download PDF" onClick={onDownload}>
                 <Download className="w-3.5 h-3.5" />
              </Button>
-             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50" title="Delete Invoice" onClick={onDelete}>
+             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full" title="Delete Invoice" onClick={onDelete}>
                 <Trash2 className="w-3.5 h-3.5" />
              </Button>
           </div>
@@ -157,4 +164,3 @@ export function InvoiceCard({
     </div>
   );
 }
-
