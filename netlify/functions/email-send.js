@@ -38,7 +38,7 @@ exports.handler = async (event) => {
 
     // Parse request
     const parsed = JSON.parse(event.body || '{}');
-    const { to, subject, body, fromName, replyToId, replyToEmail, attachments } = parsed;
+    const { to, subject, body, fromName, replyToId, replyToEmail, attachments, systemEmailId } = parsed;
     
     if (!to || !subject || !body) {
       return {
@@ -121,7 +121,8 @@ exports.handler = async (event) => {
         'References': replyMessageId
       },
       customArgs: {
-        threadId: replyToId || ''
+        threadId: replyToId || '',
+        ...(systemEmailId ? { system_email_id: systemEmailId } : {}),
       },
       trackingSettings: {
         clickTracking: {

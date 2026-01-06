@@ -9,7 +9,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 const Button: React.FC<ButtonProps> = ({ 
   children, 
   variant = 'filled', 
-  isLoading, 
+  isLoading = false, 
   className = '', 
   icon,
   ...props 

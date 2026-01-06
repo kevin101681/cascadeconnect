@@ -36,6 +36,9 @@ interface HandlerResponse {
 }
 
 export const handler = async (event: any): Promise<HandlerResponse> => {
+  // Log raw body early for debugging
+  console.log('🪝 SendGrid webhook raw body:', event.body);
+
   // Only allow POST requests
   if (event.httpMethod !== 'POST') {
     return {
@@ -159,27 +162,62 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
         const rawSgMessageId: string = sgEvent.sg_message_id || sgEvent['smtp-id'] || '';
         const normalizedMessageId = normalizeMessageId(rawSgMessageId);
         const email = sgEvent.email || '';
-        const eventType = (sgEvent.event || 'unknown').toLowerCase();
+        const eventType = ((sgEvent.event ?? sgEvent.type) || 'unknown').toLowerCase();
         const timestamp = sgEvent.timestamp 
           ? new Date(sgEvent.timestamp * 1000) // SendGrid timestamps are in seconds
           : new Date();
         const lookupPattern = normalizedMessageId ? `${normalizedMessageId}%` : rawSgMessageId;
+        const systemEmailId: string | undefined =
+          sgEvent?.custom_args?.system_email_id ||
+          sgEvent?.customArgs?.system_email_id;
 
         console.log('🪝 Incoming SendGrid payload', {
           eventType,
           email,
           rawSgMessageId,
           normalizedMessageId,
+          systemEmailId,
           timestamp: timestamp.toISOString(),
           payload: sgEvent,
         });
 
-        switch (eventType) {
-          case 'open':
-            if (!rawSgMessageId) {
-              console.warn('⚠️ Open event missing sg_message_id/smtp-id; skipping update');
-              break;
+        if (eventType === 'open') {
+          // Primary path: use system_email_id from custom args
+          if (systemEmailId) {
+            try {
+              const updateById = await sql`
+                UPDATE email_logs
+                SET 
+                  opened_at = COALESCE(opened_at, ${timestamp.toISOString()}),
+                  status = 'read'
+                WHERE id = ${systemEmailId}
+                RETURNING id, sendgrid_message_id, opened_at, status
+              `;
+
+              if (updateById && updateById.length > 0) {
+                console.log(`✅ Marked email as read/opened via custom_args for ${email}`, {
+                  matchedIds: updateById.map((row: any) => row.id),
+                });
+                openEventsProcessed += updateById.length;
+                processedEvents.push({
+                  sg_message_id: rawSgMessageId,
+                  email,
+                  event: eventType,
+                  timestamp: timestamp.toISOString(),
+                  systemEmailId,
+                });
+                continue;
+              }
+              console.log('ℹ️ No email_log matched custom_args system_email_id', { systemEmailId });
+            } catch (updateError: any) {
+              console.warn(`⚠️ Could not update opened_at/status via custom_args for ${systemEmailId}:`, updateError.message);
             }
+          }
+
+          // Fallback path: match on sg_message_id
+          if (!rawSgMessageId) {
+            console.warn('⚠️ Open event missing sg_message_id/smtp-id; skipping update');
+          } else {
             try {
               const updateResult = await sql`
                 UPDATE email_logs
@@ -209,10 +247,9 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
               console.warn(`⚠️ Could not update opened_at/status for ${rawSgMessageId}:`, updateError.message);
               // Don't fail the webhook if update fails
             }
-            break;
-          default:
-            console.log(`ℹ️ Ignoring unsupported event type: ${eventType}`);
-            break;
+          }
+        } else {
+          console.log(`ℹ️ Ignoring unsupported event type: ${eventType}`);
         }
 
         processedEvents.push({

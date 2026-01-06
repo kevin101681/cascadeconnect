@@ -28,6 +28,10 @@ export interface EmailRequest {
   html?: string;
   attachments?: EmailAttachment[];
   replyTo?: EmailRecipient;
+  // Optional: system email ID for SendGrid custom_args to improve webhook matching
+  systemEmailId?: string;
+  // Optional: additional SendGrid custom args
+  customArgs?: Record<string, string>;
 }
 
 export interface EmailResponse {
@@ -152,6 +156,19 @@ export async function sendEmail(request: EmailRequest): Promise<EmailResponse> {
         },
       },
     };
+
+    // Attach custom args for reliable webhook correlation
+    const customArgs: Record<string, string> = {};
+    if (request.systemEmailId) {
+      customArgs.system_email_id = request.systemEmailId;
+    }
+    if (request.customArgs) {
+      Object.assign(customArgs, request.customArgs);
+    }
+    if (Object.keys(customArgs).length > 0) {
+      msg.custom_args = customArgs;
+      msg.customArgs = customArgs; // Support both snake_case and camelCase for SendGrid SDK
+    }
 
     // Add optional fields
     if (request.html) {

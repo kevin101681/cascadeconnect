@@ -37,7 +37,6 @@ export function GustoConnectButton() {
       variant="outlined"
       icon={<Building2 className="h-4 w-4" aria-hidden />}
       onClick={handleClick}
-      disabled={!authUrl}
     >
       Connect Gusto
     </Button>
