@@ -62,6 +62,7 @@ const PunchListApp = React.lazy(() => import('./PunchListApp').catch(err => {
 }));
 import { HOMEOWNER_MANUAL_IMAGES } from '../lib/bluetag/constants';
 import { WarrantyCard } from './ui/WarrantyCard';
+import { HomeownerCard } from './ui/HomeownerCard';
 
 // PDF Thumbnail Component - Generates thumbnail on-the-fly if missing
 const PDFThumbnailDisplay: React.FC<{ doc: HomeownerDocument }> = ({ doc }) => {
@@ -3986,84 +3987,39 @@ const Dashboard: React.FC<DashboardProps> = ({
                 
             {/* Card Content - Clickable to collapse */}
             <div 
-              className="flex flex-col p-4 cursor-pointer"
+              className="flex flex-col p-4 cursor-pointer relative"
               onClick={() => setIsHomeownerCardCollapsed(true)}
               title="Click to collapse"
             >
-             
-             {/* Vertical Layout - Centered on desktop */}
-             <div className="flex flex-col gap-2 mb-4 w-full items-center">
-                {/* Line 1: Name with Edit Button */}
-                <div className="relative flex items-center justify-center gap-2 w-full">
-                  <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 truncate flex-1 text-center">{displayHomeowner.name}</h2>
-                  {/* Edit Button - Admin Only - Absolute positioned on mobile, in flow on desktop */}
-                  {isAdmin && !isHomeownerView && (
-                    <button 
-                       onClick={(e) => { e.stopPropagation(); handleOpenEditHomeowner(); }}
-                       className="absolute right-0 md:relative p-1.5 text-surface-outline-variant dark:text-gray-400 hover:text-primary bg-transparent hover:bg-primary/10 rounded-full transition-colors flex-shrink-0"
-                       title="Edit Homeowner Info"
-                    >
-                      <Edit2 className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-                
-                {/* Line 2: Street Address */}
-                <a 
-                  href={`https://maps.google.com/?q=${encodeURIComponent(displayHomeowner.address)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="flex items-center justify-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-400 hover:text-primary transition-colors text-center"
+              {/* Edit Button - Positioned absolutely in top right */}
+              {isAdmin && !isHomeownerView && (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); handleOpenEditHomeowner(); }}
+                  className="absolute top-6 right-6 z-10 p-1.5 text-surface-outline-variant dark:text-gray-400 hover:text-primary bg-white dark:bg-gray-800 hover:bg-primary/10 rounded-full transition-colors shadow-sm"
+                  title="Edit Homeowner Info"
                 >
-                  <MapPin className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                  <span className="truncate">{displayHomeowner.street}</span>
-                </a>
-                
-                {/* Line 3: City, State ZIP */}
-                <div className="flex items-center justify-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 text-center">
-                  <span className="truncate">{displayHomeowner.city}, {displayHomeowner.state} {displayHomeowner.zip}</span>
-                </div>
-
-                {/* Line 4: Builder */}
-                <div className="flex items-center justify-center gap-1.5 text-sm text-center">
-                  <Building2 className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                  <span className="text-surface-on-variant dark:text-gray-300 truncate">
-                    {(() => {
-                      // Prefer linked builder user over legacy text field
-                      if (displayHomeowner.builderUserId && builderUsers) {
-                        const linkedBuilder = builderUsers.find(bu => bu.id === displayHomeowner.builderUserId);
-                        if (linkedBuilder) return linkedBuilder.name;
-                      }
-                      // Fallback to text field for unlinked homeowners
-                      return displayHomeowner.builder || 'N/A';
-                    })()}
-                  </span>
-                </div>
-                  
-                {/* Line 5: Project */}
-                <div className="flex items-center justify-center gap-1.5 text-sm text-center">
-                  <Home className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                  <span className="text-surface-on-variant dark:text-gray-300 truncate">{displayHomeowner.jobName || 'N/A'}</span>
-                </div>
-                
-                {/* Line 6: Closing Date */}
-                <div className="flex items-center justify-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 text-center">
-                   <Clock className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                   <span className="truncate">Closing: {displayHomeowner.closingDate ? new Date(displayHomeowner.closingDate).toLocaleDateString() : 'N/A'}</span>
-                </div>
-                
-                {/* Line 7: Phone */}
-                <div className="flex items-center justify-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 text-center">
-                  <Phone className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                  <span className="truncate">{displayHomeowner.phone}</span>
-                </div>
-                
-                {/* Line 8: Email */}
-                <div className="flex items-center justify-center gap-1.5 text-sm text-surface-on-variant dark:text-gray-300 text-center">
-                  <Mail className="h-3.5 w-3.5 text-surface-outline dark:text-gray-500 flex-shrink-0" />
-                  <span className="truncate">{displayHomeowner.email}</span>
-                </div>
+                  <Edit2 className="h-4 w-4" />
+                </button>
+              )}
+             
+              {/* Homeowner Card Component */}
+              <HomeownerCard
+                name={displayHomeowner.name}
+                address={displayHomeowner.address}
+                builder={(() => {
+                  // Prefer linked builder user over legacy text field
+                  if (displayHomeowner.builderUserId && builderUsers) {
+                    const linkedBuilder = builderUsers.find(bu => bu.id === displayHomeowner.builderUserId);
+                    if (linkedBuilder) return linkedBuilder.name;
+                  }
+                  // Fallback to text field for unlinked homeowners
+                  return displayHomeowner.builder || undefined;
+                })()}
+                project={displayHomeowner.jobName}
+                closingDate={displayHomeowner.closingDate ? new Date(displayHomeowner.closingDate).toLocaleDateString() : undefined}
+                phone={displayHomeowner.phone}
+                email={displayHomeowner.email}
+              />
              </div>
 
              {/* Tasks (Quick Create) */}
