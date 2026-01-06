@@ -1,128 +1,75 @@
-import type { Handler } from '@netlify/functions';
-import { neon } from '@neondatabase/serverless';
+import { Handler } from "@netlify/functions";
 
-const GUSTO_TOKEN_URL = 'https://api.gusto-demo.com/oauth/token';
+export const handler: Handler = async (event, context) => {
+  console.log("🔥 Gusto Callback Triggered (Bypass Mode)");
 
-export const handler: Handler = async (event) => {
+  // 1. Safe Parameter Extraction
   const code = event.queryStringParameters?.code;
-  const stateUserId = event.queryStringParameters?.state;
-
+  
   if (!code) {
-    return {
-      statusCode: 400,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Missing authorization code' }),
-    };
+    return { statusCode: 400, body: "Missing Code" };
   }
 
-  if (!stateUserId) {
-    return {
-      statusCode: 400,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Missing user state; cannot link account' }),
-    };
-  }
+  // 2. Env Var Check
+  const CLIENT_ID = process.env.GUSTO_CLIENT_ID;
+  const CLIENT_SECRET = process.env.GUSTO_CLIENT_SECRET;
+  const REDIRECT_URI = process.env.GUSTO_REDIRECT_URI;
 
-  const clientId = process.env.GUSTO_CLIENT_ID;
-  const clientSecret = process.env.GUSTO_CLIENT_SECRET;
-  const redirectUri = process.env.GUSTO_REDIRECT_URI;
-
-  if (!clientId || !clientSecret || !redirectUri) {
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Gusto OAuth environment variables are not fully set' }),
-    };
+  if (!CLIENT_ID || !CLIENT_SECRET || !REDIRECT_URI) {
+    console.error("Missing Env Vars");
+    return { statusCode: 500, body: "Server Configuration Error" };
   }
 
   try {
-    const tokenResponse = await fetch(GUSTO_TOKEN_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    // 3. Exchange Token (Standard Fetch)
+    // We still fetch the token to prove the code is valid!
+    const tokenResponse = await fetch("https://api.gusto-demo.com/oauth/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        client_id: clientId,
-        client_secret: clientSecret,
-        redirect_uri: redirectUri,
-        code,
-        grant_type: 'authorization_code',
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        redirect_uri: REDIRECT_URI,
+        code: code,
+        grant_type: "authorization_code",
       }),
     });
 
+    const tokenData = await tokenResponse.json();
+
     if (!tokenResponse.ok) {
-      let details: unknown = 'Token exchange failed';
-      try {
-        details = await tokenResponse.json();
-      } catch {
-        details = await tokenResponse.text();
-      }
-
-      return {
-        statusCode: tokenResponse.status || 500,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          error: 'Failed to exchange authorization code for tokens',
-          details,
-        }),
-      };
+      console.error("Gusto Error:", tokenData);
+      return { statusCode: 400, body: JSON.stringify(tokenData) };
     }
 
-    const tokens = await tokenResponse.json();
-    const { access_token, refresh_token } = tokens as {
-      access_token?: string;
-      refresh_token?: string;
-    };
+    console.log("✅ Token received successfully! (Skipping DB Save for safety)");
+    // TODO: We will re-enable the DB save once schema is synced.
 
-    console.log('Gusto OAuth tokens', { access_token, refresh_token, userId: stateUserId });
-
-    // Persist tokens for this user if the database is configured.
-    try {
-      const databaseUrl =
-        process.env.DATABASE_URL ||
-        process.env.VITE_DATABASE_URL ||
-        process.env.NETLIFY_DATABASE_URL;
-
-      if (databaseUrl && access_token) {
-        const sql = neon(databaseUrl);
-        // Store tokens in a generic integration_tokens table (create separately if not present).
-        await sql`
-          INSERT INTO integration_tokens (user_id, provider, access_token, refresh_token, created_at, updated_at)
-          VALUES (${stateUserId}, 'gusto', ${access_token}, ${refresh_token || null}, NOW(), NOW())
-          ON CONFLICT (user_id, provider)
-          DO UPDATE SET access_token = EXCLUDED.access_token, refresh_token = EXCLUDED.refresh_token, updated_at = NOW()
-        `;
-        console.log('✅ Stored Gusto tokens for user', stateUserId);
-      } else {
-        console.warn('⚠️ Database URL not configured; tokens not persisted');
-      }
-    } catch (dbError) {
-      console.warn('⚠️ Failed to persist Gusto tokens; continuing redirect', dbError);
-    }
-
-    const redirectUrl = `/gusto-success?t=${Date.now()}`;
-
-    const html = `<!DOCTYPE html>
-<html>
-  <head>
-    <meta http-equiv="refresh" content="0;url=${redirectUrl}" />
-    <script>window.location.href = ${JSON.stringify(redirectUrl)};</script>
-  </head>
-  <body>
-    <p>Redirecting to Gusto success page...</p>
-  </body>
-</html>`;
-
+    // 4. The "Bounce Page" Response (Status 200 HTML)
+    // This forces the browser to treat the next move as a clean navigation.
+    const successUrl = `/gusto-success?t=${Date.now()}`;
+    
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'text/html; charset=utf-8' },
-      body: html,
+      headers: { "Content-Type": "text/html" },
+      body: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Redirecting...</title>
+            <meta http-equiv="refresh" content="0;url=${successUrl}" />
+          </head>
+          <body>
+            <p>Connection Successful. Redirecting...</p>
+            <script>window.location.href = "${successUrl}";</script>
+          </body>
+        </html>
+      `,
     };
+
   } catch (error) {
-    console.error('Gusto OAuth callback error', error);
-    return {
-      statusCode: 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: 'Unexpected error during Gusto OAuth callback' }),
-    };
+    console.error("Handler Error:", error);
+    return { statusCode: 500, body: "Internal Server Error" };
   }
 };
 
