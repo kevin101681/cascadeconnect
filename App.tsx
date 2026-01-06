@@ -6,6 +6,7 @@ import ClaimDetail from './components/ClaimDetail';
 import NewClaimForm from './components/NewClaimForm';
 import HomeownerEnrollment from './components/HomeownerEnrollment';
 import AuthScreenWrapper from './components/AuthScreenWrapper';
+import GustoSuccessPage from './components/pages/gusto-success';
 import InternalUserManagement from './components/InternalUserManagement';
 import TaskList from './components/TaskList';
 import TasksSheet from './components/TasksSheet';
@@ -142,11 +143,18 @@ const saveState = (key: string, data: any) => {
 };
 
 function App() {
+  const isGustoSuccessPage =
+    typeof window !== 'undefined' && window.location.pathname === '/gusto-success';
+
   // --- CLERK INTEGRATION ---
   // Use Clerk hooks with timeout protection
   const [authTimeout, setAuthTimeout] = useState(false);
   const { isSignedIn, user: authUser, isLoaded } = useUser();
   const { signOut } = useAuth();
+
+  if (isGustoSuccessPage) {
+    return <GustoSuccessPage />;
+  }
   
   // Timeout protection: if auth doesn't load within 3 seconds, allow app to proceed
   useEffect(() => {
