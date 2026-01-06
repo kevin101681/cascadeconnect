@@ -140,7 +140,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
 
   // Only show contractors if user has typed something
   const filteredContractors = contractorSearch.trim() 
-    ? contractors.filter(c => c.companyName.toLowerCase().includes(contractorSearch.toLowerCase()) || c.specialty.toLowerCase().includes(contractorSearch.toLowerCase()))
+    ? contractors.filter(c => (c.companyName || "").toLowerCase().includes((contractorSearch || "").toLowerCase()) || (c.specialty || "").toLowerCase().includes((contractorSearch || "").toLowerCase()))
     : [];
 
   // Handle adding item to staging (for homeowners)

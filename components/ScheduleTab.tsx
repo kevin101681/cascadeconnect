@@ -66,10 +66,10 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
 
   // Filter homeowners based on search
   const filteredHomeowners = homeowners.filter(h => 
-    h.name.toLowerCase().includes(homeownerSearch.toLowerCase()) ||
-    h.address?.toLowerCase().includes(homeownerSearch.toLowerCase()) ||
-    h.builder?.toLowerCase().includes(homeownerSearch.toLowerCase()) ||
-    h.jobName?.toLowerCase().includes(homeownerSearch.toLowerCase())
+    (h.name || "").toLowerCase().includes((homeownerSearch || "").toLowerCase()) ||
+    (h.address || "").toLowerCase().includes((homeownerSearch || "").toLowerCase()) ||
+    (h.builder || "").toLowerCase().includes((homeownerSearch || "").toLowerCase()) ||
+    (h.jobName || "").toLowerCase().includes((homeownerSearch || "").toLowerCase())
   );
 
   // Fetch appointments from API

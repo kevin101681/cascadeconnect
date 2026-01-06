@@ -133,8 +133,8 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
 
   // Filter team members by search
   const filteredTeamMembers = teamMembers.filter((member) =>
-    member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    member.email.toLowerCase().includes(searchQuery.toLowerCase())
+    (member.name || "").toLowerCase().includes((searchQuery || "").toLowerCase()) ||
+    (member.email || "").toLowerCase().includes((searchQuery || "").toLowerCase())
   );
 
   return (

@@ -385,7 +385,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   
   // Filter contractors for search
   const filteredContractors = contractorSearch.trim() 
-    ? contractors.filter(c => c.companyName.toLowerCase().includes(contractorSearch.toLowerCase()) || c.specialty.toLowerCase().includes(contractorSearch.toLowerCase()))
+    ? contractors.filter(c => (c.companyName || "").toLowerCase().includes((contractorSearch || "").toLowerCase()) || (c.specialty || "").toLowerCase().includes((contractorSearch || "").toLowerCase()))
     : [];
   
   // Close classification dropdown when clicking outside

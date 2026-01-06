@@ -46,7 +46,7 @@ export function InvoiceCard({
   const isPaid = status === "Paid";
 
   return (
-    <div className="group relative bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-all hover:border-blue-300 flex flex-col h-full">
+    <div className="group relative bg-white rounded-[28px] border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all hover:border-blue-300 flex flex-col h-full">
       
       {/* 1. HEADER: Invoice #, Status, Amount */}
       <div className="flex justify-between items-start mb-4">
@@ -104,7 +104,7 @@ export function InvoiceCard({
       </div>
 
       {/* 4. FOOTER: Actions & Input */}
-      <div className="mt-auto pt-3 border-t border-gray-100 bg-gray-50/50 -mx-4 -mb-4 p-4 rounded-b-lg">
+      <div className="mt-auto pt-3 border-t border-gray-100 bg-gray-50/50 -mx-5 -mb-5 p-5 rounded-b-[28px]">
         
         {/* Check Number Field */}
         <div className="mb-3">

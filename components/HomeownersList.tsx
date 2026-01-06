@@ -53,10 +53,10 @@ const HomeownersList: React.FC<HomeownersListProps> = ({
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(h =>
-        h.name.toLowerCase().includes(query) ||
-        h.email.toLowerCase().includes(query) ||
-        h.address.toLowerCase().includes(query) ||
-        (h.jobName && h.jobName.toLowerCase().includes(query))
+        (h.name || "").toLowerCase().includes(query) ||
+        (h.email || "").toLowerCase().includes(query) ||
+        (h.address || "").toLowerCase().includes(query) ||
+        (h.jobName || "").toLowerCase().includes(query)
       );
     }
 
