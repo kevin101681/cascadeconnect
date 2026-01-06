@@ -11,6 +11,7 @@ import {
   Building2,
   CreditCard
 } from 'lucide-react';
+import { useUser } from '@clerk/clerk-react';
 import GustoConnectButton from './integrations/gusto-connect-button';
 
 // Finch API Type Definitions (matching actual Finch response structure)
@@ -167,12 +168,14 @@ const MOCK_PAY_STATEMENTS: Record<string, PayStatement[]> = {
 };
 
 const PayrollDashboard: React.FC = () => {
+  const { user, isLoaded } = useUser();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [expandedPayment, setExpandedPayment] = useState<string | null>(null);
   const [payStatements, setPayStatements] = useState<Record<string, PayStatement[]>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isGustoConnected, setIsGustoConnected] = useState(false);
 
   // Simulate API fetch - Replace with actual Finch API calls
   useEffect(() => {
@@ -204,6 +207,21 @@ const PayrollDashboard: React.FC = () => {
 
     fetchPayrollData();
   }, []);
+
+  useEffect(() => {
+    const checkGustoStatus = async () => {
+      if (!isLoaded || !user?.id) return;
+      try {
+        const res = await fetch(`/.netlify/functions/gusto-status?userId=${encodeURIComponent(user.id)}`);
+        const json = await res.json();
+        setIsGustoConnected(!!json.isConnected);
+      } catch (err) {
+        console.warn('Failed to load Gusto status', err);
+        setIsGustoConnected(false);
+      }
+    };
+    checkGustoStatus();
+  }, [isLoaded, user?.id]);
 
   // Calculate KPIs
   const kpis = useMemo(() => {
@@ -271,7 +289,7 @@ const PayrollDashboard: React.FC = () => {
           </h2>
         </div>
           <div className="flex items-center gap-3">
-            <GustoConnectButton />
+            <GustoConnectButton isConnected={isGustoConnected} />
             <button className="flex items-center gap-2 px-4 py-2 rounded-lg hover:opacity-90 transition-opacity border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10">
               <Download className="h-4 w-4" />
               Export Report

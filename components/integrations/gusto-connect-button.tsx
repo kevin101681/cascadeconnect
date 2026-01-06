@@ -17,7 +17,11 @@ const redirectUriEnv =
   process.env.NEXT_PUBLIC_GUSTO_REDIRECT_URI ??
   process.env.GUSTO_REDIRECT_URI;
 
-export function GustoConnectButton() {
+type Props = {
+  isConnected?: boolean;
+};
+
+export function GustoConnectButton({ isConnected }: Props) {
   const { user } = useUser();
 
   const authUrl = React.useMemo(() => {
@@ -48,12 +52,13 @@ export function GustoConnectButton() {
 
   return (
     <Button
-      variant="outlined"
+      variant={isConnected ? 'filled' : 'outlined'}
+      className={isConnected ? 'bg-green-600 text-white hover:bg-green-700 border border-green-700' : ''}
       icon={<Building2 className="h-4 w-4" aria-hidden />}
       onClick={handleClick}
       disabled={!authUrl}
     >
-      Connect Gusto
+      {isConnected ? 'Gusto Connected' : 'Connect Gusto'}
     </Button>
   );
 }
