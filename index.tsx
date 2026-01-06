@@ -4,6 +4,8 @@ import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import { DarkModeProvider } from './components/DarkModeProvider';
 import { ClerkProvider } from '@clerk/clerk-react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import GustoSuccessPage from './components/pages/gusto-success';
 // Import PDF worker setup early to ensure it's configured before any PDF operations
 import './lib/pdfWorker';
 
@@ -51,7 +53,14 @@ root.render(
         }}
       >
         <DarkModeProvider>
-          <App />
+          <BrowserRouter>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/gusto-success" element={<GustoSuccessPage />} />
+              {/* Protected / main app */}
+              <Route path="/*" element={<App />} />
+            </Routes>
+          </BrowserRouter>
         </DarkModeProvider>
       </ClerkProvider>
     </ErrorBoundary>
