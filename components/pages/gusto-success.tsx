@@ -6,7 +6,7 @@ import Button from '../Button';
 
 const GustoSuccessPage: React.FC = () => {
   const handleClick = () => {
-    window.location.href = '/dashboard?tab=payroll';
+    window.location.href = '/sign-in?redirect_url=/dashboard';
   };
 
   return (

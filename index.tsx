@@ -4,8 +4,9 @@ import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import { DarkModeProvider } from './components/DarkModeProvider';
 import { ClerkProvider } from '@clerk/clerk-react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import GustoSuccessPage from './components/pages/gusto-success';
+import { SignIn, SignUp } from '@clerk/clerk-react';
 // Import PDF worker setup early to ensure it's configured before any PDF operations
 import './lib/pdfWorker';
 
@@ -56,9 +57,21 @@ root.render(
           <BrowserRouter>
             <Routes>
               {/* Public routes */}
+              <Route
+                path="/sign-in/*"
+                element={<SignIn routing="path" path="/sign-in" />}
+              />
+              <Route
+                path="/sign-up/*"
+                element={<SignUp routing="path" path="/sign-up" />}
+              />
               <Route path="/gusto-success" element={<GustoSuccessPage />} />
+
               {/* Protected / main app */}
               <Route path="/*" element={<App />} />
+
+              {/* Catch-all */}
+              <Route path="*" element={<Navigate to="/sign-in" replace />} />
             </Routes>
           </BrowserRouter>
         </DarkModeProvider>
