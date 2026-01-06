@@ -98,7 +98,7 @@ export const handler: Handler = async (event) => {
       console.warn('⚠️ Failed to persist Gusto tokens; continuing redirect', dbError);
     }
 
-    const redirectUrl = '/dashboard?tab=payroll&refresh_session=true';
+    const redirectUrl = '/gusto-success';
 
     return {
       statusCode: 302,
