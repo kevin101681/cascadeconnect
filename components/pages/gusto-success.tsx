@@ -2,9 +2,28 @@
 
 import React from 'react';
 import { CheckCircle } from 'lucide-react';
+import { useUser } from '@clerk/clerk-react';
 import Button from '../Button';
 
 const GustoSuccessPage: React.FC = () => {
+  const { isSignedIn, isLoaded } = useUser();
+
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-surface dark:bg-gray-900 flex items-center justify-center px-4">
+        <div className="text-center text-surface-on-variant dark:text-gray-300">Loading...</div>
+      </div>
+    );
+  }
+
+  const handleClick = () => {
+    if (isSignedIn) {
+      window.location.href = '/dashboard?tab=payroll';
+    } else {
+      window.location.href = '/sign-in?redirect_url=/dashboard';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-surface dark:bg-gray-900 flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-3xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 p-8 text-center space-y-4">
@@ -21,11 +40,9 @@ const GustoSuccessPage: React.FC = () => {
           <Button
             variant="filled"
             className="w-full"
-            onClick={() => {
-              window.location.href = '/dashboard?tab=payroll';
-            }}
+            onClick={handleClick}
           >
-            Return to Dashboard
+            {isSignedIn ? 'Return to Dashboard' : 'Log In to View Data'}
           </Button>
         </div>
       </div>
