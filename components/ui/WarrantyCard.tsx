@@ -1,4 +1,4 @@
-import { Calendar, Paperclip, Send, User, FileText, CheckCircle, HelpCircle } from "lucide-react";
+import { Calendar, Paperclip, Send, User, FileText, CheckCircle2 } from "lucide-react"; // Added CheckCircle2
 import { Badge } from "@/components/ui/badge";
 
 interface WarrantyCardProps {
@@ -9,6 +9,7 @@ interface WarrantyCardProps {
   soSentDate?: string;
   subName?: string;
   attachmentCount?: number;
+  isReviewed?: boolean; // New Prop
   onClick?: () => void;
 }
 
@@ -20,12 +21,12 @@ export function WarrantyCard({
   soSentDate,
   subName,
   attachmentCount = 0,
+  isReviewed = false, // Default to false
   onClick,
 }: WarrantyCardProps) {
   return (
     <div 
       onClick={onClick}
-      // CHANGED: rounded-lg -> rounded-[28px], p-4 -> p-5
       className={`group relative bg-white rounded-[28px] border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all hover:border-blue-300 h-full flex flex-col justify-between focus:outline-none ${onClick ? 'cursor-pointer' : ''}`}
     >
       
@@ -35,13 +36,22 @@ export function WarrantyCard({
           {title || "Untitled Claim"}
         </h3>
         
-        {classification ? (
-          <Badge variant="secondary" className="shrink-0 text-[10px] h-5 px-1.5 font-normal rounded-md">
-            {classification}
-          </Badge>
-        ) : (
-          <div className="h-5 w-16 bg-gray-100 rounded animate-pulse" /> 
-        )}
+        {/* PILL STACK: Classification + Reviewed */}
+        <div className="flex gap-1 shrink-0">
+          {isReviewed && (
+             <Badge className="text-[10px] h-5 px-1.5 font-medium bg-green-100 text-green-700 hover:bg-green-100 border-0 rounded-md gap-1 flex items-center">
+               <CheckCircle2 className="w-3 h-3" /> Reviewed
+             </Badge>
+          )}
+          
+          {classification ? (
+            <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-normal rounded-md">
+              {classification}
+            </Badge>
+          ) : (
+            <div className="h-5 w-16 bg-gray-100 rounded animate-pulse" /> 
+          )}
+        </div>
       </div>
 
       {/* 2. BODY: The Date Grid */}
@@ -76,7 +86,6 @@ export function WarrantyCard({
 
       {/* 3. FOOTER */}
       <div className="flex items-center justify-between pt-3 border-t border-gray-50 mt-auto">
-        
         {/* Sub Contractor */}
         <div className="flex items-center max-w-[75%]">
           <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mr-2 ${subName ? "bg-blue-50 text-blue-600" : "bg-gray-100 text-gray-400"}`}>
@@ -92,7 +101,6 @@ export function WarrantyCard({
           <Paperclip className="w-3.5 h-3.5 mr-1" />
           <span className="text-xs font-medium">{attachmentCount}</span>
         </div>
-
       </div>
     </div>
   );
