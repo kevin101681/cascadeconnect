@@ -11,22 +11,28 @@ const clientId =
   import.meta.env.VITE_GUSTO_CLIENT_ID ??
   process.env.NEXT_PUBLIC_GUSTO_CLIENT_ID ??
   process.env.GUSTO_CLIENT_ID;
-const redirectUri =
+const redirectUriEnv =
   import.meta.env.VITE_GUSTO_REDIRECT_URI ??
   process.env.NEXT_PUBLIC_GUSTO_REDIRECT_URI ??
   process.env.GUSTO_REDIRECT_URI;
 
 export function GustoConnectButton() {
   const authUrl = React.useMemo(() => {
-    if (!clientId || !redirectUri) return null;
+    const dynamicRedirectUri =
+      redirectUriEnv ||
+      (typeof window !== 'undefined'
+        ? `${window.location.origin}/.netlify/functions/gusto-callback`
+        : undefined);
+
+    if (!clientId || !dynamicRedirectUri) return null;
 
     const url = new URL(GUSTO_AUTH_URL);
     url.searchParams.set('client_id', clientId);
-    url.searchParams.set('redirect_uri', redirectUri);
+    url.searchParams.set('redirect_uri', dynamicRedirectUri);
     url.searchParams.set('response_type', 'code');
     url.searchParams.set('scope', GUSTO_SCOPE);
     return url.toString();
-  }, [clientId, redirectUri]);
+  }, [clientId]);
 
   const handleClick = React.useCallback(() => {
     if (!authUrl) {

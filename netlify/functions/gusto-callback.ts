@@ -64,10 +64,7 @@ export const handler: Handler = async (event) => {
 
     console.log('Gusto OAuth tokens', { access_token, refresh_token });
 
-    const protocol = event.headers['x-forwarded-proto'] || 'https';
-    const host = event.headers.host;
-    const baseUrl = host ? `${protocol}://${host}` : '';
-    const redirectUrl = `${baseUrl}/dashboard?tab=PAYROLL&gusto_connected=true`;
+    const redirectUrl = '/dashboard?tab=payroll&gusto_connected=true';
 
     return {
       statusCode: 302,
