@@ -377,8 +377,8 @@ const Layout: React.FC<LayoutProps> = ({
                 </div>
               )}
 
-              {/* Main Menu Dropdown - Show for Admin/Builder accounts (even when viewing as homeowner) */}
-              {(isAdmin || isBuilder || isAdminAccount) && (
+              {/* Main Menu Dropdown - Show for Admin accounts only (not for homeowner, builder, or subcontractor) */}
+              {isAdmin && (
                 <div className="relative" ref={menuRef}>
                   <button 
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
