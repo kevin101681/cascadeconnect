@@ -12,6 +12,7 @@ interface InvoiceCardProps {
   builder?: string;
   address?: string;
   checkNumber?: string;
+  onClick?: () => void;
   onMarkPaid?: (checkNum: string) => void;
   onEmail?: () => void;
   onDownload?: () => void;
@@ -27,6 +28,7 @@ export function InvoiceCard({
   builder,
   address,
   checkNumber = "",
+  onClick,
   onMarkPaid,
   onEmail,
   onDownload,
@@ -52,7 +54,12 @@ export function InvoiceCard({
   const isPaid = status === "Paid";
 
   return (
-    <div className="group relative bg-white rounded-[28px] border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all hover:border-blue-300 flex flex-col h-full">
+    <div 
+      onClick={onClick}
+      className={`group relative bg-white rounded-[28px] border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all hover:border-blue-300 flex flex-col h-full ${
+        onClick ? 'cursor-pointer' : ''
+      }`}
+    >
       
       {/* 1. HEADER: Invoice #, Status, Amount */}
       <div className="flex justify-between items-start mb-4">
@@ -136,7 +143,10 @@ export function InvoiceCard({
             <Button 
               size="sm" 
               className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white flex-1 rounded-md"
-              onClick={() => onMarkPaid?.(checkNumber)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onMarkPaid?.(checkNumber);
+              }}
             >
               Mark as Paid
             </Button>
@@ -148,13 +158,40 @@ export function InvoiceCard({
 
           {/* Secondary Actions (Icon Only) */}
           <div className="flex items-center gap-1">
-             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full" title="Email PDF" onClick={onEmail}>
+             <Button 
+               variant="ghost" 
+               size="icon" 
+               className="h-8 w-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full" 
+               title="Email PDF" 
+               onClick={(e) => {
+                 e.stopPropagation();
+                 onEmail?.();
+               }}
+             >
                 <Mail className="w-3.5 h-3.5" />
              </Button>
-             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full" title="Download PDF" onClick={onDownload}>
+             <Button 
+               variant="ghost" 
+               size="icon" 
+               className="h-8 w-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full" 
+               title="Download PDF" 
+               onClick={(e) => {
+                 e.stopPropagation();
+                 onDownload?.();
+               }}
+             >
                 <Download className="w-3.5 h-3.5" />
              </Button>
-             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full" title="Delete Invoice" onClick={onDelete}>
+             <Button 
+               variant="ghost" 
+               size="icon" 
+               className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full" 
+               title="Delete Invoice" 
+               onClick={(e) => {
+                 e.stopPropagation();
+                 onDelete?.();
+               }}
+             >
                 <Trash2 className="w-3.5 h-3.5" />
              </Button>
           </div>

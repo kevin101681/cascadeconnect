@@ -94,6 +94,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
 }) => {
   const [isCreating, setIsCreating] = useState(false); // Only for "New Invoice" mode
   const [expandedId, setExpandedId] = useState<string | null>(null); // For Inline Edit
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null); // For Modal Edit
   const [currentInvoice, setCurrentInvoice] = useState<Partial<Invoice>>({});
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -432,6 +433,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
         
         setIsCreating(false);
         setExpandedId(null);
+        setSelectedInvoice(null); // Close modal
         setCurrentInvoice({});
     } catch (e) {
         console.error("Error saving invoice", e);
@@ -1105,7 +1107,14 @@ export const Invoices: React.FC<InvoicesProps> = ({
                 <div className="h-9 px-6 rounded-full bg-primary text-primary-on text-sm font-medium flex items-center justify-center">Total: ${total.toFixed(0)}</div>
                 <div className="flex gap-2 w-full md:w-auto">
                     <button 
-                        onClick={() => isInline ? setExpandedId(null) : setIsCreating(false)} 
+                        onClick={() => {
+                          if (isInline) {
+                            setExpandedId(null);
+                          } else {
+                            setIsCreating(false);
+                            setSelectedInvoice(null); // Close modal
+                          }
+                        }} 
                         disabled={isSaving} 
                         className="flex-1 md:flex-none h-9 px-6 rounded-full bg-primary text-primary-on hover:bg-primary/90 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                     >
@@ -1738,6 +1747,10 @@ export const Invoices: React.FC<InvoicesProps> = ({
                   builder={inv.clientName}
                   address={inv.projectDetails}
                   checkNumber={inv.checkNumber}
+                  onClick={() => {
+                    setSelectedInvoice(inv);
+                    setCurrentInvoice(inv);
+                  }}
                   onMarkPaid={(checkNum) => {
                     const today = getLocalTodayDate();
                     const updatedInv = { 
@@ -1769,6 +1782,43 @@ export const Invoices: React.FC<InvoicesProps> = ({
             )}
         </div>
       </div>
+
+      {/* Invoice Editor Modal */}
+      {selectedInvoice && (
+        <div 
+          className="fixed inset-0 z-[250] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => {
+            setSelectedInvoice(null);
+            setCurrentInvoice({});
+          }}
+        >
+          <div 
+            className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-3 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-6 border-b border-surface-outline-variant dark:border-gray-700">
+              <h2 className="text-2xl font-semibold text-surface-on dark:text-gray-100">
+                Edit Invoice {selectedInvoice.invoiceNumber}
+              </h2>
+              <button
+                onClick={() => {
+                  setSelectedInvoice(null);
+                  setCurrentInvoice({});
+                }}
+                className="p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors"
+              >
+                <X className="h-6 w-6 text-surface-on-variant dark:text-gray-400" />
+              </button>
+            </div>
+
+            {/* Modal Content - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {renderInvoiceForm(false)}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
