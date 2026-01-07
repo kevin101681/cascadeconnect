@@ -152,7 +152,7 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 currentPage === page.id
                   ? 'text-white'
-                  : 'bg-surface dark:bg-gray-700 text-surface-on dark:text-gray-900 hover:bg-surface-container dark:hover:bg-gray-600'
+                  : 'bg-surface dark:bg-gray-700 text-surface-on dark:text-gray-200 hover:bg-surface-container dark:hover:bg-gray-600'
               }`}
               style={currentPage === page.id ? { backgroundColor: '#3C6B80' } : {}}
             >

@@ -25,14 +25,14 @@ export function HomeownerCard({
 }: HomeownerCardProps) {
   return (
     // CHANGED: rounded-xl -> rounded-[28px] to match Material 3 Dialog specs
-    <div className="bg-white rounded-[28px] border border-gray-200 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group">
+    <div className="bg-white dark:bg-gray-800 rounded-[28px] border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group">
       
       {/* 1. EDIT BUTTON */}
       <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
         <Button 
           variant="ghost" 
           size="icon" 
-          className="h-8 w-8 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full" // rounded-full on button too
+          className="h-8 w-8 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full" // rounded-full on button too
           onClick={onEdit}
           title="Edit Homeowner Info"
         >
@@ -42,13 +42,13 @@ export function HomeownerCard({
 
       {/* 2. HEADER: Name & Project */}
       <div className="flex flex-col mb-6 pr-8">
-        <h3 className={`font-bold text-lg leading-tight ${name ? "text-gray-900" : "text-gray-400 italic"}`}>
+        <h3 className={`font-bold text-lg leading-tight ${name ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500 italic"}`}>
           {name || "Unknown Homeowner"}
         </h3>
         
         {project && (
           <div className="mt-2">
-            <Badge variant="secondary" className="text-[10px] h-5 px-2 font-normal text-gray-600 bg-gray-100 hover:bg-gray-200 border border-gray-200">
+            <Badge variant="secondary" className="text-[10px] h-5 px-2 font-normal text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600">
               {project}
             </Badge>
           </div>
@@ -60,10 +60,10 @@ export function HomeownerCard({
         
         {/* Address */}
         <div className="flex items-start group/item">
-          <MapPin className="w-4 h-4 mt-0.5 mr-3 text-gray-400 group-hover/item:text-blue-500 transition-colors shrink-0" />
+          <MapPin className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 group-hover/item:text-blue-500 dark:group-hover/item:text-blue-400 transition-colors shrink-0" />
           <div className="flex flex-col">
-            <span className="text-[10px] text-gray-400 uppercase tracking-wider leading-none mb-1">Address</span>
-            <span className={`text-sm leading-snug ${address ? "text-gray-700" : "text-gray-300 italic"}`}>
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Address</span>
+            <span className={`text-sm leading-snug ${address ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
               {address || "No address listed"}
             </span>
           </div>
@@ -71,10 +71,10 @@ export function HomeownerCard({
 
         {/* Phone */}
         <div className="flex items-start group/item">
-          <Phone className="w-4 h-4 mt-0.5 mr-3 text-gray-400 group-hover/item:text-blue-500 transition-colors shrink-0" />
+          <Phone className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 group-hover/item:text-blue-500 dark:group-hover/item:text-blue-400 transition-colors shrink-0" />
           <div className="flex flex-col">
-            <span className="text-[10px] text-gray-400 uppercase tracking-wider leading-none mb-1">Phone</span>
-            <span className={`text-sm ${phone ? "text-gray-700 font-medium" : "text-gray-300 italic"}`}>
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Phone</span>
+            <span className={`text-sm ${phone ? "text-gray-700 dark:text-gray-300 font-medium" : "text-gray-300 dark:text-gray-600 italic"}`}>
               {phone || "--"}
             </span>
           </div>
@@ -82,21 +82,21 @@ export function HomeownerCard({
 
         {/* Email */}
         <div className="flex items-start group/item">
-          <Mail className="w-4 h-4 mt-0.5 mr-3 text-gray-400 group-hover/item:text-blue-500 transition-colors shrink-0" />
+          <Mail className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 group-hover/item:text-blue-500 dark:group-hover/item:text-blue-400 transition-colors shrink-0" />
           <div className="flex flex-col min-w-0">
-            <span className="text-[10px] text-gray-400 uppercase tracking-wider leading-none mb-1">Email</span>
-            <span className={`text-sm truncate block ${email ? "text-gray-700" : "text-gray-300 italic"}`} title={email}>
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Email</span>
+            <span className={`text-sm truncate block ${email ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`} title={email}>
               {email || "--"}
             </span>
           </div>
         </div>
 
         {/* Builder */}
-        <div className="flex items-start group/item border-t border-gray-50 pt-4 mt-2">
-          <Hammer className="w-4 h-4 mt-0.5 mr-3 text-gray-400 shrink-0" />
+        <div className="flex items-start group/item border-t border-gray-50 dark:border-gray-700 pt-4 mt-2">
+          <Hammer className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 shrink-0" />
           <div className="flex flex-col">
-            <span className="text-[10px] text-gray-400 uppercase tracking-wider leading-none mb-1">Builder</span>
-            <span className={`text-sm ${builder ? "text-gray-700" : "text-gray-300 italic"}`}>
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Builder</span>
+            <span className={`text-sm ${builder ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
               {builder || "--"}
             </span>
           </div>
@@ -104,10 +104,10 @@ export function HomeownerCard({
 
         {/* Closing Date */}
         <div className="flex items-start group/item">
-          <Calendar className="w-4 h-4 mt-0.5 mr-3 text-gray-400 shrink-0" />
+          <Calendar className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 shrink-0" />
           <div className="flex flex-col">
-            <span className="text-[10px] text-gray-400 uppercase tracking-wider leading-none mb-1">Closing Date</span>
-            <span className={`text-sm ${closingDate ? "text-gray-700" : "text-gray-300 italic"}`}>
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Closing Date</span>
+            <span className={`text-sm ${closingDate ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
               {closingDate || "--"}
             </span>
           </div>
