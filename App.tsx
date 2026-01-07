@@ -1476,6 +1476,8 @@ function App() {
           status: updatedClaim.status as any,
           classification: updatedClaim.classification,
           dateEvaluated: updatedClaim.dateEvaluated || null,
+          scheduledAt: updatedClaim.scheduledAt || null,
+          completedAt: updatedClaim.completedAt || null,
           internalNotes: updatedClaim.internalNotes || null,
           nonWarrantyExplanation: updatedClaim.nonWarrantyExplanation || null,
           contractorId: dbContractorId, // Use validated UUID or null

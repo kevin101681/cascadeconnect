@@ -2280,6 +2280,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                           subName={claim.contractorName}
                           attachmentCount={claim.attachments?.length || 0}
                           isReviewed={isReviewed}
+                          isClosed={claim.status === ClaimStatus.CLOSED}
                           isSelected={isSelected}
                         />
                       </button>

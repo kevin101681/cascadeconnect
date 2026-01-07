@@ -6,10 +6,12 @@ export enum UserRole {
 }
 
 export enum ClaimStatus {
+  OPEN = 'OPEN',
   SUBMITTED = 'SUBMITTED',
   REVIEWING = 'REVIEWING',
   SCHEDULING = 'SCHEDULING',
   SCHEDULED = 'SCHEDULED',
+  CLOSED = 'CLOSED',
   COMPLETED = 'COMPLETED'
 }
 
@@ -212,6 +214,8 @@ export interface Claim {
   reviewed?: boolean; // Marks if claim has been reviewed/processed
   
   dateSubmitted: Date;
+  scheduledAt?: Date; // When appointment was confirmed/scheduled
+  completedAt?: Date; // When work was actually finished
   proposedDates: ProposedDate[];
   comments: Comment[];
   internalNotes?: string; // Admin only
@@ -439,6 +443,10 @@ export interface Claim {
   
 
   dateSubmitted: Date;
+
+  scheduledAt?: Date; // When appointment was confirmed/scheduled
+
+  completedAt?: Date; // When work was actually finished
 
   proposedDates: ProposedDate[];
 

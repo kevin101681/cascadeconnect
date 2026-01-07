@@ -3,7 +3,7 @@ import { pgTable, text, timestamp, boolean, uuid, pgEnum, json } from 'drizzle-o
 
 // Enums
 export const userRoleEnum = pgEnum('user_role', ['ADMIN', 'HOMEOWNER', 'BUILDER']);
-export const claimStatusEnum = pgEnum('claim_status', ['SUBMITTED', 'REVIEWING', 'SCHEDULING', 'SCHEDULED', 'COMPLETED']);
+export const claimStatusEnum = pgEnum('claim_status', ['OPEN', 'SUBMITTED', 'REVIEWING', 'SCHEDULING', 'SCHEDULED', 'CLOSED', 'COMPLETED']);
 export const appointmentVisibilityEnum = pgEnum('appointment_visibility', ['internal_only', 'shared_with_homeowner']);
 export const appointmentTypeEnum = pgEnum('appointment_type', ['repair', 'inspection', 'phone_call', 'other']);
 
@@ -150,6 +150,8 @@ export const claims = pgTable('claims', {
   // Dates
   dateSubmitted: timestamp('date_submitted').defaultNow(),
   dateEvaluated: timestamp('date_evaluated'),
+  scheduledAt: timestamp('scheduled_at'), // When appointment was confirmed/scheduled
+  completedAt: timestamp('completed_at'), // When work was actually finished
   
   // Admin Data
   internalNotes: text('internal_notes'),

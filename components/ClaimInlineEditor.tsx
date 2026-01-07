@@ -1154,7 +1154,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
                       <CheckCircle className="h-6 w-6" />
                     </div>
                     <div className="flex-1">
-                      <p className="text-xs font-bold text-green-800 dark:text-green-300 uppercase tracking-wide mb-1">Appointment Confirmed</p>
+                      <p className="text-xs font-bold text-green-800 dark:text-green-300 uppercase tracking-wide mb-1">
+                        {claim.status === ClaimStatus.CLOSED ? 'Work Completed' : 'Appointment Confirmed'}
+                      </p>
                       <div className="text-base font-medium text-surface-on dark:text-gray-100">
                         {new Date(scheduledDate.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                       </div>
@@ -1167,8 +1169,52 @@ If this repair work is billable, please let me know prior to scheduling.`);
                           Sub: {claim.contractorName}
                         </p>
                       )}
+                      {claim.completedAt && (
+                        <p className="text-xs text-green-700 dark:text-green-400 mt-2 font-medium">
+                          Completed: {new Date(claim.completedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </p>
+                      )}
                     </div>
                   </div>
+                  
+                  {/* Mark Completed / Reopen Button */}
+                  {isAdmin && (
+                    <div className="mt-4 pt-4 border-t border-green-200 dark:border-green-800">
+                      {claim.status !== ClaimStatus.CLOSED ? (
+                        <Button
+                          type="button"
+                          variant="filled"
+                          onClick={() => {
+                            onUpdateClaim({
+                              ...claim,
+                              status: ClaimStatus.CLOSED,
+                              completedAt: new Date(),
+                              scheduledAt: scheduledDate ? new Date(scheduledDate.date) : undefined
+                            });
+                          }}
+                          className="w-full"
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Mark as Completed
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => {
+                            onUpdateClaim({
+                              ...claim,
+                              status: ClaimStatus.SCHEDULED,
+                              completedAt: undefined
+                            });
+                          }}
+                          className="w-full"
+                        >
+                          Reopen Claim
+                        </Button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

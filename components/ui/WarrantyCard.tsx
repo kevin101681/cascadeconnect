@@ -10,6 +10,7 @@ interface WarrantyCardProps {
   subName?: string;
   attachmentCount?: number;
   isReviewed?: boolean;
+  isClosed?: boolean; // Whether the claim is closed/completed
   isSelected?: boolean; // New Prop for selected state
   onClick?: () => void;
 }
@@ -23,6 +24,7 @@ export function WarrantyCard({
   subName,
   attachmentCount = 0,
   isReviewed = false,
+  isClosed = false, // Default to false
   isSelected = false, // Default to false
   onClick,
 }: WarrantyCardProps) {
@@ -44,9 +46,15 @@ export function WarrantyCard({
           {title || "Untitled Claim"}
         </h3>
         
-        {/* PILL STACK: Classification + Reviewed */}
+        {/* PILL STACK: Classification + Reviewed + Closed */}
         <div className="flex gap-1 shrink-0">
-          {isReviewed && (
+          {isClosed && (
+             <Badge className="text-[10px] h-5 px-1.5 font-medium bg-blue-100 text-blue-700 hover:bg-blue-100 border-0 rounded-md gap-1 flex items-center">
+               <CheckCircle2 className="w-3 h-3" /> Closed
+             </Badge>
+          )}
+          
+          {isReviewed && !isClosed && (
              <Badge className="text-[10px] h-5 px-1.5 font-medium bg-green-100 text-green-700 hover:bg-green-100 border-0 rounded-md gap-1 flex items-center">
                <CheckCircle2 className="w-3 h-3" /> Reviewed
              </Badge>
