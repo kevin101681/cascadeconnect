@@ -520,10 +520,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Use the internal state for reading
   const selectedClaimForModal = selectedClaimForModalInternal;
   
-  // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual vs Schedule)
+  // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual vs Schedule vs Help)
   // Declare currentTab early since it's used in useEffects below
   // Default to null (closed) to be safe for mobile - will be set to 'CLAIMS' on desktop via useEffect
-  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | null>(null);
+  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | null>(null);
   const previousTabRef = useRef<typeof currentTab>(null); // Initialize with null to prevent treating it as "opening"
   
   // Responsive initialization: Open Claims tab automatically on desktop, keep closed on mobile
@@ -740,7 +740,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [swipeProgress, setSwipeProgress] = useState<number>(0); // 0 to 1, represents swipe completion
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
-  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'CHAT' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES' | null>(null);
+  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'CHAT' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | null>(null);
   
   // Minimum swipe distance (in pixels)
   const minSwipeDistance = 50;
