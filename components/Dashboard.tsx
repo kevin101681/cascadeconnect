@@ -9,7 +9,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, BuilderUser, Task, Contractor, Call } from '../types';
 import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle, HelpCircle } from 'lucide-react';
 import { useTaskStore } from '../stores/useTaskStore';
 import { calls, claims as claimsSchema } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -26,6 +26,7 @@ import AIIntakeDashboard from './AIIntakeDashboard';
 import HomeownerManual from './HomeownerManual';
 import PayrollDashboard from './PayrollDashboard';
 import ScheduleTab from './ScheduleTab';
+import { HomeownerWarrantyGuide } from './HomeownerWarrantyGuide';
 
 // Lazy load TeamChat component
 const TeamChat = React.lazy(() => import('./TeamChat').catch(err => {
@@ -745,11 +746,11 @@ const Dashboard: React.FC<DashboardProps> = ({
   const minSwipeDistance = 50;
   
   // Get available tabs in order
-  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'CHAT' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> => {
+  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'CHAT' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES'> => {
     const isHomeownerViewRole = userRole === UserRole.HOMEOWNER;
     const isEmployee = currentUser?.role === 'Employee';
     console.log('🔍 Dashboard getAvailableTabs - currentUser:', currentUser?.name, 'role:', currentUser?.role, 'isEmployee:', isEmployee);
-    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'CHAT' | 'DOCUMENTS' | 'MANUAL' | 'PAYROLL' | 'INVOICES'> = ['CLAIMS'];
+    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'CHAT' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES'> = ['CLAIMS'];
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('TASKS');
       tabs.push('NOTES'); // NOTES tab between TASKS and MESSAGES
@@ -759,6 +760,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     if (isHomeownerViewRole) {
       tabs.push('DOCUMENTS'); // DOCUMENTS tab for homeowners
       tabs.push('MANUAL'); // Homeowner Manual tab
+      tabs.push('HELP'); // Help/Guide tab for homeowners
     }
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('CALLS'); // CALLS tab (admin only)
@@ -4221,6 +4223,23 @@ const Dashboard: React.FC<DashboardProps> = ({
               </button>
             )}
 
+            {/* Homeowner Help Tab - Only show for homeowners */}
+            {userRole === UserRole.HOMEOWNER && (
+              <button 
+                data-tab="HELP"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setCurrentTab('HELP');
+                }}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
+                  isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
+                } ${currentTab === 'HELP' ? 'border border-primary text-primary bg-primary/10 md:border-0 md:border-b-2 md:bg-surface-container md:dark:bg-gray-700' : 'border border-surface-outline dark:border-gray-600 text-surface-on-variant dark:text-gray-400 md:border-0 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+              >
+                <HelpCircle className="h-4 w-4" />
+                Help
+              </button>
+            )}
+
             {/* GLOBAL TABS - Admin Only */}
             {/* NOTES TAB - Admin Only (hidden in homeowner view) */}
             {isAdmin && !isHomeownerView && (
@@ -4553,6 +4572,18 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <div className="max-w-7xl mx-auto">
                     <HomeownerManual homeownerId={activeHomeowner?.id} />
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* HELP Tab - Homeowner Only */}
+            {userRole === UserRole.HOMEOWNER && (
+              <div 
+                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
+              >
+                <div className="w-full min-h-[calc(100vh-300px)] bg-gray-50 dark:bg-gray-900">
+                  <HomeownerWarrantyGuide />
                 </div>
               </div>
             )}
