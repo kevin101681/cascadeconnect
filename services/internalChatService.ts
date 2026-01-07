@@ -62,6 +62,12 @@ export interface Message {
     projectName: string;
     address: string;
   }>;
+  replyTo?: {
+    id: string;
+    senderName: string;
+    content: string;
+  } | null;
+  replyToId?: string | null;
   isEdited: boolean;
   isDeleted: boolean;
   editedAt?: Date;
@@ -303,6 +309,7 @@ export async function getChannelMessages(
         content: internalMessages.content,
         attachments: internalMessages.attachments,
         mentions: internalMessages.mentions,
+        replyToId: internalMessages.replyToId,
         isEdited: internalMessages.isEdited,
         isDeleted: internalMessages.isDeleted,
         editedAt: internalMessages.editedAt,
@@ -315,7 +322,35 @@ export async function getChannelMessages(
       .limit(limit)
       .offset(offset);
 
-    return messages.reverse(); // Reverse to show oldest first
+    // For each message, fetch the replied-to message if it exists
+    const messagesWithReplies = await Promise.all(
+      messages.map(async (msg) => {
+        let replyTo = null;
+        if (msg.replyToId) {
+          const replyMessages = await db
+            .select({
+              id: internalMessages.id,
+              senderName: users.name,
+              content: internalMessages.content,
+            })
+            .from(internalMessages)
+            .innerJoin(users, eq(internalMessages.senderId, users.id))
+            .where(eq(internalMessages.id, msg.replyToId))
+            .limit(1);
+
+          if (replyMessages.length > 0) {
+            replyTo = replyMessages[0];
+          }
+        }
+
+        return {
+          ...msg,
+          replyTo,
+        };
+      })
+    );
+
+    return messagesWithReplies.reverse(); // Reverse to show oldest first
   } catch (error) {
     console.error('❌ Error getting channel messages:', error);
     throw error;
@@ -340,9 +375,10 @@ export async function sendMessage(params: {
     projectName: string;
     address: string;
   }>;
+  replyTo?: string;
 }): Promise<Message> {
   try {
-    const { channelId, senderId, content, attachments = [], mentions = [] } = params;
+    const { channelId, senderId, content, attachments = [], mentions = [], replyTo } = params;
 
     // Insert message
     const [newMessage] = await db
@@ -353,6 +389,7 @@ export async function sendMessage(params: {
         content,
         attachments,
         mentions,
+        replyToId: replyTo || null,
       })
       .returning();
 
@@ -366,12 +403,32 @@ export async function sendMessage(params: {
       .where(eq(users.id, senderId))
       .limit(1);
 
+    // Get replied-to message if exists
+    let replyToMessage = null;
+    if (replyTo) {
+      const replyMessages = await db
+        .select({
+          id: internalMessages.id,
+          senderName: users.name,
+          content: internalMessages.content,
+        })
+        .from(internalMessages)
+        .innerJoin(users, eq(internalMessages.senderId, users.id))
+        .where(eq(internalMessages.id, replyTo))
+        .limit(1);
+
+      if (replyMessages.length > 0) {
+        replyToMessage = replyMessages[0];
+      }
+    }
+
     const messageWithSender: Message = {
       ...newMessage,
       senderName: senderData[0]?.name || 'Unknown',
       senderEmail: senderData[0]?.email || '',
       attachments: newMessage.attachments as any,
       mentions: newMessage.mentions as any,
+      replyTo: replyToMessage,
     };
 
     // Trigger Pusher event

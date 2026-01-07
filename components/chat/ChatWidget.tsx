@@ -1,13 +1,14 @@
 /**
  * CHAT WIDGET (FLOATING POPUP)
  * Persistent bottom-right chat widget - Material 3 Design
- * January 3, 2026
+ * January 6, 2026
  * 
  * Features:
  * - Collapsible FAB (Floating Action Button)
  * - Shows user list when opened
  * - Opens chat on user selection
  * - Material 3 color scheme
+ * - Responsive: Full screen on mobile, popover on desktop
  */
 
 import React, { useState, useEffect } from 'react';
@@ -101,11 +102,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         </button>
       )}
 
-      {/* Chat Popup - Material 3 design */}
+      {/* Chat Popup - Responsive: Full screen mobile, popover desktop */}
       {isOpen && (
-        <div className="fixed bottom-4 right-4 z-50 w-96 h-[600px] bg-surface dark:bg-gray-900 rounded-3xl shadow-elevation-5 border border-surface-outline-variant dark:border-gray-700 flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-50 w-full h-full bg-surface dark:bg-gray-900 rounded-none shadow-none border-0 flex flex-col overflow-hidden sm:bottom-4 sm:right-4 sm:inset-auto sm:w-[400px] sm:h-[600px] sm:rounded-3xl sm:shadow-elevation-5 sm:border sm:border-surface-outline-variant dark:sm:border-gray-700">
           {/* Header - Material 3 surface colors */}
-          <div className="flex items-center justify-between px-4 py-3 bg-surface-container dark:bg-gray-800 border-b border-surface-outline-variant dark:border-gray-700">
+          <div className="flex items-center justify-between px-4 py-3 bg-surface-container dark:bg-gray-800 border-b border-surface-outline-variant dark:border-gray-700 flex-shrink-0">
             <div className="flex items-center gap-2">
               {selectedChannel && (
                 <button
@@ -123,9 +124,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
             </div>
             <button
               onClick={handleToggle}
-              className="p-1.5 hover:bg-surface-container-high dark:hover:bg-gray-700 rounded-full transition-colors"
+              className="p-2 hover:bg-surface-container-high dark:hover:bg-gray-700 rounded-full transition-colors"
+              title="Close chat"
             >
-              <X className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
+              <X className="h-6 w-6 text-surface-on-variant dark:text-gray-400 sm:h-5 sm:w-5" />
             </button>
           </div>
 

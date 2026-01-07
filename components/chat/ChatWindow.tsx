@@ -1,13 +1,15 @@
 /**
  * CHAT WINDOW COMPONENT
  * Core chat interface with Pusher real-time updates
- * January 3, 2026
+ * January 6, 2026
  * 
  * Features:
  * - Real-time message updates via Pusher
  * - @ mentions with homeowner search
  * - Media attachments (Cloudinary)
  * - Typing indicators
+ * - Quote reply functionality
+ * - Pill-shaped modern input design
  * - Works in both full-page and popup modes
  */
 
@@ -21,7 +23,9 @@ import {
   Users,
   Hash,
   AtSign,
-  Smile
+  Smile,
+  Reply,
+  CornerUpLeft
 } from 'lucide-react';
 import { getPusherClient } from '../../lib/pusher-client';
 import {
@@ -66,6 +70,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const [mentionSuggestions, setMentionSuggestions] = useState<HomeownerMention[]>([]);
   const [selectedMentions, setSelectedMentions] = useState<HomeownerMention[]>([]);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -281,6 +286,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           projectName: m.projectName,
           address: m.address,
         })),
+        replyTo: replyingTo?.id,
       });
 
       // Clear input and attachments
@@ -288,6 +294,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       setAttachments([]);
       setSelectedMentions([]);
       setMentionQuery(null);
+      setReplyingTo(null); // Clear reply state
 
       // Stop typing indicator
       sendTypingIndicator({
@@ -355,7 +362,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   return (
     <div className={`flex flex-col h-full bg-white dark:bg-gray-900 ${isCompact ? '' : 'border border-gray-200 dark:border-gray-700 rounded-lg'}`}>
       {/* Header */}
-      <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
         {channelType === 'public' ? (
           <Hash className="h-5 w-5 text-gray-500" />
         ) : (
@@ -378,7 +385,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           messages.map((message) => (
             <div
               key={message.id}
-              className={`flex gap-3 ${message.senderId === currentUserId ? 'flex-row-reverse' : ''}`}
+              className={`flex gap-3 group ${message.senderId === currentUserId ? 'flex-row-reverse' : ''}`}
             >
               {/* Avatar */}
               <div className="flex-shrink-0">
@@ -399,6 +406,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                       minute: '2-digit',
                     })}
                   </span>
+                  {/* Reply button - visible on hover */}
+                  <button
+                    onClick={() => setReplyingTo(message)}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                    title="Reply to this message"
+                  >
+                    <Reply className="h-3 w-3 text-gray-500 dark:text-gray-400" />
+                  </button>
                 </div>
 
                 {/* Message bubble */}
@@ -409,6 +424,20 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                       : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
                   }`}
                 >
+                  {/* Quoted message (if replying to another message) */}
+                  {message.replyTo && (
+                    <div className={`border-l-2 border-blue-400 bg-black/5 dark:bg-black/20 p-2 mb-2 text-[10px] italic rounded-r ${
+                      message.senderId === currentUserId ? 'text-white/80' : 'text-gray-600 dark:text-gray-400'
+                    }`}>
+                      <div className="font-semibold not-italic mb-0.5">
+                        {message.replyTo.senderName}
+                      </div>
+                      <div className="line-clamp-2">
+                        {message.replyTo.content}
+                      </div>
+                    </div>
+                  )}
+
                   {renderMessageContent(message)}
 
                   {/* Attachments */}
@@ -493,8 +522,32 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       )}
 
-      {/* Input area */}
-      <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+      {/* Input area - Fixed at bottom on mobile */}
+      <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-900">
+        {/* Replying To Banner */}
+        {replyingTo && (
+          <div className="mb-2 rounded-t-2xl bg-gray-100 dark:bg-gray-800 border-t border-x border-gray-200 dark:border-gray-600 p-2 text-xs text-gray-600 dark:text-gray-400 flex justify-between items-start">
+            <div className="flex-1">
+              <div className="flex items-center gap-1 mb-1">
+                <CornerUpLeft className="h-3 w-3" />
+                <span className="font-medium">Replying to {replyingTo.senderName}</span>
+              </div>
+              <p className="text-gray-500 dark:text-gray-500 truncate">
+                {replyingTo.content.length > 50 
+                  ? replyingTo.content.substring(0, 50) + '...'
+                  : replyingTo.content
+                }
+              </p>
+            </div>
+            <button
+              onClick={() => setReplyingTo(null)}
+              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        )}
+
         <div className="flex items-center gap-2">
           {/* File upload */}
           <input
@@ -517,7 +570,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             )}
           </button>
 
-          {/* Text input */}
+          {/* Text input - Pill shaped */}
           <textarea
             ref={inputRef}
             value={inputValue}
@@ -525,15 +578,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             onKeyPress={handleKeyPress}
             placeholder={`Message ${channelName}...`}
             rows={1}
-            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-primary"
+            className="flex-1 px-4 py-2 border border-gray-200 dark:border-gray-600 rounded-full bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white dark:focus:bg-gray-700 transition-colors"
             style={{ minHeight: '40px', maxHeight: '120px' }}
           />
 
-          {/* Send button - Material 3 colors */}
+          {/* Send button - Pill shaped (circular) */}
           <button
             onClick={handleSendMessage}
             disabled={isSending || (!inputValue.trim() && attachments.length === 0)}
-            className="p-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
+            className="p-3 bg-primary text-primary-on rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
           >
             {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
           </button>

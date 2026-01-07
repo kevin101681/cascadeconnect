@@ -1,7 +1,7 @@
 /**
  * INTERNAL CHAT SCHEMA
  * Real-time team messaging for admin/employee users
- * January 3, 2026
+ * January 6, 2026
  * 
  * Features:
  * - Public channels (e.g., 'general', 'repairs')
@@ -9,6 +9,7 @@
  * - @ mentions of homeowners/projects
  * - Media attachments (Cloudinary)
  * - Read receipts
+ * - Quote replies (reply to specific messages)
  */
 
 import { pgTable, text, timestamp, boolean, uuid, pgEnum, json } from 'drizzle-orm/pg-core';
@@ -57,6 +58,9 @@ export const internalMessages = pgTable('internal_messages', {
     projectName: string;
     address: string;
   }>>().default([]),
+  
+  // Reply to another message (quote reply)
+  replyToId: uuid('reply_to_id').references(() => internalMessages.id),
   
   // Editing and deletion
   isEdited: boolean('is_edited').default(false),
