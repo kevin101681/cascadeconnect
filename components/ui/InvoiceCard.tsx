@@ -141,13 +141,13 @@ export function InvoiceCard({
           {!isPaid ? (
             <Button 
               size="sm" 
-              className="h-8 text-xs !bg-green-600 hover:!bg-green-700 !text-white flex-1 rounded-md !border-0"
+              className="h-8 text-xs !bg-green-700 hover:!bg-green-800 !text-white flex-1 rounded-md !border-0"
               onClick={(e) => {
                 e.stopPropagation();
                 onMarkPaid?.(checkNumber);
               }}
             >
-              Mark as Paid
+              Pay
             </Button>
           ) : (
              <Button size="sm" variant="outline" className="h-8 text-xs flex-1 cursor-default !bg-gray-50 !text-gray-600 !border-gray-200 hover:!bg-gray-50 rounded-md">
