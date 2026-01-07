@@ -141,7 +141,7 @@ export function InvoiceCard({
           {!isPaid ? (
             <Button 
               size="sm" 
-              className="h-8 text-xs !bg-green-700 hover:!bg-green-800 !text-white flex-1 rounded-md !border-0"
+              className="h-8 text-xs !bg-green-50 hover:!bg-green-100 !text-green-800 flex-1 rounded-md !border-0"
               onClick={(e) => {
                 e.stopPropagation();
                 onMarkPaid?.(checkNumber);
