@@ -1666,9 +1666,9 @@ export const Invoices: React.FC<InvoicesProps> = ({
         </div>
 
         {/* Row 2: Search & Filters - Evenly distributed */}
-        <div className={`grid grid-cols-1 md:grid-cols-12 gap-3 ${activeFab === 'search' ? '' : 'hidden md:grid'}`}>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
           {/* Search - Takes 3 columns */}
-          <div className={`md:col-span-3 relative transition-all duration-300 ${activeFab === 'search' ? 'block' : 'hidden md:block'}`}>
+          <div className="md:col-span-3 relative transition-all duration-300">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-outline dark:text-gray-400" size={20} />
             <input 
               ref={searchInputRef}
@@ -1711,7 +1711,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
       </div>
 
       {/* Invoice List Header / Count Pill */}
-      <div className={`flex justify-start items-center mb-2 ${activeFab === 'search' ? 'hidden md:flex' : ''}`}>
+      <div className="flex justify-start items-center mb-2">
           {/* Unified Count Pill on Left */}
           <span className="bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-200 px-3 py-1 rounded-full text-xs font-medium">
               {filteredInvoices.length} Invoices
