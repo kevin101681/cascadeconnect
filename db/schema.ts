@@ -297,6 +297,15 @@ export const appointmentGuests = pgTable('appointment_guests', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-// --- 13. Internal Chat System (Team Messaging) ---
+// --- 13. Response Templates (for Non-Warranty Explanations) ---
+export const responseTemplates = pgTable('response_templates', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  title: text('title').notNull(),
+  content: text('content').notNull(),
+  category: text('category').default('General'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// --- 14. Internal Chat System (Team Messaging) ---
 // Import and export internal chat tables
 export * from './schema/internal-chat';

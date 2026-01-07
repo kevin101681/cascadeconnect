@@ -13,6 +13,7 @@ import { CLAIM_CLASSIFICATIONS } from '../constants';
 import { generatePDFThumbnail } from '../lib/pdfThumbnail';
 import { useTaskStore } from '../stores/useTaskStore';
 import { uploadMultipleFiles } from '../lib/services/uploadService';
+import { NonWarrantyInput } from './claims/NonWarrantyInput';
 
 interface ClaimInlineEditorProps {
   claim: Claim;
@@ -919,12 +920,13 @@ If this repair work is billable, please let me know prior to scheduling.`);
             <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Internal Notes (Admin Only)</h4>
                   {isEditing && !isReadOnly ? (
-                      <textarea
+                      <NonWarrantyInput
                         value={editInternalNotes}
-                        onChange={e => setEditInternalNotes(e.target.value)}
-                  rows={4}
-                  className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-none overflow-hidden"
-                />
+                        onChange={setEditInternalNotes}
+                        disabled={false}
+                        placeholder="Enter internal notes or select a template..."
+                        rows={4}
+                      />
               ) : (
                 <div className="text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
                   {claim.internalNotes || 'No internal notes.'}
