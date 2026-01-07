@@ -39,13 +39,12 @@ export function InvoiceCard({
   const getStatusColor = (s: string) => {
     switch (s) {
       case "Paid": 
-        return "bg-green-100 text-green-700 hover:bg-green-100";
+        return "!bg-green-100 !text-green-800 hover:!bg-green-100 !border-0";
       case "Draft": 
-        return "bg-gray-100 text-gray-700 hover:bg-gray-100";
+        return "!bg-gray-100 !text-gray-700 hover:!bg-gray-100 !border-0";
       default: 
-        // "Sent" (and "Overdue" if it slips through) now shares this clean blue style
-        // Fixed: Light background (blue-100) with dark text (blue-700) for readability
-        return "bg-blue-100 text-blue-700 hover:bg-blue-100";
+        // "Sent" (and "Overdue") - Light background with dark text for readability
+        return "!bg-blue-50 !text-blue-800 hover:!bg-blue-50 !border-0";
     }
   };
 
@@ -82,18 +81,18 @@ export function InvoiceCard({
          {/* Builder */}
          <div className="flex items-start">
             <Hammer className="w-3.5 h-3.5 mt-0.5 mr-2 text-gray-400 shrink-0" />
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0 flex-1">
               <span className="text-[10px] text-gray-400 uppercase tracking-wider leading-none mb-0.5">Builder</span>
-              <span className="text-xs text-gray-700 truncate">{builder || "--"}</span>
+              <span className="text-xs text-gray-700 truncate overflow-hidden">{builder || "--"}</span>
             </div>
           </div>
           
           {/* Address */}
           <div className="flex items-start">
             <MapPin className="w-3.5 h-3.5 mt-0.5 mr-2 text-gray-400 shrink-0" />
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0 flex-1">
               <span className="text-[10px] text-gray-400 uppercase tracking-wider leading-none mb-0.5">Project Address</span>
-              <span className="text-xs text-gray-700 truncate">{address || "--"}</span>
+              <span className="text-xs text-gray-700 truncate overflow-hidden">{address || "--"}</span>
             </div>
           </div>
       </div>
@@ -142,7 +141,7 @@ export function InvoiceCard({
           {!isPaid ? (
             <Button 
               size="sm" 
-              className="h-8 text-xs bg-blue-600 hover:bg-blue-700 text-white flex-1 rounded-md"
+              className="h-8 text-xs !bg-green-600 hover:!bg-green-700 !text-white flex-1 rounded-md !border-0"
               onClick={(e) => {
                 e.stopPropagation();
                 onMarkPaid?.(checkNumber);
@@ -151,7 +150,7 @@ export function InvoiceCard({
               Mark as Paid
             </Button>
           ) : (
-             <Button size="sm" variant="outline" className="h-8 text-xs flex-1 cursor-default bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-50 rounded-md">
+             <Button size="sm" variant="outline" className="h-8 text-xs flex-1 cursor-default !bg-gray-50 !text-gray-600 !border-gray-200 hover:!bg-gray-50 rounded-md">
                 Paid
              </Button>
           )}
