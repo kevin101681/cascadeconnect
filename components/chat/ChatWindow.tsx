@@ -537,8 +537,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       )}
 
-      {/* Input area - Fixed at bottom on mobile */}
-      <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-900">
+      {/* Input area - Fixed at bottom on mobile with safe area support */}
+      <div className="px-4 pt-3 pb-[calc(2rem+env(safe-area-inset-bottom))] md:pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-900">
         {/* Replying To Banner */}
         {replyingTo && (
           <div className="mb-2 rounded-t-2xl bg-gray-100 dark:bg-gray-800 border-t border-x border-gray-200 dark:border-gray-600 p-2 text-xs text-gray-600 dark:text-gray-400 flex justify-between items-start">
