@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Sparkles } from 'lucide-react';
 import { getTemplates, type ResponseTemplate } from '@/actions/templates';
 
 interface NonWarrantyInputProps {
@@ -74,31 +73,25 @@ export function NonWarrantyInput({
   return (
     <div className="space-y-3">
       {/* Template Selector */}
-      <div className="flex items-center gap-3">
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap">
-          <Sparkles className="w-4 h-4 text-primary" />
-          Quick Insert:
-        </label>
-        <select
-          value={selectedTemplateId}
-          onChange={(e) => handleTemplateSelect(e.target.value)}
-          disabled={disabled || loading}
-          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <option value="">
-            {loading ? 'Loading templates...' : 'Select a template...'}
-          </option>
-          {categories.map((category) => (
-            <optgroup key={category} label={category}>
-              {templatesByCategory[category].map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.title}
-                </option>
-              ))}
-            </optgroup>
-          ))}
-        </select>
-      </div>
+      <select
+        value={selectedTemplateId}
+        onChange={(e) => handleTemplateSelect(e.target.value)}
+        disabled={disabled || loading}
+        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <option value="">
+          {loading ? 'Loading templates...' : 'Select a template...'}
+        </option>
+        {categories.map((category) => (
+          <optgroup key={category} label={category}>
+            {templatesByCategory[category].map((template) => (
+              <option key={template.id} value={template.id}>
+                {template.title}
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
 
       {/* Textarea */}
       <textarea

@@ -6,7 +6,7 @@ import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
 import { ClaimMessage } from './MessageSummaryModal';
 import ImageViewerModal from './ImageViewerModal';
-import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload, FileEdit, Trash2, StickyNote, Calendar as CalendarIcon, Tag } from 'lucide-react';
+import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload, FileEdit, Trash2, StickyNote, Calendar as CalendarIcon, Tag, Bot } from 'lucide-react';
 import { format } from 'date-fns';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar as CalendarUI } from '@/components/ui/calendar';
@@ -816,23 +816,15 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 <button
                   onClick={handleAiReview}
                   disabled={isAnalyzing}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                  title="AI Review"
+                  className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isAnalyzing ? (
-                    <>
-                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                      <span>Analyzing against warranty docs...</span>
-                    </>
+                    <div className="animate-spin h-4 w-4 border-2 border-gray-600 dark:border-gray-300 border-t-transparent rounded-full" />
                   ) : (
-                    <>
-                      <span className="text-lg">✨</span>
-                      <span>AI Review</span>
-                    </>
+                    <Bot className="h-4 w-4" />
                   )}
                 </button>
-                <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-2">
-                  AI will analyze this claim against warranty guidelines and suggest a response
-                </p>
               </div>
             )}
           </div>
@@ -1113,18 +1105,10 @@ If this repair work is billable, please let me know prior to scheduling.`);
 
           {/* Non-Warranty Explanation - Admin Only */}
           {isAdmin && (
-            <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl border-2 border-amber-200 dark:border-amber-800">
-              <div className="flex items-start gap-2 mb-3">
-                <Info className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <h4 className="text-sm font-bold text-amber-900 dark:text-amber-100 mb-1">
-                    Non-Warranty Explanation
-                  </h4>
-                  <p className="text-xs text-amber-700 dark:text-amber-300">
-                    Provide a detailed explanation for why this claim is not covered under warranty. This will be visible to the homeowner.
-                  </p>
-                </div>
-              </div>
+            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">
+                Non-Warranty Explanation
+              </h4>
               {isEditing && !isReadOnly ? (
                 <NonWarrantyInput
                   value={editNonWarrantyExplanation}
@@ -1134,7 +1118,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   rows={6}
                 />
               ) : (
-                <div className="w-full rounded-md border border-amber-300 dark:border-amber-700 bg-white/50 dark:bg-gray-800/50 px-3 py-2 text-sm text-amber-900 dark:text-amber-100 whitespace-pre-wrap leading-relaxed">
+                <div className="w-full rounded-md border border-surface-outline-variant dark:border-gray-600 bg-transparent px-3 py-2 text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
                   {claim.nonWarrantyExplanation || 'No explanation provided.'}
                 </div>
               )}
