@@ -67,6 +67,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   const [editDescription, setEditDescription] = useState(claim.description);
   const [editClassification, setEditClassification] = useState(claim.classification);
   const [editInternalNotes, setEditInternalNotes] = useState(claim.internalNotes || '');
+  const [editNonWarrantyExplanation, setEditNonWarrantyExplanation] = useState(claim.nonWarrantyExplanation || '');
   const [editDateEvaluated, setEditDateEvaluated] = useState(
     claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : ''
   );
@@ -242,6 +243,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     setEditDescription(claim.description);
     setEditClassification(claim.classification);
     setEditInternalNotes(claim.internalNotes || '');
+    setEditNonWarrantyExplanation(claim.nonWarrantyExplanation || '');
     setEditDateEvaluated(claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : '');
     // Initialize proposeDate with scheduled date if available
     if (scheduledDate) {
@@ -298,6 +300,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
       classification: editClassification,
       status: newStatus,
       internalNotes: editInternalNotes,
+      nonWarrantyExplanation: editNonWarrantyExplanation,
       dateEvaluated: editDateEvaluated ? new Date(editDateEvaluated) : undefined,
       reviewed: isReviewed
     });
@@ -338,6 +341,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     setEditDescription(claim.description);
     setEditClassification(claim.classification);
     setEditInternalNotes(claim.internalNotes || '');
+    setEditNonWarrantyExplanation(claim.nonWarrantyExplanation || '');
     setEditDateEvaluated(claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : '');
     setIsEditing(false);
     }
@@ -931,6 +935,36 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 <div className="text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
                   {claim.internalNotes || 'No internal notes.'}
                                 </div>
+              )}
+            </div>
+          )}
+
+          {/* Non-Warranty Explanation - Admin Only - Visible when Non-Warranty classification */}
+          {isAdmin && (editClassification === 'Non-Warranty' || editClassification === 'Courtesy Repair (Non-Warranty)' || claim.nonWarrantyExplanation) && (
+            <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl border-2 border-amber-200 dark:border-amber-800">
+              <div className="flex items-start gap-2 mb-3">
+                <Info className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="text-sm font-bold text-amber-900 dark:text-amber-100 mb-1">
+                    Non-Warranty Explanation
+                  </h4>
+                  <p className="text-xs text-amber-700 dark:text-amber-300">
+                    Provide a detailed explanation for why this claim is not covered under warranty. This will be visible to the homeowner.
+                  </p>
+                </div>
+              </div>
+              {isEditing && !isReadOnly ? (
+                <NonWarrantyInput
+                  value={editNonWarrantyExplanation}
+                  onChange={setEditNonWarrantyExplanation}
+                  disabled={false}
+                  placeholder="Select a template or enter explanation for non-warranty classification..."
+                  rows={6}
+                />
+              ) : (
+                <div className="text-sm text-amber-900 dark:text-amber-100 whitespace-pre-wrap leading-relaxed bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                  {claim.nonWarrantyExplanation || 'No explanation provided.'}
+                </div>
               )}
             </div>
           )}
