@@ -1,9 +1,6 @@
-'use server';
-
 import { db } from '../db';
 import { responseTemplates } from '../db/schema';
 import { eq, asc } from 'drizzle-orm';
-import { revalidatePath } from 'next/cache';
 
 export interface ResponseTemplate {
   id: string;
@@ -62,10 +59,6 @@ export async function createTemplate(data: CreateTemplateData): Promise<Response
       })
       .returning();
     
-    // Revalidate any pages that use templates
-    revalidatePath('/admin/settings/templates');
-    revalidatePath('/'); // Dashboard might use templates
-    
     return {
       id: newTemplate.id,
       title: newTemplate.title,
@@ -101,10 +94,6 @@ export async function updateTemplate(
       throw new Error('Template not found');
     }
     
-    // Revalidate any pages that use templates
-    revalidatePath('/admin/settings/templates');
-    revalidatePath('/');
-    
     return {
       id: updatedTemplate.id,
       title: updatedTemplate.title,
@@ -126,10 +115,6 @@ export async function deleteTemplate(id: string): Promise<void> {
     await db
       .delete(responseTemplates)
       .where(eq(responseTemplates.id, id));
-    
-    // Revalidate any pages that use templates
-    revalidatePath('/admin/settings/templates');
-    revalidatePath('/');
   } catch (error) {
     console.error('Error deleting template:', error);
     throw new Error('Failed to delete template');
