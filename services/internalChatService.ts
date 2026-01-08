@@ -104,7 +104,7 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
     // For each channel, get unread count and last message
     const channelsWithDetails = await Promise.all(
       memberChannels.map(async (ch) => {
-        // Get unread count
+        // Get unread count - ONLY count messages from OTHER users
         const unreadMessages = await db
           .select({ count: sql<number>`count(*)` })
           .from(internalMessages)
@@ -112,7 +112,9 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
             and(
               eq(internalMessages.channelId, ch.channelId),
               sql`${internalMessages.createdAt} > ${ch.lastReadAt}`,
-              eq(internalMessages.isDeleted, false)
+              eq(internalMessages.isDeleted, false),
+              // ✅ CRITICAL FIX: Exclude messages sent by the current user
+              sql`${internalMessages.senderId} != ${userId}`
             )
           );
 
