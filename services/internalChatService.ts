@@ -416,25 +416,38 @@ export async function sendMessage(params: {
 /**
  * Update last read timestamp for a user in a channel
  */
+/**
+ * Mark a channel as read for a user
+ * ✅ Calls server-side Netlify function
+ */
 export async function markChannelAsRead(
   userId: string,
   channelId: string
 ): Promise<void> {
   try {
-    await db
-      .update(channelMembers)
-      .set({ lastReadAt: new Date() })
-      .where(
-        and(
-          eq(channelMembers.userId, userId),
-          eq(channelMembers.channelId, channelId)
-        )
-      );
+    console.log(`📖 Marking channel ${channelId} as read for user ${userId}`);
 
-    console.log(`✅ Marked channel ${channelId} as read for user ${userId}`);
+    // ✅ Call server-side Netlify function
+    const response = await fetch('/.netlify/functions/chat-mark-read', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userId,
+        channelId,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to mark as read: ${response.statusText}`);
+    }
+
+    console.log(`✅ Channel marked as read`);
   } catch (error) {
     console.error('❌ Error marking channel as read:', error);
-    throw error;
+    // Don't throw - marking as read is not critical
   }
 }
 

@@ -180,7 +180,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     
                     {/* Unread badge - Material 3 */}
                     {channel.unreadCount && channel.unreadCount > 0 && (
-                      <div className="flex-shrink-0 h-5 min-w-[20px] px-1.5 bg-error text-error-on rounded-full flex items-center justify-center text-xs font-medium">
+                      <div className="flex-shrink-0 h-5 min-w-[20px] px-1.5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-medium">
                         {channel.unreadCount > 9 ? '9+' : channel.unreadCount}
                       </div>
                     )}

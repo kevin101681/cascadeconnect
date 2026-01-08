@@ -78,7 +78,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
   const handleSelectChannel = (channel: Channel) => {
     setSelectedChannel(channel);
-    loadUnreadCounts(); // Refresh counts
+    // ✅ Immediately refresh counts (ChatWindow will call markChannelAsRead)
+    // Add a small delay to allow markChannelAsRead to complete
+    setTimeout(loadUnreadCounts, 500);
   };
 
   const handleBack = () => {
@@ -95,7 +97,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         >
           <MessageCircle className="h-6 w-6" />
           {totalUnreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-6 w-6 bg-error text-error-on text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
+            <span className="absolute -top-1 -right-1 h-6 w-6 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
               {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
             </span>
           )}
