@@ -174,8 +174,10 @@ function App() {
   const [homeowners, setHomeowners] = useState<Homeowner[]>(() => 
     FORCE_MOCK_DATA ? MOCK_HOMEOWNERS : loadState('cascade_homeowners', MOCK_HOMEOWNERS)
   );
+  // Claims are not loaded from localStorage - large datasets (6,000+ records) exceed quota
+  // Claims are loaded from the database instead
   const [claims, setClaims] = useState<Claim[]>(() => 
-    FORCE_MOCK_DATA ? MOCK_CLAIMS : loadState('cascade_claims', MOCK_CLAIMS)
+    FORCE_MOCK_DATA ? MOCK_CLAIMS : []
   );
   const [tasks, setTasks] = useState<Task[]>(() => 
     FORCE_MOCK_DATA ? MOCK_TASKS : loadState('cascade_tasks', MOCK_TASKS)
@@ -211,16 +213,14 @@ function App() {
   useEffect(() => {
     // Check if localStorage is empty for key data, if so, load mock data
     const hasHomeowners = localStorage.getItem('cascade_homeowners');
-    const hasClaims = localStorage.getItem('cascade_claims');
+    // Claims are not stored in localStorage (too large), loaded from DB only
     const hasBuilders = localStorage.getItem('cascade_builder_groups');
     const hasContractors = localStorage.getItem('cascade_contractors');
     
     if (!hasHomeowners && MOCK_HOMEOWNERS.length > 0) {
       setHomeowners(MOCK_HOMEOWNERS);
     }
-    if (!hasClaims && MOCK_CLAIMS.length > 0) {
-      setClaims(MOCK_CLAIMS);
-    }
+    // Claims are loaded from database only, not from mock data or localStorage
     if (!hasBuilders && MOCK_BUILDER_GROUPS.length > 0) {
       setBuilderGroups(MOCK_BUILDER_GROUPS);
       setBuilderUsers(MOCK_BUILDER_USERS);
@@ -270,7 +270,9 @@ function App() {
     }
   }, [homeowners.length]); // Run when homeowners are first loaded
   
-  useEffect(() => { saveState('cascade_claims', claims); }, [claims]);
+  // Claims are not saved to localStorage - large datasets (6,000+ records) exceed quota
+  // Claims are stored in the database instead
+  // useEffect(() => { saveState('cascade_claims', claims); }, [claims]);
   useEffect(() => { saveState('cascade_tasks', tasks); }, [tasks]);
   // Documents are not saved to localStorage - they contain large base64 data URLs that exceed quota
   // Documents are stored in the database instead
