@@ -1,10 +1,4 @@
-'use server';
-
-/**
- * AI WARRANTY REVIEWER
- * Uses OpenAI GPT-4o to analyze claims against 2-10 Home Buyers Warranty guidelines
- */
-
+import { Handler } from '@netlify/functions';
 import OpenAI from 'openai';
 
 // ------------------------------------------------------------------
@@ -214,40 +208,69 @@ STRUCTURAL DEFECT DEFINITION:
 - Consequential damage (e.g., furniture damaged by a leak).
 `;
 
+interface AnalyzeClaimRequest {
+  claimTitle: string;
+  claimDescription: string;
+}
+
 interface AIReviewResult {
   status: 'Approved' | 'Denied' | 'Needs Info';
   reasoning: string;
   responseDraft: string;
 }
 
-/**
- * Analyze a warranty claim using OpenAI
- * @param claimTitle - The title/summary of the claim
- * @param claimDescription - Detailed description of the issue
- * @returns AI analysis with approval recommendation and response draft
- */
-export async function analyzeClaim(
-  claimTitle: string,
-  claimDescription: string
-): Promise<AIReviewResult> {
-  // 1. Validate Input
-  if (!claimTitle && !claimDescription) {
+export const handler: Handler = async (event) => {
+  // CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+
+  // Handle OPTIONS request for CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
     return {
-      status: 'Needs Info',
-      reasoning: 'No claim details provided.',
-      responseDraft: 'Please provide a title and description for the claim.'
+      statusCode: 204,
+      headers,
+      body: '',
+    };
+  }
+
+  // Only allow POST requests
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: 'Method not allowed' }),
     };
   }
 
   try {
-    // 2. Initialize OpenAI
+    // Parse request body
+    const requestData: AnalyzeClaimRequest = JSON.parse(event.body || '{}');
+    const { claimTitle, claimDescription } = requestData;
+
+    // Validate input
+    if (!claimTitle && !claimDescription) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          status: 'Needs Info',
+          reasoning: 'No claim details provided.',
+          responseDraft: 'Please provide a title and description for the claim.'
+        }),
+      };
+    }
+
+    // Initialize OpenAI with server-side API key
     const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY,
+      apiKey: process.env.OPENAI_API_KEY,
     });
 
     console.log('🤖 Analyzing claim with AI:', claimTitle);
 
-    // 3. Construct System Prompt
+    // Construct System Prompt
     const systemPrompt = `You are an expert Warranty Officer for a home builder. 
 Your job is to review a homeowner claim against the official "2-10 Home Buyers Warranty" guidelines provided below.
 
@@ -278,7 +301,7 @@ Description: ${claimDescription}
 
 Please analyze this claim and provide your recommendation in JSON format.`;
 
-    // 4. Call OpenAI API
+    // Call OpenAI API
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
@@ -290,7 +313,7 @@ Please analyze this claim and provide your recommendation in JSON format.`;
       max_tokens: 1000,
     });
 
-    // 5. Parse Response
+    // Parse Response
     const content = response.choices[0]?.message?.content;
     if (!content) {
       throw new Error('No response content from AI');
@@ -299,16 +322,26 @@ Please analyze this claim and provide your recommendation in JSON format.`;
     const result = JSON.parse(content) as AIReviewResult;
 
     console.log('✅ AI Analysis complete:', result.status);
-    return result;
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify(result),
+    };
 
   } catch (error) {
     console.error('❌ Error analyzing claim with AI:', error);
     
     // Return graceful fallback
     return {
-      status: 'Needs Info',
-      reasoning: 'AI analysis service temporarily unavailable.',
-      responseDraft: 'System error: Unable to perform AI analysis. Please review this claim manually.',
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({
+        status: 'Needs Info',
+        reasoning: 'AI analysis service temporarily unavailable.',
+        responseDraft: 'System error: Unable to perform AI analysis. Please review this claim manually.',
+      }),
     };
   }
-}
+};
+

@@ -20,7 +20,6 @@ import { generatePDFThumbnail } from '../lib/pdfThumbnail';
 import { useTaskStore } from '../stores/useTaskStore';
 import { uploadMultipleFiles } from '../lib/services/uploadService';
 import { NonWarrantyInput } from './claims/NonWarrantyInput';
-import { analyzeClaim } from '../actions/ai-review';
 
 interface ClaimInlineEditorProps {
   claim: Claim;
@@ -376,7 +375,24 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
 
     try {
       console.log('🤖 Requesting AI analysis...');
-      const result = await analyzeClaim(claim.title, claim.description);
+      
+      // Call secure Netlify function instead of exposing OpenAI API key
+      const response = await fetch('/.netlify/functions/analyze-claim', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          claimTitle: claim.title,
+          claimDescription: claim.description,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
       setAiReview(result);
       console.log('✅ AI analysis complete:', result.status);
     } catch (error) {
