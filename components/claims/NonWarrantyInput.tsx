@@ -104,10 +104,14 @@ export function NonWarrantyInput({
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onInput={(e) => {
+          const target = e.currentTarget;
+          target.style.height = 'auto';
+          target.style.height = target.scrollHeight + 'px';
+        }}
         disabled={disabled}
         placeholder={placeholder}
-        rows={rows}
-        className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-none overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed"
+        className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-none overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed min-h-[100px]"
       />
 
       {/* Helper Text */}

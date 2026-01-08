@@ -727,13 +727,17 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   <textarea
                     value={editDescription}
                     onChange={e => setEditDescription(e.target.value)}
-                    rows={4}
-                    className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-none overflow-hidden"
+                    onInput={(e) => {
+                      const target = e.currentTarget;
+                      target.style.height = 'auto';
+                      target.style.height = target.scrollHeight + 'px';
+                    }}
+                    className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-none overflow-hidden min-h-[100px]"
                   />
                 ) : (
-                  <p className="text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
+                  <div className="w-full rounded-md border border-secondary-container dark:border-gray-600 bg-transparent px-3 py-2 text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
                     {claim.description}
-                  </p>
+                  </div>
                 )}
               </div>
             </div>
@@ -932,9 +936,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
                         rows={4}
                       />
               ) : (
-                <div className="text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
+                <div className="w-full rounded-md border border-surface-outline-variant dark:border-gray-600 bg-transparent px-3 py-2 text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
                   {claim.internalNotes || 'No internal notes.'}
-                                </div>
+                </div>
               )}
             </div>
           )}
@@ -962,7 +966,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   rows={6}
                 />
               ) : (
-                <div className="text-sm text-amber-900 dark:text-amber-100 whitespace-pre-wrap leading-relaxed bg-white/50 dark:bg-gray-800/50 p-3 rounded-lg">
+                <div className="w-full rounded-md border border-amber-300 dark:border-amber-700 bg-white/50 dark:bg-gray-800/50 px-3 py-2 text-sm text-amber-900 dark:text-amber-100 whitespace-pre-wrap leading-relaxed">
                   {claim.nonWarrantyExplanation || 'No explanation provided.'}
                 </div>
               )}
