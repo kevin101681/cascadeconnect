@@ -10,11 +10,11 @@ const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const baseStyle = "inline-flex items-center h-6 px-3 rounded-full text-xs font-medium whitespace-nowrap";
 
   const styles = {
-    [ClaimStatus.SUBMITTED]: "bg-gray-300 dark:bg-gray-700 text-surface-on-variant dark:text-gray-300",
-    [ClaimStatus.REVIEWING]: "bg-secondary-container dark:bg-gray-700 text-secondary-on-container dark:text-gray-300",
-    [ClaimStatus.SCHEDULING]: "bg-tertiary-container dark:bg-gray-700 text-tertiary-on-container dark:text-gray-300",
-    [ClaimStatus.SCHEDULED]: "bg-primary/20 dark:bg-primary/40 text-primary dark:text-primary",
-    [ClaimStatus.COMPLETED]: "bg-gray-300 dark:bg-gray-700 text-surface-on dark:text-gray-100",
+    [ClaimStatus.SUBMITTED]: "bg-blue-50 dark:bg-gray-700 text-blue-700 dark:text-gray-300",
+    [ClaimStatus.REVIEWING]: "bg-blue-100 dark:bg-gray-700 text-blue-800 dark:text-gray-300",
+    [ClaimStatus.SCHEDULING]: "bg-blue-200 dark:bg-gray-700 text-blue-900 dark:text-gray-300",
+    [ClaimStatus.SCHEDULED]: "bg-blue-500 dark:bg-primary/40 text-white dark:text-primary",
+    [ClaimStatus.COMPLETED]: "bg-blue-600 dark:bg-gray-700 text-white dark:text-gray-100",
   };
 
   // Format status text (replace underscores with spaces and capitalize)
