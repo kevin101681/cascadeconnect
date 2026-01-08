@@ -947,8 +947,8 @@ If this repair work is billable, please let me know prior to scheduling.`);
             </div>
           )}
 
-          {/* Non-Warranty Explanation - Admin Only - Visible when Non-Warranty classification */}
-          {isAdmin && (editClassification === 'Non-Warranty' || editClassification === 'Courtesy Repair (Non-Warranty)' || claim.nonWarrantyExplanation) && (
+          {/* Non-Warranty Explanation - Admin Only */}
+          {isAdmin && (
             <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-xl border-2 border-amber-200 dark:border-amber-800">
               <div className="flex items-start gap-2 mb-3">
                 <Info className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
