@@ -102,6 +102,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     loadMessages();
   }, [loadMessages]);
 
+  // Auto-scroll when messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages.length]);
+
   // Pusher: Listen for new messages
   useEffect(() => {
     const pusher = getPusherClient();
@@ -109,8 +116,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
     channel.bind('new-message', (data: { channelId: string; message: Message }) => {
       if (data.channelId === channelId) {
-        setMessages((prev) => [...prev, data.message]);
-        scrollToBottom();
+        setMessages((prev) => {
+          // Prevent duplicates (e.g., if sender already added optimistically)
+          if (prev.find(m => m.id === data.message.id)) {
+            return prev;
+          }
+          return [...prev, data.message];
+        });
         
         // Mark as read if message is from someone else
         if (data.message.senderId !== currentUserId) {
@@ -276,7 +288,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
     setIsSending(true);
     try {
-      await sendMessage({
+      const newMessage = await sendMessage({
         channelId,
         senderId: currentUserId,
         content: inputValue.trim(),
@@ -288,6 +300,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         })),
         replyTo: replyingTo?.id,
       });
+
+      // ✅ OPTIMISTIC UPDATE: Add the message immediately to local state
+      setMessages((prev) => [...prev, newMessage]);
 
       // Clear input and attachments
       setInputValue('');
