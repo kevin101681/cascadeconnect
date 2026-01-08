@@ -129,7 +129,7 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
             senderName: users.name,
           })
           .from(internalMessages)
-          .innerJoin(users, eq(internalMessages.senderId, users.id))
+          .innerJoin(users, eq(internalMessages.senderId, users.clerkId))
           .where(
             and(
               eq(internalMessages.channelId, ch.channelId),
@@ -161,7 +161,7 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
                 email: users.email,
               })
               .from(users)
-              .where(eq(users.id, otherUserId))
+              .where(eq(users.clerkId, otherUserId))
               .limit(1);
 
             otherUser = otherUserData[0];
@@ -246,17 +246,17 @@ export async function findOrCreateDmChannel(
     }
 
     // Create new DM channel
-    // Get both users' names
+    // Get both users' names (using clerkId since userId1/userId2 are Clerk IDs)
     const user1Data = await db
       .select({ name: users.name })
       .from(users)
-      .where(eq(users.id, userId1))
+      .where(eq(users.clerkId, userId1))
       .limit(1);
 
     const user2Data = await db
       .select({ name: users.name })
       .from(users)
-      .where(eq(users.id, userId2))
+      .where(eq(users.clerkId, userId2))
       .limit(1);
 
     const channelName = `${user1Data[0]?.name || 'User'} & ${user2Data[0]?.name || 'User'}`;
@@ -317,7 +317,7 @@ export async function getChannelMessages(
         createdAt: internalMessages.createdAt,
       })
       .from(internalMessages)
-      .innerJoin(users, eq(internalMessages.senderId, users.id))
+      .innerJoin(users, eq(internalMessages.senderId, users.clerkId))
       .where(eq(internalMessages.channelId, channelId))
       .orderBy(desc(internalMessages.createdAt))
       .limit(limit)
@@ -335,7 +335,7 @@ export async function getChannelMessages(
               content: internalMessages.content,
             })
             .from(internalMessages)
-            .innerJoin(users, eq(internalMessages.senderId, users.id))
+            .innerJoin(users, eq(internalMessages.senderId, users.clerkId))
             .where(eq(internalMessages.id, msg.replyToId))
             .limit(1);
 

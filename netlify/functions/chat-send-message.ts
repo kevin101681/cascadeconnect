@@ -78,14 +78,14 @@ export const handler: Handler = async (event) => {
       })
       .returning();
 
-    // 2. Get sender info
+    // 2. Get sender info (using clerkId since senderId is Clerk ID text)
     const senderData = await db
       .select({
         name: users.name,
         email: users.email,
       })
       .from(users)
-      .where(eq(users.id, senderId))
+      .where(eq(users.clerkId, senderId))
       .limit(1);
 
     // 3. Get replied-to message if exists
@@ -98,7 +98,7 @@ export const handler: Handler = async (event) => {
           content: internalMessages.content,
         })
         .from(internalMessages)
-        .innerJoin(users, eq(internalMessages.senderId, users.id))
+        .innerJoin(users, eq(internalMessages.senderId, users.clerkId))
         .where(eq(internalMessages.id, replyTo))
         .limit(1);
 
