@@ -1361,81 +1361,80 @@ If this repair work is billable, please let me know prior to scheduling.`);
               >
                 {scheduledDate ? 'Update' : 'Confirm'}
               </Button>
-              )}
-            </div>
+            )}
               
-              {/* Appointment Confirmed Card - Show when scheduled date exists */}
-              {scheduledDate && (
-                <div className="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center text-green-700 dark:text-green-300 flex-shrink-0">
-                      <CheckCircle className="h-6 w-6" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-bold text-green-800 dark:text-green-300 uppercase tracking-wide mb-1">
-                        {claim.status === ClaimStatus.CLOSED ? 'Work Completed' : 'Appointment Confirmed'}
-                      </p>
-                      <div className="text-base font-medium text-surface-on dark:text-gray-100">
-                        {new Date(scheduledDate.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                      </div>
-                      <p className="text-sm text-surface-on-variant dark:text-gray-300 mt-0.5 font-medium">
-                        Time Slot: {scheduledDate.timeSlot}
-                      </p>
-                      {claim.contractorName && (
-                        <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-1.5 flex items-center gap-1">
-                          <HardHat className="h-3 w-3" />
-                          Sub: {claim.contractorName}
-                        </p>
-                      )}
-                      {claim.completedAt && (
-                        <p className="text-xs text-green-700 dark:text-green-400 mt-2 font-medium">
-                          Completed: {new Date(claim.completedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
-                        </p>
-                      )}
-                    </div>
+            {/* Appointment Confirmed Card - Show when scheduled date exists */}
+            {scheduledDate && (
+              <div className="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-xl p-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center text-green-700 dark:text-green-300 flex-shrink-0">
+                    <CheckCircle className="h-6 w-6" />
                   </div>
-                  
-                  {/* Mark Completed / Reopen Button */}
-                  {isAdmin && (
-                    <div className="mt-4 pt-4 border-t border-green-200 dark:border-green-800">
-                      {claim.status !== ClaimStatus.CLOSED ? (
-                        <Button
-                          type="button"
-                          variant="filled"
-                          onClick={() => {
-                            onUpdateClaim({
-                              ...claim,
-                              status: ClaimStatus.CLOSED,
-                              completedAt: new Date(),
-                              scheduledAt: scheduledDate ? new Date(scheduledDate.date) : undefined
-                            });
-                          }}
-                          className="w-full"
-                        >
-                          <CheckCircle className="h-4 w-4 mr-2" />
-                          Mark as Completed
-                        </Button>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => {
-                            onUpdateClaim({
-                              ...claim,
-                              status: ClaimStatus.SCHEDULED,
-                              completedAt: undefined
-                            });
-                          }}
-                          className="w-full"
-                        >
-                          Reopen Claim
-                        </Button>
-                      )}
+                  <div className="flex-1">
+                    <p className="text-xs font-bold text-green-800 dark:text-green-300 uppercase tracking-wide mb-1">
+                      {claim.status === ClaimStatus.CLOSED ? 'Work Completed' : 'Appointment Confirmed'}
+                    </p>
+                    <div className="text-base font-medium text-surface-on dark:text-gray-100">
+                      {new Date(scheduledDate.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                     </div>
-                  )}
+                    <p className="text-sm text-surface-on-variant dark:text-gray-300 mt-0.5 font-medium">
+                      Time Slot: {scheduledDate.timeSlot}
+                    </p>
+                    {claim.contractorName && (
+                      <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-1.5 flex items-center gap-1">
+                        <HardHat className="h-3 w-3" />
+                        Sub: {claim.contractorName}
+                      </p>
+                    )}
+                    {claim.completedAt && (
+                      <p className="text-xs text-green-700 dark:text-green-400 mt-2 font-medium">
+                        Completed: {new Date(claim.completedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
+                
+                {/* Mark Completed / Reopen Button */}
+                {isAdmin && (
+                  <div className="mt-4 pt-4 border-t border-green-200 dark:border-green-800">
+                    {claim.status !== ClaimStatus.CLOSED ? (
+                      <Button
+                        type="button"
+                        variant="filled"
+                        onClick={() => {
+                          onUpdateClaim({
+                            ...claim,
+                            status: ClaimStatus.CLOSED,
+                            completedAt: new Date(),
+                            scheduledAt: scheduledDate ? new Date(scheduledDate.date) : undefined
+                          });
+                        }}
+                        className="w-full"
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Mark as Completed
+                      </Button>
+                    ) : (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          onUpdateClaim({
+                            ...claim,
+                            status: ClaimStatus.SCHEDULED,
+                            completedAt: undefined
+                          });
+                        }}
+                        className="w-full"
+                      >
+                        Reopen Claim
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Warranty Assessment (Admin Only) */}
           {isAdmin && (
