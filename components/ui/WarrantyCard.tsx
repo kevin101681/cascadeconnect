@@ -49,7 +49,7 @@ export function WarrantyCard({
         {/* PILL STACK: Classification + Reviewed + Closed */}
         <div className="flex gap-1 shrink-0">
           {isClosed && (
-             <Badge className="text-[10px] h-5 px-1.5 font-medium bg-blue-100 text-blue-700 hover:bg-blue-100 border-0 rounded-md gap-1 flex items-center">
+             <Badge className="text-[10px] h-5 px-1.5 font-medium bg-blue-600 text-white hover:bg-blue-600 border-0 rounded-md gap-1 flex items-center">
                <CheckCircle2 className="w-3 h-3" /> Closed
              </Badge>
           )}
