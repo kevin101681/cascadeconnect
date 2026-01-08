@@ -928,12 +928,16 @@ If this repair work is billable, please let me know prior to scheduling.`);
             <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Internal Notes (Admin Only)</h4>
                   {isEditing && !isReadOnly ? (
-                      <NonWarrantyInput
+                      <textarea
                         value={editInternalNotes}
-                        onChange={setEditInternalNotes}
-                        disabled={false}
-                        placeholder="Enter internal notes or select a template..."
-                        rows={4}
+                        onChange={e => setEditInternalNotes(e.target.value)}
+                        onInput={(e) => {
+                          const target = e.currentTarget;
+                          target.style.height = 'auto';
+                          target.style.height = target.scrollHeight + 'px';
+                        }}
+                        placeholder="Enter internal notes..."
+                        className="block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-none overflow-hidden min-h-[100px]"
                       />
               ) : (
                 <div className="w-full rounded-md border border-surface-outline-variant dark:border-gray-600 bg-transparent px-3 py-2 text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
