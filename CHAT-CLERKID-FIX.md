@@ -99,11 +99,38 @@ After this fix:
 
 ---
 
-## Commit
+## Additional Critical Fix (January 8, 2026)
+
+### The Raw SQL Issue
+
+After fixing the joins, the error persisted because we were using **raw SQL** for a comparison:
+
+```typescript
+// ❌ BEFORE (Caused type inference issues)
+sql`${internalMessages.senderId} != ${userId}`
+```
+
+When Drizzle processes raw SQL templates, it can misinterpret the type of interpolated variables. Even though the schema defined `senderId` as `text`, Drizzle was treating the `${userId}` parameter as a UUID in the generated SQL.
+
+**Solution:** Use Drizzle's built-in `ne()` (not equal) operator instead:
+
+```typescript
+// ✅ AFTER (Correct type handling)
+ne(internalMessages.senderId, userId)
+```
+
+This ensures Drizzle correctly infers both operands as `text` types.
+
+---
+
+## Commits
 
 ```
 fix: Replace users.id with users.clerkId in chat joins to resolve text = uuid error
 Commit: 42cc3f4
+
+fix(critical): Replace raw SQL with ne() operator to fix text = uuid error  
+Commit: 408b5ec
 ```
 
 ---
