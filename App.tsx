@@ -4,6 +4,7 @@ import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import ClaimDetail from './components/ClaimDetail';
 import NewClaimForm from './components/NewClaimForm';
+import Settings from './components/Settings';
 import HomeownerEnrollment from './components/HomeownerEnrollment';
 import AuthScreenWrapper from './components/AuthScreenWrapper';
 import InternalUserManagement from './components/InternalUserManagement';
@@ -983,7 +984,7 @@ function App() {
 
   // UI State - Persistent (but reset INVOICES on page load to prevent auto-opening)
   // Check URL hash for invoice creation link
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES'>(() => {
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS'>(() => {
     // Check if URL has invoice creation parameters
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
@@ -1018,7 +1019,7 @@ function App() {
         // Note: Invoice navigation handled via dashboardConfig instead of currentView
       }
     }
-    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'CALLS' | 'INVOICES'>('cascade_ui_view', 'DASHBOARD');
+    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'CALLS' | 'INVOICES' | 'SETTINGS'>('cascade_ui_view', 'DASHBOARD');
     // Don't auto-open modals on page load on mobile - always start at DASHBOARD
     // On desktop, allow restoring saved view
     if (typeof window !== 'undefined') {
@@ -4317,6 +4318,9 @@ Assigned By: ${assignerName}
       )}
       {currentView === 'BACKEND' && (
         <BackendDashboard onClose={() => setCurrentView('DASHBOARD')} />
+      )}
+      {currentView === 'SETTINGS' && (
+        <Settings onNavigate={setCurrentView} />
       )}
       {currentView === 'NEW' && (
         <div className="max-w-4xl mx-auto bg-surface p-8 rounded-3xl shadow-elevation-1 border border-surface-outline-variant">

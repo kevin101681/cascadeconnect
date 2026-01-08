@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { UserRole, Homeowner } from '../types';
-import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2, Phone } from 'lucide-react';
+import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2, Phone, Settings } from 'lucide-react';
 import { useDarkMode } from './DarkModeProvider';
 import { UserButton, useUser } from '@clerk/clerk-react';
 import GlobalSearch from './global/GlobalSearch';
@@ -26,9 +26,9 @@ interface LayoutProps {
   onGlobalSearchNavigate?: (url: string) => void;
 
   // Navigation & Actions
-  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES') => void;
+  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS') => void;
   onOpenEnrollment: () => void;
-  currentView?: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'DETAIL' | 'NEW';
+  currentView?: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'DETAIL' | 'NEW';
 
   // Auth
   onSignOut: () => Promise<void>;
@@ -444,6 +444,13 @@ const Layout: React.FC<LayoutProps> = ({
                               Backend
                             </button>
                           )}
+                          <button 
+                            onClick={() => handleMenuAction(() => onNavigate('SETTINGS'))}
+                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
+                          >
+                            <Settings className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                            Settings
+                          </button>
                           
                           <div className="my-2"></div>
                           
