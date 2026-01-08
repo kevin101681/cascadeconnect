@@ -472,3 +472,4 @@ For questions or issues:
 
 The Chat Widget is now modern, responsive, and feature-rich with quote replies and adaptive layouts for all devices.
 
+

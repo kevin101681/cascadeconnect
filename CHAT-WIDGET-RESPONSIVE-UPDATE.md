@@ -337,3 +337,4 @@ className="... sm:animate-in sm:slide-in-from-right-4 sm:duration-200"
 
 **Responsive Update Complete! 📱💻**
 
+

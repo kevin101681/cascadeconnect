@@ -20,7 +20,9 @@ import {
   homeowners 
 } from '../db/schema';
 import { eq, and, desc, sql, or, ilike } from 'drizzle-orm';
-import { triggerPusherEvent } from '../lib/pusher-server';
+// NOTE: Pusher events should be triggered server-side (Netlify functions)
+// Client-side code cannot use pusher-server (Node.js crypto incompatible with browser)
+// import { triggerPusherEvent } from '../lib/pusher-server';
 
 // Types
 export interface Channel {
@@ -431,11 +433,14 @@ export async function sendMessage(params: {
       replyTo: replyToMessage,
     };
 
-    // Trigger Pusher event
-    await triggerPusherEvent('team-chat', 'new-message', {
-      channelId,
-      message: messageWithSender,
-    });
+    // NOTE: Pusher event triggering moved to server-side for browser compatibility
+    // TODO: Create a Netlify function to trigger Pusher events after message creation
+    // The pusher-server library uses Node.js crypto which doesn't work in browser/Vite
+    // For now, clients will receive updates via database polling or manual refresh
+    // await triggerPusherEvent('team-chat', 'new-message', {
+    //   channelId,
+    //   message: messageWithSender,
+    // });
 
     console.log(`📨 Message sent to channel ${channelId}`);
     return messageWithSender;
@@ -520,7 +525,10 @@ export async function sendTypingIndicator(params: {
   isTyping: boolean;
 }): Promise<void> {
   try {
-    await triggerPusherEvent('team-chat', 'typing-indicator', params);
+    // NOTE: Typing indicators disabled until server-side Pusher endpoint is created
+    // pusher-server library cannot be used in browser/Vite (Node.js crypto incompatible)
+    // await triggerPusherEvent('team-chat', 'typing-indicator', params);
+    console.log('⌨️ Typing indicator (Pusher disabled):', params);
   } catch (error) {
     console.error('❌ Error sending typing indicator:', error);
     // Don't throw - typing indicators are not critical
