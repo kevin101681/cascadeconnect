@@ -20,9 +20,6 @@ import {
   homeowners 
 } from '../db/schema';
 import { eq, and, desc, sql, or, ilike } from 'drizzle-orm';
-// NOTE: Pusher events should be triggered server-side (Netlify functions)
-// Client-side code cannot use pusher-server (Node.js crypto incompatible with browser)
-// import { triggerPusherEvent } from '../lib/pusher-server';
 
 // Types
 export interface Channel {
@@ -361,6 +358,7 @@ export async function getChannelMessages(
 
 /**
  * Send a message to a channel
+ * ✅ Calls server-side Netlify function to save message and trigger Pusher
  */
 export async function sendMessage(params: {
   channelId: string;
@@ -382,67 +380,32 @@ export async function sendMessage(params: {
   try {
     const { channelId, senderId, content, attachments = [], mentions = [], replyTo } = params;
 
-    // Insert message
-    const [newMessage] = await db
-      .insert(internalMessages)
-      .values({
+    console.log(`📨 Sending message to channel ${channelId} via Netlify function`);
+
+    // ✅ Call server-side Netlify function
+    const response = await fetch('/.netlify/functions/chat-send-message', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
         channelId,
         senderId,
         content,
         attachments,
         mentions,
-        replyToId: replyTo || null,
-      })
-      .returning();
+        replyTo,
+      }),
+    });
 
-    // Get sender info
-    const senderData = await db
-      .select({
-        name: users.name,
-        email: users.email,
-      })
-      .from(users)
-      .where(eq(users.id, senderId))
-      .limit(1);
-
-    // Get replied-to message if exists
-    let replyToMessage = null;
-    if (replyTo) {
-      const replyMessages = await db
-        .select({
-          id: internalMessages.id,
-          senderName: users.name,
-          content: internalMessages.content,
-        })
-        .from(internalMessages)
-        .innerJoin(users, eq(internalMessages.senderId, users.id))
-        .where(eq(internalMessages.id, replyTo))
-        .limit(1);
-
-      if (replyMessages.length > 0) {
-        replyToMessage = replyMessages[0];
-      }
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || `Failed to send message: ${response.statusText}`);
     }
 
-    const messageWithSender: Message = {
-      ...newMessage,
-      senderName: senderData[0]?.name || 'Unknown',
-      senderEmail: senderData[0]?.email || '',
-      attachments: newMessage.attachments as any,
-      mentions: newMessage.mentions as any,
-      replyTo: replyToMessage,
-    };
+    const messageWithSender: Message = await response.json();
 
-    // NOTE: Pusher event triggering moved to server-side for browser compatibility
-    // TODO: Create a Netlify function to trigger Pusher events after message creation
-    // The pusher-server library uses Node.js crypto which doesn't work in browser/Vite
-    // For now, clients will receive updates via database polling or manual refresh
-    // await triggerPusherEvent('team-chat', 'new-message', {
-    //   channelId,
-    //   message: messageWithSender,
-    // });
-
-    console.log(`📨 Message sent to channel ${channelId}`);
+    console.log(`✅ Message sent successfully: ${messageWithSender.id}`);
     return messageWithSender;
   } catch (error) {
     console.error('❌ Error sending message:', error);
