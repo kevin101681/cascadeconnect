@@ -19,7 +19,7 @@ import {
   users,
   homeowners 
 } from '../db/schema';
-import { eq, and, desc, sql, or, ilike } from 'drizzle-orm';
+import { eq, and, desc, sql, or, ilike, ne } from 'drizzle-orm';
 
 // Types
 export interface Channel {
@@ -113,8 +113,8 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
               eq(internalMessages.channelId, ch.channelId),
               sql`${internalMessages.createdAt} > ${ch.lastReadAt}`,
               eq(internalMessages.isDeleted, false),
-              // ✅ CRITICAL FIX: Exclude messages sent by the current user
-              sql`${internalMessages.senderId} != ${userId}`
+              // ✅ CRITICAL FIX: Exclude messages sent by the current user (using ne() to ensure proper type handling)
+              ne(internalMessages.senderId, userId)
             )
           );
 
