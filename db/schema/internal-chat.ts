@@ -13,8 +13,6 @@
  */
 
 import { pgTable, text, timestamp, boolean, uuid, pgEnum, json } from 'drizzle-orm/pg-core';
-import { users } from '../schema';
-import { homeowners } from '../schema';
 
 // Channel type enum
 export const channelTypeEnum = pgEnum('channel_type', ['public', 'dm']);
@@ -30,7 +28,8 @@ export const internalChannels = pgTable('internal_channels', {
   // Format: JSON array with exactly 2 user IDs, sorted alphabetically
   dmParticipants: json('dm_participants').$type<string[]>(),
   
-  createdBy: uuid('created_by').references(() => users.id).notNull(),
+  // NOTE: Stores Clerk ID as text, no FK constraint (Clerk IDs don't match UUID schema)
+  createdBy: text('created_by').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
@@ -38,7 +37,8 @@ export const internalChannels = pgTable('internal_channels', {
 export const internalMessages = pgTable('internal_messages', {
   id: uuid('id').defaultRandom().primaryKey(),
   channelId: uuid('channel_id').references(() => internalChannels.id).notNull(),
-  senderId: uuid('sender_id').references(() => users.id).notNull(),
+  // NOTE: Stores Clerk ID as text, no FK constraint (Clerk IDs don't match UUID schema)
+  senderId: text('sender_id').notNull(),
   
   content: text('content').notNull(), // Message text
   
@@ -75,7 +75,8 @@ export const internalMessages = pgTable('internal_messages', {
 export const channelMembers = pgTable('channel_members', {
   id: uuid('id').defaultRandom().primaryKey(),
   channelId: uuid('channel_id').references(() => internalChannels.id).notNull(),
-  userId: uuid('user_id').references(() => users.id).notNull(),
+  // NOTE: Stores Clerk ID as text, no FK constraint (Clerk IDs don't match UUID schema)
+  userId: text('user_id').notNull(),
   
   // Last time this user read messages in this channel
   lastReadAt: timestamp('last_read_at').defaultNow().notNull(),
