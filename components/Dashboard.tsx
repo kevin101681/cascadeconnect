@@ -2379,16 +2379,6 @@ const Dashboard: React.FC<DashboardProps> = ({
       {(() => {
         if (selectedClaimForModal) {
           const isMobile = window.innerWidth < 768;
-          console.log('🚨 MOBILE OVERLAY RENDERING!', {
-            claimId: selectedClaimForModal.id,
-            claimTitle: selectedClaimForModal.title,
-            isMobile,
-            currentTab,
-            timeSinceMount: Date.now() - mountTimeRef.current,
-            hasUserInteraction: userInteractionRef.current,
-            isInitialLoad: initialLoadRef.current,
-            shouldBlock: isMobile && (initialLoadRef.current || !userInteractionRef.current)
-          });
           
           // Force clear if it shouldn't be showing
           if (isMobile && (initialLoadRef.current || !userInteractionRef.current)) {
