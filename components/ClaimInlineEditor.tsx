@@ -14,6 +14,7 @@ import { generatePDFThumbnail } from '../lib/pdfThumbnail';
 import { useTaskStore } from '../stores/useTaskStore';
 import { uploadMultipleFiles } from '../lib/services/uploadService';
 import { NonWarrantyInput } from './claims/NonWarrantyInput';
+import { analyzeClaim } from '../actions/ai-review';
 
 interface ClaimInlineEditorProps {
   claim: Claim;
@@ -103,6 +104,15 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     subject: string;
     body: string;
   }
+  // AI Review state
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiReview, setAiReview] = useState<{
+    status: 'Approved' | 'Denied' | 'Needs Info';
+    reasoning: string;
+    responseDraft: string;
+  } | null>(null);
+  const [showAiReview, setShowAiReview] = useState(false);
+
   const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>(() => {
     try {
       const saved = localStorage.getItem('cascade_service_order_templates');
@@ -344,6 +354,42 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     setEditNonWarrantyExplanation(claim.nonWarrantyExplanation || '');
     setEditDateEvaluated(claim.dateEvaluated ? new Date(claim.dateEvaluated).toISOString().split('T')[0] : '');
     setIsEditing(false);
+    }
+  };
+
+  // AI Review Handler
+  const handleAiReview = async () => {
+    if (!claim.title || !claim.description) {
+      alert('Claim must have a title and description to analyze.');
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setShowAiReview(true);
+    setAiReview(null);
+
+    try {
+      console.log('🤖 Requesting AI analysis...');
+      const result = await analyzeClaim(claim.title, claim.description);
+      setAiReview(result);
+      console.log('✅ AI analysis complete:', result.status);
+    } catch (error) {
+      console.error('❌ Error analyzing claim:', error);
+      setAiReview({
+        status: 'Needs Info',
+        reasoning: 'AI analysis failed. Please review manually.',
+        responseDraft: 'We are currently reviewing your warranty claim and will respond within 2-3 business days. Thank you for your patience.',
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  // Copy draft to clipboard
+  const handleCopyDraft = () => {
+    if (aiReview?.responseDraft) {
+      navigator.clipboard.writeText(aiReview.responseDraft);
+      alert('Response draft copied to clipboard!');
     }
   };
   
@@ -741,7 +787,103 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 )}
               </div>
             </div>
+
+            {/* AI Review Button - Admin Only */}
+            {isAdmin && !isReadOnly && (
+              <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-600">
+                <button
+                  onClick={handleAiReview}
+                  disabled={isAnalyzing}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md"
+                >
+                  {isAnalyzing ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                      <span>Analyzing against warranty docs...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-lg">✨</span>
+                      <span>AI Review</span>
+                    </>
+                  )}
+                </button>
+                <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-2">
+                  AI will analyze this claim against warranty guidelines and suggest a response
+                </p>
+              </div>
+            )}
           </div>
+
+          {/* AI Review Results */}
+          {showAiReview && aiReview && isAdmin && (
+            <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 p-5 rounded-xl border-2 border-purple-200 dark:border-purple-700 shadow-sm">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">🤖</span>
+                  <h4 className="text-lg font-bold text-gray-900 dark:text-white">AI Warranty Analysis</h4>
+                </div>
+                <button
+                  onClick={() => setShowAiReview(false)}
+                  className="p-1 hover:bg-purple-200 dark:hover:bg-purple-800 rounded-full transition-colors"
+                  title="Close AI Review"
+                >
+                  <X className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                </button>
+              </div>
+
+              {/* Status Badge */}
+              <div className="mb-4">
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm ${
+                  aiReview.status === 'Approved' 
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200'
+                    : aiReview.status === 'Denied'
+                    ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200'
+                    : 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200'
+                }`}>
+                  {aiReview.status === 'Approved' && <CheckCircle className="h-4 w-4" />}
+                  {aiReview.status === 'Denied' && <X className="h-4 w-4" />}
+                  {aiReview.status === 'Needs Info' && <Info className="h-4 w-4" />}
+                  <span>Recommendation: {aiReview.status}</span>
+                </div>
+              </div>
+
+              {/* Reasoning */}
+              <div className="mb-4 bg-white dark:bg-gray-800/50 p-4 rounded-lg">
+                <h5 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
+                  <StickyNote className="h-4 w-4" />
+                  Reasoning
+                </h5>
+                <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+                  {aiReview.reasoning}
+                </p>
+              </div>
+
+              {/* Response Draft */}
+              <div className="bg-white dark:bg-gray-800/50 p-4 rounded-lg">
+                <div className="flex items-center justify-between mb-2">
+                  <h5 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Suggested Response for Homeowner
+                  </h5>
+                  <button
+                    onClick={handleCopyDraft}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-md transition-colors"
+                  >
+                    <FileText className="h-3 w-3" />
+                    Copy Draft
+                  </button>
+                </div>
+                <div className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap bg-gray-50 dark:bg-gray-900/50 p-3 rounded border border-gray-200 dark:border-gray-700">
+                  {aiReview.responseDraft}
+                </div>
+              </div>
+
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 italic">
+                ⚠️ This is an AI-generated recommendation. Please review carefully before using.
+              </p>
+            </div>
+          )}
 
           {/* Attachments Section */}
           <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
