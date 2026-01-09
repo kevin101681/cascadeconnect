@@ -1,5 +1,5 @@
 
-import { pgTable, text, timestamp, boolean, uuid, pgEnum, json } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, uuid, pgEnum, json, primaryKey } from 'drizzle-orm/pg-core';
 
 // Enums
 export const userRoleEnum = pgEnum('user_role', ['ADMIN', 'HOMEOWNER', 'BUILDER']);
@@ -355,6 +355,19 @@ export const clients = pgTable('clients', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-// --- 15. Internal Chat System (Team Messaging) ---
+// --- 15. Integration Tokens (OAuth for External Services) ---
+// Stores OAuth tokens for third-party integrations (Gusto, etc.)
+export const integrationTokens = pgTable('integration_tokens', {
+  userId: text('user_id').notNull(),
+  provider: text('provider').notNull(), // 'gusto', etc.
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.userId, table.provider] }),
+}));
+
+// --- 16. Internal Chat System (Team Messaging) ---
 // Import and export internal chat tables
 export * from './schema/internal-chat';
