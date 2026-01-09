@@ -1309,15 +1309,15 @@ If this repair work is billable, please let me know prior to scheduling.`);
                       <button
                         type="button"
                         className={cn(
-                          "w-full justify-start text-left font-normal h-10 flex items-center px-3 py-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-                          !proposeDate && !scheduledDate && "text-muted-foreground"
+                          "w-full justify-start text-left font-normal h-10 flex items-center px-3 py-2 rounded-md border border-surface-outline-variant dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors",
+                          !proposeDate && !scheduledDate && "text-surface-on-variant dark:text-gray-400"
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {proposeDate ? format(new Date(proposeDate), "PPP") : scheduledDate ? format(new Date(scheduledDate.date), "PPP") : "Select date..."}
                       </button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600">
                       <CalendarUI
                         mode="single"
                         selected={proposeDate ? new Date(proposeDate) : scheduledDate ? new Date(scheduledDate.date) : undefined}
@@ -1341,13 +1341,13 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     value={proposeTime || scheduledDate?.timeSlot || 'AM'}
                     onValueChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
                   >
-                    <SelectTrigger className="w-full h-10 bg-white dark:bg-gray-800">
+                    <SelectTrigger className="w-full h-10 bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <SelectValue placeholder="Select time slot..." />
                       </div>
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600">
                       <SelectItem value="AM">AM (8am - 12pm)</SelectItem>
                       <SelectItem value="PM">PM (12pm - 4pm)</SelectItem>
                       <SelectItem value="All Day">All Day</SelectItem>
@@ -1457,13 +1457,13 @@ If this repair work is billable, please let me know prior to scheduling.`);
                       value={editClassification || ""}
                       onValueChange={(value) => setEditClassification(value as ClaimClassification)}
                     >
-                      <SelectTrigger className="w-full h-10 bg-white dark:bg-gray-800">
+                      <SelectTrigger className="w-full h-10 bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                         <div className="flex items-center gap-2">
                           <Tag className="h-4 w-4 text-muted-foreground" />
                           <SelectValue placeholder="Select classification..." />
                         </div>
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600">
                         <SelectItem value="11-Month">11 Month</SelectItem>
                         <SelectItem value="Structural">Structural</SelectItem>
                         <SelectItem value="Plumbing">Plumbing</SelectItem>
@@ -1488,15 +1488,15 @@ If this repair work is billable, please let me know prior to scheduling.`);
                         <button
                           type="button"
                           className={cn(
-                            "w-full justify-start text-left font-normal h-10 flex items-center px-3 py-2 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-                            !editDateEvaluated && "text-muted-foreground"
+                            "w-full justify-start text-left font-normal h-10 flex items-center px-3 py-2 rounded-md border border-surface-outline-variant dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors",
+                            !editDateEvaluated && "text-surface-on-variant dark:text-gray-400"
                           )}
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {editDateEvaluated ? format(new Date(editDateEvaluated), "PPP") : "Select date..."}
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0">
+                      <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600">
                         <CalendarUI
                           mode="single"
                           selected={editDateEvaluated ? new Date(editDateEvaluated) : undefined}
