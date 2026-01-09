@@ -607,7 +607,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
             </label>
           </div>
         </div>
-      </div>
         </div>
         
         {/* Sub Assignment, Scheduling, Warranty Assessment (Admin Only) */}
