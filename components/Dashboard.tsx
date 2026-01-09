@@ -3738,8 +3738,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       })
       .slice(0, 3);
     
-    // Render new mobile dashboard for homeowner view on mobile devices (when no tab is active)
-    if (isMobileView && isHomeownerView && displayHomeowner && !currentTab) {
+    // Render new mobile dashboard for both homeowner and admin view on mobile devices (when no tab is active)
+    if (isMobileView && displayHomeowner && !currentTab) {
       return (
         <>
           {renderModals()}
@@ -4179,8 +4179,8 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* RIGHT CONTENT AREA */}
           <div className="flex-1 min-w-0 space-y-6">
-            {/* Back to Dashboard Button - Mobile Homeowner Only */}
-            {isMobileView && isHomeownerView && currentTab && (
+            {/* Back to Dashboard Button - Mobile Only (Homeowner & Admin) */}
+            {isMobileView && currentTab && (
               <button
                 onClick={() => setCurrentTab(null)}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors md:hidden"

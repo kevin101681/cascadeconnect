@@ -4,6 +4,8 @@
 
 A modern, field-service-style mobile interface for the Homeowner Dashboard. This redesign transforms the previous long vertical scroll with pill buttons into a clean, card-based categorized layout optimized for mobile workflows.
 
+**Now supports both Homeowner and Admin views on mobile devices (< 768px)!**
+
 ---
 
 ## 🎯 Design Goals Achieved
@@ -89,15 +91,15 @@ Four circular buttons arranged horizontally:
 import HomeownerDashboardMobile from './components/HomeownerDashboardMobile';
 ```
 
-### Step 2: Replace Existing Homeowner View
+### Step 2: Replace Existing View for Mobile
 
-**In your main `Dashboard.tsx` component**, locate the homeowner view rendering logic and replace it with:
+**In your main `Dashboard.tsx` component**, the mobile dashboard now renders for both homeowner and admin views:
 
 ```typescript
-// For mobile view (or responsive)
-{isMobile && effectiveHomeowner && (
+// For mobile view (< 768px) - works for both homeowner and admin
+{isMobileView && displayHomeowner && !currentTab && (
   <HomeownerDashboardMobile
-    homeowner={effectiveHomeowner}
+    homeowner={displayHomeowner}
     onNavigateToModule={(module) => {
       // Map module strings to your existing tab state
       setCurrentTab(module as any);
@@ -160,6 +162,34 @@ SMS Button:      bg-green-500  hover:bg-green-600
 Navigate Button: bg-purple-500 hover:bg-purple-600
 Email Button:    bg-orange-500 hover:bg-orange-600
 ```
+
+---
+
+## 👥 Admin vs Homeowner View
+
+### Who Sees the Mobile Dashboard?
+
+**The mobile dashboard renders for:**
+- ✅ Homeowners on mobile devices (< 768px)
+- ✅ Admins on mobile devices (< 768px) when viewing a specific homeowner
+- ❌ Desktop users (> 768px) - they see the original layout
+- ❌ Admin users without a homeowner selected
+
+### Why Admins Get the Mobile Dashboard Too
+
+**Field Service Benefits for Admins:**
+1. **On-Site Visits**: Admins visiting homeowner sites can quickly call, text, navigate, and access all homeowner info
+2. **Quick Actions**: Native mobile actions (tel:, sms:, maps, mailto:) work seamlessly
+3. **Compact UI**: Essential information accessible without excessive scrolling
+4. **Touch Optimized**: Large tap targets for gloved hands or outdoor use
+5. **Consistent UX**: Same intuitive interface whether admin or homeowner
+
+**Admin-Specific Features Still Available:**
+- Tasks quick-create buttons
+- Edit homeowner info
+- View all admin-only tabs (Notes, Calls, Schedule)
+- Access to Documents, Sub List, AI features
+- All existing admin functionality preserved
 
 ### Animation Classes
 
@@ -299,8 +329,16 @@ import HomeownerDashboardMobile from './components/HomeownerDashboardMobile';
 const Dashboard = () => {
   const [currentTab, setCurrentTab] = useState<string | null>(null);
   const [showPunchListApp, setShowPunchListApp] = useState(false);
-  const effectiveHomeowner = /* your homeowner data */;
-  const isMobile = window.innerWidth < 768;
+  const [isMobileView, setIsMobileView] = useState(false);
+  const displayHomeowner = /* your homeowner data */;
+  
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobileView(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleModuleNavigation = (module: string) => {
     if (module === 'BLUETAG') {
@@ -310,18 +348,27 @@ const Dashboard = () => {
     }
   };
 
-  return (
-    <>
-      {isMobile && effectiveHomeowner ? (
+  // Render mobile dashboard for both homeowner and admin on mobile when no tab is active
+  if (isMobileView && displayHomeowner && !currentTab) {
+    return (
+      <>
         <HomeownerDashboardMobile
-          homeowner={effectiveHomeowner}
+          homeowner={displayHomeowner}
           onNavigateToModule={handleModuleNavigation}
         />
-      ) : (
-        // Desktop view or existing layout
-        <YourExistingDashboard />
-      )}
+      </>
+    );
+  }
 
+  return (
+    <>
+      {/* Back button for mobile users viewing a tab */}
+      {isMobileView && currentTab && (
+        <button onClick={() => setCurrentTab(null)}>
+          Back to Dashboard
+        </button>
+      )}
+      
       {/* Render module content based on currentTab */}
       {currentTab === 'CLAIMS' && <ClaimsView />}
       {currentTab === 'MESSAGES' && <MessagesView />}
@@ -335,13 +382,18 @@ const Dashboard = () => {
 
 ## ✅ Testing Checklist
 
+**For Both Homeowner and Admin Views:**
+- [ ] Mobile dashboard appears on mobile devices (< 768px)
 - [ ] Header expands/collapses correctly
 - [ ] Quick action buttons trigger native handlers (tel:, sms:, mailto:, maps)
 - [ ] All module buttons navigate to correct views
+- [ ] "Back to Dashboard" button appears when viewing a tab
+- [ ] Clicking "Back to Dashboard" returns to mobile dashboard
 - [ ] Dark mode styling is correct
 - [ ] Touch targets are 44x44px minimum
 - [ ] Animations are smooth (60fps)
 - [ ] Works on iOS and Android
+- [ ] Desktop view (> 768px) shows original layout
 - [ ] Accessible (keyboard navigation, screen readers)
 
 ---
