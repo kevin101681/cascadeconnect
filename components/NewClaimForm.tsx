@@ -339,55 +339,36 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Left Column: Basic Info */}
-          <div className="space-y-6">
-            {/* Title and Description Card */}
-            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="title" className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Claim Title</label>
-                  <input
-                    id="title"
-                    type="text"
-                    required
-                    className={`${inputClass} bg-white dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                  />
-                </div>
+        {/* Single Column Layout - Matches ClaimInlineEditor Structure */}
+        <div className="space-y-6">
+          {/* Title and Description Card */}
+          <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="title" className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Claim Title</label>
+                <input
+                  id="title"
+                  type="text"
+                  required
+                  className={`${inputClass} bg-white dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
 
-                <div>
-                  <label htmlFor="description" className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Description</label>
-                  <textarea
-                    id="description"
-                    rows={4}
-                    required
-                    className={`${inputClass} bg-white dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                  />
-                </div>
+              <div>
+                <label htmlFor="description" className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Description</label>
+                <textarea
+                  id="description"
+                  rows={4}
+                  required
+                  className={`${inputClass} bg-white dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
               </div>
             </div>
-
-          {/* Internal Notes (Admin Only) */}
-           {isAdmin && (
-             <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Internal Notes (Admin Only)</h4>
-              <textarea
-                id="internalNotes"
-                rows={4}
-                className={`${inputClass} bg-white dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
-                value={internalNotes}
-                onChange={(e) => setInternalNotes(e.target.value)}
-              />
-            </div>
-           )}
           </div>
-
-          {/* Right Column: Attachments (Homeowner) or Admin Sections */}
-          <div className="space-y-6">
             {/* Attachments Section */}
             <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
               <div className="flex items-center justify-between mb-3">
@@ -602,13 +583,23 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
               </div>
               </div>
             </div>
-          </div>
-        </div>
-        
-        {/* Sub Assignment, Scheduling, Warranty Assessment (Admin Only) */}
-        {isAdmin && (
-          <>
-            {/* Sub Assignment (Admin Only) */}
+          
+          {/* Internal Notes (Admin Only) */}
+          {isAdmin && (
+            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Internal Notes (Admin Only)</h4>
+              <textarea
+                id="internalNotes"
+                rows={4}
+                className={`${inputClass} bg-white dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
+                value={internalNotes}
+                onChange={(e) => setInternalNotes(e.target.value)}
+              />
+            </div>
+          )}
+          
+          {/* Sub Assignment (Admin Only) */}
+          {isAdmin && (
             <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Sub Assignment</h4>
               
@@ -663,8 +654,10 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                 </div>
               )}
             </div>
+          )}
 
-            {/* Scheduling - Admin Only */}
+          {/* Scheduling (Admin Only) */}
+          {isAdmin && (
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4">
               <h3 className="font-semibold leading-none tracking-tight">Scheduling</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -718,8 +711,10 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                 </div>
               </div>
             </div>
+          )}
 
-            {/* Warranty Assessment (Admin Only) */}
+          {/* Warranty Assessment (Admin Only) */}
+          {isAdmin && (
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4">
               <h3 className="font-semibold leading-none tracking-tight">Warranty Assessment</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -810,8 +805,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                 </div>
               )}
             </div>
-          </>
-        )}
+          )}
 
         {/* Staging Area (Homeowners only) */}
         {!isAdmin && stagedClaims.length > 0 && (
@@ -863,6 +857,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
           </div>
         </div>
         )}
+        </div>
 
         {/* Image Viewer Modal */}
         <ImageViewerModal
