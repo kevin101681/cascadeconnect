@@ -210,6 +210,20 @@ function App() {
     loadState('cascade_task_messages', [])
   );
 
+  // State for handling multiple homeowners with same email
+  const [matchingHomeowners, setMatchingHomeowners] = useState<Homeowner[] | null>(null);
+  const [selectedHomeownerId, setSelectedHomeownerId] = useState<string | null>(() => {
+    // Load the selected homeowner ID for the current user's email from localStorage
+    if (typeof window !== 'undefined') {
+      const userEmail = localStorage.getItem('cascade_user_email');
+      if (userEmail) {
+        const stored = localStorage.getItem(`cascade_selected_homeowner_${userEmail.toLowerCase()}`);
+        return stored || null;
+      }
+    }
+    return null;
+  });
+
   // --- LOAD MOCK DATA ON FIRST MOUNT IF LOCALSTORAGE IS EMPTY ---
   useEffect(() => {
     // Check if localStorage is empty for key data, if so, load mock data
@@ -705,63 +719,9 @@ function App() {
               console.error('❌ Failed to load users:', userError);
             }
 
-            // 3. Fetch Claims
-            const dbClaims = await db.select().from(claimsTable).orderBy(desc(claimsTable.dateSubmitted));
-            if (dbClaims.length > 0) {
-              const mappedClaims: Claim[] = dbClaims.map(c => {
-                const claim: any = {
-                  id: c.id,
-                  claimNumber: c.claimNumber || undefined,
-                  title: c.title,
-                  description: c.description,
-                  address: c.address || '',
-                  homeownerName: c.homeownerName || '',
-                  homeownerEmail: c.homeownerEmail || '',
-                  builderName: c.builderName || '',
-                  jobName: c.jobName || '',
-                  status: c.status as ClaimStatus,
-                  classification: (c.classification as any) || 'Unclassified',
-                  dateSubmitted: c.dateSubmitted ? new Date(c.dateSubmitted) : new Date(),
-                  dateEvaluated: c.dateEvaluated ? new Date(c.dateEvaluated) : undefined,
-                  internalNotes: c.internalNotes || '',
-                  nonWarrantyExplanation: c.nonWarrantyExplanation || '',
-                  contractorId: c.contractorId || undefined,
-                  contractorName: c.contractorName || '',
-                  contractorEmail: c.contractorEmail || '',
-                  proposedDates: c.proposedDates as any[] || [],
-                  attachments: c.attachments as any[] || [],
-                  comments: []
-                };
-                // Add homeownerId if available from database
-                if ((c as any).homeownerId) {
-                  claim.homeownerId = (c as any).homeownerId;
-                }
-                return claim;
-              });
-              
-              // Migration: Populate homeownerId for claims that don't have it
-              // Match claims to homeowners by email
-              const claimsWithHomeownerId = mappedClaims.map(claim => {
-                if ((claim as any).homeownerId) {
-                  return claim; // Already has homeownerId
-                }
-                
-                // Try to find matching homeowner by email (case-insensitive)
-                const claimEmail = claim.homeownerEmail?.toLowerCase().trim() || '';
-                const matchingHomeowner = loadedHomeowners.find(h => {
-                  const homeownerEmail = h.email?.toLowerCase().trim() || '';
-                  return homeownerEmail === claimEmail;
-                });
-                
-                if (matchingHomeowner) {
-                  (claim as any).homeownerId = matchingHomeowner.id;
-                }
-                
-                return claim;
-              });
-              
-              setClaims(claimsWithHomeownerId);
-            }
+            // 3. Skip bulk claims fetch - claims are now loaded per-homeowner (see useEffect below)
+            // SECURITY: Never fetch all 6,200+ claims at once
+            console.log('📋 Claims will be loaded when homeowner is selected');
             
             // 4. Fetch Builder Groups
             const dbBuilderGroups = await db.select().from(builderGroupsTable);
@@ -946,6 +906,77 @@ function App() {
     syncDataAndUser();
   }, [isLoaded, isSignedIn, authUser?.id]); // Re-run when auth state changes
 
+  // --- FETCH CLAIMS FOR SELECTED HOMEOWNER ---
+  // STRICT POLICY: Only fetch claims when a homeowner is selected
+  // NEVER fetch all claims at once (6,200+ records)
+  useEffect(() => {
+    const fetchClaimsForHomeowner = async () => {
+      // Determine which homeowner ID to use:
+      // 1. For admin/builder users: selectedHomeownerId (from homeowner selection)
+      // 2. For homeowner users: activeHomeowner.id (their own account)
+      const targetHomeownerId = userRole === UserRole.HOMEOWNER 
+        ? activeHomeowner?.id 
+        : selectedHomeownerId;
+
+      if (!targetHomeownerId) {
+        console.log('📋 No homeowner selected, skipping claims fetch');
+        setClaims([]); // Clear claims if no homeowner selected
+        return;
+      }
+
+      try {
+        console.log(`📋 Fetching claims for homeowner: ${targetHomeownerId}`);
+        
+        const response = await fetch(`/.netlify/functions/get-claims?homeownerId=${targetHomeownerId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch claims: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.success && data.claims) {
+          // Map database claims to frontend Claim type
+          const mappedClaims: Claim[] = data.claims.map((c: any) => ({
+            id: c.id,
+            homeownerId: c.homeowner_id || c.homeownerId,
+            claimNumber: c.claim_number || c.claimNumber || undefined,
+            title: c.title || '',
+            description: c.description || '',
+            address: c.address || '',
+            homeownerName: c.homeowner_name || c.homeownerName || '',
+            homeownerEmail: c.homeowner_email || c.homeownerEmail || '',
+            builderName: c.builder_name || c.builderName || '',
+            jobName: c.job_name || c.jobName || '',
+            status: (c.status as ClaimStatus) || 'SUBMITTED',
+            classification: c.classification || 'Unclassified',
+            dateSubmitted: c.date_submitted || c.dateSubmitted ? new Date(c.date_submitted || c.dateSubmitted) : new Date(),
+            dateEvaluated: c.date_evaluated || c.dateEvaluated ? new Date(c.date_evaluated || c.dateEvaluated) : undefined,
+            internalNotes: c.internal_notes || c.internalNotes || '',
+            nonWarrantyExplanation: c.non_warranty_explanation || c.nonWarrantyExplanation || '',
+            contractorId: c.contractor_id || c.contractorId || undefined,
+            contractorName: c.contractor_name || c.contractorName || '',
+            contractorEmail: c.contractor_email || c.contractorEmail || '',
+            proposedDates: c.proposed_dates || c.proposedDates || [],
+            attachments: c.attachments || [],
+            comments: [],
+          }));
+          
+          setClaims(mappedClaims);
+          console.log(`✅ Loaded ${mappedClaims.length} claims for homeowner ${targetHomeownerId}`);
+        } else {
+          console.warn('⚠️ Invalid response from get-claims API:', data);
+          setClaims([]);
+        }
+      } catch (error: any) {
+        console.error('❌ Failed to fetch claims for homeowner:', error);
+        setClaims([]); // Clear claims on error
+      }
+    };
+
+    fetchClaimsForHomeowner();
+  }, [selectedHomeownerId, activeHomeowner?.id, userRole]); // Re-fetch when homeowner selection changes
+
   // Handle deep linking to specific claim from email
   useEffect(() => {
     if (typeof window === 'undefined' || !claims || claims.length === 0) return;
@@ -1045,20 +1076,6 @@ function App() {
   const [selectedAdminHomeownerId, setSelectedAdminHomeownerId] = useState<string | null>(() => 
     loadState('cascade_ui_homeowner_id', null)
   );
-  
-  // State for handling multiple homeowners with same email
-  const [matchingHomeowners, setMatchingHomeowners] = useState<Homeowner[] | null>(null);
-  const [selectedHomeownerId, setSelectedHomeownerId] = useState<string | null>(() => {
-    // Load the selected homeowner ID for the current user's email from localStorage
-    if (typeof window !== 'undefined') {
-      const userEmail = localStorage.getItem('cascade_user_email');
-      if (userEmail) {
-        const stored = localStorage.getItem(`cascade_selected_homeowner_${userEmail.toLowerCase()}`);
-        return stored || null;
-      }
-    }
-    return null;
-  });
 
   const [searchQuery, setSearchQuery] = useState('');
 
