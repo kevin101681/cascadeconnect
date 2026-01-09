@@ -27,6 +27,7 @@ import HomeownerManual from './HomeownerManual';
 import PayrollDashboard from './PayrollDashboard';
 import ScheduleTab from './ScheduleTab';
 import { HomeownerWarrantyGuide } from './HomeownerWarrantyGuide';
+import HomeownerDashboardMobile from './HomeownerDashboardMobile';
 
 // Lazy load TeamChat component
 const TeamChat = React.lazy(() => import('./TeamChat').catch(err => {
@@ -525,6 +526,21 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Default to null (closed) to be safe for mobile - will be set to 'CLAIMS' on desktop via useEffect
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | null>(null);
   const previousTabRef = useRef<typeof currentTab>(null); // Initialize with null to prevent treating it as "opening"
+  
+  // Mobile detection state for new dashboard
+  const [isMobileView, setIsMobileView] = useState<boolean>(false);
+  
+  // Set up responsive listener for mobile dashboard
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    
+    checkMobile(); // Initial check
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Responsive initialization: Open Claims tab automatically on desktop, keep closed on mobile
   useEffect(() => {
@@ -3722,6 +3738,44 @@ const Dashboard: React.FC<DashboardProps> = ({
       })
       .slice(0, 3);
     
+    // Render new mobile dashboard for homeowner view on mobile devices (when no tab is active)
+    if (isMobileView && isHomeownerView && displayHomeowner && !currentTab) {
+      return (
+        <>
+          {renderModals()}
+          <HomeownerDashboardMobile
+            homeowner={displayHomeowner}
+            onNavigateToModule={(module) => {
+              // Map module strings to existing tab state
+              const moduleMap: { [key: string]: typeof currentTab } = {
+                'TASKS': 'TASKS',
+                'SCHEDULE': 'SCHEDULE',
+                'BLUETAG': null, // Special handling
+                'CLAIMS': 'CLAIMS',
+                'MESSAGES': 'MESSAGES',
+                'NOTES': 'NOTES',
+                'CALLS': 'CALLS',
+                'INVOICES': 'INVOICES',
+                'PAYROLL': 'PAYROLL',
+                'DOCUMENTS': 'DOCUMENTS',
+                'MANUAL': 'MANUAL',
+                'HELP': 'HELP',
+              };
+              
+              if (module === 'BLUETAG') {
+                setShowPunchListApp(true);
+              } else {
+                const tab = moduleMap[module];
+                if (tab) {
+                  setCurrentTab(tab);
+                }
+              }
+            }}
+          />
+        </>
+      );
+    }
+    
     return (
       <>
         {renderModals()}
@@ -4125,6 +4179,17 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* RIGHT CONTENT AREA */}
           <div className="flex-1 min-w-0 space-y-6">
+            {/* Back to Dashboard Button - Mobile Homeowner Only */}
+            {isMobileView && isHomeownerView && currentTab && (
+              <button
+                onClick={() => setCurrentTab(null)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors md:hidden"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Back to Dashboard
+              </button>
+            )}
+            
             {/* Navigation Tabs at Top - Two column grid on mobile, horizontal tabs on desktop */}
             <div 
               ref={tabsContainerRef}
