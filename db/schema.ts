@@ -308,6 +308,53 @@ export const responseTemplates = pgTable('response_templates', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-// --- 14. Internal Chat System (Team Messaging) ---
+// --- 14. CBS Books Integration Tables ---
+// Invoices table for CBS Books accounting system
+export const invoices = pgTable('invoices', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  invoiceNumber: text('invoice_number').notNull(),
+  clientName: text('client_name').notNull(),
+  clientEmail: text('client_email'),
+  projectDetails: text('project_details'),
+  paymentLink: text('payment_link'),
+  checkNumber: text('check_number'),
+  date: timestamp('date').notNull(),
+  dueDate: timestamp('due_date').notNull(),
+  datePaid: timestamp('date_paid'),
+  total: text('total').notNull(), // Stored as text to avoid precision issues
+  status: text('status').notNull().default('draft'),
+  items: json('items').$type<any[]>().default([]),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Expenses table for CBS Books accounting system
+export const expenses = pgTable('expenses', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  date: timestamp('date').notNull(),
+  payee: text('payee').notNull(),
+  category: text('category').notNull(),
+  amount: text('amount').notNull(), // Stored as text to avoid precision issues
+  description: text('description'),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Clients table for CBS Books accounting system
+export const clients = pgTable('clients', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  companyName: text('company_name').notNull(),
+  checkPayorName: text('check_payor_name'),
+  email: text('email'),
+  address: text('address'),
+  addressLine1: text('address_line1'),
+  addressLine2: text('address_line2'),
+  city: text('city'),
+  state: text('state'),
+  zip: text('zip'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// --- 15. Internal Chat System (Team Messaging) ---
 // Import and export internal chat tables
 export * from './schema/internal-chat';
