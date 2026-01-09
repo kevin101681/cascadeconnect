@@ -1135,101 +1135,103 @@ If this repair work is billable, please let me know prior to scheduling.`);
             </button>
             
             {isMessageSummaryExpanded && (
-              <div className="mb-4">
-                {safeClaimMessages.length === 0 ? (
-                  <p className="text-sm text-secondary-on-container dark:text-gray-300 whitespace-pre-wrap leading-relaxed bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600">
-                    No messages sent for this claim yet. Messages sent via the "Send Message" button or to assigned subcontractors will appear here.
-                  </p>
-                ) : (
-                  <div className="space-y-3">
-                    {[...safeClaimMessages].sort((a, b) => 
-                      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-                    ).map((msg) => (
-                      <div
-                        key={msg.id}
-                        className="bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex flex-wrap items-center gap-2">
-                            {msg.type === 'HOMEOWNER' ? (
-                              <User className="h-4 w-4 text-primary" />
-                            ) : (
-                              <HardHat className="h-4 w-4 text-primary" />
+              <>
+                <div className="mb-4">
+                  {safeClaimMessages.length === 0 ? (
+                    <p className="text-sm text-secondary-on-container dark:text-gray-300 whitespace-pre-wrap leading-relaxed bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600">
+                      No messages sent for this claim yet. Messages sent via the "Send Message" button or to assigned subcontractors will appear here.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {[...safeClaimMessages].sort((a, b) => 
+                        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+                      ).map((msg) => (
+                        <div
+                          key={msg.id}
+                          className="bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-secondary-container-high dark:border-gray-600"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              {msg.type === 'HOMEOWNER' ? (
+                                <User className="h-4 w-4 text-primary" />
+                              ) : (
+                                <HardHat className="h-4 w-4 text-primary" />
+                              )}
+                              <span className="text-xs font-medium text-secondary-on-container dark:text-gray-300">
+                                {msg.type === 'HOMEOWNER' ? 'To Homeowner' : 'To Subcontractor'}
+                              </span>
+                              <span className="text-xs text-secondary-on-container dark:text-gray-500 opacity-70">•</span>
+                              <span className="text-xs text-secondary-on-container dark:text-gray-400 opacity-70">{msg.recipient}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => {
+                                  // Navigate to the Notes tab with message context and pre-filled body
+                                  const project = claim.jobName || claim.address;
+                                  const contextLabel = `${msg.subject} • ${project}`;
+                                  const prefilledBody = `Message ${project} back.`;
+                                  
+                                  useTaskStore.getState().openTasks(
+                                    claim.id,
+                                    contextLabel,
+                                    'message',
+                                    prefilledBody
+                                  );
+                                }}
+                                className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
+                                title={`Add a note about: ${msg.subject}`}
+                              >
+                                <StickyNote className="h-3.5 w-3.5" />
+                                <span>Note</span>
+                              </button>
+                              <span className="text-xs text-secondary-on-container dark:text-gray-400 opacity-70">
+                                {new Date(msg.timestamp).toLocaleString()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="mb-2">
+                            <p className="text-xs font-medium text-secondary-on-container dark:text-gray-400 opacity-70 mb-1">Subject:</p>
+                            <p className="text-sm text-secondary-on-container dark:text-gray-200">{msg.subject}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-secondary-on-container dark:text-gray-400 opacity-70 mb-1">Message:</p>
+                            <p className="text-sm text-secondary-on-container dark:text-gray-200 whitespace-pre-wrap">{msg.content}</p>
+                          </div>
+                          <div className="mt-2 pt-2 border-t border-secondary-container-high dark:border-gray-600 flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-xs text-secondary-on-container dark:text-gray-400 opacity-70">
+                              Sent by: {msg.senderName} • To: {msg.recipientEmail}
+                            </p>
+                            {onNavigate && (
+                              <button
+                                onClick={() => {
+                                  onNavigate('DASHBOARD', { initialTab: 'MESSAGES', initialThreadId: msg.threadId || null });
+                                }}
+                                className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded hover:bg-primary/10 dark:hover:bg-primary/20"
+                                title="View in Message Center"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                                View in Messages
+                              </button>
                             )}
-                            <span className="text-xs font-medium text-secondary-on-container dark:text-gray-300">
-                              {msg.type === 'HOMEOWNER' ? 'To Homeowner' : 'To Subcontractor'}
-                            </span>
-                            <span className="text-xs text-secondary-on-container dark:text-gray-500 opacity-70">•</span>
-                            <span className="text-xs text-secondary-on-container dark:text-gray-400 opacity-70">{msg.recipient}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => {
-                                // Navigate to the Notes tab with message context and pre-filled body
-                                const project = claim.jobName || claim.address;
-                                const contextLabel = `${msg.subject} • ${project}`;
-                                const prefilledBody = `Message ${project} back.`;
-                                
-                                useTaskStore.getState().openTasks(
-                                  claim.id,
-                                  contextLabel,
-                                  'message',
-                                  prefilledBody
-                                );
-                              }}
-                              className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
-                              title={`Add a note about: ${msg.subject}`}
-                            >
-                              <StickyNote className="h-3.5 w-3.5" />
-                              <span>Note</span>
-                            </button>
-                            <span className="text-xs text-secondary-on-container dark:text-gray-400 opacity-70">
-                              {new Date(msg.timestamp).toLocaleString()}
-                            </span>
                           </div>
                         </div>
-                        <div className="mb-2">
-                          <p className="text-xs font-medium text-secondary-on-container dark:text-gray-400 opacity-70 mb-1">Subject:</p>
-                          <p className="text-sm text-secondary-on-container dark:text-gray-200">{msg.subject}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs font-medium text-secondary-on-container dark:text-gray-400 opacity-70 mb-1">Message:</p>
-                          <p className="text-sm text-secondary-on-container dark:text-gray-200 whitespace-pre-wrap">{msg.content}</p>
-                        </div>
-                        <div className="mt-2 pt-2 border-t border-secondary-container-high dark:border-gray-600 flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-xs text-secondary-on-container dark:text-gray-400 opacity-70">
-                            Sent by: {msg.senderName} • To: {msg.recipientEmail}
-                          </p>
-                          {onNavigate && (
-                            <button
-                              onClick={() => {
-                                onNavigate('DASHBOARD', { initialTab: 'MESSAGES', initialThreadId: msg.threadId || null });
-                              }}
-                              className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors px-2 py-1 rounded hover:bg-primary/10 dark:hover:bg-primary/20"
-                              title="View in Message Center"
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                              View in Messages
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              {/* Send Message Button */}
-              <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-600">
-                <Button 
-                  type="button" 
-                  variant="filled"
-                  onClick={() => onSendMessage(claim)}
-                  className="w-full"
-                >
-                  Send Message
-                </Button>
-              </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Send Message Button */}
+                <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-600">
+                  <Button 
+                    type="button" 
+                    variant="filled"
+                    onClick={() => onSendMessage(claim)}
+                    className="w-full"
+                  >
+                    Send Message
+                  </Button>
+                </div>
+              </>
             )}
           </div>
           {/* Sub Assignment (Admin Only) */}
