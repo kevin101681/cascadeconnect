@@ -1129,6 +1129,22 @@ const Dashboard: React.FC<DashboardProps> = ({
   // New Claim Inline Creation State
   const [isCreatingNewClaim, setIsCreatingNewClaim] = useState(false);
 
+  // Handler for claim selection with unsaved changes warning
+  const handleClaimSelection = useCallback((claim: Claim) => {
+    if (isCreatingNewClaim) {
+      const confirmed = confirm(
+        'You have unsaved changes in your new claim. Are you sure you want to navigate away? All unsaved data will be lost.'
+      );
+      if (!confirmed) {
+        return; // User cancelled, stay on new claim
+      }
+      // User confirmed, close new claim form
+      setIsCreatingNewClaim(false);
+    }
+    // Navigate to the selected claim
+    setSelectedClaimForModal(claim);
+  }, [isCreatingNewClaim, setSelectedClaimForModal]);
+
   // New Task Modal State
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -2033,7 +2049,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm md:hover:shadow-elevation-1'
                     }`}
                     onClick={() => {
-                      setSelectedClaimForModal(claim);
+                      handleClaimSelection(claim);
                     }}
                   >
                       <div className="px-4 py-4">
@@ -2309,7 +2325,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <div key={claim.id} className="relative">
                       <button
                         type="button"
-                        onClick={() => setSelectedClaimForModal(claim)}
+                        onClick={() => handleClaimSelection(claim)}
                         className="w-full text-left cursor-pointer [-webkit-tap-highlight-color:transparent]"
                       >
                         <WarrantyCard
@@ -2905,7 +2921,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     onSelectClaim={(claim) => {
                       setSelectedTaskForModal(null);
                         setTasksTabStartInEditMode(false);
-                      setSelectedClaimForModal(claim);
+                      handleClaimSelection(claim);
                       setCurrentTab('CLAIMS');
                     }}
                     taskMessages={taskMessages.filter(m => m.taskId === selectedTaskForModal.id)}
@@ -3400,7 +3416,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   onBack={() => setSelectedTaskForModal(null)}
                   onSelectClaim={(claim) => {
                     setSelectedTaskForModal(null);
-                    setSelectedClaimForModal(claim);
+                    handleClaimSelection(claim);
                     setCurrentTab('CLAIMS'); // Switch to CLAIMS tab when selecting a claim
                   }}
                   startInEditMode={true}
@@ -4181,7 +4197,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <div className="p-4 flex flex-col items-center">
                       <div 
                         className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-lg text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors w-full"
-                        onClick={() => setSelectedClaimForModal(firstClaim)}
+                        onClick={() => handleClaimSelection(firstClaim)}
                       >
                         <div className="flex items-center justify-between gap-2 mb-2">
                           <p className="font-medium text-secondary-on-container dark:text-gray-200 truncate text-center flex-1">{firstClaim.title}</p>
@@ -4467,7 +4483,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         isInline={true}
                         onNavigateToClaim={(claimId) => {
                           const claim = claims.find(c => c.id === claimId);
-                          if (claim) setSelectedClaimForModal(claim);
+                          if (claim) handleClaimSelection(claim);
                         }} 
                         claims={claims} 
                       />
@@ -4857,7 +4873,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       isInline={true}
                       onNavigateToClaim={(claimId) => {
                         const claim = claims.find(c => c.id === claimId);
-                        if (claim) setSelectedClaimForModal(claim);
+                        if (claim) handleClaimSelection(claim);
                       }} 
                       claims={claims} 
                     />
