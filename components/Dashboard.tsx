@@ -3421,45 +3421,47 @@ const Dashboard: React.FC<DashboardProps> = ({
         document.body
       )}
 
-      {/* NEW CLAIM MODAL */}
+      {/* NEW CLAIM MODAL - Matches Edit Claim Modal Layout */}
       {showNewClaimModal && createPortal(
         <div 
           data-new-claim-modal
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
-          style={{ zIndex: 1000, overscrollBehavior: 'contain' }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowNewClaimModal(false);
-          }}
+          style={{ overscrollBehavior: 'contain' }}
         >
-          <div className="bg-surface dark:bg-gray-800 w-full max-w-4xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] flex flex-col h-[90vh]">
-            <div className="p-6 bg-surface dark:bg-gray-800 overflow-y-auto flex-1 min-h-0">
-              {onCreateClaim ? (
-                <Suspense fallback={
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] flex flex-col h-[90vh]">
+            <div 
+              className="overflow-y-auto overflow-x-hidden flex-1 min-h-0 overscroll-contain -webkit-overflow-scrolling-touch"
+              style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+            >
+              <div className="p-4">
+                {onCreateClaim ? (
+                  <Suspense fallback={
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  }>
+                    <NewClaimForm
+                      onSubmit={(data) => {
+                        onCreateClaim(data);
+                        setShowNewClaimModal(false);
+                      }}
+                      onCancel={() => setShowNewClaimModal(false)}
+                      onSendMessage={() => {
+                        setShowNewClaimModal(false);
+                        setCurrentTab('MESSAGES');
+                      }}
+                      contractors={contractors}
+                      activeHomeowner={targetHomeowner || activeHomeowner}
+                      userRole={userRole}
+                    />
+                  </Suspense>
+                ) : (
+                  <div className="text-center py-8">
+                    <p className="text-surface-on-variant dark:text-gray-400 mb-4">Claim creation handler not available.</p>
+                    <Button variant="text" onClick={() => setShowNewClaimModal(false)}>Close</Button>
                   </div>
-                }>
-                  <NewClaimForm
-                    onSubmit={(data) => {
-                      onCreateClaim(data);
-                      setShowNewClaimModal(false);
-                    }}
-                    onCancel={() => setShowNewClaimModal(false)}
-                    onSendMessage={() => {
-                      setShowNewClaimModal(false);
-                      setCurrentTab('MESSAGES');
-                    }}
-                    contractors={contractors}
-                    activeHomeowner={targetHomeowner || activeHomeowner}
-                    userRole={userRole}
-                  />
-                </Suspense>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-surface-on-variant dark:text-gray-400 mb-4">Claim creation handler not available.</p>
-                  <Button variant="text" onClick={() => setShowNewClaimModal(false)}>Close</Button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         </div>,

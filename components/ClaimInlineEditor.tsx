@@ -7,12 +7,6 @@ import MaterialSelect from './MaterialSelect';
 import { ClaimMessage } from './MessageSummaryModal';
 import ImageViewerModal from './ImageViewerModal';
 import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload, FileEdit, Trash2, StickyNote, Calendar as CalendarIcon, Tag, Bot } from 'lucide-react';
-import { format } from 'date-fns';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar as CalendarUI } from '@/components/ui/calendar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
@@ -92,7 +86,10 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   const [proposeDate, setProposeDate] = useState('');
   const [proposeTime, setProposeTime] = useState<'AM' | 'PM' | 'All Day'>('AM');
   const [showCalendarPicker, setShowCalendarPicker] = useState(false);
+  
+  // Calendar picker state for Material 3 components
   const [showDateEvaluatedPicker, setShowDateEvaluatedPicker] = useState(false);
+  const [showScheduledDatePicker, setShowScheduledDatePicker] = useState(false);
   
   // Service Order state
   const [showSOModal, setShowSOModal] = useState(false);
@@ -1300,59 +1297,69 @@ If this repair work is billable, please let me know prior to scheduling.`);
               Scheduling
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Scheduled Date Field */}
+              {/* Scheduled Date Field - Material 3 */}
               <div className="space-y-2">
-                <Label className="text-xs font-medium uppercase text-muted-foreground">Scheduled Date</Label>
+                <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">Scheduled Date</label>
                 {isAdmin && isEditing && !isReadOnly ? (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        className={cn(
-                          "w-full justify-start text-left font-normal h-10 flex items-center px-3 py-2 rounded-md border border-surface-outline-variant dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors",
-                          !proposeDate && !scheduledDate && "text-surface-on-variant dark:text-gray-400"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {proposeDate ? format(new Date(proposeDate), "PPP") : scheduledDate ? format(new Date(scheduledDate.date), "PPP") : "Select date..."}
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600">
-                      <CalendarUI
-                        mode="single"
-                        selected={proposeDate ? new Date(proposeDate) : scheduledDate ? new Date(scheduledDate.date) : undefined}
-                        onSelect={(date) => setProposeDate(date ? date.toISOString().split('T')[0] : '')}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setShowScheduledDatePicker(true)}
+                      className="w-full h-[56px] flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-800 hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
+                    >
+                      <CalendarIcon className="h-5 w-5 text-surface-on-variant dark:text-gray-400 mr-3" />
+                      <span className="text-surface-on dark:text-gray-100">
+                        {proposeDate ? new Date(proposeDate).toLocaleDateString('en-US', { 
+                          weekday: 'short',
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        }) : scheduledDate ? new Date(scheduledDate.date).toLocaleDateString('en-US', { 
+                          weekday: 'short',
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        }) : 'Select date...'}
+                      </span>
+                    </button>
+                    
+                    <CalendarPicker
+                      isOpen={showScheduledDatePicker}
+                      onClose={() => setShowScheduledDatePicker(false)}
+                      onSelectDate={(date) => {
+                        setProposeDate(date.toISOString().split('T')[0]);
+                        setShowScheduledDatePicker(false);
+                      }}
+                      selectedDate={proposeDate ? new Date(proposeDate) : scheduledDate ? new Date(scheduledDate.date) : null}
+                    />
+                  </>
                 ) : scheduledDate ? (
-                  <span className="text-sm text-surface-on dark:text-gray-100">{format(new Date(scheduledDate.date), "PPP")}</span>
+                  <span className="text-sm text-surface-on dark:text-gray-100">
+                    {new Date(scheduledDate.date).toLocaleDateString('en-US', { 
+                      weekday: 'short',
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}
+                  </span>
                 ) : (
                   <span className="text-sm text-surface-on-variant dark:text-gray-400">No appointment scheduled</span>
                 )}
               </div>
 
-              {/* Time Slot Field */}
+              {/* Time Slot Field - Material 3 */}
               <div className="space-y-2">
-                <Label className="text-xs font-medium uppercase text-muted-foreground">Time Slot</Label>
+                <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">Time Slot</label>
                 {isAdmin && isEditing && !isReadOnly ? (
-                  <Select
+                  <MaterialSelect
                     value={proposeTime || scheduledDate?.timeSlot || 'AM'}
-                    onValueChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
-                  >
-                    <SelectTrigger className="w-full h-10 bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <SelectValue placeholder="Select time slot..." />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent className="bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600">
-                      <SelectItem value="AM">AM (8am - 12pm)</SelectItem>
-                      <SelectItem value="PM">PM (12pm - 4pm)</SelectItem>
-                      <SelectItem value="All Day">All Day</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    onChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
+                    options={[
+                      { value: 'AM', label: 'AM (8am - 12pm)' },
+                      { value: 'PM', label: 'PM (12pm - 4pm)' },
+                      { value: 'All Day', label: 'All Day' }
+                    ]}
+                  />
                 ) : scheduledDate?.timeSlot ? (
                   <span className="text-sm text-surface-on dark:text-gray-100">{scheduledDate.timeSlot === 'AM' ? 'AM (8am-12pm)' : scheduledDate.timeSlot === 'PM' ? 'PM (12pm-4pm)' : 'All Day'}</span>
                 ) : null}
@@ -1449,65 +1456,68 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 Warranty Assessment
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Classification Field */}
+                {/* Classification Field - Material 3 */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium uppercase text-muted-foreground">Classification</Label>
+                  <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">Classification</label>
                   {isEditing && !isReadOnly ? (
-                    <Select
+                    <MaterialSelect
                       value={editClassification || ""}
-                      onValueChange={(value) => setEditClassification(value as ClaimClassification)}
-                    >
-                      <SelectTrigger className="w-full h-10 bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                        <div className="flex items-center gap-2">
-                          <Tag className="h-4 w-4 text-muted-foreground" />
-                          <SelectValue placeholder="Select classification..." />
-                        </div>
-                      </SelectTrigger>
-                      <SelectContent className="bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600">
-                        <SelectItem value="11-Month">11 Month</SelectItem>
-                        <SelectItem value="Structural">Structural</SelectItem>
-                        <SelectItem value="Plumbing">Plumbing</SelectItem>
-                        <SelectItem value="Electrical">Electrical</SelectItem>
-                        <SelectItem value="Exterior">Exterior</SelectItem>
-                        <SelectItem value="Non-Warranty">Non-Warranty</SelectItem>
-                        <SelectItem value="Service Complete">Service Complete</SelectItem>
-                        <SelectItem value="Manufacturer Defect">Manufacturer Defect</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      onChange={(value) => setEditClassification(value as ClaimClassification)}
+                      options={[
+                        { value: '11-Month', label: '11 Month' },
+                        { value: 'Structural', label: 'Structural' },
+                        { value: 'Plumbing', label: 'Plumbing' },
+                        { value: 'Electrical', label: 'Electrical' },
+                        { value: 'Exterior', label: 'Exterior' },
+                        { value: 'Non-Warranty', label: 'Non-Warranty' },
+                        { value: 'Service Complete', label: 'Service Complete' },
+                        { value: 'Manufacturer Defect', label: 'Manufacturer Defect' }
+                      ]}
+                    />
                   ) : (
                     <span className="text-sm text-surface-on dark:text-gray-100">{claim.classification}</span>
                   )}
                 </div>
 
-                {/* Date Evaluated Field */}
+                {/* Date Evaluated Field - Material 3 */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium uppercase text-muted-foreground">Date Evaluated</Label>
+                  <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">Date Evaluated</label>
                   {isEditing && !isReadOnly && isAdmin ? (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button
-                          type="button"
-                          className={cn(
-                            "w-full justify-start text-left font-normal h-10 flex items-center px-3 py-2 rounded-md border border-surface-outline-variant dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors",
-                            !editDateEvaluated && "text-surface-on-variant dark:text-gray-400"
-                          )}
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {editDateEvaluated ? format(new Date(editDateEvaluated), "PPP") : "Select date..."}
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600">
-                        <CalendarUI
-                          mode="single"
-                          selected={editDateEvaluated ? new Date(editDateEvaluated) : undefined}
-                          onSelect={(date) => setEditDateEvaluated(date ? date.toISOString() : null)}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setShowDateEvaluatedPicker(true)}
+                        className="w-full h-[56px] flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-800 hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
+                      >
+                        <CalendarIcon className="h-5 w-5 text-surface-on-variant dark:text-gray-400 mr-3" />
+                        <span className="text-surface-on dark:text-gray-100">
+                          {editDateEvaluated ? new Date(editDateEvaluated).toLocaleDateString('en-US', { 
+                            weekday: 'short',
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          }) : 'Select date...'}
+                        </span>
+                      </button>
+                      
+                      <CalendarPicker
+                        isOpen={showDateEvaluatedPicker}
+                        onClose={() => setShowDateEvaluatedPicker(false)}
+                        onSelectDate={(date) => {
+                          setEditDateEvaluated(date.toISOString());
+                          setShowDateEvaluatedPicker(false);
+                        }}
+                        selectedDate={editDateEvaluated ? new Date(editDateEvaluated) : null}
+                      />
+                    </>
                   ) : (
                     <span className="text-sm text-surface-on dark:text-gray-100">
-                      {claim.dateEvaluated ? format(new Date(claim.dateEvaluated), "PPP") : 'Not evaluated'}
+                      {claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString('en-US', { 
+                        weekday: 'short',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      }) : 'Not evaluated'}
                     </span>
                   )}
                 </div>
