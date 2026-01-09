@@ -1220,18 +1220,16 @@ If this repair work is billable, please let me know prior to scheduling.`);
               </div>
               
               {/* Send Message Button */}
-              {isMessageSummaryExpanded && (
-                <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-600">
-                  <Button 
-                    type="button" 
-                    variant="filled"
-                    onClick={() => onSendMessage(claim)}
-                    className="w-full"
-                  >
-                    Send Message
-                  </Button>
-                </div>
-              )}
+              <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-600">
+                <Button 
+                  type="button" 
+                  variant="filled"
+                  onClick={() => onSendMessage(claim)}
+                  className="w-full"
+                >
+                  Send Message
+                </Button>
+              </div>
             )}
           </div>
           {/* Sub Assignment (Admin Only) */}
