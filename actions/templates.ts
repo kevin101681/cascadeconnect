@@ -4,20 +4,21 @@
  */
 
 import { useUser } from '@clerk/clerk-react';
+import { type ResponseTemplate as DBResponseTemplate } from '@/db/schema';
 
 // ============================================================
-// Types
+// Types (Strict Type-First: Source from DB Schema)
 // ============================================================
 
-export interface ResponseTemplate {
-  id: string;
-  userId: string;
-  title: string;
-  content: string;
-  category: string;
+/**
+ * Client-side ResponseTemplate type
+ * Extends DB type but guarantees Date objects (not null) after serialization
+ */
+export type ResponseTemplate = Omit<DBResponseTemplate, 'createdAt' | 'updatedAt' | 'category'> & {
   createdAt: Date;
   updatedAt: Date;
-}
+  category: string; // Guaranteed non-null after sanitization
+};
 
 export interface CreateTemplateData {
   title: string;
@@ -68,9 +69,10 @@ export async function getTemplates(userId: string): Promise<ResponseTemplate[]> 
 
     const templates = await response.json();
     
-    // Convert date strings to Date objects
+    // Convert date strings to Date objects + sanitize nullable fields
     return templates.map((t: any) => ({
       ...t,
+      category: t.category ?? 'General', // Null → 'General' (defensive)
       createdAt: new Date(t.createdAt),
       updatedAt: new Date(t.updatedAt),
     }));
@@ -158,6 +160,7 @@ export async function updateTemplate(
     
     return {
       ...template,
+      category: template.category ?? 'General', // Null → 'General' (defensive)
       createdAt: new Date(template.createdAt),
       updatedAt: new Date(template.updatedAt),
     };

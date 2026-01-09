@@ -214,7 +214,7 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
                             {template.content}
                           </p>
                           <p className="text-xs text-surface-on-variant dark:text-gray-500 mt-2">
-                            Created: {template.createdAt.toLocaleDateString()}
+                            Created: {template.createdAt?.toLocaleDateString() ?? 'Unknown'}
                           </p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">

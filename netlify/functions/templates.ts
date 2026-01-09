@@ -1,6 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { responseTemplates } from '../../db/schema';
+import { responseTemplates, type NewResponseTemplate } from '../../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
 interface HandlerResponse {
@@ -91,14 +91,17 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           };
         }
 
+        // Strictly typed insert (Zero 'any' Policy)
+        // Drizzle's $inferInsert excludes fields with defaults
+        // Pass values directly - Drizzle will validate at runtime
         const [newTemplate] = await db
           .insert(responseTemplates)
           .values({
             userId: userId,
             title: createData.title,
             content: createData.content,
-            category: createData.category || 'General',
-          } as any)
+            ...(createData.category && { category: createData.category }),
+          } satisfies NewResponseTemplate)
           .returning();
 
         return {

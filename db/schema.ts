@@ -308,6 +308,10 @@ export const responseTemplates = pgTable('response_templates', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
+// Type inference for Response Templates (Strict Type-First Approach)
+export type ResponseTemplate = typeof responseTemplates.$inferSelect;
+export type NewResponseTemplate = typeof responseTemplates.$inferInsert;
+
 // --- 14. CBS Books Integration Tables ---
 // Invoices table for CBS Books accounting system
 export const invoices = pgTable('invoices', {
