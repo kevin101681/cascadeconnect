@@ -24,8 +24,8 @@ export function HomeownerCard({
   onEdit,
 }: HomeownerCardProps) {
   return (
-    // CHANGED: rounded-xl -> rounded-[28px] to match Material 3 Dialog specs
-    <div className="bg-white dark:bg-gray-800 rounded-[28px] border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group">
+    // Material 3 Design: Using semantic rounded-card token
+    <div className="bg-white dark:bg-gray-800 rounded-card border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group">
       
       {/* 1. EDIT BUTTON */}
       <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity z-10">

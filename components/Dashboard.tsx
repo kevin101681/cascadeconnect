@@ -1932,7 +1932,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, filter?: 'All' | 'Open' | 'Closed', setFilter?: (filter: 'All' | 'Open' | 'Closed') => void, onExportExcel?: () => void, allClaims?: Claim[], isAdminView: boolean = false) => (
     <div 
-      className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col"
+      className="bg-surface dark:bg-gray-800 rounded-modal border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col"
     >
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
         <div className="flex items-center justify-between md:justify-center gap-4 w-full md:w-auto">
@@ -2213,10 +2213,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     return (
       <>
-      <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
+      <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
         {/* Left Column: Claims List */}
-        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
-          <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-3xl md:rounded-tr-none">
+        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 md:rounded-tl-modal md:rounded-tr-none md:rounded-bl-modal ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
+          <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-modal md:rounded-tr-none">
             <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               {filteredClaims.length > 0 && (
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-primary text-primary bg-primary/10 text-xs font-medium">
@@ -2377,7 +2377,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Right Column: Claim Detail View - Desktop Only */}
-        <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedClaimForModal && !isCreatingNewClaim ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
+        <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedClaimForModal && !isCreatingNewClaim ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-modal rounded-br-modal md:rounded-r-modal md:rounded-l-none`}>
           {isCreatingNewClaim ? (
             <>
               {/* New Claim Header Toolbar */}
@@ -2407,7 +2407,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 {showUnsavedWarning && (
                   <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center p-6">
                     {/* Material 3 Confirmation Dialog */}
-                    <div className="bg-surface-container-high dark:bg-gray-800 rounded-3xl shadow-elevation-3 max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="bg-surface-container-high dark:bg-gray-800 rounded-modal shadow-elevation-3 max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
                       {/* Dialog Title */}
                       <h3 className="text-xl font-semibold text-surface-on dark:text-gray-100 mb-3">
                         Unsaved Changes
@@ -2669,8 +2669,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   };
 
   const renderDocumentsTab = () => (
-    <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col">
-      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 md:rounded-t-3xl">
+    <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col">
+      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 md:rounded-t-modal">
         <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
           Account Documents
@@ -2834,7 +2834,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     return (
       <>
-      <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
+      <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
         {/* Left Column: Tasks List */}
         <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedTaskForModal ? 'hidden md:flex' : 'flex'}`}>
           <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-3xl md:rounded-tr-none">

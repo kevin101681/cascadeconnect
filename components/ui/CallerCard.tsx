@@ -25,7 +25,7 @@ export function CallerCard({
   return (
     <div 
       onClick={onClick}
-      className={`group relative bg-white rounded-[28px] border border-gray-200 p-5 shadow-sm transition-all h-full flex flex-col justify-between
+      className={`group relative bg-white rounded-card border border-gray-200 p-5 shadow-sm transition-all h-full flex flex-col justify-between
         ${onClick ? 'cursor-pointer' : ''}
         hover:shadow-md hover:border-blue-300
       `}

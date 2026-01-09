@@ -144,9 +144,19 @@ export default {
         'gentle': 'cubic-bezier(0.2, 0, 0, 1)',
       },
       borderRadius: {
-        'xl': '12px',
-        '2xl': '16px',
-        '3xl': '24px',
+        // Material 3 Design System - Standard Radius Tokens
+        'xs': '4px',         // Extra small - chips, small buttons
+        'sm': '8px',         // Small - text fields, small cards
+        'md': '12px',        // Medium - default for most components
+        'lg': '16px',        // Large - larger cards, dialogs
+        'xl': '20px',        // Extra large - featured cards
+        '2xl': '24px',       // 2X large - large dialogs
+        '3xl': '28px',       // 3X large - PRIMARY CARD RADIUS (Material 3 standard)
+        'card': '28px',      // Semantic alias for card components
+        'modal': '28px',     // Semantic alias for modal/dialog components
+        'input': '12px',     // Semantic alias for input components
+        'button': '24px',    // Semantic alias for button components
+        'full': '9999px',    // Full rounded (pills, avatars)
       },
       boxShadow: {
         'elevation-1': '0px 1px 2px 0px rgba(0,0,0,0.3), 0px 1px 3px 1px rgba(0,0,0,0.15)',

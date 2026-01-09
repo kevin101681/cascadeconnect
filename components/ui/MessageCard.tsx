@@ -19,7 +19,7 @@ export function MessageCard({
   return (
     <div 
       onClick={onClick}
-      className={`group relative bg-white rounded-[28px] border p-5 shadow-sm transition-all h-full flex flex-col justify-between
+      className={`group relative bg-white rounded-card border p-5 shadow-sm transition-all h-full flex flex-col justify-between
         ${onClick ? 'cursor-pointer' : ''}
         ${isRead ? 'border-gray-200 hover:border-blue-300 hover:shadow-md' : 'border-blue-200 bg-blue-50/30 hover:shadow-md'}
       `}

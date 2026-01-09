@@ -55,7 +55,7 @@ export function InvoiceCard({
   return (
     <div 
       onClick={onClick}
-      className={`group relative bg-white rounded-[28px] border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all hover:border-blue-300 flex flex-col h-full ${
+      className={`group relative bg-white rounded-card border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all hover:border-blue-300 flex flex-col h-full ${
         onClick ? 'cursor-pointer' : ''
       }`}
     >
@@ -117,7 +117,7 @@ export function InvoiceCard({
       </div>
 
       {/* 4. FOOTER: Actions & Input */}
-      <div className="mt-auto pt-3 border-t border-gray-100 bg-gray-50/50 -mx-5 -mb-5 p-5 rounded-b-[28px]">
+      <div className="mt-auto pt-3 border-t border-gray-100 bg-gray-50/50 -mx-5 -mb-5 p-5 rounded-b-card">
         
         {/* Check Number Field */}
         <div className="mb-3">

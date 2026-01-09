@@ -16,7 +16,7 @@ export function NoteCard({
 }: NoteCardProps) {
   return (
     <div 
-      className={`group relative bg-white rounded-[28px] border p-5 shadow-sm transition-all h-full flex flex-col justify-between
+      className={`group relative bg-white rounded-card border p-5 shadow-sm transition-all h-full flex flex-col justify-between
         ${isCompleted 
           ? 'border-gray-100 bg-gray-50/50 opacity-75' 
           : 'border-gray-200 hover:shadow-md hover:border-blue-300'
