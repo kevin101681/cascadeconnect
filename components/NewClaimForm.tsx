@@ -816,7 +816,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                   </div>
                 </div>
               )}
-              </div>
             </div>
           </>
         )}
