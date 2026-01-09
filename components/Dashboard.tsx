@@ -4943,7 +4943,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                {renderClaimsList(displayClaims, isHomeownerView)}
+                {renderClaimsList(displayClaims, filteredClaimsForModal, isHomeownerView)}
               </div>
             </motion.div>
           )}
@@ -4959,7 +4959,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
                 <div className="flex flex-col h-full md:h-auto">
-                  {renderTasksTab()}
+                  {renderTasksTab(userTasks, filteredTasksForModal)}
                 </div>
               </div>
             </motion.div>
