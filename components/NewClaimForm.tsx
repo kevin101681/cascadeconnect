@@ -9,7 +9,8 @@ import MaterialSelect from './MaterialSelect';
 import { ToastContainer, Toast } from './Toast';
 import { uploadMultipleFiles } from '../lib/services/uploadService';
 import { analyzeWarrantyImage } from '../actions/analyze-image';
-import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar, Trash2, Plus, Sparkles } from 'lucide-react';
+import { getTemplates, type ResponseTemplate } from '../actions/templates';
+import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar, Trash2, Plus, Sparkles, FileSignature } from 'lucide-react';
 
 interface StagedClaim {
   id: string;
@@ -43,6 +44,11 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
   const [dateEvaluated, setDateEvaluated] = useState(new Date().toISOString().split('T')[0]);
   const [nonWarrantyExplanation, setNonWarrantyExplanation] = useState('');
   
+  // Response Templates State
+  const [responseTemplates, setResponseTemplates] = useState<ResponseTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  
   // Assignment (Admin Only)
   const [contractorSearch, setContractorSearch] = useState('');
   const [selectedContractorId, setSelectedContractorId] = useState<string>('');
@@ -74,6 +80,28 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showClassificationSelect]);
+
+  // Load response templates for admin users
+  useEffect(() => {
+    if (isAdmin) {
+      setLoadingTemplates(true);
+      getTemplates()
+        .then((templates) => setResponseTemplates(templates))
+        .catch((error) => {
+          console.error('Failed to load response templates:', error);
+        })
+        .finally(() => setLoadingTemplates(false));
+    }
+  }, [isAdmin]);
+
+  // Handle template selection
+  const handleTemplateSelect = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    const template = responseTemplates.find(t => t.id === templateId);
+    if (template) {
+      setNonWarrantyExplanation(template.content);
+    }
+  };
 
   // Attachments State
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -736,15 +764,43 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                 </div>
 
                 {classification === 'Non-Warranty' && (
-                   <div className="animate-in fade-in slide-in-from-top-2">
-                     <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block text-error">Non-Warranty Explanation (Required)</label>
-                     <textarea
-                       required
-                       className="w-full rounded-md border border-error bg-error/5 dark:bg-error/10 dark:border-error/50 px-3 py-2 text-surface-on dark:text-gray-100 focus:outline-none text-sm"
-                       rows={3}
-                       value={nonWarrantyExplanation}
-                       onChange={(e) => setNonWarrantyExplanation(e.target.value)}
-                     />
+                   <div className="animate-in fade-in slide-in-from-top-2 space-y-3">
+                     {/* Template Selector */}
+                     {responseTemplates.length > 0 && (
+                       <div>
+                         <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block flex items-center gap-2">
+                           <FileSignature className="h-3.5 w-3.5" />
+                           Use Response Template
+                         </label>
+                         <select
+                           className="w-full rounded-md border border-surface-outline-variant dark:border-gray-600 bg-surface dark:bg-gray-800 px-3 py-2 text-surface-on dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                           value={selectedTemplateId}
+                           onChange={(e) => handleTemplateSelect(e.target.value)}
+                         >
+                           <option value="">-- Select a template --</option>
+                           {responseTemplates.map((template) => (
+                             <option key={template.id} value={template.id}>
+                               {template.title} {template.category !== 'General' ? `(${template.category})` : ''}
+                             </option>
+                           ))}
+                         </select>
+                       </div>
+                     )}
+
+                     {/* Non-Warranty Explanation Text Area */}
+                     <div>
+                       <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block text-error">
+                         Non-Warranty Explanation (Required)
+                       </label>
+                       <textarea
+                         required
+                         className="w-full rounded-md border border-error bg-error/5 dark:bg-error/10 dark:border-error/50 px-3 py-2 text-surface-on dark:text-gray-100 focus:outline-none text-sm"
+                         rows={4}
+                         value={nonWarrantyExplanation}
+                         onChange={(e) => setNonWarrantyExplanation(e.target.value)}
+                         placeholder="Enter the explanation for why this claim is not covered under warranty..."
+                       />
+                     </div>
                    </div>
                 )}
               </div>

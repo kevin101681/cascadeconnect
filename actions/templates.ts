@@ -1,106 +1,113 @@
+'use server';
+
 /**
- * Response Templates - LocalStorage Implementation
- * Simple CRUD operations for managing warranty response templates
+ * Response Templates - Database-backed Server Actions
+ * CRUD operations for managing warranty response templates
  */
 
-const STORAGE_KEY = 'cascade_response_templates';
+import { auth } from '@clerk/nextjs/server';
+import { db } from '@/db';
+import { responseTemplates } from '@/db/schema';
+import { eq, and, desc } from 'drizzle-orm';
+import { z } from 'zod';
+
+// ============================================================
+// Types & Validation
+// ============================================================
 
 export interface ResponseTemplate {
   id: string;
+  userId: string;
   title: string;
   content: string;
   category: string;
   createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface CreateTemplateData {
-  title: string;
-  content: string;
-  category?: string;
-}
+const createTemplateSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
+  content: z.string().min(1, 'Content is required').max(5000, 'Content too long'),
+  category: z.string().optional().default('General'),
+});
 
-export interface UpdateTemplateData {
-  title?: string;
-  content?: string;
-  category?: string;
-}
+const updateTemplateSchema = z.object({
+  title: z.string().min(1).max(200).optional(),
+  content: z.string().min(1).max(5000).optional(),
+  category: z.string().optional(),
+});
 
-/**
- * Load templates from localStorage
- */
-function loadTemplatesFromStorage(): ResponseTemplate[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return [];
-    
-    const parsed = JSON.parse(stored);
-    // Convert createdAt strings back to Date objects
-    return parsed.map((t: any) => ({
-      ...t,
-      createdAt: new Date(t.createdAt)
-    }));
-  } catch (error) {
-    console.error('Error loading templates from localStorage:', error);
-    return [];
-  }
-}
+export type CreateTemplateData = z.infer<typeof createTemplateSchema>;
+export type UpdateTemplateData = z.infer<typeof updateTemplateSchema>;
+
+// ============================================================
+// Server Actions
+// ============================================================
 
 /**
- * Save templates to localStorage
- */
-function saveTemplatesToStorage(templates: ResponseTemplate[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(templates));
-  } catch (error) {
-    console.error('Error saving templates to localStorage:', error);
-    throw new Error('Failed to save templates');
-  }
-}
-
-/**
- * Generate a unique ID for a template
- */
-function generateId(): string {
-  return `template_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-}
-
-/**
- * Get all response templates ordered by title
+ * Get all response templates for the current user
  */
 export async function getTemplates(): Promise<ResponseTemplate[]> {
-  // Simulate async operation for consistency with future database migration
-  return new Promise((resolve) => {
-    const templates = loadTemplatesFromStorage();
-    const sorted = templates.sort((a, b) => a.title.localeCompare(b.title));
-    resolve(sorted);
-  });
+  try {
+    const { userId } = await auth();
+    
+    if (!userId) {
+      throw new Error('Unauthorized: User must be logged in');
+    }
+
+    const templates = await db
+      .select()
+      .from(responseTemplates)
+      .where(eq(responseTemplates.userId, userId))
+      .orderBy(desc(responseTemplates.createdAt));
+
+    return templates.map(t => ({
+      ...t,
+      createdAt: new Date(t.createdAt!),
+      updatedAt: new Date(t.updatedAt!),
+    }));
+  } catch (error) {
+    console.error('Error fetching templates:', error);
+    throw new Error('Failed to fetch templates');
+  }
 }
 
 /**
  * Create a new response template
  */
 export async function createTemplate(data: CreateTemplateData): Promise<ResponseTemplate> {
-  return new Promise((resolve, reject) => {
-    try {
-      const templates = loadTemplatesFromStorage();
-      
-      const newTemplate: ResponseTemplate = {
-        id: generateId(),
-        title: data.title,
-        content: data.content,
-        category: data.category || 'General',
-        createdAt: new Date(),
-      };
-      
-      templates.push(newTemplate);
-      saveTemplatesToStorage(templates);
-      
-      resolve(newTemplate);
-    } catch (error) {
-      console.error('Error creating template:', error);
-      reject(new Error('Failed to create template'));
+  try {
+    const { userId } = await auth();
+    
+    if (!userId) {
+      throw new Error('Unauthorized: User must be logged in');
     }
-  });
+
+    // Validate input
+    const validated = createTemplateSchema.parse(data);
+
+    const [newTemplate] = await db
+      .insert(responseTemplates)
+      .values({
+        userId,
+        title: validated.title,
+        content: validated.content,
+        category: validated.category,
+      })
+      .returning();
+
+    return {
+      ...newTemplate,
+      createdAt: new Date(newTemplate.createdAt!),
+      updatedAt: new Date(newTemplate.updatedAt!),
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new Error(`Validation error: ${error.errors[0].message}`);
+    }
+    console.error('Error creating template:', error);
+    throw new Error('Failed to create template');
+  }
 }
 
 /**
@@ -110,53 +117,76 @@ export async function updateTemplate(
   id: string,
   data: UpdateTemplateData
 ): Promise<ResponseTemplate> {
-  return new Promise((resolve, reject) => {
-    try {
-      const templates = loadTemplatesFromStorage();
-      const index = templates.findIndex((t) => t.id === id);
-      
-      if (index === -1) {
-        reject(new Error('Template not found'));
-        return;
-      }
-      
-      templates[index] = {
-        ...templates[index],
-        ...(data.title !== undefined && { title: data.title }),
-        ...(data.content !== undefined && { content: data.content }),
-        ...(data.category !== undefined && { category: data.category }),
-      };
-      
-      saveTemplatesToStorage(templates);
-      resolve(templates[index]);
-    } catch (error) {
-      console.error('Error updating template:', error);
-      reject(new Error('Failed to update template'));
+  try {
+    const { userId } = await auth();
+    
+    if (!userId) {
+      throw new Error('Unauthorized: User must be logged in');
     }
-  });
+
+    // Validate input
+    const validated = updateTemplateSchema.parse(data);
+
+    // Check ownership and update
+    const [updatedTemplate] = await db
+      .update(responseTemplates)
+      .set({
+        ...validated,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(responseTemplates.id, id),
+          eq(responseTemplates.userId, userId)
+        )
+      )
+      .returning();
+
+    if (!updatedTemplate) {
+      throw new Error('Template not found or access denied');
+    }
+
+    return {
+      ...updatedTemplate,
+      createdAt: new Date(updatedTemplate.createdAt!),
+      updatedAt: new Date(updatedTemplate.updatedAt!),
+    };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new Error(`Validation error: ${error.errors[0].message}`);
+    }
+    console.error('Error updating template:', error);
+    throw new Error('Failed to update template');
+  }
 }
 
 /**
  * Delete a response template
  */
 export async function deleteTemplate(id: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    try {
-      const templates = loadTemplatesFromStorage();
-      const filtered = templates.filter((t) => t.id !== id);
-      
-      if (filtered.length === templates.length) {
-        // No template was removed, it didn't exist
-        resolve(); // Silently succeed for idempotency
-        return;
-      }
-      
-      saveTemplatesToStorage(filtered);
-      resolve();
-    } catch (error) {
-      console.error('Error deleting template:', error);
-      reject(new Error('Failed to delete template'));
+  try {
+    const { userId } = await auth();
+    
+    if (!userId) {
+      throw new Error('Unauthorized: User must be logged in');
     }
-  });
-}
 
+    // Check ownership and delete
+    const result = await db
+      .delete(responseTemplates)
+      .where(
+        and(
+          eq(responseTemplates.id, id),
+          eq(responseTemplates.userId, userId)
+        )
+      )
+      .returning();
+
+    if (result.length === 0) {
+      throw new Error('Template not found or access denied');
+    }
+  } catch (error) {
+    console.error('Error deleting template:', error);
+    throw new Error('Failed to delete template');
+  }
+}

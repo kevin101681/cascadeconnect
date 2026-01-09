@@ -300,10 +300,12 @@ export const appointmentGuests = pgTable('appointment_guests', {
 // --- 13. Response Templates (for Non-Warranty Explanations) ---
 export const responseTemplates = pgTable('response_templates', {
   id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id').notNull(), // Clerk ID of the user who created the template
   title: text('title').notNull(),
   content: text('content').notNull(),
   category: text('category').default('General'),
   createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 // --- 14. Internal Chat System (Team Messaging) ---
