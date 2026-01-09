@@ -612,119 +612,119 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
         
         {/* Sub Assignment, Scheduling, Warranty Assessment (Admin Only) */}
         {isAdmin && (
-             <>
-             {/* Sub Assignment (Admin Only) */}
-             <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-                <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Sub Assignment</h4>
-                
-                <div className="relative">
-                  <input 
-                    type="text"
-                    placeholder="Type to search subs..."
-                    className="w-full rounded-md border border-surface-outline dark:border-gray-600 bg-surface dark:bg-gray-700 px-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                    value={contractorSearch}
-                    onChange={(e) => setContractorSearch(e.target.value)}
-                  />
+          <>
+            {/* Sub Assignment (Admin Only) */}
+            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Sub Assignment</h4>
+              
+              <div className="relative">
+                <input 
+                  type="text"
+                  placeholder="Type to search subs..."
+                  className="w-full rounded-md border border-surface-outline dark:border-gray-600 bg-surface dark:bg-gray-700 px-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                  value={contractorSearch}
+                  onChange={(e) => setContractorSearch(e.target.value)}
+                />
+              </div>
+
+              {contractorSearch.trim().length > 0 && (
+                <div className="mt-2 max-h-40 overflow-y-auto border border-surface-outline-variant dark:border-gray-600 rounded-md bg-surface dark:bg-gray-700 shadow-elevation-1">
+                  {filteredContractors.length === 0 ? (
+                    <div className="px-3 py-2 text-xs text-surface-on-variant dark:text-gray-400">No subs found.</div>
+                  ) : (
+                    filteredContractors.map(c => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => { setSelectedContractorId(c.id); setContractorSearch(''); }}
+                        className={`w-full text-left px-3 py-2 text-sm flex justify-between hover:bg-surface-container dark:hover:bg-gray-600 ${selectedContractorId === c.id ? 'bg-primary-container text-primary-on-container' : 'text-surface-on dark:text-gray-100'}`}
+                      >
+                        <span>{c.companyName}</span>
+                        <span className="text-xs opacity-70">{c.specialty}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+              
+              {selectedContractorId && (
+                <div className="mt-2 flex flex-row items-center gap-3">
+                  <div className="flex items-center bg-secondary-container px-4 py-3 rounded-xl text-secondary-on-container flex-1 min-w-0">
+                    <div className="text-sm overflow-hidden min-w-0">
+                      <p className="font-bold truncate">{contractors.find(c => c.id === selectedContractorId)?.companyName}</p>
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    type="button"
+                    variant="filled" 
+                    disabled={true}
+                    icon={<FileText className="h-4 w-4" />}
+                    className="!h-12 whitespace-nowrap flex-shrink-0"
+                    title="Save the claim first to send a service order"
+                  >
+                    Email S.O.
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Scheduling - Admin Only */}
+            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4">
+              <h3 className="font-semibold leading-none tracking-tight">Scheduling</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Scheduled Date Field */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium uppercase text-muted-foreground">Scheduled Date</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        className={cn(
+                          "w-full justify-start text-left font-normal h-10 flex items-center px-3 py-2 rounded-md border border-surface-outline-variant dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors",
+                          !proposeDate && "text-surface-on-variant dark:text-gray-400"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {proposeDate ? format(new Date(proposeDate), "PPP") : "Select date..."}
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600">
+                      <CalendarUI
+                        mode="single"
+                        selected={proposeDate ? new Date(proposeDate) : undefined}
+                        onSelect={(date) => setProposeDate(date ? date.toISOString().split('T')[0] : '')}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
-                {contractorSearch.trim().length > 0 && (
-                  <div className="mt-2 max-h-40 overflow-y-auto border border-surface-outline-variant dark:border-gray-600 rounded-md bg-surface dark:bg-gray-700 shadow-elevation-1">
-                    {filteredContractors.length === 0 ? (
-                      <div className="px-3 py-2 text-xs text-surface-on-variant dark:text-gray-400">No subs found.</div>
-                    ) : (
-                      filteredContractors.map(c => (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => { setSelectedContractorId(c.id); setContractorSearch(''); }}
-                          className={`w-full text-left px-3 py-2 text-sm flex justify-between hover:bg-surface-container dark:hover:bg-gray-600 ${selectedContractorId === c.id ? 'bg-primary-container text-primary-on-container' : 'text-surface-on dark:text-gray-100'}`}
-                        >
-                          <span>{c.companyName}</span>
-                          <span className="text-xs opacity-70">{c.specialty}</span>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                )}
-                
-                {selectedContractorId && (
-                  <div className="mt-2 flex flex-row items-center gap-3">
-                    <div className="flex items-center bg-secondary-container px-4 py-3 rounded-xl text-secondary-on-container flex-1 min-w-0">
-                      <div className="text-sm overflow-hidden min-w-0">
-                        <p className="font-bold truncate">{contractors.find(c => c.id === selectedContractorId)?.companyName}</p>
+                {/* Time Slot Field */}
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium uppercase text-muted-foreground">Time Slot</Label>
+                  <Select
+                    value={proposeTime}
+                    onValueChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
+                  >
+                    <SelectTrigger className="w-full h-10 bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <SelectValue placeholder="Select time slot..." />
                       </div>
-                    </div>
-                    
-                    <Button 
-                      type="button"
-                      variant="filled" 
-                      disabled={true}
-                      icon={<FileText className="h-4 w-4" />}
-                      className="!h-12 whitespace-nowrap flex-shrink-0"
-                      title="Save the claim first to send a service order"
-                    >
-                      Email S.O.
-                    </Button>
-                  </div>
-                )}
-             </div>
+                    </SelectTrigger>
+                    <SelectContent className="bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600">
+                      <SelectItem value="AM">AM (8am - 12pm)</SelectItem>
+                      <SelectItem value="PM">PM (12pm - 4pm)</SelectItem>
+                      <SelectItem value="All Day">All Day</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
 
-             {/* Scheduling - Admin Only */}
-             <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4">
-               <h3 className="font-semibold leading-none tracking-tight">Scheduling</h3>
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                 {/* Scheduled Date Field */}
-                 <div className="space-y-2">
-                   <Label className="text-xs font-medium uppercase text-muted-foreground">Scheduled Date</Label>
-                   <Popover>
-                     <PopoverTrigger asChild>
-                       <button
-                         type="button"
-                         className={cn(
-                           "w-full justify-start text-left font-normal h-10 flex items-center px-3 py-2 rounded-md border border-surface-outline-variant dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors",
-                           !proposeDate && "text-surface-on-variant dark:text-gray-400"
-                         )}
-                       >
-                         <CalendarIcon className="mr-2 h-4 w-4" />
-                         {proposeDate ? format(new Date(proposeDate), "PPP") : "Select date..."}
-                       </button>
-                     </PopoverTrigger>
-                     <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600">
-                       <CalendarUI
-                         mode="single"
-                         selected={proposeDate ? new Date(proposeDate) : undefined}
-                         onSelect={(date) => setProposeDate(date ? date.toISOString().split('T')[0] : '')}
-                         initialFocus
-                       />
-                     </PopoverContent>
-                   </Popover>
-                 </div>
-
-                 {/* Time Slot Field */}
-                 <div className="space-y-2">
-                   <Label className="text-xs font-medium uppercase text-muted-foreground">Time Slot</Label>
-                   <Select
-                     value={proposeTime}
-                     onValueChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
-                   >
-                     <SelectTrigger className="w-full h-10 bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                       <div className="flex items-center gap-2">
-                         <Clock className="h-4 w-4 text-muted-foreground" />
-                         <SelectValue placeholder="Select time slot..." />
-                       </div>
-                     </SelectTrigger>
-                     <SelectContent className="bg-white dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600">
-                       <SelectItem value="AM">AM (8am - 12pm)</SelectItem>
-                       <SelectItem value="PM">PM (12pm - 4pm)</SelectItem>
-                       <SelectItem value="All Day">All Day</SelectItem>
-                     </SelectContent>
-                   </Select>
-                 </div>
-               </div>
-             </div>
-
-             {/* Warranty Assessment (Admin Only) */}
-             <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4">
+            {/* Warranty Assessment (Admin Only) */}
+            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4">
               <h3 className="font-semibold leading-none tracking-tight">Warranty Assessment</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Classification Field */}
@@ -776,46 +776,46 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                 </div>
               </div>
 
-                {classification === 'Non-Warranty' && (
-                   <div className="animate-in fade-in slide-in-from-top-2 space-y-3">
-                     {/* Template Selector */}
-                     {responseTemplates.length > 0 && (
-                       <div>
-                         <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block flex items-center gap-2">
-                           <FileSignature className="h-3.5 w-3.5" />
-                           Use Response Template
-                         </label>
-                         <select
-                           className="w-full rounded-md border border-surface-outline-variant dark:border-gray-600 bg-surface dark:bg-gray-800 px-3 py-2 text-surface-on dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                           value={selectedTemplateId}
-                           onChange={(e) => handleTemplateSelect(e.target.value)}
-                         >
-                           <option value="">-- Select a template --</option>
-                           {responseTemplates.map((template) => (
-                             <option key={template.id} value={template.id}>
-                               {template.title} {template.category !== 'General' ? `(${template.category})` : ''}
-                             </option>
-                           ))}
-                         </select>
-                       </div>
-                     )}
+              {classification === 'Non-Warranty' && (
+                <div className="animate-in fade-in slide-in-from-top-2 space-y-3">
+                  {/* Template Selector */}
+                  {responseTemplates.length > 0 && (
+                    <div>
+                      <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block flex items-center gap-2">
+                        <FileSignature className="h-3.5 w-3.5" />
+                        Use Response Template
+                      </label>
+                      <select
+                        className="w-full rounded-md border border-surface-outline-variant dark:border-gray-600 bg-surface dark:bg-gray-800 px-3 py-2 text-surface-on dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                        value={selectedTemplateId}
+                        onChange={(e) => handleTemplateSelect(e.target.value)}
+                      >
+                        <option value="">-- Select a template --</option>
+                        {responseTemplates.map((template) => (
+                          <option key={template.id} value={template.id}>
+                            {template.title} {template.category !== 'General' ? `(${template.category})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
-                     {/* Non-Warranty Explanation Text Area */}
-                     <div>
-                       <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block text-error">
-                         Non-Warranty Explanation (Required)
-                       </label>
-                       <textarea
-                         required
-                         className="w-full rounded-md border border-error bg-error/5 dark:bg-error/10 dark:border-error/50 px-3 py-2 text-surface-on dark:text-gray-100 focus:outline-none text-sm"
-                         rows={4}
-                         value={nonWarrantyExplanation}
-                         onChange={(e) => setNonWarrantyExplanation(e.target.value)}
-                         placeholder="Enter the explanation for why this claim is not covered under warranty..."
-                       />
-                     </div>
-                   </div>
-                )}
+                  {/* Non-Warranty Explanation Text Area */}
+                  <div>
+                    <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block text-error">
+                      Non-Warranty Explanation (Required)
+                    </label>
+                    <textarea
+                      required
+                      className="w-full rounded-md border border-error bg-error/5 dark:bg-error/10 dark:border-error/50 px-3 py-2 text-surface-on dark:text-gray-100 focus:outline-none text-sm"
+                      rows={4}
+                      value={nonWarrantyExplanation}
+                      onChange={(e) => setNonWarrantyExplanation(e.target.value)}
+                      placeholder="Enter the explanation for why this claim is not covered under warranty..."
+                    />
+                  </div>
+                </div>
+              )}
               </div>
             </div>
           </>
