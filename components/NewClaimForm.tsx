@@ -818,11 +818,11 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                 )}
               </div>
             </div>
-           </>
-           )}
+          </>
+        )}
 
-      {/* Staging Area (Homeowners only) */}
-      {!isAdmin && stagedClaims.length > 0 && (
+        {/* Staging Area (Homeowners only) */}
+        {!isAdmin && stagedClaims.length > 0 && (
         <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
           <h3 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Pending Items ({stagedClaims.length})</h3>
           <div className="space-y-3 max-h-64 overflow-y-auto">
@@ -870,27 +870,27 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
             ))}
           </div>
         </div>
-      )}
+        )}
 
-      {/* Image Viewer Modal */}
-      <ImageViewerModal
-        isOpen={imageViewerOpen}
-        attachments={attachments}
-        initialIndex={imageViewerIndex}
-        onClose={() => setImageViewerOpen(false)}
-        onUpdateAttachment={(index, updatedUrl) => {
-          const updatedAttachments = [...attachments];
-          const imageAttachments = updatedAttachments.filter(a => a.type === 'IMAGE' && a.url);
-          const actualIndex = attachments.findIndex(a => a.url === imageAttachments[index]?.url);
-          if (actualIndex !== -1) {
-            updatedAttachments[actualIndex] = {
-              ...updatedAttachments[actualIndex],
-              url: updatedUrl
-            };
-            setAttachments(updatedAttachments);
-          }
-        }}
-      />
+        {/* Image Viewer Modal */}
+        <ImageViewerModal
+          isOpen={imageViewerOpen}
+          attachments={attachments}
+          initialIndex={imageViewerIndex}
+          onClose={() => setImageViewerOpen(false)}
+          onUpdateAttachment={(index, updatedUrl) => {
+            const updatedAttachments = [...attachments];
+            const imageAttachments = updatedAttachments.filter(a => a.type === 'IMAGE' && a.url);
+            const actualIndex = attachments.findIndex(a => a.url === imageAttachments[index]?.url);
+            if (actualIndex !== -1) {
+              updatedAttachments[actualIndex] = {
+                ...updatedAttachments[actualIndex],
+                url: updatedUrl
+              };
+              setAttachments(updatedAttachments);
+            }
+          }}
+        />
       
         {/* Footer with buttons */}
         <div className="flex justify-end gap-2 pt-6 border-t border-surface-outline-variant dark:border-gray-700 mt-auto flex-wrap">
