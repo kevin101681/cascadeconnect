@@ -1128,22 +1128,37 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // New Claim Inline Creation State
   const [isCreatingNewClaim, setIsCreatingNewClaim] = useState(false);
+  
+  // Unsaved changes confirmation dialog state
+  const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
+  const [pendingClaimSelection, setPendingClaimSelection] = useState<Claim | null>(null);
 
   // Handler for claim selection with unsaved changes warning
   const handleClaimSelection = useCallback((claim: Claim) => {
     if (isCreatingNewClaim) {
-      const confirmed = confirm(
-        'You have unsaved changes in your new claim. Are you sure you want to navigate away? All unsaved data will be lost.'
-      );
-      if (!confirmed) {
-        return; // User cancelled, stay on new claim
-      }
-      // User confirmed, close new claim form
-      setIsCreatingNewClaim(false);
+      // Show custom confirmation dialog instead of browser confirm
+      setPendingClaimSelection(claim);
+      setShowUnsavedWarning(true);
+      return;
     }
     // Navigate to the selected claim
     setSelectedClaimForModal(claim);
   }, [isCreatingNewClaim, setSelectedClaimForModal]);
+
+  // Handle confirmation dialog actions
+  const handleConfirmNavigation = useCallback(() => {
+    setShowUnsavedWarning(false);
+    setIsCreatingNewClaim(false);
+    if (pendingClaimSelection) {
+      setSelectedClaimForModal(pendingClaimSelection);
+      setPendingClaimSelection(null);
+    }
+  }, [pendingClaimSelection, setSelectedClaimForModal]);
+
+  const handleCancelNavigation = useCallback(() => {
+    setShowUnsavedWarning(false);
+    setPendingClaimSelection(null);
+  }, []);
 
   // New Task Modal State
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
@@ -2385,9 +2400,43 @@ const Dashboard: React.FC<DashboardProps> = ({
 
               {/* Scrollable New Claim Form Content */}
               <div 
-                className="flex-1 overflow-y-auto p-6 overscroll-contain"
+                className="flex-1 overflow-y-auto p-6 overscroll-contain relative"
                 style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
               >
+                {/* Backdrop overlay when warning is shown */}
+                {showUnsavedWarning && (
+                  <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-40 flex items-center justify-center p-6">
+                    {/* Material 3 Confirmation Dialog */}
+                    <div className="bg-surface-container-high dark:bg-gray-800 rounded-3xl shadow-elevation-3 max-w-md w-full p-6 animate-in fade-in zoom-in-95 duration-200">
+                      {/* Dialog Title */}
+                      <h3 className="text-xl font-semibold text-surface-on dark:text-gray-100 mb-3">
+                        Unsaved Changes
+                      </h3>
+                      
+                      {/* Dialog Content */}
+                      <p className="text-surface-on-variant dark:text-gray-300 mb-6 leading-relaxed">
+                        You have unsaved changes in your new claim. Are you sure you want to navigate away? All unsaved data will be lost.
+                      </p>
+                      
+                      {/* Dialog Actions */}
+                      <div className="flex justify-end gap-3">
+                        <button
+                          onClick={handleCancelNavigation}
+                          className="px-6 py-2.5 rounded-full text-primary dark:text-primary font-medium hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleConfirmNavigation}
+                          className="px-6 py-2.5 rounded-full bg-primary text-primary-on font-medium hover:bg-primary/90 hover:shadow-elevation-1 transition-all"
+                        >
+                          Discard Changes
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <Suspense fallback={
                   <div className="flex items-center justify-center py-12">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
