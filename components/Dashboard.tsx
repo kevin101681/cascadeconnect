@@ -135,8 +135,8 @@ const ClaimsListColumn = React.memo<{
                   <WarrantyCard
                     title={claim.title}
                     classification={claim.classification}
-                    createdDate={new Date(claim.dateSubmitted).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    scheduledDate={scheduledDate ? new Date(scheduledDate.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
+                    createdDate={claim.dateSubmitted ? new Date(claim.dateSubmitted).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
+                    scheduledDate={scheduledDate?.date ? new Date(scheduledDate.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
                     soSentDate={serviceOrderDate ? new Date(serviceOrderDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
                     subName={claim.contractorName}
                     attachmentCount={claim.attachments?.length || 0}
@@ -195,11 +195,11 @@ const TasksListColumn = React.memo<{
             return (
               <TaskCard
                 key={task.id}
-                title={task.title}
+                title={task.title || 'Untitled Task'}
                 assignedTo={assignee?.name}
                 subsToScheduleCount={taskClaims.length}
                 dateAssigned={task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Not set'}
-                isCompleted={task.isCompleted}
+                isCompleted={task.isCompleted ?? false}
                 onClick={() => onTaskSelect(task)}
               />
             );
