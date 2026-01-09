@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useUser } from '@clerk/clerk-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,6 +23,7 @@ import {
 } from '@/actions/templates';
 
 export default function TemplatesPage() {
+  const { user } = useUser();
   const [templates, setTemplates] = useState<ResponseTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -35,13 +37,17 @@ export default function TemplatesPage() {
 
   // Load templates on mount
   useEffect(() => {
-    loadTemplates();
-  }, []);
+    if (user?.id) {
+      loadTemplates();
+    }
+  }, [user?.id]);
 
   const loadTemplates = async () => {
+    if (!user?.id) return;
+    
     try {
       setLoading(true);
-      const data = await getTemplates();
+      const data = await getTemplates(user.id);
       setTemplates(data);
     } catch (error) {
       console.error('Failed to load templates:', error);
@@ -81,6 +87,11 @@ export default function TemplatesPage() {
   };
 
   const handleSave = async () => {
+    if (!user?.id) {
+      alert('User not authenticated');
+      return;
+    }
+
     if (!formData.title.trim() || !formData.content.trim()) {
       alert('Please fill in both title and content');
       return;
@@ -89,9 +100,9 @@ export default function TemplatesPage() {
     try {
       setIsSaving(true);
       if (editingTemplate) {
-        await updateTemplate(editingTemplate.id, formData);
+        await updateTemplate(user.id, editingTemplate.id, formData);
       } else {
-        await createTemplate(formData);
+        await createTemplate(user.id, formData);
       }
       await loadTemplates();
       handleCloseDialog();
@@ -104,18 +115,35 @@ export default function TemplatesPage() {
   };
 
   const handleDelete = async (id: string) => {
+    if (!user?.id) {
+      alert('User not authenticated');
+      return;
+    }
+
     if (!confirm('Are you sure you want to delete this template?')) {
       return;
     }
 
     try {
-      await deleteTemplate(id);
+      await deleteTemplate(user.id, id);
       await loadTemplates();
     } catch (error) {
       console.error('Failed to delete template:', error);
       alert('Failed to delete template. Please try again.');
     }
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <p className="text-gray-600 dark:text-gray-400">Please sign in to manage templates.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

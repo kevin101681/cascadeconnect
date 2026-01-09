@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
+import { useUser } from '@clerk/clerk-react';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
 import { Contractor, ClaimClassification, Attachment, Homeowner, ClaimStatus, UserRole } from '../types';
 import Button from './Button';
@@ -29,6 +30,7 @@ interface NewClaimFormProps {
 }
 
 const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendMessage, contractors, activeHomeowner, userRole }) => {
+  const { user } = useUser();
   const isAdmin = userRole === UserRole.ADMIN;
 
   // Staged Claims for Batch Submission (Homeowners only)
@@ -83,16 +85,16 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
 
   // Load response templates for admin users
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin && user?.id) {
       setLoadingTemplates(true);
-      getTemplates()
+      getTemplates(user.id)
         .then((templates) => setResponseTemplates(templates))
         .catch((error) => {
           console.error('Failed to load response templates:', error);
         })
         .finally(() => setLoadingTemplates(false));
     }
-  }, [isAdmin]);
+  }, [isAdmin, user?.id]);
 
   // Handle template selection
   const handleTemplateSelect = (templateId: string) => {

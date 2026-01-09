@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useUser } from '@clerk/clerk-react';
 import { getTemplates, type ResponseTemplate } from '@/actions/templates';
 
 interface NonWarrantyInputProps {
@@ -18,18 +19,25 @@ export function NonWarrantyInput({
   placeholder = 'Enter internal notes...',
   rows = 4,
 }: NonWarrantyInputProps) {
+  const { user } = useUser();
   const [templates, setTemplates] = useState<ResponseTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
 
   // Load templates on mount
   useEffect(() => {
-    loadTemplates();
-  }, []);
+    if (user?.id) {
+      loadTemplates();
+    } else {
+      setLoading(false);
+    }
+  }, [user?.id]);
 
   const loadTemplates = async () => {
+    if (!user?.id) return;
+    
     try {
-      const data = await getTemplates();
+      const data = await getTemplates(user.id);
       setTemplates(data);
     } catch (error) {
       console.error('Failed to load templates:', error);

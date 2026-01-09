@@ -1,18 +1,12 @@
-'use server';
-
 /**
- * Response Templates - Database-backed Server Actions
+ * Response Templates - Client-side API calls to Netlify Functions
  * CRUD operations for managing warranty response templates
  */
 
-import { auth } from '@clerk/nextjs/server';
-import { db } from '@/db';
-import { responseTemplates } from '@/db/schema';
-import { eq, and, desc } from 'drizzle-orm';
-import { z } from 'zod';
+import { useUser } from '@clerk/clerk-react';
 
 // ============================================================
-// Types & Validation
+// Types
 // ============================================================
 
 export interface ResponseTemplate {
@@ -25,46 +19,60 @@ export interface ResponseTemplate {
   updatedAt: Date;
 }
 
-const createTemplateSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200, 'Title too long'),
-  content: z.string().min(1, 'Content is required').max(5000, 'Content too long'),
-  category: z.string().optional().default('General'),
-});
+export interface CreateTemplateData {
+  title: string;
+  content: string;
+  category?: string;
+}
 
-const updateTemplateSchema = z.object({
-  title: z.string().min(1).max(200).optional(),
-  content: z.string().min(1).max(5000).optional(),
-  category: z.string().optional(),
-});
-
-export type CreateTemplateData = z.infer<typeof createTemplateSchema>;
-export type UpdateTemplateData = z.infer<typeof updateTemplateSchema>;
+export interface UpdateTemplateData {
+  title?: string;
+  content?: string;
+  category?: string;
+}
 
 // ============================================================
-// Server Actions
+// Helper to get user ID from Clerk
+// ============================================================
+
+// Note: These functions must be called from React components that have access to Clerk context
+// The component should pass the userId to these functions
+
+const API_BASE = '/.netlify/functions';
+
+// ============================================================
+// API Functions
 // ============================================================
 
 /**
  * Get all response templates for the current user
  */
-export async function getTemplates(): Promise<ResponseTemplate[]> {
+export async function getTemplates(userId: string): Promise<ResponseTemplate[]> {
   try {
-    const { userId } = await auth();
-    
     if (!userId) {
-      throw new Error('Unauthorized: User must be logged in');
+      throw new Error('User ID is required');
     }
 
-    const templates = await db
-      .select()
-      .from(responseTemplates)
-      .where(eq(responseTemplates.userId, userId))
-      .orderBy(desc(responseTemplates.createdAt));
+    const response = await fetch(`${API_BASE}/templates`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+      },
+    });
 
-    return templates.map(t => ({
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to fetch templates');
+    }
+
+    const templates = await response.json();
+    
+    // Convert date strings to Date objects
+    return templates.map((t: any) => ({
       ...t,
-      createdAt: new Date(t.createdAt!),
-      updatedAt: new Date(t.updatedAt!),
+      createdAt: new Date(t.createdAt),
+      updatedAt: new Date(t.updatedAt),
     }));
   } catch (error) {
     console.error('Error fetching templates:', error);
@@ -75,38 +83,43 @@ export async function getTemplates(): Promise<ResponseTemplate[]> {
 /**
  * Create a new response template
  */
-export async function createTemplate(data: CreateTemplateData): Promise<ResponseTemplate> {
+export async function createTemplate(
+  userId: string,
+  data: CreateTemplateData
+): Promise<ResponseTemplate> {
   try {
-    const { userId } = await auth();
-    
     if (!userId) {
-      throw new Error('Unauthorized: User must be logged in');
+      throw new Error('User ID is required');
     }
 
-    // Validate input
-    const validated = createTemplateSchema.parse(data);
+    if (!data.title || !data.content) {
+      throw new Error('Title and content are required');
+    }
 
-    const [newTemplate] = await db
-      .insert(responseTemplates)
-      .values({
-        userId,
-        title: validated.title,
-        content: validated.content,
-        category: validated.category,
-      })
-      .returning();
+    const response = await fetch(`${API_BASE}/templates`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+      },
+      body: JSON.stringify(data),
+    });
 
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to create template');
+    }
+
+    const template = await response.json();
+    
     return {
-      ...newTemplate,
-      createdAt: new Date(newTemplate.createdAt!),
-      updatedAt: new Date(newTemplate.updatedAt!),
+      ...template,
+      createdAt: new Date(template.createdAt),
+      updatedAt: new Date(template.updatedAt),
     };
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      throw new Error(`Validation error: ${error.errors[0].message}`);
-    }
     console.error('Error creating template:', error);
-    throw new Error('Failed to create template');
+    throw new Error(error instanceof Error ? error.message : 'Failed to create template');
   }
 }
 
@@ -114,79 +127,73 @@ export async function createTemplate(data: CreateTemplateData): Promise<Response
  * Update an existing response template
  */
 export async function updateTemplate(
+  userId: string,
   id: string,
   data: UpdateTemplateData
 ): Promise<ResponseTemplate> {
   try {
-    const { userId } = await auth();
-    
     if (!userId) {
-      throw new Error('Unauthorized: User must be logged in');
+      throw new Error('User ID is required');
     }
 
-    // Validate input
-    const validated = updateTemplateSchema.parse(data);
-
-    // Check ownership and update
-    const [updatedTemplate] = await db
-      .update(responseTemplates)
-      .set({
-        ...validated,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(responseTemplates.id, id),
-          eq(responseTemplates.userId, userId)
-        )
-      )
-      .returning();
-
-    if (!updatedTemplate) {
-      throw new Error('Template not found or access denied');
+    if (!id) {
+      throw new Error('Template ID is required');
     }
 
+    const response = await fetch(`${API_BASE}/templates/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to update template');
+    }
+
+    const template = await response.json();
+    
     return {
-      ...updatedTemplate,
-      createdAt: new Date(updatedTemplate.createdAt!),
-      updatedAt: new Date(updatedTemplate.updatedAt!),
+      ...template,
+      createdAt: new Date(template.createdAt),
+      updatedAt: new Date(template.updatedAt),
     };
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      throw new Error(`Validation error: ${error.errors[0].message}`);
-    }
     console.error('Error updating template:', error);
-    throw new Error('Failed to update template');
+    throw new Error(error instanceof Error ? error.message : 'Failed to update template');
   }
 }
 
 /**
  * Delete a response template
  */
-export async function deleteTemplate(id: string): Promise<void> {
+export async function deleteTemplate(userId: string, id: string): Promise<void> {
   try {
-    const { userId } = await auth();
-    
     if (!userId) {
-      throw new Error('Unauthorized: User must be logged in');
+      throw new Error('User ID is required');
     }
 
-    // Check ownership and delete
-    const result = await db
-      .delete(responseTemplates)
-      .where(
-        and(
-          eq(responseTemplates.id, id),
-          eq(responseTemplates.userId, userId)
-        )
-      )
-      .returning();
+    if (!id) {
+      throw new Error('Template ID is required');
+    }
 
-    if (result.length === 0) {
-      throw new Error('Template not found or access denied');
+    const response = await fetch(`${API_BASE}/templates/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-User-Id': userId,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to delete template');
     }
   } catch (error) {
     console.error('Error deleting template:', error);
-    throw new Error('Failed to delete template');
+    throw new Error(error instanceof Error ? error.message : 'Failed to delete template');
   }
 }
