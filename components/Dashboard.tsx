@@ -1123,8 +1123,11 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [selectedThreadId, messages, onUpdateThread]);
 
-  // New Claim Modal State
+  // New Claim Modal State (legacy - now using inline view)
   const [showNewClaimModal, setShowNewClaimModal] = useState(false);
+  
+  // New Claim Inline Creation State
+  const [isCreatingNewClaim, setIsCreatingNewClaim] = useState(false);
 
   // New Task Modal State
   const [showNewTaskModal, setShowNewTaskModal] = useState(false);
@@ -2205,7 +2208,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             ) : isAdmin && (
               <Button
                 variant="filled"
-                onClick={() => setShowNewClaimModal(true)}
+                onClick={() => {
+                  setIsCreatingNewClaim(true);
+                  setSelectedClaimForModal(null);
+                }}
                 className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
               >
                 <span className="hidden sm:inline">New Claim</span>
@@ -2270,6 +2276,23 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             ) : (
               <div className="grid grid-cols-1 gap-3">
+                {/* Temporary "New Claim" card when creating */}
+                {isCreatingNewClaim && (
+                  <div className="relative">
+                    <div className="w-full">
+                      <WarrantyCard
+                        title="New Claim (Unsaved)"
+                        classification="60 Day"
+                        createdDate="Just now"
+                        attachmentCount={0}
+                        isReviewed={false}
+                        isClosed={false}
+                        isSelected={true}
+                      />
+                    </div>
+                  </div>
+                )}
+                
                 {filteredClaims.map((claim) => {
                   const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
                   const isCompleted = claim.status === ClaimStatus.COMPLETED;
@@ -2323,8 +2346,57 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Right Column: Claim Detail View - Desktop Only */}
-        <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedClaimForModal ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
-          {selectedClaimForModal ? (
+        <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedClaimForModal && !isCreatingNewClaim ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
+          {isCreatingNewClaim ? (
+            <>
+              {/* New Claim Header Toolbar */}
+              <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 sticky top-0 z-10 rounded-tr-3xl">
+                <div className="flex items-center gap-4">
+                  <button 
+                    onClick={() => setIsCreatingNewClaim(false)} 
+                    className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                </div>
+                <button 
+                  onClick={() => setIsCreatingNewClaim(false)}
+                  className="hidden md:block p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Scrollable New Claim Form Content */}
+              <div 
+                className="flex-1 overflow-y-auto p-6 overscroll-contain"
+                style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+              >
+                <Suspense fallback={
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                }>
+                  <NewClaimForm
+                    onSubmit={(data) => {
+                      if (onCreateClaim) {
+                        onCreateClaim(data);
+                      }
+                      setIsCreatingNewClaim(false);
+                    }}
+                    onCancel={() => setIsCreatingNewClaim(false)}
+                    onSendMessage={() => {
+                      setIsCreatingNewClaim(false);
+                      setCurrentTab('MESSAGES');
+                    }}
+                    contractors={contractors}
+                    activeHomeowner={targetHomeowner || activeHomeowner}
+                    userRole={userRole}
+                  />
+                </Suspense>
+              </div>
+            </>
+          ) : selectedClaimForModal ? (
             <>
               {/* Claim Header Toolbar */}
               <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 sticky top-0 z-10 rounded-tr-3xl">
@@ -3421,52 +3493,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         document.body
       )}
 
-      {/* NEW CLAIM MODAL - Matches Edit Claim Modal Layout */}
-      {showNewClaimModal && createPortal(
-        <div 
-          data-new-claim-modal
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
-          style={{ overscrollBehavior: 'contain' }}
-        >
-          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] flex flex-col h-[90vh]">
-            <div 
-              className="overflow-y-auto overflow-x-hidden flex-1 min-h-0 overscroll-contain -webkit-overflow-scrolling-touch"
-              style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
-            >
-              <div className="p-4">
-                {onCreateClaim ? (
-                  <Suspense fallback={
-                    <div className="flex items-center justify-center py-12">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                  }>
-                    <NewClaimForm
-                      onSubmit={(data) => {
-                        onCreateClaim(data);
-                        setShowNewClaimModal(false);
-                      }}
-                      onCancel={() => setShowNewClaimModal(false)}
-                      onSendMessage={() => {
-                        setShowNewClaimModal(false);
-                        setCurrentTab('MESSAGES');
-                      }}
-                      contractors={contractors}
-                      activeHomeowner={targetHomeowner || activeHomeowner}
-                      userRole={userRole}
-                    />
-                  </Suspense>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-surface-on-variant dark:text-gray-400 mb-4">Claim creation handler not available.</p>
-                    <Button variant="text" onClick={() => setShowNewClaimModal(false)}>Close</Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* NEW CLAIM MODAL - DEPRECATED: Now using inline view in claims tab
+      Keeping this code commented for backward compatibility with mobile views if needed */}
+      {/* {showNewClaimModal && createPortal(...)} */}
 
       {/* NEW TASK MODAL */}
       {showNewTaskModal && createPortal(
