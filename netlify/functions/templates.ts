@@ -98,7 +98,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
             title: createData.title,
             content: createData.content,
             category: createData.category || 'General',
-          })
+          } as any)
           .returning();
 
         return {
