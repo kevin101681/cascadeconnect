@@ -1036,6 +1036,33 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Tasks filter state
   const [tasksFilter, setTasksFilter] = useState<'all' | 'open' | 'closed'>('open');
   
+  // CRITICAL: All useMemo hooks MUST be at top level, not inside render functions
+  // Memoize filtered claims to prevent recalculation
+  const filteredClaimsForModal = useMemo(() => {
+    if (claimsFilter === 'Open') {
+      return claims.filter(c => c.status !== ClaimStatus.COMPLETED);
+    } else if (claimsFilter === 'Closed') {
+      return claims.filter(c => c.status === ClaimStatus.COMPLETED);
+    }
+    return claims;
+  }, [claims, claimsFilter]);
+  
+  // Memoize user tasks to prevent recalculation
+  const userTasks = useMemo(() => 
+    tasks.filter(t => t.assignedToId === currentUser.id),
+    [tasks, currentUser.id]
+  );
+  
+  // Memoize filtered tasks to prevent recalculation
+  const filteredTasksForModal = useMemo(() => {
+    if (tasksFilter === 'open') {
+      return userTasks.filter(t => !t.isCompleted);
+    } else if (tasksFilter === 'closed') {
+      return userTasks.filter(t => t.isCompleted);
+    }
+    return userTasks;
+  }, [userTasks, tasksFilter]);
+  
   // Invite Modal State
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteName, setInviteName] = useState('');
@@ -2339,17 +2366,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
-  const renderClaimsList = (claimsList: Claim[], isHomeownerView: boolean = false) => {
-    // Filter claims based on current filter - Memoized to prevent recalculation
-    const filteredClaims = useMemo(() => {
-      if (claimsFilter === 'Open') {
-        return claimsList.filter(c => c.status !== ClaimStatus.COMPLETED);
-      } else if (claimsFilter === 'Closed') {
-        return claimsList.filter(c => c.status === ClaimStatus.COMPLETED);
-      }
-      return claimsList;
-    }, [claimsList, claimsFilter]);
-
+  const renderClaimsList = (claimsList: Claim[], filteredClaims: Claim[], isHomeownerView: boolean = false) => {
     const emptyMsg = claimsFilter === 'Open' 
       ? 'No open claims.' 
       : claimsFilter === 'Closed' 
@@ -2899,21 +2916,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     </div>
   );
 
-  const renderTasksTab = () => {
-    // Filter tasks to show only current user's tasks - Memoized to prevent recalculation
-    const userTasks = useMemo(() => 
-      tasks.filter(t => t.assignedToId === currentUser.id),
-      [tasks, currentUser.id]
-    );
-    
-    const filteredTasks = useMemo(() => {
-      if (tasksFilter === 'open') {
-        return userTasks.filter(t => !t.isCompleted);
-      } else if (tasksFilter === 'closed') {
-        return userTasks.filter(t => t.isCompleted);
-      }
-      return userTasks;
-    }, [userTasks, tasksFilter]);
+  const renderTasksTab = (userTasks: Task[], filteredTasks: Task[]) => {
 
     return (
       <>
@@ -4557,7 +4560,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             >
               <div className="w-full min-h-[calc(100vh-300px)]">
                 <div className="max-w-7xl mx-auto">
-                  {renderClaimsList(displayClaims, isHomeownerView)}
+                  {renderClaimsList(displayClaims, filteredClaimsForModal, isHomeownerView)}
                 </div>
               </div>
             </div>
@@ -4570,7 +4573,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto">
-                    {renderTasksTab()}
+                    {renderTasksTab(userTasks, filteredTasksForModal)}
                   </div>
                 </div>
               </div>
