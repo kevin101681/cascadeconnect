@@ -65,6 +65,149 @@ const PunchListApp = React.lazy(() => import('./PunchListApp').catch(err => {
 import { HOMEOWNER_MANUAL_IMAGES } from '../lib/bluetag/constants';
 import { WarrantyCard } from './ui/WarrantyCard';
 import { HomeownerCard } from './ui/HomeownerCard';
+
+// ============================================================================
+// MEMOIZED LIST COMPONENTS (Defined at top level to avoid hooks issues)
+// ============================================================================
+
+// Memoized Claims List Component - Prevents re-render flash on selection
+const ClaimsListColumn = React.memo<{
+  claims: Claim[];
+  filteredClaims: Claim[];
+  isHomeownerView: boolean;
+  emptyMsg: string;
+  isCreatingNewClaim: boolean;
+  claimMessages: ClaimMessage[];
+  selectedClaimId: string | null;
+  onClaimSelect: (claim: Claim) => void;
+  onDeleteClaim: (claimId: string) => void;
+}>(({ filteredClaims, emptyMsg, isCreatingNewClaim, claimMessages, selectedClaimId, onClaimSelect, onDeleteClaim }) => {
+  return (
+    <div 
+      className="flex-1 overflow-y-auto p-4 min-h-0"
+      style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+    >
+      {filteredClaims.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
+          <ClipboardList className="h-8 w-8 opacity-20 dark:opacity-40 text-surface-on dark:text-gray-400" />
+          <span className="text-sm">{emptyMsg}</span>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-3">
+          {/* Temporary "New Claim" card when creating */}
+          {isCreatingNewClaim && (
+            <div className="relative">
+              <div className="w-full">
+                <WarrantyCard
+                  title="New Claim (Unsaved)"
+                  classification="60 Day"
+                  createdDate="Just now"
+                  attachmentCount={0}
+                  isReviewed={false}
+                  isClosed={false}
+                  isSelected={true}
+                />
+              </div>
+            </div>
+          )}
+          
+          {filteredClaims.map((claim) => {
+            const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
+            const isCompleted = claim.status === ClaimStatus.COMPLETED;
+            const serviceOrderMessages = claimMessages
+              .filter(m => m.claimId === claim.id && 
+                           m.type === 'SUBCONTRACTOR' && 
+                           m.subject.toLowerCase().includes('service order'))
+              .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            const serviceOrderDate = serviceOrderMessages.length > 0 ? serviceOrderMessages[0].timestamp : null;
+            const isReviewed = claim.reviewed || false;
+            const isSelected = selectedClaimId === claim.id;
+            
+            return (
+              <div key={claim.id} className="relative">
+                <button
+                  type="button"
+                  onClick={() => onClaimSelect(claim)}
+                  className="w-full text-left cursor-pointer [-webkit-tap-highlight-color:transparent]"
+                >
+                  <WarrantyCard
+                    title={claim.title}
+                    classification={claim.classification}
+                    createdDate={new Date(claim.dateSubmitted).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    scheduledDate={scheduledDate ? new Date(scheduledDate.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
+                    soSentDate={serviceOrderDate ? new Date(serviceOrderDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
+                    subName={claim.contractorName}
+                    attachmentCount={claim.attachments?.length || 0}
+                    isReviewed={isReviewed}
+                    isClosed={claim.status === ClaimStatus.CLOSED}
+                    isSelected={isSelected}
+                  />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm('Are you sure you want to delete this claim? This action cannot be undone.')) {
+                      onDeleteClaim(claim.id);
+                    }
+                  }}
+                  className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors z-10 opacity-0 hover:opacity-100 focus:opacity-100"
+                  title="Delete claim"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+});
+ClaimsListColumn.displayName = 'ClaimsListColumn';
+
+// Memoized Tasks List Component - Prevents re-render flash on selection
+const TasksListColumn = React.memo<{
+  tasks: Task[];
+  employees: InternalEmployee[];
+  claims: Claim[];
+  onTaskSelect: (task: Task) => void;
+}>(({ tasks, employees, claims, onTaskSelect }) => {
+  return (
+    <div 
+      className="flex-1 overflow-y-auto p-4 min-h-0"
+      style={{ WebkitOverflowScrolling: 'touch' }}
+    >
+      {tasks.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
+          <CheckSquare className="h-8 w-8 opacity-20 dark:opacity-40 text-surface-on dark:text-gray-400" />
+          <span className="text-sm">No tasks found.</span>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-3">
+          {tasks.map((task) => {
+            const assignee = employees.find(e => e.id === task.assignedToId);
+            const taskClaims = task.relatedClaimIds 
+              ? claims.filter(c => task.relatedClaimIds?.includes(c.id))
+              : [];
+            
+            return (
+              <TaskCard
+                key={task.id}
+                title={task.title}
+                assignedTo={assignee?.name}
+                subsToScheduleCount={taskClaims.length}
+                dateAssigned={task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Not set'}
+                isCompleted={task.isCompleted}
+                onClick={() => onTaskSelect(task)}
+              />
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+});
+TasksListColumn.displayName = 'TasksListColumn';
 import { TaskCard } from './ui/TaskCard';
 import { MessageCard } from './ui/MessageCard';
 
@@ -2196,96 +2339,6 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
-  // Memoized Claims List Component - Prevents re-render flash on selection
-  const ClaimsListColumn = React.memo<{
-    claims: Claim[];
-    filteredClaims: Claim[];
-    isHomeownerView: boolean;
-    emptyMsg: string;
-  }>(({ claims, filteredClaims, isHomeownerView, emptyMsg }) => {
-    return (
-      <div 
-        className="flex-1 overflow-y-auto p-4 min-h-0"
-        style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
-      >
-        {filteredClaims.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
-            <ClipboardList className="h-8 w-8 opacity-20 dark:opacity-40 text-surface-on dark:text-gray-400" />
-            <span className="text-sm">{emptyMsg}</span>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3">
-            {/* Temporary "New Claim" card when creating */}
-            {isCreatingNewClaim && (
-              <div className="relative">
-                <div className="w-full">
-                  <WarrantyCard
-                    title="New Claim (Unsaved)"
-                    classification="60 Day"
-                    createdDate="Just now"
-                    attachmentCount={0}
-                    isReviewed={false}
-                    isClosed={false}
-                    isSelected={true}
-                  />
-                </div>
-              </div>
-            )}
-            
-            {filteredClaims.map((claim) => {
-              const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
-              const isCompleted = claim.status === ClaimStatus.COMPLETED;
-              const serviceOrderMessages = claimMessages
-                .filter(m => m.claimId === claim.id && 
-                             m.type === 'SUBCONTRACTOR' && 
-                             m.subject.toLowerCase().includes('service order'))
-                .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-              const serviceOrderDate = serviceOrderMessages.length > 0 ? serviceOrderMessages[0].timestamp : null;
-              const isReviewed = claim.reviewed || false;
-              const isSelected = selectedClaimForModal?.id === claim.id;
-              
-              return (
-                <div key={claim.id} className="relative">
-                  <button
-                    type="button"
-                    onClick={() => handleClaimSelection(claim)}
-                    className="w-full text-left cursor-pointer [-webkit-tap-highlight-color:transparent]"
-                  >
-                    <WarrantyCard
-                      title={claim.title}
-                      classification={claim.classification}
-                      createdDate={new Date(claim.dateSubmitted).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      scheduledDate={scheduledDate ? new Date(scheduledDate.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
-                      soSentDate={serviceOrderDate ? new Date(serviceOrderDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
-                      subName={claim.contractorName}
-                      attachmentCount={claim.attachments?.length || 0}
-                      isReviewed={isReviewed}
-                      isClosed={claim.status === ClaimStatus.CLOSED}
-                      isSelected={isSelected}
-                    />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (confirm('Are you sure you want to delete this claim? This action cannot be undone.')) {
-                        handleDeleteClaim(claim.id);
-                      }
-                    }}
-                    className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors z-10 opacity-0 hover:opacity-100 focus:opacity-100"
-                    title="Delete claim"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  });
-  ClaimsListColumn.displayName = 'ClaimsListColumn';
-
   const renderClaimsList = (claimsList: Claim[], isHomeownerView: boolean = false) => {
     // Filter claims based on current filter - Memoized to prevent recalculation
     const filteredClaims = useMemo(() => {
@@ -2393,6 +2446,11 @@ const Dashboard: React.FC<DashboardProps> = ({
             filteredClaims={filteredClaims}
             isHomeownerView={isHomeownerView}
             emptyMsg={emptyMsg}
+            isCreatingNewClaim={isCreatingNewClaim}
+            claimMessages={claimMessages}
+            selectedClaimId={selectedClaimForModal?.id || null}
+            onClaimSelect={handleClaimSelection}
+            onDeleteClaim={handleDeleteClaim}
           />
         </div>
 
@@ -2841,52 +2899,6 @@ const Dashboard: React.FC<DashboardProps> = ({
     </div>
   );
 
-  // Memoized Tasks List Component - Prevents re-render flash on selection
-  const TasksListColumn = React.memo<{
-    tasks: Task[];
-    employees: InternalEmployee[];
-    claims: Claim[];
-  }>(({ tasks, employees, claims }) => {
-    return (
-      <div 
-        className="flex-1 overflow-y-auto p-4 min-h-0"
-        style={{ WebkitOverflowScrolling: 'touch' }}
-      >
-        {tasks.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
-            <CheckSquare className="h-8 w-8 opacity-20 dark:opacity-40 text-surface-on dark:text-gray-400" />
-            <span className="text-sm">No tasks found.</span>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3">
-            {tasks.map((task) => {
-              const assignee = employees.find(e => e.id === task.assignedToId);
-              const taskClaims = task.relatedClaimIds 
-                ? claims.filter(c => task.relatedClaimIds?.includes(c.id))
-                : [];
-              
-              return (
-                <TaskCard
-                  key={task.id}
-                  title={task.title}
-                  assignedTo={assignee?.name}
-                  subsToScheduleCount={taskClaims.length}
-                  dateAssigned={task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Not set'}
-                  isCompleted={task.isCompleted}
-                  onClick={() => {
-                    setSelectedTaskForModal(task);
-                    setTasksTabStartInEditMode(false);
-                  }}
-                />
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  });
-  TasksListColumn.displayName = 'TasksListColumn';
-
   const renderTasksTab = () => {
     // Filter tasks to show only current user's tasks - Memoized to prevent recalculation
     const userTasks = useMemo(() => 
@@ -2960,6 +2972,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             tasks={filteredTasks}
             employees={employees}
             claims={claims}
+            onTaskSelect={(task) => {
+              setSelectedTaskForModal(task);
+              setTasksTabStartInEditMode(false);
+            }}
           />
         </div>
 
