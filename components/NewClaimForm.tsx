@@ -396,42 +396,42 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
           <div className="space-y-6">
             {/* Attachments Section */}
             <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-bold text-surface-on dark:text-gray-100">
-            Attachments
-          </h4>
-          {/* AI Assistant Button */}
-          {attachments.some(att => att.type === 'IMAGE' && att.url) && (
-            <div className="flex flex-col items-end gap-1">
-              <p className="text-[10px] text-surface-on-variant dark:text-gray-400 italic">
-                Need help with a description? Have Gemini help!
-              </p>
-              <button
-                type="button"
-                onClick={handleAnalyze}
-                disabled={isAnalyzing || isUploading}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                  isAnalyzing
-                    ? 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 cursor-wait'
-                    : 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary hover:bg-primary/20 dark:hover:bg-primary/30 hover:shadow-sm'
-                }`}
-              >
-                {isAnalyzing ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span>Analyzing...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-3.5 w-3.5" />
-                    <span>{description.trim() ? 'Refine with AI' : 'Auto-Fill with AI'}</span>
-                  </>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-bold text-surface-on dark:text-gray-100">
+                  Attachments
+                </h4>
+                {/* AI Assistant Button */}
+                {attachments.some(att => att.type === 'IMAGE' && att.url) && (
+                  <div className="flex flex-col items-end gap-1">
+                    <p className="text-[10px] text-surface-on-variant dark:text-gray-400 italic">
+                      Need help with a description? Have Gemini help!
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleAnalyze}
+                      disabled={isAnalyzing || isUploading}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                        isAnalyzing
+                          ? 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 cursor-wait'
+                          : 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary hover:bg-primary/20 dark:hover:bg-primary/30 hover:shadow-sm'
+                      }`}
+                    >
+                      {isAnalyzing ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <span>Analyzing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-3.5 w-3.5" />
+                          <span>{description.trim() ? 'Refine with AI' : 'Auto-Fill with AI'}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 )}
-              </button>
-            </div>
-          )}
-        </div>
-        <div className="space-y-4">
+              </div>
+              <div className="space-y-4">
           {/* Existing Attachments */}
           {attachments.length > 0 && (
             <div className="flex flex-wrap gap-3">
@@ -605,8 +605,10 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                 }}
               />
             </label>
+              </div>
+              </div>
+            </div>
           </div>
-        </div>
         </div>
         
         {/* Sub Assignment, Scheduling, Warranty Assessment (Admin Only) */}
