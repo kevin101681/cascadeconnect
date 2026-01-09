@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useUser } from '@clerk/clerk-react';
 import { Plus, Edit2, Trash2, X, Save, Settings as SettingsIcon } from 'lucide-react';
 import {
   getTemplates,
@@ -15,6 +16,7 @@ interface SettingsProps {
 }
 
 const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
+  const { user } = useUser();
   const [templates, setTemplates] = useState<ResponseTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,13 +29,17 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    loadTemplates();
-  }, []);
+    if (user?.id) {
+      loadTemplates();
+    }
+  }, [user?.id]);
 
   const loadTemplates = async () => {
+    if (!user?.id) return;
+    
     setLoading(true);
     try {
-      const data = await getTemplates();
+      const data = await getTemplates(user.id);
       setTemplates(data);
     } catch (error) {
       console.error('Failed to load templates:', error);
@@ -68,6 +74,11 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
   };
 
   const handleSave = async () => {
+    if (!user?.id) {
+      alert('User not authenticated');
+      return;
+    }
+
     if (!formTitle.trim() || !formContent.trim()) {
       alert('Please fill in both title and content.');
       return;
@@ -77,14 +88,14 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
     try {
       if (editingTemplate) {
         // Update existing template
-        await updateTemplate(editingTemplate.id, {
+        await updateTemplate(user.id, editingTemplate.id, {
           title: formTitle,
           content: formContent,
           category: formCategory,
         });
       } else {
         // Create new template
-        await createTemplate({
+        await createTemplate(user.id, {
           title: formTitle,
           content: formContent,
           category: formCategory,
@@ -102,12 +113,17 @@ const Settings: React.FC<SettingsProps> = ({ onNavigate }) => {
   };
 
   const handleDelete = async (id: string, title: string) => {
+    if (!user?.id) {
+      alert('User not authenticated');
+      return;
+    }
+
     if (!confirm(`Are you sure you want to delete "${title}"?`)) {
       return;
     }
 
     try {
-      await deleteTemplate(id);
+      await deleteTemplate(user.id, id);
       await loadTemplates();
     } catch (error) {
       console.error('Failed to delete template:', error);

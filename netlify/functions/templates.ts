@@ -94,7 +94,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
         const [newTemplate] = await db
           .insert(responseTemplates)
           .values({
-            userId,
+            userId: userId,
             title: createData.title,
             content: createData.content,
             category: createData.category || 'General',
@@ -119,14 +119,16 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
 
         const updateData = JSON.parse(event.body || '{}');
         
+        // Build update object with only defined fields
+        const updateFields: any = {};
+        if (updateData.title !== undefined) updateFields.title = updateData.title;
+        if (updateData.content !== undefined) updateFields.content = updateData.content;
+        if (updateData.category !== undefined) updateFields.category = updateData.category;
+        updateFields.updatedAt = new Date();
+        
         const [updatedTemplate] = await db
           .update(responseTemplates)
-          .set({
-            ...(updateData.title && { title: updateData.title }),
-            ...(updateData.content && { content: updateData.content }),
-            ...(updateData.category && { category: updateData.category }),
-            updatedAt: new Date(),
-          })
+          .set(updateFields)
           .where(
             and(
               eq(responseTemplates.id, templateId),
