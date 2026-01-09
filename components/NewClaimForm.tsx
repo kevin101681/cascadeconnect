@@ -677,15 +677,15 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                  </div>
                  <div>
                    <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Time Slot</label>
-                   <MaterialSelect
+                   <select
                      value={proposeTime}
-                     onChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
-                     options={[
-                       { value: 'AM', label: 'AM (8am-12pm)' },
-                       { value: 'PM', label: 'PM (12pm-4pm)' },
-                       { value: 'All Day', label: 'All Day' }
-                     ]}
-                   />
+                     onChange={(e) => setProposeTime(e.target.value as 'AM' | 'PM' | 'All Day')}
+                     className="w-full rounded-md border border-surface-outline-variant dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-surface-on dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                   >
+                     <option value="AM">AM (8am-12pm)</option>
+                     <option value="PM">PM (12pm-4pm)</option>
+                     <option value="All Day">All Day</option>
+                   </select>
                  </div>
                </div>
              </div>
@@ -722,36 +722,17 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
              <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Warranty Assessment</h4>
               <div className="space-y-4">
-                <div className="relative" ref={classificationSelectRef}>
+                <div>
                   <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block">Classification</label>
-                  <Button 
-                    type="button" 
-                    variant="filled"
-                    onClick={() => setShowClassificationSelect(!showClassificationSelect)}
+                  <select
+                    value={classification}
+                    onChange={(e) => setClassification(e.target.value as ClaimClassification)}
+                    className="w-full rounded-md border border-surface-outline-variant dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-surface-on dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
                   >
-                    {classification || 'Add'}
-                  </Button>
-                  {showClassificationSelect && (
-                    <div className="absolute top-full left-0 mt-2 z-50 bg-surface dark:bg-gray-800 rounded-xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-2 min-w-[200px]">
-                      {CLAIM_CLASSIFICATIONS.map(c => (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => {
-                            setClassification(c);
-                            setShowClassificationSelect(false);
-                          }}
-                          className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                            classification === c
-                              ? 'bg-primary-container dark:bg-primary/20 text-primary dark:text-primary'
-                              : 'text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700'
-                          } ${c === CLAIM_CLASSIFICATIONS[0] ? 'rounded-t-xl' : ''} ${c === CLAIM_CLASSIFICATIONS[CLAIM_CLASSIFICATIONS.length - 1] ? 'rounded-b-xl' : ''}`}
-                        >
-                          {c}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                    {CLAIM_CLASSIFICATIONS.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>

@@ -734,33 +734,26 @@ If this repair work is billable, please let me know prior to scheduling.`);
         </h2>
         {/* Action buttons - hidden on mobile as they're in the footer */}
         <div className="hidden md:flex flex-wrap items-center gap-2">
+        <Button 
+          type="button" 
+          variant="filled"
+          onClick={() => {
+            const contextLabel = `${claim.title || 'Untitled'} • Claim #${claim.claimNumber || claim.id.substring(0, 8)} • ${claim.jobName || claim.address}`;
+            useTaskStore.getState().openTasks(claim.id, contextLabel, 'claim');
+          }}
+          title={`Add a note for ${claim.claimNumber || 'this claim'}`}
+        >
+          Note
+        </Button>
+        {onCancel && (
           <Button 
             type="button" 
-            variant="filled"
-            onClick={() => {
-              const contextLabel = `${claim.title || 'Untitled'} • Claim #${claim.claimNumber || claim.id.substring(0, 8)} • ${claim.jobName || claim.address}`;
-              useTaskStore.getState().openTasks(claim.id, contextLabel, 'claim');
-            }}
-            title={`Add a note for ${claim.claimNumber || 'this claim'}`}
+            variant="filled" 
+            onClick={onCancel}
           >
-            Note
+            Cancel
           </Button>
-          <Button 
-            type="button" 
-            variant="filled"
-            onClick={() => onSendMessage(claim)}
-          >
-            Message
-          </Button>
-          {onCancel && (
-            <Button 
-              type="button" 
-              variant="filled" 
-              onClick={onCancel}
-            >
-              Cancel
-            </Button>
-          )}
+        )}
           <Button 
             type="button" 
             variant="filled" 
@@ -1225,6 +1218,20 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   </div>
                 )}
               </div>
+              
+              {/* Send Message Button */}
+              {isMessageSummaryExpanded && (
+                <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-600">
+                  <Button 
+                    type="button" 
+                    variant="filled"
+                    onClick={() => onSendMessage(claim)}
+                    className="w-full"
+                  >
+                    Send Message
+                  </Button>
+                </div>
+              )}
             )}
           </div>
           {/* Sub Assignment (Admin Only) */}
@@ -1289,8 +1296,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           
           {/* Scheduling */}
           <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4">
-            <h3 className="font-semibold leading-none tracking-tight flex items-center gap-2">
-              <Clock className="h-4 w-4 text-muted-foreground" />
+            <h3 className="font-semibold leading-none tracking-tight">
               Scheduling
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1335,7 +1341,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     value={proposeTime || scheduledDate?.timeSlot || 'AM'}
                     onValueChange={(value) => setProposeTime(value as 'AM' | 'PM' | 'All Day')}
                   >
-                    <SelectTrigger className="w-full h-10">
+                    <SelectTrigger className="w-full h-10 bg-white dark:bg-gray-800">
                       <div className="flex items-center gap-2">
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <SelectValue placeholder="Select time slot..." />
@@ -1439,8 +1445,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           {/* Warranty Assessment (Admin Only) */}
           {isAdmin && (
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4">
-              <h3 className="font-semibold leading-none tracking-tight flex items-center gap-2">
-                <Tag className="h-4 w-4 text-muted-foreground" />
+              <h3 className="font-semibold leading-none tracking-tight">
                 Warranty Assessment
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1452,7 +1457,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                       value={editClassification || ""}
                       onValueChange={(value) => setEditClassification(value as ClaimClassification)}
                     >
-                      <SelectTrigger className="w-full h-10">
+                      <SelectTrigger className="w-full h-10 bg-white dark:bg-gray-800">
                         <div className="flex items-center gap-2">
                           <Tag className="h-4 w-4 text-muted-foreground" />
                           <SelectValue placeholder="Select classification..." />
@@ -1824,13 +1829,6 @@ If this repair work is billable, please let me know prior to scheduling.`);
       
       {/* Footer with buttons - Hidden on mobile */}
       <div className="hidden md:flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700 mt-auto">
-        <Button 
-          type="button" 
-          variant="filled" 
-          onClick={() => onSendMessage(claim)} 
-        >
-          Message
-        </Button>
         {!isHomeowner && (
           <Button 
             type="button" 
