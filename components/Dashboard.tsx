@@ -65,6 +65,8 @@ const PunchListApp = React.lazy(() => import('./PunchListApp').catch(err => {
 import { HOMEOWNER_MANUAL_IMAGES } from '../lib/bluetag/constants';
 import { WarrantyCard } from './ui/WarrantyCard';
 import { HomeownerCard } from './ui/HomeownerCard';
+import { TaskCard } from './ui/TaskCard';
+import { MessageCard } from './ui/MessageCard';
 
 // ============================================================================
 // MEMOIZED LIST COMPONENTS (Defined at top level to avoid hooks issues)
@@ -112,14 +114,14 @@ const ClaimsListColumn = React.memo<{
           )}
           
           {filteredClaims.map((claim) => {
-            const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
+            const scheduledDate = claim.proposedDates?.find(d => d.status === 'ACCEPTED');
             const isCompleted = claim.status === ClaimStatus.COMPLETED;
             const serviceOrderMessages = claimMessages
               .filter(m => m.claimId === claim.id && 
                            m.type === 'SUBCONTRACTOR' && 
-                           m.subject.toLowerCase().includes('service order'))
+                           m.subject?.toLowerCase().includes('service order'))
               .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-            const serviceOrderDate = serviceOrderMessages.length > 0 ? serviceOrderMessages[0].timestamp : null;
+            const serviceOrderDate = serviceOrderMessages.length > 0 ? serviceOrderMessages[0]?.timestamp : null;
             const isReviewed = claim.reviewed || false;
             const isSelected = selectedClaimId === claim.id;
             
@@ -208,8 +210,6 @@ const TasksListColumn = React.memo<{
   );
 });
 TasksListColumn.displayName = 'TasksListColumn';
-import { TaskCard } from './ui/TaskCard';
-import { MessageCard } from './ui/MessageCard';
 
 // PDF Thumbnail Component - Generates thumbnail on-the-fly if missing
 const PDFThumbnailDisplay: React.FC<{ doc: HomeownerDocument }> = ({ doc }) => {
