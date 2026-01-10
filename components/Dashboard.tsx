@@ -4183,6 +4183,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                 closingDate={displayHomeowner.closingDate ? new Date(displayHomeowner.closingDate).toLocaleDateString() : undefined}
                 phone={displayHomeowner.phone}
                 email={displayHomeowner.email}
+                clerkId={displayHomeowner.clerkId}
+                inviteEmailRead={displayHomeowner.inviteEmailRead}
               />
              </div>
 

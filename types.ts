@@ -46,6 +46,7 @@ export interface BuilderUser {
 
 export interface Homeowner {
   id: string;
+  clerkId?: string; // Clerk user ID if they've created an account
   name: string; // Combined First + Last for display
   firstName?: string;
   lastName?: string;
@@ -88,6 +89,10 @@ export interface Homeowner {
   
   // Subcontractor list from enrollment spreadsheet
   subcontractorList?: any[]; // Parsed spreadsheet data
+  
+  // Status tracking for invite/onboarding
+  inviteEmailRead?: boolean; // From email_logs table
+  createdAt?: Date;
 }
 
 export interface InternalEmployee {
