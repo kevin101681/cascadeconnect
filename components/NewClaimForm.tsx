@@ -326,9 +326,9 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
   return (
     <>
       <ToastContainer toasts={toasts} onDismiss={removeToast} />
-      <form onSubmit={isAdmin ? handleSubmit : handleAddItem} className="space-y-6 flex flex-col h-full">
+      <form onSubmit={isAdmin ? handleSubmit : handleAddItem} className="flex flex-col h-full min-h-0">
         {/* Header */}
-        <div className="pb-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center">
+        <div className="flex-none pb-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center">
           <h2 className="text-lg font-normal text-surface-on dark:text-gray-100">
             {isAdmin ? 'New Claim' : 'Submit Warranty Request'}
           </h2>
@@ -339,8 +339,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
           </span>
         </div>
 
-        {/* Single Column Layout - Matches ClaimInlineEditor Structure */}
-        <div className="space-y-6 pb-6">
+        {/* Scrollable Body - Takes remaining space */}
+        <div className="flex-1 overflow-y-auto py-6 space-y-6 min-h-0"
           {/* Title and Description Card */}
           <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
             <div className="space-y-4">
@@ -879,8 +879,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
           }}
         />
       
-        {/* Footer with buttons */}
-        <div className="flex justify-end gap-2 pt-6 border-t border-surface-outline-variant dark:border-gray-700 mt-auto flex-wrap">
+        {/* Fixed Footer with buttons - Sticky at bottom */}
+        <div className="flex-none flex justify-end gap-2 pt-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 sticky bottom-0 flex-wrap"
           {onSendMessage && (
             <Button 
               type="button" 

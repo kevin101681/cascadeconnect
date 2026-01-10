@@ -4383,9 +4383,24 @@ Assigned By: ${assignerName}
         <Settings onNavigate={setCurrentView} />
       )}
       {currentView === 'NEW' && (
-        <div className="max-w-4xl mx-auto bg-surface p-8 rounded-3xl shadow-elevation-1 border border-surface-outline-variant">
-          <h2 className="text-2xl font-normal text-surface-on mb-6">Create Warranty Claim</h2>
-          <NewClaimForm onSubmit={handleCreateClaim} onCancel={() => setCurrentView('DASHBOARD')} contractors={contractors} activeHomeowner={(userRole === UserRole.ADMIN || userRole === UserRole.BUILDER) && targetHomeowner ? targetHomeowner : activeHomeowner} userRole={userRole} />
+        <div className="flex flex-col h-screen overflow-hidden">
+          {/* Fixed Header */}
+          <div className="flex-none bg-surface border-b border-surface-outline-variant px-8 py-6">
+            <h2 className="text-2xl font-normal text-surface-on">Create Warranty Claim</h2>
+          </div>
+          
+          {/* Scrollable Content Area */}
+          <div className="flex-1 overflow-y-auto px-8 py-6">
+            <div className="max-w-4xl mx-auto">
+              <NewClaimForm 
+                onSubmit={handleCreateClaim} 
+                onCancel={() => setCurrentView('DASHBOARD')} 
+                contractors={contractors} 
+                activeHomeowner={(userRole === UserRole.ADMIN || userRole === UserRole.BUILDER) && targetHomeowner ? targetHomeowner : activeHomeowner} 
+                userRole={userRole} 
+              />
+            </div>
+          </div>
         </div>
       )}
       {currentView === 'DETAIL' && selectedClaim && (
