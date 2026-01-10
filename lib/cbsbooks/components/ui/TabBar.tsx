@@ -13,8 +13,8 @@ export const TabBar: React.FC<TabBarProps> = ({ activeView, onNavigate }) => {
         onClick={() => onNavigate('invoices')}
         className={`px-4 py-2 rounded-full transition-all text-sm font-medium ${
           activeView === 'invoices'
-            ? 'bg-primary text-primary-on'
-            : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 hover:bg-opacity-80'
+            ? 'bg-white border border-primary text-primary shadow-sm'
+            : 'bg-gray-100 text-gray-600 hover:text-gray-900 border border-transparent'
         }`}
       >
         Invoices
@@ -23,8 +23,8 @@ export const TabBar: React.FC<TabBarProps> = ({ activeView, onNavigate }) => {
         onClick={() => onNavigate('clients')}
         className={`px-4 py-2 rounded-full transition-all text-sm font-medium ${
           activeView === 'clients'
-            ? 'bg-primary text-primary-on'
-            : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 hover:bg-opacity-80'
+            ? 'bg-white border border-primary text-primary shadow-sm'
+            : 'bg-gray-100 text-gray-600 hover:text-gray-900 border border-transparent'
         }`}
       >
         Builders
@@ -33,8 +33,8 @@ export const TabBar: React.FC<TabBarProps> = ({ activeView, onNavigate }) => {
         onClick={() => onNavigate('reports')}
         className={`px-4 py-2 rounded-full transition-all text-sm font-medium ${
           activeView === 'reports'
-            ? 'bg-primary text-primary-on'
-            : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 hover:bg-opacity-80'
+            ? 'bg-white border border-primary text-primary shadow-sm'
+            : 'bg-gray-100 text-gray-600 hover:text-gray-900 border border-transparent'
         }`}
       >
         P&L
@@ -43,8 +43,8 @@ export const TabBar: React.FC<TabBarProps> = ({ activeView, onNavigate }) => {
         onClick={() => onNavigate('expenses')}
         className={`px-4 py-2 rounded-full transition-all text-sm font-medium ${
           activeView === 'expenses'
-            ? 'bg-primary text-primary-on'
-            : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 hover:bg-opacity-80'
+            ? 'bg-white border border-primary text-primary shadow-sm'
+            : 'bg-gray-100 text-gray-600 hover:text-gray-900 border border-transparent'
         }`}
       >
         Expenses

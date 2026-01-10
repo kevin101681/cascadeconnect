@@ -278,7 +278,7 @@ const App: React.FC<CBSBooksAppProps> = ({ prefillInvoice }) => {
   // Show UI immediately - no loading indicator needed for fast loads
   if (isLoading) {
     return (
-      <div className="min-h-full bg-gray-100 dark:bg-gray-900">
+      <div className="min-h-full bg-white dark:bg-gray-900">
         <main className="p-4 md:p-8 max-w-7xl mx-auto w-full pb-32">
           {view === 'invoices' && <Invoices invoices={[]} clients={[]} onAdd={handleAddInvoice} onUpdate={handleUpdateInvoice} onDelete={handleDeleteInvoice} onBulkAdd={handleBulkAddInvoices} onBulkDelete={handleBulkDeleteInvoices} onNavigate={setView} onBackup={handleFullBackup} prefillInvoice={prefillInvoice} />}
           {view === 'expenses' && <Expenses expenses={[]} onAdd={handleAddExpense} onDelete={handleDeleteExpense} onBulkAdd={handleBulkAddExpenses} onBulkDelete={handleBulkDeleteExpenses} onNavigate={setView} onBackup={handleFullBackup} />}
@@ -306,7 +306,7 @@ const App: React.FC<CBSBooksAppProps> = ({ prefillInvoice }) => {
   }
 
   return (
-    <div className="min-h-full bg-gray-100 dark:bg-gray-900">
+    <div className="min-h-full bg-white dark:bg-gray-900">
       {/* Only show offline banner if FORCE_OFFLINE is explicitly set, not just when using mock data */}
       {typeof window !== 'undefined' && localStorage.getItem('FORCE_OFFLINE') === 'true' && (
         <div className="sticky top-0 left-0 right-0 z-50 flex justify-center p-2">

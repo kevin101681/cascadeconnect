@@ -1628,7 +1628,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
             <div className="flex flex-col gap-2">
               <p className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider mb-1">Status</p>
               {(['all', 'draft', 'sent', 'paid'] as const).map(s => (
-                <button key={s} onClick={() => handleFilterSelection('status', s)} className={`px-4 h-10 rounded-full text-sm font-medium flex items-center justify-start border transition-all ${statusFilter === s ? 'border-primary text-primary bg-primary/10' : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 border-surface-outline-variant/50 dark:border-gray-600 hover:bg-surface-container-high/80 dark:hover:bg-gray-500'}`}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>
+                <button key={s} onClick={() => handleFilterSelection('status', s)} className={`px-4 h-10 rounded-full text-sm font-medium flex items-center justify-start border transition-all ${statusFilter === s ? 'bg-white border-primary text-primary shadow-sm' : 'bg-gray-100 text-gray-600 hover:text-gray-900 border-transparent'}`}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>
               ))}
             </div>
             <div className="flex flex-col gap-2 pt-2 border-t border-surface-outline-variant/50 dark:border-gray-600">
@@ -1699,8 +1699,8 @@ export const Invoices: React.FC<InvoicesProps> = ({
                 onClick={() => setStatusFilter(s)} 
                 className={`flex-1 h-10 rounded-full text-sm font-medium transition-all ${
                   statusFilter === s 
-                    ? 'border border-primary text-primary bg-primary/10' 
-                    : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 hover:bg-opacity-80'
+                    ? 'bg-white border border-primary text-primary shadow-sm' 
+                    : 'bg-gray-100 text-gray-600 hover:text-gray-900 border border-transparent'
                 }`}
               >
                 {s.charAt(0).toUpperCase() + s.slice(1)}
