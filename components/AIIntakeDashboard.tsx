@@ -551,17 +551,28 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                     </button>
                   )}
                   
-                  {/* Listen to Call Audio Button */}
+                  {/* Call Recording Audio Player */}
                   {actualSelectedCall.recordingUrl && (
-                    <a
-                      href={actualSelectedCall.recordingUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors"
-                    >
-                      <Play className="h-4 w-4" />
-                      Listen to Call Audio
-                    </a>
+                    <div className="mt-4 p-4 border border-surface-outline-variant dark:border-gray-700 rounded-lg bg-surface-container/30 dark:bg-gray-800/30">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Play className="h-4 w-4 text-primary" />
+                        <p className="text-sm font-medium text-surface-on dark:text-gray-200">Call Recording</p>
+                      </div>
+                      <audio 
+                        controls 
+                        src={actualSelectedCall.recordingUrl} 
+                        className="w-full"
+                        preload="metadata"
+                      />
+                      <a
+                        href={actualSelectedCall.recordingUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
+                      >
+                        Open in new tab
+                      </a>
+                    </div>
                   )}
                 </div>
               </div>
@@ -795,17 +806,28 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                 </button>
               )}
               
-              {/* Listen to Call Audio Button */}
+              {/* Call Recording Audio Player */}
               {actualSelectedCall.recordingUrl && (
-                <a
-                  href={actualSelectedCall.recordingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors"
-                >
-                  <Play className="h-4 w-4" />
-                  Listen to Call Audio
-                </a>
+                <div className="mt-4 p-4 border border-surface-outline-variant dark:border-gray-700 rounded-lg bg-surface-container/30 dark:bg-gray-800/30">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Play className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-medium text-surface-on dark:text-gray-200">Call Recording</p>
+                  </div>
+                  <audio 
+                    controls 
+                    src={actualSelectedCall.recordingUrl} 
+                    className="w-full"
+                    preload="metadata"
+                  />
+                  <a
+                    href={actualSelectedCall.recordingUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
+                  >
+                    Open in new tab
+                  </a>
+                </div>
               )}
             </div>
           </div>

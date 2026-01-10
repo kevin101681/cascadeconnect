@@ -174,11 +174,11 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     console.log(`🆔 Call ID: ${vapiCallId}`);
     logCallData(callData);
 
-    // 📞 PHONE NUMBER FALLBACK: Use Caller ID if extracted phone is missing
+    // 📞 PHONE NUMBER PRIORITY: ALWAYS prioritize telecom data over AI summary
     let {
       propertyAddress,
       homeownerName,
-      phoneNumber,
+      phoneNumber: aiExtractedPhone,
       issueDescription,
       callIntent,
       isUrgent,
@@ -186,23 +186,32 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       recordingUrl
     } = callData;
     
-    // Fallback to caller ID if phone number wasn't extracted
-    if (!phoneNumber || phoneNumber === 'not provided' || phoneNumber === 'Not Provided') {
-      // Safely access call data with proper typing
-      const messageCall = body?.message?.call as VapiCallWithCustomer | undefined;
-      const payloadCall = body?.call as VapiCallWithCustomer | undefined;
-      
-      const callerId = messageCall?.customer?.number || 
-                       payloadCall?.customer?.number ||
-                       messageCall?.phoneNumber ||
-                       payloadCall?.phoneNumber ||
-                       messageCall?.from ||
-                       payloadCall?.from;
-      
-      if (callerId) {
-        console.log(`📞 Using Caller ID as fallback: ${callerId}`);
-        phoneNumber = callerId;
-      }
+    // 🎯 PRIORITY 1: Get telecom phone number (Caller ID from carrier)
+    const messageCall = body?.message?.call as VapiCallWithCustomer | undefined;
+    const payloadCall = body?.call as VapiCallWithCustomer | undefined;
+    
+    const telecomNumber = messageCall?.customer?.number || 
+                         payloadCall?.customer?.number ||
+                         messageCall?.phoneNumber ||
+                         payloadCall?.phoneNumber ||
+                         messageCall?.from ||
+                         payloadCall?.from;
+    
+    // 🎯 PRIORITY LOGIC: Telecom > AI (only if valid)
+    let phoneNumber: string | undefined;
+    
+    if (telecomNumber && telecomNumber !== 'anonymous' && telecomNumber !== 'unknown') {
+      console.log(`📞 Using TELECOM Caller ID: ${telecomNumber}`);
+      phoneNumber = telecomNumber;
+    } else if (aiExtractedPhone && 
+               !aiExtractedPhone.toLowerCase().includes('not provided') && 
+               !aiExtractedPhone.toLowerCase().includes('(not provided)') &&
+               !aiExtractedPhone.toLowerCase().includes('unknown')) {
+      console.log(`📞 Using AI-extracted phone: ${aiExtractedPhone}`);
+      phoneNumber = aiExtractedPhone;
+    } else {
+      console.log(`⚠️ No valid phone number found (Telecom: ${telecomNumber}, AI: ${aiExtractedPhone})`);
+      phoneNumber = undefined;
     }
     
     // 🎯 CALL INTENT SMART DEFAULT: If missing but has robust issue description, default to 'new_claim'
