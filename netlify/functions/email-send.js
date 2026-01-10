@@ -99,6 +99,41 @@ exports.handler = async (event) => {
       });
     }
 
+    // ===== CRITICAL FIX: Log email to DB BEFORE sending to get the ID =====
+    let emailLogId = systemEmailId; // Use provided ID if available
+    
+    if (!emailLogId) {
+      try {
+        const databaseUrl = process.env.DATABASE_URL || process.env.VITE_DATABASE_URL;
+        if (databaseUrl) {
+          const sql = neon(databaseUrl);
+          const insertResult = await sql(
+            `INSERT INTO email_logs (recipient, subject, status, metadata) 
+             VALUES ($1, $2, $3, $4) 
+             RETURNING id`,
+            [
+              to,
+              subject,
+              'pending', // Mark as pending until sent
+              JSON.stringify({
+                from: fromEmail,
+                fromName: fromName || 'Cascade Connect',
+                replyToId: replyToId,
+                attachmentCount: sendGridAttachments.length
+              })
+            ]
+          );
+          emailLogId = insertResult[0]?.id;
+          console.log('📝 Pre-logged email to database with ID:', emailLogId);
+        } else {
+          console.warn('⚠️ DATABASE_URL not set, skipping email logging');
+        }
+      } catch (dbError) {
+        console.error('❌ Failed to pre-log email to database:', dbError);
+        // Continue sending email even if logging fails
+      }
+    }
+
     // Send email
     const msg = {
       to: to,
@@ -122,7 +157,7 @@ exports.handler = async (event) => {
       },
       customArgs: {
         threadId: replyToId || '',
-        ...(systemEmailId ? { system_email_id: systemEmailId } : {}),
+        ...(emailLogId ? { system_email_id: String(emailLogId) } : {}),  // ⭐ PASS DB ID TO SENDGRID
       },
       trackingSettings: {
         clickTracking: {
@@ -142,40 +177,40 @@ exports.handler = async (event) => {
     console.log('✅ Email sent via SendGrid:', {
       statusCode: response.statusCode,
       messageId: sendGridMessageId,
+      systemEmailId: emailLogId,
       to: to,
       from: fromEmail,
       subject: subject,
       attachmentsCount: sendGridAttachments.length
     });
 
-    // Log to database
+    // Update database log with SendGrid message ID and status
     try {
       const databaseUrl = process.env.DATABASE_URL || process.env.VITE_DATABASE_URL;
-      if (databaseUrl) {
+      if (databaseUrl && emailLogId) {
         const sql = neon(databaseUrl);
         await sql(
-          `INSERT INTO email_logs (recipient, subject, status, sendgrid_message_id, metadata) VALUES ($1, $2, $3, $4, $5)`,
+          `UPDATE email_logs 
+           SET status = $1, sendgrid_message_id = $2, metadata = $3
+           WHERE id = $4`,
           [
-            to,
-            subject,
             'sent',
-            sendGridMessageId,  // Store SendGrid message ID for tracking opens
+            sendGridMessageId,
             JSON.stringify({
               messageId: sendGridMessageId,
               from: fromEmail,
               fromName: fromName || 'Cascade Connect',
               replyToId: replyToId,
               attachmentCount: sendGridAttachments.length
-            })
+            }),
+            emailLogId
           ]
         );
-        console.log('📝 Logged email to database');
-      } else {
-        console.warn('⚠️ DATABASE_URL not set, skipping email logging');
+        console.log('📝 Updated email log with SendGrid message ID');
       }
     } catch (dbError) {
       // Don't fail the email send if logging fails
-      console.error('❌ Failed to log email to database:', dbError);
+      console.error('❌ Failed to update email log:', dbError);
     }
 
     return {
