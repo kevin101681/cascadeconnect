@@ -155,7 +155,7 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
                 // Dispatch event to trigger invoice creation in CBS Books
                 window.dispatchEvent(new Event('cbsbooks-create-invoice'));
               }}
-              className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-full text-sm font-medium transition-all bg-white border border-primary text-primary hover:bg-gray-50 shadow-sm"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-full text-sm font-medium transition-all bg-white border-2 border-primary text-primary hover:bg-gray-50 shadow-sm"
               title="Create new invoice"
             >
               <Plus className="h-4 w-4" />
