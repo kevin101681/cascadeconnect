@@ -27,21 +27,8 @@ export function HomeownerCard({
     // Material 3 Design: Using semantic rounded-card token
     <div className="bg-white dark:bg-gray-800 rounded-card border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group">
       
-      {/* 1. EDIT BUTTON */}
-      <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="h-8 w-8 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-full" // rounded-full on button too
-          onClick={onEdit}
-          title="Edit Homeowner Info"
-        >
-          <Edit2 className="w-4 h-4" />
-        </Button>
-      </div>
-
-      {/* 2. HEADER: Name & Project */}
-      <div className="flex flex-col mb-6 pr-8">
+      {/* HEADER: Name & Project */}
+      <div className="flex flex-col mb-6">
         <h3 className={`font-bold text-lg leading-tight ${name ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500 italic"}`}>
           {name || "Unknown Homeowner"}
         </h3>

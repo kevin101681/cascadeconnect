@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Task, InternalEmployee, Claim, Homeowner, ClaimStatus } from '../types';
 import Button from './Button';
 import StatusBadge from './StatusBadge';
-import { ArrowLeft, Check, Calendar, User, CheckSquare, Square, HardHat, Edit2, X, MessageSquare, Send, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
+import { Check, Calendar, User, CheckSquare, Square, HardHat, Edit2, X, MessageSquare, Send, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { TaskMessage } from './MessageSummaryModal';
 import { AutoSaveTextarea } from './ui/AutoSaveTextarea';
 
@@ -115,32 +115,29 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
   return (
     <div className="flex flex-col h-full relative max-w-5xl mx-auto">
       {/* Header */}
-      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button variant="text" onClick={onBack} icon={<ArrowLeft className="h-5 w-5" />} className="!px-2" />
-          <div className="flex-1">
-            {isEditing ? (
-              <input 
-                type="text" 
-                value={editTaskTitle}
-                onChange={e => setEditTaskTitle(e.target.value)}
-                autoFocus
-                className="text-2xl font-normal bg-surface-container dark:bg-gray-700 border border-primary rounded px-2 py-1 text-surface-on dark:text-gray-100 focus:outline-none w-full"
-              />
-            ) : (
-              <div className="text-sm text-surface-on-variant dark:text-gray-400 flex items-center gap-2 flex-wrap">
-                <span className="flex items-center gap-1.5">
-                  <User className="h-4 w-4" />
-                  Assigned to: <span className="font-medium text-surface-on dark:text-gray-100">{assignee?.name || 'Unknown'}</span>
-                </span>
-                <span className="text-surface-outline dark:text-gray-600">|</span>
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="h-4 w-4" />
-                  Assigned: {task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString() : 'N/A'}
-                </span>
-              </div>
-            )}
-          </div>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="flex-1">
+          {isEditing ? (
+            <input 
+              type="text" 
+              value={editTaskTitle}
+              onChange={e => setEditTaskTitle(e.target.value)}
+              autoFocus
+              className="text-2xl font-normal bg-surface-container dark:bg-gray-700 border border-primary rounded px-2 py-1 text-surface-on dark:text-gray-100 focus:outline-none w-full"
+            />
+          ) : (
+            <div className="text-sm text-surface-on-variant dark:text-gray-400 flex items-center gap-2 whitespace-nowrap flex-wrap">
+              <span className="flex items-center gap-1.5">
+                <User className="h-4 w-4" />
+                Assigned to: <span className="font-medium text-surface-on dark:text-gray-100">{assignee?.name || 'Unknown'}</span>
+              </span>
+              <span className="text-surface-outline dark:text-gray-600">|</span>
+              <span className="flex items-center gap-1.5">
+                <Calendar className="h-4 w-4" />
+                Assigned: {task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString() : 'N/A'}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Actions */}
@@ -150,9 +147,8 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
               variant="text"
               icon={<Edit2 className="h-4 w-4" />}
               onClick={() => setIsEditing(true)}
-            >
-              Edit
-            </Button>
+              className="!px-2"
+            />
           )}
         </div>
       </div>
