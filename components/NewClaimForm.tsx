@@ -11,7 +11,7 @@ import { ToastContainer, Toast } from './Toast';
 import { uploadMultipleFiles } from '../lib/services/uploadService';
 import { analyzeWarrantyImage } from '../actions/analyze-image';
 import { getTemplates, type ResponseTemplate } from '../actions/templates';
-import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar, Trash2, Plus, Sparkles, FileSignature, Calendar as CalendarIcon, Clock, Tag } from 'lucide-react';
+import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar, Trash2, Plus, Image as ImageIcon, FileSignature, Calendar as CalendarIcon, Clock, Tag } from 'lucide-react';
 
 interface StagedClaim {
   id: string;
@@ -139,7 +139,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
     setIsAnalyzing(true);
     
     try {
-      console.log('🤖 Analyzing image with AI...');
+      console.log('🔍 Analyzing image to generate description...');
       const result = await analyzeWarrantyImage(firstImage.url, description);
       
       // Update title if empty
@@ -152,17 +152,17 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
         // Case A: Empty description - just set it
         setDescription(result.description);
       } else {
-        // Case B: Existing description - append AI suggestion with separator
-        const separator = "\n\n--- 🤖 AI Suggestion ---\n";
+      // Case B: Existing description - append system suggestion with separator
+        const separator = "\n\n--- System Suggestion ---\n";
         const newText = description + separator + result.description;
         setDescription(newText);
       }
-      
-      addToast('✨ AI analysis complete!', 'success');
+
+      addToast('✓ Description generated!', 'success');
     } catch (error) {
-      console.error('AI analysis error:', error);
+      console.error('Description generation error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to analyze image';
-      addToast(`AI analysis failed: ${errorMessage}`, 'error');
+      addToast(`Description generation failed: ${errorMessage}`, 'error');
     } finally {
       setIsAnalyzing(false);
     }
@@ -363,11 +363,11 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                 <h4 className="text-sm font-bold text-surface-on dark:text-gray-100">
                   Attachments
                 </h4>
-                {/* AI Assistant Button */}
+                {/* Description Generator Button */}
                 {attachments.some(att => att.type === 'IMAGE' && att.url) && (
                   <div className="flex flex-col items-end gap-1">
-                    <p className="text-[10px] text-surface-on-variant dark:text-gray-400 italic">
-                      Need help with a description? Have Gemini help!
+                    <p className="text-[10px] text-gray-600 dark:text-gray-400">
+                      Need help with a description? Generate one from your image.
                     </p>
                     <button
                       type="button"
@@ -376,7 +376,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                         isAnalyzing
                           ? 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 cursor-wait'
-                          : 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary hover:bg-primary/20 dark:hover:bg-primary/30 hover:shadow-sm'
+                          : 'bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200'
                       }`}
                     >
                       {isAnalyzing ? (
@@ -386,8 +386,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                         </>
                       ) : (
                         <>
-                          <Sparkles className="h-3.5 w-3.5" />
-                          <span>{description.trim() ? 'Refine with AI' : 'Auto-Fill with AI'}</span>
+                          <ImageIcon className="h-3.5 w-3.5" />
+                          <span>{description.trim() ? 'Refine Description' : 'Generate Description'}</span>
                         </>
                       )}
                     </button>
