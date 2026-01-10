@@ -340,7 +340,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
         </div>
 
         {/* Single Column Layout - Matches ClaimInlineEditor Structure */}
-        <div className="space-y-6">
+        <div className="space-y-6 pb-6">
           {/* Title and Description Card */}
           <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
             <div className="space-y-4">
