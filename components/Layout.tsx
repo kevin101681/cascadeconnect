@@ -349,16 +349,23 @@ const Layout: React.FC<LayoutProps> = ({
                 );
               })()}
 
-              {/* Clerk UserButton - Outline style with border */}
+              {/* Clerk UserButton - Branded with primary color */}
               {clerkLoaded ? (
                 <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 border-primary bg-white hover:bg-gray-50 transition-colors">
                   <UserButton
                     appearance={{
                       elements: {
+                        // Avatar button trigger
                         userButtonTrigger: "!flex !items-center !justify-center !w-9 !h-9 !min-w-[36px] !min-h-[36px] !max-w-[36px] !max-h-[36px] !visible !opacity-100 !relative",
-                        userButtonAvatarBox: "!w-9 !h-9 !min-w-[36px] !min-h-[36px] !max-w-[36px] !max-h-[36px] !block !visible !opacity-100 !flex !items-center !justify-center !relative",
-                        userButtonAvatar: "!w-full !h-full !block !visible !opacity-100 !relative",
-                        userButtonPopoverCard: "shadow-elevation-2",
+                        
+                        // Avatar container with brand color border
+                        userButtonAvatarBox: "!w-9 !h-9 !min-w-[36px] !min-h-[36px] !max-w-[36px] !max-h-[36px] !block !visible !opacity-100 !flex !items-center !justify-center !relative border-2 border-primary/20",
+                        
+                        // CRITICAL: Avatar image/placeholder with primary brand color
+                        userButtonAvatarImage: "!w-full !h-full !block !visible !opacity-100 !relative",
+                        
+                        // Dropdown styling
+                        userButtonPopoverCard: "shadow-elevation-2 rounded-xl border border-gray-200",
                         userButtonPopoverHeader: "hidden",
                         userButtonPopoverHeaderTitle: "hidden",
                         userButtonPopoverHeaderSubtitle: "hidden",
@@ -367,6 +374,11 @@ const Layout: React.FC<LayoutProps> = ({
                         userButtonPopoverActionButtonIcon: "hidden",
                         userButtonPopoverActionButton__manageAccount: "hidden",
                         userButtonPopoverFooter: "hidden",
+                      },
+                      variables: {
+                        // Force brand color on avatar background
+                        colorPrimary: '#3c6b80', // Your primary brand color
+                        colorTextOnPrimaryBackground: '#ffffff',
                       }
                     }}
                   />

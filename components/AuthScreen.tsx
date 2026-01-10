@@ -129,7 +129,19 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
               ) : (
                 <>
                   <p className="text-surface-on dark:text-gray-100">You are signed in!</p>
-                  <UserButton />
+                  <UserButton
+                    appearance={{
+                      elements: {
+                        userButtonAvatarBox: "w-10 h-10 border-2 border-primary/20",
+                        userButtonTrigger: "focus:shadow-none focus:ring-0",
+                        userButtonPopoverCard: "rounded-xl border border-gray-200 shadow-lg"
+                      },
+                      variables: {
+                        colorPrimary: '#3c6b80',
+                        colorTextOnPrimaryBackground: '#ffffff',
+                      }
+                    }}
+                  />
                 </>
               )}
             </div>
