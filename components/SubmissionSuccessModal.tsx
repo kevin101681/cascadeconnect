@@ -1,8 +1,8 @@
 import React from 'react';
-import { CheckCircle, X, Sparkles } from 'lucide-react';
+import { CheckCircle, X, ClipboardList } from 'lucide-react';
 import Button from './Button';
 
-interface AIAnalysis {
+interface SystemReview {
   status: 'Approved' | 'Denied' | 'Needs Info';
   reasoning: string;
 }
@@ -11,7 +11,7 @@ interface SubmissionSuccessModalProps {
   isOpen: boolean;
   onClose: () => void;
   claimCount: number;
-  aiAnalysis?: AIAnalysis | null;
+  aiAnalysis?: SystemReview | null;
 }
 
 const SubmissionSuccessModal: React.FC<SubmissionSuccessModalProps> = ({
@@ -61,35 +61,40 @@ const SubmissionSuccessModal: React.FC<SubmissionSuccessModalProps> = ({
             </p>
           </div>
 
-          {/* AI Preliminary Analysis */}
+          {/* Preliminary System Review */}
           {aiAnalysis && (
-            <div className="bg-white dark:bg-gray-900/50 border border-surface-outline-variant dark:border-gray-700 rounded-xl p-5 space-y-4">
+            <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-300 dark:border-gray-700 rounded-lg p-5 space-y-4">
               <div className="flex items-start gap-3">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex-shrink-0">
-                  <Sparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                  <ClipboardList className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-surface-on dark:text-white mb-1">
-                    Preliminary Analysis
+                    Preliminary System Review
                   </h3>
                   <p className="text-xs text-surface-on-variant dark:text-gray-400 leading-relaxed">
-                    Based on a preliminary analysis of your description, here is the likely determination. 
-                    Please note: We will review this manually to make a final decision.
+                    Based on the details and photos provided, our system has generated a preliminary assessment. 
+                    A warranty specialist will review your claim shortly to make a final determination.
                   </p>
                 </div>
               </div>
 
-              {/* AI Reasoning */}
-              <div className="bg-surface-container/50 dark:bg-gray-800/50 rounded-lg p-4">
+              {/* System Assessment */}
+              <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-md p-4">
+                <div className="mb-2">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                    Automated Assessment
+                  </p>
+                </div>
                 <p className="text-sm text-surface-on dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
                   {aiAnalysis.reasoning}
                 </p>
               </div>
 
               {/* Disclaimer */}
-              <div className="flex items-start gap-2 pt-2 border-t border-surface-outline-variant/30 dark:border-gray-700/30">
+              <div className="flex items-start gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
                 <svg 
-                  className="h-4 w-4 text-surface-on-variant dark:text-gray-500 flex-shrink-0 mt-0.5" 
+                  className="h-4 w-4 text-gray-500 dark:text-gray-500 flex-shrink-0 mt-0.5" 
                   fill="currentColor" 
                   viewBox="0 0 20 20"
                 >
@@ -99,9 +104,9 @@ const SubmissionSuccessModal: React.FC<SubmissionSuccessModalProps> = ({
                     clipRule="evenodd" 
                   />
                 </svg>
-                <p className="text-xs text-surface-on-variant dark:text-gray-500 italic">
-                  This is an automated preliminary analysis. Our team will conduct a thorough manual review 
-                  and reach out with the final determination.
+                <p className="text-xs text-gray-600 dark:text-gray-500">
+                  This is an automated report for your records. A human warranty specialist will review 
+                  your claim shortly to make a final determination.
                 </p>
               </div>
             </div>
