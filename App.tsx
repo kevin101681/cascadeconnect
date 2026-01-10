@@ -2046,34 +2046,8 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
       (newClaim as any).homeownerId = subjectHomeowner.id;
     }
     
-    // Update State (useEffect handles persistence)
-    setClaims(prev => [newClaim, ...prev]);
-    setCurrentView('DASHBOARD');
-
-    // Send push notifications to admin users if claim was submitted by homeowner
-    if (userRole === UserRole.HOMEOWNER && employees.length > 0) {
-      try {
-        const { pushNotificationService } = await import('./services/pushNotificationService');
-        const permission = await pushNotificationService.requestPermission();
-        if (permission === 'granted') {
-          // Send push notification to each admin user who has this preference enabled
-          for (const emp of employees) {
-            if (emp.pushNotifyClaimSubmitted === true) {
-              await pushNotificationService.notifyNewClaim(
-                newClaim.title,
-                subjectHomeowner.name,
-                newClaim.id
-              );
-              break; // Only send one notification per browser session
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error sending push notifications:', error);
-      }
-    }
-
-    // DB Insert - CRITICAL: Must save to database for persistence
+    // DB Insert - CRITICAL: Must save to database FIRST before updating UI
+    // This prevents claims from appearing in UI if database save fails
     if (isDbConfigured) {
       try {
         console.log("🔄 Attempting to save claim to database...");
@@ -2148,6 +2122,34 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
       console.error("❌ Database not configured - claim will NOT be saved permanently!");
       alert("❌ Database is not configured. Claims cannot be saved. Please contact your administrator.");
       throw new Error("Database not configured");
+    }
+
+    // ✅ Database save succeeded - NOW update UI state
+    console.log("✅ Updating UI state with new claim");
+    setClaims(prev => [newClaim, ...prev]);
+    setCurrentView('DASHBOARD');
+
+    // Send push notifications to admin users if claim was submitted by homeowner
+    if (userRole === UserRole.HOMEOWNER && employees.length > 0) {
+      try {
+        const { pushNotificationService } = await import('./services/pushNotificationService');
+        const permission = await pushNotificationService.requestPermission();
+        if (permission === 'granted') {
+          // Send push notification to each admin user who has this preference enabled
+          for (const emp of employees) {
+            if (emp.pushNotifyClaimSubmitted === true) {
+              await pushNotificationService.notifyNewClaim(
+                newClaim.title,
+                subjectHomeowner.name,
+                newClaim.id
+              );
+              break; // Only send one notification per browser session
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error sending push notifications:', error);
+      }
     }
 
     // Send email notification to admins (non-blocking)
