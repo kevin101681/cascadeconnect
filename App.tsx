@@ -1270,14 +1270,22 @@ function App() {
     : [];
 
   const handleSelectHomeowner = (homeowner: Homeowner) => {
+    // 1. Debug Log (MANDATORY)
+    console.log("🖱️ User selected:", homeowner.id, homeowner.firstName || homeowner.name);
+    
+    // 2. Set React State
     setSelectedAdminHomeownerId(homeowner.id);
     setSearchQuery('');
     setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
     setCurrentView('DASHBOARD');
     
-    // Persist to browser memory (localStorage)
-    localStorage.setItem("cascade_active_homeowner_id", homeowner.id);
-    console.log("💾 Saved homeowner to localStorage:", homeowner.firstName || homeowner.name);
+    // 3. Persist to Storage (Force string conversion)
+    try {
+      localStorage.setItem("cascade_active_homeowner_id", String(homeowner.id));
+      console.log("💾 Wrote to storage:", localStorage.getItem("cascade_active_homeowner_id"));
+    } catch (e) {
+      console.error("🔥 Failed to write to localStorage:", e);
+    }
   };
 
   const handleClearHomeownerSelection = () => {
