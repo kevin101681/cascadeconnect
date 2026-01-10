@@ -132,13 +132,9 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
                   <UserButton
                     appearance={{
                       elements: {
-                        userButtonAvatarBox: "w-10 h-10 border-2 border-primary/20",
+                        userButtonAvatarBox: "w-10 h-10",
                         userButtonTrigger: "focus:shadow-none focus:ring-0",
                         userButtonPopoverCard: "rounded-xl border border-gray-200 shadow-lg"
-                      },
-                      variables: {
-                        colorPrimary: '#3c6b80',
-                        colorTextOnPrimaryBackground: '#ffffff',
                       }
                     }}
                   />

@@ -349,7 +349,7 @@ const Layout: React.FC<LayoutProps> = ({
                 );
               })()}
 
-              {/* Clerk UserButton - Branded with primary color */}
+              {/* Clerk UserButton - Outlined style matching app theme */}
               {clerkLoaded ? (
                 <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 border-primary bg-white hover:bg-gray-50 transition-colors">
                   <UserButton
@@ -358,10 +358,10 @@ const Layout: React.FC<LayoutProps> = ({
                         // Avatar button trigger
                         userButtonTrigger: "!flex !items-center !justify-center !w-9 !h-9 !min-w-[36px] !min-h-[36px] !max-w-[36px] !max-h-[36px] !visible !opacity-100 !relative",
                         
-                        // Avatar container with brand color border
-                        userButtonAvatarBox: "!w-9 !h-9 !min-w-[36px] !min-h-[36px] !max-w-[36px] !max-h-[36px] !block !visible !opacity-100 !flex !items-center !justify-center !relative border-2 border-primary/20",
+                        // Avatar container - no extra styling, let Clerk handle the avatar
+                        userButtonAvatarBox: "!w-9 !h-9 !min-w-[36px] !min-h-[36px] !max-w-[36px] !max-h-[36px] !block !visible !opacity-100 !flex !items-center !justify-center !relative",
                         
-                        // CRITICAL: Avatar image/placeholder with primary brand color
+                        // Avatar image - keep default Clerk styling
                         userButtonAvatarImage: "!w-full !h-full !block !visible !opacity-100 !relative",
                         
                         // Dropdown styling
@@ -374,11 +374,6 @@ const Layout: React.FC<LayoutProps> = ({
                         userButtonPopoverActionButtonIcon: "hidden",
                         userButtonPopoverActionButton__manageAccount: "hidden",
                         userButtonPopoverFooter: "hidden",
-                      },
-                      variables: {
-                        // Force brand color on avatar background
-                        colorPrimary: '#3c6b80', // Your primary brand color
-                        colorTextOnPrimaryBackground: '#ffffff',
                       }
                     }}
                   />
