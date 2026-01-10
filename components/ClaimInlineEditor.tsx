@@ -724,16 +724,16 @@ If this repair work is billable, please let me know prior to scheduling.`);
   };
   
   return (
-    <div className="space-y-6 flex flex-col">
-      {/* Header */}
-      <div className="pb-4 border-b border-surface-outline-variant dark:border-gray-700 flex flex-wrap justify-between items-center gap-2">
+    <div className="flex flex-col h-full min-h-0">
+      {/* Header - Fixed */}
+      <div className="flex-none p-6 pb-4 border-b border-surface-outline-variant dark:border-gray-700 flex flex-wrap justify-between items-center gap-2">
         <h2 className="text-lg font-normal text-surface-on dark:text-gray-100">
           Edit Claim
         </h2>
         {/* Action buttons - hidden on mobile as they're in the footer */}
         <div className="hidden md:flex flex-wrap items-center gap-2">
-        <Button 
-          type="button" 
+        <Button
+          type="button"
           variant="filled"
           onClick={() => {
             const contextLabel = `${claim.title || 'Untitled'} • Claim #${claim.claimNumber || claim.id.substring(0, 8)} • ${claim.jobName || claim.address}`;
@@ -744,26 +744,26 @@ If this repair work is billable, please let me know prior to scheduling.`);
           Note
         </Button>
         {onCancel && (
-          <Button 
-            type="button" 
-            variant="filled" 
+          <Button
+            type="button"
+            variant="filled"
             onClick={onCancel}
           >
             Cancel
           </Button>
         )}
-          <Button 
-            type="button" 
-            variant="filled" 
+          <Button
+            type="button"
+            variant="filled"
             onClick={handleSaveDetails}
           >
             Save
           </Button>
         </div>
       </div>
-      
-      {/* Single Column Layout */}
-      <div className="space-y-6">
+
+      {/* Scrollable Body - Takes remaining space */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
           {/* Title and Description Card */}
           <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
             <div className="space-y-4">
@@ -1849,9 +1849,10 @@ If this repair work is billable, please let me know prior to scheduling.`);
           </div>
         </div>
       )}
+      </div>
       
-      {/* Footer with buttons - Hidden on mobile */}
-      <div className="hidden md:flex justify-end space-x-3 pt-6 border-t border-surface-outline-variant dark:border-gray-700 mt-auto">
+      {/* Footer - Fixed at bottom */}
+      <div className="flex-none p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end space-x-3">
         {!isHomeowner && (
           <Button 
             type="button" 

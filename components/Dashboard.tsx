@@ -3547,18 +3547,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
           style={{ overscrollBehavior: 'contain' }}
         >
-          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] flex flex-col h-[90vh]">
-            <div 
-              className="overflow-y-auto overflow-x-hidden flex-1 min-h-0 overscroll-contain -webkit-overflow-scrolling-touch"
-              style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
-            >
-              <div className="p-4">
-                <Suspense fallback={
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                }>
-                  <ClaimInlineEditor
+          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] flex flex-col h-[90vh] p-0">
+            <Suspense fallback={
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            }>
+              <ClaimInlineEditor
                   claim={selectedClaimForModal}
                   onUpdateClaim={(updatedClaim) => {
                     if (onUpdateClaim) {
@@ -3584,9 +3579,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   onCancel={() => setSelectedClaimForModal(null)}
                   onNavigate={onNavigate}
                 />
-                </Suspense>
-              </div>
-            </div>
+            </Suspense>
           </div>
         </div>,
         document.body
