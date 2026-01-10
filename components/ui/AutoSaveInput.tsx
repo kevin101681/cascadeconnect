@@ -3,50 +3,38 @@ import { Check, AlertCircle, Loader2 } from 'lucide-react';
 
 export type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-interface AutoSaveTextareaProps {
+interface AutoSaveInputProps {
   value: string;
   onSave: (value: string) => Promise<void>;
   label?: string;
   placeholder?: string;
-  rows?: number;
   debounceMs?: number;
   className?: string;
   disabled?: boolean;
   showSaveStatus?: boolean;
+  type?: 'text' | 'email' | 'tel';
 }
 
 /**
- * AutoSaveTextarea - Google Docs-style auto-save textarea
+ * AutoSaveInput - Google Docs-style auto-save input
  * 
  * Features:
  * - Immediate local state updates (no lag)
  * - Debounced server saves (1000ms default)
  * - Force save on blur
- * - Visual save status indicator
+ * - Visual save status indicator (bottom right)
  * - Error handling
- * 
- * Usage:
- * ```tsx
- * <AutoSaveTextarea
- *   value={claim.description}
- *   onSave={async (newValue) => {
- *     await updateClaim(claim.id, { description: newValue });
- *   }}
- *   label="Description"
- *   placeholder="Enter description..."
- * />
- * ```
  */
-export const AutoSaveTextarea: React.FC<AutoSaveTextareaProps> = ({
+export const AutoSaveInput: React.FC<AutoSaveInputProps> = ({
   value: initialValue,
   onSave,
   label,
   placeholder,
-  rows = 6,
   debounceMs = 1000,
   className = '',
   disabled = false,
   showSaveStatus = true,
+  type = 'text',
 }) => {
   const [localValue, setLocalValue] = useState(initialValue);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
@@ -111,7 +99,7 @@ export const AutoSaveTextarea: React.FC<AutoSaveTextareaProps> = ({
   /**
    * Handle text change - updates local state immediately
    */
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     setLocalValue(newValue);
 
@@ -186,14 +174,14 @@ export const AutoSaveTextarea: React.FC<AutoSaveTextareaProps> = ({
         </label>
       )}
       
-      <textarea
+      <input
+        type={type}
         value={localValue}
         onChange={handleChange}
         onBlur={handleBlur}
         placeholder={placeholder}
-        rows={rows}
         disabled={disabled}
-        className={`w-full bg-white dark:bg-white border border-surface-outline-variant dark:border-gray-600 rounded-lg px-3 py-2 text-surface-on dark:text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none transition-colors ${
+        className={`w-full bg-white dark:bg-white border border-surface-outline-variant dark:border-gray-600 rounded-lg px-3 py-2 text-surface-on dark:text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${
           saveStatus === 'error' ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
       />
@@ -214,4 +202,4 @@ export const AutoSaveTextarea: React.FC<AutoSaveTextareaProps> = ({
   );
 };
 
-export default AutoSaveTextarea;
+export default AutoSaveInput;

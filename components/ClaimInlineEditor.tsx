@@ -15,6 +15,7 @@ import { useTaskStore } from '../stores/useTaskStore';
 import { uploadMultipleFiles } from '../lib/services/uploadService';
 import { NonWarrantyInput } from './claims/NonWarrantyInput';
 import { AutoSaveTextarea } from './ui/AutoSaveTextarea';
+import { AutoSaveInput } from './ui/AutoSaveInput';
 
 interface ClaimInlineEditorProps {
   claim: Claim;
@@ -732,35 +733,48 @@ If this repair work is billable, please let me know prior to scheduling.`);
           <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Claim Title</label>
                 {isEditing && !isReadOnly ? (
-                  <input 
-                    type="text" 
+                  <AutoSaveInput
                     value={editTitle}
-                    onChange={e => setEditTitle(e.target.value)}
-                    className="block w-full rounded-input border border-secondary-container dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors"
+                    onSave={async (newTitle) => {
+                      setEditTitle(newTitle);
+                      await onUpdateClaim({
+                        ...claim,
+                        title: newTitle,
+                      });
+                    }}
+                    label="Claim Title"
+                    placeholder="Enter claim title..."
                   />
                 ) : (
-                  <p className="text-surface-on dark:text-gray-100 font-medium">{claim.title}</p>
+                  <>
+                    <label className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Claim Title</label>
+                    <p className="text-surface-on dark:text-gray-100 font-medium">{claim.title}</p>
+                  </>
                 )}
               </div>
               <div>
-                <label className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Description</label>
                 {isEditing && !isReadOnly ? (
-                  <textarea
+                  <AutoSaveTextarea
                     value={editDescription}
-                    onChange={e => setEditDescription(e.target.value)}
-                    onInput={(e) => {
-                      const target = e.currentTarget;
-                      target.style.height = 'auto';
-                      target.style.height = target.scrollHeight + 'px';
+                    onSave={async (newDescription) => {
+                      setEditDescription(newDescription);
+                      await onUpdateClaim({
+                        ...claim,
+                        description: newDescription,
+                      });
                     }}
-                    className="block w-full rounded-md border border-secondary-container dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-secondary-on-container dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-none overflow-hidden min-h-[100px]"
+                    label="Description"
+                    placeholder="Enter description..."
+                    rows={6}
                   />
                 ) : (
-                  <div className="w-full rounded-input border border-secondary-container dark:border-gray-600 bg-transparent px-3 py-2 text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
-                    {claim.description}
-                  </div>
+                  <>
+                    <label className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Description</label>
+                    <div className="w-full rounded-input border border-secondary-container dark:border-gray-600 bg-transparent px-3 py-2 text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
+                      {claim.description}
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -782,15 +796,12 @@ If this repair work is billable, please let me know prior to scheduling.`);
 
           {/* AI Review Results */}
           {showAiReview && aiReview && isAdmin && (
-            <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 p-5 rounded-xl border-2 border-purple-200 dark:border-purple-700 shadow-sm">
+            <div className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-surface-outline-variant dark:border-gray-700 shadow-sm">
               <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">🤖</span>
-                  <h4 className="text-lg font-bold text-gray-900 dark:text-white">AI Warranty Analysis</h4>
-                </div>
+                <h4 className="text-lg font-bold text-gray-900 dark:text-white">AI Warranty Analysis</h4>
                 <button
                   onClick={() => setShowAiReview(false)}
-                  className="p-1 hover:bg-purple-200 dark:hover:bg-purple-800 rounded-full transition-colors"
+                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors"
                   title="Close AI Review"
                 >
                   <X className="h-5 w-5 text-gray-600 dark:text-gray-300" />
@@ -814,39 +825,35 @@ If this repair work is billable, please let me know prior to scheduling.`);
               </div>
 
               {/* Reasoning */}
-              <div className="mb-4 bg-white dark:bg-gray-800/50 p-4 rounded-lg">
-                <h5 className="font-semibold text-gray-900 dark:text-white mb-2 flex items-center gap-2">
-                  <StickyNote className="h-4 w-4" />
-                  Reasoning
-                </h5>
-                <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
-                  {aiReview.reasoning}
-                </p>
-              </div>
-
-              {/* Response Draft */}
-              <div className="bg-white dark:bg-gray-800/50 p-4 rounded-lg">
+              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <h5 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4" />
-                    Suggested Response for Homeowner
+                    <StickyNote className="h-4 w-4" />
+                    Reasoning
                   </h5>
                   <button
-                    onClick={handleCopyDraft}
-                    className="inline-flex items-center gap-1 px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-md transition-colors"
+                    onClick={() => {
+                      const reasoningText = aiReview.status === 'Denied' 
+                        ? `${aiReview.reasoning}\n\nNo warranty action required.`
+                        : aiReview.reasoning;
+                      navigator.clipboard.writeText(reasoningText);
+                      alert('Reasoning copied to clipboard!');
+                    }}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-primary hover:bg-primary/90 text-white text-sm rounded-md transition-colors"
                   >
                     <FileText className="h-3 w-3" />
-                    Copy Draft
+                    Copy
                   </button>
                 </div>
-                <div className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap bg-gray-50 dark:bg-gray-900/50 p-3 rounded border border-gray-200 dark:border-gray-700">
-                  {aiReview.responseDraft}
-                </div>
+                <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">
+                  {aiReview.reasoning}
+                  {aiReview.status === 'Denied' && (
+                    <span className="block mt-3 font-medium text-red-700 dark:text-red-400">
+                      No warranty action required.
+                    </span>
+                  )}
+                </p>
               </div>
-
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 italic">
-                ⚠️ This is an AI-generated recommendation. Please review carefully before using.
-              </p>
             </div>
           )}
 
@@ -1476,23 +1483,27 @@ If this repair work is billable, please let me know prior to scheduling.`);
           {/* Internal Notes - Admin Only */}
           {isAdmin && (
             <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
-              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Internal Notes (Admin Only)</h4>
                   {isEditing && !isReadOnly ? (
-                      <textarea
-                        value={editInternalNotes}
-                        onChange={e => setEditInternalNotes(e.target.value)}
-                        onInput={(e) => {
-                          const target = e.currentTarget;
-                          target.style.height = 'auto';
-                          target.style.height = target.scrollHeight + 'px';
-                        }}
-                        placeholder="Enter internal notes..."
-                        className="block w-full rounded-input border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-none overflow-hidden min-h-[100px]"
-                      />
+                    <AutoSaveTextarea
+                      value={editInternalNotes}
+                      onSave={async (newNotes) => {
+                        setEditInternalNotes(newNotes);
+                        await onUpdateClaim({
+                          ...claim,
+                          internalNotes: newNotes,
+                        });
+                      }}
+                      label="Internal Notes (Admin Only)"
+                      placeholder="Enter internal notes..."
+                      rows={6}
+                    />
               ) : (
-                <div className="w-full rounded-input border border-surface-outline-variant dark:border-gray-600 bg-transparent px-3 py-2 text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
-                  {claim.internalNotes || 'No internal notes.'}
-                </div>
+                <>
+                  <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Internal Notes (Admin Only)</h4>
+                  <div className="w-full rounded-input border border-surface-outline-variant dark:border-gray-600 bg-transparent px-3 py-2 text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
+                    {claim.internalNotes || 'No internal notes.'}
+                  </div>
+                </>
               )}
             </div>
           )}

@@ -4186,38 +4186,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               />
              </div>
 
-             {/* Tasks (Quick Create) */}
-             {!isHomeownerView && (
-               <div className="w-full mt-3" onClick={(e) => e.stopPropagation()}>
-                 <div className="w-full bg-surface dark:bg-gray-800 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-700/50 p-3">
-                   <div className="text-xs font-semibold text-surface-on-variant dark:text-gray-300 uppercase tracking-wide text-center">
-                     Tasks
-                   </div>
-                   <div className="mt-2 flex items-center justify-center gap-2">
-                    <DropdownButton
-                      label="Eval"
-                      variant="outlined"
-                      className="!h-10 !px-4 !min-w-0 flex-1"
-                      options={[
-                        { label: '60 Day', onClick: () => { void handleEvalCreate('60 Day'); } },
-                        { label: '11 Month', onClick: () => { void handleEvalCreate('11 Month'); } },
-                        { label: 'Other', onClick: () => { void handleEvalCreate('Other'); } },
-                      ]}
-                    />
-                     <Button
-                       variant="outlined"
-                       onClick={async () => {
-                         await handleScheduleCreate();
-                       }}
-                       className="!h-10 !px-4 !min-w-0 flex-1"
-                     >
-                       Schedule
-                     </Button>
-                   </div>
-                 </div>
-               </div>
-             )}
-
              {/* Actions - Two columns on all viewports */}
              <div 
                className="mt-3 pt-3 px-3 pb-3 border-t border-surface-outline-variant/50 dark:border-gray-700/50 grid grid-cols-2 md:grid-cols-2 gap-2 items-center justify-center"
