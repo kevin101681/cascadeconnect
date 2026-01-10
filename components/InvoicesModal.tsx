@@ -10,7 +10,7 @@
  */
 
 import React, { Suspense, lazy, useEffect, useState, useCallback, useRef } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Plus } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 interface InvoicesModalProps {
@@ -148,23 +148,38 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
           >
             CBS Books - Invoices
           </h2>
-          <button
-            ref={closeButtonRef}
-            onClick={onClose}
-            className="
-              p-2 md:p-3 rounded-full 
-              bg-surface-container-high hover:bg-surface-container 
-              dark:bg-gray-700 dark:hover:bg-gray-600
-              text-surface-on-variant dark:text-gray-400 
-              hover:text-surface-on dark:hover:text-gray-100
-              transition-all hover:scale-105 active:scale-95
-              flex items-center justify-center
-            "
-            title="Close (Esc)"
-            aria-label="Close invoices modal"
-          >
-            <X className="h-5 w-5 md:h-6 md:w-6" />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* New Invoice Button */}
+            <button
+              onClick={() => {
+                // Dispatch event to trigger invoice creation in CBS Books
+                window.dispatchEvent(new Event('cbsbooks-create-invoice'));
+              }}
+              className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-full text-sm font-medium transition-all bg-white border border-primary text-primary hover:bg-gray-50 shadow-sm"
+              title="Create new invoice"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden md:inline">New Invoice</span>
+            </button>
+            {/* Close Button */}
+            <button
+              ref={closeButtonRef}
+              onClick={onClose}
+              className="
+                p-2 md:p-3 rounded-full 
+                bg-surface-container-high hover:bg-surface-container 
+                dark:bg-gray-700 dark:hover:bg-gray-600
+                text-surface-on-variant dark:text-gray-400 
+                hover:text-surface-on dark:hover:text-gray-100
+                transition-all hover:scale-105 active:scale-95
+                flex items-center justify-center
+              "
+              title="Close (Esc)"
+              aria-label="Close invoices modal"
+            >
+              <X className="h-5 w-5 md:h-6 md:w-6" />
+            </button>
+          </div>
         </div>
         
         {/* Content Area - Scrollable with max height constraint */}
