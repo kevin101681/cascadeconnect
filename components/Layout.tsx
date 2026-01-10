@@ -349,14 +349,14 @@ const Layout: React.FC<LayoutProps> = ({
                 );
               })()}
 
-              {/* Clerk UserButton - Avatar visible, dropdown shows only Sign Out text */}
+              {/* Clerk UserButton - Outline style with border */}
               {clerkLoaded ? (
-                <div className="flex items-center justify-center w-10 h-10">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 border-primary bg-white hover:bg-gray-50 transition-colors">
                   <UserButton
                     appearance={{
                       elements: {
-                        userButtonTrigger: "!flex !items-center !justify-center !w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !visible !opacity-100 !relative",
-                        userButtonAvatarBox: "!w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !block !visible !opacity-100 !flex !items-center !justify-center !relative",
+                        userButtonTrigger: "!flex !items-center !justify-center !w-9 !h-9 !min-w-[36px] !min-h-[36px] !max-w-[36px] !max-h-[36px] !visible !opacity-100 !relative",
+                        userButtonAvatarBox: "!w-9 !h-9 !min-w-[36px] !min-h-[36px] !max-w-[36px] !max-h-[36px] !block !visible !opacity-100 !flex !items-center !justify-center !relative",
                         userButtonAvatar: "!w-full !h-full !block !visible !opacity-100 !relative",
                         userButtonPopoverCard: "shadow-elevation-2",
                         userButtonPopoverHeader: "hidden",
@@ -372,8 +372,8 @@ const Layout: React.FC<LayoutProps> = ({
                   />
                 </div>
               ) : (
-                <div className="w-10 h-10 bg-surface-container dark:bg-gray-700 rounded-full flex items-center justify-center">
-                  <Loader2 className="h-5 w-5 animate-spin text-surface-on-variant dark:text-gray-400" />
+                <div className="w-10 h-10 bg-white dark:bg-gray-700 border-2 border-primary rounded-full flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
                 </div>
               )}
 

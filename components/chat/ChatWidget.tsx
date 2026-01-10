@@ -89,15 +89,15 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
   return (
     <>
-      {/* Floating Action Button - Material 3 colors */}
+      {/* Floating Action Button - Standard outline style */}
       {!isOpen && (
         <button
           onClick={handleToggle}
-          className="fixed bottom-4 right-4 z-50 h-14 w-14 bg-primary hover:bg-primary/90 text-primary-on rounded-full shadow-elevation-3 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+          className="fixed bottom-4 right-4 z-50 h-14 w-14 bg-white hover:bg-gray-50 text-primary border-2 border-primary rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
         >
           <MessageCircle className="h-6 w-6" />
           {totalUnreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-6 w-6 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
+            <span className="absolute -top-1 -right-1 h-6 w-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
               {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
             </span>
           )}
