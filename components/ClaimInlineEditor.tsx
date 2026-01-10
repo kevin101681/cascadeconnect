@@ -808,12 +808,14 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   onClick={handleAiReview}
                   disabled={isAnalyzing}
                   title="AI Review"
-                  className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isAnalyzing ? (
                     <div className="animate-spin h-4 w-4 border-2 border-gray-600 dark:border-gray-300 border-t-transparent rounded-full" />
                   ) : (
-                    <Bot className="h-4 w-4" />
+                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-on text-[10px] font-bold">
+                      AI
+                    </div>
                   )}
                 </button>
               </div>
