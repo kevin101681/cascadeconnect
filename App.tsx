@@ -1520,13 +1520,18 @@ function App() {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Cmd+K on Mac, Ctrl+K on Windows/Linux
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        console.log('🔍 Cmd+K pressed - Dispatching global search event');
         e.preventDefault();
         window.dispatchEvent(new Event('cascade:global-search-open'));
       }
     };
 
+    console.log('🎧 Global search keyboard listener registered');
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => {
+      console.log('🔇 Global search keyboard listener removed');
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const handleUpdateClaim = async (updatedClaim: Claim) => {

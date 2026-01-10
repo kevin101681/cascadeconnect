@@ -38,12 +38,20 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
   // Open/focus when Cmd/Ctrl+K fires (dispatched by App)
   useEffect(() => {
     const onOpen = () => {
+      console.log('🔍 GlobalSearch: Received open event');
       setIsOpen(true);
       // Defer to ensure input is mounted
-      window.requestAnimationFrame(() => inputRef.current?.focus());
+      window.requestAnimationFrame(() => {
+        console.log('🔍 GlobalSearch: Focusing input');
+        inputRef.current?.focus();
+      });
     };
+    console.log('🎧 GlobalSearch: Listening for', OPEN_EVENT);
     window.addEventListener(OPEN_EVENT, onOpen);
-    return () => window.removeEventListener(OPEN_EVENT, onOpen);
+    return () => {
+      console.log('🔇 GlobalSearch: Removed event listener');
+      window.removeEventListener(OPEN_EVENT, onOpen);
+    };
   }, []);
 
   // Close on outside click
