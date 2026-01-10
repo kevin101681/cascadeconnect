@@ -2073,9 +2073,11 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
       }
     }
 
-    // DB Insert
+    // DB Insert - CRITICAL: Must save to database for persistence
     if (isDbConfigured) {
       try {
+        console.log("🔄 Attempting to save claim to database...");
+        
         // Validate UUIDs
         const isValidUUID = (str: string) => {
           const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -2083,6 +2085,20 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
         };
         const dbHomeownerId = (subjectHomeowner.id && isValidUUID(subjectHomeowner.id)) ? subjectHomeowner.id : null;
         const dbContractorId = (newClaim.contractorId && isValidUUID(newClaim.contractorId)) ? newClaim.contractorId : null;
+        
+        // CRITICAL: Validate homeownerId exists (required for fetching claims later)
+        if (!dbHomeownerId) {
+          const errorMsg = `❌ CRITICAL: Cannot save claim - homeownerId is missing or invalid. subjectHomeowner.id: ${subjectHomeowner.id}`;
+          console.error(errorMsg);
+          throw new Error("Cannot save claim: Homeowner ID is required");
+        }
+        
+        console.log("📝 Claim data to insert:", {
+          id: newClaim.id,
+          homeownerId: dbHomeownerId,
+          title: newClaim.title,
+          claimNumber: newClaim.claimNumber
+        });
         
         const result = await db.insert(claimsTable).values({
           id: newClaim.id, // Explicit ID
@@ -2108,12 +2124,30 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
           proposedDates: [],
           summary: null
         } as any);
-        console.log("✅ Claim saved to Neon database:", newClaim.id);
-      } catch (e) {
-        console.error("❌ Failed to save claim to DB:", e);
-        // Show user-friendly error
-        alert("Warning: Claim saved locally but failed to sync to database. Please check your connection.");
+        
+        console.log("✅ Claim saved to Neon database successfully:", newClaim.id);
+        console.log("📊 Insert result:", result);
+        
+      } catch (e: any) {
+        console.error("🔥 FAILED TO CREATE CLAIM - DATABASE ERROR:", e);
+        console.error("Error details:", {
+          message: e?.message || 'Unknown error',
+          stack: e?.stack,
+          name: e?.name,
+          code: e?.code
+        });
+        
+        // Show user-friendly error with more details
+        const errorMsg = e?.message || 'Unknown database error';
+        alert(`❌ FAILED TO SAVE CLAIM TO DATABASE\n\nError: ${errorMsg}\n\nThe claim was NOT saved. Please:\n1. Check your internet connection\n2. Try again\n3. Contact support if the issue persists`);
+        
+        // Re-throw to prevent the UI from proceeding as if save was successful
+        throw e;
       }
+    } else {
+      console.error("❌ Database not configured - claim will NOT be saved permanently!");
+      alert("❌ Database is not configured. Claims cannot be saved. Please contact your administrator.");
+      throw new Error("Database not configured");
     }
 
     // Send email notification to admins (non-blocking)

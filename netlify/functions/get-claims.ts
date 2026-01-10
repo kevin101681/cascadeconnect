@@ -31,8 +31,13 @@ const getDbClient = () => {
  * STRICT POLICY:
  * - homeownerId parameter is REQUIRED
  * - Returns ONLY claims for the specified homeowner
- * - Returns empty array (or error) if no homeownerId provided
+ * - Returns empty array if no homeownerId provided (400 error)
  * - NEVER returns all claims from the database
+ * 
+ * DATABASE SCHEMA VERIFICATION:
+ * - Database column: homeowner_id (snake_case with underscore)
+ * - Drizzle ORM maps: homeownerId -> homeowner_id
+ * - Query uses: eq(claims.homeownerId, homeownerId)
  */
 export const handler = async (event: any): Promise<HandlerResponse> => {
   // Handle CORS preflight
@@ -52,14 +57,33 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     // Extract homeownerId from query parameters
     const homeownerId = event.queryStringParameters?.homeownerId;
 
-    // STRICT: homeownerId is REQUIRED
-    if (!homeownerId) {
+    // STRICT: homeownerId is REQUIRED - Return error and empty array if missing
+    if (!homeownerId || homeownerId.trim() === '') {
+      console.warn('⚠️ get-claims called without homeownerId parameter');
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ 
           error: 'homeownerId parameter is required',
-          message: 'You must provide a homeownerId to fetch claims. Never fetch all claims.'
+          message: 'You must provide a homeownerId to fetch claims. Never fetch all claims.',
+          success: false,
+          claims: [], // Return empty array for consistent response structure
+        }),
+      };
+    }
+
+    // Validate homeownerId format (should be a valid UUID)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(homeownerId)) {
+      console.warn(`⚠️ Invalid homeownerId format: ${homeownerId}`);
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Invalid homeownerId format',
+          message: 'homeownerId must be a valid UUID',
+          success: false,
+          claims: [],
         }),
       };
     }
@@ -67,6 +91,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     const db = getDbClient();
 
     // Fetch ONLY claims for this specific homeowner
+    // Database column is 'homeowner_id' but Drizzle maps it to 'homeownerId'
     const dbClaims = await db
       .select()
       .from(claims)
@@ -91,7 +116,11 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: error.message || 'Internal Server Error' }),
+      body: JSON.stringify({ 
+        error: error.message || 'Internal Server Error',
+        success: false,
+        claims: [], // Return empty array on error for consistent response structure
+      }),
     };
   }
 };

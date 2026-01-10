@@ -67,21 +67,19 @@ if (isDbConfigured) {
 
 // Export database instance - will be null if not configured or failed to initialize
 // This allows callers to check isDbConfigured before using db
-// Provide a safe fallback that won't crash the app
+// CRITICAL: Provide a fallback that THROWS ERRORS instead of silently failing
+// This prevents data loss from silent failures
 export const db = dbInstance || {
-  select: () => ({ 
-    from: () => Promise.resolve([]),
-    orderBy: () => ({ from: () => Promise.resolve([]) })
-  }),
-  insert: () => ({ 
-    values: () => Promise.resolve({}) 
-  }),
-  update: () => ({ 
-    set: () => ({ 
-      where: () => Promise.resolve({}) 
-    }) 
-  }),
-  delete: () => ({ 
-    where: () => Promise.resolve({}) 
-  }),
+  select: () => {
+    throw new Error('❌ Database not initialized. Cannot perform SELECT operation. Check VITE_DATABASE_URL.');
+  },
+  insert: () => {
+    throw new Error('❌ Database not initialized. Cannot perform INSERT operation. Check VITE_DATABASE_URL.');
+  },
+  update: () => {
+    throw new Error('❌ Database not initialized. Cannot perform UPDATE operation. Check VITE_DATABASE_URL.');
+  },
+  delete: () => {
+    throw new Error('❌ Database not initialized. Cannot perform DELETE operation. Check VITE_DATABASE_URL.');
+  },
 };
