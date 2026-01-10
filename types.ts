@@ -155,6 +155,10 @@ export interface Message {
   content: string;
   timestamp: Date;
   attachments?: Attachment[];
+  // Email tracking
+  messageType?: 'email' | 'sms' | 'internal'; // Type of message
+  isRead?: boolean; // Email read status from SendGrid
+  openedAt?: Date; // When email was opened
 }
 
 export interface MessageThread {
@@ -323,6 +327,11 @@ export interface Message {
   timestamp: Date;
 
   attachments?: Attachment[];
+  
+  // Email tracking
+  messageType?: 'email' | 'sms' | 'internal'; // Type of message
+  isRead?: boolean; // Email read status from SendGrid
+  openedAt?: Date; // When email was opened
 
 }
 

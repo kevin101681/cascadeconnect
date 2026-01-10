@@ -9,7 +9,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, BuilderUser, Task, Contractor, Call } from '../types';
 import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle, HelpCircle } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle, HelpCircle, CheckCheck } from 'lucide-react';
 import { useTaskStore } from '../stores/useTaskStore';
 import { calls, claims as claimsSchema } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -3241,6 +3241,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <div className="space-y-8">
                       {selectedThread.messages.map((msg, idx) => {
                         const isMe = isAdmin ? msg.senderRole === UserRole.ADMIN : msg.senderRole === UserRole.HOMEOWNER;
+                        // Show read status only for outbound emails from internal users
+                        const showReadStatus = isMe && msg.messageType === 'email';
+                        
                         return (
                           <div key={msg.id} className="group">
                              <div className="flex items-start gap-4 mb-3">
@@ -3261,6 +3264,16 @@ const Dashboard: React.FC<DashboardProps> = ({
                                         <div className="text-xs text-surface-on-variant dark:text-gray-400 transition-colors">
                                           {new Date(msg.timestamp).toLocaleString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
                                         </div>
+                                        {/* Read Status Indicator */}
+                                        {showReadStatus && (
+                                          <div className="flex items-center gap-1" title={msg.isRead ? `Read ${msg.openedAt ? new Date(msg.openedAt).toLocaleString() : ''}` : 'Delivered'}>
+                                            {msg.isRead ? (
+                                              <CheckCheck className="h-3 w-3 text-green-600 dark:text-green-400" />
+                                            ) : (
+                                              <Check className="h-3 w-3 text-gray-400 dark:text-gray-500" />
+                                            )}
+                                          </div>
+                                        )}
                                       </div>
                                    </div>
                                    <div className="text-xs text-surface-on-variant dark:text-gray-400">to {isMe ? (effectiveHomeowner?.name || 'Homeowner') : 'Me'}</div>
