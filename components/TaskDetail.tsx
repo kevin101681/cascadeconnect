@@ -4,6 +4,7 @@ import Button from './Button';
 import StatusBadge from './StatusBadge';
 import { ArrowLeft, Check, Calendar, User, CheckSquare, Square, HardHat, Edit2, X, MessageSquare, Send, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { TaskMessage } from './MessageSummaryModal';
+import { AutoSaveTextarea } from './ui/AutoSaveTextarea';
 
 interface TaskDetailProps {
   task: Task;
@@ -53,7 +54,6 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
   const [isEditing, setIsEditing] = useState(startInEditMode);
   const [editTaskTitle, setEditTaskTitle] = useState(task.title);
   const [editTaskAssignee, setEditTaskAssignee] = useState(task.assignedToId);
-  const [editTaskNotes, setEditTaskNotes] = useState(task.description || '');
   const [editSelectedClaimIds, setEditSelectedClaimIds] = useState<string[]>(task.relatedClaimIds || []);
   const [isMessageSummaryExpanded, setIsMessageSummaryExpanded] = useState(false);
   
@@ -64,7 +64,6 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
     setIsEditing(startInEditMode);
     setEditTaskTitle(task.title);
     setEditTaskAssignee(task.assignedToId);
-    setEditTaskNotes(task.description || '');
     setEditSelectedClaimIds(task.relatedClaimIds || []);
   }, [task.id, startInEditMode]);
 
@@ -92,7 +91,6 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
     onUpdateTask(task.id, {
       title: editTaskTitle,
       assignedToId: editTaskAssignee,
-      description: editTaskNotes,
       relatedClaimIds: editSelectedClaimIds
     });
     
@@ -102,7 +100,6 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
   const handleCancelEdit = () => {
     setEditTaskTitle(task.title);
     setEditTaskAssignee(task.assignedToId);
-    setEditTaskNotes(task.description || '');
     setEditSelectedClaimIds(task.relatedClaimIds || []);
     setIsEditing(false);
   };
@@ -131,110 +128,67 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
                 className="text-2xl font-normal bg-surface-container dark:bg-gray-700 border border-primary rounded px-2 py-1 text-surface-on dark:text-gray-100 focus:outline-none w-full"
               />
             ) : (
-              <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100">{task.title}</h2>
+              <div className="text-sm text-surface-on-variant dark:text-gray-400 flex items-center gap-2 flex-wrap">
+                <span className="flex items-center gap-1.5">
+                  <User className="h-4 w-4" />
+                  Assigned to: <span className="font-medium text-surface-on dark:text-gray-100">{assignee?.name || 'Unknown'}</span>
+                </span>
+                <span className="text-surface-outline dark:text-gray-600">|</span>
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="h-4 w-4" />
+                  Assigned: {task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString() : 'N/A'}
+                </span>
+              </div>
             )}
-            <div className="text-sm text-surface-on-variant dark:text-gray-400 mt-2 flex items-center gap-2 flex-wrap">
-              <span className="flex items-center gap-1.5">
-                <User className="h-4 w-4" />
-                Assigned to: <span className="font-medium text-surface-on dark:text-gray-100">{assignee?.name || 'Unknown'}</span>
-              </span>
-              <span className="text-surface-outline dark:text-gray-600">|</span>
-              <span className="flex items-center gap-1.5">
-                <Calendar className="h-4 w-4" />
-                Assigned: {task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString() : 'N/A'}
-              </span>
-            </div>
           </div>
         </div>
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          {!isEditing && (
-            <>
-              {onSendMessage && (
-                <Button 
-                  variant="tonal" 
-                  onClick={() => onSendMessage(task)} 
-                  icon={<MessageSquare className="h-4 w-4" />}
-                >
-                  Send Message
-                </Button>
-              )}
-              <button
-                onClick={() => onToggleTask(task.id)}
-                className={`flex-shrink-0 w-10 h-10 rounded-full border-2 flex items-center justify-center transition-colors ${
-                  task.isCompleted 
-                    ? 'bg-primary border-primary text-white' 
-                    : 'border-surface-outline dark:border-gray-600 hover:border-primary'
-                }`}
-                title={task.isCompleted ? 'Mark as incomplete' : 'Mark as complete'}
-              >
-                {task.isCompleted && <Check className="h-5 w-5" />}
-              </button>
-              {onUpdateTask && !task.isCompleted && (
-                <Button
-                  variant="text"
-                  icon={<Edit2 className="h-4 w-4" />}
-                  onClick={() => setIsEditing(true)}
-                >
-                  Edit
-                </Button>
-              )}
-            </>
+          {!isEditing && onUpdateTask && !task.isCompleted && (
+            <Button
+              variant="text"
+              icon={<Edit2 className="h-4 w-4" />}
+              onClick={() => setIsEditing(true)}
+            >
+              Edit
+            </Button>
           )}
         </div>
       </div>
 
       {/* Content */}
-      <div className="space-y-6">
-        {/* Meta Information */}
-        <div className="bg-surface-container dark:bg-gray-800 p-6 rounded-2xl border border-surface-outline-variant dark:border-gray-700">
-          <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4">Task Information</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs text-surface-on-variant dark:text-gray-400 mb-1 block">Assigned To</label>
-              {isEditing ? (
-                <select 
-                  className="w-full bg-white dark:bg-white rounded-lg px-3 py-2 text-sm text-surface-on dark:text-gray-900 border border-surface-outline-variant dark:border-gray-600"
-                  value={editTaskAssignee}
-                  onChange={e => setEditTaskAssignee(e.target.value)}
-                >
-                  {employees.map(emp => (
-                    <option key={emp.id} value={emp.id}>{emp.name} ({emp.role})</option>
-                  ))}
-                </select>
-              ) : (
-                <p className="text-sm text-surface-on dark:text-gray-100">{assignee?.name || 'Unknown'} ({assignee?.role || 'Unknown'})</p>
-              )}
-            </div>
-            <div>
-              <label className="text-xs text-surface-on-variant dark:text-gray-400 mb-1 block">Date Assigned</label>
-              <p className="text-sm text-surface-on dark:text-gray-100">
-                {task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString() : 'N/A'}
-              </p>
-            </div>
-            <div className="md:col-span-2">
-              <label className="text-xs text-surface-on-variant dark:text-gray-400 mb-1 block">Status</label>
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                task.isCompleted 
-                  ? 'bg-primary text-primary-on' 
-                  : 'bg-surface-container-high dark:bg-gray-700 text-surface-on dark:text-gray-100'
-              }`}>
-                {task.isCompleted ? 'Completed' : 'Open'}
-              </span>
-            </div>
+      <div className="space-y-6 pb-10">
+        {/* Assignee Editor (Edit Mode Only) */}
+        {isEditing && (
+          <div className="bg-surface-container dark:bg-gray-800 p-6 rounded-2xl border border-surface-outline-variant dark:border-gray-700">
+            <label className="text-sm font-medium text-surface-on dark:text-gray-200 mb-2 block">Assigned To</label>
+            <select 
+              className="w-full bg-white dark:bg-white rounded-lg px-3 py-2 text-sm text-surface-on dark:text-gray-900 border border-surface-outline-variant dark:border-gray-600"
+              value={editTaskAssignee}
+              onChange={e => setEditTaskAssignee(e.target.value)}
+            >
+              {employees.map(emp => (
+                <option key={emp.id} value={emp.id}>{emp.name} ({emp.role})</option>
+              ))}
+            </select>
           </div>
-        </div>
+        )}
 
-        {/* Notes / Description */}
+        {/* Notes */}
         <div className="bg-surface-container dark:bg-gray-800 p-6 rounded-2xl border border-surface-outline-variant dark:border-gray-700">
-          <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4">Notes / Description</h3>
+          <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 mb-4">Notes</h3>
           {isEditing ? (
-            <textarea
+            <AutoSaveTextarea
+              value={task.description || ''}
+              onSave={async (newValue) => {
+                if (onUpdateTask) {
+                  await onUpdateTask(task.id, { description: newValue });
+                }
+              }}
+              placeholder="Add notes for this task..."
               rows={6}
-              className="w-full bg-white dark:bg-white border border-surface-outline-variant dark:border-gray-600 rounded-lg px-3 py-2 text-surface-on dark:text-gray-900 focus:border-primary focus:outline-none resize-none"
-              value={editTaskNotes}
-              onChange={e => setEditTaskNotes(e.target.value)}
+              showSaveStatus={true}
             />
           ) : (
             <div className="text-sm text-surface-on dark:text-gray-100 whitespace-pre-wrap">
@@ -243,7 +197,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
           )}
         </div>
 
-        {/* Message Summary */}
+        {/* Messages */}
         <div className="bg-surface-container dark:bg-gray-800 p-6 rounded-2xl border border-surface-outline-variant dark:border-gray-700">
           <button
             onClick={() => setIsMessageSummaryExpanded(!isMessageSummaryExpanded)}
@@ -251,7 +205,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
           >
             <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-primary" />
-              Message Summary
+              Messages
             </h3>
             {isMessageSummaryExpanded ? (
               <ChevronUp className="h-5 w-5 text-surface-on dark:text-gray-100" />
@@ -261,7 +215,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
           </button>
           
           {isMessageSummaryExpanded && (
-            <div className="mb-4">
+            <div>
               {safeTaskMessages.length === 0 ? (
                 <p className="text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed bg-surface/30 dark:bg-gray-700/30 rounded-lg p-4 border border-surface-outline-variant dark:border-gray-600">
                   No messages sent for this task yet. Messages sent via the "Send Message" button will appear here.
@@ -313,6 +267,20 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+              
+              {/* Send Message Button - Moved to bottom */}
+              {!isEditing && onSendMessage && (
+                <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-700">
+                  <Button 
+                    variant="tonal" 
+                    onClick={() => onSendMessage(task)} 
+                    icon={<MessageSquare className="h-4 w-4" />}
+                    className="w-full"
+                  >
+                    Send Message
+                  </Button>
                 </div>
               )}
             </div>
@@ -401,7 +369,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
         {isEditing && (
           <div className="flex justify-end gap-2">
             <Button variant="text" onClick={handleCancelEdit}>Cancel</Button>
-            <Button onClick={handleSaveEdit}>Save Changes</Button>
+            <Button onClick={handleSaveEdit}>Save Task Details</Button>
           </div>
         )}
       </div>

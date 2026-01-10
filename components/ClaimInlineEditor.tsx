@@ -14,6 +14,7 @@ import { generatePDFThumbnail } from '../lib/pdfThumbnail';
 import { useTaskStore } from '../stores/useTaskStore';
 import { uploadMultipleFiles } from '../lib/services/uploadService';
 import { NonWarrantyInput } from './claims/NonWarrantyInput';
+import { AutoSaveTextarea } from './ui/AutoSaveTextarea';
 
 interface ClaimInlineEditorProps {
   claim: Claim;
