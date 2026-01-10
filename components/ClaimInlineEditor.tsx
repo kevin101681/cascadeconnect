@@ -246,6 +246,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   // Collapsible state - default to collapsed
   const [isInternalNotesExpanded, setIsInternalNotesExpanded] = useState(false);
   const [isMessageSummaryExpanded, setIsMessageSummaryExpanded] = useState(false);
+  const [isNonWarrantyExpanded, setIsNonWarrantyExpanded] = useState(false);
   
   const scheduledDate = claim.proposedDates.find(d => d.status === 'ACCEPTED');
   const isScheduled = claim.status === ClaimStatus.SCHEDULED && claim.proposedDates.length > 0;
@@ -1069,60 +1070,127 @@ If this repair work is billable, please let me know prior to scheduling.`);
             </div>
           </div>
 
-          {/* Internal Notes - Admin Only */}
+          {/* Warranty Assessment (Admin Only) */}
           {isAdmin && (
-            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
-              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Internal Notes (Admin Only)</h4>
+            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4">
+              <h3 className="font-semibold leading-none tracking-tight">
+                Warranty Assessment
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Classification Field - Material 3 */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">Classification</label>
                   {isEditing && !isReadOnly ? (
-                      <textarea
-                        value={editInternalNotes}
-                        onChange={e => setEditInternalNotes(e.target.value)}
-                        onInput={(e) => {
-                          const target = e.currentTarget;
-                          target.style.height = 'auto';
-                          target.style.height = target.scrollHeight + 'px';
-                        }}
-                        placeholder="Enter internal notes..."
-                        className="block w-full rounded-input border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-none overflow-hidden min-h-[100px]"
-                      />
-              ) : (
-                <div className="w-full rounded-input border border-surface-outline-variant dark:border-gray-600 bg-transparent px-3 py-2 text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
-                  {claim.internalNotes || 'No internal notes.'}
+                    <MaterialSelect
+                      value={editClassification || ""}
+                      onChange={(value) => setEditClassification(value as ClaimClassification)}
+                      options={[
+                        { value: '11-Month', label: '11 Month' },
+                        { value: 'Structural', label: 'Structural' },
+                        { value: 'Plumbing', label: 'Plumbing' },
+                        { value: 'Electrical', label: 'Electrical' },
+                        { value: 'Exterior', label: 'Exterior' },
+                        { value: 'Non-Warranty', label: 'Non-Warranty' },
+                        { value: 'Service Complete', label: 'Service Complete' },
+                        { value: 'Manufacturer Defect', label: 'Manufacturer Defect' }
+                      ]}
+                    />
+                  ) : (
+                    <span className="text-sm text-surface-on dark:text-gray-100">{claim.classification}</span>
+                  )}
                 </div>
-              )}
+
+                {/* Date Evaluated Field - Material 3 */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">Date Evaluated</label>
+                  {isEditing && !isReadOnly && isAdmin ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setShowDateEvaluatedPicker(true)}
+                        className="w-full h-[56px] flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container dark:border-gray-800 hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
+                      >
+                        <CalendarIcon className="h-5 w-5 text-surface-on-variant dark:text-gray-400 mr-3" />
+                        <span className="text-surface-on dark:text-gray-100">
+                          {editDateEvaluated ? new Date(editDateEvaluated).toLocaleDateString('en-US', { 
+                            weekday: 'short',
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          }) : 'Select date...'}
+                        </span>
+                      </button>
+                      
+                      <CalendarPicker
+                        isOpen={showDateEvaluatedPicker}
+                        onClose={() => setShowDateEvaluatedPicker(false)}
+                        onSelectDate={(date) => {
+                          setEditDateEvaluated(date.toISOString());
+                          setShowDateEvaluatedPicker(false);
+                        }}
+                        selectedDate={editDateEvaluated ? new Date(editDateEvaluated) : null}
+                      />
+                    </>
+                  ) : (
+                    <span className="text-sm text-surface-on dark:text-gray-100">
+                      {claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString('en-US', { 
+                        weekday: 'short',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      }) : 'Not evaluated'}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
-          {/* Non-Warranty Explanation - Admin Only */}
+          {/* Non-Warranty Explanation - Admin Only - Default Collapsed */}
           {isAdmin && (
             <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
-              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">
-                Non-Warranty Explanation
-              </h4>
-              {isEditing && !isReadOnly ? (
-                <NonWarrantyInput
-                  value={editNonWarrantyExplanation}
-                  onChange={setEditNonWarrantyExplanation}
-                  disabled={false}
-                  placeholder="Select a template or enter explanation for non-warranty classification..."
-                  rows={6}
-                />
-              ) : (
-                <div className="w-full rounded-input border border-surface-outline-variant dark:border-gray-600 bg-transparent px-3 py-2 text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
-                  {claim.nonWarrantyExplanation || 'No explanation provided.'}
-                </div>
+              <button
+                onClick={() => setIsNonWarrantyExpanded(!isNonWarrantyExpanded)}
+                className="w-full flex items-center justify-between mb-3 text-left"
+              >
+                <h4 className="text-sm font-bold text-surface-on dark:text-gray-100">
+                  Non-Warranty Explanation
+                </h4>
+                {isNonWarrantyExpanded ? (
+                  <ChevronUp className="h-4 w-4 text-surface-on dark:text-gray-100" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-surface-on dark:text-gray-100" />
+                )}
+              </button>
+              
+              {isNonWarrantyExpanded && (
+                <>
+                  {isEditing && !isReadOnly ? (
+                    <NonWarrantyInput
+                      value={editNonWarrantyExplanation}
+                      onChange={setEditNonWarrantyExplanation}
+                      disabled={false}
+                      placeholder="Select a template or enter explanation for non-warranty classification..."
+                      rows={6}
+                    />
+                  ) : (
+                    <div className="w-full rounded-input border border-surface-outline-variant dark:border-gray-600 bg-transparent px-3 py-2 text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
+                      {claim.nonWarrantyExplanation || 'No explanation provided.'}
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
           
-          {/* Message Summary - Visible to All Users */}
+          {/* Messages - Visible to All Users */}
           <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
             <button
               onClick={() => setIsMessageSummaryExpanded(!isMessageSummaryExpanded)}
               className="w-full flex items-center justify-between mb-3 text-left"
             >
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100">
-                Message Summary
+                Messages
               </h4>
               {isMessageSummaryExpanded ? (
                 <ChevronUp className="h-4 w-4 text-surface-on dark:text-gray-100" />
@@ -1449,79 +1517,27 @@ If this repair work is billable, please let me know prior to scheduling.`);
             )}
           </div>
 
-          {/* Warranty Assessment (Admin Only) */}
+          {/* Internal Notes - Admin Only */}
           {isAdmin && (
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4">
-              <h3 className="font-semibold leading-none tracking-tight">
-                Warranty Assessment
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Classification Field - Material 3 */}
-                <div className="space-y-2">
-                  <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">Classification</label>
+            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Internal Notes (Admin Only)</h4>
                   {isEditing && !isReadOnly ? (
-                    <MaterialSelect
-                      value={editClassification || ""}
-                      onChange={(value) => setEditClassification(value as ClaimClassification)}
-                      options={[
-                        { value: '11-Month', label: '11 Month' },
-                        { value: 'Structural', label: 'Structural' },
-                        { value: 'Plumbing', label: 'Plumbing' },
-                        { value: 'Electrical', label: 'Electrical' },
-                        { value: 'Exterior', label: 'Exterior' },
-                        { value: 'Non-Warranty', label: 'Non-Warranty' },
-                        { value: 'Service Complete', label: 'Service Complete' },
-                        { value: 'Manufacturer Defect', label: 'Manufacturer Defect' }
-                      ]}
-                    />
-                  ) : (
-                    <span className="text-sm text-surface-on dark:text-gray-100">{claim.classification}</span>
-                  )}
-                </div>
-
-                {/* Date Evaluated Field - Material 3 */}
-                <div className="space-y-2">
-                  <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">Date Evaluated</label>
-                  {isEditing && !isReadOnly && isAdmin ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => setShowDateEvaluatedPicker(true)}
-                        className="w-full h-[56px] flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-800 hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
-                      >
-                        <CalendarIcon className="h-5 w-5 text-surface-on-variant dark:text-gray-400 mr-3" />
-                        <span className="text-surface-on dark:text-gray-100">
-                          {editDateEvaluated ? new Date(editDateEvaluated).toLocaleDateString('en-US', { 
-                            weekday: 'short',
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric'
-                          }) : 'Select date...'}
-                        </span>
-                      </button>
-                      
-                      <CalendarPicker
-                        isOpen={showDateEvaluatedPicker}
-                        onClose={() => setShowDateEvaluatedPicker(false)}
-                        onSelectDate={(date) => {
-                          setEditDateEvaluated(date.toISOString());
-                          setShowDateEvaluatedPicker(false);
+                      <textarea
+                        value={editInternalNotes}
+                        onChange={e => setEditInternalNotes(e.target.value)}
+                        onInput={(e) => {
+                          const target = e.currentTarget;
+                          target.style.height = 'auto';
+                          target.style.height = target.scrollHeight + 'px';
                         }}
-                        selectedDate={editDateEvaluated ? new Date(editDateEvaluated) : null}
+                        placeholder="Enter internal notes..."
+                        className="block w-full rounded-input border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700/50 px-3 py-3 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none sm:text-sm transition-colors resize-none overflow-hidden min-h-[100px]"
                       />
-                    </>
-                  ) : (
-                    <span className="text-sm text-surface-on dark:text-gray-100">
-                      {claim.dateEvaluated ? new Date(claim.dateEvaluated).toLocaleDateString('en-US', { 
-                        weekday: 'short',
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      }) : 'Not evaluated'}
-                    </span>
-                  )}
+              ) : (
+                <div className="w-full rounded-input border border-surface-outline-variant dark:border-gray-600 bg-transparent px-3 py-2 text-sm text-surface-on-variant dark:text-gray-400 whitespace-pre-wrap leading-relaxed">
+                  {claim.internalNotes || 'No internal notes.'}
                 </div>
-              </div>
+              )}
             </div>
           )}
       </div>

@@ -581,20 +581,100 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
               />
             </label>
               </div>
-              </div>
             </div>
+          </div>
           
-          {/* Internal Notes (Admin Only) */}
+          {/* Warranty Assessment (Admin Only) */}
           {isAdmin && (
-            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
-              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Internal Notes (Admin Only)</h4>
-              <textarea
-                id="internalNotes"
-                rows={4}
-                className={`${inputClass} bg-white dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
-                value={internalNotes}
-                onChange={(e) => setInternalNotes(e.target.value)}
-              />
+            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4">
+              <h3 className="font-semibold leading-none tracking-tight">Warranty Assessment</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Classification Field - Material 3 */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
+                    Classification
+                  </label>
+                  <MaterialSelect
+                    value={classification}
+                    onChange={(value) => setClassification(value as ClaimClassification)}
+                    options={CLAIM_CLASSIFICATIONS.map(c => ({ value: c, label: c }))}
+                  />
+                </div>
+
+                {/* Date Evaluated Field - Material 3 */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
+                    Date Evaluated
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowDateEvaluatedPicker(true)}
+                    className="w-full h-[56px] flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-800 hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
+                  >
+                    <CalendarIcon className="h-5 w-5 text-surface-on-variant dark:text-gray-400 mr-3" />
+                    <span className="text-surface-on dark:text-gray-100">
+                      {dateEvaluated ? new Date(dateEvaluated).toLocaleDateString('en-US', { 
+                        weekday: 'short',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                      }) : 'Select date...'}
+                    </span>
+                  </button>
+                  
+                  {/* Material 3 Calendar Picker */}
+                  <CalendarPicker
+                    isOpen={showDateEvaluatedPicker}
+                    onClose={() => setShowDateEvaluatedPicker(false)}
+                    onSelectDate={(date) => {
+                      setDateEvaluated(date.toISOString().split('T')[0]);
+                      setShowDateEvaluatedPicker(false);
+                    }}
+                    selectedDate={dateEvaluated ? new Date(dateEvaluated) : null}
+                  />
+                </div>
+              </div>
+
+              {classification === 'Non-Warranty' && (
+                <div className="animate-in fade-in slide-in-from-top-2 space-y-3">
+                  {/* Template Selector */}
+                  {responseTemplates.length > 0 && (
+                    <div>
+                      <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block flex items-center gap-2">
+                        <FileSignature className="h-3.5 w-3.5" />
+                        Use Response Template
+                      </label>
+                      <select
+                        className="w-full rounded-md border border-surface-outline-variant dark:border-gray-600 bg-surface dark:bg-gray-800 px-3 py-2 text-surface-on dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+                        value={selectedTemplateId}
+                        onChange={(e) => handleTemplateSelect(e.target.value)}
+                      >
+                        <option value="">-- Select a template --</option>
+                        {responseTemplates.map((template) => (
+                          <option key={template.id} value={template.id}>
+                            {template.title} {template.category !== 'General' ? `(${template.category})` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Non-Warranty Explanation Text Area */}
+                  <div>
+                    <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block text-error">
+                      Non-Warranty Explanation (Required)
+                    </label>
+                    <textarea
+                      required
+                      className="w-full rounded-md border border-error bg-error/5 dark:bg-error/10 dark:border-error/50 px-3 py-2 text-surface-on dark:text-gray-100 focus:outline-none text-sm"
+                      rows={4}
+                      value={nonWarrantyExplanation}
+                      onChange={(e) => setNonWarrantyExplanation(e.target.value)}
+                      placeholder="Enter the explanation for why this claim is not covered under warranty..."
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
           
@@ -713,97 +793,17 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
             </div>
           )}
 
-          {/* Warranty Assessment (Admin Only) */}
+          {/* Internal Notes (Admin Only) */}
           {isAdmin && (
-            <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4">
-              <h3 className="font-semibold leading-none tracking-tight">Warranty Assessment</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Classification Field - Material 3 */}
-                <div className="space-y-2">
-                  <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
-                    Classification
-                  </label>
-                  <MaterialSelect
-                    value={classification}
-                    onChange={(value) => setClassification(value as ClaimClassification)}
-                    options={CLAIM_CLASSIFICATIONS.map(c => ({ value: c, label: c }))}
-                  />
-                </div>
-
-                {/* Date Evaluated Field - Material 3 */}
-                <div className="space-y-2">
-                  <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
-                    Date Evaluated
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowDateEvaluatedPicker(true)}
-                    className="w-full h-[56px] flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-800 hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
-                  >
-                    <CalendarIcon className="h-5 w-5 text-surface-on-variant dark:text-gray-400 mr-3" />
-                    <span className="text-surface-on dark:text-gray-100">
-                      {dateEvaluated ? new Date(dateEvaluated).toLocaleDateString('en-US', { 
-                        weekday: 'short',
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      }) : 'Select date...'}
-                    </span>
-                  </button>
-                  
-                  {/* Material 3 Calendar Picker */}
-                  <CalendarPicker
-                    isOpen={showDateEvaluatedPicker}
-                    onClose={() => setShowDateEvaluatedPicker(false)}
-                    onSelectDate={(date) => {
-                      setDateEvaluated(date.toISOString().split('T')[0]);
-                      setShowDateEvaluatedPicker(false);
-                    }}
-                    selectedDate={dateEvaluated ? new Date(dateEvaluated) : null}
-                  />
-                </div>
-              </div>
-
-              {classification === 'Non-Warranty' && (
-                <div className="animate-in fade-in slide-in-from-top-2 space-y-3">
-                  {/* Template Selector */}
-                  {responseTemplates.length > 0 && (
-                    <div>
-                      <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-2 block flex items-center gap-2">
-                        <FileSignature className="h-3.5 w-3.5" />
-                        Use Response Template
-                      </label>
-                      <select
-                        className="w-full rounded-md border border-surface-outline-variant dark:border-gray-600 bg-surface dark:bg-gray-800 px-3 py-2 text-surface-on dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary text-sm"
-                        value={selectedTemplateId}
-                        onChange={(e) => handleTemplateSelect(e.target.value)}
-                      >
-                        <option value="">-- Select a template --</option>
-                        {responseTemplates.map((template) => (
-                          <option key={template.id} value={template.id}>
-                            {template.title} {template.category !== 'General' ? `(${template.category})` : ''}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  {/* Non-Warranty Explanation Text Area */}
-                  <div>
-                    <label className="text-xs text-surface-on-variant dark:text-gray-300 mb-1 block text-error">
-                      Non-Warranty Explanation (Required)
-                    </label>
-                    <textarea
-                      required
-                      className="w-full rounded-md border border-error bg-error/5 dark:bg-error/10 dark:border-error/50 px-3 py-2 text-surface-on dark:text-gray-100 focus:outline-none text-sm"
-                      rows={4}
-                      value={nonWarrantyExplanation}
-                      onChange={(e) => setNonWarrantyExplanation(e.target.value)}
-                      placeholder="Enter the explanation for why this claim is not covered under warranty..."
-                    />
-                  </div>
-                </div>
-              )}
+            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
+              <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Internal Notes (Admin Only)</h4>
+              <textarea
+                id="internalNotes"
+                rows={4}
+                className={`${inputClass} bg-white dark:bg-gray-700/50 border-secondary-container dark:border-gray-600 text-secondary-on-container dark:text-gray-100`}
+                value={internalNotes}
+                onChange={(e) => setInternalNotes(e.target.value)}
+              />
             </div>
           )}
 
