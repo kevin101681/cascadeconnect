@@ -68,7 +68,7 @@ const MaterialSelect: React.FC<MaterialSelectProps> = ({
         onBlur={() => setFocused(false)}
         tabIndex={disabled ? -1 : 0}
       >
-        <div className="flex items-center justify-between px-3 py-2 h-[2.5rem]">
+        <div className="flex items-center justify-between px-4 h-[56px]">
           <span className={`text-sm ${value ? 'text-surface-on dark:text-gray-100' : 'text-surface-on-variant dark:text-gray-400'}`}>
             {selectedOption?.label || 'Select...'}
           </span>

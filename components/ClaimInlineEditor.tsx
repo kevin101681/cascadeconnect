@@ -804,20 +804,19 @@ If this repair work is billable, please let me know prior to scheduling.`);
             {/* AI Review Button - Admin Only */}
             {isAdmin && !isReadOnly && (
               <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-600">
-                <button
+                <Button
                   onClick={handleAiReview}
                   disabled={isAnalyzing}
-                  title="AI Review"
-                  className="inline-flex items-center justify-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isAnalyzing ? (
-                    <div className="animate-spin h-4 w-4 border-2 border-gray-600 dark:border-gray-300 border-t-transparent rounded-full" />
+                  variant="outlined"
+                  icon={isAnalyzing ? (
+                    <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
                   ) : (
-                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-on text-[10px] font-bold">
-                      AI
-                    </div>
+                    <Bot className="h-4 w-4" />
                   )}
-                </button>
+                  className="!h-9"
+                >
+                  {isAnalyzing ? 'Analyzing...' : 'AI Review'}
+                </Button>
               </div>
             )}
           </div>
@@ -1075,9 +1074,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           {/* Warranty Assessment (Admin Only) */}
           {isAdmin && (
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4">
-              <h3 className="font-semibold leading-none tracking-tight">
-                Warranty Assessment
-              </h3>
+              <h3 className="font-semibold leading-none tracking-tight">Warranty Assessment</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Classification Field - Material 3 */}
                 <div className="space-y-2">
@@ -1363,9 +1360,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           
           {/* Scheduling */}
           <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 space-y-4">
-            <h3 className="font-semibold leading-none tracking-tight">
-              Scheduling
-            </h3>
+            <h3 className="font-semibold leading-none tracking-tight">Scheduling</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Scheduled Date Field - Material 3 */}
               <div className="space-y-2">
