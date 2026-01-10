@@ -2916,7 +2916,12 @@ const Dashboard: React.FC<DashboardProps> = ({
     </div>
   );
 
-  const renderTasksTab = (userTasks: Task[], filteredTasks: Task[]) => {
+  const renderTasksTab = (
+    userTasks: Task[], 
+    filteredTasks: Task[],
+    onCreateScheduleTask?: (assigneeId: string) => Promise<void>,
+    onCreateEvalTask?: (type: '60 Day' | '11 Month' | 'Other', assigneeId: string) => Promise<void>
+  ) => {
 
     return (
       <>
@@ -3038,6 +3043,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                         setSelectedTaskForModal(null);
                         setTasksTabStartInEditMode(false);
                       }}
+                      onCreateScheduleTask={onCreateScheduleTask}
+                      onCreateEvalTask={onCreateEvalTask}
                   />
                 </Suspense>
               </div>
@@ -3094,6 +3101,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                   setSelectedTaskForModal(null);
                   setTasksTabStartInEditMode(false);
                 }}
+                onCreateScheduleTask={onCreateScheduleTask}
+                onCreateEvalTask={onCreateEvalTask}
               />
             </Suspense>
           </div>
@@ -3878,6 +3887,53 @@ const Dashboard: React.FC<DashboardProps> = ({
       });
     };
 
+    // Wrappers for TaskDetail Quick Actions (accept assigneeId parameter)
+    const handleScheduleTaskWithAssignee = async (assigneeId: string) => {
+      const x = openClaimsForHomeowner.length;
+      const claimLines = openClaimsForHomeowner
+        .map((c) => {
+          const claimRef = c.claimNumber ? `Claim #${c.claimNumber}` : `Claim ${c.id.substring(0, 8)}`;
+          return `- ${claimRef}: ${c.title} (#claims?claimId=${c.id})`;
+        })
+        .join('\n');
+
+      await createHomeownerTask({
+        title: `Ready to schedule ${x} open claims`,
+        description: `Tags: ${tagsLine}\n\nOpen claims:\n${claimLines || '- (none)'}`,
+        relatedClaimIds: openClaimsForHomeowner.map((c) => c.id),
+        assignedToId: assigneeId,
+      });
+    };
+
+    const handleEvalTaskWithAssignee = async (type: '60 Day' | '11 Month' | 'Other', assigneeId: string) => {
+      if (type === '60 Day') {
+        await createHomeownerTask({
+          title: 'Schedule 60 Day Evaluation',
+          description: `Tags: ${tagsLine}`,
+          relatedClaimIds: [],
+          assignedToId: assigneeId,
+        });
+      } else if (type === '11 Month') {
+        await createHomeownerTask({
+          title: 'Schedule 11 Month Evaluation',
+          description: `Tags: ${tagsLine}`,
+          relatedClaimIds: [],
+          assignedToId: assigneeId,
+        });
+      } else {
+        // Other: create a blank-title task and open it immediately for editing
+        await createHomeownerTask(
+          {
+            title: '',
+            description: `Tags: ${tagsLine}`,
+            relatedClaimIds: [],
+            assignedToId: assigneeId,
+          },
+          { openForEdit: true }
+        );
+      }
+    };
+
     // Get scheduled claims for this homeowner
     const scheduledClaims = claims
       .filter(c => {
@@ -4566,7 +4622,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto">
-                    {renderTasksTab(userTasks, filteredTasksForModal)}
+                    {renderTasksTab(userTasks, filteredTasksForModal, handleScheduleTaskWithAssignee, handleEvalTaskWithAssignee)}
                   </div>
                 </div>
               </div>
@@ -4952,7 +5008,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             >
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
                 <div className="flex flex-col h-full md:h-auto">
-                  {renderTasksTab(userTasks, filteredTasksForModal)}
+                  {renderTasksTab(userTasks, filteredTasksForModal, handleScheduleTaskWithAssignee, handleEvalTaskWithAssignee)}
                 </div>
               </div>
             </motion.div>

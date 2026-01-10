@@ -5,6 +5,7 @@ import StatusBadge from './StatusBadge';
 import { Check, Calendar, User, CheckSquare, Square, HardHat, Edit2, X, MessageSquare, Send, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { TaskMessage } from './MessageSummaryModal';
 import { AutoSaveTextarea } from './ui/AutoSaveTextarea';
+import { DropdownButton } from './ui/dropdown-button';
 
 interface TaskDetailProps {
   task: Task;
@@ -31,6 +32,10 @@ interface TaskDetailProps {
     senderName: string;
   }) => void;
   onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS', config?: { initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES'; initialThreadId?: string | null }) => void;
+  
+  // Quick Actions for task creation
+  onCreateScheduleTask?: (assigneeId: string) => Promise<void>;
+  onCreateEvalTask?: (type: '60 Day' | '11 Month' | 'Other', assigneeId: string) => Promise<void>;
 }
 
 const TaskDetail: React.FC<TaskDetailProps> = ({
@@ -49,13 +54,16 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
   taskMessages = [],
   onSendMessage,
   onTrackTaskMessage,
-  onNavigate
+  onNavigate,
+  onCreateScheduleTask,
+  onCreateEvalTask
 }) => {
   const [isEditing, setIsEditing] = useState(startInEditMode);
   const [editTaskTitle, setEditTaskTitle] = useState(task.title);
   const [editTaskAssignee, setEditTaskAssignee] = useState(task.assignedToId);
   const [editSelectedClaimIds, setEditSelectedClaimIds] = useState<string[]>(task.relatedClaimIds || []);
   const [isMessageSummaryExpanded, setIsMessageSummaryExpanded] = useState(false);
+  const [quickActionAssignee, setQuickActionAssignee] = useState<string>('');
   
   // Ensure taskMessages is always an array
   const safeTaskMessages = Array.isArray(taskMessages) ? taskMessages : [];
@@ -155,6 +163,88 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
 
       {/* Content */}
       <div className="space-y-6 pb-10">
+        {/* Quick Actions (Task Creation) */}
+        {(onCreateScheduleTask || onCreateEvalTask) && (
+          <div className="bg-primary-container/10 dark:bg-primary/5 p-6 rounded-2xl border border-primary/20 dark:border-primary/30">
+            <h3 className="text-sm font-semibold text-primary dark:text-primary-light mb-4 uppercase tracking-wide">Quick Actions</h3>
+            
+            {/* Assigned To Dropdown */}
+            <label className="text-xs font-medium text-surface-on dark:text-gray-200 mb-2 block">Assign To</label>
+            <select 
+              value={quickActionAssignee}
+              onChange={e => setQuickActionAssignee(e.target.value)}
+              className="w-full bg-white dark:bg-gray-700 rounded-lg px-3 py-2 text-sm text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600 mb-4"
+            >
+              <option value="">Select User...</option>
+              {employees.map(emp => (
+                <option key={emp.id} value={emp.id}>{emp.name} ({emp.role})</option>
+              ))}
+            </select>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+              {onCreateEvalTask && (
+                <DropdownButton
+                  label="Eval"
+                  variant="outlined"
+                  className="!h-10 !px-4 !min-w-0 flex-1"
+                  disabled={!quickActionAssignee}
+                  options={[
+                    { 
+                      label: '60 Day', 
+                      onClick: () => { 
+                        if (quickActionAssignee) {
+                          void onCreateEvalTask('60 Day', quickActionAssignee);
+                          setQuickActionAssignee(''); // Reset after creation
+                        }
+                      } 
+                    },
+                    { 
+                      label: '11 Month', 
+                      onClick: () => { 
+                        if (quickActionAssignee) {
+                          void onCreateEvalTask('11 Month', quickActionAssignee);
+                          setQuickActionAssignee('');
+                        }
+                      } 
+                    },
+                    { 
+                      label: 'Other', 
+                      onClick: () => { 
+                        if (quickActionAssignee) {
+                          void onCreateEvalTask('Other', quickActionAssignee);
+                          setQuickActionAssignee('');
+                        }
+                      } 
+                    },
+                  ]}
+                />
+              )}
+              {onCreateScheduleTask && (
+                <Button
+                  variant="outlined"
+                  onClick={async () => {
+                    if (quickActionAssignee) {
+                      await onCreateScheduleTask(quickActionAssignee);
+                      setQuickActionAssignee(''); // Reset after creation
+                    }
+                  }}
+                  disabled={!quickActionAssignee}
+                  className="!h-10 !px-4 !min-w-0 flex-1"
+                >
+                  Schedule
+                </Button>
+              )}
+            </div>
+            
+            {!quickActionAssignee && (
+              <p className="mt-3 text-xs text-surface-on-variant dark:text-gray-400 italic">
+                Select a user to enable task creation buttons
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Assignee Editor (Edit Mode Only) */}
         {isEditing && (
           <div className="bg-surface-container dark:bg-gray-800 p-6 rounded-2xl border border-surface-outline-variant dark:border-gray-700">
