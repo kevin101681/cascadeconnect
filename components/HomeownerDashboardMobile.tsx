@@ -15,19 +15,28 @@ import {
   PhoneCall,
   FileText,
   DollarSign,
+  MessageSquare,
+  MapPin,
 } from 'lucide-react';
 import { Homeowner } from '../types';
 
 interface HomeownerDashboardMobileProps {
   homeowner: Homeowner;
   onNavigateToModule: (module: string) => void;
+  onOpenNewMessage?: () => void; // For internal messaging
 }
 
 const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
   homeowner,
   onNavigateToModule,
+  onOpenNewMessage,
 }) => {
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
+
+  // Format closing date nicely
+  const formattedClosingDate = homeowner.closingDate 
+    ? new Date(homeowner.closingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : null;
 
   // Quick action handlers for native actions
   const handleCall = () => {
@@ -45,13 +54,13 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
   const handleNavigate = () => {
     if (homeowner.address) {
       const encodedAddress = encodeURIComponent(homeowner.address);
-      window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`, '_blank');
     }
   };
 
-  const handleEmail = () => {
-    if (homeowner.email) {
-      window.location.href = `mailto:${homeowner.email}`;
+  const handleMessage = () => {
+    if (onOpenNewMessage) {
+      onOpenNewMessage();
     }
   };
 
@@ -65,8 +74,9 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
               <h1 className="text-xl font-semibold text-gray-900 dark:text-white truncate">
                 {homeowner.name}
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
-                {homeowner.address}
+              {/* Project Name • Closing Date */}
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {homeowner.jobName || 'Project'} {formattedClosingDate && `• ${formattedClosingDate}`}
               </p>
             </div>
             <button
@@ -85,6 +95,12 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
           {/* Expanded Details */}
           {isHeaderExpanded && (
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2 animate-in slide-in-from-top-2 fade-in duration-200">
+              {homeowner.address && (
+                <div className="flex items-center text-sm">
+                  <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Address:</span>
+                  <span className="text-gray-900 dark:text-white">{homeowner.address}</span>
+                </div>
+              )}
               {homeowner.builder && (
                 <div className="flex items-center text-sm">
                   <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Builder:</span>
@@ -97,12 +113,10 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
                   <span className="text-gray-900 dark:text-white">{homeowner.email}</span>
                 </div>
               )}
-              {homeowner.closingDate && (
+              {homeowner.phone && (
                 <div className="flex items-center text-sm">
-                  <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Closing:</span>
-                  <span className="text-gray-900 dark:text-white">
-                    {new Date(homeowner.closingDate).toLocaleDateString()}
-                  </span>
+                  <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Phone:</span>
+                  <span className="text-gray-900 dark:text-white">{homeowner.phone}</span>
                 </div>
               )}
             </div>
@@ -110,43 +124,9 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
         </div>
       </div>
 
-      {/* Quick Actions Bar */}
-      <div className="bg-white dark:bg-gray-800 px-4 py-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-around gap-2">
-          <button
-            onClick={handleCall}
-            className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-blue-500 hover:bg-blue-600 text-white shadow-md hover:shadow-lg transition-all active:scale-95"
-            aria-label="Call homeowner"
-          >
-            <Phone className="h-6 w-6" />
-          </button>
-          <button
-            onClick={handleSMS}
-            className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-md hover:shadow-lg transition-all active:scale-95"
-            aria-label="Send SMS"
-          >
-            <MessageCircle className="h-6 w-6" />
-          </button>
-          <button
-            onClick={handleNavigate}
-            className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-purple-500 hover:bg-purple-600 text-white shadow-md hover:shadow-lg transition-all active:scale-95"
-            aria-label="Navigate to address"
-          >
-            <Navigation className="h-6 w-6" />
-          </button>
-          <button
-            onClick={handleEmail}
-            className="flex flex-col items-center justify-center w-16 h-16 rounded-full bg-orange-500 hover:bg-orange-600 text-white shadow-md hover:shadow-lg transition-all active:scale-95"
-            aria-label="Send email"
-          >
-            <Mail className="h-6 w-6" />
-          </button>
-        </div>
-      </div>
-
       {/* Categorized Modules */}
       <div className="px-4 py-4 space-y-4">
-        {/* Project Section */}
+        {/* Project Section - Now includes Notes */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Project
@@ -172,24 +152,53 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
               label="Warranty"
               onClick={() => onNavigateToModule('CLAIMS')}
             />
-          </div>
-        </div>
-
-        {/* Communication Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-            Communication
-          </h2>
-          <div className="grid grid-cols-3 gap-3">
-            <ModuleButton
-              icon={<MessagesSquare className="h-5 w-5" />}
-              label="Messages"
-              onClick={() => onNavigateToModule('MESSAGES')}
-            />
             <ModuleButton
               icon={<StickyNote className="h-5 w-5" />}
               label="Notes"
               onClick={() => onNavigateToModule('NOTES')}
+            />
+          </div>
+        </div>
+
+        {/* Quick Actions Section */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+            Quick Actions
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            <ModuleButton
+              icon={<MessageCircle className="h-5 w-5" />}
+              label="Text"
+              onClick={handleSMS}
+            />
+            <ModuleButton
+              icon={<MapPin className="h-5 w-5" />}
+              label="Maps"
+              onClick={handleNavigate}
+            />
+            <ModuleButton
+              icon={<Phone className="h-5 w-5" />}
+              label="Call"
+              onClick={handleCall}
+            />
+            <ModuleButton
+              icon={<MessageSquare className="h-5 w-5" />}
+              label="Message"
+              onClick={handleMessage}
+            />
+          </div>
+        </div>
+
+        {/* Communication Section - Notes removed */}
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+          <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+            Communication
+          </h2>
+          <div className="grid grid-cols-2 gap-3">
+            <ModuleButton
+              icon={<MessagesSquare className="h-5 w-5" />}
+              label="Messages"
+              onClick={() => onNavigateToModule('MESSAGES')}
             />
             <ModuleButton
               icon={<PhoneCall className="h-5 w-5" />}
