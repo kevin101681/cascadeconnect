@@ -149,11 +149,6 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
       {/* Header */}
       <div className={`flex-shrink-0 px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface dark:bg-gray-800 ${isInline ? 'md:rounded-t-3xl' : ''}`}>
         <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-          {activeTasks.length > 0 && (
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-              {activeTasks.length}
-            </span>
-          )}
           Notes
         </h2>
         {!isInline && (

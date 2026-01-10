@@ -261,11 +261,6 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
             Calls
-            {stats.total > 0 && (
-              <span className="inline-flex items-center justify-center px-2 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-                {stats.total}
-              </span>
-            )}
           </h2>
         </div>
       </div>
