@@ -85,50 +85,16 @@
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
     
-    <!-- ===== BRUTE FORCE FIX: Clerk Avatar - CSS Variables + Class Overrides ===== -->
-    <!-- Loaded last to ensure highest specificity -->
+    <!-- ===== CLERK AVATAR: Minimal CSS (Colors controlled via Clerk Dashboard) ===== -->
+    <!-- Loaded last to ensure proper sizing only -->
     <style>
-      /* Method 1: Override Clerk's CSS Variables */
-      :root {
-        --cl-userButton-avatarBox-background: #3c6b80 !important;
-        --cl-userButton-avatarImage-background: #3c6b80 !important;
-        --clerk-primary: #3c6b80 !important;
-      }
-      
-      /* Method 2: Target the specific Clerk Avatar class structure */
-      .cl-userButtonTrigger .cl-userButtonAvatarBox {
-        border: 2px solid #3c6b80 !important;
-        background-color: #3c6b80 !important;
-      }
+      /* Only ensure proper sizing - let Clerk Dashboard control colors */
+      .cl-userButtonTrigger,
+      .cl-userButtonTrigger .cl-userButtonAvatarBox,
       .cl-userButtonTrigger .cl-avatarImage {
-        background-color: #3c6b80 !important;
-        fill: #3c6b80 !important;
-      }
-      /* Fallback for text initials */
-      .cl-userButtonTrigger .cl-userButtonAvatarImage {
-        background-color: #3c6b80 !important; 
-        color: #ffffff !important;
-      }
-      
-      /* Method 3: Additional selectors for stubborn cases */
-      [class*="cl-userButtonTrigger"] [class*="cl-avatarImage"],
-      [class*="cl-userButtonTrigger"] [class*="cl-userButtonAvatarImage"],
-      [class*="cl-userButtonTrigger"] [class*="cl-userButtonAvatarBox"] {
-        background-color: #3c6b80 !important;
-        color: #ffffff !important;
-      }
-      
-      /* Method 4: Hide the default generic avatar color if present */
-      div[class*="cl-userButtonAvatarImage"],
-      div[class*="cl-avatarImage"] {
-        background-color: #3c6b80 !important;
-        color: white !important;
-      }
-      
-      /* Method 5: Target the SVG fallback icon directly */
-      .cl-userButtonAvatarBox .cl-avatarImage svg {
-        fill: #3c6b80 !important;
-        color: #3c6b80 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
       }
     </style>
   </body>

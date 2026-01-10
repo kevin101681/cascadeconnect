@@ -349,37 +349,35 @@ const Layout: React.FC<LayoutProps> = ({
                 );
               })()}
 
-              {/* Clerk UserButton - Outlined style matching app theme */}
+              {/* Clerk UserButton - Clean, no wrapper border */}
               {clerkLoaded ? (
-                <div className="flex items-center justify-center w-10 h-10 rounded-full border-2 border-primary bg-white hover:bg-gray-50 transition-colors">
-                  <UserButton
-                    appearance={{
-                      elements: {
-                        // Avatar button trigger
-                        userButtonTrigger: "!flex !items-center !justify-center !w-9 !h-9 !min-w-[36px] !min-h-[36px] !max-w-[36px] !max-h-[36px] !visible !opacity-100 !relative",
-                        
-                        // Avatar container - no extra styling, let Clerk handle the avatar
-                        userButtonAvatarBox: "!w-9 !h-9 !min-w-[36px] !min-h-[36px] !max-w-[36px] !max-h-[36px] !block !visible !opacity-100 !flex !items-center !justify-center !relative",
-                        
-                        // Avatar image - keep default Clerk styling
-                        userButtonAvatarImage: "!w-full !h-full !block !visible !opacity-100 !relative",
-                        
-                        // Dropdown styling
-                        userButtonPopoverCard: "shadow-elevation-2 rounded-xl border border-gray-200",
-                        userButtonPopoverHeader: "hidden",
-                        userButtonPopoverHeaderTitle: "hidden",
-                        userButtonPopoverHeaderSubtitle: "hidden",
-                        userButtonPopoverAvatarBox: "hidden",
-                        userButtonPopoverActions: "p-2",
-                        userButtonPopoverActionButtonIcon: "hidden",
-                        userButtonPopoverActionButton__manageAccount: "hidden",
-                        userButtonPopoverFooter: "hidden",
-                      }
-                    }}
-                  />
-                </div>
+                <UserButton
+                  appearance={{
+                    elements: {
+                      // Avatar button trigger
+                      userButtonTrigger: "!flex !items-center !justify-center !w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !visible !opacity-100 !relative",
+
+                      // Avatar container - let Clerk handle all styling
+                      userButtonAvatarBox: "!w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !block !visible !opacity-100 !flex !items-center !justify-center !relative",
+
+                      // Avatar image - keep default Clerk styling (they control colors via dashboard)
+                      userButtonAvatarImage: "!w-full !h-full !block !visible !opacity-100 !relative",
+
+                      // Dropdown styling
+                      userButtonPopoverCard: "shadow-elevation-2 rounded-xl border border-gray-200",
+                      userButtonPopoverHeader: "hidden",
+                      userButtonPopoverHeaderTitle: "hidden",
+                      userButtonPopoverHeaderSubtitle: "hidden",
+                      userButtonPopoverAvatarBox: "hidden",
+                      userButtonPopoverActions: "p-2",
+                      userButtonPopoverActionButtonIcon: "hidden",
+                      userButtonPopoverActionButton__manageAccount: "hidden",
+                      userButtonPopoverFooter: "hidden",
+                    }
+                  }}
+                />
               ) : (
-                <div className="w-10 h-10 bg-white dark:bg-gray-700 border-2 border-primary rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-surface-container rounded-full flex items-center justify-center">
                   <Loader2 className="h-5 w-5 animate-spin text-primary" />
                 </div>
               )}
