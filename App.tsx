@@ -915,33 +915,31 @@ function App() {
     // Only restore if no homeowner is currently selected
     if (selectedHomeownerId) return;
     
-    // Check if homeowners have been loaded
+    // 1. Wait for the database list to be ready (handle race condition)
     if (homeowners.length === 0) return;
     
     try {
-      const url = new URL(window.location.href);
-      const urlHomeownerId = url.searchParams.get('homeownerId');
+      // 2. Check local storage
+      const savedId = localStorage.getItem("cascade_active_homeowner_id");
+      console.log("💾 Storage Check. Found ID:", savedId);
       
-      if (urlHomeownerId) {
-        console.log(`🔄 Restoring homeowner from URL: ${urlHomeownerId}`);
-        
+      if (savedId) {
         // Find the homeowner in the loaded list
-        const targetHomeowner = homeowners.find(h => h.id === urlHomeownerId);
+        const found = homeowners.find(h => h.id === savedId);
         
-        if (targetHomeowner) {
-          console.log(`✅ Found homeowner in database: ${targetHomeowner.name}`);
-          setSelectedAdminHomeownerId(urlHomeownerId);
+        if (found) {
+          console.log("💾 Restoring saved homeowner:", found.firstName || found.name);
+          setSelectedAdminHomeownerId(savedId);
           setCurrentView('DASHBOARD');
           setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
         } else {
-          console.warn(`⚠️ Homeowner ${urlHomeownerId} not found in database`);
-          // Clean up invalid URL parameter
-          url.searchParams.delete('homeownerId');
-          window.history.replaceState({}, '', url.toString());
+          console.warn(`⚠️ Homeowner ${savedId} not found in database`);
+          // Clean up invalid localStorage entry
+          localStorage.removeItem("cascade_active_homeowner_id");
         }
       }
     } catch (error) {
-      console.error('❌ Error restoring homeowner from URL:', error);
+      console.error('❌ Error restoring homeowner from localStorage:', error);
     }
   }, [homeowners, userRole, selectedHomeownerId]); // Run when homeowners are loaded or role changes
 
@@ -1273,19 +1271,17 @@ function App() {
     setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
     setCurrentView('DASHBOARD');
     
-    // Persist selected homeowner in URL for state restoration on refresh
-    const url = new URL(window.location.href);
-    url.searchParams.set('homeownerId', homeowner.id);
-    window.history.replaceState({}, '', url.toString());
+    // Persist to browser memory (localStorage)
+    localStorage.setItem("cascade_active_homeowner_id", homeowner.id);
+    console.log("💾 Saved homeowner to localStorage:", homeowner.firstName || homeowner.name);
   };
 
   const handleClearHomeownerSelection = () => {
     setSelectedAdminHomeownerId(null);
     
-    // Clear homeowner ID from URL
-    const url = new URL(window.location.href);
-    url.searchParams.delete('homeownerId');
-    window.history.replaceState({}, '', url.toString());
+    // Clear homeowner ID from localStorage
+    localStorage.removeItem("cascade_active_homeowner_id");
+    console.log("💾 Cleared homeowner from localStorage");
   };
 
   const handleSwitchRole = async () => {
