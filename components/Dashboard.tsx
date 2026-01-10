@@ -67,6 +67,7 @@ import { WarrantyCard } from './ui/WarrantyCard';
 import { HomeownerCard } from './ui/HomeownerCard';
 import { TaskCard } from './ui/TaskCard';
 import { MessageCard } from './ui/MessageCard';
+import { TaskCreationCard } from './TaskCreationCard';
 
 // ============================================================================
 // MEMOIZED LIST COMPONENTS (Defined at top level to avoid hooks issues)
@@ -2928,52 +2929,65 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
         {/* Left Column: Tasks List */}
         <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedTaskForModal ? 'hidden md:flex' : 'flex'}`}>
-          <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-3xl md:rounded-tr-none">
-            <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-              {filteredTasks.length > 0 && (
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-primary text-primary bg-primary/10 text-xs font-medium">
-                  {filteredTasks.length}
-                </span>
-              )}
-              <span className="hidden sm:inline">My Tasks</span>
-              <span className="sm:hidden">Tasks</span>
-            </h3>
-          </div>
-          
-          {/* Filter Pills */}
-          <div className="px-4 py-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setTasksFilter('open')}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  tasksFilter === 'open'
-                    ? 'border border-primary text-primary bg-primary/10'
-                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
-                }`}
-              >
-                Open
-              </button>
-              <button
-                onClick={() => setTasksFilter('closed')}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  tasksFilter === 'closed'
-                    ? 'border border-primary text-primary bg-primary/10'
-                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
-                }`}
-              >
-                Closed
-              </button>
-              <button
-                onClick={() => setTasksFilter('all')}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  tasksFilter === 'all'
-                    ? 'border border-primary text-primary bg-primary/10'
-                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
-                }`}
-              >
-                All
-              </button>
+          {/* Sticky Header */}
+          <div className="sticky top-0 z-10 bg-surface dark:bg-gray-800 md:rounded-tl-3xl">
+            {/* Title Bar */}
+            <div className="px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0">
+              <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                {filteredTasks.length > 0 && (
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-primary text-primary bg-primary/10 text-xs font-medium">
+                    {filteredTasks.length}
+                  </span>
+                )}
+                <span className="hidden sm:inline">My Tasks</span>
+                <span className="sm:hidden">Tasks</span>
+              </h3>
             </div>
+            
+            {/* Filter Pills */}
+            <div className="px-4 py-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setTasksFilter('open')}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    tasksFilter === 'open'
+                      ? 'border border-primary text-primary bg-primary/10'
+                      : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                  }`}
+                >
+                  Open
+                </button>
+                <button
+                  onClick={() => setTasksFilter('closed')}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    tasksFilter === 'closed'
+                      ? 'border border-primary text-primary bg-primary/10'
+                      : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                  }`}
+                >
+                  Closed
+                </button>
+                <button
+                  onClick={() => setTasksFilter('all')}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    tasksFilter === 'all'
+                      ? 'border border-primary text-primary bg-primary/10'
+                      : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                  }`}
+                >
+                  All
+                </button>
+              </div>
+            </div>
+
+            {/* Task Creation Card */}
+            {onCreateScheduleTask && onCreateEvalTask && (
+              <TaskCreationCard
+                employees={employees}
+                onCreateScheduleTask={onCreateScheduleTask}
+                onCreateEvalTask={onCreateEvalTask}
+              />
+            )}
           </div>
 
           <TasksListColumn
@@ -3043,8 +3057,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                         setSelectedTaskForModal(null);
                         setTasksTabStartInEditMode(false);
                       }}
-                      onCreateScheduleTask={onCreateScheduleTask}
-                      onCreateEvalTask={onCreateEvalTask}
                   />
                 </Suspense>
               </div>
@@ -3101,8 +3113,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                   setSelectedTaskForModal(null);
                   setTasksTabStartInEditMode(false);
                 }}
-                onCreateScheduleTask={onCreateScheduleTask}
-                onCreateEvalTask={onCreateEvalTask}
               />
             </Suspense>
           </div>
