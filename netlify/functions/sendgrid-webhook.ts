@@ -103,17 +103,20 @@ export const handler = async (event: any) => {
         ? new Date(sgEvent.timestamp * 1000)
         : new Date();
       
-      // Extract system_email_id from custom args (both formats)
+      // Extract system_email_id (SendGrid flattens customArgs to top level)
       const systemEmailId: string | undefined =
-        sgEvent?.custom_args?.system_email_id ||
-        sgEvent?.customArgs?.system_email_id;
+        sgEvent?.system_email_id ||  // ⭐ PRIMARY: Top-level (SendGrid flattens it)
+        sgEvent?.custom_args?.system_email_id ||  // Fallback: nested format
+        sgEvent?.customArgs?.system_email_id;     // Fallback: alternate nested format
 
       console.log(`\n📨 Event #${i + 1}:`);
       console.log(`   Type: ${eventType}`);
       console.log(`   Email: ${email}`);
       console.log(`   System Email ID: ${systemEmailId || 'MISSING ⚠️'}`);
       console.log(`   Timestamp: ${timestamp.toISOString()}`);
-      console.log(`   Custom Args:`, sgEvent?.custom_args || sgEvent?.customArgs || 'NONE ⚠️');
+      console.log(`   Top-level system_email_id:`, sgEvent?.system_email_id || 'NONE');
+      console.log(`   Nested custom_args:`, sgEvent?.custom_args || 'NONE');
+      console.log(`   Nested customArgs:`, sgEvent?.customArgs || 'NONE');
 
       // ===== STEP 5: HANDLE "OPEN" EVENTS =====
       if (eventType === 'open') {
