@@ -146,15 +146,15 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
   // Render the content (shared between inline and modal modes)
   const renderContent = () => (
     <>
-      {/* Header */}
-      <div className={`flex-shrink-0 px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface dark:bg-gray-800 ${isInline ? 'md:rounded-t-3xl' : ''}`}>
-        <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+      {/* Header - COMPACT & STANDARDIZED */}
+      <div className="flex items-center justify-between px-6 h-16 border-b border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
+        <h2 className="text-xl font-semibold text-surface-on dark:text-gray-100">
           Notes
         </h2>
         {!isInline && (
           <button
             onClick={closeTasks}
-            className="p-2 rounded-full hover:bg-surface-container dark:hover:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors absolute top-6 right-6"
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
             aria-label="Close"
           >
             <X className="h-5 w-5" />

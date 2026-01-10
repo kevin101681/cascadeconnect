@@ -140,36 +140,33 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
         " 
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header - Fixed at top */}
-        <div className="flex-shrink-0 flex items-center justify-between px-4 md:px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
-          <h2 
-            id="invoices-modal-title"
-            className="text-xl md:text-2xl font-semibold text-surface-on dark:text-gray-100"
-          >
+        {/* Header - COMPACT & STANDARDIZED */}
+        <div className="flex items-center justify-between px-6 h-16 border-b border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
+          <h2 className="text-xl font-semibold text-surface-on dark:text-gray-100">
             CBS Books - Invoices
           </h2>
           <div className="flex items-center gap-2">
-            {/* New Invoice Button - INLINE STYLE OVERRIDE */}
+            {/* New Invoice Button - Compact Pill Outline */}
             <button
               onClick={() => {
                 // Dispatch event to trigger invoice creation in CBS Books
                 window.dispatchEvent(new Event('cbsbooks-create-invoice'));
               }}
               style={{
+                height: '36px',
+                padding: '0 16px',
                 backgroundColor: "white",
                 color: "#3c6b80",
                 border: "2px solid #3c6b80",
                 borderRadius: "9999px",
-                padding: "8px 16px",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
                 fontSize: "0.875rem",
-                fontWeight: "500",
-                boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)"
+                fontWeight: "500"
               }}
-              className="hover:bg-gray-50 transition-all"
+              className="hover:bg-gray-50 transition-colors"
               title="Create new invoice"
             >
               <Plus className="h-4 w-4" />
@@ -179,19 +176,11 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
             <button
               ref={closeButtonRef}
               onClick={onClose}
-              className="
-                p-2 md:p-3 rounded-full 
-                bg-surface-container-high hover:bg-surface-container 
-                dark:bg-gray-700 dark:hover:bg-gray-600
-                text-surface-on-variant dark:text-gray-400 
-                hover:text-surface-on dark:hover:text-gray-100
-                transition-all hover:scale-105 active:scale-95
-                flex items-center justify-center
-              "
+              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
               title="Close (Esc)"
               aria-label="Close invoices modal"
             >
-              <X className="h-5 w-5 md:h-6 md:w-6" />
+              <X className="h-5 w-5" />
             </button>
           </div>
         </div>

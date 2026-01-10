@@ -5694,22 +5694,17 @@ const Dashboard: React.FC<DashboardProps> = ({
               }}
             >
               <div className="bg-surface dark:bg-gray-800 w-full max-w-7xl max-h-[85vh] rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 flex flex-col">
-                {/* Header */}
-                <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center sticky top-0 z-10 flex-shrink-0">
-                  <div>
-                    <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                      <Phone className="h-6 w-6 text-primary" />
-                      AI Calls - {displayHomeowner.name}
-                    </h2>
-                    <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
-                      {homeownerCalls.length} call{homeownerCalls.length !== 1 ? 's' : ''} found
-                    </p>
-                  </div>
-                  <button 
-                    onClick={() => setShowCallsModal(false)} 
-                    className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 p-2 rounded-full hover:bg-white/10 dark:hover:bg-gray-600/50"
+                {/* Header - COMPACT & STANDARDIZED */}
+                <div className="flex items-center justify-between px-6 h-16 border-b border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
+                  <h2 className="text-xl font-semibold text-surface-on dark:text-gray-100 flex items-center gap-2">
+                    <Phone className="h-5 w-5 text-primary" />
+                    AI Calls - {displayHomeowner.name}
+                  </h2>
+                  <button
+                    onClick={() => setShowCallsModal(false)}
+                    className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
                   >
-                    <X className="h-6 w-6" />
+                    <X className="h-5 w-5" />
                   </button>
                 </div>
                 

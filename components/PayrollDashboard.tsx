@@ -134,20 +134,34 @@ const PayrollDashboard: React.FC = () => {
 
   return (
     <div className="bg-white dark:bg-white md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col">
-      {/* Header */}
-      <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 md:rounded-t-3xl flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-            Payroll Dashboard
-          </h2>
+      {/* Header - COMPACT & STANDARDIZED */}
+      <div className="flex items-center justify-between px-6 h-16 border-b border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 md:rounded-t-3xl">
+        <h2 className="text-xl font-semibold text-surface-on dark:text-gray-100">
+          Payroll Dashboard
+        </h2>
+        <div className="flex items-center gap-3">
+          <GustoConnectButton isConnected={isGustoConnected} />
+          <button 
+            style={{
+              height: '36px',
+              padding: '0 16px',
+              backgroundColor: "white",
+              color: "#3c6b80",
+              border: "2px solid #3c6b80",
+              borderRadius: "9999px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontSize: "0.875rem",
+              fontWeight: "500"
+            }}
+            className="hover:bg-gray-50 transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            Export Report
+          </button>
         </div>
-          <div className="flex items-center gap-3">
-            <GustoConnectButton isConnected={isGustoConnected} />
-            <button className="flex items-center gap-2 px-4 py-2 rounded-lg hover:opacity-90 transition-opacity border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10">
-              <Download className="h-4 w-4" />
-              Export Report
-            </button>
-          </div>
       </div>
       
       {/* Content */}
