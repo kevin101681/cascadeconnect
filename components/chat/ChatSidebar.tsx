@@ -137,9 +137,34 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
     (member.email || "").toLowerCase().includes((searchQuery || "").toLowerCase())
   );
 
+  // Filter existing channels by search (name or last message content)
+  const filteredChannels = channels.filter((channel) => {
+    const query = (searchQuery || "").toLowerCase();
+    if (!query) return true;
+    
+    const nameMatch = (channel.otherUser?.name || channel.name || "").toLowerCase().includes(query);
+    const messageMatch = (channel.lastMessage?.content || "").toLowerCase().includes(query);
+    
+    return nameMatch || messageMatch;
+  });
+
   return (
     <div className={`flex flex-col h-full bg-surface dark:bg-gray-800 ${isCompact ? '' : 'border-r border-surface-outline-variant dark:border-gray-700'}`}>
-      {/* DM Lists - No header, no search */}
+      {/* Search Bar */}
+      <div className="flex-shrink-0 px-3 py-3 border-b border-surface-outline-variant dark:border-gray-700">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search messages..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 text-sm bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 rounded-full outline-none focus:ring-2 focus:ring-primary placeholder:text-surface-on-variant dark:placeholder:text-gray-400"
+          />
+        </div>
+      </div>
+
+      {/* DM Lists */}
       <div className="flex-1 overflow-y-auto pt-2">
         {isLoadingChannels || isLoadingTeam ? (
           <div className="px-4 py-8 flex flex-col items-center gap-2 text-surface-on-variant dark:text-gray-400">
@@ -148,10 +173,10 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
           </div>
         ) : (
           <>
-            {/* Active Conversations - No "Recent" label */}
-            {channels.length > 0 && (
+            {/* Active Conversations */}
+            {filteredChannels.length > 0 && (
               <div>
-                {channels.map((channel) => (
+                {filteredChannels.map((channel) => (
                   <button
                     key={channel.id}
                     onClick={() => onSelectChannel(channel)}
@@ -161,11 +186,6 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                         : 'text-surface-on dark:text-gray-300 hover:bg-surface-container dark:hover:bg-gray-700/50'
                     }`}
                   >
-                    {/* Avatar - Material 3 */}
-                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-secondary-container dark:bg-secondary/20 flex items-center justify-center text-secondary-on-container dark:text-secondary font-medium">
-                      {channel.otherUser?.name.charAt(0).toUpperCase() || 'U'}
-                    </div>
-                    
                     {/* Content */}
                     <div className="flex-1 min-w-0 text-left">
                       <div className="font-medium truncate">
@@ -189,9 +209,13 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
               </div>
             )}
 
-            {/* All Team Members - No divider, no "Start New Conversation" label */}
-            <div className={channels.length > 0 ? 'mt-2' : ''}>
-              {filteredTeamMembers.length === 0 ? (
+            {/* All Team Members */}
+            <div className={filteredChannels.length > 0 ? 'mt-2' : ''}>
+              {searchQuery && filteredChannels.length === 0 && filteredTeamMembers.filter((member) => !existingDmUserIds.has(member.id)).length === 0 ? (
+                <div className="px-4 py-8 text-center text-sm text-surface-on-variant dark:text-gray-400">
+                  No results found
+                </div>
+              ) : filteredTeamMembers.length === 0 && !searchQuery ? (
                 <div className="px-4 py-8 text-center text-sm text-surface-on-variant dark:text-gray-400">
                   No other team members
                 </div>
@@ -205,11 +229,6 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       disabled={isCreatingDm}
                       className="w-full px-4 py-3 flex items-center gap-3 text-surface-on dark:text-gray-300 hover:bg-surface-container dark:hover:bg-gray-700/50 transition-all disabled:opacity-50"
                     >
-                      {/* Avatar - Material 3 */}
-                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-tertiary-container dark:bg-tertiary/20 flex items-center justify-center text-tertiary-on-container dark:text-tertiary font-medium">
-                        {member.name.charAt(0).toUpperCase()}
-                      </div>
-                      
                       {/* Content */}
                       <div className="flex-1 min-w-0 text-left">
                         <div className="font-medium">{member.name}</div>
