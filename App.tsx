@@ -13,6 +13,7 @@ import TasksSheet from './components/TasksSheet';
 import MessageSummaryModal, { ClaimMessage, TaskMessage } from './components/MessageSummaryModal';
 import InvoicesModal from './components/InvoicesModal';
 import HomeownersList from './components/HomeownersList';
+import SubmissionSuccessModal from './components/SubmissionSuccessModal';
 import { X, Info, CheckCircle, User } from 'lucide-react';
 import EmailHistory from './components/EmailHistory';
 import BackendDashboard from './components/BackendDashboard';
@@ -1231,7 +1232,14 @@ function App() {
   // Alert modal state
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [alertType, setAlertType] = useState<'info' | 'success' | 'error'>('info');
-  
+
+  // Submission success modal state (with AI analysis)
+  const [showSubmissionSuccess, setShowSubmissionSuccess] = useState(false);
+  const [submissionData, setSubmissionData] = useState<{
+    claimCount: number;
+    aiAnalysis?: { status: 'Approved' | 'Denied' | 'Needs Info'; reasoning: string } | null;
+  } | null>(null);
+
   const selectedClaim = claims.find(c => c.id === selectedClaimId);
   const targetHomeowner = selectedAdminHomeownerId ? homeowners.find(h => h.id === selectedAdminHomeownerId) || null : null;
 
@@ -2031,10 +2039,20 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
         
         console.log(`📧 [EMAIL] Batch claim notification summary: ${emailSuccessCount} sent, ${emailFailureCount} failed`);
 
-        // Redirect to dashboard with success
-        setCurrentView('DASHBOARD');
-        setAlertType('success');
-        setAlertMessage(`Successfully submitted ${createdClaims.length} claim${createdClaims.length > 1 ? 's' : ''}!`);
+        // Show submission success modal with AI analysis (if homeowner)
+        if (userRole === UserRole.HOMEOWNER) {
+          setSubmissionData({
+            claimCount: createdClaims.length,
+            aiAnalysis: result.aiAnalysis || null
+          });
+          setShowSubmissionSuccess(true);
+          setCurrentView('DASHBOARD'); // Navigate to dashboard in background
+        } else {
+          // For admins, just show the alert
+          setAlertType('success');
+          setAlertMessage(`Successfully submitted ${createdClaims.length} claim${createdClaims.length > 1 ? 's' : ''}!`);
+          setCurrentView('DASHBOARD');
+        }
         return;
       } catch (error: any) {
         console.error('Batch submission error:', error);
@@ -4515,6 +4533,17 @@ Assigned By: ${assignerName}
           }}
         />
       )}
+      
+      {/* Submission Success Modal with AI Analysis */}
+      <SubmissionSuccessModal
+        isOpen={showSubmissionSuccess}
+        onClose={() => {
+          setShowSubmissionSuccess(false);
+          setSubmissionData(null);
+        }}
+        claimCount={submissionData?.claimCount || 0}
+        aiAnalysis={submissionData?.aiAnalysis || null}
+      />
       
       {/* Global Modal Provider - Renders all stacked modals */}
       <ModalProvider />

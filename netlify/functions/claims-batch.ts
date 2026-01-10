@@ -143,6 +143,37 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
 
     console.log(`✅ Batch insert: ${insertedClaims.length} claims created for homeowner ${homeownerId}`);
 
+    // Run AI analysis on the first claim for preliminary feedback
+    let aiAnalysis = null;
+    if (insertedClaims.length > 0 && claimsInput[0]) {
+      try {
+        console.log('🤖 Running AI analysis on first claim...');
+        const firstClaim = claimsInput[0];
+        
+        // Call the analyze-claim function
+        const analysisResponse = await fetch(`${process.env.URL || 'http://localhost:8888'}/.netlify/functions/analyze-claim`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            claimTitle: firstClaim.title,
+            claimDescription: firstClaim.description,
+          }),
+        });
+
+        if (analysisResponse.ok) {
+          aiAnalysis = await analysisResponse.json();
+          console.log('✅ AI analysis complete:', aiAnalysis.status);
+        } else {
+          console.warn('⚠️ AI analysis failed, continuing without it');
+        }
+      } catch (error) {
+        console.error('❌ Error running AI analysis:', error);
+        // Continue without AI analysis - don't block submission
+      }
+    }
+
     return {
       statusCode: 201,
       headers,
@@ -150,6 +181,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
         success: true,
         claims: insertedClaims,
         count: insertedClaims.length,
+        aiAnalysis: aiAnalysis, // Include AI analysis in response
       }),
     };
   } catch (error: any) {
