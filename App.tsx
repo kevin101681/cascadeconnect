@@ -2074,7 +2074,7 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
           claimNumber: newClaim.claimNumber
         });
         
-        const result = await db.insert(claimsTable).values({
+        const [insertedClaim] = await db.insert(claimsTable).values({
           id: newClaim.id, // Explicit ID
           homeownerId: dbHomeownerId, // Use validated UUID or null
           title: newClaim.title,
@@ -2097,10 +2097,17 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
           contractorEmail: newClaim.contractorEmail || null,
           proposedDates: [],
           summary: null
-        } as any);
+        } as any).returning(); // CRITICAL: Return the inserted row
         
-        console.log("✅ Claim saved to Neon database successfully:", newClaim.id);
-        console.log("📊 Insert result:", result);
+        console.log("✅ Claim saved to Neon database successfully:", insertedClaim.id);
+        console.log("📊 Insert result:", insertedClaim);
+        
+        // Update newClaim with the actual database values (ensures consistency)
+        if (insertedClaim) {
+          newClaim.id = insertedClaim.id;
+          newClaim.dateSubmitted = insertedClaim.dateSubmitted ? new Date(insertedClaim.dateSubmitted) : newClaim.dateSubmitted;
+          (newClaim as any).homeownerId = insertedClaim.homeownerId;
+        }
         
       } catch (e: any) {
         console.error("🔥 FAILED TO CREATE CLAIM - DATABASE ERROR:", e);
@@ -2764,7 +2771,7 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
                       address: c.address,
                       homeownerEmail: c.homeownerEmail,
                       dateSubmitted: c.dateSubmitted,
-                  } as any)));
+                  } as any))).returning(); // Return inserted rows
                } catch (batchErr) {
                    console.warn("Batch failed, trying sequential insert...", batchErr);
                    // Fallback: One by one
@@ -2777,7 +2784,7 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
                            address: c.address,
                            homeownerEmail: c.homeownerEmail,
                            dateSubmitted: c.dateSubmitted,
-                       } as any);
+                       } as any).returning(); // Return inserted row
                    }
                }
              }

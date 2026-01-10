@@ -120,11 +120,11 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     const insertedClaims = [];
     for (const claimData of claimsToInsert) {
       try {
-        await db.insert(claims).values(claimData as any).execute();
+        const [insertedClaim] = await db.insert(claims).values(claimData as any).returning(); // CRITICAL: Return inserted row
         insertedClaims.push({
-          id: claimData.id,
-          claimNumber: claimData.claimNumber,
-          title: claimData.title,
+          id: insertedClaim.id,
+          claimNumber: insertedClaim.claimNumber,
+          title: insertedClaim.title,
           category: claimData.category,
         });
       } catch (error: any) {
