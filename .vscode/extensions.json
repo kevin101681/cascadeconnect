@@ -4,10 +4,38 @@
 
 	// List of extensions which should be recommended for users of this workspace.
 	"recommendations": [
-		
+		// === DATABASE ===
+		// Neon Database - Critical for MCP integration with serverless Postgres
+		"neondatabase.neon",
+
+		// === STYLING & UI ===
+		// Tailwind CSS IntelliSense - Autocomplete, syntax highlighting, and linting for Tailwind
+		"bradlc.vscode-tailwindcss",
+
+		// === REACT & JAVASCRIPT ===
+		// ES7+ React/Redux Snippets - Code snippets for React, Redux, Next.js
+		"dsznajder.es7-react-js-snippets",
+
+		// === TYPESCRIPT ===
+		// Pretty TypeScript Errors - Makes TS errors more readable with formatting
+		"yoavbls.pretty-ts-errors",
+
+		// === API TESTING ===
+		// REST Client - Test API endpoints directly in VS Code (alternative to Postman)
+		"humao.rest-client",
+
+		// === ENVIRONMENT ===
+		// DotENV - Syntax highlighting for .env files
+		"mikestead.dotenv",
+
+		// === CODE FORMATTING & LINTING ===
+		// Prettier - Code formatter for consistent style
+		"esbenp.prettier-vscode",
+
+		// ESLint - JavaScript/TypeScript linting
+		"dbaeumer.vscode-eslint"
 	],
+
 	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
-	"unwantedRecommendations": [
-		
-	]
+	"unwantedRecommendations": []
 }
