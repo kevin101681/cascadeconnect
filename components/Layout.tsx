@@ -433,13 +433,6 @@ const Layout: React.FC<LayoutProps> = ({
                               </button>
                             </>
                           )}
-                          <button 
-                            onClick={() => handleMenuAction(() => onNavigate('EMAIL_HISTORY'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
-                          >
-                            <Mail className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-                            Email History
-                          </button>
                           {isAdministrator && (
                             <button 
                               onClick={() => handleMenuAction(() => onNavigate('BACKEND'))}

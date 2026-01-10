@@ -68,7 +68,7 @@ interface EmailAnalyticsData {
 }
 
 interface EmailHistoryProps {
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
@@ -316,13 +316,15 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
       </div>
       <div className="flex items-center gap-2">
         {actions}
-        <button 
-          onClick={onClose} 
-          className="p-2.5 rounded-full hover:bg-surface-container dark:hover:bg-gray-600 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
-          title="Close"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="p-2.5 rounded-full hover:bg-surface-container dark:hover:bg-gray-600 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 transition-colors"
+            title="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
     </div>
   );

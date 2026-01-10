@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Database, Users, Home, FileText, ClipboardList, MessageSquare, Building2, HardHat, CheckCircle, XCircle, RefreshCw, AlertCircle, TrendingUp, Server, Globe, Code, Key, Zap, X } from 'lucide-react';
+import { Database, Users, Home, FileText, ClipboardList, MessageSquare, Building2, HardHat, CheckCircle, XCircle, RefreshCw, AlertCircle, TrendingUp, Server, Globe, Code, Key, Zap, X, Mail } from 'lucide-react';
 import Button from './Button';
 import { db, isDbConfigured } from '../db';
 import { users as usersTable, homeowners as homeownersTable, claims as claimsTable, documents as documentsTable, tasks as tasksTable, messageThreads as messageThreadsTable, builderGroups as builderGroupsTable, contractors as contractorsTable } from '../db/schema';
 import { eq, count, desc } from 'drizzle-orm';
 import { getNetlifyInfo, getNetlifyDeploys, rollbackDeployment as rollbackDeploymentService, getNeonStats } from '../lib/services/netlifyService';
+import EmailHistory from './EmailHistory';
 
 interface BackendDashboardProps {
   onClose: () => void;
@@ -37,7 +38,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'USERS' | 'HOMEOWNERS' | 'CLAIMS' | 'DOCUMENTS' | 'TASKS' | 'MESSAGES' | 'NEON' | 'NETLIFY'>('NETLIFY');
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'NETLIFY' | 'NEON' | 'EMAILS'>('NETLIFY');
   const [detailedData, setDetailedData] = useState<any>(null);
   const [netlifyInfo, setNetlifyInfo] = useState<any>(null);
   const [netlifyLoading, setNetlifyLoading] = useState(false);
@@ -411,17 +412,20 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
         <div className="p-6 space-y-6 overflow-y-auto flex-1" style={{ height: 'calc(85vh - 120px)' }}>
           {/* Tabs */}
           <div className="flex gap-2 mb-6 border-b border-surface-outline-variant dark:border-gray-700 overflow-x-auto">
-            {(['NETLIFY', 'NEON', 'OVERVIEW', 'USERS', 'HOMEOWNERS', 'CLAIMS', 'DOCUMENTS', 'TASKS', 'MESSAGES'] as const).map(tab => (
+            {(['OVERVIEW', 'NETLIFY', 'NEON', 'EMAILS'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 ${
+                className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
                   activeTab === tab
                     ? 'border-primary text-primary'
                     : 'border-transparent text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100'
                 }`}
               >
-                {tab.replace('_', ' ')}
+                {tab === 'OVERVIEW' && 'Overview'}
+                {tab === 'NETLIFY' && 'Netlify'}
+                {tab === 'NEON' && 'Neon'}
+                {tab === 'EMAILS' && 'Emails'}
               </button>
             ))}
           </div>
@@ -1440,152 +1444,12 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
           </div>
         )}
 
-          {/* Detailed Data Tables */}
-          {activeTab !== 'OVERVIEW' && activeTab !== 'NETLIFY' && activeTab !== 'NEON' && (
+          {/* Emails Tab */}
+          {activeTab === 'EMAILS' && (
             <div className="mt-6">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <RefreshCw className="h-6 w-6 animate-spin text-primary" />
-                <span className="ml-3 text-surface-on-variant dark:text-gray-400">Loading...</span>
-              </div>
-            ) : detailedData && detailedData.length > 0 ? (
-              <div className="bg-surface-container dark:bg-gray-700 rounded-xl border border-surface-outline-variant overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-surface-container-high dark:bg-gray-600 border-b border-surface-outline-variant">
-                      <tr>
-                        {activeTab === 'USERS' && (
-                          <>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Name</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Email</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Role</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Created</th>
-                          </>
-                        )}
-                        {activeTab === 'HOMEOWNERS' && (
-                          <>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Name</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Email</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Address</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Builder</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Created</th>
-                          </>
-                        )}
-                        {activeTab === 'CLAIMS' && (
-                          <>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Title</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Homeowner</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Status</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Submitted</th>
-                          </>
-                        )}
-                        {activeTab === 'DOCUMENTS' && (
-                          <>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Name</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Type</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Uploaded By</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Uploaded</th>
-                          </>
-                        )}
-                        {activeTab === 'TASKS' && (
-                          <>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Title</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Status</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Assigned</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Due Date</th>
-                          </>
-                        )}
-                        {activeTab === 'MESSAGES' && (
-                          <>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Subject</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Read</th>
-                            <th className="text-left px-4 py-3 text-xs font-medium text-surface-on-variant dark:text-gray-400">Last Message</th>
-                          </>
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-surface-outline-variant dark:divide-gray-600">
-                      {detailedData.slice(0, 100).map((item: any, idx: number) => (
-                        <tr key={item.id || idx} className="hover:bg-surface-container-high dark:hover:bg-gray-600">
-                          {activeTab === 'USERS' && (
-                            <>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{item.name}</td>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{item.email}</td>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{item.role}</td>
-                              <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">{formatDate(item.createdAt)}</td>
-                            </>
-                          )}
-                          {activeTab === 'HOMEOWNERS' && (
-                            <>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{item.name}</td>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{item.email}</td>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100 truncate max-w-xs">{item.address}</td>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{item.builder || 'N/A'}</td>
-                              <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">{formatDate(item.createdAt)}</td>
-                            </>
-                          )}
-                          {activeTab === 'CLAIMS' && (
-                            <>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{item.title}</td>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{item.homeownerName || 'N/A'}</td>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{item.status}</td>
-                              <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">{formatDate(item.dateSubmitted)}</td>
-                            </>
-                          )}
-                          {activeTab === 'DOCUMENTS' && (
-                            <>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{item.name}</td>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{item.type}</td>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{item.uploadedBy || 'N/A'}</td>
-                              <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">{formatDate(item.uploadedAt)}</td>
-                            </>
-                          )}
-                          {activeTab === 'TASKS' && (
-                            <>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{item.title}</td>
-                              <td className="px-4 py-3 text-sm">
-                                {item.isCompleted ? (
-                                  <span className="text-green-600 dark:text-green-400">Completed</span>
-                                ) : (
-                                  <span className="text-yellow-600 dark:text-yellow-400">Pending</span>
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{item.assignedToId || 'Unassigned'}</td>
-                              <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">{formatDate(item.dueDate)}</td>
-                            </>
-                          )}
-                          {activeTab === 'MESSAGES' && (
-                            <>
-                              <td className="px-4 py-3 text-sm text-surface-on dark:text-gray-100">{item.subject}</td>
-                              <td className="px-4 py-3 text-sm">
-                                {item.isRead ? (
-                                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400 inline" />
-                                ) : (
-                                  <XCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 inline" />
-                                )}
-                              </td>
-                              <td className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400">{formatDate(item.lastMessageAt)}</td>
-                            </>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                {detailedData.length > 100 && (
-                  <div className="px-4 py-3 text-sm text-surface-on-variant dark:text-gray-400 border-t border-surface-outline-variant">
-                    Showing first 100 of {formatNumber(detailedData.length)} records
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-12 bg-surface-container dark:bg-gray-700 rounded-xl">
-                <AlertCircle className="h-12 w-12 text-surface-outline-variant dark:text-gray-500 mx-auto mb-4 opacity-50" />
-                <p className="text-surface-on-variant dark:text-gray-400">No data found</p>
-              </div>
-            )}
-          </div>
-        )}
+              <EmailHistory />
+            </div>
+          )}
         </div>
       </div>
     </div>
