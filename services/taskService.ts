@@ -7,13 +7,16 @@ export interface SimpleTask {
 }
 
 /**
- * Fetch all tasks, optionally filtered by claimId
+ * Fetch all tasks, optionally filtered by claimId or notesOnly
  */
-export async function fetchTasks(claimId?: string | null): Promise<SimpleTask[]> {
+export async function fetchTasks(claimId?: string | null, notesOnly?: boolean): Promise<SimpleTask[]> {
   try {
     const url = new URL('/api/tasks', window.location.origin);
     if (claimId) {
       url.searchParams.set('claimId', claimId);
+    }
+    if (notesOnly) {
+      url.searchParams.set('notesOnly', 'true');
     }
     
     const response = await fetch(url.toString());

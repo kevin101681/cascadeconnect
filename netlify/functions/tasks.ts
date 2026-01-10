@@ -66,13 +66,29 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
         // Fetch all tasks, optionally filtered by claimId
         const queryParams = event.queryStringParameters || {};
         const claimId = queryParams.claimId || null;
+        const notesOnly = queryParams.notesOnly === 'true'; // New filter for simple notes
 
         let allTasks;
         
-        // Apply filter if claimId is provided
-        if (claimId) {
+        // Apply filters
+        if (notesOnly) {
+          // For Notes modal: only show simple notes (no assigned tasks)
+          // Simple notes have content but no assignedToId
+          if (claimId) {
+            allTasks = await db.select().from(tasks).where(
+              and(
+                eq(tasks.claimId, claimId),
+                isNull(tasks.assignedToId)
+              )
+            );
+          } else {
+            allTasks = await db.select().from(tasks).where(isNull(tasks.assignedToId));
+          }
+        } else if (claimId) {
+          // Fetch all tasks for specific claim
           allTasks = await db.select().from(tasks).where(eq(tasks.claimId, claimId));
         } else {
+          // Fetch all tasks
           allTasks = await db.select().from(tasks);
         }
 

@@ -44,8 +44,8 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
   const loadTasks = async () => {
     setLoading(true);
     try {
-      // Always fetch all tasks (pass null to get all)
-      const fetchedTasks = await fetchTasks(null);
+      // Fetch only simple notes (exclude assigned tasks like Schedule/Eval)
+      const fetchedTasks = await fetchTasks(null, true); // notesOnly = true
       setTasks(fetchedTasks);
     } catch (error) {
       console.error('Failed to load tasks:', error);
