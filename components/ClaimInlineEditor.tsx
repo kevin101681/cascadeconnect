@@ -117,6 +117,13 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   } | null>(null);
   const [showAiReview, setShowAiReview] = useState(false);
 
+  // Reset AI analysis state when claim changes
+  useEffect(() => {
+    setAiReview(null);
+    setShowAiReview(false);
+    setIsAnalyzing(false);
+  }, [claim.id]);
+
   const [emailTemplates, setEmailTemplates] = useState<EmailTemplate[]>(() => {
     try {
       const saved = localStorage.getItem('cascade_service_order_templates');
