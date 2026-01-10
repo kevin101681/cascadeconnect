@@ -246,20 +246,9 @@ export async function findOrCreateDmChannel(
     }
 
     // Create new DM channel
-    // Get both users' names (using clerkId since userId1/userId2 are Clerk IDs)
-    const user1Data = await db
-      .select({ name: users.name })
-      .from(users)
-      .where(eq(users.clerkId, userId1))
-      .limit(1);
-
-    const user2Data = await db
-      .select({ name: users.name })
-      .from(users)
-      .where(eq(users.clerkId, userId2))
-      .limit(1);
-
-    const channelName = `${user1Data[0]?.name || 'User'} & ${user2Data[0]?.name || 'User'}`;
+    // For DM channels, we don't need a descriptive name since we'll use otherUser.name in the UI
+    // Just use a simple identifier
+    const channelName = `dm-${participants[0]}-${participants[1]}`;
 
     const [newChannel] = await db
       .insert(internalChannels)
