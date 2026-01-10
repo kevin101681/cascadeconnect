@@ -1213,6 +1213,29 @@ function App() {
   useEffect(() => { saveState('cascade_ui_claim_id', selectedClaimId); }, [selectedClaimId]);
   useEffect(() => { saveState('cascade_ui_homeowner_id', selectedAdminHomeownerId); }, [selectedAdminHomeownerId]);
   
+  // --- STATE WATCHER: AUTO-SAVE SELECTED HOMEOWNER TO LOCALSTORAGE ---
+  // 🛡️ GUARANTEED PERSISTENCE
+  // This runs automatically whenever the user selection changes
+  // Decoupled from event handlers to survive crashes/errors in notification services
+  useEffect(() => {
+    // Only persist for admin/builder users
+    if (userRole === UserRole.HOMEOWNER) return;
+
+    if (selectedAdminHomeownerId) {
+      console.log("💾 Auto-Saving Homeowner ID:", selectedAdminHomeownerId);
+      try {
+        localStorage.setItem("cascade_active_homeowner_id", String(selectedAdminHomeownerId));
+        console.log("✅ Persistence confirmed:", localStorage.getItem("cascade_active_homeowner_id"));
+      } catch (error) {
+        console.error("🔥 Auto-save to localStorage failed:", error);
+      }
+    } else {
+      // Clear when null (explicit deselection)
+      console.log("💾 Clearing saved homeowner (null selection)");
+      localStorage.removeItem("cascade_active_homeowner_id");
+    }
+  }, [selectedAdminHomeownerId, userRole]); // Watches for any change to selection
+  
   // Redirect INVOICES view to Dashboard with Invoices tab
   useEffect(() => {
     if (currentView === 'INVOICES') {
@@ -1279,21 +1302,13 @@ function App() {
     setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
     setCurrentView('DASHBOARD');
     
-    // 3. Persist to Storage (Force string conversion)
-    try {
-      localStorage.setItem("cascade_active_homeowner_id", String(homeowner.id));
-      console.log("💾 Wrote to storage:", localStorage.getItem("cascade_active_homeowner_id"));
-    } catch (e) {
-      console.error("🔥 Failed to write to localStorage:", e);
-    }
+    // Note: Persistence now handled by State Watcher useEffect
+    // This ensures it survives crashes in notification/other services
   };
 
   const handleClearHomeownerSelection = () => {
     setSelectedAdminHomeownerId(null);
-    
-    // Clear homeowner ID from localStorage
-    localStorage.removeItem("cascade_active_homeowner_id");
-    console.log("💾 Cleared homeowner from localStorage");
+    // Note: Persistence clearing now handled by State Watcher useEffect
   };
 
   const handleSwitchRole = async () => {
