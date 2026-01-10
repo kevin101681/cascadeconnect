@@ -30,7 +30,7 @@ interface EmailActivity {
   id: string;
   recipient: string;
   subject: string;
-  status: 'sent' | 'failed';
+  status: 'sent' | 'failed' | 'read';
   error?: string | null;
   metadata?: Record<string, any> | null;
   created_at: string;
@@ -540,8 +540,8 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
                               </div>
                             </td>
                             <td className="px-4 py-3">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${email.status === 'sent' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                                {email.status === 'sent' ? 'Sent' : 'Failed'}
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(email.status === 'sent' || email.status === 'read') ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                {(email.status === 'sent' || email.status === 'read') ? 'Sent' : 'Failed'}
                               </span>
                             </td>
                             <td className="px-4 py-3 text-center">
@@ -552,7 +552,7 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
                                     {formatDateTime(email.opened_at)}
                                   </span>
                                 </div>
-                              ) : email.status === 'sent' ? (
+                              ) : (email.status === 'sent' || email.status === 'read') ? (
                                 <div className="flex flex-col items-center gap-1">
                                   <Mail className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                                   <span className="text-xs text-gray-500 dark:text-gray-400">
@@ -583,7 +583,7 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
                                     </div>
                                     <div>
                                       <div className="text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-1">Status</div>
-                                      <div className="text-sm text-surface-on dark:text-gray-100">{email.status === 'sent' ? 'Sent' : 'Failed'}</div>
+                                      <div className="text-sm text-surface-on dark:text-gray-100">{(email.status === 'sent' || email.status === 'read') ? 'Sent' : 'Failed'}</div>
                                     </div>
                                     <div>
                                       <div className="text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-1">Sent At</div>
