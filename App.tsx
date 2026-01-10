@@ -929,77 +929,6 @@ function App() {
     syncDataAndUser();
   }, [isLoaded, isSignedIn, authUser?.id]); // Re-run when auth state changes
 
-  // --- FETCH CLAIMS FOR SELECTED HOMEOWNER ---
-  // STRICT POLICY: Only fetch claims when a homeowner is selected
-  // NEVER fetch all claims at once (6,200+ records)
-  useEffect(() => {
-    const fetchClaimsForHomeowner = async () => {
-      // Determine which homeowner ID to use:
-      // 1. For admin/builder users: selectedHomeownerId (from homeowner selection)
-      // 2. For homeowner users: activeHomeowner.id (their own account)
-      const targetHomeownerId = userRole === UserRole.HOMEOWNER 
-        ? activeHomeowner?.id 
-        : selectedHomeownerId;
-
-      if (!targetHomeownerId) {
-        console.log('📋 No homeowner selected, skipping claims fetch');
-        setClaims([]); // Clear claims if no homeowner selected
-        return;
-      }
-
-      try {
-        console.log(`📋 Fetching claims for homeowner: ${targetHomeownerId}`);
-        
-        const response = await fetch(`/.netlify/functions/get-claims?homeownerId=${targetHomeownerId}`);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch claims: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        
-        if (data.success && data.claims) {
-          // Map database claims to frontend Claim type
-          const mappedClaims: Claim[] = data.claims.map((c: any) => ({
-            id: c.id,
-            homeownerId: c.homeowner_id || c.homeownerId,
-            claimNumber: c.claim_number || c.claimNumber || undefined,
-            title: c.title || '',
-            description: c.description || '',
-            address: c.address || '',
-            homeownerName: c.homeowner_name || c.homeownerName || '',
-            homeownerEmail: c.homeowner_email || c.homeownerEmail || '',
-            builderName: c.builder_name || c.builderName || '',
-            jobName: c.job_name || c.jobName || '',
-            status: (c.status as ClaimStatus) || 'SUBMITTED',
-            classification: c.classification || 'Unclassified',
-            dateSubmitted: c.date_submitted || c.dateSubmitted ? new Date(c.date_submitted || c.dateSubmitted) : new Date(),
-            dateEvaluated: c.date_evaluated || c.dateEvaluated ? new Date(c.date_evaluated || c.dateEvaluated) : undefined,
-            internalNotes: c.internal_notes || c.internalNotes || '',
-            nonWarrantyExplanation: c.non_warranty_explanation || c.nonWarrantyExplanation || '',
-            contractorId: c.contractor_id || c.contractorId || undefined,
-            contractorName: c.contractor_name || c.contractorName || '',
-            contractorEmail: c.contractor_email || c.contractorEmail || '',
-            proposedDates: c.proposed_dates || c.proposedDates || [],
-            attachments: c.attachments || [],
-            comments: [],
-          }));
-          
-          setClaims(mappedClaims);
-          console.log(`✅ Loaded ${mappedClaims.length} claims for homeowner ${targetHomeownerId}`);
-        } else {
-          console.warn('⚠️ Invalid response from get-claims API:', data);
-          setClaims([]);
-        }
-      } catch (error: any) {
-        console.error('❌ Failed to fetch claims for homeowner:', error);
-        setClaims([]); // Clear claims on error
-      }
-    };
-
-    fetchClaimsForHomeowner();
-  }, [selectedHomeownerId, activeHomeowner?.id, userRole]); // Re-fetch when homeowner selection changes
-
   // Handle deep linking to specific claim from email
   useEffect(() => {
     if (typeof window === 'undefined' || !claims || claims.length === 0) return;
@@ -1099,6 +1028,77 @@ function App() {
   const [selectedAdminHomeownerId, setSelectedAdminHomeownerId] = useState<string | null>(() => 
     loadState('cascade_ui_homeowner_id', null)
   );
+
+  // --- FETCH CLAIMS FOR SELECTED HOMEOWNER ---
+  // STRICT POLICY: Only fetch claims when a homeowner is selected
+  // NEVER fetch all claims at once (6,200+ records)
+  useEffect(() => {
+    const fetchClaimsForHomeowner = async () => {
+      // Determine which homeowner ID to use:
+      // 1. For admin/builder users: selectedAdminHomeownerId (from homeowner selection)
+      // 2. For homeowner users: activeHomeowner.id (their own account)
+      const targetHomeownerId = userRole === UserRole.HOMEOWNER 
+        ? activeHomeowner?.id 
+        : selectedAdminHomeownerId;
+
+      if (!targetHomeownerId) {
+        console.log('📋 No homeowner selected, skipping claims fetch');
+        setClaims([]); // Clear claims if no homeowner selected
+        return;
+      }
+
+      try {
+        console.log(`🔄 Homeowner changed to: ${targetHomeownerId} - Fetching claims now.`);
+        
+        const response = await fetch(`/.netlify/functions/get-claims?homeownerId=${targetHomeownerId}`);
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch claims: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.success && data.claims) {
+          // Map database claims to frontend Claim type
+          const mappedClaims: Claim[] = data.claims.map((c: any) => ({
+            id: c.id,
+            homeownerId: c.homeowner_id || c.homeownerId,
+            claimNumber: c.claim_number || c.claimNumber || undefined,
+            title: c.title || '',
+            description: c.description || '',
+            address: c.address || '',
+            homeownerName: c.homeowner_name || c.homeownerName || '',
+            homeownerEmail: c.homeowner_email || c.homeownerEmail || '',
+            builderName: c.builder_name || c.builderName || '',
+            jobName: c.job_name || c.jobName || '',
+            status: (c.status as ClaimStatus) || 'SUBMITTED',
+            classification: c.classification || 'Unclassified',
+            dateSubmitted: c.date_submitted || c.dateSubmitted ? new Date(c.date_submitted || c.dateSubmitted) : new Date(),
+            dateEvaluated: c.date_evaluated || c.dateEvaluated ? new Date(c.date_evaluated || c.dateEvaluated) : undefined,
+            internalNotes: c.internal_notes || c.internalNotes || '',
+            nonWarrantyExplanation: c.non_warranty_explanation || c.nonWarrantyExplanation || '',
+            contractorId: c.contractor_id || c.contractorId || undefined,
+            contractorName: c.contractor_name || c.contractorName || '',
+            contractorEmail: c.contractor_email || c.contractorEmail || '',
+            proposedDates: c.proposed_dates || c.proposedDates || [],
+            attachments: c.attachments || [],
+            comments: [],
+          }));
+          
+          setClaims(mappedClaims);
+          console.log(`✅ Loaded ${mappedClaims.length} claims for homeowner ${targetHomeownerId}`);
+        } else {
+          console.warn('⚠️ Invalid response from get-claims API:', data);
+          setClaims([]);
+        }
+      } catch (error: any) {
+        console.error('❌ Failed to fetch claims for homeowner:', error);
+        setClaims([]); // Clear claims on error
+      }
+    };
+
+    fetchClaimsForHomeowner();
+  }, [selectedAdminHomeownerId, activeHomeowner?.id, userRole]);
 
   const [searchQuery, setSearchQuery] = useState('');
 
