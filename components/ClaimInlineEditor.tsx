@@ -1831,9 +1831,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
             type="button" 
             variant={isReviewed ? "filled" : "outline"}
             onClick={handleToggleReviewed}
-            className={isReviewed ? "!bg-green-600 hover:!bg-green-700 dark:!bg-green-700 dark:hover:!bg-green-800 !text-white" : ""}
+            className={isReviewed ? "!bg-green-100 hover:!bg-green-200 dark:!bg-green-900/30 dark:hover:!bg-green-900/40 !text-green-700 dark:!text-green-400" : ""}
           >
-            {isReviewed ? '✓ Reviewed' : 'Process'}
+            {isReviewed ? 'Reviewed' : 'Process'}
           </Button>
         )}
         {onCancel && (
