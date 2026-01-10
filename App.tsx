@@ -493,7 +493,7 @@ function App() {
                 const localOnly = prev.filter(h => {
                   const notInDbById = !dbIds.has(h.id);
                   const notInDbByEmail = !dbEmails.has(h.email.toLowerCase());
-                  // Include if not in DB by ID OR email (to catch cases where ID differs but email matches)
+                  // Include if not in DB by ID OR email (to catch cases where ID differs but email match)
                   return notInDbById && notInDbByEmail;
                 });
                 
@@ -503,6 +503,29 @@ function App() {
                 return merged;
               });
               loadedHomeowners = mappedHomeowners;
+
+              // 🔗 CHAINED RESTORATION: Immediately restore selected homeowner after data load
+              // This ensures restoration happens synchronously after DB fetch completes
+              if (userRole !== UserRole.HOMEOWNER && !selectedAdminHomeownerId) {
+                const savedId = localStorage.getItem("cascade_active_homeowner_id");
+                console.log("🔗 Data loaded. Now attempting immediate restore for ID:", savedId);
+                
+                if (savedId) {
+                  const found = mappedHomeowners.find(h => h.id === savedId);
+                  
+                  if (found) {
+                    console.log("✅ RESTORED SESSION:", found.firstName || found.name);
+                    setSelectedAdminHomeownerId(savedId);
+                    setCurrentView('DASHBOARD');
+                    setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
+                  } else {
+                    console.warn("⚠️ Saved ID not found in new data. Clearing invalid storage.");
+                    localStorage.removeItem("cascade_active_homeowner_id");
+                  }
+                } else {
+                  console.log("ℹ️ No saved session found.");
+                }
+              }
             } else {
               console.log("⚠️ No homeowners found in database");
               
@@ -905,47 +928,6 @@ function App() {
 
     syncDataAndUser();
   }, [isLoaded, isSignedIn, authUser?.id]); // Re-run when auth state changes
-
-  // --- RESTORE SELECTED HOMEOWNER FROM URL ON PAGE LOAD ---
-  // This ensures that the selected homeowner persists across page refreshes
-  useEffect(() => {
-    // Only run for admin/builder users (homeowner users don't need URL persistence)
-    if (userRole === UserRole.HOMEOWNER) return;
-    
-    // Only restore if no homeowner is currently selected
-    if (selectedAdminHomeownerId) return;
-    
-    // 1. STOP if the database list hasn't loaded yet.
-    // We can't select a homeowner if we don't know who they are.
-    if (!homeowners || homeowners.length === 0) {
-      console.log("⏳ Waiting for homeowners list to load...");
-      return;
-    }
-    
-    try {
-      // 2. NOW check storage
-      const savedId = localStorage.getItem("cascade_active_homeowner_id");
-      console.log("💾 Checking Storage. Found ID:", savedId);
-      
-      if (savedId) {
-        // 3. Find the user in the NOW LOADED list
-        const found = homeowners.find(h => h.id === savedId);
-        
-        if (found) {
-          console.log("✅ Restoring session for:", found.firstName || found.name);
-          setSelectedAdminHomeownerId(savedId);
-          setCurrentView('DASHBOARD');
-          setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
-        } else {
-          console.warn("⚠️ Found ID in storage, but user is not in the loaded list.");
-          // Clean up invalid localStorage entry
-          localStorage.removeItem("cascade_active_homeowner_id");
-        }
-      }
-    } catch (error) {
-      console.error('❌ Error restoring homeowner from localStorage:', error);
-    }
-  }, [homeowners, userRole]); // Re-runs whenever the list updates
 
   // --- FETCH CLAIMS FOR SELECTED HOMEOWNER ---
   // STRICT POLICY: Only fetch claims when a homeowner is selected
