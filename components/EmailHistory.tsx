@@ -486,7 +486,7 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
           <div className="mt-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">
-                Email Logs ({filteredActivity.length} of {data?.activityCount || 0} emails)
+                Email Logs ({filteredActivity.length} {searchQuery ? `of ${stats.total}` : 'total'})
               </h2>
               {/* Search Bar */}
               <div className="relative">
