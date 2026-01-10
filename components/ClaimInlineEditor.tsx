@@ -383,7 +383,19 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
     try {
       console.log('🤖 Requesting AI analysis...');
       
-      // Call secure Netlify function instead of exposing OpenAI API key
+      // Extract image URLs from attachments
+      const imageUrls: string[] = [];
+      if (claim.attachments && Array.isArray(claim.attachments)) {
+        claim.attachments.forEach((att: any) => {
+          if (att.url && att.type === 'IMAGE') {
+            imageUrls.push(att.url);
+          }
+        });
+      }
+      
+      console.log(`📸 Sending ${imageUrls.length} images for vision analysis`);
+      
+      // Call secure Netlify function with vision support
       const response = await fetch('/.netlify/functions/analyze-claim', {
         method: 'POST',
         headers: {
@@ -392,6 +404,7 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
         body: JSON.stringify({
           claimTitle: claim.title,
           claimDescription: claim.description,
+          imageUrls: imageUrls, // Include images for vision analysis
         }),
       });
 

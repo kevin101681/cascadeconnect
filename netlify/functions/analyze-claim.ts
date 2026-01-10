@@ -211,6 +211,7 @@ STRUCTURAL DEFECT DEFINITION:
 interface AnalyzeClaimRequest {
   claimTitle: string;
   claimDescription: string;
+  imageUrls?: string[]; // NEW: Array of image URLs
 }
 
 interface AIReviewResult {
@@ -248,7 +249,7 @@ export const handler: Handler = async (event) => {
   try {
     // Parse request body
     const requestData: AnalyzeClaimRequest = JSON.parse(event.body || '{}');
-    const { claimTitle, claimDescription } = requestData;
+    const { claimTitle, claimDescription, imageUrls = [] } = requestData;
 
     // Validate input
     if (!claimTitle && !claimDescription) {
@@ -269,48 +270,86 @@ export const handler: Handler = async (event) => {
     });
 
     console.log('🤖 Analyzing claim with AI:', claimTitle);
+    console.log(`📸 Images provided: ${imageUrls.length}`);
 
-    // Construct System Prompt
-    const systemPrompt = `You are an expert Warranty Officer for a home builder. 
+    // Construct System Prompt (Updated for Vision Analysis)
+    const systemPrompt = `You are an expert Warranty Officer for a home builder with VISION ANALYSIS capabilities.
 Your job is to review a homeowner claim against the official "2-10 Home Buyers Warranty" guidelines provided below.
+
+CRITICAL VISUAL ANALYSIS INSTRUCTIONS:
+- Analyze BOTH the text description AND the attached photos (if provided).
+- Look for visual evidence of damage, wear and tear, or installation defects in the images.
+- If the photo contradicts the text (e.g., text says "broken" but photo shows "dirty"), TRUST THE PHOTO.
+- If the photo is unclear, blurry, or doesn't show the issue, mention that in your reasoning.
+- For measurement-based guidelines (e.g., "crack > 1/4 inch"), attempt to visually estimate dimensions from photos if visible.
+- If no photos are provided, analyze based on text description alone.
+
+IMPORTANT: Photos provide CRITICAL CONTEXT. Examples:
+- Text: "My window is broken" + Photo shows: Dirty glass → This is MAINTENANCE (Denied)
+- Text: "Floor has small crack" + Photo shows: Large structural crack → This is COVERED (Approved)
+- Text: "Paint is peeling" + Photo shows: Normal aging/wear → This is MAINTENANCE (Denied)
+- Text: "Roof leak" + Photo shows: Water stains from clogged gutter → This is MAINTENANCE (Denied)
 
 Adhere strictly to the "Construction Performance Guidelines" (Section IX).
 - If a measurement is provided (e.g., "1/8 inch crack"), compare it mathematically to the standard (e.g., "Standard allows up to 1/4 inch").
 - If the claim meets the deficiency standard (is worse than the tolerance), mark as 'Approved'.
 - If it does not meet the standard (is within tolerance), mark as 'Denied'.
-- If the homeowner did not provide enough detail (e.g., "My floor is uneven" but no measurements), mark as 'Needs Info'.
+- If the homeowner did not provide enough detail (e.g., "My floor is uneven" but no measurements and no clear photo), mark as 'Needs Info'.
 
 TONE INSTRUCTIONS:
 - Be professional, empathetic, but firm on the standards.
 - ALWAYS cite the specific Section Number (e.g., "Per Section 2.1...").
-- If Denied, explain exactly why based on the text (e.g., "The guideline states coverage applies only to cracks exceeding 1/4 inch.").
+- If Denied, explain exactly why based on the text AND visual evidence (e.g., "The photo shows surface dirt, which is a maintenance item, not a defect.").
+- If photos helped clarify the decision, mention that explicitly (e.g., "Based on the photo provided, this appears to be...").
 
 Format your response as a JSON object with these exact fields:
 {
   "status": "Approved" | "Denied" | "Needs Info",
-  "reasoning": "Brief explanation of why, citing specific guideline",
+  "reasoning": "Brief explanation of why, citing specific guideline AND visual observations if photos provided",
   "responseDraft": "The full, polite response text for the homeowner"
 }
 
 OFFICIAL WARRANTY TEXT:
 ${WARRANTY_GUIDELINES}`;
 
-    const userPrompt = `CLAIM TO REVIEW:
+    // Construct user message with text and images
+    const userMessageContent: any[] = [
+      { 
+        type: "text", 
+        text: `CLAIM TO REVIEW:
 Title: ${claimTitle}
 Description: ${claimDescription}
 
-Please analyze this claim and provide your recommendation in JSON format.`;
+Please analyze this claim and provide your recommendation in JSON format.`
+      }
+    ];
 
-    // Call OpenAI API
+    // Add images if provided
+    if (imageUrls && imageUrls.length > 0) {
+      console.log(`📸 Adding ${imageUrls.length} images to analysis`);
+      imageUrls.forEach((url, index) => {
+        userMessageContent.push({
+          type: "image_url",
+          image_url: {
+            url: url,
+            detail: "high" // Use high detail for better analysis
+          }
+        });
+      });
+    } else {
+      console.log('📝 Text-only analysis (no images provided)');
+    }
+
+    // Call OpenAI API with vision support
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
+        { role: 'user', content: userMessageContent },
       ],
       response_format: { type: 'json_object' },
       temperature: 0.1, // Low temperature for high factual accuracy
-      max_tokens: 1000,
+      max_tokens: 1500, // Increased for vision analysis
     });
 
     // Parse Response

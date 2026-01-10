@@ -150,7 +150,19 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
         console.log('🤖 Running AI analysis on first claim...');
         const firstClaim = claimsInput[0];
         
-        // Call the analyze-claim function
+        // Extract image URLs from attachments (filter for images only)
+        const imageUrls: string[] = [];
+        if (firstClaim.attachments && Array.isArray(firstClaim.attachments)) {
+          firstClaim.attachments.forEach((att: any) => {
+            if (att.url && att.type === 'IMAGE') {
+              imageUrls.push(att.url);
+            }
+          });
+        }
+        
+        console.log(`📸 Found ${imageUrls.length} images in first claim`);
+        
+        // Call the analyze-claim function with vision support
         const analysisResponse = await fetch(`${process.env.URL || 'http://localhost:8888'}/.netlify/functions/analyze-claim`, {
           method: 'POST',
           headers: {
@@ -159,6 +171,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           body: JSON.stringify({
             claimTitle: firstClaim.title,
             claimDescription: firstClaim.description,
+            imageUrls: imageUrls, // Pass images for vision analysis
           }),
         });
 
