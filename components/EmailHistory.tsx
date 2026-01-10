@@ -553,49 +553,12 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
                                   </span>
                                 </div>
                               ) : email.status === 'sent' ? (
-                                <button
-                                  onClick={async (e) => {
-                                    e.stopPropagation();
-                                    
-                                    // ===== BRUTE FORCE FIX: OPTIMISTIC UI UPDATE =====
-                                    // 1. Update UI instantly (don't wait for server)
-                                    setData(currentData => {
-                                      if (!currentData) return currentData;
-                                      
-                                      const updatedLogs = (currentData.logs || currentData.activity || []).map(item =>
-                                        item.id === email.id 
-                                          ? { ...item, opened_at: new Date().toISOString() }
-                                          : item
-                                      );
-                                      
-                                      return {
-                                        ...currentData,
-                                        logs: updatedLogs,
-                                        activity: updatedLogs,
-                                      };
-                                    });
-                                    
-                                    // 2. Then update database (async, don't await)
-                                    try {
-                                      await fetch(`/.netlify/functions/email-logs`, {
-                                        method: 'PATCH',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({
-                                          email_id: email.id,
-                                          opened_at: new Date().toISOString(),
-                                        }),
-                                      });
-                                    } catch (error) {
-                                      console.error('Failed to mark email as read:', error);
-                                      // Silently fail - UI already updated
-                                    }
-                                  }}
-                                  className="flex items-center justify-center gap-1 text-surface-on-variant dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                                  title="Mark as read"
-                                >
-                                  <Mail className="h-4 w-4" />
-                                  <span className="text-xs">Unread</span>
-                                </button>
+                                <div className="flex flex-col items-center gap-1">
+                                  <Mail className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    Unread
+                                  </span>
+                                </div>
                               ) : (
                                 <span className="text-xs text-surface-on-variant dark:text-gray-500">—</span>
                               )}
