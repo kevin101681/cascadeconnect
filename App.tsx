@@ -913,27 +913,31 @@ function App() {
     if (userRole === UserRole.HOMEOWNER) return;
     
     // Only restore if no homeowner is currently selected
-    if (selectedHomeownerId) return;
+    if (selectedAdminHomeownerId) return;
     
-    // 1. Wait for the database list to be ready (handle race condition)
-    if (homeowners.length === 0) return;
+    // 1. STOP if the database list hasn't loaded yet.
+    // We can't select a homeowner if we don't know who they are.
+    if (!homeowners || homeowners.length === 0) {
+      console.log("⏳ Waiting for homeowners list to load...");
+      return;
+    }
     
     try {
-      // 2. Check local storage
+      // 2. NOW check storage
       const savedId = localStorage.getItem("cascade_active_homeowner_id");
-      console.log("💾 Storage Check. Found ID:", savedId);
+      console.log("💾 Checking Storage. Found ID:", savedId);
       
       if (savedId) {
-        // Find the homeowner in the loaded list
+        // 3. Find the user in the NOW LOADED list
         const found = homeowners.find(h => h.id === savedId);
         
         if (found) {
-          console.log("💾 Restoring saved homeowner:", found.firstName || found.name);
+          console.log("✅ Restoring session for:", found.firstName || found.name);
           setSelectedAdminHomeownerId(savedId);
           setCurrentView('DASHBOARD');
           setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
         } else {
-          console.warn(`⚠️ Homeowner ${savedId} not found in database`);
+          console.warn("⚠️ Found ID in storage, but user is not in the loaded list.");
           // Clean up invalid localStorage entry
           localStorage.removeItem("cascade_active_homeowner_id");
         }
@@ -941,7 +945,7 @@ function App() {
     } catch (error) {
       console.error('❌ Error restoring homeowner from localStorage:', error);
     }
-  }, [homeowners, userRole, selectedHomeownerId]); // Run when homeowners are loaded or role changes
+  }, [homeowners, userRole]); // Re-runs whenever the list updates
 
   // --- FETCH CLAIMS FOR SELECTED HOMEOWNER ---
   // STRICT POLICY: Only fetch claims when a homeowner is selected
