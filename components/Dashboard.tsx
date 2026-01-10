@@ -5148,7 +5148,20 @@ const Dashboard: React.FC<DashboardProps> = ({
                         const event = new CustomEvent('cbsbooks-create-invoice');
                         window.dispatchEvent(event);
                       }}
-                      className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-full hover:opacity-90 transition-opacity text-sm font-medium"
+                      style={{
+                        backgroundColor: "white",
+                        color: "#3c6b80",
+                        border: "2px solid #3c6b80",
+                        borderRadius: "9999px",
+                        padding: "8px 16px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        fontSize: "0.875rem",
+                        fontWeight: "500"
+                      }}
+                      className="hover:bg-gray-50 transition-opacity"
                     >
                       New Invoice
                     </button>

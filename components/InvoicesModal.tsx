@@ -149,13 +149,27 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
             CBS Books - Invoices
           </h2>
           <div className="flex items-center gap-2">
-            {/* New Invoice Button - BRUTE FORCE: Hardcoded hex values */}
+            {/* New Invoice Button - INLINE STYLE OVERRIDE */}
             <button
               onClick={() => {
                 // Dispatch event to trigger invoice creation in CBS Books
                 window.dispatchEvent(new Event('cbsbooks-create-invoice'));
               }}
-              className="flex items-center gap-2 px-3 md:px-4 py-2 rounded-full text-sm font-medium transition-all bg-white border-2 border-[#3c6b80] text-[#3c6b80] hover:bg-gray-50 shadow-sm"
+              style={{
+                backgroundColor: "white",
+                color: "#3c6b80",
+                border: "2px solid #3c6b80",
+                borderRadius: "9999px",
+                padding: "8px 16px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                fontSize: "0.875rem",
+                fontWeight: "500",
+                boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)"
+              }}
+              className="hover:bg-gray-50 transition-all"
               title="Create new invoice"
             >
               <Plus className="h-4 w-4" />
