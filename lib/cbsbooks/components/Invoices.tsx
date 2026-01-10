@@ -1479,6 +1479,13 @@ export const Invoices: React.FC<InvoicesProps> = ({
       {/* Navigation Bar */}
       <div className="flex flex-wrap gap-2 mb-4 items-center justify-between">
         <TabBar activeView="invoices" onNavigate={onNavigate} />
+        <button
+          onClick={handleCreate}
+          className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all bg-white border border-primary text-primary hover:bg-gray-50 shadow-sm"
+        >
+          <Plus size={18} />
+          <span>New Invoice</span>
+        </button>
       </div>
 
       <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleCsvUpload}/>
