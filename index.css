@@ -1201,3 +1201,28 @@ html.dark .cl-userButtonPopoverHeader * {
   animation: slide-up-fade-in 0.7s ease-out 0.3s both;
 }
 
+/* ===== BRUTE FORCE FIX: Clerk Avatar Background Color ===== */
+/* Force Clerk Avatar initials background to use primary brand color */
+/* This overrides Clerk's Shadow DOM styles that can't be reached via React props */
+.cl-userButtonAvatarImage,
+.cl-avatarImage,
+[class*="cl-userButtonAvatarImage"],
+[class*="cl-avatarImage"],
+.cl-userButtonAvatarBox .cl-avatarImage {
+  background-color: #3c6b80 !important; /* Primary brand color */
+  color: white !important;
+}
+
+/* Ensure the wrapper doesn't interfere */
+.cl-userButtonTrigger .cl-userButtonAvatarBox {
+  background-color: #3c6b80 !important;
+}
+
+/* Target Clerk's internal avatar placeholder */
+.cl-internal-avatar,
+[class*="cl-internal-avatar"],
+.cl-userButtonTrigger svg[data-slot="icon"] {
+  color: white !important;
+  fill: white !important;
+}
+
