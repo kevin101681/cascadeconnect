@@ -26,33 +26,43 @@ function calculateScore(matchType: 'exact' | 'partial' | 'fuzzy', fieldWeight: n
  * Search homeowners
  */
 async function searchHomeowners(query: string): Promise<SearchResult[]> {
-  if (!isDbConfigured) return [];
+  console.log('🔍 [SearchHomeowners] Called with query:', query);
+  
+  if (!isDbConfigured) {
+    console.log('🔍 [SearchHomeowners] DB not configured, returning empty array');
+    return [];
+  }
 
-  const searchTerm = `%${query}%`;
-  const results = await db
-    .select({
-      id: homeowners.id,
-      firstName: homeowners.firstName,
-      lastName: homeowners.lastName,
-      name: homeowners.name,
-      email: homeowners.email,
-      phone: homeowners.phone,
-      address: homeowners.address,
-      jobName: homeowners.jobName,
-    })
-    .from(homeowners)
-    .where(
-      or(
-        ilike(homeowners.firstName, searchTerm),
-        ilike(homeowners.lastName, searchTerm),
-        ilike(homeowners.name, searchTerm),
-        ilike(homeowners.email, searchTerm),
-        ilike(homeowners.phone, searchTerm),
-        ilike(homeowners.address, searchTerm),
-        ilike(homeowners.jobName, searchTerm)
+  try {
+    const searchTerm = `%${query}%`;
+    console.log('🔍 [SearchHomeowners] Searching with term:', searchTerm);
+    
+    const results = await db
+      .select({
+        id: homeowners.id,
+        firstName: homeowners.firstName,
+        lastName: homeowners.lastName,
+        name: homeowners.name,
+        email: homeowners.email,
+        phone: homeowners.phone,
+        address: homeowners.address,
+        jobName: homeowners.jobName,
+      })
+      .from(homeowners)
+      .where(
+        or(
+          ilike(homeowners.firstName, searchTerm),
+          ilike(homeowners.lastName, searchTerm),
+          ilike(homeowners.name, searchTerm),
+          ilike(homeowners.email, searchTerm),
+          ilike(homeowners.phone, searchTerm),
+          ilike(homeowners.address, searchTerm),
+          ilike(homeowners.jobName, searchTerm)
+        )
       )
-    )
-    .limit(10);
+      .limit(10);
+    
+    console.log('🔍 [SearchHomeowners] Found', results.length, 'homeowners');
 
   return results.map((homeowner) => {
     const fullName = homeowner.name || `${homeowner.firstName || ''} ${homeowner.lastName || ''}`.trim();
@@ -76,16 +86,26 @@ async function searchHomeowners(query: string): Promise<SearchResult[]> {
       score,
     };
   });
+  } catch (error) {
+    console.error('🔍 [SearchHomeowners] Error:', error);
+    return [];
+  }
 }
 
 /**
  * Search claims
  */
 async function searchClaims(query: string): Promise<SearchResult[]> {
-  if (!isDbConfigured) return [];
+  console.log('🔍 [SearchClaims] Called with query:', query);
+  
+  if (!isDbConfigured) {
+    console.log('🔍 [SearchClaims] DB not configured, returning empty array');
+    return [];
+  }
 
-  const searchTerm = `%${query}%`;
-  const results = await db
+  try {
+    const searchTerm = `%${query}%`;
+    const results = await db
     .select({
       id: claims.id,
       title: claims.title,
@@ -105,6 +125,8 @@ async function searchClaims(query: string): Promise<SearchResult[]> {
     )
     .orderBy(desc(claims.dateSubmitted))
     .limit(10);
+  
+  console.log('🔍 [SearchClaims] Found', results.length, 'claims');
 
   return results.map((claim) => {
     // Create snippet from description (first 100 chars)
@@ -130,16 +152,26 @@ async function searchClaims(query: string): Promise<SearchResult[]> {
       score,
     };
   });
+  } catch (error) {
+    console.error('🔍 [SearchClaims] Error:', error);
+    return [];
+  }
 }
 
 /**
  * Search appointments/events
  */
 async function searchAppointments(query: string): Promise<SearchResult[]> {
-  if (!isDbConfigured) return [];
+  console.log('🔍 [SearchAppointments] Called with query:', query);
+  
+  if (!isDbConfigured) {
+    console.log('🔍 [SearchAppointments] DB not configured, returning empty array');
+    return [];
+  }
 
-  const searchTerm = `%${query}%`;
-  const thirtyDaysAgo = new Date();
+  try {
+    const searchTerm = `%${query}%`;
+    const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   const results = await db
@@ -163,6 +195,8 @@ async function searchAppointments(query: string): Promise<SearchResult[]> {
     )
     .orderBy(desc(appointments.startTime))
     .limit(10);
+  
+  console.log('🔍 [SearchAppointments] Found', results.length, 'appointments');
 
   return results.map((appointment) => {
     const startDate = appointment.startTime ? new Date(appointment.startTime) : null;
@@ -191,18 +225,28 @@ async function searchAppointments(query: string): Promise<SearchResult[]> {
       score,
     };
   });
+  } catch (error) {
+    console.error('🔍 [SearchAppointments] Error:', error);
+    return [];
+  }
 }
 
 /**
  * Search internal chat messages
  */
 async function searchMessages(query: string): Promise<SearchResult[]> {
-  if (!isDbConfigured) return [];
-
-  const searchTerm = `%${query}%`;
+  console.log('🔍 [SearchMessages] Called with query:', query);
   
-  // Join with channels and users to get context
-  const results = await db
+  if (!isDbConfigured) {
+    console.log('🔍 [SearchMessages] DB not configured, returning empty array');
+    return [];
+  }
+
+  try {
+    const searchTerm = `%${query}%`;
+    
+    // Join with channels and users to get context
+    const results = await db
     .select({
       id: internalMessages.id,
       content: internalMessages.content,
@@ -219,6 +263,8 @@ async function searchMessages(query: string): Promise<SearchResult[]> {
     .where(ilike(internalMessages.content, searchTerm))
     .orderBy(desc(internalMessages.createdAt))
     .limit(10);
+  
+  console.log('🔍 [SearchMessages] Found', results.length, 'messages');
 
   return results.map((message) => {
     // Create snippet from content (first 80 chars)
@@ -256,6 +302,10 @@ async function searchMessages(query: string): Promise<SearchResult[]> {
       score,
     };
   });
+  } catch (error) {
+    console.error('🔍 [SearchMessages] Error:', error);
+    return [];
+  }
 }
 
 /**
@@ -264,7 +314,11 @@ async function searchMessages(query: string): Promise<SearchResult[]> {
  * @returns Unified search results sorted by relevance
  */
 export async function performGlobalSearch(query: string): Promise<SearchResponse> {
+  console.log('🔍 [GlobalSearch] performGlobalSearch called with query:', query);
+  console.log('🔍 [GlobalSearch] isDbConfigured:', isDbConfigured);
+  
   if (!query || query.trim().length < 2) {
+    console.log('🔍 [GlobalSearch] Query too short, returning empty results');
     return {
       results: [],
       total: 0,
@@ -273,30 +327,48 @@ export async function performGlobalSearch(query: string): Promise<SearchResponse
   }
 
   const trimmedQuery = query.trim();
+  console.log('🔍 [GlobalSearch] Starting parallel searches for:', trimmedQuery);
 
-  // Run all searches in parallel
-  const [homeownerResults, claimResults, appointmentResults, messageResults] = await Promise.all([
-    searchHomeowners(trimmedQuery),
-    searchClaims(trimmedQuery),
-    searchAppointments(trimmedQuery),
-    searchMessages(trimmedQuery),
-  ]);
+  try {
+    // Run all searches in parallel
+    const [homeownerResults, claimResults, appointmentResults, messageResults] = await Promise.all([
+      searchHomeowners(trimmedQuery),
+      searchClaims(trimmedQuery),
+      searchAppointments(trimmedQuery),
+      searchMessages(trimmedQuery),
+    ]);
 
-  // Combine all results
-  const allResults: SearchResult[] = [
-    ...homeownerResults,
-    ...claimResults,
-    ...appointmentResults,
-    ...messageResults,
-  ];
+    console.log('🔍 [GlobalSearch] Search results:', {
+      homeowners: homeownerResults.length,
+      claims: claimResults.length,
+      appointments: appointmentResults.length,
+      messages: messageResults.length,
+    });
 
-  // Sort by score (highest first)
-  allResults.sort((a, b) => b.score - a.score);
+    // Combine all results
+    const allResults: SearchResult[] = [
+      ...homeownerResults,
+      ...claimResults,
+      ...appointmentResults,
+      ...messageResults,
+    ];
 
-  return {
-    results: allResults,
-    total: allResults.length,
-    query: trimmedQuery,
-  };
+    // Sort by score (highest first)
+    allResults.sort((a, b) => b.score - a.score);
+
+    console.log('🔍 [GlobalSearch] Returning', allResults.length, 'total results');
+    return {
+      results: allResults,
+      total: allResults.length,
+      query: trimmedQuery,
+    };
+  } catch (error) {
+    console.error('🔍 [GlobalSearch] Error during search:', error);
+    return {
+      results: [],
+      total: 0,
+      query: trimmedQuery,
+    };
+  }
 }
 

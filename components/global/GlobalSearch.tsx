@@ -76,14 +76,17 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
       return;
     }
 
+    console.log('🔍 [GlobalSearch Component] Starting search for:', q);
     setIsLoading(true);
     const timeoutId = window.setTimeout(async () => {
       try {
+        console.log('🔍 [GlobalSearch Component] Calling performGlobalSearch...');
         const response = await performGlobalSearch(q);
+        console.log('🔍 [GlobalSearch Component] Received response:', response);
         setResults(response.results);
         setSelectedIndex(0);
       } catch (error) {
-        console.error('Global search error:', error);
+        console.error('🔍 [GlobalSearch Component] Error:', error);
         setResults([]);
       } finally {
         setIsLoading(false);
