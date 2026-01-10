@@ -1,158 +1,89 @@
+/**
+ * SendGrid Webhook Handler - "SAFETY OFF" VERSION
+ * ALL signature verification removed to isolate database update logic
+ * Enhanced logging to trace every step
+ */
+
 import { neon } from '@neondatabase/serverless';
-import { EventWebhook, EventWebhookHeader } from '@sendgrid/eventwebhook';
 
 interface SendGridEvent {
   email: string;
   timestamp: number;
-  'smtp-id'?: string;
   event: string;
-  category?: string[];
-  sg_event_id?: string;
-  sg_message_id?: string;
-  reason?: string;
-  status?: string;
-  response?: string;
-  attempt?: string;
-  useragent?: string;
-  ip?: string;
-  url?: string;
-  asm_group_id?: number;
-  [key: string]: any; // Allow additional fields
+  custom_args?: Record<string, string>;
+  customArgs?: Record<string, string>;
+  [key: string]: any;
 }
 
-// SendGrid sometimes appends metadata to sg_message_id (e.g., ".filter123")
-// Normalize by stripping angle brackets and trimming everything after the first dot.
-function normalizeMessageId(id?: string | null): string {
-  if (!id) return '';
-  const cleaned = id.replace(/[<>]/g, '');
-  const dotIndex = cleaned.indexOf('.');
-  return dotIndex === -1 ? cleaned : cleaned.slice(0, dotIndex);
-}
+export const handler = async (event: any) => {
+  // ===== STEP 1: LOG ENTRY =====
+  console.log('🚨🚨🚨 WEBHOOK HIT! 🚨🚨🚨');
+  console.log('Method:', event.httpMethod);
+  console.log('Headers:', JSON.stringify(event.headers, null, 2));
+  console.log('Raw Body:', event.body);
 
-interface HandlerResponse {
-  statusCode: number;
-  headers: Record<string, string>;
-  body: string;
-}
+  // Handle GET requests (SendGrid verification)
+  if (event.httpMethod === 'GET') {
+    console.log('✅ GET request - returning 200');
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'text/plain' },
+      body: 'Webhook is active',
+    };
+  }
 
-export const handler = async (event: any): Promise<HandlerResponse> => {
-  // ===== ENHANCED DEBUG LOGGING =====
-  console.log('🪝 [WEBHOOK] SendGrid webhook triggered!');
-  console.log('🪝 [WEBHOOK] HTTP Method:', event.httpMethod);
-  console.log('🪝 [WEBHOOK] Headers:', JSON.stringify(event.headers, null, 2));
-  console.log('🪝 [WEBHOOK] Raw body:', event.body);
-
-  // Only allow POST requests
+  // Only allow POST
   if (event.httpMethod !== 'POST') {
-    console.log('❌ [WEBHOOK] Method not allowed:', event.httpMethod);
+    console.log('❌ Method not POST:', event.httpMethod);
     return {
       statusCode: 405,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ error: 'Method not allowed' }),
     };
   }
 
   try {
-    // Get environment variables
+    // ===== STEP 2: CHECK DATABASE CONNECTION =====
     const databaseUrl = process.env.DATABASE_URL;
-    const webhookVerificationKey = process.env.SENDGRID_WEBHOOK_VERIFICATION_KEY;
-
+    
     if (!databaseUrl) {
-      console.error('DATABASE_URL is not configured');
+      console.error('❌ DATABASE_URL not configured!');
       return {
         statusCode: 500,
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ error: 'Database not configured' }),
       };
     }
 
-    // IMPORTANT: Get the raw body BEFORE any parsing
-    // Netlify functions provide the body as a string in event.body
-    // If it's base64 encoded, we need to decode it first
-    let rawBody: string;
-    if (event.isBase64Encoded) {
-      rawBody = Buffer.from(event.body, 'base64').toString('utf-8');
-      console.log('🪝 [WEBHOOK] Decoded base64 body');
-    } else {
-      rawBody = event.body || '';
-    }
+    console.log('✅ DATABASE_URL exists');
+    const sql = neon(databaseUrl);
+    console.log('✅ Neon SQL client created');
 
-    // ===== TEMPORARILY BYPASS SIGNATURE VERIFICATION FOR DEBUGGING =====
-    // TODO: Re-enable after confirming webhook is working
-    console.log('⚠️ [WEBHOOK] Signature verification BYPASSED for debugging');
-    
-    /*
-    // Verify webhook signature if key is provided
-    // MUST verify signature using raw body BEFORE JSON parsing
-    if (webhookVerificationKey) {
-      try {
-        const ew = new EventWebhook();
-        const publicKey = ew.convertPublicKeyToECDSA(webhookVerificationKey);
-        
-        // Get signature and timestamp from headers
-        // SendGrid uses these header names (case-insensitive)
-        const signature = event.headers['x-twilio-email-event-webhook-signature'] || 
-                         event.headers['X-Twilio-Email-Event-Webhook-Signature'] ||
-                         event.headers['x-sendgrid-signature'] ||
-                         event.headers['X-Sendgrid-Signature'] || '';
-        
-        const timestamp = event.headers['x-twilio-email-event-webhook-timestamp'] ||
-                         event.headers['X-Twilio-Email-Event-Webhook-Timestamp'] ||
-                         event.headers['x-sendgrid-timestamp'] ||
-                         event.headers['X-Sendgrid-Timestamp'] || '';
-
-        if (signature && timestamp) {
-          // CRITICAL: Use rawBody (before JSON parsing) for signature verification
-          const isValid = ew.verifySignature(
-            publicKey,
-            rawBody,
-            signature,
-            timestamp
-          );
-
-          if (!isValid) {
-            console.error('Invalid webhook signature');
-            return {
-              statusCode: 401,
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ error: 'Invalid signature' }),
-            };
-          }
-          console.log('✅ Webhook signature verified');
-        } else {
-          console.warn('⚠️ Missing signature or timestamp headers. Skipping verification.');
-        }
-      } catch (verifyError: any) {
-        console.error('Error verifying webhook signature:', verifyError.message);
-        // Continue processing even if verification fails (for development)
-        // In production, you might want to return an error here
-        console.warn('⚠️ Continuing without signature verification');
-      }
-    } else {
-      console.warn('⚠️ SENDGRID_WEBHOOK_VERIFICATION_KEY is not configured. Skipping signature verification.');
-    }
-    */
-
-    // NOW parse the webhook body (after signature verification)
-    let events: SendGridEvent[];
-    try {
-      events = JSON.parse(rawBody || '[]');
-      console.log(`🪝 [WEBHOOK] Parsed ${Array.isArray(events) ? events.length : 1} event(s)`);
-      console.log(`🪝 [WEBHOOK] Full payload:`, JSON.stringify(events, null, 2));
-    } catch (parseError: any) {
-      console.error('❌ [WEBHOOK] Error parsing webhook body:', parseError.message);
+    // ===== STEP 3: PARSE BODY =====
+    if (!event.body) {
+      console.log('❌ No body in request');
       return {
         statusCode: 400,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ error: 'Invalid JSON body' }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'No body provided' }),
+      };
+    }
+
+    let events: SendGridEvent[];
+    try {
+      // Handle base64 encoding if present
+      const rawBody = event.isBase64Encoded 
+        ? Buffer.from(event.body, 'base64').toString('utf-8')
+        : event.body;
+      
+      events = JSON.parse(rawBody);
+      console.log(`✅ Parsed ${Array.isArray(events) ? events.length : 1} event(s)`);
+    } catch (parseError: any) {
+      console.error('❌ JSON parse error:', parseError.message);
+      return {
+        statusCode: 400,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: 'Invalid JSON' }),
       };
     }
 
@@ -161,160 +92,103 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       events = [events];
     }
 
-    console.log(`📧 Received ${events.length} SendGrid event(s)`);
+    // ===== STEP 4: PROCESS EACH EVENT =====
+    let updatesProcessed = 0;
 
-    // Connect to Neon database
-    const sql = neon(databaseUrl);
+    for (let i = 0; i < events.length; i++) {
+      const sgEvent = events[i];
+      const eventType = (sgEvent.event || 'unknown').toLowerCase();
+      const email = sgEvent.email || '';
+      const timestamp = sgEvent.timestamp 
+        ? new Date(sgEvent.timestamp * 1000)
+        : new Date();
+      
+      // Extract system_email_id from custom args (both formats)
+      const systemEmailId: string | undefined =
+        sgEvent?.custom_args?.system_email_id ||
+        sgEvent?.customArgs?.system_email_id;
 
-    // Process each event
-    const processedEvents: any[] = [];
-    let openEventsProcessed = 0;
-    
-    for (const sgEvent of events) {
-      try {
-        const rawSgMessageId: string = sgEvent.sg_message_id || sgEvent['smtp-id'] || '';
-        const normalizedMessageId = normalizeMessageId(rawSgMessageId);
-        const email = sgEvent.email || '';
-        const eventType = ((sgEvent.event ?? sgEvent.type) || 'unknown').toLowerCase();
-        const timestamp = sgEvent.timestamp 
-          ? new Date(sgEvent.timestamp * 1000) // SendGrid timestamps are in seconds
-          : new Date();
-        const lookupPattern = normalizedMessageId ? `${normalizedMessageId}%` : rawSgMessageId;
-        const systemEmailId: string | undefined =
-          sgEvent?.custom_args?.system_email_id ||
-          sgEvent?.customArgs?.system_email_id;
+      console.log(`\n📨 Event #${i + 1}:`);
+      console.log(`   Type: ${eventType}`);
+      console.log(`   Email: ${email}`);
+      console.log(`   System Email ID: ${systemEmailId || 'MISSING ⚠️'}`);
+      console.log(`   Timestamp: ${timestamp.toISOString()}`);
+      console.log(`   Custom Args:`, sgEvent?.custom_args || sgEvent?.customArgs || 'NONE ⚠️');
 
-        // 📨 ENHANCED VISIBILITY LOG
-        console.log(`📨 [WEBHOOK] SendGrid Event #${events.indexOf(sgEvent) + 1}:`);
-        console.log(`   Type: ${eventType}`);
-        console.log(`   Email: ${email}`);
-        console.log(`   SG Message ID: ${rawSgMessageId || 'MISSING'}`);
-        console.log(`   System Email ID: ${systemEmailId || 'MISSING ⚠️'}`);
-        console.log(`   Timestamp: ${timestamp.toISOString()}`);
-        console.log(`   Custom Args:`, sgEvent?.custom_args || sgEvent?.customArgs || 'NONE ⚠️');
-        console.log(`   Full Event:`, JSON.stringify(sgEvent, null, 2));
+      // ===== STEP 5: HANDLE "OPEN" EVENTS =====
+      if (eventType === 'open') {
+        console.log(`🔔 OPEN EVENT DETECTED!`);
 
-        if (eventType === 'open') {
-          console.log(`🔔 [WEBHOOK] OPEN EVENT DETECTED!`);
-          
-          // Primary path: use system_email_id from custom args
-          if (systemEmailId) {
-            console.log(`✅ [WEBHOOK] Found system_email_id: ${systemEmailId}`);
-            try {
-              const updateById = await sql`
-                UPDATE email_logs
-                SET 
-                  opened_at = COALESCE(opened_at, ${timestamp.toISOString()}),
-                  status = 'read'
-                WHERE id = ${systemEmailId}
-                RETURNING id, sendgrid_message_id, opened_at, status
-              `;
-
-              if (updateById && updateById.length > 0) {
-                console.log(`✅✅✅ [WEBHOOK] SUCCESS! Marked email as read/opened for ${email}`, {
-                  matchedIds: updateById.map((row: any) => row.id),
-                  updatedRows: updateById,
-                });
-                openEventsProcessed += updateById.length;
-                processedEvents.push({
-                  sg_message_id: rawSgMessageId,
-                  email,
-                  event: eventType,
-                  timestamp: timestamp.toISOString(),
-                  systemEmailId,
-                });
-                continue;
-              }
-              console.log('❌ [WEBHOOK] No email_log matched custom_args system_email_id', { systemEmailId });
-            } catch (updateError: any) {
-              console.error(`❌ [WEBHOOK] Could not update opened_at/status via custom_args for ${systemEmailId}:`, updateError.message);
-            }
-          } else {
-            console.warn(`⚠️ [WEBHOOK] MISSING system_email_id in open event! Cannot correlate with database.`);
-            console.warn(`⚠️ [WEBHOOK] This email will NOT be marked as read in the database.`);
-          }
-
-          // Fallback path: match on sg_message_id
-          if (!rawSgMessageId) {
-            console.warn('⚠️ Open event missing sg_message_id/smtp-id; skipping update');
-          } else {
-            try {
-              const updateResult = await sql`
-                UPDATE email_logs
-                SET 
-                  opened_at = COALESCE(opened_at, ${timestamp.toISOString()}),
-                  status = 'read'
-                WHERE sendgrid_message_id IS NOT NULL
-                  AND (
-                    sendgrid_message_id = ${rawSgMessageId}
-                    OR sendgrid_message_id LIKE ${lookupPattern}
-                  )
-                RETURNING id, sendgrid_message_id, opened_at, status
-              `;
-              
-              if (updateResult && updateResult.length > 0) {
-                console.log(`✅ Marked email as read/opened for ${email}`, {
-                  matchedIds: updateResult.map((row: any) => row.sendgrid_message_id),
-                });
-                openEventsProcessed += updateResult.length;
-              } else {
-                console.log('ℹ️ No matching email_log found for open event', {
-                  rawSgMessageId,
-                  normalizedMessageId,
-                });
-              }
-            } catch (updateError: any) {
-              console.warn(`⚠️ Could not update opened_at/status for ${rawSgMessageId}:`, updateError.message);
-              // Don't fail the webhook if update fails
-            }
-          }
-        } else {
-          console.log(`ℹ️ Ignoring unsupported event type: ${eventType}`);
+        if (!systemEmailId) {
+          console.warn(`⚠️ No system_email_id found - cannot update database`);
+          console.warn(`⚠️ This means the email was sent WITHOUT the ID in customArgs`);
+          continue;
         }
 
-        processedEvents.push({
-          sg_message_id: rawSgMessageId,
-          email,
-          event: eventType,
-          timestamp: timestamp.toISOString(),
-        });
+        console.log(`✅ Found system_email_id: ${systemEmailId}`);
 
-      } catch (eventError: any) {
-        console.error(`❌ Error processing event:`, {
-          error: eventError.message,
-          event: sgEvent,
-        });
-        // Continue processing other events even if one fails
+        // ===== STEP 6: UPDATE DATABASE =====
+        try {
+          console.log(`🔄 Attempting database update for email_logs.id = ${systemEmailId}...`);
+
+          const updateResult = await sql`
+            UPDATE email_logs
+            SET 
+              opened_at = COALESCE(opened_at, ${timestamp.toISOString()}),
+              status = 'read'
+            WHERE id = ${systemEmailId}
+            RETURNING id, sendgrid_message_id, opened_at, status
+          `;
+
+          console.log(`🔍 Update result:`, updateResult);
+
+          if (updateResult && updateResult.length > 0) {
+            console.log(`✅✅✅ SUCCESS! Database updated for email ID ${systemEmailId}`);
+            console.log(`✅ Updated row:`, updateResult[0]);
+            updatesProcessed++;
+          } else {
+            console.error(`❌ No rows updated. Email ID ${systemEmailId} not found in database.`);
+            console.error(`❌ This could mean:`);
+            console.error(`   1. Email was never logged to database`);
+            console.error(`   2. ID mismatch (string vs number)`);
+            console.error(`   3. Wrong database being queried`);
+          }
+
+        } catch (dbError: any) {
+          console.error(`❌ Database update FAILED for ID ${systemEmailId}:`);
+          console.error(`   Error:`, dbError.message);
+          console.error(`   Stack:`, dbError.stack);
+        }
+      } else {
+        console.log(`ℹ️ Ignoring event type: ${eventType}`);
       }
     }
 
-    // Always return 200 to SendGrid immediately
-    // This prevents SendGrid from retrying
+    // ===== STEP 7: RETURN SUCCESS =====
+    console.log(`\n🎯 WEBHOOK COMPLETE`);
+    console.log(`   Total events: ${events.length}`);
+    console.log(`   Updates processed: ${updatesProcessed}`);
+
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         success: true,
-        message: `Processed ${openEventsProcessed} open event(s)`,
+        message: `Processed ${events.length} events, ${updatesProcessed} updates`,
         received: events.length,
-        openEventsProcessed,
+        updatesProcessed,
       }),
     };
-  } catch (error: any) {
-    console.error('❌ Webhook handler error:', {
-      message: error.message,
-      stack: error.stack,
-    });
 
-    // Still return 200 to prevent SendGrid retries
-    // Log the error for debugging
+  } catch (error: any) {
+    console.error('❌❌❌ WEBHOOK CRASHED!', error);
+    console.error('Message:', error.message);
+    console.error('Stack:', error.stack);
+
+    // Still return 200 to prevent SendGrid from retrying infinitely
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         success: false,
         error: 'Internal server error (logged)',
@@ -322,4 +196,3 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     };
   }
 };
-
