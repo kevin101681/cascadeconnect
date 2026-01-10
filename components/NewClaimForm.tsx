@@ -327,20 +327,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
     <>
       <ToastContainer toasts={toasts} onDismiss={removeToast} />
       <form onSubmit={isAdmin ? handleSubmit : handleAddItem} className="flex flex-col h-full min-h-0">
-        {/* Header */}
-        <div className="flex-none pb-4 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center">
-          <h2 className="text-lg font-normal text-surface-on dark:text-gray-100">
-            {isAdmin ? 'New Claim' : 'Submit Warranty Request'}
-          </h2>
-          {/* Job Name Pill */}
-          <span className="bg-primary text-primary-on text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
-            <Building2 className="h-3 w-3" />
-            {activeHomeowner.jobName}
-          </span>
-        </div>
-
-        {/* Scrollable Body - Takes remaining space */}
-        <div className="flex-1 overflow-y-auto py-6 space-y-6 min-h-0">
+        {/* Scrollable Body - Takes full space */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
           {/* Title and Description Card */}
           <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
             <div className="space-y-4">
@@ -879,8 +867,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
           }}
         />
       
-        {/* Fixed Footer with buttons - Sticky at bottom */}
-        <div className="flex-none flex justify-end gap-2 pt-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 sticky bottom-0 flex-wrap">
+        {/* Fixed Footer with buttons */}
+        <div className="flex-none p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end gap-3 flex-wrap">
           {onSendMessage && (
             <Button 
               type="button" 
