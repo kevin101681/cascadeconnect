@@ -906,6 +906,45 @@ function App() {
     syncDataAndUser();
   }, [isLoaded, isSignedIn, authUser?.id]); // Re-run when auth state changes
 
+  // --- RESTORE SELECTED HOMEOWNER FROM URL ON PAGE LOAD ---
+  // This ensures that the selected homeowner persists across page refreshes
+  useEffect(() => {
+    // Only run for admin/builder users (homeowner users don't need URL persistence)
+    if (userRole === UserRole.HOMEOWNER) return;
+    
+    // Only restore if no homeowner is currently selected
+    if (selectedHomeownerId) return;
+    
+    // Check if homeowners have been loaded
+    if (homeowners.length === 0) return;
+    
+    try {
+      const url = new URL(window.location.href);
+      const urlHomeownerId = url.searchParams.get('homeownerId');
+      
+      if (urlHomeownerId) {
+        console.log(`🔄 Restoring homeowner from URL: ${urlHomeownerId}`);
+        
+        // Find the homeowner in the loaded list
+        const targetHomeowner = homeowners.find(h => h.id === urlHomeownerId);
+        
+        if (targetHomeowner) {
+          console.log(`✅ Found homeowner in database: ${targetHomeowner.name}`);
+          setSelectedAdminHomeownerId(urlHomeownerId);
+          setCurrentView('DASHBOARD');
+          setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
+        } else {
+          console.warn(`⚠️ Homeowner ${urlHomeownerId} not found in database`);
+          // Clean up invalid URL parameter
+          url.searchParams.delete('homeownerId');
+          window.history.replaceState({}, '', url.toString());
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error restoring homeowner from URL:', error);
+    }
+  }, [homeowners, userRole, selectedHomeownerId]); // Run when homeowners are loaded or role changes
+
   // --- FETCH CLAIMS FOR SELECTED HOMEOWNER ---
   // STRICT POLICY: Only fetch claims when a homeowner is selected
   // NEVER fetch all claims at once (6,200+ records)
@@ -1233,10 +1272,20 @@ function App() {
     setSearchQuery('');
     setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
     setCurrentView('DASHBOARD');
+    
+    // Persist selected homeowner in URL for state restoration on refresh
+    const url = new URL(window.location.href);
+    url.searchParams.set('homeownerId', homeowner.id);
+    window.history.replaceState({}, '', url.toString());
   };
 
   const handleClearHomeownerSelection = () => {
     setSelectedAdminHomeownerId(null);
+    
+    // Clear homeowner ID from URL
+    const url = new URL(window.location.href);
+    url.searchParams.delete('homeownerId');
+    window.history.replaceState({}, '', url.toString());
   };
 
   const handleSwitchRole = async () => {
