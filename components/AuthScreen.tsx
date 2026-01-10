@@ -83,7 +83,7 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
               <div className="flex flex-col gap-4">
                 <button 
                   onClick={() => setShowSignIn(true)}
-                  className="w-full bg-primary hover:bg-primary/90 text-primary-on dark:text-white font-medium py-3 px-4 rounded-lg transition-colors shadow-sm"
+                  className="w-full bg-white hover:bg-gray-50 border-2 border-primary text-primary font-medium py-3 px-4 rounded-lg transition-colors shadow-sm"
                 >
                   Sign In
                 </button>
