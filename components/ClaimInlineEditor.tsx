@@ -772,14 +772,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   onClick={handleAiReview}
                   disabled={isAnalyzing}
                   variant="outlined"
-                  icon={isAnalyzing ? (
-                    <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-                  ) : (
-                    <Bot className="h-4 w-4" />
-                  )}
                   className="!h-9"
                 >
-                  {isAnalyzing ? 'Analyzing...' : 'AI Review'}
+                  {isAnalyzing ? 'Analyzing...' : 'AI'}
                 </Button>
               </div>
             )}
