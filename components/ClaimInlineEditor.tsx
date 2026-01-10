@@ -1833,7 +1833,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
             onClick={handleToggleReviewed}
             className={isReviewed ? "!bg-green-600 hover:!bg-green-700 dark:!bg-green-700 dark:hover:!bg-green-800 !text-white" : ""}
           >
-            {isReviewed ? '✓ Reviewed' : 'Mark Processed'}
+            {isReviewed ? '✓ Reviewed' : 'Process'}
           </Button>
         )}
         {onCancel && (
