@@ -171,6 +171,8 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           sgEvent?.custom_args?.system_email_id ||
           sgEvent?.customArgs?.system_email_id;
 
+        // 📨 ENHANCED VISIBILITY LOG
+        console.log(`📨 SendGrid Webhook Event: ${eventType} | Email: ${email} | SG ID: ${rawSgMessageId || 'MISSING'}`);
         console.log('🪝 Incoming SendGrid payload', {
           eventType,
           email,

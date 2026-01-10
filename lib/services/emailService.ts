@@ -392,7 +392,7 @@ export async function sendUniversalNotification(
       // Log email to database for tracking (non-blocking)
       try {
         const { logEmailToDb } = require('../../lib/email-logger.js');
-        await logEmailToDb({
+        const emailLogResult = await logEmailToDb({
           recipient: recipientEmail,
           subject,
           status: 'sent',
@@ -404,6 +404,7 @@ export async function sendUniversalNotification(
             claimId: data.claimId,
           },
         });
+        console.log('📝 Email logged to database:', { emailLogResult, messageId: result.messageId });
       } catch (logError) {
         console.error('Failed to log email (non-blocking):', logError);
       }
