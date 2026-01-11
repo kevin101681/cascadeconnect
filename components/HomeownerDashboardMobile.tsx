@@ -193,10 +193,10 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
         </div>
       </div>
 
-      {/* Categorized Modules */}
-      <div className="px-4 py-4 space-y-4">
+      {/* Categorized Modules - Full Width on Mobile */}
+      <div className="px-0 md:px-4 py-4 space-y-4">
         {/* Project Section - Now includes Notes */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-none md:rounded-xl shadow-sm border-y md:border border-x-0 md:border-x border-gray-200 dark:border-gray-700 p-4">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Project
           </h2>
@@ -230,7 +230,7 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
         </div>
 
         {/* Quick Actions Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-none md:rounded-xl shadow-sm border-y md:border border-x-0 md:border-x border-gray-200 dark:border-gray-700 p-4">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Quick Actions
           </h2>
@@ -259,7 +259,7 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
         </div>
 
         {/* Communication Section - Notes removed */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-none md:rounded-xl shadow-sm border-y md:border border-x-0 md:border-x border-gray-200 dark:border-gray-700 p-4">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Communication
           </h2>
@@ -278,7 +278,7 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
         </div>
 
         {/* Financial Section */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-none md:rounded-xl shadow-sm border-y md:border border-x-0 md:border-x border-gray-200 dark:border-gray-700 p-4">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Financial
           </h2>
