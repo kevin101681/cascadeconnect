@@ -1841,7 +1841,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
       </div>
       
       {/* Footer - Fixed at bottom */}
-      <div className="flex-none py-2 px-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end space-x-3">
+      <div className="flex-none py-2 px-6 pb-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end space-x-3">
         <Button
           type="button"
           variant="filled"
