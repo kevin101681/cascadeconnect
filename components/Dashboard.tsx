@@ -1440,6 +1440,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   // State for homeowner calls
   const [homeownerCalls, setHomeownerCalls] = useState<Call[]>([]);
   const [callsLoading, setCallsLoading] = useState(false);
+  const [selectedCallId, setSelectedCallId] = useState<string | null>(null); // ✅ MOVED OUTSIDE - Fix for React #310
   
   // Load calls for the effective homeowner
   useEffect(() => {
@@ -1485,6 +1486,13 @@ const Dashboard: React.FC<DashboardProps> = ({
     
     loadHomeownerCalls();
   }, [effectiveHomeowner?.id]);
+
+  // Set initial selected call when calls load or modal opens
+  useEffect(() => {
+    if (showCallsModal && homeownerCalls.length > 0 && !selectedCallId) {
+      setSelectedCallId(homeownerCalls[0].id);
+    }
+  }, [showCallsModal, homeownerCalls, selectedCallId]);
 
   // Sync state when editing starts
   const parseEditSubcontractorFile = (file: File) => {
@@ -3901,6 +3909,54 @@ const Dashboard: React.FC<DashboardProps> = ({
       })
       .slice(0, 3);
     
+    // Calculate upcoming appointment for mobile dashboard (Rule 6: Defensive rendering with null checks)
+    const upcomingAppointment = (() => {
+      if (!isHomeownerView || scheduledClaims.length === 0) return null;
+      
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      
+      const upcomingClaims = scheduledClaims
+        .map(c => {
+          const acceptedDate = c.proposedDates?.find(d => d.status === 'ACCEPTED');
+          if (!acceptedDate?.date) return null;
+          
+          const appointmentDate = new Date(acceptedDate.date);
+          appointmentDate.setHours(0, 0, 0, 0);
+          if (appointmentDate < now) return null;
+          
+          return { claim: c, date: appointmentDate, acceptedDate };
+        })
+        .filter(Boolean) as Array<{ claim: Claim; date: Date; acceptedDate: any }>;
+      
+      if (upcomingClaims.length === 0) return null;
+      
+      // Sort by date
+      upcomingClaims.sort((a, b) => a.date.getTime() - b.date.getTime());
+      
+      // Get the next date
+      const nextDate = upcomingClaims[0].date;
+      const nextDateStr = nextDate.toISOString().split('T')[0];
+      
+      // Count how many claims have this same date
+      const claimsOnNextDate = upcomingClaims.filter(item => {
+        const itemDateStr = item.date.toISOString().split('T')[0];
+        return itemDateStr === nextDateStr;
+      });
+      
+      const firstClaim = claimsOnNextDate[0].claim;
+      const acceptedDate = claimsOnNextDate[0].acceptedDate;
+      
+      return {
+        claimId: firstClaim.id,
+        claimTitle: firstClaim.title,
+        date: acceptedDate.date,
+        timeSlot: acceptedDate.timeSlot ?? null,
+        contractorName: firstClaim.contractorName ?? null,
+        count: claimsOnNextDate.length,
+      };
+    })();
+    
     // Render new mobile dashboard for both homeowner and admin view on mobile devices (when no tab is active)
     if (isMobileView && displayHomeowner && !currentTab) {
       return (
@@ -3908,6 +3964,13 @@ const Dashboard: React.FC<DashboardProps> = ({
           {renderModals()}
           <HomeownerDashboardMobile
             homeowner={displayHomeowner}
+            upcomingAppointment={upcomingAppointment}
+            onAppointmentClick={(claimId) => {
+              const claim = claims.find(c => c.id === claimId);
+              if (claim) {
+                handleClaimSelection(claim);
+              }
+            }}
             onNavigateToModule={(module) => {
               // Map module strings to existing tab state
               const moduleMap: { [key: string]: typeof currentTab } = {
@@ -3923,6 +3986,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 'DOCUMENTS': 'DOCUMENTS',
                 'MANUAL': 'MANUAL',
                 'HELP': 'HELP',
+                'CHAT': 'CHAT', // ✅ FIX: Added CHAT to module map
               };
 
               if (module === 'BLUETAG') {
@@ -3944,8 +4008,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         {renderModals()}
         {/* Main Layout Container - Sidebar + Content with Staggered Cascade Animation */}
         <StaggerContainer className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 bg-white dark:bg-gray-900" staggerDelay={0.08}>
-          {/* LEFT SIDEBAR - Homeowner Info Card with Search */}
-          <FadeIn direction="right" className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 ${isHomeownerCardCollapsed ? 'w-full lg:w-16' : 'w-full lg:w-72'}`}>
+          {/* LEFT SIDEBAR - Homeowner Info Card with Search - HIDDEN ON MOBILE when tab is active */}
+          <FadeIn direction="right" className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 ${currentTab ? 'hidden lg:block' : ''} ${isHomeownerCardCollapsed ? 'w-full lg:w-16' : 'w-full lg:w-72'}`}>
             {/* Search Bar - Admin & Builder Only - Always visible on mobile, top of card on desktop */}
             {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
               <div className={`lg:hidden mb-4 ${isHomeownerCardCollapsed ? 'block' : 'block'}`}>
@@ -5577,7 +5641,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
         {/* HOMEOWNER CALLS MODAL - Two Column Layout */}
         {showCallsModal && displayHomeowner && homeownerCalls.length > 0 && (() => {
-          const [selectedCallId, setSelectedCallId] = useState<string | null>(homeownerCalls[0]?.id || null);
+          // ✅ FIX: State moved to component scope (line 1443) to fix React #310
           const selectedCall = homeownerCalls.find(c => c.id === selectedCallId);
           
           return createPortal(
@@ -5817,11 +5881,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 }>
-                  <PunchListApp
-                    homeowner={effectiveHomeowner}
-                    onClose={() => setCurrentTab(null)}
-                    onUpdateHomeowner={onUpdateHomeowner}
-                    onSavePDF={async (pdfBlob: Blob, filename: string) => {
+                  {/* ✅ FIX: Defensive check - ensure homeowner data exists before rendering */}
+                  {effectiveHomeowner ? (
+                    <PunchListApp
+                      homeowner={effectiveHomeowner}
+                      onClose={() => setCurrentTab(null)}
+                      onUpdateHomeowner={onUpdateHomeowner}
+                      onSavePDF={async (pdfBlob: Blob, filename: string) => {
                     // Delete existing documents with the same name for this homeowner
                     if (onDeleteDocument && effectiveHomeowner) {
                       const existingDocs = documents.filter(
@@ -5854,6 +5920,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                   }}
                   onShowManual={() => setShowManualModal(true)}
                   />
+                ) : (
+                  <div className="flex items-center justify-center h-full text-surface-on-variant dark:text-gray-400">
+                    <p>Unable to load BlueTag. Homeowner data missing.</p>
+                  </div>
+                )}
                 </Suspense>
               </div>
               

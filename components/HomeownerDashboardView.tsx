@@ -27,6 +27,16 @@ import { Homeowner } from '../types';
 import { StaggerContainer, FadeIn } from './motion/MotionWrapper';
 import { SmoothHeightWrapper } from './motion/SmoothHeightWrapper';
 
+// Appointment interface for type safety
+interface UpcomingAppointment {
+  claimId: string;
+  claimTitle: string;
+  date: string; // ISO string format
+  timeSlot: string | null | undefined;
+  contractorName: string | null | undefined;
+  count: number; // Number of appointments on this date
+}
+
 // Helper function to determine client status
 type ClientStatus = 'active' | 'invite_read' | 'pending';
 
@@ -90,12 +100,16 @@ interface HomeownerDashboardViewProps {
   homeowner: Homeowner;
   onNavigateToModule: (module: string) => void;
   onOpenNewMessage?: () => void; // For internal messaging
+  upcomingAppointment?: UpcomingAppointment | null; // Optional upcoming appointment data
+  onAppointmentClick?: (claimId: string) => void; // Handler for appointment click
 }
 
 const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
   homeowner,
   onNavigateToModule,
   onOpenNewMessage,
+  upcomingAppointment = null,
+  onAppointmentClick,
 }) => {
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
 
@@ -135,6 +149,50 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-6">
+      {/* Upcoming Appointment Card - Top Priority (Rule 6: Defensive Rendering) */}
+      {upcomingAppointment != null && (
+        <FadeIn direction="down" className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+          <div className="px-4 py-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Calendar className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                Next Appointment
+              </h3>
+            </div>
+            <button
+              onClick={() => onAppointmentClick?.(upcomingAppointment.claimId)}
+              className="w-full bg-primary/5 dark:bg-gray-700/50 hover:bg-primary/10 dark:hover:bg-gray-700 p-3 rounded-lg border border-primary/20 dark:border-gray-600 transition-all text-left"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
+                    {upcomingAppointment.claimTitle}
+                  </p>
+                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                    {new Date(upcomingAppointment.date).toLocaleDateString('en-US', { 
+                      weekday: 'short', 
+                      month: 'short', 
+                      day: 'numeric' 
+                    })}
+                    {upcomingAppointment.timeSlot && ` • ${upcomingAppointment.timeSlot}`}
+                  </p>
+                  {upcomingAppointment.contractorName && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      {upcomingAppointment.contractorName}
+                    </p>
+                  )}
+                </div>
+                {upcomingAppointment.count > 1 && (
+                  <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs font-medium">
+                    {upcomingAppointment.count}
+                  </span>
+                )}
+              </div>
+            </button>
+          </div>
+        </FadeIn>
+      )}
+
       {/* Collapsible Header Card */}
       <FadeIn direction="down" className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
         <div className="px-4 py-4">
