@@ -581,6 +581,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   const userInteractionRef = useRef(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   
+  // URL Search Params for mobile navigation - MUST be declared early before callbacks use it
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  
   // Wrap the internal setter to log ALL state changes (for debugging)
   const setSelectedClaimForModalInternalWithLogging = useCallback((claim: Claim | null) => {
     const isMobile = window.innerWidth < 768;
@@ -679,10 +683,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Default to null (closed) to be safe for mobile - will be set to 'CLAIMS' on desktop via useEffect
   const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | null>(null);
   const previousTabRef = useRef<typeof currentTab>(null); // Initialize with null to prevent treating it as "opening"
-  
-  // URL Search Params for mobile navigation
-  const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   
   // Mobile detection state for new dashboard
   const [isMobileView, setIsMobileView] = useState<boolean>(false);
