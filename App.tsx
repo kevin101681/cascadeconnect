@@ -19,7 +19,6 @@ import EmailHistory from './components/EmailHistory';
 import BackendDashboard from './components/BackendDashboard';
 import AIIntakeDashboard from './components/AIIntakeDashboard';
 import HomeownerSelector from './components/HomeownerSelector';
-import { ChatWidget } from './components/chat/ChatWidget';
 import UnifiedImportDashboard from './app/dashboard/admin/import/page';
 import { ModalProvider } from './components/providers/modal-provider';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
@@ -4516,23 +4515,6 @@ Assigned By: ${assignerName}
         }}
         claims={claims}
       />
-      
-      {/* Floating Chat Widget - Only for Admin/Employee Users */}
-      {activeEmployee && activeEmployee.id !== 'placeholder' && userRole === UserRole.ADMIN && (
-        <ChatWidget
-          currentUserId={activeEmployee.id}
-          currentUserName={activeEmployee.name}
-          onOpenHomeownerModal={(homeownerId) => {
-            const homeowner = availableHomeowners.find(h => h.id === homeownerId);
-            if (homeowner) {
-              setSelectedHomeownerId(homeownerId);
-              setActiveHomeowner(homeowner);
-              setSelectedAdminHomeownerId(homeownerId);
-              setCurrentView('DASHBOARD');
-            }
-          }}
-        />
-      )}
       
       {/* Submission Success Modal with AI Analysis */}
       <SubmissionSuccessModal

@@ -258,21 +258,30 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
           </div>
         </div>
 
-        {/* Communication Section - Notes removed */}
+        {/* Communication Section - Hero Grid Layout */}
         <div className="bg-white dark:bg-gray-800 rounded-none md:rounded-xl shadow-sm border-y md:border border-x-0 md:border-x border-gray-200 dark:border-gray-700 p-4">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Communication
           </h2>
           <div className="grid grid-cols-2 gap-3">
-            <ModuleButton
-              icon={<MessagesSquare className="h-5 w-5" />}
-              label="Messages"
-              onClick={() => onNavigateToModule('MESSAGES')}
-            />
+            {/* Messages Button - Full Width Hero */}
+            <div className="col-span-2">
+              <ModuleButton
+                icon={<MessagesSquare className="h-5 w-5" />}
+                label="Messages"
+                onClick={() => onNavigateToModule('MESSAGES')}
+              />
+            </div>
+            {/* Calls & Team Chat - Side by Side */}
             <ModuleButton
               icon={<PhoneCall className="h-5 w-5" />}
               label="Calls"
               onClick={() => onNavigateToModule('CALLS')}
+            />
+            <ModuleButton
+              icon={<MessageCircle className="h-5 w-5" />}
+              label="Team Chat"
+              onClick={() => onNavigateToModule('CHAT')}
             />
           </div>
         </div>
