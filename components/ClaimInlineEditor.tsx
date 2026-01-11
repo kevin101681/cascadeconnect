@@ -748,9 +748,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Scrollable Body - Takes full space */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
+      <div className="flex-1 overflow-y-auto p-6 md:p-6 px-0 py-6 space-y-6 min-h-0">
           {/* Title and Description Card */}
-          <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
+          <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg md:rounded-lg rounded-none border border-surface-outline-variant dark:border-gray-600 md:border border-x-0 md:border-x">
             <div className="space-y-4">
               <div>
                 {isEditing && !isReadOnly ? (
@@ -1841,7 +1841,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
       </div>
       
       {/* Footer - Fixed at bottom */}
-      <div className="flex-none p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end space-x-3">
+      <div className="flex-none p-3 md:p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end space-x-2 md:space-x-3">
         <Button
           type="button"
           variant="filled"
@@ -1850,17 +1850,20 @@ If this repair work is billable, please let me know prior to scheduling.`);
             useTaskStore.getState().openTasks(claim.id, contextLabel, 'claim');
           }}
           title={`Add a note for ${claim.claimNumber || 'this claim'}`}
+          className="!text-sm md:!text-base !px-3 md:!px-4"
         >
-          Note
+          <span className="md:inline hidden">Note</span>
+          <StickyNote className="h-4 w-4 md:hidden" />
         </Button>
         {!isHomeowner && (
           <Button 
             type="button" 
             variant={isReviewed ? "filled" : "outline"}
             onClick={handleToggleReviewed}
-            className={isReviewed ? "!bg-green-100 hover:!bg-green-200 dark:!bg-green-900/30 dark:hover:!bg-green-900/40 !text-green-700 dark:!text-green-400" : ""}
+            className={`!text-sm md:!text-base !px-3 md:!px-4 ${isReviewed ? "!bg-green-100 hover:!bg-green-200 dark:!bg-green-900/30 dark:hover:!bg-green-900/40 !text-green-700 dark:!text-green-400" : ""}`}
           >
-            {isReviewed ? 'Reviewed' : 'Process'}
+            <span className="md:inline hidden">{isReviewed ? 'Reviewed' : 'Process'}</span>
+            <CheckCircle className="h-4 w-4 md:hidden" />
           </Button>
         )}
         {onCancel && (
@@ -1868,16 +1871,20 @@ If this repair work is billable, please let me know prior to scheduling.`);
             type="button" 
             variant="filled" 
             onClick={onCancel}
+            className="!text-sm md:!text-base !px-3 md:!px-4"
           >
-            Cancel
+            <span className="md:inline hidden">Cancel</span>
+            <X className="h-4 w-4 md:hidden" />
           </Button>
         )}
         <Button 
           type="button" 
           variant="filled" 
           onClick={handleSaveDetails}
+          className="!text-sm md:!text-base !px-3 md:!px-4"
         >
-          Save
+          <span className="md:inline hidden">Save</span>
+          <Save className="h-4 w-4 md:hidden" />
         </Button>
       </div>
 

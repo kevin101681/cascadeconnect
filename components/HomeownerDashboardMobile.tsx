@@ -86,12 +86,16 @@ interface HomeownerDashboardMobileProps {
   homeowner: Homeowner;
   onNavigateToModule: (module: string) => void;
   onOpenNewMessage?: () => void; // For internal messaging
+  onCreateClaim?: () => void; // For creating new claim
+  onCreateTask?: () => void; // For creating new task
 }
 
 const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
   homeowner,
   onNavigateToModule,
   onOpenNewMessage,
+  onCreateClaim,
+  onCreateTask,
 }) => {
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
 
@@ -224,12 +228,39 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
           </div>
         </div>
 
-        {/* Quick Actions Section - 4 items (2x2 grid) */}
+        {/* Quick Actions Section - 7 items (grid wraps gracefully) */}
         <div className="bg-white dark:bg-gray-800 rounded-none md:rounded-xl shadow-sm border-y md:border border-x-0 md:border-x border-gray-200 dark:border-gray-700 p-4">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Quick Actions
           </h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <ModuleButton
+              icon={<Shield className="h-5 w-5" />}
+              label="New Claim"
+              onClick={() => {
+                if (onCreateClaim) {
+                  onCreateClaim();
+                } else {
+                  onNavigateToModule('CLAIMS');
+                }
+              }}
+            />
+            <ModuleButton
+              icon={<ClipboardList className="h-5 w-5" />}
+              label="New Task"
+              onClick={() => {
+                if (onCreateTask) {
+                  onCreateTask();
+                } else {
+                  onNavigateToModule('TASKS');
+                }
+              }}
+            />
+            <ModuleButton
+              icon={<MessageSquare className="h-5 w-5" />}
+              label="New Message"
+              onClick={handleMessage}
+            />
             <ModuleButton
               icon={<MessageCircle className="h-5 w-5" />}
               label="Text"
@@ -246,9 +277,13 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
               onClick={handleCall}
             />
             <ModuleButton
-              icon={<MessageSquare className="h-5 w-5" />}
-              label="Message"
-              onClick={handleMessage}
+              icon={<Mail className="h-5 w-5" />}
+              label="Email"
+              onClick={() => {
+                if (homeowner.email) {
+                  window.location.href = `mailto:${homeowner.email}`;
+                }
+              }}
             />
           </div>
         </div>
@@ -316,7 +351,7 @@ const ModuleButton: React.FC<ModuleButtonProps> = ({ icon, label, onClick }) => 
   return (
     <button
       onClick={onClick}
-      className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-all active:scale-95 shadow-sm hover:shadow-md"
+      className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-600 transition-all active:scale-95 shadow-sm hover:shadow-md touch-manipulation [-webkit-tap-highlight-color:transparent]"
     >
       <div className="text-primary dark:text-primary">{icon}</div>
       <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center">

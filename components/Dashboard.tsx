@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef, forwardRef, Suspense, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import HTMLFlipBook from 'react-pageflip';
 // Lazy load heavy libraries - only load when needed
 // import Papa from 'papaparse';
@@ -176,8 +177,8 @@ const TasksListColumn = React.memo<{
   onTaskSelect: (task: Task) => void;
 }>(({ tasks, employees, claims, onTaskSelect }) => {
   return (
-    <div 
-      className="flex-1 overflow-y-auto p-4 min-h-0"
+    <div
+      className="flex-1 overflow-y-auto p-4 min-h-0 h-[calc(100dvh-200px)] md:h-auto"
       style={{ WebkitOverflowScrolling: 'touch' }}
     >
       {tasks.length === 0 ? (
@@ -519,6 +520,10 @@ const Dashboard: React.FC<DashboardProps> = ({
   onUpdateTask,
   onNavigate
 }) => {
+  // React Router hooks for URL-based navigation
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
   // Check if user is actually logged in as admin (has currentUser/activeEmployee)
@@ -612,7 +617,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     };
   }, []);
   
-  // Wrapper function to prevent auto-opening on mobile
+  // Wrapper function to prevent auto-opening on mobile AND sync with URL
   const setSelectedClaimForModal = React.useCallback((claim: Claim | null) => {
     console.log('🔍 setSelectedClaimForModal called', {
       claim: claim ? { id: claim.id, title: claim.title } : null,
@@ -628,6 +633,10 @@ const Dashboard: React.FC<DashboardProps> = ({
     if (!isMobile) {
       console.log('🖥️ Desktop: Allowing modal to open');
       setSelectedClaimForModalInternalWithLogging(claim);
+      // Sync with URL
+      if (claim) {
+        navigateToView('CLAIMS', { claimId: claim.id });
+      }
       return;
     }
     
@@ -660,16 +669,75 @@ const Dashboard: React.FC<DashboardProps> = ({
     
     // Allow setting (either null to close, or claim with user interaction)
     setSelectedClaimForModalInternalWithLogging(claim);
-  }, [setSelectedClaimForModalInternalWithLogging]);
+    // Sync with URL
+    if (claim) {
+      navigateToView('CLAIMS', { claimId: claim.id });
+    } else {
+      navigateBack();
+    }
+  }, [setSelectedClaimForModalInternalWithLogging, navigateToView, navigateBack]);
   
   // Use the internal state for reading
   const selectedClaimForModal = selectedClaimForModalInternal;
   
-  // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual vs Schedule vs Help)
-  // Declare currentTab early since it's used in useEffects below
-  // Default to null (closed) to be safe for mobile - will be set to 'CLAIMS' on desktop via useEffect
-  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | null>(null);
-  const previousTabRef = useRef<typeof currentTab>(null); // Initialize with null to prevent treating it as "opening"
+  // Sync claim from URL to internal state
+  useEffect(() => {
+    if (claimIdFromUrl) {
+      const claim = claims.find(c => c.id === claimIdFromUrl);
+      if (claim && selectedClaimForModalInternal?.id !== claim.id) {
+        setSelectedClaimForModalInternalWithLogging(claim);
+      }
+    } else if (selectedClaimForModalInternal && viewFromUrl === 'CLAIMS') {
+      // Clear selected claim if no claimId in URL but we're on CLAIMS view
+      setSelectedClaimForModalInternalWithLogging(null);
+    }
+  }, [claimIdFromUrl, claims, selectedClaimForModalInternal, setSelectedClaimForModalInternalWithLogging, viewFromUrl]);
+  
+  // View State for Dashboard - Synced with URL search parameters
+  // Read initial state from URL, or default to null for mobile
+  const viewFromUrl = searchParams.get('view') as 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | null;
+  const taskIdFromUrl = searchParams.get('taskId');
+  const claimIdFromUrl = searchParams.get('claimId');
+  
+  // Use URL as source of truth for current tab
+  const currentTab = viewFromUrl;
+  const previousTabRef = useRef<typeof currentTab>(null);
+  
+  // Helper function to navigate to a view
+  const navigateToView = useCallback((view: typeof currentTab, options?: { taskId?: string; claimId?: string; scroll?: boolean }) => {
+    const params = new URLSearchParams(searchParams);
+    
+    if (view) {
+      params.set('view', view);
+      if (options?.taskId) {
+        params.set('taskId', options.taskId);
+      } else {
+        params.delete('taskId');
+      }
+      if (options?.claimId) {
+        params.set('claimId', options.claimId);
+      } else {
+        params.delete('claimId');
+      }
+    } else {
+      // Clear all view-related params
+      params.delete('view');
+      params.delete('taskId');
+      params.delete('claimId');
+    }
+    
+    setSearchParams(params, { replace: false });
+    
+    // Optionally scroll to top
+    if (options?.scroll !== false) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [searchParams, setSearchParams]);
+  
+  // Helper to go back (clear view params)
+  const navigateBack = useCallback(() => {
+    navigateToView(null);
+  }, [navigateToView]);
   
   // Mobile detection state for new dashboard
   const [isMobileView, setIsMobileView] = useState<boolean>(false);
@@ -688,9 +756,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Responsive initialization: Open Claims tab automatically on desktop, keep closed on mobile
   useEffect(() => {
-    // Only open automatically if we are on a large screen (desktop)
-    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
-      setCurrentTab('CLAIMS');
+    // Only open automatically if we are on a large screen (desktop) AND no view is set in URL
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024 && !viewFromUrl) {
+      navigateToView('CLAIMS');
       previousTabRef.current = 'CLAIMS';
     }
   }, []); // Run only once on mount
@@ -749,8 +817,11 @@ const Dashboard: React.FC<DashboardProps> = ({
     };
   }, []);
   
-  // Selected task for modal
-  const [selectedTaskForModal, setSelectedTaskForModal] = useState<Task | null>(null);
+  // Selected task for modal - synced with URL
+  const selectedTaskForModal = useMemo(() => {
+    if (!taskIdFromUrl) return null;
+    return tasks.find(t => t.id === taskIdFromUrl) || null;
+  }, [taskIdFromUrl, tasks]);
   
   // Header scroll sync refs
   
@@ -796,7 +867,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       const handlePopState = (e: PopStateEvent) => {
         // Close modal when back button is pressed
-        setSelectedTaskForModal(null);
+        navigateBack();
       };
 
       window.addEventListener('popstate', handlePopState);
@@ -831,7 +902,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       currentTab !== 'TASKS' &&
       selectedTaskForModal
     ) {
-      setSelectedTaskForModal(null);
+      navigateToView('TASKS');
     }
     if (
       isDesktop &&
@@ -850,7 +921,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       window.history.pushState({ tabOpen: true }, '');
       
       const handlePopState = (e: PopStateEvent) => {
-        setCurrentTab(null);
+        navigateBack();
       };
       
       window.addEventListener('popstate', handlePopState);
@@ -999,7 +1070,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         // Swipe left - go to next tab
         setSwipeProgress(1); // Complete the animation
         setTimeout(() => {
-          setCurrentTab(availableTabs[currentIndex + 1]);
+          navigateToView(availableTabs[currentIndex + 1]);
           setSwipeProgress(0);
           setSwipeDirection(null);
           setTargetTab(null);
@@ -1008,7 +1079,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         // Swipe right - go to previous tab
         setSwipeProgress(1); // Complete the animation
         setTimeout(() => {
-          setCurrentTab(availableTabs[currentIndex - 1]);
+          navigateToView(availableTabs[currentIndex - 1]);
           setSwipeProgress(0);
           setSwipeDirection(null);
           setTargetTab(null);
@@ -1119,7 +1190,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         if (selectedClaimForModal) {
           setSelectedClaimForModal(null);
         } else if (selectedTaskForModal) {
-          setSelectedTaskForModal(null);
+          navigateBack();
         } else if (selectedThreadId) {
           setSelectedThreadId(null);
         }
@@ -1300,6 +1371,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   // New Claim Inline Creation State
   const [isCreatingNewClaim, setIsCreatingNewClaim] = useState(false);
   
+  // New Task Inline Creation State
+  const [isCreatingNewTask, setIsCreatingNewTask] = useState(false);
+
   // Unsaved changes confirmation dialog state
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
   const [pendingClaimSelection, setPendingClaimSelection] = useState<Claim | null>(null);
@@ -2376,7 +2450,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     return (
       <>
-      <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
+      <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)] md:mt-0 -mt-0">
         {/* Left Column: Claims List */}
         <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 md:rounded-tl-modal md:rounded-tr-none md:rounded-bl-modal ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
           <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-modal md:rounded-tr-none">
@@ -2548,7 +2622,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     onCancel={() => setIsCreatingNewClaim(false)}
                     onSendMessage={() => {
                       setIsCreatingNewClaim(false);
-                      setCurrentTab('MESSAGES');
+                      navigateToView('MESSAGES');
                     }}
                     contractors={contractors}
                     activeHomeowner={targetHomeowner || activeHomeowner}
@@ -2995,7 +3069,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             employees={employees}
             claims={claims}
             onTaskSelect={(task) => {
-              setSelectedTaskForModal(task);
+              navigateToView('TASKS', { taskId: task.id });
               setTasksTabStartInEditMode(false);
             }}
           />
@@ -3008,8 +3082,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               {/* Task Header Toolbar */}
               <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 sticky top-0 z-10 rounded-tr-3xl">
                 <div className="flex items-center gap-4">
-                  <button 
-                    onClick={() => setSelectedTaskForModal(null)} 
+                  <button
+                    onClick={navigateBack}
                     className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
                   >
                     <ChevronLeft className="h-5 w-5" />
@@ -3018,8 +3092,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                     {selectedTaskForModal.title}
                   </h3>
                 </div>
-                <button 
-                  onClick={() => setSelectedTaskForModal(null)}
+                <button
+                  onClick={navigateBack}
                   className="hidden md:block p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
                 >
                   <X className="h-5 w-5" />
@@ -3047,14 +3121,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                     onUpdateTask={onUpdateTask}
                       startInEditMode={tasksTabStartInEditMode}
                     onSelectClaim={(claim) => {
-                      setSelectedTaskForModal(null);
+                      navigateToView('CLAIMS', { claimId: claim.id });
                         setTasksTabStartInEditMode(false);
                       handleClaimSelection(claim);
-                      setCurrentTab('CLAIMS');
                     }}
                     taskMessages={taskMessages.filter(m => m.taskId === selectedTaskForModal.id)}
                       onBack={() => {
-                        setSelectedTaskForModal(null);
+                        navigateBack();
                         setTasksTabStartInEditMode(false);
                       }}
                   />
@@ -3078,8 +3151,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           {/* Task Header Toolbar */}
           <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30">
             <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setSelectedTaskForModal(null)} 
+              <button
+                onClick={navigateBack}
                 className="p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
               >
                 <ChevronLeft className="h-5 w-5" />
@@ -3110,7 +3183,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onDeleteTask={onDeleteTask}
                 startInEditMode={tasksTabStartInEditMode}
                 onBack={() => {
-                  setSelectedTaskForModal(null);
+                  navigateBack();
                   setTasksTabStartInEditMode(false);
                 }}
               />
@@ -3227,7 +3300,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                            const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
                            const claimNum = associatedClaim?.claimNumber ? `Claim #${associatedClaim.claimNumber}` : '';
                            const contextLabel = [selectedThread.subject, claimNum, project].filter(Boolean).join(' • ');
-                           setCurrentTab('NOTES');
+                           navigateToView('NOTES');
                            useTaskStore.setState({ activeClaimId: associatedClaim?.id || null, contextLabel, contextType: 'message' });
                          }}
                          className="p-2 -mr-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full transition-colors"
@@ -3401,8 +3474,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                   const claimNum = associatedClaim?.claimNumber ? `Claim #${associatedClaim.claimNumber}` : '';
                   const contextLabel = [selectedThread.subject, claimNum, project].filter(Boolean).join(' • ');
                   const prefilledBody = `Message ${project} back.`;
-                  
-                  setCurrentTab('NOTES');
+
+                  navigateToView('NOTES');
                   setSelectedThreadId(null);
                   useTaskStore.setState({ 
                     activeClaimId: associatedClaim?.id || null, 
@@ -3554,11 +3627,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                   onUpdateTask={onUpdateTask}
                   onDeleteTask={onDeleteTask}
                   onToggleTask={onToggleTask}
-                  onBack={() => setSelectedTaskForModal(null)}
+                  onBack={navigateBack}
                   onSelectClaim={(claim) => {
-                    setSelectedTaskForModal(null);
+                    navigateToView('CLAIMS', { claimId: claim.id }); // Switch to CLAIMS tab when selecting a claim
                     handleClaimSelection(claim);
-                    setCurrentTab('CLAIMS'); // Switch to CLAIMS tab when selecting a claim
                   }}
                   startInEditMode={true}
                   taskMessages={taskMessages.filter(m => m.taskId === selectedTaskForModal.id)}
@@ -3606,7 +3678,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     }
                     setSelectedClaimForModal(null); // Close edit claim modal
                     setShowNewMessageModal(true);
-                    setCurrentTab('MESSAGES');
+                    navigateToView('MESSAGES');
                   }}
                   onCancel={() => setSelectedClaimForModal(null)}
                   onNavigate={onNavigate}
@@ -3683,7 +3755,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 setNewTaskAssignee(currentUser.id);
                 setSelectedClaimIds([]);
                 setShowNewTaskModal(false);
-                setCurrentTab('TASKS');
+                navigateToView('TASKS');
               } catch (error) {
                 console.error('Failed to create task:', error);
                 alert('Failed to create task. Please try again.');
@@ -3855,7 +3927,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       }
 
       if (options?.openForEdit) {
-        setSelectedTaskForModal(taskPreview);
+        navigateToView('TASKS', { taskId: taskPreview.id });
         if (currentTab === 'TASKS') {
           setTasksTabStartInEditMode(true);
         }
@@ -3995,9 +4067,20 @@ const Dashboard: React.FC<DashboardProps> = ({
               } else {
                 const tab = moduleMap[module];
                 if (tab) {
-                  setCurrentTab(tab);
+                  navigateToView(tab);
                 }
               }
+            }}
+            onCreateClaim={() => {
+              navigateToView('CLAIMS');
+              setIsCreatingNewClaim(true);
+            }}
+            onCreateTask={() => {
+              navigateToView('TASKS');
+              setIsCreatingNewTask(true);
+            }}
+            onOpenNewMessage={() => {
+              navigateToView('CHAT');
             }}
           />
         </>
@@ -4380,7 +4463,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             {/* Back to Dashboard Button - Mobile Only (Homeowner & Admin) */}
             {isMobileView && currentTab && (
               <button
-                onClick={() => setCurrentTab(null)}
+                onClick={navigateBack}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors md:hidden"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -4399,7 +4482,7 @@ const Dashboard: React.FC<DashboardProps> = ({
            <button 
               data-tab="CLAIMS"
               onClick={() => {
-                setCurrentTab('CLAIMS');
+                navigateToView('CLAIMS');
               }}
               className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
                 isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
@@ -4418,7 +4501,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="TASKS"
                 onClick={() => {
-                  setCurrentTab('TASKS');
+                  navigateToView('TASKS');
                 }}
                 className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
                   isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
@@ -4432,7 +4515,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <button 
               data-tab="MESSAGES"
               onClick={() => {
-                setCurrentTab('MESSAGES');
+                navigateToView('MESSAGES');
               }}
               className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
                 isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
@@ -4448,7 +4531,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 data-tab="DOCUMENTS"
                 onClick={(e) => {
                   e.preventDefault();
-                  setCurrentTab('DOCUMENTS');
+                  navigateToView('DOCUMENTS');
                 }}
                 className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
                   isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
@@ -4465,7 +4548,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 data-tab="MANUAL"
                 onClick={(e) => {
                   e.preventDefault();
-                  setCurrentTab('MANUAL');
+                  navigateToView('MANUAL');
                 }}
                 className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
                   isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
@@ -4482,7 +4565,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 data-tab="HELP"
                 onClick={(e) => {
                   e.preventDefault();
-                  setCurrentTab('HELP');
+                  navigateToView('HELP');
                 }}
                 className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
                   isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
@@ -4499,7 +4582,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="NOTES"
                 onClick={() => {
-                  setCurrentTab('NOTES');
+                  navigateToView('NOTES');
                 }}
                 className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
                   isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
@@ -4515,7 +4598,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="CALLS"
                 onClick={() => {
-                  setCurrentTab('CALLS');
+                  navigateToView('CALLS');
                 }}
                 className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
                   isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
@@ -4531,7 +4614,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="SCHEDULE"
                 onClick={() => {
-                  setCurrentTab('SCHEDULE');
+                  navigateToView('SCHEDULE');
                 }}
                 className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
                   isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
@@ -4548,7 +4631,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="CHAT"
                 onClick={() => {
-                  setCurrentTab('CHAT');
+                  navigateToView('CHAT');
                 }}
                 className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${currentTab === 'CHAT' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
@@ -4563,7 +4646,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="PAYROLL"
                 onClick={() => {
-                  setCurrentTab('PAYROLL');
+                  navigateToView('PAYROLL');
                 }}
                 className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${currentTab === 'PAYROLL' ? 'border border-primary text-primary bg-primary/10 md:border-0 md:border-b-2 md:bg-surface-container md:dark:bg-gray-700' : 'border border-surface-outline dark:border-gray-600 text-surface-on-variant dark:text-gray-400 md:border-0 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
@@ -4577,7 +4660,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <button 
                 data-tab="INVOICES"
                 onClick={() => {
-                  setCurrentTab('INVOICES');
+                  navigateToView('INVOICES');
                 }}
                 className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${currentTab === 'INVOICES' ? 'border border-primary text-primary bg-primary/10 md:border-0 md:border-b-2 md:bg-surface-container md:dark:bg-gray-700' : 'border border-surface-outline dark:border-gray-600 text-surface-on-variant dark:text-gray-400 md:border-0 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
@@ -4965,7 +5048,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab && !selectedClaimForModal && !selectedTaskForModal && !selectedThreadId && (
             <>
               <button
-                onClick={() => setCurrentTab(null)}
+                onClick={navigateBack}
                 className="md:hidden fixed bottom-6 right-4 z-[1010] w-14 h-14 bg-primary hover:bg-primary/90 rounded-full shadow-lg flex items-center justify-center text-primary-on transition-all"
               >
                 <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -4984,7 +5067,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4 md:pt-0 pt-0">
                 {renderClaimsList(displayClaims, filteredClaimsForModal, isHomeownerView)}
               </div>
             </motion.div>
@@ -5115,7 +5198,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       const homeowner = homeowners.find(h => h.id === homeownerId);
                       if (homeowner && onSelectHomeowner) {
                         onSelectHomeowner(homeowner);
-                        setCurrentTab('CLAIMS');
+                        navigateToView('CLAIMS');
                       }
                     }}
                   />
@@ -5902,7 +5985,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <Button 
                     onClick={() => {
                       setShowCallsModal(false);
-                      setCurrentTab('CALLS');
+                      navigateToView('CALLS');
                     }} 
                     variant="outlined"
                   >

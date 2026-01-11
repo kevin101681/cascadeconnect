@@ -342,7 +342,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
       {/* Content Area - Scrollable */}
       <div className="flex-1 overflow-y-auto p-6 bg-surface-container/50 dark:bg-gray-800/50">
         {/* Legend */}
-        <div className="flex items-center gap-4 mb-4 text-xs text-surface-on-variant dark:text-gray-400">
+        <div className="flex items-center gap-4 mb-4 text-xs text-surface-on-variant dark:text-gray-400 flex-wrap">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-primary rounded"></div>
             <span>Shared</span>
