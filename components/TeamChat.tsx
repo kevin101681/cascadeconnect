@@ -29,8 +29,8 @@ const TeamChat: React.FC<TeamChatProps> = ({
 
   return (
     <div className="h-full flex bg-white dark:bg-gray-900">
-      {/* Sidebar */}
-      <div className="w-64 flex-shrink-0 border-r border-gray-200 dark:border-gray-700">
+      {/* Sidebar - Hidden on mobile when chat active, always visible on desktop */}
+      <div className={`${selectedChannel ? 'hidden md:flex' : 'flex'} w-full md:w-64 flex-shrink-0 border-r border-gray-200 dark:border-gray-700`}>
         <ChatSidebar
           currentUserId={currentUserId}
           selectedChannelId={selectedChannel?.id || null}
@@ -38,17 +38,29 @@ const TeamChat: React.FC<TeamChatProps> = ({
         />
       </div>
 
-      {/* Main chat area */}
-      <div className="flex-1 flex flex-col">
+      {/* Main chat area - Full screen on mobile when active, side-by-side on desktop */}
+      <div className={`${selectedChannel ? 'flex fixed md:relative inset-0 md:inset-auto z-50 md:z-auto bg-white dark:bg-gray-900' : 'hidden md:flex'} flex-1 flex-col`}>
         {selectedChannel ? (
-          <ChatWindow
-            channelId={selectedChannel.id}
-            channelName={selectedChannel.otherUser?.name || selectedChannel.name}
-            channelType={selectedChannel.type}
-            currentUserId={currentUserId}
-            currentUserName={currentUserName}
-            onOpenHomeownerModal={onOpenHomeownerModal}
-          />
+          <>
+            {/* Mobile Back Button */}
+            <button
+              onClick={() => setSelectedChannel(null)}
+              className="md:hidden flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+              <span className="font-medium">Back</span>
+            </button>
+            <ChatWindow
+              channelId={selectedChannel.id}
+              channelName={selectedChannel.otherUser?.name || selectedChannel.name}
+              channelType={selectedChannel.type}
+              currentUserId={currentUserId}
+              currentUserName={currentUserName}
+              onOpenHomeownerModal={onOpenHomeownerModal}
+            />
+          </>
         ) : (
           <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
             <div className="text-center">

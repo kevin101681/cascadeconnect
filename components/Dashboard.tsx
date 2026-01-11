@@ -4376,16 +4376,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* RIGHT CONTENT AREA */}
           <FadeIn direction="up" delay={0.1} fullWidth className="flex-1 min-w-0 space-y-6">
-            {/* Back to Dashboard Button - Mobile Only (Homeowner & Admin) */}
-            {isMobileView && currentTab && (
-              <button
-                onClick={() => setCurrentTab(null)}
-                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors md:hidden"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Back to Dashboard
-              </button>
-            )}
+            {/* Legacy tabs and content removed - Dashboard now uses clean modal-based navigation */}
             
             {/* Navigation Tabs at Top - Two column grid on mobile, horizontal tabs on desktop */}
             <div 
