@@ -617,6 +617,52 @@ const Dashboard: React.FC<DashboardProps> = ({
     };
   }, []);
   
+  // View State for Dashboard - Synced with URL search parameters
+  // Read initial state from URL, or default to null for mobile
+  const viewFromUrl = searchParams.get('view') as 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | null;
+  const taskIdFromUrl = searchParams.get('taskId');
+  const claimIdFromUrl = searchParams.get('claimId');
+  
+  // Use URL as source of truth for current tab
+  const currentTab = viewFromUrl;
+  const previousTabRef = useRef<typeof currentTab>(null);
+  
+  // Helper function to navigate to a view
+  const navigateToView = useCallback((view: typeof currentTab, options?: { taskId?: string; claimId?: string; scroll?: boolean }) => {
+    const params = new URLSearchParams(searchParams);
+    
+    if (view) {
+      params.set('view', view);
+      if (options?.taskId) {
+        params.set('taskId', options.taskId);
+      } else {
+        params.delete('taskId');
+      }
+      if (options?.claimId) {
+        params.set('claimId', options.claimId);
+      } else {
+        params.delete('claimId');
+      }
+    } else {
+      // Clear all view-related params
+      params.delete('view');
+      params.delete('taskId');
+      params.delete('claimId');
+    }
+    
+    setSearchParams(params, { replace: false });
+    
+    // Optionally scroll to top
+    if (options?.scroll !== false) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [searchParams, setSearchParams]);
+  
+  // Helper to go back (clear view params)
+  const navigateBack = useCallback(() => {
+    navigateToView(null);
+  }, [navigateToView]);
+  
   // Wrapper function to prevent auto-opening on mobile AND sync with URL
   const setSelectedClaimForModal = React.useCallback((claim: Claim | null) => {
     console.log('🔍 setSelectedClaimForModal called', {
@@ -692,52 +738,6 @@ const Dashboard: React.FC<DashboardProps> = ({
       setSelectedClaimForModalInternalWithLogging(null);
     }
   }, [claimIdFromUrl, claims, selectedClaimForModalInternal, setSelectedClaimForModalInternalWithLogging, viewFromUrl]);
-  
-  // View State for Dashboard - Synced with URL search parameters
-  // Read initial state from URL, or default to null for mobile
-  const viewFromUrl = searchParams.get('view') as 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | null;
-  const taskIdFromUrl = searchParams.get('taskId');
-  const claimIdFromUrl = searchParams.get('claimId');
-  
-  // Use URL as source of truth for current tab
-  const currentTab = viewFromUrl;
-  const previousTabRef = useRef<typeof currentTab>(null);
-  
-  // Helper function to navigate to a view
-  const navigateToView = useCallback((view: typeof currentTab, options?: { taskId?: string; claimId?: string; scroll?: boolean }) => {
-    const params = new URLSearchParams(searchParams);
-    
-    if (view) {
-      params.set('view', view);
-      if (options?.taskId) {
-        params.set('taskId', options.taskId);
-      } else {
-        params.delete('taskId');
-      }
-      if (options?.claimId) {
-        params.set('claimId', options.claimId);
-      } else {
-        params.delete('claimId');
-      }
-    } else {
-      // Clear all view-related params
-      params.delete('view');
-      params.delete('taskId');
-      params.delete('claimId');
-    }
-    
-    setSearchParams(params, { replace: false });
-    
-    // Optionally scroll to top
-    if (options?.scroll !== false) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, [searchParams, setSearchParams]);
-  
-  // Helper to go back (clear view params)
-  const navigateBack = useCallback(() => {
-    navigateToView(null);
-  }, [navigateToView]);
   
   // Mobile detection state for new dashboard
   const [isMobileView, setIsMobileView] = useState<boolean>(false);
