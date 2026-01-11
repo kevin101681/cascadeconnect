@@ -195,7 +195,7 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
 
       {/* Categorized Modules - Full Width on Mobile */}
       <div className="px-0 md:px-4 py-4 space-y-4">
-        {/* Project Section - Now includes Notes */}
+        {/* Project Section - 4 items (2x2 grid) */}
         <div className="bg-white dark:bg-gray-800 rounded-none md:rounded-xl shadow-sm border-y md:border border-x-0 md:border-x border-gray-200 dark:border-gray-700 p-4">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Project
@@ -221,15 +221,10 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
               label="Warranty"
               onClick={() => onNavigateToModule('CLAIMS')}
             />
-            <ModuleButton
-              icon={<StickyNote className="h-5 w-5" />}
-              label="Notes"
-              onClick={() => onNavigateToModule('NOTES')}
-            />
           </div>
         </div>
 
-        {/* Quick Actions Section */}
+        {/* Quick Actions Section - 4 items (2x2 grid) */}
         <div className="bg-white dark:bg-gray-800 rounded-none md:rounded-xl shadow-sm border-y md:border border-x-0 md:border-x border-gray-200 dark:border-gray-700 p-4">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Quick Actions
@@ -258,21 +253,17 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
           </div>
         </div>
 
-        {/* Communication Section - Hero Grid Layout */}
+        {/* Communication Section - 4 items (2x2 grid) */}
         <div className="bg-white dark:bg-gray-800 rounded-none md:rounded-xl shadow-sm border-y md:border border-x-0 md:border-x border-gray-200 dark:border-gray-700 p-4">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Communication
           </h2>
           <div className="grid grid-cols-2 gap-3">
-            {/* Messages Button - Full Width Hero */}
-            <div className="col-span-2">
-              <ModuleButton
-                icon={<MessagesSquare className="h-5 w-5" />}
-                label="Messages"
-                onClick={() => onNavigateToModule('MESSAGES')}
-              />
-            </div>
-            {/* Calls & Team Chat - Side by Side */}
+            <ModuleButton
+              icon={<MessagesSquare className="h-5 w-5" />}
+              label="Messages"
+              onClick={() => onNavigateToModule('MESSAGES')}
+            />
             <ModuleButton
               icon={<PhoneCall className="h-5 w-5" />}
               label="Calls"
@@ -283,10 +274,15 @@ const HomeownerDashboardMobile: React.FC<HomeownerDashboardMobileProps> = ({
               label="Team Chat"
               onClick={() => onNavigateToModule('CHAT')}
             />
+            <ModuleButton
+              icon={<StickyNote className="h-5 w-5" />}
+              label="Notes"
+              onClick={() => onNavigateToModule('NOTES')}
+            />
           </div>
         </div>
 
-        {/* Financial Section */}
+        {/* Financial Section - 2 items (2x1 grid) */}
         <div className="bg-white dark:bg-gray-800 rounded-none md:rounded-xl shadow-sm border-y md:border border-x-0 md:border-x border-gray-200 dark:border-gray-700 p-4">
           <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
             Financial
