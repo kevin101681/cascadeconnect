@@ -28,6 +28,8 @@ import PayrollDashboard from './PayrollDashboard';
 import ScheduleTab from './ScheduleTab';
 import { HomeownerWarrantyGuide } from './HomeownerWarrantyGuide';
 import HomeownerDashboardMobile from './HomeownerDashboardMobile';
+import { StaggerContainer, FadeIn, AnimatedTabContent } from './motion/MotionWrapper';
+import { SmoothHeightWrapper } from './motion/SmoothHeightWrapper';
 
 // Lazy load TeamChat component
 const TeamChat = React.lazy(() => import('./TeamChat').catch(err => {
@@ -3940,10 +3942,10 @@ const Dashboard: React.FC<DashboardProps> = ({
     return (
       <>
         {renderModals()}
-        {/* Main Layout Container - Sidebar + Content */}
-        <div className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 animate-in fade-in slide-in-from-top-4 bg-white dark:bg-gray-900">
+        {/* Main Layout Container - Sidebar + Content with Staggered Cascade Animation */}
+        <StaggerContainer className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 bg-white dark:bg-gray-900" staggerDelay={0.08}>
           {/* LEFT SIDEBAR - Homeowner Info Card with Search */}
-          <div className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 ${isHomeownerCardCollapsed ? 'w-full lg:w-16' : 'w-full lg:w-72'}`}>
+          <FadeIn direction="right" className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 ${isHomeownerCardCollapsed ? 'w-full lg:w-16' : 'w-full lg:w-72'}`}>
             {/* Search Bar - Admin & Builder Only - Always visible on mobile, top of card on desktop */}
             {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
               <div className={`lg:hidden mb-4 ${isHomeownerCardCollapsed ? 'block' : 'block'}`}>
@@ -4305,11 +4307,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                 })()}
               </div>
             )}
-          </div>
+          </FadeIn>
           {/* END LEFT SIDEBAR */}
 
           {/* RIGHT CONTENT AREA */}
-          <div className="flex-1 min-w-0 space-y-6">
+          <FadeIn direction="up" delay={0.1} fullWidth className="flex-1 min-w-0 space-y-6">
             {/* Back to Dashboard Button - Mobile Only (Homeowner & Admin) */}
             {isMobileView && currentTab && (
               <button
@@ -4893,6 +4895,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div 
           className={`fixed top-16 left-0 right-0 bottom-0 z-[1000] bg-surface dark:bg-gray-900 flex flex-col pt-4 md:pt-0 md:relative md:top-auto md:left-auto md:right-auto md:bottom-auto md:z-auto md:bg-transparent md:block`}
         >
+        <SmoothHeightWrapper className="min-h-[300px]">
         <AnimatePresence mode="wait" initial={false}>
           {/* Mobile Close FAB - shown on tab list view, hidden when nested modals are open */}
           {currentTab && !selectedClaimForModal && !selectedTaskForModal && !selectedThreadId && (
@@ -4909,231 +4912,179 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
           
           {currentTab === 'CLAIMS' && (
-            <motion.div 
-              key="claims"
-              className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                {renderClaimsList(displayClaims, filteredClaimsForModal, isHomeownerView)}
+            <AnimatedTabContent tabKey="claims">
+              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
+                <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+                  {renderClaimsList(displayClaims, filteredClaimsForModal, isHomeownerView)}
+                </div>
               </div>
-            </motion.div>
+            </AnimatedTabContent>
           )}
 
           {currentTab === 'TASKS' && isAdmin && (
-            <motion.div 
-              key="tasks"
-              className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <div className="flex flex-col h-full md:h-auto">
-                  {renderTasksTab(userTasks, filteredTasksForModal, handleScheduleTaskWithAssignee, handleEvalTaskWithAssignee)}
+            <AnimatedTabContent tabKey="tasks">
+              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
+                <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+                  <div className="flex flex-col h-full md:h-auto">
+                    {renderTasksTab(userTasks, filteredTasksForModal, handleScheduleTaskWithAssignee, handleEvalTaskWithAssignee)}
+                  </div>
                 </div>
               </div>
-            </motion.div>
+            </AnimatedTabContent>
           )}
 
           {/* NOTES Tab - Admin Only */}
           {currentTab === 'NOTES' && isAdmin && (
-            <motion.div 
-              key="notes"
-              className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <div className="flex flex-col h-full md:h-auto">
-                  <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
-                    <TasksSheet 
-                      isInline={true}
-                      onNavigateToClaim={(claimId) => {
-                        const claim = claims.find(c => c.id === claimId);
-                        if (claim) handleClaimSelection(claim);
-                      }} 
-                      claims={claims} 
-                    />
-                  </Suspense>
+            <AnimatedTabContent tabKey="notes">
+              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
+                <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+                  <div className="flex flex-col h-full md:h-auto">
+                    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
+                      <TasksSheet 
+                        isInline={true}
+                        onNavigateToClaim={(claimId) => {
+                          const claim = claims.find(c => c.id === claimId);
+                          if (claim) handleClaimSelection(claim);
+                        }} 
+                        claims={claims} 
+                      />
+                    </Suspense>
+                  </div>
                 </div>
               </div>
-            </motion.div>
+            </AnimatedTabContent>
           )}
 
           {currentTab === 'MESSAGES' && (
-            <motion.div 
-              key="messages"
-              className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                {renderMessagesTab()}
+            <AnimatedTabContent tabKey="messages">
+              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
+                <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+                  {renderMessagesTab()}
+                </div>
               </div>
-            </motion.div>
+            </AnimatedTabContent>
           )}
 
           {/* CALLS Tab - Admin Only */}
           {currentTab === 'CALLS' && isAdmin && (
-            <motion.div 
-              key="calls"
-              className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <div className="flex flex-col h-full md:h-auto">
-                  <AIIntakeDashboard 
-                    onNavigate={onNavigate}
-                    onSelectHomeowner={(homeownerId) => {
-                      const homeowner = homeowners.find(h => h.id === homeownerId);
-                      if (homeowner && onSelectHomeowner) {
-                        onSelectHomeowner(homeowner);
-                      }
-                    }}
-                  />
+            <AnimatedTabContent tabKey="calls">
+              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
+                <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+                  <div className="flex flex-col h-full md:h-auto">
+                    <AIIntakeDashboard 
+                      onNavigate={onNavigate}
+                      onSelectHomeowner={(homeownerId) => {
+                        const homeowner = homeowners.find(h => h.id === homeownerId);
+                        if (homeowner && onSelectHomeowner) {
+                          onSelectHomeowner(homeowner);
+                        }
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
-            </motion.div>
+            </AnimatedTabContent>
           )}
 
           {/* SCHEDULE Tab - Admin Only */}
           {currentTab === 'SCHEDULE' && isAdmin && (
-            <motion.div 
-              key="schedule"
-              className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col h-full">
-                  <ScheduleTab 
-                    homeowners={homeowners}
-                    currentUserId={currentUser?.id}
-                  />
+            <AnimatedTabContent tabKey="schedule">
+              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
+                <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+                  <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col h-full">
+                    <ScheduleTab 
+                      homeowners={homeowners}
+                      currentUserId={currentUser?.id}
+                    />
+                  </div>
                 </div>
               </div>
-            </motion.div>
+            </AnimatedTabContent>
           )}
 
 
           {/* CHAT TAB - Team Chat */}
           {currentTab === 'CHAT' && isAdmin && (
-            <motion.div 
-              key="chat"
-              className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <div className="flex-1 overflow-hidden md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4" style={{ height: 'calc(100vh - 200px)' }}>
-                <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                  <TeamChat 
-                    currentUserId={currentUser?.id || ''}
-                    currentUserName={currentUser?.name || 'Unknown User'}
-                    onOpenHomeownerModal={(homeownerId) => {
-                      const homeowner = homeowners.find(h => h.id === homeownerId);
-                      if (homeowner && onSelectHomeowner) {
-                        onSelectHomeowner(homeowner);
-                        setCurrentTab('CLAIMS');
-                      }
-                    }}
-                  />
-                </Suspense>
+            <AnimatedTabContent tabKey="chat">
+              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
+                <div className="flex-1 overflow-hidden md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4" style={{ height: 'calc(100vh - 200px)' }}>
+                  <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                    <TeamChat 
+                      currentUserId={currentUser?.id || ''}
+                      currentUserName={currentUser?.name || 'Unknown User'}
+                      onOpenHomeownerModal={(homeownerId) => {
+                        const homeowner = homeowners.find(h => h.id === homeownerId);
+                        if (homeowner && onSelectHomeowner) {
+                          onSelectHomeowner(homeowner);
+                          setCurrentTab('CLAIMS');
+                        }
+                      }}
+                    />
+                  </Suspense>
+                </div>
               </div>
-            </motion.div>
+            </AnimatedTabContent>
           )}
 
 
           {currentTab === 'PAYROLL' && isAdmin && currentUser?.role !== 'Employee' && (
-            <motion.div 
-              key="payroll"
-              className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <div className="flex-1 overflow-y-auto md:overflow-visible">
-                <div className="flex flex-col h-full md:h-auto">
-                  <PayrollDashboard />
+            <AnimatedTabContent tabKey="payroll">
+              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
+                <div className="flex-1 overflow-y-auto md:overflow-visible">
+                  <div className="flex flex-col h-full md:h-auto">
+                    <PayrollDashboard />
+                  </div>
                 </div>
               </div>
-            </motion.div>
+            </AnimatedTabContent>
           )}
 
           {currentTab === 'INVOICES' && isAdmin && currentUser?.role !== 'Employee' && (
-            <motion.div 
-              key="invoices"
-              className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col h-full">
-                  <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex-shrink-0 md:rounded-t-3xl flex items-center justify-between">
-                    <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                      Invoices
-                    </h2>
-                    <button
-                      onClick={() => {
-                        // Trigger new invoice creation in CBSBooksApp
-                        const event = new CustomEvent('cbsbooks-create-invoice');
-                        window.dispatchEvent(event);
-                      }}
-                      style={{
-                        backgroundColor: "white",
-                        color: "#3c6b80",
-                        border: "2px solid #3c6b80",
-                        borderRadius: "9999px",
-                        padding: "8px 16px",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                        fontSize: "0.875rem",
-                        fontWeight: "500"
-                      }}
-                      className="hover:bg-gray-50 transition-opacity"
-                    >
-                      New Invoice
-                    </button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto">
-                    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
-                      <CBSBooksApp />
-                    </Suspense>
+            <AnimatedTabContent tabKey="invoices">
+              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
+                <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+                  <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col h-full">
+                    <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex-shrink-0 md:rounded-t-3xl flex items-center justify-between">
+                      <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                        Invoices
+                      </h2>
+                      <button
+                        onClick={() => {
+                          // Trigger new invoice creation in CBSBooksApp
+                          const event = new CustomEvent('cbsbooks-create-invoice');
+                          window.dispatchEvent(event);
+                        }}
+                        style={{
+                          backgroundColor: "white",
+                          color: "#3c6b80",
+                          border: "2px solid #3c6b80",
+                          borderRadius: "9999px",
+                          padding: "8px 16px",
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                          fontSize: "0.875rem",
+                          fontWeight: "500"
+                        }}
+                        className="hover:bg-gray-50 transition-opacity"
+                      >
+                        New Invoice
+                      </button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto">
+                      <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
+                        <CBSBooksApp />
+                      </Suspense>
+                    </div>
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </AnimatedTabContent>
           )}
 
           {currentTab === 'DOCUMENTS' && (
-            <motion.div 
-              key="documents"
-              className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
+            <AnimatedTabContent tabKey="documents">
               <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
                 <div className="flex flex-col h-full md:h-auto">
                   <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 overflow-hidden">
@@ -5292,35 +5243,31 @@ const Dashboard: React.FC<DashboardProps> = ({
                       </div>
                     )}
                   </div>
-                </div>
+                  </div>
                 </div>
               </div>
-            </motion.div>
+            </AnimatedTabContent>
           )}
 
           {currentTab === 'MANUAL' && (
-            <motion.div 
-              key="manual"
-              className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                <div className="flex flex-col h-full md:h-auto">
-                  <HomeownerManual homeownerId={activeHomeowner?.id} />
+            <AnimatedTabContent tabKey="manual">
+              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
+                <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+                  <div className="flex flex-col h-full md:h-auto">
+                    <HomeownerManual homeownerId={activeHomeowner?.id} />
+                  </div>
                 </div>
               </div>
-            </motion.div>
+            </AnimatedTabContent>
           )}
 
         </AnimatePresence>
+        </SmoothHeightWrapper>
         </div>
         )}
         {/* END RIGHT CONTENT AREA */}
-        </div>
-        </div>
+        </FadeIn>
+        </StaggerContainer>
         {/* END MAIN LAYOUT CONTAINER */}
 
         {/* DOCUMENTS MODAL - Now opened via button in homeowner card */}
