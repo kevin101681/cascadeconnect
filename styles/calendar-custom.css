@@ -1,5 +1,15 @@
 /* Custom styles for react-big-calendar with dark mode support */
 
+/* Scrollbar hide utility for horizontal scrolling */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
 /* Main calendar container */
 .rbc-calendar {
   font-family: inherit;

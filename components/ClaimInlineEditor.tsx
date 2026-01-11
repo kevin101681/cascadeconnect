@@ -1841,7 +1841,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
       </div>
       
       {/* Footer - Fixed at bottom */}
-      <div className="flex-none p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end space-x-3">
+      <div className="flex-none py-2 px-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end space-x-3">
         <Button
           type="button"
           variant="filled"
@@ -1850,7 +1850,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
             useTaskStore.getState().openTasks(claim.id, contextLabel, 'claim');
           }}
           title={`Add a note for ${claim.claimNumber || 'this claim'}`}
-          className="text-sm"
+          className="!h-9"
         >
           Note
         </Button>
@@ -1859,7 +1859,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
             type="button" 
             variant={isReviewed ? "filled" : "outline"}
             onClick={handleToggleReviewed}
-            className={`text-sm ${isReviewed ? "!bg-green-100 hover:!bg-green-200 dark:!bg-green-900/30 dark:hover:!bg-green-900/40 !text-green-700 dark:!text-green-400" : ""}`}
+            className={`!h-9 ${isReviewed ? "!bg-green-100 hover:!bg-green-200 dark:!bg-green-900/30 dark:hover:!bg-green-900/40 !text-green-700 dark:!text-green-400" : ""}`}
           >
             {isReviewed ? 'Reviewed' : 'Process'}
           </Button>
@@ -1869,7 +1869,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
             type="button" 
             variant="filled" 
             onClick={onCancel}
-            className="text-sm"
+            className="!h-9"
           >
             Cancel
           </Button>
@@ -1878,7 +1878,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           type="button" 
           variant="filled" 
           onClick={handleSaveDetails}
-          className="text-sm"
+          className="!h-9"
         >
           Save
         </Button>

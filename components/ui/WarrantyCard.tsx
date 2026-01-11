@@ -31,7 +31,7 @@ export function WarrantyCard({
   return (
     <div 
       onClick={onClick}
-      className={`group relative rounded-none md:rounded-card border border-x-0 md:border-x p-5 transition-all h-full flex flex-col justify-between focus:outline-none -mx-4 md:mx-0 ${
+      className={`group relative rounded-card border p-5 transition-all h-full flex flex-col justify-between focus:outline-none ${
         onClick ? 'cursor-pointer' : ''
       } ${
         isSelected 

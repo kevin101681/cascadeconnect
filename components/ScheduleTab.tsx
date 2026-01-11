@@ -249,10 +249,10 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
 
         {label()}
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-shrink-0">
           <button
             onClick={() => toolbar.onView('month')}
-            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors flex-shrink-0 ${
               toolbar.view === 'month'
                 ? 'border border-primary text-primary bg-primary/10'
                 : 'border border-surface-outline dark:border-gray-600 text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-700'
@@ -262,7 +262,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
           </button>
           <button
             onClick={() => toolbar.onView('week')}
-            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors flex-shrink-0 ${
               toolbar.view === 'week'
                 ? 'border border-primary text-primary bg-primary/10'
                 : 'border border-surface-outline dark:border-gray-600 text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-700'
@@ -272,7 +272,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
           </button>
           <button
             onClick={() => toolbar.onView('day')}
-            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors flex-shrink-0 ${
               toolbar.view === 'day'
                 ? 'border border-primary text-primary bg-primary/10'
                 : 'border border-surface-outline dark:border-gray-600 text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-700'
@@ -282,7 +282,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
           </button>
           <button
             onClick={() => toolbar.onView('agenda')}
-            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors ${
+            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors flex-shrink-0 ${
               toolbar.view === 'agenda'
                 ? 'border border-primary text-primary bg-primary/10'
                 : 'border border-surface-outline dark:border-gray-600 text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-700'
@@ -342,7 +342,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
       {/* Content Area - Scrollable */}
       <div className="flex-1 overflow-y-auto p-6 bg-surface-container/50 dark:bg-gray-800/50">
         {/* Legend */}
-        <div className="flex flex-wrap items-center gap-2 mb-4 text-xs text-surface-on-variant dark:text-gray-400">
+        <div className="flex items-center gap-4 mb-4 text-xs text-surface-on-variant dark:text-gray-400">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-primary rounded"></div>
             <span>Shared</span>

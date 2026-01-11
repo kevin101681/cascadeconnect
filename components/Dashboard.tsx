@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef, forwardRef, Suspense, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useSearchParams, useNavigate } from 'react-router-dom';
 import HTMLFlipBook from 'react-pageflip';
 // Lazy load heavy libraries - only load when needed
 // import Papa from 'papaparse';
@@ -88,7 +87,7 @@ const ClaimsListColumn = React.memo<{
 }>(({ filteredClaims, emptyMsg, isCreatingNewClaim, claimMessages, selectedClaimId, onClaimSelect, onDeleteClaim }) => {
   return (
     <div 
-      className="flex-1 overflow-y-auto px-4 pb-4 pt-0 min-h-0"
+      className="flex-1 overflow-y-auto px-2 py-4 md:p-4 min-h-0"
       style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
     >
       {filteredClaims.length === 0 ? (
@@ -97,7 +96,7 @@ const ClaimsListColumn = React.memo<{
           <span className="text-sm">{emptyMsg}</span>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 pt-4">
+        <div className="grid grid-cols-1 gap-3">
           {/* Temporary "New Claim" card when creating */}
           {isCreatingNewClaim && (
             <div className="relative">
@@ -177,9 +176,9 @@ const TasksListColumn = React.memo<{
   onTaskSelect: (task: Task) => void;
 }>(({ tasks, employees, claims, onTaskSelect }) => {
   return (
-    <div 
-      className="flex-1 overflow-y-auto overscroll-contain p-4 min-h-0 h-[calc(100dvh-200px)]"
-      style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+    <div
+      className="flex-1 overflow-y-auto p-4 min-h-0 md:h-auto h-[calc(100vh-220px)]"
+      style={{ WebkitOverflowScrolling: 'touch' }}
     >
       {tasks.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
@@ -568,34 +567,11 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Description expand popup state
   const [expandedDescription, setExpandedDescription] = useState<Claim | null>(null);
   
-  // Selected claim for modal
-  // Initialize with null and log if it's ever set to a non-null value during render
-  const [selectedClaimForModalInternal, setSelectedClaimForModalInternal] = useState<Claim | null>(() => {
-    console.log('🔵 selectedClaimForModalInternal initializing to null');
-    return null;
-  });
-  
   // Track if this is the initial load period and user interactions
   const initialLoadRef = useRef(true);
   const mountTimeRef = useRef(Date.now());
   const userInteractionRef = useRef(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // URL Search Params for mobile navigation - MUST be declared early before callbacks use it
-  const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
-  
-  // Wrap the internal setter to log ALL state changes (for debugging)
-  const setSelectedClaimForModalInternalWithLogging = useCallback((claim: Claim | null) => {
-    const isMobile = window.innerWidth < 768;
-    console.log('🔧 INTERNAL setter called', {
-      claim: claim ? { id: claim.id, title: claim.title } : null,
-      isMobile,
-      timeSinceMount: Date.now() - mountTimeRef.current,
-      caller: new Error().stack?.split('\n')[2]?.trim()
-    });
-    setSelectedClaimForModalInternal(claim);
-  }, []);
   
   // Track user interactions (clicks, touches) to distinguish user-initiated vs auto-opens
   useEffect(() => {
@@ -617,72 +593,55 @@ const Dashboard: React.FC<DashboardProps> = ({
     };
   }, []);
   
-  // Wrapper function to prevent auto-opening on mobile
-  const setSelectedClaimForModal = React.useCallback((claim: Claim | null) => {
-    console.log('🔍 setSelectedClaimForModal called', {
-      claim: claim ? { id: claim.id, title: claim.title } : null,
-      isMobile: window.innerWidth < 768,
-      timeSinceMount: Date.now() - mountTimeRef.current,
-      hasUserInteraction: userInteractionRef.current,
-      isInitialLoad: initialLoadRef.current
+  // URL-based navigation: Read view from URL search params
+  const [searchParams, setSearchParams] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search);
+    }
+    return new URLSearchParams();
+  });
+  
+  // Helper to update URL search params
+  const updateSearchParams = useCallback((updates: Record<string, string | null>) => {
+    const newParams = new URLSearchParams(window.location.search);
+    
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === undefined || value === '') {
+        newParams.delete(key);
+      } else {
+        newParams.set(key, value);
+      }
     });
     
-    const isMobile = window.innerWidth < 768;
-    
-    // On desktop, always allow
-    if (!isMobile) {
-      console.log('🖥️ Desktop: Allowing modal to open');
-      setSelectedClaimForModalInternalWithLogging(claim);
-      return;
-    }
-    
-    // On mobile, check if we should block
-    if (claim) {
-      const timeSinceMount = Date.now() - mountTimeRef.current;
-      const isInitialLoadPeriod = initialLoadRef.current && timeSinceMount < 5000; // 5 second grace period
-      const hasNoUserInteraction = !userInteractionRef.current;
-      
-      // Block if in initial load period OR no user interaction
-      if (isInitialLoadPeriod || hasNoUserInteraction) {
-        console.log('🚫 BLOCKING auto-open of claim modal on mobile', {
-          isInitialLoadPeriod,
-          hasNoUserInteraction,
-          timeSinceMount,
-          claimId: claim?.id,
-          claimTitle: claim?.title
-        });
-        return; // Don't set the modal
-      } else {
-        console.log('✅ ALLOWING claim modal to open on mobile (user interaction detected)', {
-          timeSinceMount,
-          claimId: claim?.id,
-          claimTitle: claim?.title
-        });
-        
-        // Update URL params on mobile to enable hierarchical navigation
-        setSearchParams({ view: 'warranty', claimId: claim.id });
-      }
-    } else {
-      console.log('📱 Mobile: Closing modal (claim is null)');
-      // When closing, go back to the list view
-      const currentView = searchParams.get('view');
-      if (currentView) {
-        setSearchParams({ view: currentView });
-      }
-    }
-    
-    // Allow setting (either null to close, or claim with user interaction)
-    setSelectedClaimForModalInternalWithLogging(claim);
-  }, [setSelectedClaimForModalInternalWithLogging, setSearchParams, searchParams]);
+    const newUrl = `${window.location.pathname}${newParams.toString() ? '?' + newParams.toString() : ''}`;
+    window.history.pushState({}, '', newUrl);
+    setSearchParams(newParams);
+  }, []);
   
-  // Use the internal state for reading
-  const selectedClaimForModal = selectedClaimForModalInternal;
+  // Listen to popstate (back/forward button)
+  useEffect(() => {
+    const handlePopState = () => {
+      setSearchParams(new URLSearchParams(window.location.search));
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
   
-  // View State for Dashboard (Claims vs Messages vs Tasks vs Notes vs Calls vs Documents vs Manual vs Schedule vs Help)
-  // Declare currentTab early since it's used in useEffects below
-  // Default to null (closed) to be safe for mobile - will be set to 'CLAIMS' on desktop via useEffect
-  const [currentTab, setCurrentTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | null>(null);
-  const previousTabRef = useRef<typeof currentTab>(null); // Initialize with null to prevent treating it as "opening"
+  // View State for Dashboard - derived from URL
+  type TabType = 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | 'PUNCHLIST' | null;
+  
+  const currentTab = useMemo<TabType>(() => {
+    const view = searchParams.get('view');
+    if (!view) return null;
+    
+    const validTabs: TabType[] = ['CLAIMS', 'MESSAGES', 'TASKS', 'NOTES', 'CALLS', 'DOCUMENTS', 'MANUAL', 'HELP', 'PAYROLL', 'INVOICES', 'SCHEDULE', 'CHAT', 'PUNCHLIST'];
+    const upperView = view.toUpperCase() as TabType;
+    
+    return validTabs.includes(upperView) ? upperView : null;
+  }, [searchParams]);
+  
+  const previousTabRef = useRef<TabType>(null);
   
   // Mobile detection state for new dashboard
   const [isMobileView, setIsMobileView] = useState<boolean>(false);
@@ -701,75 +660,59 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Responsive initialization: Open Claims tab automatically on desktop, keep closed on mobile
   useEffect(() => {
-    // Only open automatically if we are on a large screen (desktop)
-    if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
-      setCurrentTab('CLAIMS');
+    // Only open automatically if we are on a large screen (desktop) and no view is set
+    if (typeof window !== 'undefined' && window.innerWidth >= 1024 && !searchParams.get('view')) {
+      updateSearchParams({ view: 'claims' });
       previousTabRef.current = 'CLAIMS';
     }
   }, []); // Run only once on mount
   
-  // Sync URL search params with view state (mobile navigation)
-  useEffect(() => {
-    const viewParam = searchParams.get('view');
-    const taskIdParam = searchParams.get('taskId');
-    const claimIdParam = searchParams.get('claimId');
-    
-    // Handle view changes from URL
-    if (isMobileView) {
-      if (viewParam === 'tasks') {
-        setCurrentTab('TASKS');
-        if (taskIdParam && tasks.length > 0) {
-          const task = tasks.find(t => t.id === taskIdParam);
-          if (task) {
-            setSelectedTaskForModal(task);
-          }
-        }
-      } else if (viewParam === 'warranty' || viewParam === 'claims') {
-        setCurrentTab('CLAIMS');
-        if (claimIdParam && claims.length > 0) {
-          const claim = claims.find(c => c.id === claimIdParam);
-          if (claim) {
-            setSelectedClaimForModal(claim);
-          }
-        }
-      } else if (viewParam && !taskIdParam && !claimIdParam) {
-        // No ID params, so we're viewing the list
-        const viewMap: { [key: string]: typeof currentTab } = {
-          'schedule': 'SCHEDULE',
-          'notes': 'NOTES',
-          'messages': 'MESSAGES',
-          'calls': 'CALLS',
-          'chat': 'CHAT',
-        };
-        const tab = viewMap[viewParam];
-        if (tab) {
-          setCurrentTab(tab);
-        }
-      }
+  // Helper function to set current tab via URL
+  const setCurrentTab = useCallback((tab: TabType) => {
+    if (tab === null) {
+      // Close all tabs - clear view param
+      updateSearchParams({ view: null, taskId: null, claimId: null });
+    } else {
+      // Open tab - set view param
+      updateSearchParams({ view: tab.toLowerCase() });
     }
-  }, [searchParams, isMobileView, tasks, claims]);
+  }, [updateSearchParams]);
   
-  // Handle browser back button on mobile
-  useEffect(() => {
-    if (!isMobileView) return;
-    
-    const handlePopState = () => {
-      const viewParam = searchParams.get('view');
-      const hasDetailParam = searchParams.get('taskId') || searchParams.get('claimId');
-      
-      // If we're in a detail view and back is pressed, close the detail and stay in list view
-      if (hasDetailParam) {
-        setSelectedClaimForModal(null);
-        setSelectedTaskForModal(null);
-      } else if (!viewParam) {
-        // If no view param, close the tab and return to dashboard
-        setCurrentTab(null);
-      }
-    };
-    
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [isMobileView, searchParams]);
+  // Get selected task/claim IDs from URL
+  const selectedTaskIdFromUrl = searchParams.get('taskId');
+  const selectedClaimIdFromUrl = searchParams.get('claimId');
+  
+  // Find selected task/claim from URL params
+  const selectedTaskForModal = useMemo(() => {
+    if (!selectedTaskIdFromUrl) return null;
+    return tasks.find(t => t.id === selectedTaskIdFromUrl) || null;
+  }, [selectedTaskIdFromUrl, tasks]);
+  
+  const selectedClaimForModalFromUrl = useMemo(() => {
+    if (!selectedClaimIdFromUrl) return null;
+    return claims.find(c => c.id === selectedClaimIdFromUrl) || null;
+  }, [selectedClaimIdFromUrl, claims]);
+  
+  // Helper to set selected task
+  const setSelectedTaskForModal = useCallback((task: Task | null) => {
+    if (task === null) {
+      updateSearchParams({ taskId: null });
+    } else {
+      updateSearchParams({ view: 'tasks', taskId: task.id });
+    }
+  }, [updateSearchParams]);
+  
+  // Helper to set selected claim
+  const setSelectedClaimForModal = useCallback((claim: Claim | null) => {
+    if (claim === null) {
+      updateSearchParams({ claimId: null });
+    } else {
+      updateSearchParams({ view: 'claims', claimId: claim.id });
+    }
+  }, [updateSearchParams]);
+  
+  // Derive selectedClaimForModal from URL (used throughout the component)
+  const selectedClaimForModal = selectedClaimForModalFromUrl;
   
   // Debug: Log whenever selectedClaimForModal changes
   useEffect(() => {
@@ -825,29 +768,6 @@ const Dashboard: React.FC<DashboardProps> = ({
     };
   }, []);
   
-  // Selected task for modal
-  const [selectedTaskForModal, setSelectedTaskForModalRaw] = useState<Task | null>(null);
-  
-  // Wrap task selection to update URL params on mobile
-  const setSelectedTaskForModal = useCallback((task: Task | null) => {
-    const isMobile = window.innerWidth < 768;
-    
-    if (isMobile) {
-      if (task) {
-        // When opening a task, add taskId to URL
-        setSearchParams({ view: 'tasks', taskId: task.id });
-      } else {
-        // When closing, go back to the task list view
-        const currentView = searchParams.get('view');
-        if (currentView) {
-          setSearchParams({ view: currentView });
-        }
-      }
-    }
-    
-    setSelectedTaskForModalRaw(task);
-  }, [setSearchParams, searchParams]);
-
   // Header scroll sync refs
   
   // Prevent body scroll when modal is open (mobile only - desktop uses split-screen)
@@ -996,17 +916,17 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [swipeProgress, setSwipeProgress] = useState<number>(0); // 0 to 1, represents swipe completion
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
-  const [targetTab, setTargetTab] = useState<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'CHAT' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | null>(null);
-  
+  const [targetTab, setTargetTab] = useState<TabType>(null);
+
   // Minimum swipe distance (in pixels)
   const minSwipeDistance = 50;
-  
+
   // Get available tabs in order
-  const getAvailableTabs = (): Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'CHAT' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES'> => {
+  const getAvailableTabs = (): Array<Exclude<TabType, null>> => {
     const isHomeownerViewRole = userRole === UserRole.HOMEOWNER;
     const isEmployee = currentUser?.role === 'Employee';
     console.log('🔍 Dashboard getAvailableTabs - currentUser:', currentUser?.name, 'role:', currentUser?.role, 'isEmployee:', isEmployee);
-    const tabs: Array<'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'SCHEDULE' | 'CHAT' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES'> = ['CLAIMS'];
+    const tabs: Array<Exclude<TabType, null>> = ['CLAIMS'];
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('TASKS');
       tabs.push('NOTES'); // NOTES tab between TASKS and MESSAGES
@@ -1434,8 +1354,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [newTaskNotes, setNewTaskNotes] = useState('');
   const [selectedClaimIds, setSelectedClaimIds] = useState<string[]>([]);
 
-  // Punch List App State
-  const [showPunchListApp, setShowPunchListApp] = useState(false);
+  // Modal states
   const [showManualModal, setShowManualModal] = useState(false);
 
   // Debug: Log modal state changes
@@ -1449,10 +1368,10 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // Lock body scroll when any modal is open (without layout shifts)
   useEffect(() => {
-    const isAnyModalOpen = showNewTaskModal || showNewMessageModal || showNewClaimModal || 
-                          showDocsModal || showInviteModal || showEditHomeownerModal || 
-                          showSubListModal || showPunchListApp || isPDFViewerOpen || showCallsModal;
-    
+    const isAnyModalOpen = showNewTaskModal || showNewMessageModal || showNewClaimModal ||
+                          showDocsModal || showInviteModal || showEditHomeownerModal ||
+                          showSubListModal || (currentTab === 'PUNCHLIST') || isPDFViewerOpen || showCallsModal;
+
     if (isAnyModalOpen) {
       // Use overflow hidden only to prevent scrolling without layout shifts
       const originalBodyOverflow = document.body.style.overflow;
@@ -1467,8 +1386,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         document.documentElement.style.overflow = originalHtmlOverflow;
       };
     }
-  }, [showNewTaskModal, showNewMessageModal, showNewClaimModal, showDocsModal, 
-      showInviteModal, showEditHomeownerModal, showSubListModal, showPunchListApp, isPDFViewerOpen, showCallsModal]);
+  }, [showNewTaskModal, showNewMessageModal, showNewClaimModal, showDocsModal,
+      showInviteModal, showEditHomeownerModal, showSubListModal, currentTab, isPDFViewerOpen, showCallsModal]);
 
   // Note: Do NOT sync initialTab - tabs should only open when user clicks them
   // The initialTab prop is only used for the default value in old code paths
@@ -2475,7 +2394,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
         {/* Left Column: Claims List */}
         <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 md:rounded-tl-modal md:rounded-tr-none md:rounded-bl-modal ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
-          <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-modal md:rounded-tr-none">
+          <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-modal md:rounded-tr-none">
             <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               {filteredClaims.length > 0 && (
                 <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-primary text-primary bg-primary/10 text-xs font-medium">
@@ -4084,30 +4003,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                 'DOCUMENTS': 'DOCUMENTS',
                 'MANUAL': 'MANUAL',
                 'HELP': 'HELP',
-                'CHAT': 'CHAT',
               };
 
               if (module === 'BLUETAG') {
-                setShowPunchListApp(true);
+                setCurrentTab('PUNCHLIST');
               } else {
                 const tab = moduleMap[module];
                 if (tab) {
-                  // On mobile, use URL search params for hierarchical navigation
-                  if (isMobileView) {
-                    const viewParamMap: { [key: string]: string } = {
-                      'TASKS': 'tasks',
-                      'SCHEDULE': 'schedule',
-                      'CLAIMS': 'warranty',
-                      'MESSAGES': 'messages',
-                      'NOTES': 'notes',
-                      'CALLS': 'calls',
-                      'CHAT': 'chat',
-                    };
-                    const viewParam = viewParamMap[module];
-                    if (viewParam) {
-                      setSearchParams({ view: viewParam });
-                    }
-                  }
                   setCurrentTab(tab);
                 }
               }
@@ -4206,9 +4108,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
                 className="bg-surface-container/30 dark:bg-gray-700/30 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 overflow-hidden relative"
               >
-                {/* Search Bar - Admin & Builder Only - Desktop only (inside card) */}
+                {/* Search Bar - Admin & Builder Only - Visible on all screen sizes */}
                 {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
-                  <div className="hidden lg:block p-4 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
+                  <div className="block p-4 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" />
                       <input 
@@ -4346,10 +4248,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                     {(() => {
                       const reportKey = `bluetag_report_${displayHomeowner.id}`;
                       const hasReport = localStorage.getItem(reportKey) !== null;
-                      
+
                       return (
-                        <Button 
-                          onClick={() => setShowPunchListApp(true)}
+                        <Button
+                          onClick={() => setCurrentTab('PUNCHLIST')}
                           variant="outlined"
                           icon={<ClipboardList className="h-4 w-4" />}
                           className="!h-9 w-full md:w-auto"
@@ -4509,7 +4411,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               }`}
             >
            {/* HOMEOWNER-SPECIFIC TABS */}
-           <button 
+           <button
               data-tab="CLAIMS"
               onClick={() => {
                 setCurrentTab('CLAIMS');
@@ -4523,7 +4425,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               }`}
             >
               <ClipboardList className="h-4 w-4" />
-              Warranty
+              Claims
             </button>
             
             {/* TASKS TAB - Admin Only (hidden in homeowner view) */}
@@ -4656,20 +4558,20 @@ const Dashboard: React.FC<DashboardProps> = ({
             )}
             
             {/* CHAT TAB - Admin Only (Team Messaging) */}
-            {/* HIDDEN: Using floating widget instead. Uncomment to restore tab.
             {isAdmin && !isHomeownerView && (
               <button 
                 data-tab="CHAT"
                 onClick={() => {
                   setCurrentTab('CHAT');
                 }}
-                className={`px-6 py-3 text-sm font-medium transition-all rounded-t-xl flex items-center gap-2 whitespace-nowrap ${currentTab === 'CHAT' ? 'bg-surface-container dark:bg-gray-700 text-primary border-b-2 border-primary' : 'text-surface-on-variant dark:text-gray-400 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
+                className={`px-6 py-3 text-sm font-medium transition-all rounded-full md:rounded-t-xl md:rounded-b-none flex items-center gap-2 whitespace-nowrap justify-center ${
+                  isHomeownerCardCollapsed ? 'md:flex-1 md:justify-center' : ''
+                } ${currentTab === 'CHAT' ? 'border border-primary text-primary bg-primary/10 md:border-0 md:border-b-2 md:bg-surface-container md:dark:bg-gray-700' : 'border border-surface-outline dark:border-gray-600 text-surface-on-variant dark:text-gray-400 md:border-0 hover:bg-surface-container/50 dark:hover:bg-gray-700/50'}`}
               >
                 <MessageCircle className="h-4 w-4" />
-                Chat
+                Team Chat
               </button>
             )}
-            */}
             
             {/* PAYROLL TAB - Administrator Only (hidden for employees and homeowner view) */}
             {isAdmin && !isHomeownerView && currentUser?.role !== 'Employee' && (
@@ -5209,7 +5111,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             </motion.div>
           )}
 
-          {/* HIDDEN: CHAT tab content - Using floating widget instead. Uncomment to restore.
+
+          {/* CHAT TAB - Team Chat */}
           {currentTab === 'CHAT' && isAdmin && (
             <motion.div 
               key="chat"
@@ -5236,7 +5139,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             </motion.div>
           )}
-          */}
+
 
           {currentTab === 'PAYROLL' && isAdmin && currentUser?.role !== 'Employee' && (
             <motion.div 
@@ -6032,12 +5935,12 @@ const Dashboard: React.FC<DashboardProps> = ({
         })()}
 
         {/* PUNCH LIST APP MODAL */}
-        {showPunchListApp && effectiveHomeowner && createPortal(
-          <div 
+        {currentTab === 'PUNCHLIST' && effectiveHomeowner && createPortal(
+          <div
             className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
-                setShowPunchListApp(false);
+                setCurrentTab(null);
               }
             }}
           >
@@ -6051,7 +5954,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 }>
                   <PunchListApp
                     homeowner={effectiveHomeowner}
-                    onClose={() => setShowPunchListApp(false)}
+                    onClose={() => setCurrentTab(null)}
                     onUpdateHomeowner={onUpdateHomeowner}
                     onSavePDF={async (pdfBlob: Blob, filename: string) => {
                     // Delete existing documents with the same name for this homeowner
@@ -6090,8 +5993,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
               
               {/* Close button at bottom right */}
-              <button 
-                onClick={() => setShowPunchListApp(false)} 
+              <button
+                onClick={() => setCurrentTab(null)}
                 className="absolute bottom-4 right-4 z-[200] bg-primary text-white p-3 rounded-full shadow-lg hover:bg-primary/90 transition-colors"
                 title="Close"
               >
