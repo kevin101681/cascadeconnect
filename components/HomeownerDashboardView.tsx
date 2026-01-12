@@ -161,6 +161,50 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
     <div className="min-h-screen bg-background p-0 md:p-6">
       {/* Mobile: edge-to-edge stack. Desktop: padded container */}
       <div className="w-full">
+        {/* Upcoming Appointment (Top) */}
+        {upcomingAppointment != null && (
+          <FadeIn direction="down" className="w-full">
+            <section className="w-full bg-card px-4 py-4 md:px-6 md:py-6 border-b border-border/40">
+              <div className="flex items-center gap-2 mb-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-foreground">
+                  Next Appointment
+                </h3>
+              </div>
+              <button
+                onClick={() => onAppointmentClick?.(upcomingAppointment.claimId)}
+                className="w-full bg-primary/5 hover:bg-primary/10 p-3 rounded-lg border border-primary/20 transition-all text-left"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm text-foreground truncate">
+                      {upcomingAppointment.claimTitle}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(upcomingAppointment.date).toLocaleDateString('en-US', { 
+                        weekday: 'short', 
+                        month: 'short', 
+                        day: 'numeric' 
+                      })}
+                      {upcomingAppointment.timeSlot && ` • ${upcomingAppointment.timeSlot}`}
+                    </p>
+                    {upcomingAppointment.contractorName && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {upcomingAppointment.contractorName}
+                      </p>
+                    )}
+                  </div>
+                  {upcomingAppointment.count > 1 && (
+                    <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-medium">
+                      {upcomingAppointment.count}
+                    </span>
+                  )}
+                </div>
+              </button>
+            </section>
+          </FadeIn>
+        )}
+
         {/* Layer 1 (Top): Search & Info */}
         <FadeIn direction="down" className="w-full">
           <section className="w-full bg-card px-4 py-4 md:px-6 md:py-6">
@@ -199,47 +243,6 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
                     )}
                   </div>
                 )}
-              </div>
-            )}
-
-            {upcomingAppointment != null && (
-              <div className="mb-4 pb-4 border-b border-border/40">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-primary" />
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Next Appointment
-                  </h3>
-                </div>
-                <button
-                  onClick={() => onAppointmentClick?.(upcomingAppointment.claimId)}
-                  className="w-full bg-primary/5 hover:bg-primary/10 p-3 rounded-lg border border-primary/20 transition-all text-left"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-foreground truncate">
-                        {upcomingAppointment.claimTitle}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(upcomingAppointment.date).toLocaleDateString('en-US', { 
-                          weekday: 'short', 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
-                        {upcomingAppointment.timeSlot && ` • ${upcomingAppointment.timeSlot}`}
-                      </p>
-                      {upcomingAppointment.contractorName && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {upcomingAppointment.contractorName}
-                        </p>
-                      )}
-                    </div>
-                    {upcomingAppointment.count > 1 && (
-                      <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-medium">
-                        {upcomingAppointment.count}
-                      </span>
-                    )}
-                  </div>
-                </button>
               </div>
             )}
 
