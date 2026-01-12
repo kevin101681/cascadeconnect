@@ -158,169 +158,153 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-6">
-      {/* Edge-to-edge stacked cards (BlueTag-inspired) */}
+    <div className="min-h-screen bg-background p-0 md:p-6">
+      {/* Mobile: edge-to-edge stack. Desktop: padded container */}
       <div className="w-full">
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-[24px] overflow-hidden">
-          {/* First Card: Search + Homeowner Info */}
-          <FadeIn direction="down" className="w-full">
-            <div className="px-4 py-4">
-              {/* Homeowner Search (Admin/Builder context) */}
-              {searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
-                <div className="mb-4 relative">
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => onSearchChange(e.target.value)}
-                    placeholder="Homeowner Search"
-                    className="w-full border border-input rounded-full bg-background"
-                  />
-                  {searchQuery && (
-                    <div className="absolute z-50 w-full mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 max-h-80 overflow-y-auto overflow-x-hidden">
-                      {searchResults.length > 0 ? (
-                        searchResults.map((h) => (
-                          <button
-                            key={h.id}
-                            type="button"
-                            onClick={() => {
-                              onSelectHomeowner(h);
-                              onSearchChange('');
-                            }}
-                            className="w-full text-left px-4 py-3 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center justify-between group border-b border-surface-outline-variant/50 dark:border-gray-700/50 last:border-0"
-                          >
-                            <div className="min-w-0">
-                              <p className="font-medium text-surface-on dark:text-gray-100 text-sm truncate">{h.name}</p>
-                              <p className="text-xs text-surface-on-variant dark:text-gray-300 truncate">
-                                {h.jobName && <span className="font-medium text-primary mr-1">{h.jobName} •</span>}
-                                {h.address}
-                              </p>
-                            </div>
-                          </button>
-                        ))
-                      ) : (
-                        <div className="p-4 text-center text-surface-on-variant dark:text-gray-400 text-xs">No homeowners found.</div>
-                      )}
+        {/* Layer 1 (Top): Search & Info */}
+        <FadeIn direction="down" className="w-full">
+          <section className="w-full bg-card px-4 py-4 md:px-6 md:py-6">
+            {searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
+              <div className="mb-4 relative">
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  placeholder="Homeowner Search"
+                  className="w-full rounded-full border border-input bg-background shadow-sm"
+                />
+                {searchQuery && (
+                  <div className="absolute z-50 w-full mt-2 bg-popover text-popover-foreground rounded-2xl shadow-elevation-3 border border-border/40 max-h-80 overflow-y-auto overflow-x-hidden">
+                    {searchResults.length > 0 ? (
+                      searchResults.map((h) => (
+                        <button
+                          key={h.id}
+                          type="button"
+                          onClick={() => {
+                            onSelectHomeowner(h);
+                            onSearchChange('');
+                          }}
+                          className="w-full text-left px-4 py-3 hover:bg-accent/60 flex items-center justify-between group border-b border-border/40 last:border-0"
+                        >
+                          <div className="min-w-0">
+                            <p className="font-medium text-sm truncate">{h.name}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {h.jobName && <span className="font-medium text-primary mr-1">{h.jobName} •</span>}
+                              {h.address}
+                            </p>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-muted-foreground text-xs">No homeowners found.</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-xl font-semibold text-foreground truncate">
+                    {homeowner.name}
+                  </h1>
+                  <StatusBadge status={clientStatus} showLabel={true} />
+                </div>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {homeowner.jobName || 'Project'} {formattedClosingDate && `• ${formattedClosingDate}`}
+                </p>
+              </div>
+              <button
+                onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
+                className="ml-3 p-2 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors flex-shrink-0"
+                aria-label={isHeaderExpanded ? 'Collapse details' : 'Expand details'}
+              >
+                {isHeaderExpanded ? (
+                  <ChevronUp className="h-5 w-5" />
+                ) : (
+                  <ChevronDown className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+
+            <SmoothHeightWrapper>
+              {isHeaderExpanded && (
+                <div className="mt-4 pt-4 border-t border-border/40 space-y-2">
+                  {homeowner.address && (
+                    <div className="flex items-center text-sm">
+                      <span className="text-muted-foreground w-24 flex-shrink-0">Address:</span>
+                      <span className="text-foreground">{homeowner.address}</span>
+                    </div>
+                  )}
+                  {homeowner.builder && (
+                    <div className="flex items-center text-sm">
+                      <span className="text-muted-foreground w-24 flex-shrink-0">Builder:</span>
+                      <span className="text-foreground font-medium">{homeowner.builder}</span>
+                    </div>
+                  )}
+                  {homeowner.email && (
+                    <div className="flex items-center text-sm">
+                      <span className="text-muted-foreground w-24 flex-shrink-0">Email:</span>
+                      <span className="text-foreground">{homeowner.email}</span>
+                    </div>
+                  )}
+                  {homeowner.phone && (
+                    <div className="flex items-center text-sm">
+                      <span className="text-muted-foreground w-24 flex-shrink-0">Phone:</span>
+                      <span className="text-foreground">{homeowner.phone}</span>
                     </div>
                   )}
                 </div>
               )}
+            </SmoothHeightWrapper>
 
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  {/* Name with Status Badge */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-xl font-semibold text-gray-900 dark:text-white truncate">
-                      {homeowner.name}
-                    </h1>
-                    <StatusBadge status={clientStatus} showLabel={true} />
-                  </div>
-                  {/* Project Name • Closing Date */}
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    {homeowner.jobName || 'Project'} {formattedClosingDate && `• ${formattedClosingDate}`}
-                  </p>
+            {upcomingAppointment != null && (
+              <div className="mt-4 pt-4 border-t border-border/40">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Next Appointment
+                  </h3>
                 </div>
                 <button
-                  onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
-                  className="ml-3 p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-shrink-0"
-                  aria-label={isHeaderExpanded ? 'Collapse details' : 'Expand details'}
+                  onClick={() => onAppointmentClick?.(upcomingAppointment.claimId)}
+                  className="w-full bg-primary/5 hover:bg-primary/10 p-3 rounded-lg border border-primary/20 transition-all text-left"
                 >
-                  {isHeaderExpanded ? (
-                    <ChevronUp className="h-5 w-5" />
-                  ) : (
-                    <ChevronDown className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-
-              {/* Expanded Details with Smooth Height Animation */}
-              <SmoothHeightWrapper>
-                {isHeaderExpanded && (
-                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
-                    {homeowner.address && (
-                      <div className="flex items-center text-sm">
-                        <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Address:</span>
-                        <span className="text-gray-900 dark:text-white">{homeowner.address}</span>
-                      </div>
-                    )}
-                    {homeowner.builder && (
-                      <div className="flex items-center text-sm">
-                        <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Builder:</span>
-                        <span className="text-gray-900 dark:text-white font-medium">{homeowner.builder}</span>
-                      </div>
-                    )}
-                    {homeowner.email && (
-                      <div className="flex items-center text-sm">
-                        <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Email:</span>
-                        <span className="text-gray-900 dark:text-white">{homeowner.email}</span>
-                      </div>
-                    )}
-                    {homeowner.phone && (
-                      <div className="flex items-center text-sm">
-                        <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Phone:</span>
-                        <span className="text-gray-900 dark:text-white">{homeowner.phone}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </SmoothHeightWrapper>
-            </div>
-          </FadeIn>
-
-          {/* Thin separator between stacked sections */}
-          <div className="h-px bg-gray-200 dark:bg-gray-700" />
-
-          {/* Optional: Upcoming Appointment (embedded into stack) */}
-          {upcomingAppointment != null && (
-            <>
-              <FadeIn direction="down" className="w-full">
-                <div className="px-4 py-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Calendar className="h-4 w-4 text-primary" />
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                      Next Appointment
-                    </h3>
-                  </div>
-                  <button
-                    onClick={() => onAppointmentClick?.(upcomingAppointment.claimId)}
-                    className="w-full bg-primary/5 dark:bg-gray-700/50 hover:bg-primary/10 dark:hover:bg-gray-700 p-3 rounded-lg border border-primary/20 dark:border-gray-600 transition-all text-left"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
-                          {upcomingAppointment.claimTitle}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-foreground truncate">
+                        {upcomingAppointment.claimTitle}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(upcomingAppointment.date).toLocaleDateString('en-US', { 
+                          weekday: 'short', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                        {upcomingAppointment.timeSlot && ` • ${upcomingAppointment.timeSlot}`}
+                      </p>
+                      {upcomingAppointment.contractorName && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {upcomingAppointment.contractorName}
                         </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
-                          {new Date(upcomingAppointment.date).toLocaleDateString('en-US', { 
-                            weekday: 'short', 
-                            month: 'short', 
-                            day: 'numeric' 
-                          })}
-                          {upcomingAppointment.timeSlot && ` • ${upcomingAppointment.timeSlot}`}
-                        </p>
-                        {upcomingAppointment.contractorName && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                            {upcomingAppointment.contractorName}
-                          </p>
-                        )}
-                      </div>
-                      {upcomingAppointment.count > 1 && (
-                        <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs font-medium">
-                          {upcomingAppointment.count}
-                        </span>
                       )}
                     </div>
-                  </button>
-                </div>
-              </FadeIn>
-              <div className="h-px bg-gray-200 dark:bg-gray-700" />
-            </>
-          )}
+                    {upcomingAppointment.count > 1 && (
+                      <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-medium">
+                        {upcomingAppointment.count}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              </div>
+            )}
+          </section>
+        </FadeIn>
 
-      {/* Categorized Modules - Staggered Cascade Animation */}
-      <StaggerContainer className="px-0 py-4 space-y-0" staggerDelay={0.08}>
-        {/* Project Section - 4 items (2x2 grid) */}
+        {/* Layer 2 (Middle): Project Grid */}
         <FadeIn direction="up" fullWidth>
-          <div className="bg-white dark:bg-gray-800 p-4">
-            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+          <section className="w-full bg-card px-4 py-4 md:px-6 md:py-6 border-y border-border/40">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
               Project
             </h2>
             <div className="grid grid-cols-2 gap-3">
@@ -345,14 +329,13 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
                 onClick={() => onNavigateToModule('CLAIMS')}
               />
             </div>
-          </div>
+          </section>
         </FadeIn>
-        <div className="h-px bg-gray-200 dark:bg-gray-700" />
 
-        {/* Quick Actions Section - 4 items (2x2 grid) */}
+        {/* Layer 3 (Bottom): Quick Actions */}
         <FadeIn direction="up" fullWidth>
-          <div className="bg-white dark:bg-gray-800 p-4">
-            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
+          <section className="w-full bg-card px-4 py-4 pb-12 md:px-6 md:py-6">
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
               Quick Actions
             </h2>
             <div className="grid grid-cols-2 gap-3">
@@ -377,64 +360,8 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
                 onClick={handleMessage}
               />
             </div>
-          </div>
+          </section>
         </FadeIn>
-        <div className="h-px bg-gray-200 dark:bg-gray-700" />
-
-        {/* Communication Section - 4 items (2x2 grid) */}
-        <FadeIn direction="up" fullWidth>
-          <div className="bg-white dark:bg-gray-800 p-4">
-            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-              Communication
-            </h2>
-            <div className="grid grid-cols-2 gap-3">
-              <ModuleButton
-                icon={<MessagesSquare className="h-5 w-5" />}
-                label="Messages"
-                onClick={() => onNavigateToModule('MESSAGES')}
-              />
-              <ModuleButton
-                icon={<PhoneCall className="h-5 w-5" />}
-                label="Calls"
-                onClick={() => onNavigateToModule('CALLS')}
-              />
-              <ModuleButton
-                icon={<MessageCircle className="h-5 w-5" />}
-                label="Team Chat"
-                onClick={() => onNavigateToModule('CHAT')}
-              />
-              <ModuleButton
-                icon={<StickyNote className="h-5 w-5" />}
-                label="Notes"
-                onClick={() => onNavigateToModule('NOTES')}
-              />
-            </div>
-          </div>
-        </FadeIn>
-        <div className="h-px bg-gray-200 dark:bg-gray-700" />
-
-        {/* Financial Section - 2 items (2x1 grid) */}
-        <FadeIn direction="up" fullWidth>
-          <div className="bg-white dark:bg-gray-800 p-4">
-            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-              Financial
-            </h2>
-            <div className="grid grid-cols-2 gap-3">
-              <ModuleButton
-                icon={<FileText className="h-5 w-5" />}
-                label="Invoices"
-                onClick={() => onNavigateToModule('INVOICES')}
-              />
-              <ModuleButton
-                icon={<DollarSign className="h-5 w-5" />}
-                label="Payroll"
-                onClick={() => onNavigateToModule('PAYROLL')}
-              />
-            </div>
-          </div>
-        </FadeIn>
-      </StaggerContainer>
-        </div>
       </div>
     </div>
   );
