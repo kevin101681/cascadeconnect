@@ -159,47 +159,10 @@ export default defineConfig(({ mode }) => {
               const parts = rel.split('/');
               const pkg = parts[0]?.startsWith('@') ? `${parts[0]}/${parts[1]}` : parts[0];
 
-              if (!pkg) return 'vendor';
+              // If we can't resolve a package name, let Rollup decide.
+              if (!pkg) return;
 
-              // 1) Core (React + router) — stable, changes infrequently.
-              if (
-                pkg === 'react' ||
-                pkg === 'react-dom' ||
-                pkg === 'react-router' ||
-                pkg === 'react-router-dom' ||
-                pkg === 'scheduler'
-              ) {
-                return 'vendor-core';
-              }
-
-              // 2) UI libs (Radix/Shadcn building blocks + icons + small utilities).
-              if (
-                pkg.startsWith('@radix-ui/') ||
-                pkg === 'lucide-react' ||
-                pkg === 'cmdk' ||
-                pkg === 'clsx' ||
-                pkg === 'tailwind-merge'
-              ) {
-                return 'vendor-ui';
-              }
-
-              // 3) Motion (framer-motion is used widely and is chunky).
-              if (pkg === 'framer-motion') {
-                return 'vendor-motion';
-              }
-
-              // 4) Date/time libs (calendar tooling, scheduling, formatting).
-              if (
-                pkg === 'date-fns' ||
-                pkg === 'moment' ||
-                pkg === 'react-big-calendar' ||
-                pkg === 'react-day-picker' ||
-                pkg === 'ics'
-              ) {
-                return 'vendor-date';
-              }
-
-              // 5) PDF + document heavyweights.
+              // PDF + document heavyweights (independent; safe to isolate).
               if (
                 pkg === 'pdfjs-dist' ||
                 pkg === 'react-pdf' ||
@@ -210,38 +173,23 @@ export default defineConfig(({ mode }) => {
                 return 'vendor-pdf';
               }
 
-              // 6) Realtime (independent).
+              // Realtime (independent; safe to isolate).
               if (pkg === 'pusher-js' || pkg === 'pusher') {
                 return 'vendor-pusher';
               }
 
-              // 7) DB / data layer (often admin-only, heavy).
-              if (
-                pkg === 'drizzle-orm' ||
-                pkg === '@neondatabase/serverless' ||
-                pkg === 'pg' ||
-                pkg === 'postgres'
-              ) {
-                return 'vendor-db';
-              }
-
-              // 8) AI SDKs (not needed for initial paint).
-              if (pkg === 'openai' || pkg === '@google/genai') {
-                return 'vendor-ai';
-              }
-
-              // 9) Canvas/media heavy libs.
+              // Canvas/media heavy libs (independent; safe to isolate).
               if (pkg === 'fabric' || pkg === 'html2canvas') {
                 return 'vendor-canvas';
               }
 
-              // 10) Large file/parse libs.
+              // Large file/parse libs (independent; safe to isolate).
               if (pkg === 'xlsx' || pkg === 'papaparse') {
                 return 'vendor-files';
               }
-
-              // Everything else.
-              return 'vendor';
+              
+              // Everything else: let Rollup decide to avoid cyclic vendor chunks.
+              return;
             }
           },
           // Ensure consistent chunk naming for better caching
