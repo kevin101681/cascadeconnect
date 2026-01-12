@@ -6,12 +6,22 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 interface SmoothHeightWrapperProps {
   children: ReactNode;
   className?: string;
+  /**
+   * When false, renders a plain div with no height animation/ResizeObserver.
+   * Useful for full-screen overlays where height should be stable.
+   */
+  enabled?: boolean;
 }
 
 export const SmoothHeightWrapper = ({
   children,
   className,
+  enabled = true,
 }: SmoothHeightWrapperProps) => {
+  if (!enabled) {
+    return <div className={className}>{children}</div>;
+  }
+
   const containerRef = useRef<HTMLDivElement>(null);
   const [height, setHeight] = useState<number | "auto">("auto");
 

@@ -646,12 +646,16 @@ const Dashboard: React.FC<DashboardProps> = ({
   const previousTabRef = useRef<TabType>(null);
   
   // Mobile detection state for new dashboard
-  const [isMobileView, setIsMobileView] = useState<boolean>(false);
+  const [isMobileView, setIsMobileView] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 768;
+  });
   
   // Set up responsive listener for mobile dashboard
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobileView(window.innerWidth < 768);
+      const nextIsMobile = window.innerWidth < 768;
+      setIsMobileView((prev) => (prev === nextIsMobile ? prev : nextIsMobile));
     };
     
     checkMobile(); // Initial check
@@ -4786,7 +4790,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div 
           className={`fixed top-16 left-0 right-0 bottom-0 z-[1000] bg-surface dark:bg-gray-900 flex flex-col pt-4 md:pt-0 md:relative md:top-auto md:left-auto md:right-auto md:bottom-auto md:z-auto md:bg-transparent md:block`}
         >
-        <SmoothHeightWrapper className="min-h-[300px]">
+        <SmoothHeightWrapper enabled={!isMobileView} className="flex-1 min-h-0 md:min-h-[300px]">
         <AnimatePresence mode="wait" initial={false}>
           {/* Mobile Close FAB - shown on tab list view, hidden when nested modals are open */}
           {currentTab && !selectedClaimForModal && !selectedTaskForModal && !selectedThreadId && (
