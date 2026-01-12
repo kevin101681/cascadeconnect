@@ -4786,19 +4786,18 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Content Area - Full-screen overlay on mobile (when tab is active), inline on desktop */}
-        {currentTab && (
-        <div 
-          className={`fixed top-16 left-0 right-0 bottom-0 z-[1000] bg-surface dark:bg-gray-900 flex flex-col pt-4 md:pt-0 md:relative md:top-auto md:left-auto md:right-auto md:bottom-auto md:z-auto md:bg-transparent md:block`}
-        >
-        {/* Disable height animation here to prevent "condensed then fullscreen" growth on open. */}
-        <SmoothHeightWrapper enabled={false} className="flex-1 min-h-0 md:min-h-[300px]">
-        <AnimatePresence mode="wait" initial={false}>
+        {currentTab && (() => {
+          const overlayInner = (
+            <>
+              {/* Disable height animation here to prevent "condensed then fullscreen" growth on open. */}
+              <SmoothHeightWrapper enabled={false} className="flex-1 min-h-0 md:min-h-[300px]">
+              <AnimatePresence mode="wait" initial={false}>
           {/* Mobile Close FAB - shown on tab list view, hidden when nested modals are open */}
           {currentTab && !selectedClaimForModal && !selectedTaskForModal && !selectedThreadId && (
             <>
               <button
                 onClick={() => setCurrentTab(null)}
-                className="md:hidden fixed bottom-6 right-4 z-[1010] w-14 h-14 bg-primary hover:bg-primary/90 rounded-full shadow-lg flex items-center justify-center text-primary-on transition-all"
+                className="md:hidden fixed bottom-6 right-4 z-[5010] w-14 h-14 bg-primary hover:bg-primary/90 rounded-full shadow-lg flex items-center justify-center text-primary-on transition-all"
               >
                 <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -5157,10 +5156,30 @@ const Dashboard: React.FC<DashboardProps> = ({
             </AnimatedTabContent>
           )}
 
-        </AnimatePresence>
-        </SmoothHeightWrapper>
-        </div>
-        )}
+              </AnimatePresence>
+              </SmoothHeightWrapper>
+            </>
+          );
+
+          // IMPORTANT: On iOS/Safari (and when using Framer Motion), `position: fixed` elements
+          // rendered inside an ancestor with a `transform` can be treated as "fixed to that ancestor"
+          // during initial animation frame(s). That creates a brief "smaller version" flash before
+          // the overlay becomes truly full-screen. Portaling to `document.body` avoids this.
+          if (isMobileView && typeof document !== 'undefined') {
+            return createPortal(
+              <div className="fixed top-16 left-0 right-0 bottom-0 z-[5000] bg-surface dark:bg-gray-900 flex flex-col pt-4">
+                {overlayInner}
+              </div>,
+              document.body
+            );
+          }
+
+          return (
+            <div className="relative bg-transparent flex flex-col pt-0">
+              {overlayInner}
+            </div>
+          );
+        })()}
         {/* END RIGHT CONTENT AREA */}
         </FadeIn>
         </StaggerContainer>
