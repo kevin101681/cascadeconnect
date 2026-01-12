@@ -4498,7 +4498,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                         className={[
                           'shrink-0 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors',
                           isActive
-                            ? 'bg-primary text-primary-on'
+                            // Match the "New Claim" button theme (filled variant in Button.tsx)
+                            ? 'border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10 focus:bg-primary/10'
                             : 'bg-surface dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700',
                         ].join(' ')}
                         aria-current={isActive ? 'page' : undefined}

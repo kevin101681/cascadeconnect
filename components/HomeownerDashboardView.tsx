@@ -202,6 +202,47 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
               </div>
             )}
 
+            {upcomingAppointment != null && (
+              <div className="mb-4 pb-4 border-b border-border/40">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Next Appointment
+                  </h3>
+                </div>
+                <button
+                  onClick={() => onAppointmentClick?.(upcomingAppointment.claimId)}
+                  className="w-full bg-primary/5 hover:bg-primary/10 p-3 rounded-lg border border-primary/20 transition-all text-left"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-foreground truncate">
+                        {upcomingAppointment.claimTitle}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(upcomingAppointment.date).toLocaleDateString('en-US', { 
+                          weekday: 'short', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                        {upcomingAppointment.timeSlot && ` • ${upcomingAppointment.timeSlot}`}
+                      </p>
+                      {upcomingAppointment.contractorName && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {upcomingAppointment.contractorName}
+                        </p>
+                      )}
+                    </div>
+                    {upcomingAppointment.count > 1 && (
+                      <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-medium">
+                        {upcomingAppointment.count}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              </div>
+            )}
+
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -257,47 +298,6 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
                 </div>
               )}
             </SmoothHeightWrapper>
-
-            {upcomingAppointment != null && (
-              <div className="mt-4 pt-4 border-t border-border/40">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-primary" />
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Next Appointment
-                  </h3>
-                </div>
-                <button
-                  onClick={() => onAppointmentClick?.(upcomingAppointment.claimId)}
-                  className="w-full bg-primary/5 hover:bg-primary/10 p-3 rounded-lg border border-primary/20 transition-all text-left"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm text-foreground truncate">
-                        {upcomingAppointment.claimTitle}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(upcomingAppointment.date).toLocaleDateString('en-US', { 
-                          weekday: 'short', 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
-                        {upcomingAppointment.timeSlot && ` • ${upcomingAppointment.timeSlot}`}
-                      </p>
-                      {upcomingAppointment.contractorName && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {upcomingAppointment.contractorName}
-                        </p>
-                      )}
-                    </div>
-                    {upcomingAppointment.count > 1 && (
-                      <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-medium">
-                        {upcomingAppointment.count}
-                      </span>
-                    )}
-                  </div>
-                </button>
-              </div>
-            )}
           </section>
         </FadeIn>
 

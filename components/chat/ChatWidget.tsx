@@ -97,6 +97,32 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     setSelectedChannel(null);
   };
 
+  const getRecipientLabel = (channel: Channel): string => {
+    if (channel.otherUser?.name) return channel.otherUser.name;
+
+    const raw = channel.name || '';
+    const normalize = (s: string) => s.trim().toLowerCase();
+    const me = normalize(currentUserName || '');
+
+    // Common naming pattern: "Me & Recipient"
+    const byAmp = raw.split('&').map((p) => p.trim()).filter(Boolean);
+    if (byAmp.length === 2) {
+      const [a, b] = byAmp;
+      if (me && normalize(a) === me) return b;
+      if (me && normalize(b) === me) return a;
+    }
+
+    // Alternative: "Me and Recipient"
+    const byAnd = raw.split(/\s+and\s+/i).map((p) => p.trim()).filter(Boolean);
+    if (byAnd.length === 2) {
+      const [a, b] = byAnd;
+      if (me && normalize(a) === me) return b;
+      if (me && normalize(b) === me) return a;
+    }
+
+    return raw;
+  };
+
   return (
     <>
       {/* Floating Action Button - Standard outline style */}
@@ -131,7 +157,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
               )}
               <MessageCircle className="h-5 w-5 text-primary" />
               <span className="font-semibold text-surface-on dark:text-gray-100">
-                {selectedChannel ? (selectedChannel.otherUser?.name || selectedChannel.name) : 'Team Chat'}
+                {selectedChannel ? getRecipientLabel(selectedChannel) : 'Team Chat'}
               </span>
             </div>
             <button
@@ -160,7 +186,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
               <div className="flex-1">
                 <ChatWindow
                   channelId={selectedChannel.id}
-                  channelName={selectedChannel.otherUser?.name || selectedChannel.name}
+                  channelName={getRecipientLabel(selectedChannel)}
                   channelType={selectedChannel.type}
                   currentUserId={currentUserId}
                   currentUserName={currentUserName}

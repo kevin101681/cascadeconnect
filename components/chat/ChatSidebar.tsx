@@ -138,11 +138,29 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   );
 
   // Filter existing channels by search (name or last message content)
+  const getRecipientName = (channel: Channel): string => {
+    if (channel.type !== 'dm') return channel.name || 'Conversation';
+
+    // Prefer explicit otherUser name when available.
+    if (channel.otherUser?.name && channel.otherUser.id !== currentUserId) {
+      return channel.otherUser.name;
+    }
+
+    // Otherwise, derive the other participant from dmParticipants.
+    const otherUserId = channel.dmParticipants?.find((id) => id !== currentUserId);
+    if (otherUserId) {
+      const member = teamMembers.find((m) => m.id === otherUserId);
+      if (member?.name) return member.name;
+    }
+
+    return channel.otherUser?.name || channel.name || 'Conversation';
+  };
+
   const filteredChannels = channels.filter((channel) => {
     const query = (searchQuery || "").toLowerCase();
     if (!query) return true;
     
-    const nameMatch = (channel.otherUser?.name || channel.name || "").toLowerCase().includes(query);
+    const nameMatch = (getRecipientName(channel) || "").toLowerCase().includes(query);
     const messageMatch = (channel.lastMessage?.content || "").toLowerCase().includes(query);
     
     return nameMatch || messageMatch;
@@ -189,7 +207,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     {/* Content */}
                     <div className="flex-1 min-w-0 text-left">
                       <div className="font-medium truncate">
-                        {channel.otherUser?.name || channel.name}
+                        {getRecipientName(channel)}
                       </div>
                       {channel.lastMessage && (
                         <div className="text-xs text-surface-on-variant dark:text-gray-400 truncate">
