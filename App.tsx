@@ -10,10 +10,14 @@ import MessageSummaryModal, { ClaimMessage, TaskMessage } from './components/Mes
 import SubmissionSuccessModal from './components/SubmissionSuccessModal';
 import { X, Info, CheckCircle, User } from 'lucide-react';
 import HomeownerSelector from './components/HomeownerSelector';
-import { LazyAppProviders } from './components/providers/LazyAppProviders';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS, MOCK_CLAIM_MESSAGES } from './constants';
 import { sendEmail, generateNotificationBody } from './services/emailService';
+
+// Lazy-load non-critical provider hosts so they don't bloat the entry bundle.
+const LazyAppProviders = React.lazy(() =>
+  import('./components/providers/LazyAppProviders').then((m) => ({ default: m.LazyAppProviders }))
+);
 
 // Code-split non-critical views to reduce initial JS.
 const ClaimDetail = React.lazy(() => import('./components/ClaimDetail'));
@@ -4572,7 +4576,9 @@ Assigned By: ${assignerName}
       />
       
       {/* Global Modal Provider - Renders all stacked modals */}
-      <LazyAppProviders />
+      <React.Suspense fallback={null}>
+        <LazyAppProviders />
+      </React.Suspense>
     </Layout>
     </>
   );
