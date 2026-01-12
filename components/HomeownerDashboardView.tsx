@@ -26,6 +26,7 @@ import {
 import { Homeowner } from '../types';
 import { StaggerContainer, FadeIn } from './motion/MotionWrapper';
 import { SmoothHeightWrapper } from './motion/SmoothHeightWrapper';
+import { Input } from './ui/input';
 
 // Appointment interface for type safety
 interface UpcomingAppointment {
@@ -102,6 +103,11 @@ interface HomeownerDashboardViewProps {
   onOpenNewMessage?: () => void; // For internal messaging
   upcomingAppointment?: UpcomingAppointment | null; // Optional upcoming appointment data
   onAppointmentClick?: (claimId: string) => void; // Handler for appointment click
+  // Optional admin search (Homeowner picker) - rendered above the info card
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
+  searchResults?: Homeowner[];
+  onSelectHomeowner?: (homeowner: Homeowner) => void;
 }
 
 const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
@@ -110,6 +116,10 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
   onOpenNewMessage,
   upcomingAppointment = null,
   onAppointmentClick,
+  searchQuery,
+  onSearchChange,
+  searchResults,
+  onSelectHomeowner,
 }) => {
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
 
@@ -149,119 +159,167 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-6">
-      {/* Upcoming Appointment Card - Top Priority (Rule 6: Defensive Rendering) */}
-      {upcomingAppointment != null && (
-        <FadeIn direction="down" className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-          <div className="px-4 py-3">
-            <div className="flex items-center gap-2 mb-2">
-              <Calendar className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
-                Next Appointment
-              </h3>
-            </div>
-            <button
-              onClick={() => onAppointmentClick?.(upcomingAppointment.claimId)}
-              className="w-full bg-primary/5 dark:bg-gray-700/50 hover:bg-primary/10 dark:hover:bg-gray-700 p-3 rounded-lg border border-primary/20 dark:border-gray-600 transition-all text-left"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
-                    {upcomingAppointment.claimTitle}
-                  </p>
-                  <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
-                    {new Date(upcomingAppointment.date).toLocaleDateString('en-US', { 
-                      weekday: 'short', 
-                      month: 'short', 
-                      day: 'numeric' 
-                    })}
-                    {upcomingAppointment.timeSlot && ` • ${upcomingAppointment.timeSlot}`}
-                  </p>
-                  {upcomingAppointment.contractorName && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                      {upcomingAppointment.contractorName}
-                    </p>
+      {/* Edge-to-edge stacked cards (BlueTag-inspired) */}
+      <div className="w-full">
+        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-[24px] overflow-hidden">
+          {/* First Card: Search + Homeowner Info */}
+          <FadeIn direction="down" className="w-full">
+            <div className="px-4 py-4">
+              {/* Homeowner Search (Admin/Builder context) */}
+              {searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
+                <div className="mb-4 relative">
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    placeholder="Homeowner Search"
+                    className="w-full border border-input rounded-full bg-background"
+                  />
+                  {searchQuery && (
+                    <div className="absolute z-50 w-full mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 max-h-80 overflow-y-auto overflow-x-hidden">
+                      {searchResults.length > 0 ? (
+                        searchResults.map((h) => (
+                          <button
+                            key={h.id}
+                            type="button"
+                            onClick={() => {
+                              onSelectHomeowner(h);
+                              onSearchChange('');
+                            }}
+                            className="w-full text-left px-4 py-3 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center justify-between group border-b border-surface-outline-variant/50 dark:border-gray-700/50 last:border-0"
+                          >
+                            <div className="min-w-0">
+                              <p className="font-medium text-surface-on dark:text-gray-100 text-sm truncate">{h.name}</p>
+                              <p className="text-xs text-surface-on-variant dark:text-gray-300 truncate">
+                                {h.jobName && <span className="font-medium text-primary mr-1">{h.jobName} •</span>}
+                                {h.address}
+                              </p>
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-4 text-center text-surface-on-variant dark:text-gray-400 text-xs">No homeowners found.</div>
+                      )}
+                    </div>
                   )}
                 </div>
-                {upcomingAppointment.count > 1 && (
-                  <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs font-medium">
-                    {upcomingAppointment.count}
-                  </span>
-                )}
-              </div>
-            </button>
-          </div>
-        </FadeIn>
-      )}
-
-      {/* Collapsible Header Card */}
-      <FadeIn direction="down" className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="px-4 py-4">
-          <div className="flex items-start justify-between">
-            <div className="flex-1 min-w-0">
-              {/* Name with Status Badge */}
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-semibold text-gray-900 dark:text-white truncate">
-                  {homeowner.name}
-                </h1>
-                <StatusBadge status={clientStatus} showLabel={true} />
-              </div>
-              {/* Project Name • Closing Date */}
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {homeowner.jobName || 'Project'} {formattedClosingDate && `• ${formattedClosingDate}`}
-              </p>
-            </div>
-            <button
-              onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
-              className="ml-3 p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-shrink-0"
-              aria-label={isHeaderExpanded ? 'Collapse details' : 'Expand details'}
-            >
-              {isHeaderExpanded ? (
-                <ChevronUp className="h-5 w-5" />
-              ) : (
-                <ChevronDown className="h-5 w-5" />
               )}
-            </button>
-          </div>
 
-          {/* Expanded Details with Smooth Height Animation */}
-          <SmoothHeightWrapper>
-            {isHeaderExpanded && (
-              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
-                {homeowner.address && (
-                  <div className="flex items-center text-sm">
-                    <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Address:</span>
-                    <span className="text-gray-900 dark:text-white">{homeowner.address}</span>
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  {/* Name with Status Badge */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-xl font-semibold text-gray-900 dark:text-white truncate">
+                      {homeowner.name}
+                    </h1>
+                    <StatusBadge status={clientStatus} showLabel={true} />
                   </div>
-                )}
-                {homeowner.builder && (
-                  <div className="flex items-center text-sm">
-                    <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Builder:</span>
-                    <span className="text-gray-900 dark:text-white font-medium">{homeowner.builder}</span>
-                  </div>
-                )}
-                {homeowner.email && (
-                  <div className="flex items-center text-sm">
-                    <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Email:</span>
-                    <span className="text-gray-900 dark:text-white">{homeowner.email}</span>
-                  </div>
-                )}
-                {homeowner.phone && (
-                  <div className="flex items-center text-sm">
-                    <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Phone:</span>
-                    <span className="text-gray-900 dark:text-white">{homeowner.phone}</span>
-                  </div>
-                )}
+                  {/* Project Name • Closing Date */}
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {homeowner.jobName || 'Project'} {formattedClosingDate && `• ${formattedClosingDate}`}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}
+                  className="ml-3 p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex-shrink-0"
+                  aria-label={isHeaderExpanded ? 'Collapse details' : 'Expand details'}
+                >
+                  {isHeaderExpanded ? (
+                    <ChevronUp className="h-5 w-5" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5" />
+                  )}
+                </button>
               </div>
-            )}
-          </SmoothHeightWrapper>
-        </div>
-      </FadeIn>
+
+              {/* Expanded Details with Smooth Height Animation */}
+              <SmoothHeightWrapper>
+                {isHeaderExpanded && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-2">
+                    {homeowner.address && (
+                      <div className="flex items-center text-sm">
+                        <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Address:</span>
+                        <span className="text-gray-900 dark:text-white">{homeowner.address}</span>
+                      </div>
+                    )}
+                    {homeowner.builder && (
+                      <div className="flex items-center text-sm">
+                        <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Builder:</span>
+                        <span className="text-gray-900 dark:text-white font-medium">{homeowner.builder}</span>
+                      </div>
+                    )}
+                    {homeowner.email && (
+                      <div className="flex items-center text-sm">
+                        <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Email:</span>
+                        <span className="text-gray-900 dark:text-white">{homeowner.email}</span>
+                      </div>
+                    )}
+                    {homeowner.phone && (
+                      <div className="flex items-center text-sm">
+                        <span className="text-gray-500 dark:text-gray-400 w-24 flex-shrink-0">Phone:</span>
+                        <span className="text-gray-900 dark:text-white">{homeowner.phone}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </SmoothHeightWrapper>
+            </div>
+          </FadeIn>
+
+          {/* Thin separator between stacked sections */}
+          <div className="h-px bg-gray-200 dark:bg-gray-700" />
+
+          {/* Optional: Upcoming Appointment (embedded into stack) */}
+          {upcomingAppointment != null && (
+            <>
+              <FadeIn direction="down" className="w-full">
+                <div className="px-4 py-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar className="h-4 w-4 text-primary" />
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                      Next Appointment
+                    </h3>
+                  </div>
+                  <button
+                    onClick={() => onAppointmentClick?.(upcomingAppointment.claimId)}
+                    className="w-full bg-primary/5 dark:bg-gray-700/50 hover:bg-primary/10 dark:hover:bg-gray-700 p-3 rounded-lg border border-primary/20 dark:border-gray-600 transition-all text-left"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-gray-900 dark:text-white truncate">
+                          {upcomingAppointment.claimTitle}
+                        </p>
+                        <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+                          {new Date(upcomingAppointment.date).toLocaleDateString('en-US', { 
+                            weekday: 'short', 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                          {upcomingAppointment.timeSlot && ` • ${upcomingAppointment.timeSlot}`}
+                        </p>
+                        {upcomingAppointment.contractorName && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                            {upcomingAppointment.contractorName}
+                          </p>
+                        )}
+                      </div>
+                      {upcomingAppointment.count > 1 && (
+                        <span className="flex-shrink-0 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-white text-xs font-medium">
+                          {upcomingAppointment.count}
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                </div>
+              </FadeIn>
+              <div className="h-px bg-gray-200 dark:bg-gray-700" />
+            </>
+          )}
 
       {/* Categorized Modules - Staggered Cascade Animation */}
-      <StaggerContainer className="px-0 md:px-4 py-4 space-y-4" staggerDelay={0.08}>
+      <StaggerContainer className="px-0 py-4 space-y-0" staggerDelay={0.08}>
         {/* Project Section - 4 items (2x2 grid) */}
         <FadeIn direction="up" fullWidth>
-          <div className="bg-white dark:bg-gray-800 rounded-none md:rounded-xl shadow-sm border-y md:border border-x-0 md:border-x border-gray-200 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-800 p-4">
             <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               Project
             </h2>
@@ -289,10 +347,11 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
             </div>
           </div>
         </FadeIn>
+        <div className="h-px bg-gray-200 dark:bg-gray-700" />
 
         {/* Quick Actions Section - 4 items (2x2 grid) */}
         <FadeIn direction="up" fullWidth>
-          <div className="bg-white dark:bg-gray-800 rounded-none md:rounded-xl shadow-sm border-y md:border border-x-0 md:border-x border-gray-200 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-800 p-4">
             <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               Quick Actions
             </h2>
@@ -320,10 +379,11 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
             </div>
           </div>
         </FadeIn>
+        <div className="h-px bg-gray-200 dark:bg-gray-700" />
 
         {/* Communication Section - 4 items (2x2 grid) */}
         <FadeIn direction="up" fullWidth>
-          <div className="bg-white dark:bg-gray-800 rounded-none md:rounded-xl shadow-sm border-y md:border border-x-0 md:border-x border-gray-200 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-800 p-4">
             <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               Communication
             </h2>
@@ -351,10 +411,11 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
             </div>
           </div>
         </FadeIn>
+        <div className="h-px bg-gray-200 dark:bg-gray-700" />
 
         {/* Financial Section - 2 items (2x1 grid) */}
         <FadeIn direction="up" fullWidth>
-          <div className="bg-white dark:bg-gray-800 rounded-none md:rounded-xl shadow-sm border-y md:border border-x-0 md:border-x border-gray-200 dark:border-gray-700 p-4">
+          <div className="bg-white dark:bg-gray-800 p-4">
             <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
               Financial
             </h2>
@@ -373,6 +434,8 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
           </div>
         </FadeIn>
       </StaggerContainer>
+        </div>
+      </div>
     </div>
   );
 };

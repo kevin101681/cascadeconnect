@@ -5,6 +5,7 @@ import 'react-big-calendar/lib/css/react-big-calendar.css';
 import '../styles/calendar-custom.css';
 import { Lock, Plus, X, Calendar as CalendarIcon, Clock, Mail, FileText, MapPin, Building2, Search } from 'lucide-react';
 import { Homeowner } from '../types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 const localizer = momentLocalizer(moment);
 
@@ -249,7 +250,8 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
 
         {label()}
 
-        <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide flex-shrink-0">
+        {/* Desktop: keep existing tab buttons */}
+        <div className="hidden md:flex items-center gap-2 flex-shrink-0">
           <button
             onClick={() => toolbar.onView('month')}
             className={`px-4 py-2 text-sm font-medium rounded-full transition-colors flex-shrink-0 ${
@@ -290,6 +292,24 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
           >
             Agenda
           </button>
+        </div>
+
+        {/* Mobile: dropdown to prevent overflow */}
+        <div className="md:hidden w-44 flex-shrink-0">
+          <Select
+            value={toolbar.view}
+            onValueChange={(val) => toolbar.onView(val)}
+          >
+            <SelectTrigger className="h-9 rounded-full">
+              <SelectValue placeholder="Select view" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="month">Month View</SelectItem>
+              <SelectItem value="week">Week View</SelectItem>
+              <SelectItem value="day">Day View</SelectItem>
+              <SelectItem value="agenda">Agenda</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     );

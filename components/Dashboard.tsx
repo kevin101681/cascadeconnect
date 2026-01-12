@@ -723,6 +723,28 @@ const Dashboard: React.FC<DashboardProps> = ({
     currentTab === 'PUNCHLIST' ||
     (selectedDocument && isPDFViewerOpen)
   );
+
+  // If `?view=` is being used for a modal route (e.g. `?view=claim`), hide the legacy dashboard underlay entirely.
+  // Note: `currentTab` only recognizes plural tab keys (claims/tasks/messages/etc). Singular modal routes would otherwise
+  // leave the tab UI visible behind the modal.
+  const viewParam = (searchParams.get('view') || '').toLowerCase();
+  const validTabViews = new Set([
+    'claims',
+    'messages',
+    'tasks',
+    'notes',
+    'calls',
+    'documents',
+    'manual',
+    'help',
+    'payroll',
+    'invoices',
+    'schedule',
+    'chat',
+    'punchlist',
+  ]);
+  const isLegacyModalView = Boolean(viewParam && !validTabViews.has(viewParam));
+  const shouldHideDashboardUnderlay = isPortalModalOpen || isLegacyModalView;
   
   // Debug: Log whenever selectedClaimForModal changes
   useEffect(() => {
@@ -3972,6 +3994,10 @@ const Dashboard: React.FC<DashboardProps> = ({
           {renderModals()}
           <HomeownerDashboardMobile
             homeowner={displayHomeowner}
+            searchQuery={(isAdmin || isBuilder) ? searchQuery : undefined}
+            onSearchChange={(isAdmin || isBuilder) ? onSearchChange : undefined}
+            searchResults={(isAdmin || isBuilder) ? searchResults : undefined}
+            onSelectHomeowner={(isAdmin || isBuilder) ? onSelectHomeowner : undefined}
             upcomingAppointment={upcomingAppointment}
             onAppointmentClick={(claimId) => {
               const claim = claims.find(c => c.id === claimId);
@@ -4014,7 +4040,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     return (
       <>
         {renderModals()}
-        <div className={isPortalModalOpen ? 'hidden' : 'block'}>
+        <div className={shouldHideDashboardUnderlay ? 'hidden' : 'block'}>
         {/* Main Layout Container - Sidebar + Content with Staggered Cascade Animation */}
         <StaggerContainer className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 bg-white dark:bg-gray-900" staggerDelay={0.08}>
           {/* LEFT SIDEBAR - Homeowner Info Card with Search - HIDDEN ON MOBILE when tab is active */}
@@ -5082,7 +5108,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           {currentTab === 'CHAT' && isAdmin && (
             <AnimatedTabContent tabKey="chat">
               <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
-                <div className="flex-1 overflow-hidden md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4" style={{ height: 'calc(100vh - 200px)' }}>
+                <div className="flex-1 min-h-0 overflow-hidden md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4 h-[calc(100vh-100px)] md:h-auto">
                   <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
                     <TeamChat 
                       currentUserId={currentUser?.id || ''}
