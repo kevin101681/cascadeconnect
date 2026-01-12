@@ -109,33 +109,15 @@ export default defineConfig(({ mode }) => {
           ]
         },
         workbox: {
-          // Precache only the minimal "app shell" needed for first paint.
-          // Avoid precaching large lazy chunks (PDF, scanners, etc.) which Lighthouse flags as
-          // "downloading everything" during SW install.
-          globPatterns: [
-            'index.html',
-            'manifest.webmanifest',
-            'registerSW.js',
-            'assets/main-*.js',
-            'assets/vendor-core-*.js',
-            'assets/vendor-ui-*.js',
-            'assets/vendor-motion-*.js',
-            'assets/vendor-date-*.js',
-            'assets/main-*.css',
-            'assets/vendor-*.css',
-            'assets/*.woff2',
-          ],
+          // IMPORTANT:
+          // Prevent "white screen" after deploy: Workbox serves cached `index.html` for navigations.
+          // If that cached HTML references hashed chunks that aren't available, the app won't boot.
+          // So we precache *all* built JS/CSS/font assets (but still exclude the huge PDF worker and maps).
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,woff}'],
           globIgnores: [
             '**/*.map',
-            // Heavy/lazy chunks: fetch only when user opens PDF-heavy features.
-            '**/assets/vendor-pdf-*.js',
+            // Keep the massive PDF worker out of the precache (fetch on-demand only).
             '**/assets/pdf.worker*.js',
-            '**/assets/cbsbooks-app-*.js',
-            // Large/admin-only chunks: do not precache.
-            '**/assets/vendor-db-*.js',
-            '**/assets/vendor-ai-*.js',
-            '**/assets/vendor-canvas-*.js',
-            '**/assets/vendor-files-*.js',
             // Large static manuals/images are not needed for initial shell.
             '**/images/manual/**',
           ],
@@ -146,7 +128,8 @@ export default defineConfig(({ mode }) => {
           runtimeCaching: []
         },
         devOptions: {
-          enabled: true,
+          // Disable SW in dev to avoid persistent caching bugs / blank screens while iterating.
+          enabled: false,
           type: 'module'
         }
       })
