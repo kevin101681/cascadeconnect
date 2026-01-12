@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Claim, Homeowner, BuilderGroup, ClaimStatus } from '../types';
+import { Claim, Homeowner, BuilderGroup, BuilderUser, ClaimStatus } from '../types';
 import { ClaimMessage } from '../constants';
 import { BarChart3, Users, FileText, CheckCircle, Clock, TrendingUp, AlertCircle, Filter, X } from 'lucide-react';
 
@@ -7,6 +7,7 @@ interface WarrantyAnalyticsProps {
   claims: Claim[];
   homeowners: Homeowner[];
   builderGroups: BuilderGroup[];
+  builderUsers: BuilderUser[];
   claimMessages: ClaimMessage[];
   onSelectClaim: (claim: Claim) => void;
   onClose?: () => void;
@@ -33,29 +34,30 @@ const WarrantyAnalytics: React.FC<WarrantyAnalyticsProps> = ({
   claims,
   homeowners,
   builderGroups,
+  builderUsers,
   claimMessages,
   onSelectClaim,
   onClose
 }) => {
-  const [selectedBuilderGroupId, setSelectedBuilderGroupId] = useState<string>('all');
+  const [selectedBuilderUserId, setSelectedBuilderUserId] = useState<string>('all');
   const [showInProcessReport, setShowInProcessReport] = useState(false);
   const [showAllClaimsReport, setShowAllClaimsReport] = useState(false);
 
-  // Filter data by builder group
+  // Filter data by builder user
   const filteredData = useMemo(() => {
     let filteredHomeowners = homeowners;
     let filteredClaims = claims;
 
-    if (selectedBuilderGroupId !== 'all') {
-      filteredHomeowners = homeowners.filter(h => h.builderId === selectedBuilderGroupId);
+    if (selectedBuilderUserId !== 'all') {
+      filteredHomeowners = homeowners.filter(h => h.builderUserId === selectedBuilderUserId);
       filteredClaims = claims.filter(c => {
         const homeowner = homeowners.find(h => h.name === c.homeownerName && h.address === c.address);
-        return homeowner?.builderId === selectedBuilderGroupId;
+        return homeowner?.builderUserId === selectedBuilderUserId;
       });
     }
 
     return { homeowners: filteredHomeowners, claims: filteredClaims };
-  }, [homeowners, claims, selectedBuilderGroupId]);
+  }, [homeowners, claims, selectedBuilderUserId]);
 
   // Calculate metrics
   const metrics = useMemo(() => {
@@ -210,19 +212,25 @@ const WarrantyAnalytics: React.FC<WarrantyAnalyticsProps> = ({
 
         <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
           <div className="space-y-6">
-        {/* Header with Builder Group Filter */}
+        {/* Header with Builder User Filter */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Filter className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
             <select
-              value={selectedBuilderGroupId}
-              onChange={(e) => setSelectedBuilderGroupId(e.target.value)}
+              value={selectedBuilderUserId}
+              onChange={(e) => setSelectedBuilderUserId(e.target.value)}
               className="px-4 py-2 rounded-lg border border-surface-outline-variant dark:border-gray-600 bg-surface dark:bg-gray-800 text-surface-on dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <option value="all">All Builder Groups</option>
-              {builderGroups.map(bg => (
-                <option key={bg.id} value={bg.id}>{bg.name}</option>
-              ))}
+              <option value="all">All Builder Users</option>
+              {builderUsers.map((bu) => {
+                const groupName =
+                  builderGroups.find((bg) => bg.id === bu.builderGroupId)?.name || 'Builder';
+                return (
+                  <option key={bu.id} value={bu.id}>
+                    {bu.name} ({groupName})
+                  </option>
+                );
+              })}
             </select>
           </div>
         </div>

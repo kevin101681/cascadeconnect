@@ -5264,6 +5264,40 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* END MAIN LAYOUT CONTAINER */}
         </div>
 
+        {/* Floating Team Chat (Admin) */}
+        {isAdmin && (
+          <>
+            {!isChatWidgetOpen && (
+              <button
+                type="button"
+                onClick={() => setIsChatWidgetOpen(true)}
+                className="fixed bottom-4 right-4 z-50 h-14 w-14 bg-white hover:bg-gray-50 text-primary border-2 border-primary rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+                aria-label="Open Team Chat"
+              >
+                <MessageCircle className="h-6 w-6" />
+              </button>
+            )}
+
+            {isChatWidgetOpen && (
+              <Suspense fallback={null}>
+                <FloatingChatWidget
+                  currentUserId={currentUser?.id || ''}
+                  currentUserName={currentUser?.name || 'Unknown User'}
+                  isOpen={isChatWidgetOpen}
+                  onOpenChange={setIsChatWidgetOpen}
+                  onOpenHomeownerModal={(homeownerId) => {
+                    const homeowner = homeowners.find((h) => h.id === homeownerId);
+                    if (homeowner && onSelectHomeowner) {
+                      onSelectHomeowner(homeowner);
+                      setCurrentTab('CLAIMS');
+                    }
+                  }}
+                />
+              </Suspense>
+            )}
+          </>
+        )}
+
         {/* DOCUMENTS MODAL - Now opened via button in homeowner card */}
         {showDocsModal && userRole !== UserRole.HOMEOWNER && createPortal(
           <div 

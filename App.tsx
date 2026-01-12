@@ -4481,6 +4481,7 @@ Assigned By: ${assignerName}
             claims={claims}
             homeowners={availableHomeowners}
             builderGroups={builderGroups}
+            builderUsers={builderUsers}
             claimMessages={claimMessages as any}
             onSelectClaim={(claim) => {
               handleSelectClaim(claim);
