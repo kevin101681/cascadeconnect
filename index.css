@@ -10,7 +10,7 @@
 }
 
 body {
-  font-family: 'Google Sans Flex', 'Outfit', 'Roboto', sans-serif;
+  font-family: 'Outfit', 'Roboto', system-ui, -apple-system, Segoe UI, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

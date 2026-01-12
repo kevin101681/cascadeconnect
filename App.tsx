@@ -2,28 +2,27 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
-import ClaimDetail from './components/ClaimDetail';
-import NewClaimForm from './components/NewClaimForm';
-import Settings from './components/Settings';
 import HomeownerEnrollment from './components/HomeownerEnrollment';
 import AuthScreenWrapper from './components/AuthScreenWrapper';
-import InternalUserManagement from './components/InternalUserManagement';
-import TaskList from './components/TaskList';
 import TasksSheet from './components/TasksSheet';
 import MessageSummaryModal, { ClaimMessage, TaskMessage } from './components/MessageSummaryModal';
-import InvoicesModal from './components/InvoicesModal';
-import HomeownersList from './components/HomeownersList';
 import SubmissionSuccessModal from './components/SubmissionSuccessModal';
 import { X, Info, CheckCircle, User } from 'lucide-react';
-import EmailHistory from './components/EmailHistory';
-import BackendDashboard from './components/BackendDashboard';
-import AIIntakeDashboard from './components/AIIntakeDashboard';
 import HomeownerSelector from './components/HomeownerSelector';
-import UnifiedImportDashboard from './app/dashboard/admin/import/page';
 import { ModalProvider } from './components/providers/modal-provider';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS, MOCK_CLAIM_MESSAGES } from './constants';
 import { sendEmail, generateNotificationBody } from './services/emailService';
+
+// Code-split non-critical views to reduce initial JS.
+const ClaimDetail = React.lazy(() => import('./components/ClaimDetail'));
+const NewClaimForm = React.lazy(() => import('./components/NewClaimForm'));
+const Settings = React.lazy(() => import('./components/Settings'));
+const InternalUserManagement = React.lazy(() => import('./components/InternalUserManagement'));
+const HomeownersList = React.lazy(() => import('./components/HomeownersList'));
+const EmailHistory = React.lazy(() => import('./components/EmailHistory'));
+const BackendDashboard = React.lazy(() => import('./components/BackendDashboard'));
+const UnifiedImportDashboard = React.lazy(() => import('./app/dashboard/admin/import/page'));
 
 // DB Imports
 import { db, isDbConfigured } from './db';
@@ -4414,49 +4413,61 @@ Assigned By: ${assignerName}
         />
       )}
       {currentView === 'TEAM' && (
-        <InternalUserManagement 
-          employees={employees}
-          onAddEmployee={handleAddEmployee}
-          onUpdateEmployee={handleUpdateEmployee}
-          onDeleteEmployee={handleDeleteEmployee}
-          contractors={contractors}
-          onAddContractor={handleAddContractor}
-          onUpdateContractor={handleUpdateContractor}
-          onDeleteContractor={handleDeleteContractor}
-          builderUsers={builderUsers}
-          builderGroups={builderGroups}
-          homeowners={homeowners}
-          onAddBuilderUser={handleAddBuilderUser}
-          onUpdateBuilderUser={handleUpdateBuilderUser}
-          onDeleteBuilderUser={handleDeleteBuilderUser}
-          onClose={() => setCurrentView('DASHBOARD')}
-          initialTab="EMPLOYEES"
-          currentUser={activeEmployee}
-        />
+        <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
+          <InternalUserManagement 
+            employees={employees}
+            onAddEmployee={handleAddEmployee}
+            onUpdateEmployee={handleUpdateEmployee}
+            onDeleteEmployee={handleDeleteEmployee}
+            contractors={contractors}
+            onAddContractor={handleAddContractor}
+            onUpdateContractor={handleUpdateContractor}
+            onDeleteContractor={handleDeleteContractor}
+            builderUsers={builderUsers}
+            builderGroups={builderGroups}
+            homeowners={homeowners}
+            onAddBuilderUser={handleAddBuilderUser}
+            onUpdateBuilderUser={handleUpdateBuilderUser}
+            onDeleteBuilderUser={handleDeleteBuilderUser}
+            onClose={() => setCurrentView('DASHBOARD')}
+            initialTab="EMPLOYEES"
+            currentUser={activeEmployee}
+          />
+        </React.Suspense>
       )}
       {currentView === 'DATA' && (
-        <UnifiedImportDashboard 
-          onClose={() => setCurrentView('DASHBOARD')}
-        />
+        <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
+          <UnifiedImportDashboard 
+            onClose={() => setCurrentView('DASHBOARD')}
+          />
+        </React.Suspense>
       )}
       {currentView === 'HOMEOWNERS' && (
-        <HomeownersList 
-          homeowners={availableHomeowners}
-          builderGroups={builderGroups}
-          builderUsers={builderUsers}
-          onUpdateHomeowner={handleUpdateHomeowner}
-          onDeleteHomeowner={handleDeleteHomeowner}
-          onClose={() => setCurrentView('DASHBOARD')}
-        />
+        <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
+          <HomeownersList 
+            homeowners={availableHomeowners}
+            builderGroups={builderGroups}
+            builderUsers={builderUsers}
+            onUpdateHomeowner={handleUpdateHomeowner}
+            onDeleteHomeowner={handleDeleteHomeowner}
+            onClose={() => setCurrentView('DASHBOARD')}
+          />
+        </React.Suspense>
       )}
       {currentView === 'EMAIL_HISTORY' && (
-        <EmailHistory onClose={() => setCurrentView('DASHBOARD')} />
+        <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
+          <EmailHistory onClose={() => setCurrentView('DASHBOARD')} />
+        </React.Suspense>
       )}
       {currentView === 'BACKEND' && (
-        <BackendDashboard onClose={() => setCurrentView('DASHBOARD')} />
+        <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
+          <BackendDashboard onClose={() => setCurrentView('DASHBOARD')} />
+        </React.Suspense>
       )}
       {currentView === 'SETTINGS' && (
-        <Settings onNavigate={setCurrentView} />
+        <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
+          <Settings onNavigate={setCurrentView} />
+        </React.Suspense>
       )}
       {currentView === 'NEW' && (
         <div className="flex flex-col h-screen overflow-hidden">
@@ -4468,40 +4479,44 @@ Assigned By: ${assignerName}
           {/* Scrollable Content Area */}
           <div className="flex-1 overflow-y-auto px-8 py-6">
             <div className="max-w-4xl mx-auto">
-              <NewClaimForm 
-                onSubmit={handleCreateClaim} 
-                onCancel={() => setCurrentView('DASHBOARD')} 
-                contractors={contractors} 
-                activeHomeowner={(userRole === UserRole.ADMIN || userRole === UserRole.BUILDER) && targetHomeowner ? targetHomeowner : activeHomeowner} 
-                userRole={userRole} 
-              />
+              <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
+                <NewClaimForm 
+                  onSubmit={handleCreateClaim} 
+                  onCancel={() => setCurrentView('DASHBOARD')} 
+                  contractors={contractors} 
+                  activeHomeowner={(userRole === UserRole.ADMIN || userRole === UserRole.BUILDER) && targetHomeowner ? targetHomeowner : activeHomeowner} 
+                  userRole={userRole} 
+                />
+              </React.Suspense>
             </div>
           </div>
         </div>
       )}
       {currentView === 'DETAIL' && selectedClaim && (
-        <ClaimDetail 
-          claim={selectedClaim} 
-          currentUserRole={userRole} 
-          onUpdateClaim={handleUpdateClaim} 
-          onBack={() => {
-            setClaimEditMode(false);
-            setCurrentView('DASHBOARD');
-          }} 
-          contractors={contractors} 
-          onSendMessage={handleContactAboutClaim}
-          startInEditMode={claimEditMode}
-          currentUser={activeEmployee}
-          onAddInternalNote={addInternalNoteToClaim}
-          claimMessages={(claimMessages || []).filter(m => m.claimId === selectedClaim.id)}
-          onTrackClaimMessage={trackClaimMessage}
-          onNavigate={(view, config) => {
-            if (config) {
-              setDashboardConfig(config);
-            }
-            setCurrentView(view);
-          }}
-        />
+        <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
+          <ClaimDetail 
+            claim={selectedClaim} 
+            currentUserRole={userRole} 
+            onUpdateClaim={handleUpdateClaim} 
+            onBack={() => {
+              setClaimEditMode(false);
+              setCurrentView('DASHBOARD');
+            }} 
+            contractors={contractors} 
+            onSendMessage={handleContactAboutClaim}
+            startInEditMode={claimEditMode}
+            currentUser={activeEmployee}
+            onAddInternalNote={addInternalNoteToClaim}
+            claimMessages={(claimMessages || []).filter(m => m.claimId === selectedClaim.id)}
+            onTrackClaimMessage={trackClaimMessage}
+            onNavigate={(view, config) => {
+              if (config) {
+                setDashboardConfig(config);
+              }
+              setCurrentView(view);
+            }}
+          />
+        </React.Suspense>
       )}
       <HomeownerEnrollment isOpen={isEnrollmentOpen} onClose={() => setIsEnrollmentOpen(false)} onEnroll={handleEnrollHomeowner} builderGroups={builderGroups} />
       

@@ -220,6 +220,8 @@ const Layout: React.FC<LayoutProps> = ({
                   <img 
                     src="/logo.svg" 
                     alt="CASCADE CONNECT Logo" 
+                    width={24}
+                    height={24}
                     className="h-6 w-6 object-contain" 
                   />
                 </div>
@@ -227,6 +229,8 @@ const Layout: React.FC<LayoutProps> = ({
                   <img 
                     src="/connect.svg" 
                     alt="CASCADE CONNECT" 
+                    width={160}
+                    height={28}
                     className="h-7 object-contain"
                   />
                 </div>

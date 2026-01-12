@@ -395,8 +395,16 @@ const PDFCanvasPreview = ({
             setError(null);
             renderedCount.current = 0;
             try {
-                const pdfjsLib = (window as any).pdfjsLib;
-                if (!pdfjsLib) throw new Error("PDF Library not loaded");
+                // Lazy-load PDF.js only when BlueTag preview is opened.
+                // This avoids render-blocking global PDF scripts.
+                const pdfjsMod: any = await import('pdfjs-dist/legacy/build/pdf');
+                const pdfjsLib: any = pdfjsMod?.default ?? pdfjsMod;
+
+                // Configure worker locally (bundled) for pdfjs-dist.
+                if (pdfjsLib?.GlobalWorkerOptions) {
+                    const worker = await import('pdfjs-dist/build/pdf.worker.min.js?url');
+                    pdfjsLib.GlobalWorkerOptions.workerSrc = (worker as any).default ?? worker;
+                }
 
                 const loadingTask = pdfjsLib.getDocument(pdfUrl);
                 const pdf = await loadingTask.promise;

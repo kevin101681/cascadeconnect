@@ -7,8 +7,16 @@ import { ClerkProvider } from '@clerk/clerk-react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import GustoSuccessPage from './components/pages/gusto-success';
 import { SignIn, SignUp } from '@clerk/clerk-react';
-// Import PDF worker setup early to ensure it's configured before any PDF operations
-import './lib/pdfWorker';
+
+// Load fonts locally (avoids render-blocking Google Fonts CSS)
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
+import '@fontsource/outfit/300.css';
+import '@fontsource/outfit/400.css';
+import '@fontsource/outfit/500.css';
+import '@fontsource/outfit/600.css';
+import '@fontsource/outfit/700.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

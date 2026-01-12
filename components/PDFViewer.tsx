@@ -3,8 +3,7 @@ import { Document, Page, pdfjs } from 'react-pdf';
 import HTMLFlipBook from 'react-pageflip';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { HomeownerDocument } from '../types';
-// Import centralized PDF worker setup
-import '../lib/pdfWorker';
+import { ensurePdfWorkerConfigured } from '../lib/pdfWorker';
 
 interface PDFViewerProps {
   document: HomeownerDocument;
@@ -114,6 +113,12 @@ const PDFViewer: React.FC<PDFViewerProps> = ({ document: doc, isOpen, onClose })
   const [currentPage, setCurrentPage] = useState(1);
   const flipBookRef = useRef<any>(null);
   const blobUrlRef = useRef<string | null>(null);
+
+  // Configure PDF worker only when this viewer is opened
+  useEffect(() => {
+    if (!isOpen) return;
+    ensurePdfWorkerConfigured();
+  }, [isOpen]);
 
   // Helper to get current page directly from flipbook
   const getCurrentPageFromFlipbook = (): number => {

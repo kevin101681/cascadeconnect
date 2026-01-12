@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { X, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from 'lucide-react';
-// Import centralized PDF worker setup
-import '../lib/pdfWorker';
+import { ensurePdfWorkerConfigured } from '../lib/pdfWorker';
 
 interface PdfFlipViewer3DProps {
   document?: {
@@ -76,14 +75,7 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
         setPdfAspectRatio(null);
         
         // Ensure worker is configured before preparing PDF
-        const workerUrl = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-        if (!pdfjs.GlobalWorkerOptions.workerSrc || 
-            pdfjs.GlobalWorkerOptions.workerSrc.includes('fake') ||
-            pdfjs.GlobalWorkerOptions.workerSrc.includes('pdf.worker.mjs') ||
-            !pdfjs.GlobalWorkerOptions.workerSrc.startsWith('http')) {
-          pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-          console.log('PDF worker configured in PdfFlipViewer3D:', workerUrl);
-        }
+        ensurePdfWorkerConfigured();
         
         if (blobUrlRef.current) {
           URL.revokeObjectURL(blobUrlRef.current);
@@ -155,13 +147,7 @@ const PdfFlipViewer3D: React.FC<PdfFlipViewer3DProps> = ({ document, isOpen, onC
       (async () => {
         try {
           // Ensure worker is set before loading
-          const workerUrl = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-          if (!pdfjs.GlobalWorkerOptions.workerSrc || 
-              pdfjs.GlobalWorkerOptions.workerSrc.includes('fake') ||
-              pdfjs.GlobalWorkerOptions.workerSrc.includes('pdf.worker.mjs') ||
-              !pdfjs.GlobalWorkerOptions.workerSrc.startsWith('http')) {
-            pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-          }
+          ensurePdfWorkerConfigured();
           
           // Load the PDF document to get page dimensions
           const loadingTask = pdfjs.getDocument(pdfUrl);

@@ -22,11 +22,6 @@ import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
 import TaskDetail from './TaskDetail';
 import TasksSheet from './TasksSheet';
-import AIIntakeDashboard from './AIIntakeDashboard';
-import HomeownerManual from './HomeownerManual';
-import PayrollDashboard from './PayrollDashboard';
-import ScheduleTab from './ScheduleTab';
-import { HomeownerWarrantyGuide } from './HomeownerWarrantyGuide';
 import HomeownerDashboardMobile from './HomeownerDashboardMobile';
 import { StaggerContainer, FadeIn, AnimatedTabContent } from './motion/MotionWrapper';
 import { SmoothHeightWrapper } from './motion/SmoothHeightWrapper';
@@ -36,6 +31,15 @@ const TeamChat = React.lazy(() => import('./TeamChat').catch(err => {
   console.error('Failed to load TeamChat:', err);
   return { default: () => <div className="p-4 text-red-500">Failed to load Team Chat. Please refresh the page.</div> };
 }));
+
+// Lazy-load heavy dashboard tabs / tools so they don't ship in the initial bundle.
+const AIIntakeDashboard = React.lazy(() => import('./AIIntakeDashboard'));
+const HomeownerManual = React.lazy(() => import('./HomeownerManual'));
+const PayrollDashboard = React.lazy(() => import('./PayrollDashboard'));
+const ScheduleTab = React.lazy(() => import('./ScheduleTab'));
+const HomeownerWarrantyGuide = React.lazy(() =>
+  import('./HomeownerWarrantyGuide').then((m) => ({ default: m.HomeownerWarrantyGuide }))
+);
 
 // Import CBS Books App directly for inline rendering in tab
 const CBSBooksApp = React.lazy(() => import('../lib/cbsbooks/App'));
@@ -3768,7 +3772,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               </button>
               
               {/* Homeowner Manual Component */}
-              <HomeownerManual homeownerId={activeHomeowner?.id} />
+              <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                <HomeownerManual homeownerId={activeHomeowner?.id} />
+              </Suspense>
             </div>
           </div>
         </div>,
@@ -4646,7 +4652,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto">
-                    <HomeownerManual homeownerId={activeHomeowner?.id} />
+                    <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                      <HomeownerManual homeownerId={activeHomeowner?.id} />
+                    </Suspense>
                   </div>
                 </div>
               </div>
@@ -4659,7 +4667,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)] bg-gray-50 dark:bg-gray-900">
-                  <HomeownerWarrantyGuide />
+                  <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                    <HomeownerWarrantyGuide />
+                  </Suspense>
                 </div>
               </div>
             )}
@@ -4672,15 +4682,17 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
-                    <AIIntakeDashboard 
-                      onNavigate={onNavigate}
-                      onSelectHomeowner={(homeownerId) => {
-                        const homeowner = homeowners.find(h => h.id === homeownerId);
-                        if (homeowner && onSelectHomeowner) {
-                          onSelectHomeowner(homeowner);
-                        }
-                      }}
-                    />
+                    <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                      <AIIntakeDashboard 
+                        onNavigate={onNavigate}
+                        onSelectHomeowner={(homeownerId) => {
+                          const homeowner = homeowners.find(h => h.id === homeownerId);
+                          if (homeowner && onSelectHomeowner) {
+                            onSelectHomeowner(homeowner);
+                          }
+                        }}
+                      />
+                    </Suspense>
                   </div>
                 </div>
               </div>
@@ -4694,7 +4706,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
-                    <PayrollDashboard />
+                    <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                      <PayrollDashboard />
+                    </Suspense>
                   </div>
                 </div>
               </div>
@@ -4739,7 +4753,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
-                    <PayrollDashboard />
+                    <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                      <PayrollDashboard />
+                    </Suspense>
                   </div>
                 </div>
               </div>
@@ -4848,15 +4864,17 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
                 <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
                   <div className="flex flex-col h-full md:h-auto">
-                    <AIIntakeDashboard 
-                      onNavigate={onNavigate}
-                      onSelectHomeowner={(homeownerId) => {
-                        const homeowner = homeowners.find(h => h.id === homeownerId);
-                        if (homeowner && onSelectHomeowner) {
-                          onSelectHomeowner(homeowner);
-                        }
-                      }}
-                    />
+                    <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                      <AIIntakeDashboard 
+                        onNavigate={onNavigate}
+                        onSelectHomeowner={(homeownerId) => {
+                          const homeowner = homeowners.find(h => h.id === homeownerId);
+                          if (homeowner && onSelectHomeowner) {
+                            onSelectHomeowner(homeowner);
+                          }
+                        }}
+                      />
+                    </Suspense>
                   </div>
                 </div>
               </div>
@@ -4869,10 +4887,12 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
                 <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
                   <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col h-full">
-                    <ScheduleTab 
-                      homeowners={homeowners}
-                      currentUserId={currentUser?.id}
-                    />
+                    <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                      <ScheduleTab 
+                        homeowners={homeowners}
+                        currentUserId={currentUser?.id}
+                      />
+                    </Suspense>
                   </div>
                 </div>
               </div>
@@ -4909,7 +4929,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
                 <div className="flex-1 overflow-y-auto md:overflow-visible">
                   <div className="flex flex-col h-full md:h-auto">
-                    <PayrollDashboard />
+                    <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                      <PayrollDashboard />
+                    </Suspense>
                   </div>
                 </div>
               </div>
@@ -5131,7 +5153,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
                 <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
                   <div className="flex flex-col h-full md:h-auto">
-                    <HomeownerManual homeownerId={activeHomeowner?.id} />
+                    <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                      <HomeownerManual homeownerId={activeHomeowner?.id} />
+                    </Suspense>
                   </div>
                 </div>
               </div>

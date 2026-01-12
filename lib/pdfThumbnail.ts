@@ -1,6 +1,5 @@
 import { pdfjs } from 'react-pdf';
-// Import centralized PDF worker setup
-import './pdfWorker';
+import { ensurePdfWorkerConfigured } from './pdfWorker';
 
 /**
  * Generates a thumbnail image from the first page of a PDF
@@ -15,14 +14,7 @@ export async function generatePDFThumbnail(
   maxHeight: number = 400
 ): Promise<string> {
   try {
-    // Ensure worker is set to CDN URL before loading PDF
-    const workerUrl = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-    if (!pdfjs.GlobalWorkerOptions.workerSrc || 
-        pdfjs.GlobalWorkerOptions.workerSrc.includes('fake') ||
-        pdfjs.GlobalWorkerOptions.workerSrc.includes('pdf.worker.mjs') ||
-        !pdfjs.GlobalWorkerOptions.workerSrc.startsWith('http')) {
-      pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
-    }
+    ensurePdfWorkerConfigured();
     
     // Load the PDF document
     const loadingTask = pdfjs.getDocument(pdfUrl);
