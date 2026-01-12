@@ -4242,6 +4242,90 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </div>
                 )}
                 
+                {/* Next Appointment (sticky, above homeowner info) - Homeowner View Only */}
+                {isHomeownerView && (
+                  <div className="px-4 pt-4">
+                    <div className="bg-primary/5 dark:bg-gray-700/50 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-600 overflow-hidden">
+                      <div className="p-3 bg-surface-container/30 dark:bg-gray-700/30 border-b border-surface-outline-variant/50 dark:border-gray-600 text-center">
+                        <h3 className="font-medium text-sm flex items-center justify-center text-secondary-on-container dark:text-gray-100">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Next Appointment
+                        </h3>
+                      </div>
+                      {(() => {
+                        // Get the next upcoming appointment date
+                        const now = new Date();
+                        now.setHours(0, 0, 0, 0);
+
+                        const upcomingClaims = scheduledClaims
+                          .map((c) => {
+                            const acceptedDate = c.proposedDates.find((d) => d.status === 'ACCEPTED');
+                            if (!acceptedDate) return null;
+                            const appointmentDate = new Date(acceptedDate.date);
+                            appointmentDate.setHours(0, 0, 0, 0);
+                            if (appointmentDate < now) return null;
+                            return { claim: c, date: appointmentDate, acceptedDate };
+                          })
+                          .filter(Boolean) as Array<{ claim: Claim; date: Date; acceptedDate: any }>;
+
+                        if (upcomingClaims.length === 0) {
+                          return (
+                            <div className="p-3 text-center">
+                              <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">
+                                No upcoming appointments.
+                              </p>
+                            </div>
+                          );
+                        }
+
+                        // Sort by date
+                        upcomingClaims.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+                        // Get the next date
+                        const nextDate = upcomingClaims[0].date;
+                        const nextDateStr = nextDate.toISOString().split('T')[0];
+
+                        // Count how many claims have this same date
+                        const claimsOnNextDate = upcomingClaims.filter((item) => {
+                          const itemDateStr = item.date.toISOString().split('T')[0];
+                          return itemDateStr === nextDateStr;
+                        });
+
+                        const firstClaim = claimsOnNextDate[0].claim;
+                        const acceptedDate = claimsOnNextDate[0].acceptedDate;
+
+                        return (
+                          <div className="p-3 flex flex-col items-center">
+                            <div
+                              className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-lg text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors w-full"
+                              onClick={() => handleClaimSelection(firstClaim)}
+                            >
+                              <div className="flex items-center justify-between gap-2 mb-2">
+                                <p className="font-medium text-secondary-on-container dark:text-gray-200 truncate text-center flex-1">
+                                  {firstClaim.title}
+                                </p>
+                                {claimsOnNextDate.length > 1 && (
+                                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-on text-xs font-medium flex-shrink-0">
+                                    {claimsOnNextDate.length}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="opacity-80 dark:opacity-70 text-secondary-on-container dark:text-gray-300 text-center">
+                                {new Date(acceptedDate.date).toLocaleDateString()} - {acceptedDate?.timeSlot}
+                              </p>
+                              {firstClaim.contractorName && (
+                                <p className="opacity-70 dark:opacity-60 mt-1 text-secondary-on-container dark:text-gray-400 text-xs text-center">
+                                  {firstClaim.contractorName}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                )}
+
             {/* Card Content - Clickable to collapse */}
             <div 
               className="flex flex-col p-4 cursor-pointer relative"
@@ -4374,84 +4458,6 @@ const Dashboard: React.FC<DashboardProps> = ({
             )}
             {/* End Homeowner Card */}
             
-            {/* Next Appointment Card - Below Homeowner Info within sidebar - Homeowner View Only */}
-            {isHomeownerView && (
-              <div className="mt-4 bg-primary/5 dark:bg-gray-700/50 rounded-2xl border border-surface-outline-variant/50 dark:border-gray-600 overflow-hidden">
-                <div className="p-4 bg-surface-container/30 dark:bg-gray-700/30 border-b border-surface-outline-variant/50 dark:border-gray-600 text-center">
-                  <h3 className="font-medium text-sm flex items-center justify-center text-secondary-on-container dark:text-gray-100">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    Next Appointment
-                  </h3>
-                </div>
-                
-                {(() => {
-                  // Get the next upcoming appointment date
-                  const now = new Date();
-                  now.setHours(0, 0, 0, 0);
-                  
-                  const upcomingClaims = scheduledClaims
-                    .map(c => {
-                      const acceptedDate = c.proposedDates.find(d => d.status === 'ACCEPTED');
-                      if (!acceptedDate) return null;
-                      const appointmentDate = new Date(acceptedDate.date);
-                      appointmentDate.setHours(0, 0, 0, 0);
-                      if (appointmentDate < now) return null;
-                      return { claim: c, date: appointmentDate, acceptedDate };
-                    })
-                    .filter(Boolean) as Array<{ claim: Claim; date: Date; acceptedDate: any }>;
-                  
-                  if (upcomingClaims.length === 0) {
-                    return (
-                      <div className="p-4 text-center">
-                        <p className="text-sm opacity-70 dark:opacity-60 text-secondary-on-container dark:text-gray-400">No upcoming appointments.</p>
-                      </div>
-                    );
-                  }
-                  
-                  // Sort by date
-                  upcomingClaims.sort((a, b) => a.date.getTime() - b.date.getTime());
-                  
-                  // Get the next date
-                  const nextDate = upcomingClaims[0].date;
-                  const nextDateStr = nextDate.toISOString().split('T')[0];
-                  
-                  // Count how many claims have this same date
-                  const claimsOnNextDate = upcomingClaims.filter(item => {
-                    const itemDateStr = item.date.toISOString().split('T')[0];
-                    return itemDateStr === nextDateStr;
-                  });
-                  
-                  const firstClaim = claimsOnNextDate[0].claim;
-                  const acceptedDate = claimsOnNextDate[0].acceptedDate;
-                  
-                  return (
-                    <div className="p-4 flex flex-col items-center">
-                      <div 
-                        className="bg-surface/50 dark:bg-gray-700/50 p-4 rounded-lg text-sm backdrop-blur-sm border border-white/20 dark:border-gray-600/30 cursor-pointer hover:bg-surface/70 dark:hover:bg-gray-700/70 transition-colors w-full"
-                        onClick={() => handleClaimSelection(firstClaim)}
-                      >
-                        <div className="flex items-center justify-between gap-2 mb-2">
-                          <p className="font-medium text-secondary-on-container dark:text-gray-200 truncate text-center flex-1">{firstClaim.title}</p>
-                          {claimsOnNextDate.length > 1 && (
-                            <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-primary text-primary-on text-xs font-medium flex-shrink-0">
-                              {claimsOnNextDate.length}
-                            </span>
-                          )}
-                        </div>
-                        <p className="opacity-80 dark:opacity-70 text-secondary-on-container dark:text-gray-300 text-center">
-                          {new Date(acceptedDate.date).toLocaleDateString()} - {acceptedDate?.timeSlot}
-                        </p>
-                        {firstClaim.contractorName && (
-                          <p className="opacity-70 dark:opacity-60 mt-1 text-secondary-on-container dark:text-gray-400 text-xs text-center">
-                            {firstClaim.contractorName}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
           </FadeIn>
           {/* END LEFT SIDEBAR */}
 
