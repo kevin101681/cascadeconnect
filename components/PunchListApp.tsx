@@ -16,7 +16,7 @@ import { X, ClipboardList } from 'lucide-react';
 import type { ProjectDetails, LocationGroup, SignOffTemplate } from '../lib/bluetag/types';
 
 interface PunchListAppProps {
-  homeowner: Homeowner;
+  homeowner?: Homeowner;
   onClose: () => void;
   onSavePDF?: (pdfBlob: Blob, filename: string) => void;
   onCreateMessage?: (homeownerId: string, subject: string, content: string, attachments?: Array<{ filename: string; content: string; contentType: string }>) => Promise<void>;
@@ -45,6 +45,8 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
   onShowManual,
   onUpdateHomeowner
 }) => {
+  if (!homeowner) return null;
+
   const [BlueTagDashboard, setBlueTagDashboard] = useState<React.ComponentType<any> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -289,6 +291,7 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
 
   // Save report data whenever project or locations change
   useEffect(() => {
+    if (!homeowner?.id) return;
     const reportKey = `bluetag_report_${homeowner.id}`;
     const reportData = {
       project,
@@ -296,7 +299,7 @@ const PunchListApp: React.FC<PunchListAppProps> = ({
       lastModified: Date.now()
     };
     localStorage.setItem(reportKey, JSON.stringify(reportData));
-  }, [project, locations, homeowner.id]);
+  }, [project, locations, homeowner?.id]);
 
   // Debug: Log when Dashboard is about to render (must be before any early returns)
   useEffect(() => {

@@ -715,6 +715,14 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Derive selectedClaimForModal from URL (used throughout the component)
   const selectedClaimForModal = selectedClaimForModalFromUrl;
+
+  // If a portal-backed modal is open, hide legacy background UI so nothing "ghosts" behind the overlay
+  const isPortalModalOpen = Boolean(
+    (selectedTaskForModal && currentTab !== 'TASKS') ||
+    (selectedClaimForModal && currentTab !== 'CLAIMS') ||
+    currentTab === 'PUNCHLIST' ||
+    (selectedDocument && isPDFViewerOpen)
+  );
   
   // Debug: Log whenever selectedClaimForModal changes
   useEffect(() => {
@@ -4006,6 +4014,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     return (
       <>
         {renderModals()}
+        <div className={isPortalModalOpen ? 'hidden' : 'block'}>
         {/* Main Layout Container - Sidebar + Content with Staggered Cascade Animation */}
         <StaggerContainer className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 bg-white dark:bg-gray-900" staggerDelay={0.08}>
           {/* LEFT SIDEBAR - Homeowner Info Card with Search - HIDDEN ON MOBILE when tab is active */}
@@ -4376,9 +4385,19 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* RIGHT CONTENT AREA */}
           <FadeIn direction="up" delay={0.1} fullWidth className="flex-1 min-w-0 space-y-6">
-            {/* Legacy tabs and content removed - Dashboard now uses clean modal-based navigation */}
+            {/* Back to Dashboard Button - Mobile Only (Homeowner & Admin) */}
+            {isMobileView && currentTab && !isPortalModalOpen && (
+              <button
+                onClick={() => setCurrentTab(null)}
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-primary/10 rounded-lg hover:bg-primary/20 transition-colors md:hidden"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Back to Dashboard
+              </button>
+            )}
             
             {/* Navigation Tabs at Top - Two column grid on mobile, horizontal tabs on desktop */}
+            {!isPortalModalOpen && (
             <div 
               ref={tabsContainerRef}
               className={`grid grid-cols-2 gap-2 md:flex md:flex-row md:border-b md:border-surface-outline-variant md:dark:border-gray-700 md:overflow-x-auto md:mx-auto md:max-w-6xl ${
@@ -4576,6 +4595,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </button>
             )}
         </div>
+            )}
 
         {/* Content Area - Mobile Carousel (HIDDEN - now using desktop view for all) */}
         <div
@@ -5324,6 +5344,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </FadeIn>
         </StaggerContainer>
         {/* END MAIN LAYOUT CONTAINER */}
+        </div>
 
         {/* DOCUMENTS MODAL - Now opened via button in homeowner card */}
         {showDocsModal && userRole !== UserRole.HOMEOWNER && createPortal(

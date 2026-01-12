@@ -13,6 +13,7 @@ import React, { useState } from 'react';
 import { ChatWindow } from './chat/ChatWindow';
 import { ChatSidebar } from './chat/ChatSidebar';
 import { type Channel } from '../services/internalChatService';
+import { ChevronLeft } from 'lucide-react';
 
 interface TeamChatProps {
   currentUserId: string;
@@ -26,11 +27,12 @@ const TeamChat: React.FC<TeamChatProps> = ({
   onOpenHomeownerModal,
 }) => {
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
+  const activeChat = !!selectedChannel;
 
   return (
     <div className="h-full flex bg-white dark:bg-gray-900">
-      {/* Sidebar - Hidden on mobile when chat active, always visible on desktop */}
-      <div className={`${selectedChannel ? 'hidden md:flex' : 'flex'} w-full md:w-64 flex-shrink-0 border-r border-gray-200 dark:border-gray-700`}>
+      {/* Sidebar */}
+      <div className={`md:flex ${activeChat ? 'hidden' : 'flex w-full'} md:w-64 md:flex-shrink-0 border-r border-gray-200 dark:border-gray-700`}>
         <ChatSidebar
           currentUserId={currentUserId}
           selectedChannelId={selectedChannel?.id || null}
@@ -38,31 +40,39 @@ const TeamChat: React.FC<TeamChatProps> = ({
         />
       </div>
 
-      {/* Main chat area - Full screen on mobile when active, side-by-side on desktop */}
-      <div className={`${selectedChannel ? 'flex fixed md:relative inset-0 md:inset-auto z-50 md:z-auto bg-white dark:bg-gray-900' : 'hidden md:flex'} flex-1 flex-col`}>
-        {selectedChannel ? (
-          <>
-            {/* Mobile Back Button */}
+      {/* Main chat area */}
+      <div
+        className={`md:flex md:static md:inset-auto md:z-auto md:bg-transparent ${activeChat ? 'flex w-full fixed inset-0 z-50 bg-background' : 'hidden'} flex-1 flex-col`}
+      >
+        {/* Mobile header (Back to List) */}
+        {activeChat && (
+          <div className="md:hidden h-14 shrink-0 px-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2 bg-white dark:bg-gray-900">
             <button
+              type="button"
               onClick={() => setSelectedChannel(null)}
-              className="md:hidden flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="inline-flex items-center gap-2 px-2 py-2 -ml-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+              aria-label="Back to List"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-              </svg>
-              <span className="font-medium">Back</span>
+              <ChevronLeft className="h-5 w-5" />
+              Back to List
             </button>
-            <ChatWindow
-              channelId={selectedChannel.id}
-              channelName={selectedChannel.otherUser?.name || selectedChannel.name}
-              channelType={selectedChannel.type}
-              currentUserId={currentUserId}
-              currentUserName={currentUserName}
-              onOpenHomeownerModal={onOpenHomeownerModal}
-            />
-          </>
+            <div className="min-w-0 flex-1 text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+              {selectedChannel?.otherUser?.name || selectedChannel?.name || 'Chat'}
+            </div>
+          </div>
+        )}
+
+        {selectedChannel ? (
+          <ChatWindow
+            channelId={selectedChannel.id}
+            channelName={selectedChannel.otherUser?.name || selectedChannel.name}
+            channelType={selectedChannel.type}
+            currentUserId={currentUserId}
+            currentUserName={currentUserName}
+            onOpenHomeownerModal={onOpenHomeownerModal}
+          />
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500 dark:text-gray-400">
+          <div className="hidden md:flex flex-1 items-center justify-center text-gray-500 dark:text-gray-400">
             <div className="text-center">
               <div className="text-4xl mb-4">💬</div>
               <h3 className="text-xl font-semibold mb-2">Welcome to Team Chat</h3>

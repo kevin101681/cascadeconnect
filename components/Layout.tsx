@@ -5,6 +5,7 @@ import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Bu
 import { useDarkMode } from './DarkModeProvider';
 import { UserButton, useUser } from '@clerk/clerk-react';
 import GlobalSearch from './global/GlobalSearch';
+import { Input } from './ui/input';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -209,39 +210,86 @@ const Layout: React.FC<LayoutProps> = ({
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col font-sans">
-      {/* M3 Small Top App Bar - Mobile: 2-row layout, Desktop: 1-row */}
+      {/* M3 Small Top App Bar */}
       <header className="bg-surface dark:bg-gray-800 text-surface-on dark:text-gray-100 sticky top-0 z-50 transition-shadow duration-200 border-b border-surface-container dark:border-gray-700 shadow-elevation-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Row 1: Logo + Menu + Profile (Always visible) */}
-          <div className="flex justify-between items-center h-16 gap-4">
-            
-            {/* Logo */}
-            <button onClick={() => onNavigate('DASHBOARD')} className="flex items-center gap-3 flex-shrink-0 focus:outline-none">
-              <div className="bg-gray-200 dark:bg-gray-800 p-2 rounded-xl border border-surface-outline-variant dark:border-gray-600 shadow-sm h-10 w-12 flex items-center justify-center overflow-hidden">
-                <img 
-                  src="/logo.svg" 
-                  alt="CASCADE CONNECT Logo" 
-                  className="h-6 w-6 object-contain" 
-                />
-              </div>
-              <div className="relative hidden md:block">
-                <img 
-                  src="/connect.svg" 
-                  alt="CASCADE CONNECT" 
-                  className="h-7 object-contain"
-                />
-              </div>
-            </button>
-            
-            {/* Global Search Bar (Admin & Builder Only) - DESKTOP ONLY (moved to Row 2 on mobile) */}
-            {(isAdmin || isBuilder) && onGlobalSearchNavigate && (
-              <div className="hidden md:flex flex-1 max-w-md relative">
-                <GlobalSearch onNavigate={onGlobalSearchNavigate} />
-              </div>
-            )}
-            
-            {/* Right Actions */}
-            <div className="flex items-center gap-4 flex-shrink-0">
+          <div className="py-2 md:py-0">
+            <div className="flex justify-between items-center h-16 gap-4">
+              {/* Logo */}
+              <button onClick={() => onNavigate('DASHBOARD')} className="flex items-center gap-3 flex-shrink-0 focus:outline-none">
+                <div className="bg-gray-200 dark:bg-gray-800 p-2 rounded-xl border border-surface-outline-variant dark:border-gray-600 shadow-sm h-10 w-12 flex items-center justify-center overflow-hidden">
+                  <img 
+                    src="/logo.svg" 
+                    alt="CASCADE CONNECT Logo" 
+                    className="h-6 w-6 object-contain" 
+                  />
+                </div>
+                <div className="relative hidden md:block">
+                  <img 
+                    src="/connect.svg" 
+                    alt="CASCADE CONNECT" 
+                    className="h-7 object-contain"
+                  />
+                </div>
+              </button>
+
+              {/* Global Search Bar (Admin & Builder Only) - Always Visible */}
+              {(isAdmin || isBuilder) && onGlobalSearchNavigate && (
+                <div className="flex-1 max-w-md relative">
+                  <GlobalSearch onNavigate={onGlobalSearchNavigate} />
+                </div>
+              )}
+
+              {/* Legacy Homeowner Search Bar (Admin & Builder Only) - Hidden on Dashboard - Fallback if global search not available */}
+              {(isAdmin || isBuilder) && currentView !== 'DASHBOARD' && !onGlobalSearchNavigate && (
+                <div className="flex-1 max-w-sm relative">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" style={{ top: '50%', transform: 'translateY(-50%)' }} />
+                    <input 
+                      type="text" 
+                      className="w-full bg-surface-container dark:bg-gray-700 rounded-full pl-9 pr-8 py-2 text-sm border-none focus:ring-2 focus:ring-primary focus:outline-none text-surface-on dark:text-gray-100 transition-all"
+                      value={searchQuery}
+                      onChange={(e) => onSearchChange(e.target.value)}
+                    />
+                    {searchQuery && (
+                      <button 
+                        onClick={() => onSearchChange('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-outline-variant hover:text-surface-on"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Dropdown Results */}
+                  {searchQuery && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-surface dark:bg-gray-800 rounded-xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden max-h-80 overflow-y-auto z-50">
+                      {searchResults.length > 0 ? (
+                        searchResults.map(h => (
+                          <button
+                            key={h.id}
+                            onClick={() => onSelectHomeowner(h)}
+                            className="w-full text-left px-4 py-3 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center justify-between group border-b border-surface-outline-variant/50 dark:border-gray-700/50 last:border-0"
+                          >
+                            <div>
+                              <p className="font-medium text-surface-on dark:text-gray-100 text-sm">{h.name}</p>
+                              <p className="text-xs text-surface-on-variant dark:text-gray-300">
+                                {h.jobName && <span className="font-medium text-primary mr-1">{h.jobName} •</span>}
+                                {h.address}
+                              </p>
+                            </div>
+                          </button>
+                        ))
+                      ) : (
+                        <div className="p-4 text-center text-surface-on-variant dark:text-gray-400 text-xs">No homeowners found.</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Right Actions */}
+              <div className="flex items-center gap-4 flex-shrink-0">
               {/* Dark Mode Toggle */}
               <button
                 onClick={toggleDarkMode}
@@ -434,15 +482,59 @@ const Layout: React.FC<LayoutProps> = ({
                 </div>
               )}
 
+              </div>
             </div>
+
+            {/* Mobile-only Homeowner Search Row (Admin & Builder) */}
+            {(isAdmin || isBuilder) && (
+              <div className="w-full mt-2 block md:hidden relative">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-400" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => onSearchChange(e.target.value)}
+                    placeholder="Homeowner Search"
+                    className="w-full pl-9 pr-9 rounded-full bg-surface-container dark:bg-gray-700 border-none focus-visible:ring-primary"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => onSearchChange('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-outline-variant hover:text-surface-on"
+                      aria-label="Clear search"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Dropdown Results */}
+                {searchQuery && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-surface dark:bg-gray-800 rounded-xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden max-h-80 overflow-y-auto z-50">
+                    {searchResults.length > 0 ? (
+                      searchResults.map(h => (
+                        <button
+                          key={h.id}
+                          onClick={() => onSelectHomeowner(h)}
+                          className="w-full text-left px-4 py-3 hover:bg-surface-container dark:hover:bg-gray-700 flex items-center justify-between group border-b border-surface-outline-variant/50 dark:border-gray-700/50 last:border-0"
+                        >
+                          <div>
+                            <p className="font-medium text-surface-on dark:text-gray-100 text-sm">{h.name}</p>
+                            <p className="text-xs text-surface-on-variant dark:text-gray-300">
+                              {h.jobName && <span className="font-medium text-primary mr-1">{h.jobName} •</span>}
+                              {h.address}
+                            </p>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="p-4 text-center text-surface-on-variant dark:text-gray-400 text-xs">No homeowners found.</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-          
-          {/* Row 2: Mobile Search Bar (Admin & Builder Only) - FULL WIDTH on mobile */}
-          {(isAdmin || isBuilder) && onGlobalSearchNavigate && (
-            <div className="md:hidden pb-3 pt-0">
-              <GlobalSearch onNavigate={onGlobalSearchNavigate} />
-            </div>
-          )}
         </div>
       </header>
 
