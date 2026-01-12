@@ -9,14 +9,15 @@ import GustoSuccessPage from './components/pages/gusto-success';
 import { SignIn, SignUp } from '@clerk/clerk-react';
 
 // Load fonts locally (avoids render-blocking Google Fonts CSS)
-import '@fontsource/roboto/400.css';
-import '@fontsource/roboto/500.css';
-import '@fontsource/roboto/700.css';
-import '@fontsource/outfit/300.css';
-import '@fontsource/outfit/400.css';
-import '@fontsource/outfit/500.css';
-import '@fontsource/outfit/600.css';
-import '@fontsource/outfit/700.css';
+// Use latin-only subsets to avoid shipping dozens of font files.
+import '@fontsource/roboto/latin-400.css';
+import '@fontsource/roboto/latin-500.css';
+import '@fontsource/roboto/latin-700.css';
+import '@fontsource/outfit/latin-300.css';
+import '@fontsource/outfit/latin-400.css';
+import '@fontsource/outfit/latin-500.css';
+import '@fontsource/outfit/latin-600.css';
+import '@fontsource/outfit/latin-700.css';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

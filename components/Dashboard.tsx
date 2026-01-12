@@ -949,7 +949,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   const getAvailableTabs = (): Array<Exclude<TabType, null>> => {
     const isHomeownerViewRole = userRole === UserRole.HOMEOWNER;
     const isEmployee = currentUser?.role === 'Employee';
-    console.log('🔍 Dashboard getAvailableTabs - currentUser:', currentUser?.name, 'role:', currentUser?.role, 'isEmployee:', isEmployee);
     const tabs: Array<Exclude<TabType, null>> = ['CLAIMS'];
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('TASKS');
@@ -973,9 +972,10 @@ const Dashboard: React.FC<DashboardProps> = ({
       }
     }
     // DOCUMENTS tab for homeowners is now in the tabs, but for admin it's still a button in homeowner info card
-    console.log('📋 Available tabs:', tabs);
     return tabs;
   };
+
+  const availableTabs = useMemo(() => getAvailableTabs(), [userRole, isAdmin, currentUser?.role]);
   
   // Handle swipe gestures for mobile tab navigation
   const onTouchStart = (e: React.TouchEvent) => {
@@ -4415,6 +4415,60 @@ const Dashboard: React.FC<DashboardProps> = ({
           {/* RIGHT CONTENT AREA */}
           <FadeIn direction="up" delay={0.1} fullWidth className="flex-1 min-w-0 space-y-6">
             {/* Legacy tab-strip/back-button removed to prevent "ghost" UI flashing behind new views/modals. */}
+
+            {/* Primary Tab Bar (Warranty/Tasks/Messages/etc.) */}
+            <div className="sticky top-0 z-10">
+              <div className="bg-background/95 dark:bg-gray-900/95 backdrop-blur border border-surface-outline-variant/40 dark:border-gray-700/50 rounded-2xl overflow-hidden">
+                <div
+                  ref={tabsContainerRef}
+                  className="flex items-center gap-2 px-2 py-2 overflow-x-auto [-webkit-overflow-scrolling:touch]"
+                  style={{ scrollbarWidth: 'none' } as React.CSSProperties}
+                >
+                  {availableTabs.map((tab) => {
+                    const isActive = currentTab === tab;
+                    const meta: Record<
+                      Exclude<TabType, null>,
+                      { label: string; icon: React.ReactNode }
+                    > = {
+                      CLAIMS: { label: 'Warranty', icon: <ClipboardList className="h-4 w-4" /> },
+                      TASKS: { label: 'Tasks', icon: <CheckSquare className="h-4 w-4" /> },
+                      NOTES: { label: 'Notes', icon: <StickyNote className="h-4 w-4" /> },
+                      MESSAGES: { label: 'Messages', icon: <Mail className="h-4 w-4" /> },
+                      DOCUMENTS: { label: 'Docs', icon: <FileText className="h-4 w-4" /> },
+                      MANUAL: { label: 'Manual', icon: <BookOpen className="h-4 w-4" /> },
+                      HELP: { label: 'Help', icon: <HelpCircle className="h-4 w-4" /> },
+                      CALLS: { label: 'Calls', icon: <Phone className="h-4 w-4" /> },
+                      SCHEDULE: { label: 'Schedule', icon: <Calendar className="h-4 w-4" /> },
+                      CHAT: { label: 'Chat', icon: <MessageCircle className="h-4 w-4" /> },
+                      PAYROLL: { label: 'Payroll', icon: <DollarSign className="h-4 w-4" /> },
+                      INVOICES: { label: 'Invoices', icon: <Receipt className="h-4 w-4" /> },
+                      PUNCHLIST: { label: 'BlueTag', icon: <HardHat className="h-4 w-4" /> },
+                    };
+
+                    const { label, icon } = meta[tab] || { label: tab, icon: null };
+
+                    return (
+                      <button
+                        key={tab}
+                        type="button"
+                        data-tab={tab}
+                        onClick={() => setCurrentTab(tab)}
+                        className={[
+                          'shrink-0 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-colors',
+                          isActive
+                            ? 'bg-primary text-primary-on'
+                            : 'bg-surface dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700',
+                        ].join(' ')}
+                        aria-current={isActive ? 'page' : undefined}
+                      >
+                        {icon}
+                        <span className="whitespace-nowrap">{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
 
         {/* Content Area - Mobile Carousel (HIDDEN - now using desktop view for all) */}
         <div

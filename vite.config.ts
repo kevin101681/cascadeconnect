@@ -109,41 +109,41 @@ export default defineConfig(({ mode }) => {
           ]
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+          // Precache only the minimal "app shell" needed for first paint.
+          // Avoid precaching large lazy chunks (PDF, scanners, etc.) which Lighthouse flags as
+          // "downloading everything" during SW install.
+          globPatterns: [
+            'index.html',
+            'manifest.webmanifest',
+            'registerSW.js',
+            'assets/main-*.js',
+            'assets/vendor-core-*.js',
+            'assets/vendor-ui-*.js',
+            'assets/vendor-motion-*.js',
+            'assets/vendor-date-*.js',
+            'assets/main-*.css',
+            'assets/vendor-*.css',
+            'assets/*.woff2',
+          ],
+          globIgnores: [
+            '**/*.map',
+            // Heavy/lazy chunks: fetch only when user opens PDF-heavy features.
+            '**/assets/vendor-pdf-*.js',
+            '**/assets/pdf.worker*.js',
+            '**/assets/cbsbooks-app-*.js',
+            // Large/admin-only chunks: do not precache.
+            '**/assets/vendor-db-*.js',
+            '**/assets/vendor-ai-*.js',
+            '**/assets/vendor-canvas-*.js',
+            '**/assets/vendor-files-*.js',
+            // Large static manuals/images are not needed for initial shell.
+            '**/images/manual/**',
+          ],
           maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB (increased for large vendor bundle)
           cleanupOutdatedCaches: true,
           skipWaiting: true,
           clientsClaim: true,
-          runtimeCaching: [
-            {
-              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'google-fonts-cache',
-                expiration: {
-                  maxEntries: 10,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
-            },
-            {
-              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
-              handler: 'CacheFirst',
-              options: {
-                cacheName: 'gstatic-fonts-cache',
-                expiration: {
-                  maxEntries: 10,
-                  maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-                },
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
-            }
-          ]
+          runtimeCaching: []
         },
         devOptions: {
           enabled: true,
@@ -170,17 +170,94 @@ export default defineConfig(({ mode }) => {
               return 'cbsbooks-app';
             }
             
-            // Split only truly independent large libraries
             if (id.includes('node_modules')) {
-              // PDF libraries are large and independent
-              if (id.includes('pdfjs') || id.includes('pdf-dist')) {
+              // Resolve package name from node_modules path.
+              const rel = id.split('node_modules/')[1] || '';
+              const parts = rel.split('/');
+              const pkg = parts[0]?.startsWith('@') ? `${parts[0]}/${parts[1]}` : parts[0];
+
+              if (!pkg) return 'vendor';
+
+              // 1) Core (React + router) — stable, changes infrequently.
+              if (
+                pkg === 'react' ||
+                pkg === 'react-dom' ||
+                pkg === 'react-router' ||
+                pkg === 'react-router-dom' ||
+                pkg === 'scheduler'
+              ) {
+                return 'vendor-core';
+              }
+
+              // 2) UI libs (Radix/Shadcn building blocks + icons + small utilities).
+              if (
+                pkg.startsWith('@radix-ui/') ||
+                pkg === 'lucide-react' ||
+                pkg === 'cmdk' ||
+                pkg === 'clsx' ||
+                pkg === 'tailwind-merge'
+              ) {
+                return 'vendor-ui';
+              }
+
+              // 3) Motion (framer-motion is used widely and is chunky).
+              if (pkg === 'framer-motion') {
+                return 'vendor-motion';
+              }
+
+              // 4) Date/time libs (calendar tooling, scheduling, formatting).
+              if (
+                pkg === 'date-fns' ||
+                pkg === 'moment' ||
+                pkg === 'react-big-calendar' ||
+                pkg === 'react-day-picker' ||
+                pkg === 'ics'
+              ) {
+                return 'vendor-date';
+              }
+
+              // 5) PDF + document heavyweights.
+              if (
+                pkg === 'pdfjs-dist' ||
+                pkg === 'react-pdf' ||
+                pkg === 'react-pageflip' ||
+                pkg === '@jaymanyoo/pdf-book-viewer' ||
+                pkg === '@jaymanyoo/pdf-book-viewer/react'
+              ) {
                 return 'vendor-pdf';
               }
-              // Pusher is independent
-              if (id.includes('pusher-js')) {
+
+              // 6) Realtime (independent).
+              if (pkg === 'pusher-js' || pkg === 'pusher') {
                 return 'vendor-pusher';
               }
-              // Keep everything else together (React, UI libs, etc.)
+
+              // 7) DB / data layer (often admin-only, heavy).
+              if (
+                pkg === 'drizzle-orm' ||
+                pkg === '@neondatabase/serverless' ||
+                pkg === 'pg' ||
+                pkg === 'postgres'
+              ) {
+                return 'vendor-db';
+              }
+
+              // 8) AI SDKs (not needed for initial paint).
+              if (pkg === 'openai' || pkg === '@google/genai') {
+                return 'vendor-ai';
+              }
+
+              // 9) Canvas/media heavy libs.
+              if (pkg === 'fabric' || pkg === 'html2canvas') {
+                return 'vendor-canvas';
+              }
+
+              // 10) Large file/parse libs.
+              if (pkg === 'xlsx' || pkg === 'papaparse') {
+                return 'vendor-files';
+              }
+
+              // Everything else.
               return 'vendor';
             }
           },
