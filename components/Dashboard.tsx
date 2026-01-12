@@ -629,6 +629,46 @@ const Dashboard: React.FC<DashboardProps> = ({
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  // Deep-link bootstrap:
+  // If the app is loaded directly into a tab view (e.g. `?view=claims`), the browser's Back button
+  // would otherwise exit the browser/app (no prior in-app history entry). To ensure Back from the
+  // list returns to the dashboard, we insert a synthetic base (dashboard) history entry once.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const hasDeepLink =
+        Boolean(params.get('view')) ||
+        Boolean(params.get('claimId')) ||
+        Boolean(params.get('taskId'));
+
+      if (!hasDeepLink) return;
+
+      // Avoid doing this more than once per session.
+      if (sessionStorage.getItem('cc_deeplink_bootstrap') === '1') return;
+
+      // Build the "dashboard" URL by stripping tab/detail params.
+      const baseParams = new URLSearchParams(window.location.search);
+      baseParams.delete('view');
+      baseParams.delete('claimId');
+      baseParams.delete('taskId');
+
+      const baseUrl = `${window.location.pathname}${baseParams.toString() ? `?${baseParams.toString()}` : ''}`;
+      const fullUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+
+      // Replace current entry with dashboard, then push the deep-linked view.
+      window.history.replaceState({ __ccDeepLinkBootstrapped: true, __ccBase: true }, '', baseUrl);
+      window.history.pushState({ __ccDeepLinkBootstrapped: true, __ccView: true }, '', fullUrl);
+
+      // Sync local state to the deep-linked view (no popstate event for pushState).
+      setSearchParams(params);
+      sessionStorage.setItem('cc_deeplink_bootstrap', '1');
+    } catch (e) {
+      console.warn('Deep-link history bootstrap failed:', e);
+    }
+  }, []);
   
   // View State for Dashboard - derived from URL
   type TabType = 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | 'PUNCHLIST' | null;
