@@ -646,8 +646,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       if (!hasDeepLink) return;
 
-      // Avoid doing this more than once per session.
-      if (sessionStorage.getItem('cc_deeplink_bootstrap') === '1') return;
+      // Only do this when there is effectively no "back stack" for this tab.
+      // On Android/Chrome (and PWAs), this is the case that causes Back to exit the app.
+      if (window.history.length > 1) return;
 
       // Build the "dashboard" URL by stripping tab/detail params.
       const baseParams = new URLSearchParams(window.location.search);
@@ -664,7 +665,6 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       // Sync local state to the deep-linked view (no popstate event for pushState).
       setSearchParams(params);
-      sessionStorage.setItem('cc_deeplink_bootstrap', '1');
     } catch (e) {
       console.warn('Deep-link history bootstrap failed:', e);
     }
@@ -2683,8 +2683,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         if (selectedClaimForModal) {
           const isMobile = window.innerWidth < 768;
           
-          // Force clear if it shouldn't be showing
-          if (isMobile && (initialLoadRef.current || !userInteractionRef.current)) {
+          // Force clear ONLY for non-user-initiated opens during initial load.
+          // This prevents accidental deep-link auto-opens while still allowing the user's first tap.
+          if (isMobile && initialLoadRef.current && !userInteractionRef.current) {
             console.log('🚫 FORCE CLEARING mobile overlay that should not be visible!');
             // Use setTimeout to avoid state update during render
             setTimeout(() => setSelectedClaimForModal(null), 0);
