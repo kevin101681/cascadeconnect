@@ -70,6 +70,9 @@ export default defineConfig(({ mode }) => {
       react(),
       VitePWA({
         registerType: 'autoUpdate',
+        // We'll register the Service Worker ourselves after first paint (see index.tsx),
+        // so do not inject registerSW.js into index.html.
+        injectRegister: null,
         includeAssets: ['logo.svg', 'favicon.ico', 'complete_homeowner_manual.html', 'homeowner-manual.html'],
         manifest: {
           name: 'CASCADE CONNECT',
@@ -118,6 +121,8 @@ export default defineConfig(({ mode }) => {
             '**/*.map',
             // Keep the massive PDF worker out of the precache (fetch on-demand only).
             '**/assets/pdf.worker*.js',
+            // Do not precache file parsing libs; they are only needed for admin import/enrollment flows.
+            '**/assets/vendor-files*.js',
             // Large static manuals/images are not needed for initial shell.
             '**/images/manual/**',
           ],

@@ -88,3 +88,19 @@ root.render(
     </ErrorBoundary>
   </React.StrictMode>
 );
+
+// Delay Service Worker registration to reduce startup main-thread work.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    // Delay by ~1.5s so the UI paints first.
+    window.setTimeout(() => {
+      import('virtual:pwa-register')
+        .then(({ registerSW }) => {
+          registerSW({ immediate: true });
+        })
+        .catch((err) => {
+          console.warn('PWA registration skipped:', err);
+        });
+    }, 1500);
+  });
+}

@@ -10,7 +10,7 @@ import MessageSummaryModal, { ClaimMessage, TaskMessage } from './components/Mes
 import SubmissionSuccessModal from './components/SubmissionSuccessModal';
 import { X, Info, CheckCircle, User } from 'lucide-react';
 import HomeownerSelector from './components/HomeownerSelector';
-import { ModalProvider } from './components/providers/modal-provider';
+import { LazyAppProviders } from './components/providers/LazyAppProviders';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS, MOCK_CLAIM_MESSAGES } from './constants';
 import { sendEmail, generateNotificationBody } from './services/emailService';
@@ -4571,7 +4571,7 @@ Assigned By: ${assignerName}
       />
       
       {/* Global Modal Provider - Renders all stacked modals */}
-      <ModalProvider />
+      <LazyAppProviders />
     </Layout>
     </>
   );
