@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import HomeownerEnrollment from './components/HomeownerEnrollment';
@@ -23,6 +24,7 @@ const HomeownersList = React.lazy(() => import('./components/HomeownersList'));
 const EmailHistory = React.lazy(() => import('./components/EmailHistory'));
 const BackendDashboard = React.lazy(() => import('./components/BackendDashboard'));
 const UnifiedImportDashboard = React.lazy(() => import('./app/dashboard/admin/import/page'));
+const WarrantyAnalytics = React.lazy(() => import('./components/WarrantyAnalytics'));
 
 // DB Imports
 import { db, isDbConfigured } from './db';
@@ -142,6 +144,8 @@ const saveState = (key: string, data: any) => {
 };
 
 function App() {
+  const location = useLocation();
+  const navigate = useNavigate();
   // --- CLERK INTEGRATION ---
   // Use Clerk hooks with timeout protection
   const [authTimeout, setAuthTimeout] = useState(false);
@@ -966,7 +970,7 @@ function App() {
 
   // UI State - Persistent (but reset INVOICES on page load to prevent auto-opening)
   // Check URL hash for invoice creation link
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS'>(() => {
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS'>(() => {
     // Check if URL has invoice creation parameters
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
@@ -1001,7 +1005,7 @@ function App() {
         // Note: Invoice navigation handled via dashboardConfig instead of currentView
       }
     }
-    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'CALLS' | 'INVOICES' | 'SETTINGS'>('cascade_ui_view', 'DASHBOARD');
+    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'CALLS' | 'INVOICES' | 'SETTINGS'>('cascade_ui_view', 'DASHBOARD');
     // Don't auto-open modals on page load on mobile - always start at DASHBOARD
     // On desktop, allow restoring saved view
     if (typeof window !== 'undefined') {
@@ -1012,6 +1016,13 @@ function App() {
     }
     return saved;
   });
+
+  // Route-based wiring: allow direct navigation to Analytics.
+  useEffect(() => {
+    if (location.pathname === '/dashboard/analytics') {
+      setCurrentView('ANALYTICS');
+    }
+  }, [location.pathname]);
   
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(() => {
     // Don't restore selected claim on mobile to prevent modal from auto-opening
@@ -1514,7 +1525,7 @@ function App() {
         }
       } else {
         // Simple view navigation
-        if (view === 'DASHBOARD' || view === 'TEAM' || view === 'DATA' || view === 'TASKS' || view === 'HOMEOWNERS' || view === 'EMAIL_HISTORY' || view === 'BACKEND' || view === 'CALLS' || view === 'INVOICES') {
+        if (view === 'DASHBOARD' || view === 'TEAM' || view === 'DATA' || view === 'ANALYTICS' || view === 'TASKS' || view === 'HOMEOWNERS' || view === 'EMAIL_HISTORY' || view === 'BACKEND' || view === 'CALLS' || view === 'INVOICES') {
           setCurrentView(view as any);
         }
       }
@@ -4462,6 +4473,23 @@ Assigned By: ${assignerName}
       {currentView === 'BACKEND' && (
         <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
           <BackendDashboard onClose={() => setCurrentView('DASHBOARD')} />
+        </React.Suspense>
+      )}
+      {currentView === 'ANALYTICS' && (
+        <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
+          <WarrantyAnalytics
+            claims={claims}
+            homeowners={availableHomeowners}
+            builderGroups={builderGroups}
+            claimMessages={claimMessages as any}
+            onSelectClaim={(claim) => {
+              handleSelectClaim(claim);
+            }}
+            onClose={() => {
+              setCurrentView('DASHBOARD');
+              navigate('/');
+            }}
+          />
         </React.Suspense>
       )}
       {currentView === 'SETTINGS' && (
