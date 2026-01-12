@@ -2435,9 +2435,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     return (
       <>
-      <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
+      <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
         {/* Left Column: Claims List */}
-        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 md:rounded-tl-modal md:rounded-tr-none md:rounded-bl-modal ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
+        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800 md:rounded-tl-modal md:rounded-tr-none md:rounded-bl-modal ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
           <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-modal md:rounded-tr-none">
             <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               {filteredClaims.length > 0 && (
@@ -2903,9 +2903,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
     return (
       <>
-      <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
+      <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
         {/* Left Column: Tasks List */}
-        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedTaskForModal ? 'hidden md:flex' : 'flex'}`}>
+        <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedTaskForModal ? 'hidden md:flex' : 'flex'}`}>
           {/* Sticky Header */}
           <div className="sticky top-0 z-10 bg-surface dark:bg-gray-800 md:rounded-tl-3xl">
             {/* Title Bar */}
@@ -3101,9 +3101,9 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const renderMessagesTab = () => (
     <>
-    <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden md:h-full md:max-h-[calc(100vh-8rem)]">
+    <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
        {/* Left Column: Inbox List (Gmail Style) */}
-       <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col bg-surface dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
+       <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-3xl md:rounded-tr-none">
             <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
               {displayThreads.filter(t => !t.isRead).length > 0 && (
@@ -4808,7 +4808,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
           
           {currentTab === 'CLAIMS' && (
-            <AnimatedTabContent tabKey="claims">
+            <AnimatedTabContent tabKey="claims" className="flex-1 min-h-0 flex flex-col">
               <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
                 <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
                   {renderClaimsList(displayClaims, filteredClaimsForModal, isHomeownerView)}
@@ -4818,7 +4818,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
 
           {currentTab === 'TASKS' && isAdmin && (
-            <AnimatedTabContent tabKey="tasks">
+            <AnimatedTabContent tabKey="tasks" className="flex-1 min-h-0 flex flex-col">
               <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
                 <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
                   <div className="flex flex-col h-full md:h-auto">
@@ -4831,7 +4831,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* NOTES Tab - Admin Only */}
           {currentTab === 'NOTES' && isAdmin && (
-            <AnimatedTabContent tabKey="notes">
+            <AnimatedTabContent tabKey="notes" className="flex-1 min-h-0 flex flex-col">
               <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
                 <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
                   <div className="flex flex-col h-full md:h-auto">
@@ -4852,7 +4852,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
 
           {currentTab === 'MESSAGES' && (
-            <AnimatedTabContent tabKey="messages">
+            <AnimatedTabContent tabKey="messages" className="flex-1 min-h-0 flex flex-col">
               <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
                 <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
                   {renderMessagesTab()}
@@ -4863,7 +4863,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* CALLS Tab - Admin Only */}
           {currentTab === 'CALLS' && isAdmin && (
-            <AnimatedTabContent tabKey="calls">
+            <AnimatedTabContent tabKey="calls" className="flex-1 min-h-0 flex flex-col">
               <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
                 <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
                   <div className="flex flex-col h-full md:h-auto">
@@ -4884,7 +4884,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* SCHEDULE Tab - Admin Only */}
           {currentTab === 'SCHEDULE' && isAdmin && (
-            <AnimatedTabContent tabKey="schedule">
+            <AnimatedTabContent tabKey="schedule" className="flex-1 min-h-0 flex flex-col">
               <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
                 <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
                   <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col h-full">
@@ -4901,7 +4901,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* CHAT TAB - Team Chat */}
           {currentTab === 'CHAT' && isAdmin && (
-            <AnimatedTabContent tabKey="chat">
+            <AnimatedTabContent tabKey="chat" className="flex-1 min-h-0 flex flex-col">
               <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
                 <div className="flex-1 min-h-0 overflow-hidden md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4 h-[calc(100vh-100px)] md:h-auto">
                   <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
