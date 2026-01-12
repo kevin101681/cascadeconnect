@@ -819,48 +819,9 @@ const Dashboard: React.FC<DashboardProps> = ({
     };
   }, [selectedClaimForModal, selectedTaskForModal]);
   
-  // Handle browser back button for mobile claim modal
-  useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    if (selectedClaimForModal && isMobile) {
-      // Push a history state when modal opens
-      window.history.pushState({ modalOpen: 'claimDetails' }, '');
-
-      const handlePopState = (e: PopStateEvent) => {
-        // Close modal when back button is pressed
-        setSelectedClaimForModal(null);
-      };
-
-      window.addEventListener('popstate', handlePopState);
-
-      return () => {
-        window.removeEventListener('popstate', handlePopState);
-      };
-    }
-  }, [selectedClaimForModal]);
-
-  // Handle browser back button for mobile task modal
-  useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    if (selectedTaskForModal && isMobile) {
-      // Push a history state when modal opens
-      window.history.pushState({ modalOpen: 'taskDetails' }, '');
-
-      const handlePopState = (e: PopStateEvent) => {
-        // Close modal when back button is pressed
-        setSelectedTaskForModal(null);
-      };
-
-      window.addEventListener('popstate', handlePopState);
-
-      return () => {
-        window.removeEventListener('popstate', handlePopState);
-      };
-    }
-  }, [selectedTaskForModal]);
-  
-  // Handle browser back button to close modal (mobile only, and only when first opening a tab)
-  // Also clear inline selections when leaving split views on desktop to prevent modals from popping.
+  // Desktop: clear selections when leaving their split views to avoid fallback modals.
+  // Mobile back-navigation is handled purely via URL params (`view`, `claimId`, `taskId`) and the
+  // global popstate listener above.
   useEffect(() => {
     const previousTab = previousTabRef.current;
     const isMobile = window.innerWidth < 768;
@@ -893,23 +854,6 @@ const Dashboard: React.FC<DashboardProps> = ({
       selectedThreadId
     ) {
       setSelectedThreadId(null);
-    }
-    
-    const isOpeningTab = previousTab === null && currentTab !== null;
-    
-    if (isMobile && isOpeningTab) {
-      // Push a history state when tab first opens on mobile
-      window.history.pushState({ tabOpen: true }, '');
-      
-      const handlePopState = (e: PopStateEvent) => {
-        setCurrentTab(null);
-      };
-      
-      window.addEventListener('popstate', handlePopState);
-      
-      return () => {
-        window.removeEventListener('popstate', handlePopState);
-      };
     }
     
     // Update previous tab ref
@@ -2439,15 +2383,26 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Left Column: Claims List */}
         <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800 md:rounded-tl-modal md:rounded-tr-none md:rounded-bl-modal ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
           <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-modal md:rounded-tr-none">
-            <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-              {filteredClaims.length > 0 && (
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-primary text-primary bg-primary/10 text-xs font-medium">
-                  {filteredClaims.length}
-                </span>
-              )}
-              <span className="hidden sm:inline">Warranty Claims</span>
-              <span className="sm:hidden">Claims</span>
-            </h3>
+            <div className="flex items-center gap-2 min-w-0">
+              {/* Mobile back: Claims list → Dashboard */}
+              <button
+                type="button"
+                onClick={() => setCurrentTab(null)}
+                className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
+                aria-label="Back to dashboard"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2 min-w-0">
+                {filteredClaims.length > 0 && (
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-primary text-primary bg-primary/10 text-xs font-medium flex-shrink-0">
+                    {filteredClaims.length}
+                  </span>
+                )}
+                <span className="hidden sm:inline truncate">Warranty Claims</span>
+                <span className="sm:hidden truncate">Claims</span>
+              </h3>
+            </div>
             {/* New Claim button */}
             {isHomeownerView ? (
               <Button
@@ -2700,11 +2655,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       })()}
       {selectedClaimForModal && (
         <div className="md:hidden fixed inset-0 z-50 bg-surface dark:bg-gray-900 flex flex-col">
-          {/* Scrollable Claim Editor Content */}
-          <div 
-            className="flex-1 overflow-y-auto p-6 pb-24 overscroll-contain"
-            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
-          >
+          {/* Claim detail: edge-to-edge sections on mobile */}
+          <div className="flex-1 min-h-0">
             <Suspense fallback={
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -4793,20 +4745,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               <SmoothHeightWrapper enabled={false} className="flex-1 min-h-0 flex flex-col md:min-h-[300px]">
               <div className="flex-1 min-h-0 flex flex-col">
               <AnimatePresence mode="wait" initial={false}>
-          {/* Mobile Close FAB - shown on tab list view, hidden when nested modals are open */}
-          {currentTab && !selectedClaimForModal && !selectedTaskForModal && !selectedThreadId && (
-            <>
-              <button
-                onClick={() => setCurrentTab(null)}
-                className="md:hidden fixed bottom-6 right-4 z-[5010] w-14 h-14 bg-primary hover:bg-primary/90 rounded-full shadow-lg flex items-center justify-center text-primary-on transition-all"
-              >
-                <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </>
-          )}
-          
+          {/* Removed floating close FAB (use browser/back navigation instead). */}
+
           {currentTab === 'CLAIMS' && (
             <AnimatedTabContent tabKey="claims" className="flex-1 min-h-0 flex flex-col">
               <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">

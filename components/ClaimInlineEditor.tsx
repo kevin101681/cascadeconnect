@@ -748,7 +748,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Scrollable Body - Takes full space */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
+      <div className="flex-1 overflow-y-auto px-0 py-4 md:p-6 space-y-6 min-h-0">
           {/* Title and Description Card */}
           <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
             <div className="space-y-4">
@@ -930,7 +930,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                                 }
                               }}
                             />
-                            <div className="image-fallback hidden absolute inset-0 w-full h-full flex flex-col items-center justify-center p-2 text-center bg-surface-container dark:bg-gray-700">
+                            <div className="image-fallback hidden absolute inset-0 w-full h-full flex-col items-center justify-center p-2 text-center bg-surface-container dark:bg-gray-700">
                               <FileText className="h-8 w-8 text-primary mb-1" />
                               <span className="text-[10px] text-surface-on-variant truncate w-full px-1">{attachmentName}</span>
                             </div>
@@ -1093,7 +1093,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                       <button
                         type="button"
                         onClick={() => setShowDateEvaluatedPicker(true)}
-                        className="w-full h-[56px] flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container dark:border-gray-800 hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
+                        className="w-full h-[56px] flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
                       >
                         <CalendarIcon className="h-5 w-5 text-surface-on-variant dark:text-gray-400 mr-3" />
                         <span className="text-surface-on dark:text-gray-100">
