@@ -4790,7 +4790,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           const overlayInner = (
             <>
               {/* Disable height animation here to prevent "condensed then fullscreen" growth on open. */}
-              <SmoothHeightWrapper enabled={false} className="flex-1 min-h-0 md:min-h-[300px]">
+              <SmoothHeightWrapper enabled={false} className="flex-1 min-h-0 flex flex-col md:min-h-[300px]">
+              <div className="flex-1 min-h-0 flex flex-col">
               <AnimatePresence mode="wait" initial={false}>
           {/* Mobile Close FAB - shown on tab list view, hidden when nested modals are open */}
           {currentTab && !selectedClaimForModal && !selectedTaskForModal && !selectedThreadId && (
@@ -5157,6 +5158,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
 
               </AnimatePresence>
+              </div>
               </SmoothHeightWrapper>
             </>
           );
@@ -5167,7 +5169,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           // the overlay becomes truly full-screen. Portaling to `document.body` avoids this.
           if (isMobileView && typeof document !== 'undefined') {
             return createPortal(
-              <div className="fixed top-16 left-0 right-0 bottom-0 z-[5000] bg-surface dark:bg-gray-900 flex flex-col pt-4">
+              <div className="fixed top-16 left-0 right-0 bottom-0 z-[5000] bg-surface dark:bg-gray-900 flex flex-col pt-4 overflow-hidden">
                 {overlayInner}
               </div>,
               document.body
