@@ -229,9 +229,9 @@ const Layout: React.FC<LayoutProps> = ({
                   <img 
                     src="/connect.svg" 
                     alt="CASCADE CONNECT" 
-                    width={160}
-                    height={28}
-                    className="h-7 object-contain"
+                    width={150}
+                    height={32}
+                    className="h-8 w-auto object-contain"
                   />
                 </div>
               </button>

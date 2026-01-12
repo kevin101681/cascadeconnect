@@ -1,7 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
 import Button from './Button';
 import CalendarPicker from './CalendarPicker';
 import { Homeowner, HomeownerDocument, BuilderGroup } from '../types';
@@ -68,7 +66,7 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
     }
   }, [isOpen]);
 
-  const parseSubcontractorFile = (file: File) => {
+  const parseSubcontractorFile = async (file: File) => {
     setIsParsing(true);
     setParsedSubs([]);
 
@@ -85,6 +83,7 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
 
     if (isCSV) {
       // Parse CSV file directly
+      const Papa = (await import('papaparse')).default;
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
@@ -116,6 +115,7 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
       });
     } else if (isExcel) {
       // Parse Excel file using xlsx library
+      const XLSX = await import('xlsx');
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
@@ -187,6 +187,7 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
       reader.readAsBinaryString(file);
     } else {
       // Try to parse as CSV anyway (might be a CSV with wrong extension)
+      const Papa = (await import('papaparse')).default;
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
@@ -222,7 +223,7 @@ const HomeownerEnrollment: React.FC<HomeownerEnrollmentProps> = ({ isOpen, onClo
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setTradeFile(selectedFile);
-      parseSubcontractorFile(selectedFile);
+      void parseSubcontractorFile(selectedFile);
     }
   };
 

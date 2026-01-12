@@ -9,7 +9,6 @@
  */
 
 import React, { useState } from 'react';
-import Papa from 'papaparse';
 import { Upload, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 import Button from '../Button';
 import { importSubcontractors, SubcontractorImportRow, SubcontractorImportResult } from '../../actions/import-subcontractors';
@@ -33,6 +32,8 @@ const SubImport: React.FC = () => {
 
     try {
       const text = await file.text();
+
+      const Papa = (await import('papaparse')).default;
       
       Papa.parse(text, {
         header: true,

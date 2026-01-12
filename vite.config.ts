@@ -142,17 +142,14 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       target: 'esnext',
+      // Avoid eager preloading of large lazy chunks (helps Lighthouse "Unused JS").
+      modulePreload: false,
       rollupOptions: {
         input: {
           main: path.resolve(__dirname, 'index.html'),
         },
         output: {
           manualChunks(id) {
-            // Create a separate chunk for CBS Books app
-            if (id.includes('lib/cbsbooks/App')) {
-              return 'cbsbooks-app';
-            }
-            
             if (id.includes('node_modules')) {
               // Resolve package name from node_modules path.
               const rel = id.split('node_modules/')[1] || '';
@@ -162,16 +159,8 @@ export default defineConfig(({ mode }) => {
               // If we can't resolve a package name, let Rollup decide.
               if (!pkg) return;
 
-              // PDF + document heavyweights (independent; safe to isolate).
-              if (
-                pkg === 'pdfjs-dist' ||
-                pkg === 'react-pdf' ||
-                pkg === 'react-pageflip' ||
-                pkg === '@jaymanyoo/pdf-book-viewer' ||
-                pkg === '@jaymanyoo/pdf-book-viewer/react'
-              ) {
-                return 'vendor-pdf';
-              }
+              // PDF: Let Rollup decide chunking to avoid accidentally creating
+              // a shared chunk that gets pulled into the entry dependency graph.
 
               // Realtime (independent; safe to isolate).
               if (pkg === 'pusher-js' || pkg === 'pusher') {

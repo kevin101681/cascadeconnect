@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef, forwardRef, Suspense, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import HTMLFlipBook from 'react-pageflip';
 // Lazy load heavy libraries - only load when needed
 // import Papa from 'papaparse';
 // import * as XLSX from 'xlsx';
@@ -26,12 +25,6 @@ import HomeownerDashboardMobile from './HomeownerDashboardMobile';
 import { StaggerContainer, FadeIn, AnimatedTabContent } from './motion/MotionWrapper';
 import { SmoothHeightWrapper } from './motion/SmoothHeightWrapper';
 
-// Lazy load TeamChat component
-const TeamChat = React.lazy(() => import('./TeamChat').catch(err => {
-  console.error('Failed to load TeamChat:', err);
-  return { default: () => <div className="p-4 text-red-500">Failed to load Team Chat. Please refresh the page.</div> };
-}));
-
 // Lazy-load heavy dashboard tabs / tools so they don't ship in the initial bundle.
 const AIIntakeDashboard = React.lazy(() => import('./AIIntakeDashboard'));
 const HomeownerManual = React.lazy(() => import('./HomeownerManual'));
@@ -50,6 +43,14 @@ const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err =
   // Return a fallback component
   return { default: () => <div className="p-4 text-red-500">Failed to load PDF viewer. Please refresh the page.</div> };
 }));
+
+// Lazy-load react-pageflip (heavy) so it doesn't ship on initial dashboard load.
+const HTMLFlipBook = React.lazy(() => import('react-pageflip'));
+
+// Lazy-load team chat widget so it doesn't ship on initial dashboard load.
+const FloatingChatWidget = React.lazy(() =>
+  import('./chat/ChatWidget').then((m) => ({ default: m.ChatWidget }))
+);
 
 const ClaimInlineEditor = React.lazy(() => import('./ClaimInlineEditor').catch(err => {
   console.error('Failed to load ClaimInlineEditor:', err);
@@ -377,25 +378,33 @@ const ManualImageFlipBook: React.FC<ManualImageFlipBookProps> = ({ images, width
 
   return (
     <div style={{ maxWidth: '100%', maxHeight: '100%', overflow: 'hidden' }}>
-      <HTMLFlipBook
-        ref={flipBookRef}
-        width={width}
-        height={height}
-        size="fixed"
-        showCover={false}
-        className="manual-flipbook"
-        {...({} as any)}
+      <Suspense
+        fallback={
+          <div className="p-4 text-sm text-surface-on-variant dark:text-gray-400">
+            Loading flipbook…
+          </div>
+        }
       >
-        {images.map((imageUrl, index) => (
-          <ManualImagePage
-            key={`manual-page-${index}`}
-            imageUrl={imageUrl}
-            pageNumber={index + 1}
-            width={width}
-            height={height}
-          />
-        ))}
-      </HTMLFlipBook>
+        <HTMLFlipBook
+          ref={flipBookRef}
+          width={width}
+          height={height}
+          size="fixed"
+          showCover={false}
+          className="manual-flipbook"
+          {...({} as any)}
+        >
+          {images.map((imageUrl, index) => (
+            <ManualImagePage
+              key={`manual-page-${index}`}
+              imageUrl={imageUrl}
+              pageNumber={index + 1}
+              width={width}
+              height={height}
+            />
+          ))}
+        </HTMLFlipBook>
+      </Suspense>
     </div>
   );
 };
@@ -565,6 +574,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   // PDF Viewer state
   const [selectedDocument, setSelectedDocument] = useState<HomeownerDocument | null>(null);
   const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false);
+
+  // Team Chat widget (lazy mounted)
+  const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(false);
   
   // Manual page viewer state
   const [manualPageDimensions, setManualPageDimensions] = useState({ width: 800, height: 1200 });
@@ -675,13 +687,13 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, []);
   
   // View State for Dashboard - derived from URL
-  type TabType = 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'CHAT' | 'PUNCHLIST' | null;
+  type TabType = 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'PUNCHLIST' | null;
   
   const currentTab = useMemo<TabType>(() => {
     const view = searchParams.get('view');
     if (!view) return null;
     
-    const validTabs: TabType[] = ['CLAIMS', 'MESSAGES', 'TASKS', 'NOTES', 'CALLS', 'DOCUMENTS', 'MANUAL', 'HELP', 'PAYROLL', 'INVOICES', 'SCHEDULE', 'CHAT', 'PUNCHLIST'];
+    const validTabs: TabType[] = ['CLAIMS', 'MESSAGES', 'TASKS', 'NOTES', 'CALLS', 'DOCUMENTS', 'MANUAL', 'HELP', 'PAYROLL', 'INVOICES', 'SCHEDULE', 'PUNCHLIST'];
     const upperView = view.toUpperCase() as TabType;
     
     return validTabs.includes(upperView) ? upperView : null;
@@ -964,7 +976,6 @@ const Dashboard: React.FC<DashboardProps> = ({
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('CALLS'); // CALLS tab (admin only)
       tabs.push('SCHEDULE'); // SCHEDULE tab (admin only)
-      tabs.push('CHAT'); // CHAT tab (admin only)
       // Only show Payroll and Invoices for Administrator role, not Employee role
       if (!isEmployee) {
         tabs.push('PAYROLL'); // PAYROLL tab (administrator only)
@@ -4023,11 +4034,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                 'DOCUMENTS': 'DOCUMENTS',
                 'MANUAL': 'MANUAL',
                 'HELP': 'HELP',
-                'CHAT': 'CHAT', // ✅ FIX: Added CHAT to module map
               };
 
               if (module === 'BLUETAG') {
                 setCurrentTab('PUNCHLIST');
+              } else if (module === 'CHAT') {
+                setIsChatWidgetOpen(true);
               } else {
                 const tab = moduleMap[module];
                 if (tab) {
@@ -4036,6 +4048,37 @@ const Dashboard: React.FC<DashboardProps> = ({
               }
             }}
           />
+          {isAdmin && (
+            <>
+              {!isChatWidgetOpen && (
+                <button
+                  type="button"
+                  onClick={() => setIsChatWidgetOpen(true)}
+                  className="fixed bottom-4 right-4 z-50 h-14 w-14 bg-white hover:bg-gray-50 text-primary border-2 border-primary rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+                  aria-label="Open Team Chat"
+                >
+                  <MessageCircle className="h-6 w-6" />
+                </button>
+              )}
+
+              {isChatWidgetOpen && (
+                <Suspense fallback={null}>
+                  <FloatingChatWidget
+                    currentUserId={currentUser?.id || ''}
+                    currentUserName={currentUser?.name || 'Unknown User'}
+                    isOpen={isChatWidgetOpen}
+                    onOpenChange={setIsChatWidgetOpen}
+                    onOpenHomeownerModal={(homeownerId) => {
+                      const homeowner = homeowners.find((h) => h.id === homeownerId);
+                      if (homeowner && onSelectHomeowner) {
+                        onSelectHomeowner(homeowner);
+                      }
+                    }}
+                  />
+                </Suspense>
+              )}
+            </>
+          )}
         </>
       );
     }
@@ -4439,7 +4482,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                       HELP: { label: 'Help', icon: <HelpCircle className="h-4 w-4" /> },
                       CALLS: { label: 'Calls', icon: <Phone className="h-4 w-4" /> },
                       SCHEDULE: { label: 'Schedule', icon: <Calendar className="h-4 w-4" /> },
-                      CHAT: { label: 'Chat', icon: <MessageCircle className="h-4 w-4" /> },
                       PAYROLL: { label: 'Payroll', icon: <DollarSign className="h-4 w-4" /> },
                       INVOICES: { label: 'Invoices', icon: <Receipt className="h-4 w-4" /> },
                       PUNCHLIST: { label: 'BlueTag', icon: <HardHat className="h-4 w-4" /> },
@@ -4952,31 +4994,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             </AnimatedTabContent>
           )}
-
-
-          {/* CHAT TAB - Team Chat */}
-          {currentTab === 'CHAT' && isAdmin && (
-            <AnimatedTabContent tabKey="chat" className="flex-1 min-h-0 flex flex-col">
-              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
-                <div className="flex-1 min-h-0 overflow-hidden md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4 h-[calc(100vh-100px)] md:h-auto">
-                  <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                    <TeamChat 
-                      currentUserId={currentUser?.id || ''}
-                      currentUserName={currentUser?.name || 'Unknown User'}
-                      onOpenHomeownerModal={(homeownerId) => {
-                        const homeowner = homeowners.find(h => h.id === homeownerId);
-                        if (homeowner && onSelectHomeowner) {
-                          onSelectHomeowner(homeowner);
-                          setCurrentTab('CLAIMS');
-                        }
-                      }}
-                    />
-                  </Suspense>
-                </div>
-              </div>
-            </AnimatedTabContent>
-          )}
-
 
           {currentTab === 'PAYROLL' && isAdmin && currentUser?.role !== 'Employee' && (
             <AnimatedTabContent tabKey="payroll">
@@ -6492,6 +6509,38 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
           )}
         </div>
+        {isAdmin && (
+          <>
+            {!isChatWidgetOpen && (
+              <button
+                type="button"
+                onClick={() => setIsChatWidgetOpen(true)}
+                className="fixed bottom-4 right-4 z-50 h-14 w-14 bg-white hover:bg-gray-50 text-primary border-2 border-primary rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+                aria-label="Open Team Chat"
+              >
+                <MessageCircle className="h-6 w-6" />
+              </button>
+            )}
+
+            {isChatWidgetOpen && (
+              <Suspense fallback={null}>
+                <FloatingChatWidget
+                  currentUserId={currentUser?.id || ''}
+                  currentUserName={currentUser?.name || 'Unknown User'}
+                  isOpen={isChatWidgetOpen}
+                  onOpenChange={setIsChatWidgetOpen}
+                  onOpenHomeownerModal={(homeownerId) => {
+                    const homeowner = homeowners.find((h) => h.id === homeownerId);
+                    if (homeowner && onSelectHomeowner) {
+                      onSelectHomeowner(homeowner);
+                      setCurrentTab('CLAIMS');
+                    }
+                  }}
+                />
+              </Suspense>
+            )}
+          </>
+        )}
       </>
     );
   }

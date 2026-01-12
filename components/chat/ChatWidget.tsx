@@ -11,7 +11,7 @@
  * - Responsive: Full screen on mobile, popover on desktop
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { MessageCircle, X, ArrowLeft } from 'lucide-react';
 import { ChatWindow } from './ChatWindow';
 import { ChatSidebar } from './ChatSidebar';
@@ -22,19 +22,29 @@ interface ChatWidgetProps {
   currentUserId: string;
   currentUserName: string;
   onOpenHomeownerModal?: (homeownerId: string) => void;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const ChatWidget: React.FC<ChatWidgetProps> = ({
   currentUserId,
   currentUserName,
   onOpenHomeownerModal,
+  isOpen: isOpenProp,
+  onOpenChange,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
 
+  const isOpen = isOpenProp ?? internalIsOpen;
+  const setIsOpen = (next: boolean) => {
+    if (onOpenChange) onOpenChange(next);
+    else setInternalIsOpen(next);
+  };
+
   // Load unread counts
-  const loadUnreadCounts = async () => {
+  const loadUnreadCounts = useCallback(async () => {
     try {
       const channels = await getUserChannels(currentUserId);
       const total = channels.reduce((sum, ch) => sum + (ch.unreadCount || 0), 0);
@@ -42,7 +52,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     } catch (error) {
       console.error('Error loading unread counts:', error);
     }
-  };
+  }, [currentUserId]);
 
   useEffect(() => {
     loadUnreadCounts();
@@ -51,7 +61,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     const interval = setInterval(loadUnreadCounts, 30000);
     
     return () => clearInterval(interval);
-  }, [currentUserId]);
+  }, [loadUnreadCounts]);
 
   // Listen for new messages to update unread count
   useEffect(() => {
@@ -66,7 +76,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
       channel.unbind('new-message');
       pusher.unsubscribe('team-chat');
     };
-  }, []);
+  }, [loadUnreadCounts]);
 
   const handleToggle = () => {
     setIsOpen(!isOpen);

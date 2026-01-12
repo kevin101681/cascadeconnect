@@ -61,13 +61,17 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
           <img 
             src="/logo.svg" 
             alt="CASCADE CONNECT Logo" 
+            width={40}
+            height={40}
             className="h-10 w-10 object-contain" 
           />
         </div>
         <img 
           src="/connect.svg" 
           alt="CASCADE CONNECT" 
-          className="h-8 object-contain mb-4" 
+          width={150}
+          height={32}
+          className="h-8 w-auto object-contain mb-4" 
         />
         <p className="text-surface-on-variant dark:text-gray-400 text-center max-w-sm">
           The premier warranty management platform for builders and homeowners.
