@@ -4471,6 +4471,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       PAYROLL: { label: 'Payroll', icon: <DollarSign className="h-4 w-4" /> },
                       INVOICES: { label: 'Invoices', icon: <Receipt className="h-4 w-4" /> },
                       PUNCHLIST: { label: 'BlueTag', icon: <HardHat className="h-4 w-4" /> },
+                      CHAT: { label: 'Chat', icon: <MessageCircle className="h-4 w-4" /> },
                     };
 
                     const { label, icon } = meta[tab] || { label: tab, icon: null };
