@@ -628,39 +628,25 @@ export const Invoices: React.FC<InvoicesProps> = ({
     doc.text("3519 Fox Ct.", 14, 69);
     doc.text("Gig Harbor, WA 98335", 14, 74);
     
-    // Project Address (full width section above table)
+    // Start Y for table block (header pills + injected address row + line items)
     let y = 83;
-    if (invoice.projectDetails) {
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'bold');
-        doc.setTextColor(0);
-        doc.text("Project Address:", 14, y);
-        doc.setFont(undefined, 'normal');
-        
-        // Full-width value below label (prevents "detached" wrapping/overflow)
-        const addressLines = wrapText(invoice.projectDetails, 182);
-        const addressStartY = y + 6;
-        addressLines.forEach((line, idx) => {
-            doc.text(line, 14, addressStartY + (idx * 5));
-        });
-        
-        // Space before table
-        y = addressStartY + (addressLines.length * 5) + 5;
-    }
     
     // Items Table Header Y Position
     y = Math.max(y, 88); // Ensure minimum spacing
 
     // Table Header: individual "pill" cells with true centered text (no padding math)
+    // Column sizing: keep header + body aligned by using shared ratios.
     const tableX = 14;
     const tableW = 182;
     const gap = 2;
     const headerH = 8;
     const headerYTop = y;
-    const colDescW = 90;
-    const colQtyW = 20;
-    const colRateW = 28;
-    const colAmtW = tableW - (colDescW + colQtyW + colRateW + (gap * 3)); // remaining width
+    const contentW = tableW - (gap * 3);
+    // Flex ratios (sum = 10): Description 4, Qty 1.5, Rate 2, Amount 2.5
+    const colDescW = contentW * 0.4;
+    const colQtyW = contentW * 0.15;
+    const colRateW = contentW * 0.2;
+    const colAmtW = contentW - (colDescW + colQtyW + colRateW); // remainder to avoid rounding drift
     const descRect = { x: tableX, y: headerYTop, w: colDescW, h: headerH };
     const qtyRect = { x: tableX + colDescW + gap, y: headerYTop, w: colQtyW, h: headerH };
     const rateRect = { x: qtyRect.x + colQtyW + gap, y: headerYTop, w: colRateW, h: headerH };
@@ -680,7 +666,47 @@ export const Invoices: React.FC<InvoicesProps> = ({
     // Items start just below header
     doc.setFont(undefined, 'normal');
     doc.setTextColor(0);
-    y = headerYTop + headerH + 8;
+    y = headerYTop + headerH + 6;
+    
+    // Injected "Project Address" row (sandwiched inside table: after header, before first item)
+    if (invoice.projectDetails) {
+        const label = "Project Address: ";
+        const value = String(invoice.projectDetails);
+        const rowX = descRect.x + 2;
+        const rowMaxW = tableW - 4; // allow across entire table width
+        
+        // Inline label + value on the same line; wrap if needed.
+        doc.setFontSize(10);
+        doc.setTextColor(0);
+        
+        doc.setFont(undefined, 'bold');
+        const labelW = (doc as any).getTextWidth ? (doc as any).getTextWidth(label) : 28;
+        
+        doc.setFont(undefined, 'normal');
+        const valueLines = wrapText(value, Math.max(10, rowMaxW - labelW));
+        
+        // First line: label (bold) + first value segment (normal) on the same baseline.
+        doc.setFont(undefined, 'bold');
+        doc.text(label, rowX, y);
+        doc.setFont(undefined, 'normal');
+        doc.text(valueLines[0] || '', rowX + labelW, y);
+        
+        // Additional wrapped lines align with description column left edge (no label repeat)
+        if (valueLines.length > 1) {
+            valueLines.slice(1).forEach((line, idx) => {
+                doc.text(line, rowX, y + ((idx + 1) * 5));
+            });
+            y += (valueLines.length * 5);
+        } else {
+            y += 6;
+        }
+        
+        // Small spacing before first line item row
+        y += 2;
+    } else {
+        // Keep a touch of separation from header when no address row exists
+        y += 2;
+    }
     
     // Defensive check: Ensure items exist and is array
     const items = Array.isArray(invoice.items) ? invoice.items : [];
