@@ -584,7 +584,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
         doc.text(`Date Paid: ${formatDate(invoice.datePaid)}`, 140, 32, { align: 'right' });
     }
 
-    // Bill To section
+    // Bill To section (left column, top)
     doc.setFontSize(12);
     doc.setFont(undefined, 'bold');
     doc.text("Bill To:", 14, 40);
@@ -593,27 +593,29 @@ export const Invoices: React.FC<InvoicesProps> = ({
     doc.text(invoice.clientName || '', 14, 46);
     if(invoice.clientEmail) doc.text(invoice.clientEmail, 14, 51);
     
-    // Sent From section (right side, aligned with Bill To)
+    // Sent From section (left column, below Bill To)
     doc.setFontSize(12);
     doc.setFont(undefined, 'bold');
-    doc.text("Sent From:", 120, 40);
+    doc.text("Sent From:", 14, 58);
     doc.setFont(undefined, 'normal');
     doc.setFontSize(10);
-    doc.text("Cascade Builder Services", 120, 46);
-    doc.text("3519 Fox Ct.", 120, 51);
-    doc.text("Gig Harbor, WA 98335", 120, 56);
+    doc.text("Cascade Builder Services", 14, 64);
+    doc.text("3519 Fox Ct.", 14, 69);
+    doc.text("Gig Harbor, WA 98335", 14, 74);
     
-    // Items Table Header Y Position
-    let y = 75;
-
-    // Project Details (Moved above Items Table)
+    // Project Address (full width section above table)
+    let y = 83;
     if (invoice.projectDetails) {
         doc.setFontSize(10);
         doc.setFont(undefined, 'bold');
-        doc.text("Address:", 14, 62);
+        doc.text("Project Address:", 14, y);
         doc.setFont(undefined, 'normal');
-        doc.text(invoice.projectDetails, 32, 62); // Reduced from 40 to 32 to bring closer
+        doc.text(invoice.projectDetails, 52, y);
+        y += 8;
     }
+    
+    // Items Table Header Y Position
+    y = Math.max(y, 88); // Ensure minimum spacing
 
     // Table Header with Rounded Corners (Pill style)
     doc.setFillColor(surfaceContainerColor[0], surfaceContainerColor[1], surfaceContainerColor[2]);
