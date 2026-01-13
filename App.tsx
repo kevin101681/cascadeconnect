@@ -30,6 +30,9 @@ const BackendDashboard = React.lazy(() => import('./components/BackendDashboard'
 const UnifiedImportDashboard = React.lazy(() => import('./app/dashboard/admin/import/page'));
 const WarrantyAnalytics = React.lazy(() => import('./components/WarrantyAnalytics'));
 
+// Edge-to-edge loading skeleton
+import { DashboardSkeleton } from './components/skeletons/DashboardSkeleton';
+
 // DB Imports
 import { db, isDbConfigured } from './db';
 import { 
@@ -626,137 +629,228 @@ function App() {
               // Keep existing homeowners from state/localStorage as fallback
             }
 
-            // 2. Fetch Users (Employees & Builders)
-            // Try selective query first to avoid errors if email notification columns don't exist
-            try {
-              // First, try to select only basic columns (safer - works even if email notification columns don't exist)
-              const dbUsers = await db.select({
-                id: usersTable.id,
-                name: usersTable.name,
-                email: usersTable.email,
-                role: usersTable.role,
-                internalRole: usersTable.internalRole, // CRITICAL: Load the internal role for ADMIN users
-                password: usersTable.password,
-                builderGroupId: usersTable.builderGroupId
-              }).from(usersTable);
-              
-              console.log('👥 Loaded users from database:', dbUsers.length, 'users');
-              
-              if (dbUsers.length > 0) {
-                // Try to fetch email notification preferences separately if columns exist
-                let emailPrefsMap = new Map<string, any>();
+            // ========================================================================
+            // 🚀 PARALLEL DATA FETCHING (Optimized from Sequential Waterfall)
+            // ========================================================================
+            // Previously: Sequential queries took 10+ seconds (2s + 1s + 3s + 4s...)
+            // Now: All queries run in parallel. Total time = Max(individual queries) ≈ 2-3s
+            
+            console.time('⏱️ 2. PARALLEL DB FETCH (All Tables)');
+            
+            // Fetch all data in parallel using Promise.all
+            const [
+              usersResult,
+              builderGroupsResult,
+              tasksResult,
+              docsResult,
+              contractorsResult,
+              threadsResult
+            ] = await Promise.all([
+              // 2a. Fetch Users (Employees & Builders)
+              (async () => {
+                console.time('⏱️   2a. Users Query');
                 try {
-                  // Only try to fetch preferences if we can safely query for them
-                  // This avoids 400 errors if columns don't exist
-                  const usersWithPrefs = await db.select({
+                  const dbUsers = await db.select({
                     id: usersTable.id,
-                    emailNotifyClaimSubmitted: usersTable.emailNotifyClaimSubmitted,
-                    emailNotifyHomeownerAcceptsAppointment: usersTable.emailNotifyHomeownerAcceptsAppointment,
-                    emailNotifySubAcceptsAppointment: usersTable.emailNotifySubAcceptsAppointment,
-                    emailNotifyHomeownerRescheduleRequest: usersTable.emailNotifyHomeownerRescheduleRequest,
-                    emailNotifyTaskAssigned: usersTable.emailNotifyTaskAssigned,
-                    emailNotifyHomeownerEnrollment: usersTable.emailNotifyHomeownerEnrollment,
-                    pushNotifyClaimSubmitted: usersTable.pushNotifyClaimSubmitted,
-                    pushNotifyHomeownerAcceptsAppointment: usersTable.pushNotifyHomeownerAcceptsAppointment,
-                    pushNotifySubAcceptsAppointment: usersTable.pushNotifySubAcceptsAppointment,
-                    pushNotifyHomeownerRescheduleRequest: usersTable.pushNotifyHomeownerRescheduleRequest,
-                    pushNotifyTaskAssigned: usersTable.pushNotifyTaskAssigned,
-                    pushNotifyHomeownerMessage: usersTable.pushNotifyHomeownerMessage,
-                    pushNotifyHomeownerEnrollment: usersTable.pushNotifyHomeownerEnrollment
-                  }).from(usersTable).catch((err: any) => {
-                    // If query fails due to missing columns, return empty array
-                    if (err?.message?.includes('email_notify') || err?.message?.includes('push_notify') || err?.statusCode === 400) {
-                      console.log('⚠️ Email notification columns not found, using defaults');
-                      return [];
-                    }
-                    throw err; // Re-throw other errors
-                  });
-                  
-                  if (usersWithPrefs && usersWithPrefs.length > 0) {
-                    usersWithPrefs.forEach(u => {
-                      emailPrefsMap.set(u.id, {
-                        emailNotifyClaimSubmitted: u.emailNotifyClaimSubmitted ?? true,
-                        emailNotifyHomeownerAcceptsAppointment: u.emailNotifyHomeownerAcceptsAppointment ?? true,
-                        emailNotifySubAcceptsAppointment: u.emailNotifySubAcceptsAppointment ?? true,
-                        emailNotifyHomeownerRescheduleRequest: u.emailNotifyHomeownerRescheduleRequest ?? true,
-                        emailNotifyTaskAssigned: u.emailNotifyTaskAssigned ?? true,
-                        pushNotifyClaimSubmitted: u.pushNotifyClaimSubmitted === true,
-                        pushNotifyHomeownerAcceptsAppointment: u.pushNotifyHomeownerAcceptsAppointment === true,
-                        pushNotifySubAcceptsAppointment: u.pushNotifySubAcceptsAppointment === true,
-                        pushNotifyHomeownerRescheduleRequest: u.pushNotifyHomeownerRescheduleRequest === true,
-                        pushNotifyTaskAssigned: u.pushNotifyTaskAssigned === true,
-                        pushNotifyHomeownerMessage: u.pushNotifyHomeownerMessage === true,
-                        pushNotifyHomeownerEnrollment: u.pushNotifyHomeownerEnrollment === true,
-                        emailNotifyHomeownerEnrollment: u.emailNotifyHomeownerEnrollment ?? true
-                      });
-                    });
-                  }
-                } catch (prefsError: any) {
-                  // Email notification columns don't exist - use defaults
-                  console.log('⚠️ Email notification columns not found, using defaults');
+                    name: usersTable.name,
+                    email: usersTable.email,
+                    role: usersTable.role,
+                    internalRole: usersTable.internalRole,
+                    password: usersTable.password,
+                    builderGroupId: usersTable.builderGroupId
+                  }).from(usersTable);
+                  console.timeEnd('⏱️   2a. Users Query');
+                  console.log('👥 Loaded users from database:', dbUsers.length, 'users');
+                  return { success: true, data: dbUsers };
+                } catch (error) {
+                  console.timeEnd('⏱️   2a. Users Query');
+                  console.error('❌ Failed to load users:', error);
+                  return { success: false, data: [] };
                 }
+              })(),
+              
+              // 2b. Fetch Builder Groups
+              (async () => {
+                console.time('⏱️   2b. Builder Groups Query');
+                try {
+                  const dbBuilderGroups = await db.select().from(builderGroupsTable);
+                  console.timeEnd('⏱️   2b. Builder Groups Query');
+                  return { success: true, data: dbBuilderGroups };
+                } catch (error) {
+                  console.timeEnd('⏱️   2b. Builder Groups Query');
+                  return { success: false, data: [] };
+                }
+              })(),
+              
+              // 2c. Fetch Tasks
+              (async () => {
+                console.time('⏱️   2c. Tasks Query');
+                try {
+                  const dbTasks = await db.select().from(tasksTable);
+                  console.timeEnd('⏱️   2c. Tasks Query');
+                  return { success: true, data: dbTasks };
+                } catch (error) {
+                  console.timeEnd('⏱️   2c. Tasks Query');
+                  return { success: false, data: [] };
+                }
+              })(),
+              
+              // 2d. Fetch Documents
+              (async () => {
+                console.time('⏱️   2d. Documents Query');
+                try {
+                  const dbDocs = await db.select().from(documentsTable);
+                  console.timeEnd('⏱️   2d. Documents Query');
+                  return { success: true, data: dbDocs };
+                } catch (error) {
+                  console.timeEnd('⏱️   2d. Documents Query');
+                  return { success: false, data: [] };
+                }
+              })(),
+              
+              // 2e. Fetch Contractors
+              (async () => {
+                console.time('⏱️   2e. Contractors Query');
+                try {
+                  const dbContractors = await db.select().from(contractorsTable);
+                  console.timeEnd('⏱️   2e. Contractors Query');
+                  return { success: true, data: dbContractors };
+                } catch (error) {
+                  console.timeEnd('⏱️   2e. Contractors Query');
+                  console.log('Contractors table not found, using local storage:', (error as any).message);
+                  return { success: false, data: [] };
+                }
+              })(),
+              
+              // 2f. Fetch Message Threads
+              (async () => {
+                console.time('⏱️   2f. Message Threads Query');
+                try {
+                  const dbThreads = await db.select().from(messageThreadsTable);
+                  console.timeEnd('⏱️   2f. Message Threads Query');
+                  return { success: true, data: dbThreads };
+                } catch (error) {
+                  console.timeEnd('⏱️   2f. Message Threads Query');
+                  console.log('Message threads table not found, using local storage:', (error as any).message);
+                  return { success: false, data: [] };
+                }
+              })()
+            ]);
+            
+            console.timeEnd('⏱️ 2. PARALLEL DB FETCH (All Tables)');
+            
+            // ========================================================================
+            // PROCESS RESULTS (Map database rows to frontend types)
+            // ========================================================================
+            
+            // Process Users (with secondary preferences query if needed)
+            if (usersResult.success && usersResult.data.length > 0) {
+              const dbUsers = usersResult.data;
+              
+              // Try to fetch email notification preferences separately if columns exist
+              let emailPrefsMap = new Map<string, any>();
+              try {
+                const usersWithPrefs = await db.select({
+                  id: usersTable.id,
+                  emailNotifyClaimSubmitted: usersTable.emailNotifyClaimSubmitted,
+                  emailNotifyHomeownerAcceptsAppointment: usersTable.emailNotifyHomeownerAcceptsAppointment,
+                  emailNotifySubAcceptsAppointment: usersTable.emailNotifySubAcceptsAppointment,
+                  emailNotifyHomeownerRescheduleRequest: usersTable.emailNotifyHomeownerRescheduleRequest,
+                  emailNotifyTaskAssigned: usersTable.emailNotifyTaskAssigned,
+                  emailNotifyHomeownerEnrollment: usersTable.emailNotifyHomeownerEnrollment,
+                  pushNotifyClaimSubmitted: usersTable.pushNotifyClaimSubmitted,
+                  pushNotifyHomeownerAcceptsAppointment: usersTable.pushNotifyHomeownerAcceptsAppointment,
+                  pushNotifySubAcceptsAppointment: usersTable.pushNotifySubAcceptsAppointment,
+                  pushNotifyHomeownerRescheduleRequest: usersTable.pushNotifyHomeownerRescheduleRequest,
+                  pushNotifyTaskAssigned: usersTable.pushNotifyTaskAssigned,
+                  pushNotifyHomeownerMessage: usersTable.pushNotifyHomeownerMessage,
+                  pushNotifyHomeownerEnrollment: usersTable.pushNotifyHomeownerEnrollment
+                }).from(usersTable).catch((err: any) => {
+                  if (err?.message?.includes('email_notify') || err?.message?.includes('push_notify') || err?.statusCode === 400) {
+                    console.log('⚠️ Email notification columns not found, using defaults');
+                    return [];
+                  }
+                  throw err;
+                });
                 
-                const fetchedEmployees: InternalEmployee[] = dbUsers
-                  .filter(u => u.role === 'ADMIN')
-                  .map(u => {
-                    const prefs = emailPrefsMap.get(u.id);
-                    return {
-                        id: u.id,
-                        name: u.name,
-                        email: u.email,
-                        role: u.internalRole || 'Administrator', // Use internalRole if available, default to Administrator
-                        password: u.password || undefined,
-                        // Use preferences if available, otherwise default to true
-                        emailNotifyClaimSubmitted: prefs?.emailNotifyClaimSubmitted ?? true,
-                        emailNotifyHomeownerAcceptsAppointment: prefs?.emailNotifyHomeownerAcceptsAppointment ?? true,
-                        emailNotifySubAcceptsAppointment: prefs?.emailNotifySubAcceptsAppointment ?? true,
-                        emailNotifyHomeownerRescheduleRequest: prefs?.emailNotifyHomeownerRescheduleRequest ?? true,
-                        emailNotifyTaskAssigned: prefs?.emailNotifyTaskAssigned ?? true,
-                        pushNotifyClaimSubmitted: prefs?.pushNotifyClaimSubmitted === true,
-                        pushNotifyHomeownerAcceptsAppointment: prefs?.pushNotifyHomeownerAcceptsAppointment === true,
-                        pushNotifySubAcceptsAppointment: prefs?.pushNotifySubAcceptsAppointment === true,
-                        pushNotifyHomeownerRescheduleRequest: prefs?.pushNotifyHomeownerRescheduleRequest === true,
-                        pushNotifyTaskAssigned: prefs?.pushNotifyTaskAssigned === true,
-                        pushNotifyHomeownerMessage: prefs?.pushNotifyHomeownerMessage === true,
-                        pushNotifyHomeownerEnrollment: prefs?.pushNotifyHomeownerEnrollment === true,
-                        emailNotifyHomeownerEnrollment: prefs?.emailNotifyHomeownerEnrollment ?? true
-                    };
+                if (usersWithPrefs && usersWithPrefs.length > 0) {
+                  usersWithPrefs.forEach(u => {
+                    emailPrefsMap.set(u.id, {
+                      emailNotifyClaimSubmitted: u.emailNotifyClaimSubmitted ?? true,
+                      emailNotifyHomeownerAcceptsAppointment: u.emailNotifyHomeownerAcceptsAppointment ?? true,
+                      emailNotifySubAcceptsAppointment: u.emailNotifySubAcceptsAppointment ?? true,
+                      emailNotifyHomeownerRescheduleRequest: u.emailNotifyHomeownerRescheduleRequest ?? true,
+                      emailNotifyTaskAssigned: u.emailNotifyTaskAssigned ?? true,
+                      pushNotifyClaimSubmitted: u.pushNotifyClaimSubmitted === true,
+                      pushNotifyHomeownerAcceptsAppointment: u.pushNotifyHomeownerAcceptsAppointment === true,
+                      pushNotifySubAcceptsAppointment: u.pushNotifySubAcceptsAppointment === true,
+                      pushNotifyHomeownerRescheduleRequest: u.pushNotifyHomeownerRescheduleRequest === true,
+                      pushNotifyTaskAssigned: u.pushNotifyTaskAssigned === true,
+                      pushNotifyHomeownerMessage: u.pushNotifyHomeownerMessage === true,
+                      pushNotifyHomeownerEnrollment: u.pushNotifyHomeownerEnrollment === true,
+                      emailNotifyHomeownerEnrollment: u.emailNotifyHomeownerEnrollment ?? true
+                    });
                   });
-                
-                console.log('📋 Loaded employees from database:', fetchedEmployees.map(e => ({ name: e.name, role: e.role, email: e.email })));
-                
-                const fetchedBuilders: BuilderUser[] = dbUsers
-                  .filter(u => u.role === 'BUILDER')
-                  .map(u => ({
+                }
+              } catch (prefsError: any) {
+                console.log('⚠️ Email notification columns not found, using defaults');
+              }
+              
+              const fetchedEmployees: InternalEmployee[] = dbUsers
+                .filter(u => u.role === 'ADMIN')
+                .map(u => {
+                  const prefs = emailPrefsMap.get(u.id);
+                  return {
                       id: u.id,
                       name: u.name,
                       email: u.email,
-                      role: UserRole.BUILDER,
-                      builderGroupId: u.builderGroupId || '',
-                      password: u.password || undefined
-                  }));
+                      role: u.internalRole || 'Administrator',
+                      password: u.password || undefined,
+                      emailNotifyClaimSubmitted: prefs?.emailNotifyClaimSubmitted ?? true,
+                      emailNotifyHomeownerAcceptsAppointment: prefs?.emailNotifyHomeownerAcceptsAppointment ?? true,
+                      emailNotifySubAcceptsAppointment: prefs?.emailNotifySubAcceptsAppointment ?? true,
+                      emailNotifyHomeownerRescheduleRequest: prefs?.emailNotifyHomeownerRescheduleRequest ?? true,
+                      emailNotifyTaskAssigned: prefs?.emailNotifyTaskAssigned ?? true,
+                      pushNotifyClaimSubmitted: prefs?.pushNotifyClaimSubmitted === true,
+                      pushNotifyHomeownerAcceptsAppointment: prefs?.pushNotifyHomeownerAcceptsAppointment === true,
+                      pushNotifySubAcceptsAppointment: prefs?.pushNotifySubAcceptsAppointment === true,
+                      pushNotifyHomeownerRescheduleRequest: prefs?.pushNotifyHomeownerRescheduleRequest === true,
+                      pushNotifyTaskAssigned: prefs?.pushNotifyTaskAssigned === true,
+                      pushNotifyHomeownerMessage: prefs?.pushNotifyHomeownerMessage === true,
+                      pushNotifyHomeownerEnrollment: prefs?.pushNotifyHomeownerEnrollment === true,
+                      emailNotifyHomeownerEnrollment: prefs?.emailNotifyHomeownerEnrollment ?? true
+                  };
+                });
+              
+              console.log('📋 Loaded employees from database:', fetchedEmployees.map(e => ({ name: e.name, role: e.role, email: e.email })));
+              
+              const fetchedBuilders: BuilderUser[] = dbUsers
+                .filter(u => u.role === 'BUILDER')
+                .map(u => ({
+                    id: u.id,
+                    name: u.name,
+                    email: u.email,
+                    role: UserRole.BUILDER,
+                    builderGroupId: u.builderGroupId || '',
+                    password: u.password || undefined
+                }));
 
-                if (fetchedEmployees.length > 0) {
-                   setEmployees(fetchedEmployees);
-                   loadedEmployees = fetchedEmployees;
-                }
-                if (fetchedBuilders.length > 0) {
-                   setBuilderUsers(fetchedBuilders);
-                   loadedBuilders = fetchedBuilders;
-                }
+              if (fetchedEmployees.length > 0) {
+                 setEmployees(fetchedEmployees);
+                 loadedEmployees = fetchedEmployees;
               }
-            } catch (userError: any) {
-              console.error('❌ Failed to load users:', userError);
+              if (fetchedBuilders.length > 0) {
+                 setBuilderUsers(fetchedBuilders);
+                 loadedBuilders = fetchedBuilders;
+              }
             }
-
-            // 3. Skip bulk claims fetch - claims are now loaded per-homeowner (see useEffect below)
-            // SECURITY: Never fetch all 6,200+ claims at once
+            
+            // Skip bulk claims fetch - claims are loaded per-homeowner
             console.log('📋 Claims will be loaded when homeowner is selected');
             
-            // 4. Fetch Builder Groups
-            const dbBuilderGroups = await db.select().from(builderGroupsTable);
-            if (dbBuilderGroups.length > 0) {
-              const mappedGroups = dbBuilderGroups.map(bg => ({
+            // Process Builder Groups
+            if (builderGroupsResult.success && builderGroupsResult.data.length > 0) {
+              const mappedGroups = builderGroupsResult.data.map(bg => ({
                 id: bg.id,
                 name: bg.name,
                 email: bg.email || ''
@@ -764,10 +858,9 @@ function App() {
               setBuilderGroups(mappedGroups);
             }
 
-            // 5. Fetch Tasks
-            const dbTasks = await db.select().from(tasksTable);
-            if (dbTasks.length > 0) {
-              const mappedTasks: Task[] = dbTasks.map(t => ({
+            // Process Tasks
+            if (tasksResult.success && tasksResult.data.length > 0) {
+              const mappedTasks: Task[] = tasksResult.data.map(t => ({
                 id: t.id,
                 title: t.title,
                 description: t.description || '',
@@ -781,10 +874,9 @@ function App() {
               setTasks(mappedTasks);
             }
 
-            // 6. Fetch Documents
-            const dbDocs = await db.select().from(documentsTable);
-            if (dbDocs.length > 0) {
-              const mappedDocs: HomeownerDocument[] = dbDocs.map(d => ({
+            // Process Documents
+            if (docsResult.success && docsResult.data.length > 0) {
+              const mappedDocs: HomeownerDocument[] = docsResult.data.map(d => ({
                 id: d.id,
                 homeownerId: d.homeownerId || '',
                 name: d.name,
@@ -796,46 +888,34 @@ function App() {
               setDocuments(mappedDocs);
             }
 
-            // 7. Fetch Contractors
-            try {
-              const dbContractors = await db.select().from(contractorsTable);
-              if (dbContractors.length > 0) {
-                const mappedContractors: Contractor[] = dbContractors.map(c => ({
-                  id: c.id,
-                  companyName: c.companyName,
-                  contactName: c.contactName || '',
-                  email: c.email,
-                  phone: c.phone || '',
-                  specialty: c.specialty
-                }));
-                setContractors(mappedContractors);
-              }
-            } catch (error: any) {
-              // Contractors table might not exist yet - that's okay, use local storage
-              console.log('Contractors table not found, using local storage:', error.message);
+            // Process Contractors
+            if (contractorsResult.success && contractorsResult.data.length > 0) {
+              const mappedContractors: Contractor[] = contractorsResult.data.map(c => ({
+                id: c.id,
+                companyName: c.companyName,
+                contactName: c.contactName || '',
+                email: c.email,
+                phone: c.phone || '',
+                specialty: c.specialty
+              }));
+              setContractors(mappedContractors);
             }
 
-             // 8. Fetch Messages
-            try {
-              const dbThreads = await db.select().from(messageThreadsTable);
-              if (dbThreads.length > 0) {
-                const mappedThreads: MessageThread[] = dbThreads.map(t => ({
-                  id: t.id,
-                  subject: t.subject,
-                  homeownerId: t.homeownerId || '',
-                  participants: t.participants || [],
-                  isRead: t.isRead || false,
-                  lastMessageAt: t.lastMessageAt ? new Date(t.lastMessageAt) : new Date(),
-                  messages: (t.messages || []).map((m: any) => ({
-                      ...m,
-                      timestamp: m.timestamp ? new Date(m.timestamp) : new Date()
-                  }))
-                }));
-                setMessages(mappedThreads);
-              }
-            } catch (error: any) {
-              // Message threads table might not exist yet - that's okay, use local storage
-              console.log('Message threads table not found, using local storage:', error.message);
+            // Process Message Threads
+            if (threadsResult.success && threadsResult.data.length > 0) {
+              const mappedThreads: MessageThread[] = threadsResult.data.map(t => ({
+                id: t.id,
+                subject: t.subject,
+                homeownerId: t.homeownerId || '',
+                participants: t.participants || [],
+                isRead: t.isRead || false,
+                lastMessageAt: t.lastMessageAt ? new Date(t.lastMessageAt) : new Date(),
+                messages: (t.messages || []).map((m: any) => ({
+                    ...m,
+                    timestamp: m.timestamp ? new Date(m.timestamp) : new Date()
+                }))
+              }));
+              setMessages(mappedThreads);
             }
 
             console.log("Successfully synced with Neon DB.");
@@ -4127,14 +4207,8 @@ Assigned By: ${assignerName}
   
   // Show loading screen only if auth is still loading and hasn't timed out, OR if role is being determined
   if ((!isLoaded && !authTimeout) || (effectiveIsSignedIn && isRoleLoading)) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-surface-on-variant dark:text-gray-400">Loading...</p>
-        </div>
-      </div>
-    );
+    // Return edge-to-edge skeleton that matches dashboard geometry (prevents layout shift)
+    return <DashboardSkeleton />;
   }
   
   // TEMPORARY: Disable authentication for testing
