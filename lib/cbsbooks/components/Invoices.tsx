@@ -548,6 +548,31 @@ export const Invoices: React.FC<InvoicesProps> = ({
     const primaryColor = [79, 120, 130]; // #4f7882
     const surfaceContainerColor = [238, 239, 241]; // #eeeff1
     
+    // "Pill" helpers (jsPDF is coordinate-based; we emulate perfect centering)
+    const TEXT_CENTER_NUDGE_Y = 0.6; // tiny baseline correction (like marginTop: 1)
+    const drawPill = (x: number, yTop: number, w: number, h: number, r = 5, fill = surfaceContainerColor) => {
+        doc.setFillColor(fill[0], fill[1], fill[2]);
+        doc.roundedRect(x, yTop, w, h, r, r, 'F');
+    };
+    const drawCenteredText = (
+        text: string,
+        x: number,
+        y: number,
+        opts?: { fontSize?: number; fontStyle?: 'normal' | 'bold'; color?: number[]; nudgeY?: number }
+    ) => {
+        const { fontSize = 10, fontStyle = 'normal', color = [0, 0, 0], nudgeY = 0 } = opts || {};
+        doc.setFontSize(fontSize);
+        doc.setFont(undefined, fontStyle);
+        doc.setTextColor(color[0], color[1], color[2]);
+        doc.text(text, x, y + nudgeY, { align: 'center', baseline: 'middle' } as any);
+    };
+    const wrapText = (text: string, maxWidth: number) => {
+        // jsPDF has splitTextToSize; keep it defensive in case types differ
+        const splitter = (doc as any).splitTextToSize;
+        if (typeof splitter === 'function') return splitter.call(doc, text, maxWidth) as string[];
+        return [text];
+    };
+    
     // Helper to add new page if needed
     const checkPageBreak = (currentY: number) => {
         if (currentY > 260) {
@@ -608,40 +633,65 @@ export const Invoices: React.FC<InvoicesProps> = ({
     if (invoice.projectDetails) {
         doc.setFontSize(10);
         doc.setFont(undefined, 'bold');
+        doc.setTextColor(0);
         doc.text("Project Address:", 14, y);
         doc.setFont(undefined, 'normal');
-        doc.text(invoice.projectDetails, 52, y);
-        y += 8;
+        
+        // Full-width value below label (prevents "detached" wrapping/overflow)
+        const addressLines = wrapText(invoice.projectDetails, 182);
+        const addressStartY = y + 6;
+        addressLines.forEach((line, idx) => {
+            doc.text(line, 14, addressStartY + (idx * 5));
+        });
+        
+        // Space before table
+        y = addressStartY + (addressLines.length * 5) + 5;
     }
     
     // Items Table Header Y Position
     y = Math.max(y, 88); // Ensure minimum spacing
 
-    // Table Header with Rounded Corners (Pill style)
-    doc.setFillColor(surfaceContainerColor[0], surfaceContainerColor[1], surfaceContainerColor[2]);
-    doc.roundedRect(14, y-5, 182, 8, 5, 5, 'F');
-
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-    // Vertically center text in pill: pill top is y-5, height is 8, so center is y-1
-    doc.text("Description", 16, y-1);
-    doc.text("Qty", 110, y-1, { align: 'center' });
-    doc.text("Rate", 135, y-1, { align: 'right' });
-    doc.text("Amount", 185, y-1, { align: 'right' });
+    // Table Header: individual "pill" cells with true centered text (no padding math)
+    const tableX = 14;
+    const tableW = 182;
+    const gap = 2;
+    const headerH = 8;
+    const headerYTop = y;
+    const colDescW = 90;
+    const colQtyW = 20;
+    const colRateW = 28;
+    const colAmtW = tableW - (colDescW + colQtyW + colRateW + (gap * 3)); // remaining width
+    const descRect = { x: tableX, y: headerYTop, w: colDescW, h: headerH };
+    const qtyRect = { x: tableX + colDescW + gap, y: headerYTop, w: colQtyW, h: headerH };
+    const rateRect = { x: qtyRect.x + colQtyW + gap, y: headerYTop, w: colRateW, h: headerH };
+    const amtRect = { x: rateRect.x + colRateW + gap, y: headerYTop, w: colAmtW, h: headerH };
+    
+    drawPill(descRect.x, descRect.y, descRect.w, descRect.h, 5);
+    drawPill(qtyRect.x, qtyRect.y, qtyRect.w, qtyRect.h, 5);
+    drawPill(rateRect.x, rateRect.y, rateRect.w, rateRect.h, 5);
+    drawPill(amtRect.x, amtRect.y, amtRect.w, amtRect.h, 5);
+    
+    const headerTextY = headerYTop + (headerH / 2);
+    drawCenteredText("Description", descRect.x + (descRect.w / 2), headerTextY, { fontSize: 10, fontStyle: 'bold', color: primaryColor, nudgeY: TEXT_CENTER_NUDGE_Y });
+    drawCenteredText("Qty", qtyRect.x + (qtyRect.w / 2), headerTextY, { fontSize: 10, fontStyle: 'bold', color: primaryColor, nudgeY: TEXT_CENTER_NUDGE_Y });
+    drawCenteredText("Rate", rateRect.x + (rateRect.w / 2), headerTextY, { fontSize: 10, fontStyle: 'bold', color: primaryColor, nudgeY: TEXT_CENTER_NUDGE_Y });
+    drawCenteredText("Amount", amtRect.x + (amtRect.w / 2), headerTextY, { fontSize: 10, fontStyle: 'bold', color: primaryColor, nudgeY: TEXT_CENTER_NUDGE_Y });
+    
+    // Items start just below header
     doc.setFont(undefined, 'normal');
     doc.setTextColor(0);
-    
-    y += 10;
+    y = headerYTop + headerH + 8;
     
     // Defensive check: Ensure items exist and is array
     const items = Array.isArray(invoice.items) ? invoice.items : [];
 
     items.forEach(item => {
         y = checkPageBreak(y);
-        doc.text(item.description || '', 16, y);
-        doc.text((item.quantity || 0).toString(), 110, y, { align: 'center' });
-        doc.text(`$${(item.rate || 0).toFixed(0)}`, 135, y, { align: 'right' });
-        doc.text(`$${(item.amount || 0).toFixed(0)}`, 185, y, { align: 'right' });
+        // Keep rows aligned with the header-pill columns
+        doc.text(item.description || '', descRect.x + 2, y);
+        doc.text((item.quantity || 0).toString(), qtyRect.x + (qtyRect.w / 2), y, { align: 'center' });
+        doc.text(`$${(item.rate || 0).toFixed(0)}`, rateRect.x + rateRect.w - 2, y, { align: 'right' });
+        doc.text(`$${(item.amount || 0).toFixed(0)}`, amtRect.x + amtRect.w - 2, y, { align: 'right' });
         y += 8;
     });
     
@@ -659,24 +709,23 @@ export const Invoices: React.FC<InvoicesProps> = ({
     doc.line(14, y, 196, y);
     y += 10;
     
-    // Total Background with Rounded Corners (Pill style) - Reduced width and padding
-    doc.setFillColor(surfaceContainerColor[0], surfaceContainerColor[1], surfaceContainerColor[2]);
-    doc.roundedRect(135, y-6, 60, 10, 5, 5, 'F'); // Reduced from 70 to 60, moved from x=125 to x=135
-
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+    // Total "pill" with centered text (no padding offsets)
+    const totalPill = { x: 135, y: y, w: 60, h: 10 };
+    drawPill(totalPill.x, totalPill.y, totalPill.w, totalPill.h, 5);
     
-    // Align Total label and Amount - vertically centered in pill (height 10, center is y-1)
-    doc.text("Total", 142, y-1);
     // Ensure total is a number safe for toFixed
     const safeTotal = typeof invoice.total === 'number' ? invoice.total : 0;
-    doc.text(`$${safeTotal.toFixed(0)}`, 188, y-1, { align: 'right' });
+    drawCenteredText(`TOTAL  $${safeTotal.toFixed(0)}`, totalPill.x + (totalPill.w / 2), totalPill.y + (totalPill.h / 2), {
+        fontSize: 11,
+        fontStyle: 'bold',
+        color: primaryColor,
+        nudgeY: TEXT_CENTER_NUDGE_Y
+    });
 
     // Payment Button
     // Only render if paymentLink exists
     if (invoice.paymentLink) {
-        y += 20;
+        y += 22;
         
         // Ensure we didn't run off page
         if (y > 280) {
@@ -685,20 +734,19 @@ export const Invoices: React.FC<InvoicesProps> = ({
         }
 
         // Button Background (Pill) - High Contrast (Teal)
-        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]); 
-        // x=155, width=40 (approx center under total)
-        doc.roundedRect(155, y-7, 40, 10, 5, 5, 'F');
+        const payPill = { x: 155, y: y, w: 40, h: 10 };
+        drawPill(payPill.x, payPill.y, payPill.w, payPill.h, 5, primaryColor);
         
-        // Button Text - White, centered horizontally and vertically
-        doc.setTextColor(255, 255, 255);
-        doc.setFontSize(10);
-        doc.setFont(undefined, 'bold');
-
-        // Pill center: x=175 (155 + 40/2), y center: y-2 (pill top is y-7, height 10, so center is y-2)
-        doc.text("PAY ONLINE", 175, y-2, { align: 'center' });
+        // Button Text - White, centered
+        drawCenteredText("PAY ONLINE", payPill.x + (payPill.w / 2), payPill.y + (payPill.h / 2), {
+            fontSize: 10,
+            fontStyle: 'bold',
+            color: [255, 255, 255],
+            nudgeY: TEXT_CENTER_NUDGE_Y
+        });
         
         // Clickable Link
-        doc.link(155, y-7, 40, 10, { url: invoice.paymentLink });
+        doc.link(payPill.x, payPill.y, payPill.w, payPill.h, { url: invoice.paymentLink });
     }
     
     return doc;
