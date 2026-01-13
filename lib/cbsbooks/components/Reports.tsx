@@ -145,7 +145,7 @@ export const Reports: React.FC<ReportsProps> = ({ invoices, expenses, onNavigate
         {/* Right-aligned Download PDF Button */}
         <button
           onClick={handleDownloadPDF}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:opacity-90 transition-opacity"
+          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-primary text-primary rounded-lg hover:bg-primary/10 transition-colors"
         >
           <Download size={18} />
           <span className="text-sm font-medium">Download PDF</span>

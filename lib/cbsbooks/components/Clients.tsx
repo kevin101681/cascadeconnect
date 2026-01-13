@@ -160,8 +160,8 @@ export const Clients: React.FC<ClientsProps> = ({ clients, invoices, onAdd, onUp
     if (!searchQuery) return clients;
     const lowerQuery = searchQuery.toLowerCase();
     return clients.filter(client => 
-      client.companyName.toLowerCase().includes(lowerQuery) ||
-      client.email.toLowerCase().includes(lowerQuery) ||
+      (client.companyName || '').toLowerCase().includes(lowerQuery) ||
+      (client.email || '').toLowerCase().includes(lowerQuery) ||
       (client.checkPayorName && client.checkPayorName.toLowerCase().includes(lowerQuery)) ||
       (client.addressLine1 && client.addressLine1.toLowerCase().includes(lowerQuery)) ||
       (client.city && client.city.toLowerCase().includes(lowerQuery))
@@ -186,7 +186,7 @@ export const Clients: React.FC<ClientsProps> = ({ clients, invoices, onAdd, onUp
             setNewClient({});
             setIsAdding(true);
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on rounded-lg hover:opacity-90 transition-opacity"
+          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-primary text-primary rounded-lg hover:bg-primary/10 transition-colors"
         >
           <Plus size={18} />
           <span className="text-sm font-medium">Add Builder</span>

@@ -126,7 +126,7 @@ export const CheckScanner: React.FC<CheckScannerProps> = ({
     // 3. Last Resort: Word matching on Company Name
     if (!match) {
         const words = scannedName.split(' ').filter(w => w.length > 3);
-        match = clients.find(c => words.some(w => c.companyName.toLowerCase().includes(w.toLowerCase())));
+        match = clients.find(c => words.some(w => (c.companyName || '').toLowerCase().includes(w.toLowerCase())));
     }
 
     if (match) {

@@ -1099,7 +1099,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
     if (!builderQuery) return [];
     const query = builderQuery.toLowerCase();
     return clients
-      .filter(c => c.companyName.toLowerCase().includes(query))
+      .filter(c => (c.companyName || '').toLowerCase().includes(query))
       .slice(0, 10); // Limit to 10 results
   }, [builderQuery, clients]);
 
@@ -1296,7 +1296,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
             </div>
 
             <div className="flex flex-col md:flex-row justify-between items-center pt-2 gap-4">
-                <div className="h-9 px-6 rounded-full bg-primary text-primary-on text-sm font-medium flex items-center justify-center">Total: ${total.toFixed(0)}</div>
+                <div className="h-9 px-6 rounded-full bg-white border-2 border-primary text-primary text-sm font-medium flex items-center justify-center">Total: ${total.toFixed(0)}</div>
                 <div className="flex gap-2 w-full md:w-auto">
                     <button 
                         onClick={() => {
@@ -1310,7 +1310,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                           setShowBuilderDropdown(false);
                         }} 
                         disabled={isSaving} 
-                        className="flex-1 md:flex-none h-9 px-6 rounded-full bg-primary text-primary-on hover:bg-primary/90 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        className="flex-1 md:flex-none h-9 px-6 rounded-full bg-white border-2 border-primary text-primary hover:bg-primary/10 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                     >
                         Cancel
                     </button>
@@ -1326,7 +1326,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                     <button 
                         onClick={handleSave} 
                         disabled={isSaving}
-                        className="flex-1 md:flex-none h-9 px-6 rounded-full bg-primary text-primary-on hover:bg-primary/90 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 md:flex-none h-9 px-6 rounded-full bg-white border-2 border-primary text-primary hover:bg-primary/10 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                         {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : null}
                         {isSaving ? 'Saving...' : 'Save'}
@@ -1840,7 +1840,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                 <button 
                   key={opt.value} 
                   onClick={() => handleFilterSelection('sort', opt.value)}
-                  className={`px-4 h-10 rounded-full text-sm font-medium flex items-center justify-start border transition-all ${sortValue === opt.value ? 'bg-primary text-primary-on border-primary/30' : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 border-surface-outline-variant/50 dark:border-gray-600 hover:bg-surface-container-high/80 dark:hover:bg-gray-500'}`}
+                  className={`px-4 h-10 rounded-full text-sm font-medium flex items-center justify-start border transition-all ${sortValue === opt.value ? 'bg-white border-2 border-primary text-primary' : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 border-surface-outline-variant/50 dark:border-gray-600 hover:bg-surface-container-high/80 dark:hover:bg-gray-500'}`}
                 >
                   {opt.label}
                 </button>
