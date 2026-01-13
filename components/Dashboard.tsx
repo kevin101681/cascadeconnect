@@ -4483,11 +4483,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                         data-tab={tab}
                         onClick={() => setCurrentTab(tab)}
                         className={[
-                          'shrink-0 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:text-primary',
+                          'shrink-0 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-all duration-300',
+                          // Base inactive state: transparent background
+                          'bg-transparent text-surface-on dark:text-gray-100',
+                          // Hover state (both active and inactive): gray background, raised, blue text
+                          'hover:bg-gray-100/50 dark:hover:bg-gray-700/50 hover:-translate-y-0.5 hover:shadow-md hover:text-primary',
+                          // Active state: white background, blue text, shadow
                           isActive
-                            // Active state: White background with shadow to pop off the gray track
-                            ? 'border border-surface-outline text-primary bg-white dark:bg-gray-800 shadow-sm hover:bg-primary/10 focus:bg-primary/10'
-                            : 'bg-surface dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700',
+                            ? 'bg-white dark:bg-gray-800 text-primary shadow-sm border border-surface-outline'
+                            : '',
                         ].join(' ')}
                         aria-current={isActive ? 'page' : undefined}
                       >
