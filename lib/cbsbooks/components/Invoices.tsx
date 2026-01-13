@@ -174,8 +174,13 @@ export const Invoices: React.FC<InvoicesProps> = ({
   const [showDueDatePicker, setShowDueDatePicker] = useState(false);
   const [showDatePaidPicker, setShowDatePaidPicker] = useState(false);
 
+  // Builder autocomplete state
+  const [builderQuery, setBuilderQuery] = useState('');
+  const [showBuilderDropdown, setShowBuilderDropdown] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const builderInputRef = useRef<HTMLInputElement>(null);
 
   const rateOptions = [25, 35, 50, 75, 100, 150];
 
@@ -389,10 +394,14 @@ export const Invoices: React.FC<InvoicesProps> = ({
     if (expandedId === inv.id) {
         setExpandedId(null);
         setCurrentInvoice({});
+        setBuilderQuery('');
+        setShowBuilderDropdown(false);
     } else {
         if (isCreating) setIsCreating(false);
         setExpandedId(inv.id);
         setCurrentInvoice(JSON.parse(JSON.stringify(inv)));
+        setBuilderQuery('');
+        setShowBuilderDropdown(false);
     }
   };
 
@@ -407,6 +416,8 @@ export const Invoices: React.FC<InvoicesProps> = ({
       total: 0,
       clientName: ''
     });
+    setBuilderQuery('');
+    setShowBuilderDropdown(false);
     setIsCreating(true);
     setActiveFab('none');
   };
@@ -471,6 +482,8 @@ export const Invoices: React.FC<InvoicesProps> = ({
         setExpandedId(null);
         updateSearchParams({ invoiceId: null }); // Close modal via URL
         setCurrentInvoice({});
+        setBuilderQuery('');
+        setShowBuilderDropdown(false);
         
         return invoiceToSave;
     } catch (e) {
@@ -1081,6 +1094,22 @@ export const Invoices: React.FC<InvoicesProps> = ({
      alert(`Processed ${invoiceIds.length} invoices with check #${checkNumber}`);
   };
 
+  // Filtered builders based on query
+  const filteredBuilders = useMemo(() => {
+    if (!builderQuery) return [];
+    const query = builderQuery.toLowerCase();
+    return clients
+      .filter(c => c.companyName.toLowerCase().includes(query))
+      .slice(0, 10); // Limit to 10 results
+  }, [builderQuery, clients]);
+
+  // Handle builder selection
+  const selectBuilder = (builderName: string) => {
+    setCurrentInvoice({...currentInvoice, clientName: builderName});
+    setBuilderQuery('');
+    setShowBuilderDropdown(false);
+  };
+
   // Reusable Form Render Logic
   const renderInvoiceForm = (isInline: boolean) => {
       const items = currentInvoice.items || [];
@@ -1090,14 +1119,50 @@ export const Invoices: React.FC<InvoicesProps> = ({
         <div className={isInline ? "pt-4" : "space-y-4"}>
             {/* Form Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div className="relative">
                     <label className="text-xs text-surface-outline dark:text-gray-400 font-medium ml-1">Builder</label>
                     {!currentInvoice.id ? (
                         <>
-                        <input list="clients-list" value={currentInvoice.clientName || ''} onChange={e => setCurrentInvoice({...currentInvoice, clientName: e.target.value})} className="w-full bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary" placeholder=""/>
-                        <datalist id="clients-list">
-                            {clients.map(c => <option key={c.id} value={c.companyName} />)}
-                        </datalist>
+                        <input 
+                          ref={builderInputRef}
+                          type="text"
+                          value={currentInvoice.clientName || builderQuery}
+                          onChange={e => {
+                            const value = e.target.value;
+                            if (currentInvoice.clientName) {
+                              // If there's a selected builder, clear it and switch to search mode
+                              setCurrentInvoice({...currentInvoice, clientName: ''});
+                            }
+                            setBuilderQuery(value);
+                            setShowBuilderDropdown(value.length > 0);
+                          }}
+                          onFocus={() => {
+                            if (builderQuery.length > 0) {
+                              setShowBuilderDropdown(true);
+                            }
+                          }}
+                          onBlur={() => {
+                            // Delay to allow click on dropdown item
+                            setTimeout(() => setShowBuilderDropdown(false), 200);
+                          }}
+                          className="w-full bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary" 
+                          placeholder=""
+                        />
+                        {/* Autocomplete Dropdown */}
+                        {showBuilderDropdown && filteredBuilders.length > 0 && (
+                          <div className="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                            {filteredBuilders.map(c => (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => selectBuilder(c.companyName)}
+                                className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-surface-on dark:text-gray-200 transition-colors first:rounded-t-xl last:rounded-b-xl"
+                              >
+                                {c.companyName}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                         </>
                     ) : (
                         <div className="w-full bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl text-surface-on dark:text-gray-200 font-medium">
@@ -1241,6 +1306,8 @@ export const Invoices: React.FC<InvoicesProps> = ({
                             setIsCreating(false);
                             updateSearchParams({ invoiceId: null }); // Close modal via URL
                           }
+                          setBuilderQuery('');
+                          setShowBuilderDropdown(false);
                         }} 
                         disabled={isSaving} 
                         className="flex-1 md:flex-none h-9 px-6 rounded-full bg-primary text-primary-on hover:bg-primary/90 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
