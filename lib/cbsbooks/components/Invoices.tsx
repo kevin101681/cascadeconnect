@@ -418,9 +418,20 @@ export const Invoices: React.FC<InvoicesProps> = ({
     });
     setBuilderQuery('');
     setShowBuilderDropdown(false);
-    setIsCreating(true);
+    updateSearchParams({ view: 'new', invoiceId: null });
     setActiveFab('none');
   };
+
+  // Sync currentInvoice when selectedInvoice changes
+  useEffect(() => {
+    if (selectedInvoice) {
+      setCurrentInvoice(JSON.parse(JSON.stringify(selectedInvoice)));
+    } else if (searchParams.get('view') === 'new') {
+      // Keep the currentInvoice as is for new invoice
+    } else {
+      setCurrentInvoice({});
+    }
+  }, [selectedInvoice, searchParams]);
 
   const handleSave = async (): Promise<Invoice | null> => {
     if (!currentInvoice.clientName) {
@@ -480,7 +491,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
         
         setIsCreating(false);
         setExpandedId(null);
-        updateSearchParams({ invoiceId: null }); // Close modal via URL
+        updateSearchParams({ invoiceId: null, view: null }); // Close detail panel
         setCurrentInvoice({});
         setBuilderQuery('');
         setShowBuilderDropdown(false);
@@ -1667,22 +1678,22 @@ export const Invoices: React.FC<InvoicesProps> = ({
     );
   };
 
-  if (isCreating) {
-      return (
-          <div className="animate-slide-up pb-32">
-              <Card title='New Invoice'>
-                  {renderInvoiceForm(false)}
-              </Card>
-          </div>
-      );
-  }
+  // Determine what to show in right panel based on URL
+  const showNewInvoice = searchParams.get('view') === 'new';
+  const showEditInvoice = !!selectedInvoiceId;
+  const showRightPanel = showNewInvoice || showEditInvoice;
 
   return (
-    <div className="space-y-4 relative min-h-[calc(100vh-100px)] pb-24 max-w-7xl mx-auto">
-      {/* Navigation Bar */}
-      <div className="flex flex-wrap gap-2 mb-4 items-center justify-between">
+    <div className="h-[calc(100vh-80px)] flex flex-col overflow-hidden">
+      {/* Navigation Bar - Always visible on desktop, hidden on mobile when detail shown */}
+      <div className={`flex-shrink-0 flex flex-wrap gap-2 mb-4 items-center justify-between px-4 ${showRightPanel ? 'hidden md:flex' : 'flex'}`}>
         <TabBar activeView="invoices" onNavigate={onNavigate} />
       </div>
+
+      {/* Split Layout Container */}
+      <div className="flex-1 flex gap-4 px-4 overflow-hidden">
+        {/* LEFT PANEL - Invoice List (hidden on mobile when detail shown) */}
+        <div className={`flex flex-col gap-4 ${showRightPanel ? 'hidden md:flex md:w-[400px] lg:w-[480px]' : 'flex flex-1'} overflow-hidden`}>
 
       <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleCsvUpload}/>
       <CheckScanner isOpen={showCheckScanner} onClose={() => setShowCheckScanner(false)} clients={clients} invoices={invoices} onProcessPayments={handleCheckScanPayments} />
@@ -1951,8 +1962,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                   address={inv.projectDetails}
                   checkNumber={inv.checkNumber}
                   onClick={() => {
-                    updateSearchParams({ invoiceId: inv.id });
-                    setCurrentInvoice(inv);
+                    updateSearchParams({ invoiceId: inv.id, view: null });
                   }}
                   onMarkPaid={(checkNum) => {
                     const today = getLocalTodayDate();
@@ -1992,60 +2002,63 @@ export const Invoices: React.FC<InvoicesProps> = ({
             )}
         </div>
       </div>
-
-      {/* Invoice Editor Modal - Full Screen on Mobile, Centered on Desktop */}
-      {selectedInvoice && (
-        <div 
-          className="fixed inset-0 z-[250] bg-black/50 md:backdrop-blur-sm flex items-center justify-center md:p-4"
-          onClick={() => {
-            updateSearchParams({ invoiceId: null });
-            setCurrentInvoice({});
-          }}
-        >
-          <div 
-            className="bg-surface dark:bg-gray-800 shadow-elevation-3 overflow-hidden flex flex-col
-                       h-full w-full max-w-none m-0 p-0 rounded-none
-                       md:max-w-4xl md:h-auto md:max-h-[90vh] md:rounded-3xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex justify-between items-center p-4 md:p-6 border-b border-surface-outline-variant dark:border-gray-700 shrink-0">
-              {/* Mobile: Back button on left */}
-              <button
-                onClick={() => {
-                  updateSearchParams({ invoiceId: null });
-                  setCurrentInvoice({});
-                }}
-                className="md:hidden p-2 -ml-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors touch-manipulation"
-                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
-                aria-label="Back"
-              >
-                <ChevronLeft className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
-              </button>
-              
-              <h2 className="text-lg md:text-2xl font-semibold text-surface-on dark:text-gray-100 flex-1 md:flex-none">
-                Edit Invoice {selectedInvoice.invoiceNumber}
-              </h2>
-              
-              {/* Desktop: X button on right */}
-              <button
-                onClick={() => {
-                  updateSearchParams({ invoiceId: null });
-                  setCurrentInvoice({});
-                }}
-                className="hidden md:block p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors"
-              >
-                <X className="h-6 w-6 text-surface-on-variant dark:text-gray-400" />
-              </button>
-            </div>
-
-            {/* Modal Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto p-4 md:p-6">
-              {renderInvoiceForm(false)}
-            </div>
-          </div>
         </div>
-      )}
-    </div>
+
+        {/* RIGHT PANEL - Detail/Edit View (full-screen on mobile when shown) */}
+        <div className={`flex flex-col ${showRightPanel ? 'flex-1' : 'hidden'} overflow-hidden`}>
+          {showRightPanel && (
+            <div className="flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg border border-surface-outline-variant dark:border-gray-700 overflow-hidden">
+              {/* Header */}
+              <div className="flex justify-between items-center p-4 border-b border-surface-outline-variant dark:border-gray-700 flex-shrink-0">
+                {/* Mobile: Back button */}
+                <button
+                  onClick={() => {
+                    updateSearchParams({ invoiceId: null, view: null });
+                    setCurrentInvoice({});
+                    setBuilderQuery('');
+                    setShowBuilderDropdown(false);
+                  }}
+                  className="md:hidden p-2 -ml-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors"
+                  aria-label="Back"
+                >
+                  <ChevronLeft className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
+                </button>
+                
+                <h2 className="text-lg md:text-xl font-semibold text-surface-on dark:text-gray-100 flex-1 md:flex-none">
+                  {showNewInvoice ? 'New Invoice' : selectedInvoice ? `Edit Invoice ${selectedInvoice.invoiceNumber}` : ''}
+                </h2>
+                
+                {/* Desktop: X button */}
+                <button
+                  onClick={() => {
+                    updateSearchParams({ invoiceId: null, view: null });
+                    setCurrentInvoice({});
+                    setBuilderQuery('');
+                    setShowBuilderDropdown(false);
+                  }}
+                  className="hidden md:block p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors"
+                >
+                  <X className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
+                </button>
+              </div>
+
+              {/* Content - Scrollable */}
+              <div className="flex-1 overflow-y-auto p-4 md:p-6">
+                {showNewInvoice || selectedInvoice ? (
+                  renderInvoiceForm(false)
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full text-center text-gray-400">
+                    <p className="text-lg font-medium">Select an invoice to edit</p>
+                    <p className="text-sm mt-2">or create a new one</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Global Modals (outside split layout) */}
+      {/* AI Import Modal */}
   );
 };
