@@ -68,6 +68,9 @@
 /api/tasks /.netlify/functions/tasks    200!
 /api/tasks/* /.netlify/functions/tasks/:splat    200!
 
+# Homeowner "Find My Account" helper (masked email lookup)
+/api/homeowners/lookup-email /.netlify/functions/lookupHomeownerEmail 200!
+
 # Handle Batch Claims API
 /api/claims/batch /.netlify/functions/claims-batch    200!
 

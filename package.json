@@ -54,6 +54,7 @@
     "@fontsource/outfit": "^5.2.8",
     "@fontsource/roboto": "^5.2.9",
     "@google/genai": "^1.33.0",
+    "@hookform/resolvers": "^5.2.2",
     "@jaymanyoo/pdf-book-viewer": "^1.4.7",
     "@neondatabase/serverless": "^0.10.1",
     "@netlify/functions": "^5.1.2",
@@ -93,6 +94,7 @@
     "react-big-calendar": "^1.19.4",
     "react-day-picker": "^9.13.0",
     "react-dom": "^18.2.0",
+    "react-hook-form": "^7.71.0",
     "react-pageflip": "^2.0.3",
     "react-pdf": "^10.2.0",
     "react-router-dom": "^6.22.3",
@@ -103,6 +105,7 @@
     "twilio": "^5.11.1",
     "uuid": "^13.0.0",
     "xlsx": "^0.18.5",
+    "zod": "^3.25.76",
     "zustand": "^5.0.9"
   },
   "devDependencies": {

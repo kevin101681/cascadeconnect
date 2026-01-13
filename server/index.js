@@ -2,6 +2,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import pg from "pg";
+import { z } from "zod";
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import cbsbooksRouter from "./cbsbooks.js";
@@ -17,6 +19,7 @@ dotenv.config(); // Also load default .env as fallback
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const { Client } = pg;
 
 app.use(cors({
   origin: true, // Allow all origins in development
@@ -34,6 +37,83 @@ app.use(cors({
 // Express JSON middleware - mount after Better Auth handler
 // This prevents Better Auth from hanging on pending requests
 app.use(express.json());
+
+// --- Homeowner "Find My Account" (masked email lookup) ---
+const lookupHomeownerEmailSchema = z.object({
+  lastName: z.string().trim().min(1).max(80),
+  houseNumber: z.string().trim().regex(/^\d{1,8}$/),
+  zipCode: z.string().trim().regex(/^\d{5}$/),
+});
+
+const maskEmail = (email) => {
+  const atIdx = email.indexOf("@");
+  if (atIdx <= 0 || atIdx === email.length - 1) return null;
+  const local = email.slice(0, atIdx);
+  const domain = email.slice(atIdx + 1);
+  const first = local[0] || "*";
+  return `${first}****@${domain}`;
+};
+
+const getDbClient = async () => {
+  let connectionString = process.env.NETLIFY_DATABASE_URL || process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("Database configuration is missing. Please set NETLIFY_DATABASE_URL or DATABASE_URL.");
+  }
+  if (connectionString.includes("?")) {
+    connectionString = connectionString.split("?")[0];
+  }
+  const client = new Client({
+    connectionString,
+    ssl: { rejectUnauthorized: false },
+  });
+  await client.connect();
+  return client;
+};
+
+app.post("/api/homeowners/lookup-email", async (req, res) => {
+  let client;
+  try {
+    const parsed = lookupHomeownerEmailSchema.safeParse(req.body || {});
+    if (!parsed.success) {
+      return res.status(400).json({ error: "Invalid input" });
+    }
+
+    const { lastName, houseNumber, zipCode } = parsed.data;
+    const housePrefix = `${houseNumber}%`;
+
+    client = await getDbClient();
+    const result = await client.query(
+      `
+        SELECT email
+        FROM homeowners
+        WHERE LOWER(last_name) = LOWER($1)
+          AND LOWER(zip) = LOWER($2)
+          AND (
+            street ILIKE $3
+            OR address ILIKE $3
+          )
+        LIMIT 1
+      `,
+      [lastName, zipCode, housePrefix]
+    );
+
+    const email = result.rows?.[0]?.email || null;
+    const maskedEmail = email ? maskEmail(email) : null;
+
+    if (!maskedEmail) {
+      return res.status(404).json({ error: "No account found" });
+    }
+
+    return res.json({ maskedEmail });
+  } catch (error) {
+    console.error("lookup-email error:", error?.message || error);
+    return res.status(500).json({ error: "No account found" });
+  } finally {
+    if (client) {
+      try { await client.end(); } catch (e) { /* ignore */ }
+    }
+  }
+});
 
 // CBS Books API Routes
 app.use("/api/cbsbooks", cbsbooksRouter);
