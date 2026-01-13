@@ -7,6 +7,7 @@ import {
 } from '@clerk/clerk-react';
 import CustomSignUp from './CustomSignUp';
 import CustomSignIn from './CustomSignIn';
+import { CheckAccountEmail } from './CheckAccountEmail';
 
 interface AuthScreenProps {
   // Props are kept for compatibility
@@ -148,6 +149,15 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
           </SignedIn>
         </div>
       </div>
+
+      {/* Account Email Lookup Helper - Only show on Sign Up */}
+      <SignedOut>
+        {showSignUp && (
+          <div className="w-full max-w-md mt-4">
+            <CheckAccountEmail />
+          </div>
+        )}
+      </SignedOut>
       
       {/* Development-Only: Skip Login Button (only shows when running locally) */}
       {(typeof window !== 'undefined' && (
