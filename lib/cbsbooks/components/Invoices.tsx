@@ -715,9 +715,10 @@ export const Invoices: React.FC<InvoicesProps> = ({
         y = checkPageBreak(y);
         // Keep rows aligned with the header-pill columns
         doc.text(item.description || '', descRect.x + 2, y);
+        // Qty / Rate / Amount: center-aligned to match header pills
         doc.text((item.quantity || 0).toString(), qtyRect.x + (qtyRect.w / 2), y, { align: 'center' });
-        doc.text(`$${(item.rate || 0).toFixed(0)}`, rateRect.x + rateRect.w - 2, y, { align: 'right' });
-        doc.text(`$${(item.amount || 0).toFixed(0)}`, amtRect.x + amtRect.w - 2, y, { align: 'right' });
+        doc.text(`$${(item.rate || 0).toFixed(0)}`, rateRect.x + (rateRect.w / 2), y, { align: 'center' });
+        doc.text(`$${(item.amount || 0).toFixed(0)}`, amtRect.x + (amtRect.w / 2), y, { align: 'center' });
         y += 8;
     });
     
