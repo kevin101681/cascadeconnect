@@ -621,6 +621,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   
   // Helper to update URL search params
   const updateSearchParams = useCallback((updates: Record<string, string | null>) => {
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
     const newParams = new URLSearchParams(window.location.search);
     
     Object.entries(updates).forEach(([key, value]) => {
@@ -632,6 +633,13 @@ const Dashboard: React.FC<DashboardProps> = ({
     });
     
     const newUrl = `${window.location.pathname}${newParams.toString() ? '?' + newParams.toString() : ''}`;
+    // Avoid creating duplicate history entries (this breaks Back navigation on mobile by "refreshing"
+    // the same list view instead of returning to the dashboard).
+    if (newUrl === currentUrl) {
+      // Still sync local state so dependent memos update predictably.
+      setSearchParams(newParams);
+      return;
+    }
     window.history.pushState({}, '', newUrl);
     setSearchParams(newParams);
   }, []);
@@ -1156,10 +1164,13 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [showCallsModal, setShowCallsModal] = useState(false);
   const [newMessageSubject, setNewMessageSubject] = useState('');
 
-  // Handle browser back button for nested modals (claims, tasks, message threads)
+  // Handle browser back button for nested modals that are NOT URL-driven.
+  // Claims/Tasks use `?claimId` / `?taskId` in the URL, so Back should be handled by normal
+  // popstate + searchParams syncing. Messages threads are local-state only, so we push a nested
+  // history entry to allow: thread -> back -> list -> back -> dashboard.
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
-    const hasNestedModal = selectedClaimForModal || selectedTaskForModal || selectedThreadId;
+    const hasNestedModal = Boolean(selectedThreadId);
     
     if (hasNestedModal && isMobile) {
       // Push a history state when modal opens
@@ -1167,13 +1178,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       const handlePopState = (e: PopStateEvent) => {
         // Close the appropriate modal when back button is pressed
-        if (selectedClaimForModal) {
-          setSelectedClaimForModal(null);
-        } else if (selectedTaskForModal) {
-          setSelectedTaskForModal(null);
-        } else if (selectedThreadId) {
-          setSelectedThreadId(null);
-        }
+        if (selectedThreadId) setSelectedThreadId(null);
       };
 
       window.addEventListener('popstate', handlePopState);
@@ -1182,7 +1187,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         window.removeEventListener('popstate', handlePopState);
       };
     }
-  }, [selectedClaimForModal, selectedTaskForModal, selectedThreadId]);
+  }, [selectedThreadId]);
   const [newMessageContent, setNewMessageContent] = useState('');
   const [newMessageRecipientId, setNewMessageRecipientId] = useState<string>('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
