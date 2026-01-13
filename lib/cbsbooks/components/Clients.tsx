@@ -234,7 +234,7 @@ export const Clients: React.FC<ClientsProps> = ({ clients, invoices, onAdd, onUp
               </div>
               <div className="md:col-span-2"><label className="block text-xs font-medium text-surface-outline dark:text-gray-400 mb-1">Name on Check (Optional)</label><input type="text" value={newClient.checkPayorName || ''} onChange={e => setNewClient({...newClient, checkPayorName: e.target.value})} className="w-full bg-surface-container dark:bg-gray-700 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary" placeholder="If different from Builder Name"/></div>
            </div>
-           <div className="mt-6 flex justify-end gap-3"><Button variant="text" onClick={handleCancel}>Cancel</Button><Button onClick={handleSave}>{editingId ? "Update Builder" : "Save Builder"}</Button></div>
+           <div className="mt-6 flex justify-end gap-3"><Button variant="outline" onClick={handleCancel}>Cancel</Button><Button variant="outline" onClick={handleSave}>{editingId ? "Update Builder" : "Save Builder"}</Button></div>
         </Card>
       )}
 

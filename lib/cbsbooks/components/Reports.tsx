@@ -162,17 +162,17 @@ export const Reports: React.FC<ReportsProps> = ({ invoices, expenses, onNavigate
             <div className="text-center border-b border-surfaceContainerHigh pb-6"><p className="text-sm font-medium text-primary px-3 py-1 bg-primary/10 inline-block rounded-full">{filteredData.dateLabel}</p></div>
             <div>
               <h4 className="text-lg font-medium text-primary mb-4">Income</h4>
-              <div className="flex justify-between items-center py-3 bg-primary text-primary-on px-4 rounded-lg"><span className="font-bold">Total Income</span><span className="font-bold">${filteredData.totalIncome.toFixed(0)}</span></div>
+              <div className="flex justify-between items-center py-3 bg-white border-2 border-primary text-primary px-4 rounded-lg"><span className="font-bold">Total Income</span><span className="font-bold">${filteredData.totalIncome.toFixed(0)}</span></div>
             </div>
             <div>
               <h4 className="text-lg font-medium text-primary mb-4">Operating Expenses</h4>
               <div className="space-y-2 mb-4">
                 {Object.entries(filteredData.expenseCategories).map(([category, amount]) => (<div key={category} className="flex justify-between items-center py-1"><span className="text-surface-on dark:text-gray-200">{category}</span><span className="text-surface-on dark:text-gray-200">${(amount as number).toFixed(0)}</span></div>))}
               </div>
-              <div className="flex justify-between items-center py-3 bg-primary text-primary-on px-4 rounded-lg"><span className="font-bold">Total Expenses</span><span className="font-bold">${filteredData.totalExpenses.toFixed(0)}</span></div>
+              <div className="flex justify-between items-center py-3 bg-white border-2 border-primary text-primary px-4 rounded-lg"><span className="font-bold">Total Expenses</span><span className="font-bold">${filteredData.totalExpenses.toFixed(0)}</span></div>
             </div>
             <div className="pt-4 border-t-2 border-surfaceContainerHigh">
-               <div className={`flex justify-between items-center py-4 px-4 rounded-xl ${filteredData.netProfit >= 0 ? 'bg-primary text-primary-on' : 'bg-red-800 text-white'}`}><span className="text-lg font-bold">Net Profit</span><span className="text-lg font-bold">${filteredData.netProfit.toFixed(0)}</span></div>
+               <div className={`flex justify-between items-center py-4 px-4 rounded-xl ${filteredData.netProfit >= 0 ? 'bg-white border-2 border-primary text-primary' : 'bg-white border-2 border-red-600 text-red-600'}`}><span className="text-lg font-bold">Net Profit</span><span className="text-lg font-bold">${filteredData.netProfit.toFixed(0)}</span></div>
             </div>
           </div>
         </Card>
