@@ -4483,7 +4483,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         data-tab={tab}
                         onClick={() => setCurrentTab(tab)}
                         className={[
-                          'shrink-0 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md',
+                          'shrink-0 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:text-primary',
                           isActive
                             // Match the "New Claim" button theme (filled variant in Button.tsx)
                             ? 'border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10 focus:bg-primary/10'
