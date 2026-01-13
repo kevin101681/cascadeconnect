@@ -307,38 +307,40 @@ const Layout: React.FC<LayoutProps> = ({
                 );
               })()}
 
-              {/* Clerk UserButton - Clean, no wrapper border */}
-              {clerkLoaded ? (
-                <UserButton
-                  appearance={{
-                    elements: {
-                      // Avatar button trigger
-                      userButtonTrigger: "!flex !items-center !justify-center !w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !visible !opacity-100 !relative",
+              {/* Clerk UserButton - Wrapped with padding to prevent border clipping */}
+              <div className="p-0.5">
+                {clerkLoaded ? (
+                  <UserButton
+                    appearance={{
+                      elements: {
+                        // Avatar button trigger
+                        userButtonTrigger: "!flex !items-center !justify-center !w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !visible !opacity-100 !relative",
 
-                      // Avatar container - let Clerk handle all styling
-                      userButtonAvatarBox: "!w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !block !visible !opacity-100 !flex !items-center !justify-center !relative",
+                        // Avatar container - let Clerk handle all styling
+                        userButtonAvatarBox: "!w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !block !visible !opacity-100 !flex !items-center !justify-center !relative",
 
-                      // Avatar image - keep default Clerk styling (they control colors via dashboard)
-                      userButtonAvatarImage: "!w-full !h-full !block !visible !opacity-100 !relative",
+                        // Avatar image - keep default Clerk styling (they control colors via dashboard)
+                        userButtonAvatarImage: "!w-full !h-full !block !visible !opacity-100 !relative",
 
-                      // Dropdown styling
-                      userButtonPopoverCard: "shadow-elevation-2 rounded-xl border border-gray-200",
-                      userButtonPopoverHeader: "hidden",
-                      userButtonPopoverHeaderTitle: "hidden",
-                      userButtonPopoverHeaderSubtitle: "hidden",
-                      userButtonPopoverAvatarBox: "hidden",
-                      userButtonPopoverActions: "p-2",
-                      userButtonPopoverActionButtonIcon: "hidden",
-                      userButtonPopoverActionButton__manageAccount: "hidden",
-                      userButtonPopoverFooter: "hidden",
-                    }
-                  }}
-                />
-              ) : (
-                <div className="w-10 h-10 bg-surface-container rounded-full flex items-center justify-center">
-                  <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                </div>
-              )}
+                        // Dropdown styling
+                        userButtonPopoverCard: "shadow-elevation-2 rounded-xl border border-gray-200",
+                        userButtonPopoverHeader: "hidden",
+                        userButtonPopoverHeaderTitle: "hidden",
+                        userButtonPopoverHeaderSubtitle: "hidden",
+                        userButtonPopoverAvatarBox: "hidden",
+                        userButtonPopoverActions: "p-2",
+                        userButtonPopoverActionButtonIcon: "hidden",
+                        userButtonPopoverActionButton__manageAccount: "hidden",
+                        userButtonPopoverFooter: "hidden",
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="w-10 h-10 bg-surface-container rounded-full flex items-center justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  </div>
+                )}
+              </div>
 
               {/* Main Menu Dropdown - Show for Admin accounts only (not for homeowner, builder, or subcontractor) */}
               {isAdmin && (
