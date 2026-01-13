@@ -2057,8 +2057,6 @@ export const Invoices: React.FC<InvoicesProps> = ({
           )}
         </div>
       </div>
-
-      {/* Global Modals (outside split layout) */}
-      {/* AI Import Modal */}
+    </div>
   );
 };
