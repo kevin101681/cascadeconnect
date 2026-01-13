@@ -4,7 +4,7 @@ import { Invoice, Client, InvoiceItem, ViewState } from '../types';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { TabBar } from './ui/TabBar';
-import { Plus, Trash2, Download, Search, X, Upload, Database, SlidersHorizontal, Camera, ArrowUpDown, Share2, Check, Sparkles, Loader2, ScanText, Link as LinkIcon, Mail, Send, CreditCard, Pencil, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Trash2, Download, Search, X, Upload, Database, SlidersHorizontal, Camera, ArrowUpDown, Share2, Check, Sparkles, Loader2, ScanText, Link as LinkIcon, Mail, Send, CreditCard, Pencil, Calendar as CalendarIcon, ChevronLeft } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { FloatingMenu, ActionItem } from './ui/FloatingMenu';
 import { api } from '../services/api';
@@ -94,8 +94,44 @@ export const Invoices: React.FC<InvoicesProps> = ({
 }) => {
   const [isCreating, setIsCreating] = useState(false); // Only for "New Invoice" mode
   const [expandedId, setExpandedId] = useState<string | null>(null); // For Inline Edit
-  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null); // For Modal Edit
   const [currentInvoice, setCurrentInvoice] = useState<Partial<Invoice>>({});
+  
+  // URL-based modal state management (single source of truth)
+  const [searchParams, setSearchParams] = useState(() => new URLSearchParams(window.location.search));
+  
+  // Listen to browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      setSearchParams(new URLSearchParams(window.location.search));
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+  
+  // Helper to update URL search params
+  const updateSearchParams = (updates: Record<string, string | null>) => {
+    const newParams = new URLSearchParams(window.location.search);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === undefined) {
+        newParams.delete(key);
+      } else {
+        newParams.set(key, value);
+      }
+    });
+    
+    const newUrl = `${window.location.pathname}${newParams.toString() ? '?' + newParams.toString() : ''}`;
+    if (newUrl !== `${window.location.pathname}${window.location.search}`) {
+      window.history.pushState({}, '', newUrl);
+      setSearchParams(newParams);
+    }
+  };
+  
+  // Get selected invoice from URL
+  const selectedInvoiceId = searchParams.get('invoiceId');
+  const selectedInvoice = useMemo(() => {
+    if (!selectedInvoiceId) return null;
+    return invoices.find(inv => inv.id === selectedInvoiceId) || null;
+  }, [selectedInvoiceId, invoices]);
   
   const [searchQuery, setSearchQuery] = useState('');
   // Use a single state to track which FAB modal is active
@@ -433,7 +469,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
         
         setIsCreating(false);
         setExpandedId(null);
-        setSelectedInvoice(null); // Close modal
+        updateSearchParams({ invoiceId: null }); // Close modal via URL
         setCurrentInvoice({});
     } catch (e) {
         console.error("Error saving invoice", e);
@@ -1112,7 +1148,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                             setExpandedId(null);
                           } else {
                             setIsCreating(false);
-                            setSelectedInvoice(null); // Close modal
+                            updateSearchParams({ invoiceId: null }); // Close modal via URL
                           }
                         }} 
                         disabled={isSaving} 
@@ -1748,7 +1784,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                   address={inv.projectDetails}
                   checkNumber={inv.checkNumber}
                   onClick={() => {
-                    setSelectedInvoice(inv);
+                    updateSearchParams({ invoiceId: inv.id });
                     setCurrentInvoice(inv);
                   }}
                   onMarkPaid={(checkNum) => {
@@ -1783,37 +1819,54 @@ export const Invoices: React.FC<InvoicesProps> = ({
         </div>
       </div>
 
-      {/* Invoice Editor Modal */}
+      {/* Invoice Editor Modal - Full Screen on Mobile, Centered on Desktop */}
       {selectedInvoice && (
         <div 
-          className="fixed inset-0 z-[250] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-[250] bg-black/50 md:backdrop-blur-sm flex items-center justify-center md:p-4"
           onClick={() => {
-            setSelectedInvoice(null);
+            updateSearchParams({ invoiceId: null });
             setCurrentInvoice({});
           }}
         >
           <div 
-            className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-3 w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col"
+            className="bg-surface dark:bg-gray-800 shadow-elevation-3 overflow-hidden flex flex-col
+                       h-full w-full max-w-none m-0 p-0 rounded-none
+                       md:max-w-4xl md:h-auto md:max-h-[90vh] md:rounded-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex justify-between items-center p-6 border-b border-surface-outline-variant dark:border-gray-700">
-              <h2 className="text-2xl font-semibold text-surface-on dark:text-gray-100">
-                Edit Invoice {selectedInvoice.invoiceNumber}
-              </h2>
+            <div className="flex justify-between items-center p-4 md:p-6 border-b border-surface-outline-variant dark:border-gray-700 shrink-0">
+              {/* Mobile: Back button on left */}
               <button
                 onClick={() => {
-                  setSelectedInvoice(null);
+                  updateSearchParams({ invoiceId: null });
                   setCurrentInvoice({});
                 }}
-                className="p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors"
+                className="md:hidden p-2 -ml-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors touch-manipulation"
+                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
+                aria-label="Back"
+              >
+                <ChevronLeft className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
+              </button>
+              
+              <h2 className="text-lg md:text-2xl font-semibold text-surface-on dark:text-gray-100 flex-1 md:flex-none">
+                Edit Invoice {selectedInvoice.invoiceNumber}
+              </h2>
+              
+              {/* Desktop: X button on right */}
+              <button
+                onClick={() => {
+                  updateSearchParams({ invoiceId: null });
+                  setCurrentInvoice({});
+                }}
+                className="hidden md:block p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors"
               >
                 <X className="h-6 w-6 text-surface-on-variant dark:text-gray-400" />
               </button>
             </div>
 
             {/* Modal Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6">
               {renderInvoiceForm(false)}
             </div>
           </div>

@@ -55,9 +55,10 @@ export function InvoiceCard({
   return (
     <div 
       onClick={onClick}
-      className={`group relative bg-white rounded-card border border-gray-200 p-5 shadow-sm hover:shadow-md transition-all hover:border-blue-300 flex flex-col h-full ${
-        onClick ? 'cursor-pointer' : ''
+      className={`group relative bg-white rounded-card border border-gray-200 p-5 shadow-sm transition-all flex flex-col h-full touch-manipulation ${
+        onClick ? 'cursor-pointer md:hover:shadow-md md:hover:border-blue-300' : ''
       }`}
+      style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
     >
       
       {/* 1. HEADER: Invoice #, Status, Amount */}

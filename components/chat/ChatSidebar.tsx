@@ -198,11 +198,12 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   <button
                     key={channel.id}
                     onClick={() => onSelectChannel(channel)}
-                    className={`w-full px-4 py-3 flex items-center gap-3 transition-all ${
+                    className={`w-full px-4 py-3 flex items-center gap-3 transition-all touch-manipulation ${
                       selectedChannelId === channel.id
                         ? 'bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary border-l-4 border-primary'
-                        : 'text-surface-on dark:text-gray-300 hover:bg-surface-container dark:hover:bg-gray-700/50'
+                        : 'text-surface-on dark:text-gray-300 md:hover:bg-surface-container md:dark:hover:bg-gray-700/50'
                     }`}
+                    style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
                   >
                     {/* Content */}
                     <div className="flex-1 min-w-0 text-left">
@@ -245,7 +246,8 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       key={member.id}
                       onClick={() => handleDmClick(member.id, member.name)}
                       disabled={isCreatingDm}
-                      className="w-full px-4 py-3 flex items-center gap-3 text-surface-on dark:text-gray-300 hover:bg-surface-container dark:hover:bg-gray-700/50 transition-all disabled:opacity-50"
+                      className="w-full px-4 py-3 flex items-center gap-3 text-surface-on dark:text-gray-300 md:hover:bg-surface-container md:dark:hover:bg-gray-700/50 transition-all disabled:opacity-50 touch-manipulation"
+                      style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
                     >
                       {/* Content */}
                       <div className="flex-1 min-w-0 text-left">

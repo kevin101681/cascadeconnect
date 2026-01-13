@@ -1,15 +1,16 @@
 /**
  * TEAM CHAT TAB (FULL PAGE)
  * Full-height chat interface for the admin dashboard
- * January 3, 2026
+ * January 3, 2026 - Updated January 13, 2026
  * 
  * Features:
  * - Sidebar + chat window layout
  * - Responsive design
+ * - URL-based navigation (fixes back button loop)
  * - Integrates with existing dashboard tabs
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ChatWindow } from './chat/ChatWindow';
 import { ChatSidebar } from './chat/ChatSidebar';
 import { type Channel } from '../services/internalChatService';
@@ -26,8 +27,54 @@ const TeamChat: React.FC<TeamChatProps> = ({
   currentUserName,
   onOpenHomeownerModal,
 }) => {
-  const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
+  // URL-based state management (single source of truth)
+  const [searchParams, setSearchParams] = useState(() => new URLSearchParams(window.location.search));
+  const [allChannels, setAllChannels] = useState<Channel[]>([]);
+  
+  // Listen to browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      setSearchParams(new URLSearchParams(window.location.search));
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+  
+  // Helper to update URL search params
+  const updateSearchParams = (updates: Record<string, string | null>) => {
+    const newParams = new URLSearchParams(window.location.search);
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value === null || value === undefined) {
+        newParams.delete(key);
+      } else {
+        newParams.set(key, value);
+      }
+    });
+    
+    const newUrl = `${window.location.pathname}${newParams.toString() ? '?' + newParams.toString() : ''}`;
+    if (newUrl !== `${window.location.pathname}${window.location.search}`) {
+      window.history.pushState({}, '', newUrl);
+      setSearchParams(newParams);
+    }
+  };
+  
+  // Get selected channel from URL
+  const selectedChannelId = searchParams.get('channelId');
+  const selectedChannel = useMemo(() => {
+    if (!selectedChannelId) return null;
+    return allChannels.find(c => c.id === selectedChannelId) || null;
+  }, [selectedChannelId, allChannels]);
+  
   const activeChat = !!selectedChannel;
+  
+  // Handle channel selection (update URL instead of local state)
+  const handleSelectChannel = (channel: Channel | null) => {
+    if (channel === null) {
+      updateSearchParams({ channelId: null });
+    } else {
+      updateSearchParams({ channelId: channel.id });
+    }
+  };
 
   return (
     <div className="h-full flex bg-white dark:bg-gray-900">
@@ -36,7 +83,17 @@ const TeamChat: React.FC<TeamChatProps> = ({
         <ChatSidebar
           currentUserId={currentUserId}
           selectedChannelId={selectedChannel?.id || null}
-          onSelectChannel={setSelectedChannel}
+          onSelectChannel={(channel) => {
+            // Update URL and track channels for lookup
+            if (channel) {
+              setAllChannels(prev => {
+                const exists = prev.find(c => c.id === channel.id);
+                if (!exists) return [...prev, channel];
+                return prev;
+              });
+            }
+            handleSelectChannel(channel);
+          }}
         />
       </div>
 
@@ -49,8 +106,9 @@ const TeamChat: React.FC<TeamChatProps> = ({
           <div className="md:hidden h-14 shrink-0 px-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2 bg-white dark:bg-gray-900">
             <button
               type="button"
-              onClick={() => setSelectedChannel(null)}
-              className="inline-flex items-center gap-2 px-2 py-2 -ml-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+              onClick={() => handleSelectChannel(null)}
+              className="inline-flex items-center gap-2 px-2 py-2 -ml-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg touch-manipulation"
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
               aria-label="Back to List"
             >
               <ChevronLeft className="h-5 w-5" />
