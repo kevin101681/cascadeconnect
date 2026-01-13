@@ -2,6 +2,7 @@ import { FileText, Calendar, MapPin, Hammer, Mail, Download, Trash2, Check, Doll
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useState } from "react";
 
 interface InvoiceCardProps {
   invoiceNumber: string;
@@ -14,6 +15,7 @@ interface InvoiceCardProps {
   checkNumber?: string;
   onClick?: () => void;
   onMarkPaid?: (checkNum: string) => void;
+  onCheckNumberUpdate?: (checkNum: string) => void;
   onEmail?: () => void;
   onDownload?: () => void;
   onDelete?: () => void;
@@ -30,10 +32,14 @@ export function InvoiceCard({
   checkNumber = "",
   onClick,
   onMarkPaid,
+  onCheckNumberUpdate,
   onEmail,
   onDownload,
   onDelete,
 }: InvoiceCardProps) {
+  
+  // Local state for check number to enable instant typing
+  const [checkNum, setCheckNum] = useState(checkNumber);
   
   // Helper for Status Badge Colors
   const getStatusColor = (s: string) => {
@@ -51,6 +57,15 @@ export function InvoiceCard({
   // Visual Override: If data says "Overdue", we display "Sent"
   const displayStatus = status === "Overdue" ? "Sent" : status;
   const isPaid = status === "Paid";
+  
+  // Auto-save check number
+  const handleSaveCheckNumber = () => {
+    // Don't save if nothing changed
+    if (checkNum === checkNumber) return;
+    
+    // Call the update callback
+    onCheckNumberUpdate?.(checkNum);
+  };
 
   return (
     <div 
@@ -127,7 +142,15 @@ export function InvoiceCard({
           </label>
           <div className="relative">
              <Input 
-                defaultValue={checkNumber}
+                value={checkNum}
+                onChange={(e) => setCheckNum(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onBlur={handleSaveCheckNumber}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.currentTarget.blur();
+                  }
+                }}
                 disabled={isPaid}
                 placeholder="Enter check number..."
                 className="h-8 text-xs bg-white pr-8 rounded-md border-gray-300 focus-visible:ring-blue-500"
@@ -145,7 +168,7 @@ export function InvoiceCard({
               className="h-8 text-xs !bg-green-50 hover:!bg-green-100 !text-green-800 flex-1 rounded-md !border-0"
               onClick={(e) => {
                 e.stopPropagation();
-                onMarkPaid?.(checkNumber);
+                onMarkPaid?.(checkNum);
               }}
             >
               Pay

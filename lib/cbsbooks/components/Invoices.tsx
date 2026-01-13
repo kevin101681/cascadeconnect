@@ -1964,6 +1964,13 @@ export const Invoices: React.FC<InvoicesProps> = ({
                     };
                     onUpdate(updatedInv);
                   }}
+                  onCheckNumberUpdate={(checkNum) => {
+                    const updatedInv = { 
+                      ...inv, 
+                      checkNumber: checkNum
+                    };
+                    onUpdate(updatedInv);
+                  }}
                   onEmail={() => {
                     handlePrepareEmail(inv);
                   }}
