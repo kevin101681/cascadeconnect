@@ -6,7 +6,8 @@ import { DarkModeProvider } from './components/DarkModeProvider';
 import { ClerkProvider } from '@clerk/clerk-react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import GustoSuccessPage from './components/pages/gusto-success';
-import { SignIn, SignUp } from '@clerk/clerk-react';
+import { SignIn } from '@clerk/clerk-react';
+import HomeownerSignUpPage from './components/pages/homeowner-sign-up';
 
 // Load fonts locally (avoids render-blocking Google Fonts CSS)
 // Use latin-only subsets to avoid shipping dozens of font files.
@@ -72,7 +73,7 @@ root.render(
               />
               <Route
                 path="/sign-up/*"
-                element={<SignUp routing="path" path="/sign-up" />}
+                element={<HomeownerSignUpPage />}
               />
               <Route path="/gusto-success" element={<GustoSuccessPage />} />
 
