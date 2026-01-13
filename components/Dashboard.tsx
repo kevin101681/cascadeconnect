@@ -47,10 +47,8 @@ const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err =
 // Lazy-load react-pageflip (heavy) so it doesn't ship on initial dashboard load.
 const HTMLFlipBook = React.lazy(() => import('react-pageflip'));
 
-// Lazy-load team chat widget so it doesn't ship on initial dashboard load.
-const FloatingChatWidget = React.lazy(() =>
-  import('./chat/ChatWidget').then((m) => ({ default: m.ChatWidget }))
-);
+// Import TeamChat component for full-screen chat interface
+import TeamChat from './TeamChat';
 
 const ClaimInlineEditor = React.lazy(() => import('./ClaimInlineEditor').catch(err => {
   console.error('Failed to load ClaimInlineEditor:', err);
@@ -695,13 +693,13 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, []);
   
   // View State for Dashboard - derived from URL
-  type TabType = 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'PUNCHLIST' | null;
-  
+  type TabType = 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'PUNCHLIST' | 'CHAT' | null;
+
   const currentTab = useMemo<TabType>(() => {
     const view = searchParams.get('view');
     if (!view) return null;
-    
-    const validTabs: TabType[] = ['CLAIMS', 'MESSAGES', 'TASKS', 'NOTES', 'CALLS', 'DOCUMENTS', 'MANUAL', 'HELP', 'PAYROLL', 'INVOICES', 'SCHEDULE', 'PUNCHLIST'];
+
+    const validTabs: TabType[] = ['CLAIMS', 'MESSAGES', 'TASKS', 'NOTES', 'CALLS', 'DOCUMENTS', 'MANUAL', 'HELP', 'PAYROLL', 'INVOICES', 'SCHEDULE', 'PUNCHLIST', 'CHAT'];
     const upperView = view.toUpperCase() as TabType;
     
     return validTabs.includes(upperView) ? upperView : null;
@@ -789,6 +787,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     (selectedTaskForModal && currentTab !== 'TASKS') ||
     (selectedClaimForModal && currentTab !== 'CLAIMS') ||
     currentTab === 'PUNCHLIST' ||
+    currentTab === 'CHAT' ||
     (selectedDocument && isPDFViewerOpen)
   );
 
@@ -1395,7 +1394,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   useEffect(() => {
     const isAnyModalOpen = showNewTaskModal || showNewMessageModal || showNewClaimModal ||
                           showDocsModal || showInviteModal || showEditHomeownerModal ||
-                          showSubListModal || (currentTab === 'PUNCHLIST') || isPDFViewerOpen || showCallsModal;
+                          showSubListModal || (currentTab === 'PUNCHLIST') || (currentTab === 'CHAT') || isPDFViewerOpen || showCallsModal;
 
     if (isAnyModalOpen) {
       // Use overflow hidden only to prevent scrolling without layout shifts
@@ -4019,7 +4018,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               if (module === 'BLUETAG') {
                 setCurrentTab('PUNCHLIST');
               } else if (module === 'CHAT') {
-                setIsChatWidgetOpen(true);
+                updateSearchParams({ view: 'chat' });
               } else {
                 const tab = moduleMap[module];
                 if (tab) {
@@ -4979,6 +4978,24 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </Suspense>
                   </div>
                 </div>
+              </div>
+            </AnimatedTabContent>
+          )}
+
+          {/* CHAT Tab - Admin Only - Full-screen team chat interface */}
+          {currentTab === 'CHAT' && isAdmin && (
+            <AnimatedTabContent tabKey="chat" className="flex-1 min-h-0 flex flex-col">
+              <div className="w-full h-full flex flex-col">
+                <TeamChat
+                  currentUserId={currentUser?.id || ''}
+                  currentUserName={currentUser?.name || 'Unknown User'}
+                  onOpenHomeownerModal={(homeownerId) => {
+                    const homeowner = homeowners.find((h) => h.id === homeownerId);
+                    if (homeowner && onSelectHomeowner) {
+                      onSelectHomeowner(homeowner);
+                    }
+                  }}
+                />
               </div>
             </AnimatedTabContent>
           )}
