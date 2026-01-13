@@ -31,13 +31,14 @@ export function WarrantyCard({
   return (
     <div 
       onClick={onClick}
-      className={`group relative rounded-card border p-5 transition-all h-full flex flex-col justify-between focus:outline-none ${
+      className={`group relative rounded-card border p-5 transition-all h-full flex flex-col justify-between focus:outline-none touch-manipulation ${
         onClick ? 'cursor-pointer' : ''
       } ${
         isSelected 
           ? 'bg-blue-50 border-blue-500 shadow-md' 
-          : 'bg-white border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300'
+          : 'bg-white border-gray-200 shadow-sm md:hover:shadow-md md:hover:border-blue-300'
       }`}
+      style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
     >
       
       {/* 1. HEADER */}
@@ -113,7 +114,7 @@ export function WarrantyCard({
         </div>
 
         {/* Attachment Count */}
-        <div className={`flex items-center transition-colors ${attachmentCount > 0 ? "text-gray-500 hover:text-gray-800" : "text-gray-300"}`}>
+        <div className={`flex items-center transition-colors ${attachmentCount > 0 ? "text-gray-500 md:hover:text-gray-800" : "text-gray-300"}`}>
           <Paperclip className="w-3.5 h-3.5 mr-1" />
           <span className="text-xs font-medium">{attachmentCount}</span>
         </div>

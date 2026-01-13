@@ -815,6 +815,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   const shouldHideDashboardUnderlay = isPortalModalOpen || isLegacyModalView;
   
   // Debug: Log whenever selectedClaimForModal changes
+  // NOTE: This useEffect is for debugging ONLY. It does NOT interfere with browser history.
+  // The modal state is STRICTLY controlled by the URL search params.
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
     if (selectedClaimForModal) {
@@ -828,23 +830,6 @@ const Dashboard: React.FC<DashboardProps> = ({
         hasUserInteraction: userInteractionRef.current,
         isInitialLoad: initialLoadRef.current
       });
-      
-      // If on mobile and CLAIMS tab, this will show as full-screen overlay
-      if (isMobile && currentTab === 'CLAIMS') {
-        console.log('⚠️ WARNING: Mobile overlay will render - this is the modal the user sees!', {
-          claimId: selectedClaimForModal.id,
-          timeSinceMount: Date.now() - mountTimeRef.current,
-          hasUserInteraction: userInteractionRef.current,
-          isInitialLoad: initialLoadRef.current,
-          shouldHaveBeenBlocked: initialLoadRef.current || !userInteractionRef.current
-        });
-        
-        // If this shouldn't have been allowed, force clear it
-        if (initialLoadRef.current || !userInteractionRef.current) {
-          console.log('🚫 FORCE CLEARING modal that should have been blocked!');
-          setSelectedClaimForModal(null);
-        }
-      }
     } else {
       console.log('📋 selectedClaimForModal cleared (Dashboard)');
     }
@@ -2699,21 +2684,11 @@ const Dashboard: React.FC<DashboardProps> = ({
       </div>
       
       {/* Mobile Full-Screen Overlay for Claim Modal */}
-      {(() => {
-        if (selectedClaimForModal) {
-          const isMobile = window.innerWidth < 768;
-          
-          // Force clear ONLY for non-user-initiated opens during initial load.
-          // This prevents accidental deep-link auto-opens while still allowing the user's first tap.
-          if (isMobile && initialLoadRef.current && !userInteractionRef.current) {
-            console.log('🚫 FORCE CLEARING mobile overlay that should not be visible!');
-            // Use setTimeout to avoid state update during render
-            setTimeout(() => setSelectedClaimForModal(null), 0);
-            return null;
-          }
-        }
-        return null;
-      })()}
+      {/* 
+        NOTE: The modal state is STRICTLY controlled by URL search params.
+        We do NOT force-clear the modal here, as that would interfere with browser history navigation.
+        If a claim is in the URL (via deep link or back button), the modal should display it.
+      */}
       {selectedClaimForModal && (
         <div className="md:hidden fixed inset-0 z-50 bg-surface dark:bg-gray-900 flex flex-col">
           {/* Claim detail: edge-to-edge sections on mobile */}
