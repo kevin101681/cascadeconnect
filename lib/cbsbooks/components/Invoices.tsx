@@ -411,10 +411,10 @@ export const Invoices: React.FC<InvoicesProps> = ({
     setActiveFab('none');
   };
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<Invoice | null> => {
     if (!currentInvoice.clientName) {
       alert("Client is required");
-      return;
+      return null;
     }
 
     setIsSaving(true);
@@ -437,7 +437,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                  const proceed = confirm(`Failed to auto-generate Square payment link: ${e.message || 'Unknown error'}. \n\nSave invoice anyway without the link?`);
                  if (!proceed) {
                      setIsSaving(false);
-                     return;
+                     return null;
                  }
              }
         }
@@ -471,11 +471,24 @@ export const Invoices: React.FC<InvoicesProps> = ({
         setExpandedId(null);
         updateSearchParams({ invoiceId: null }); // Close modal via URL
         setCurrentInvoice({});
+        
+        return invoiceToSave;
     } catch (e) {
         console.error("Error saving invoice", e);
         alert("An error occurred while saving.");
+        return null;
     } finally {
         setIsSaving(false);
+    }
+  };
+
+  const handleSaveAndEmail = async () => {
+    // Save the invoice first
+    const savedInvoice = await handleSave();
+    
+    // If save was successful, prepare email modal
+    if (savedInvoice) {
+      handlePrepareEmail(savedInvoice);
     }
   };
   
@@ -878,7 +891,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
             onUpdate({ ...emailingInvoice, status: 'sent' });
         }
 
-        alert("Email sent successfully!");
+        // Close modal (success is implied by modal closure)
         setEmailingInvoice(null);
     } catch (e: any) {
         console.error("Failed to send email", e);
@@ -1078,10 +1091,10 @@ export const Invoices: React.FC<InvoicesProps> = ({
             {/* Form Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <label className="text-xs text-surface-outline dark:text-gray-400 font-medium ml-1">Client</label>
+                    <label className="text-xs text-surface-outline dark:text-gray-400 font-medium ml-1">Builder</label>
                     {!currentInvoice.id ? (
                         <>
-                        <input list="clients-list" value={currentInvoice.clientName || ''} onChange={e => setCurrentInvoice({...currentInvoice, clientName: e.target.value})} className="w-full bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary" placeholder="Select or type client name"/>
+                        <input list="clients-list" value={currentInvoice.clientName || ''} onChange={e => setCurrentInvoice({...currentInvoice, clientName: e.target.value})} className="w-full bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary" placeholder=""/>
                         <datalist id="clients-list">
                             {clients.map(c => <option key={c.id} value={c.companyName} />)}
                         </datalist>
@@ -1155,8 +1168,8 @@ export const Invoices: React.FC<InvoicesProps> = ({
                             <input 
                                 type="number" 
                                 placeholder="Rate" 
-                                value={item.rate}
-                                onChange={(e) => updateItem(item.id, 'rate', Number(e.target.value))} 
+                                value={item.rate === 0 ? '' : item.rate}
+                                onChange={(e) => updateItem(item.id, 'rate', e.target.value === '' ? 0 : Number(e.target.value))} 
                                 className="w-full bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-calendar-picker-indicator]:hidden"
                             />
                         </div>
@@ -1233,6 +1246,15 @@ export const Invoices: React.FC<InvoicesProps> = ({
                         className="flex-1 md:flex-none h-9 px-6 rounded-full bg-primary text-primary-on hover:bg-primary/90 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                     >
                         Cancel
+                    </button>
+                    <button 
+                        onClick={handleSaveAndEmail} 
+                        disabled={isSaving}
+                        className="flex-1 md:flex-none h-9 px-6 rounded-full bg-white border-2 border-primary text-primary hover:bg-primary/10 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        title="Save invoice and send via email"
+                    >
+                        {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <Mail size={16} />}
+                        {isSaving ? 'Saving...' : 'Save & Email'}
                     </button>
                     <button 
                         onClick={handleSave} 
