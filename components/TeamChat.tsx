@@ -43,6 +43,12 @@ const TeamChat: React.FC<TeamChatProps> = ({
   // Helper to update URL search params
   const updateSearchParams = (updates: Record<string, string | null>) => {
     const newParams = new URLSearchParams(window.location.search);
+    
+    // ✅ CRITICAL: Always preserve view=chat when in TeamChat component
+    if (!newParams.has('view')) {
+      newParams.set('view', 'chat');
+    }
+    
     Object.entries(updates).forEach(([key, value]) => {
       if (value === null || value === undefined) {
         newParams.delete(key);

@@ -4028,7 +4028,8 @@ const Dashboard: React.FC<DashboardProps> = ({
               }
             }}
           />
-          {isAdmin && (
+          {/* REMOVED: Floating Chat Widget (redundant - use "Team Chat" button in Communication section instead) */}
+          {/* {isAdmin && (
             <>
               {!isChatWidgetOpen && (
                 <button
@@ -4058,7 +4059,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 </Suspense>
               )}
             </>
-          )}
+          )} */}
         </>
       );
     }
@@ -5251,8 +5252,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* END MAIN LAYOUT CONTAINER */}
         </div>
 
-        {/* Floating Team Chat (Admin) */}
-        {isAdmin && (
+        {/* REMOVED: Floating Team Chat (Admin) - redundant with Communication section button */}
+        {/* {isAdmin && (
           <>
             {!isChatWidgetOpen && (
               <button
@@ -5283,7 +5284,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </Suspense>
             )}
           </>
-        )}
+        )} */}
 
         {/* DOCUMENTS MODAL - Now opened via button in homeowner card */}
         {showDocsModal && userRole !== UserRole.HOMEOWNER && createPortal(
@@ -6530,7 +6531,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
           )}
         </div>
-        {isAdmin && (
+        {/* REMOVED: Floating Chat Widget (redundant - use "Team Chat" button in Communication section instead) */}
+        {/* {isAdmin && (
           <>
             {!isChatWidgetOpen && (
               <button
@@ -6561,7 +6563,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </Suspense>
             )}
           </>
-        )}
+        )} */}
       </>
     );
   }
