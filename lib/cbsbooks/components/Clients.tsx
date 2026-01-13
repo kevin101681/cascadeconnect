@@ -67,7 +67,15 @@ export const Clients: React.FC<ClientsProps> = ({ clients, invoices, onAdd, onUp
   };
 
   const handleSave = () => {
-    if (!newClient.companyName || !newClient.email) return;
+    // Validation with user feedback
+    if (!newClient.companyName?.trim()) {
+      alert('Builder Name is required');
+      return;
+    }
+    if (!newClient.email?.trim()) {
+      alert('Email is required');
+      return;
+    }
 
     const clientData: Client = { 
         id: editingId || crypto.randomUUID(), 

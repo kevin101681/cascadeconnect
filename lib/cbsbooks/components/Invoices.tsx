@@ -515,6 +515,26 @@ export const Invoices: React.FC<InvoicesProps> = ({
       handlePrepareEmail(savedInvoice);
     }
   };
+
+  const handleSaveAndMarkSent = async () => {
+    // Temporarily set status to 'sent' before saving
+    const originalStatus = currentInvoice.status;
+    setCurrentInvoice({ ...currentInvoice, status: 'sent' });
+    
+    try {
+      // Save with 'sent' status
+      const savedInvoice = await handleSave();
+      
+      if (!savedInvoice) {
+        // Restore original status if save failed
+        setCurrentInvoice({ ...currentInvoice, status: originalStatus });
+      }
+    } catch (error) {
+      // Restore original status on error
+      setCurrentInvoice({ ...currentInvoice, status: originalStatus });
+      throw error;
+    }
+  };
   
   const handleDeleteInvoice = (id: string) => {
       if(confirm('Delete invoice?')) {
@@ -1333,6 +1353,15 @@ export const Invoices: React.FC<InvoicesProps> = ({
                     >
                         {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <Mail size={16} />}
                         {isSaving ? 'Saving...' : 'Save & Email'}
+                    </button>
+                    <button 
+                        onClick={handleSaveAndMarkSent} 
+                        disabled={isSaving}
+                        className="flex-1 md:flex-none h-9 px-6 rounded-full bg-white border-2 border-gray-400 text-gray-700 hover:bg-gray-50 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        title="Save invoice and mark as sent (without emailing)"
+                    >
+                        {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <Check size={16} />}
+                        {isSaving ? 'Saving...' : 'Save & Mark Sent'}
                     </button>
                     <button 
                         onClick={handleSave} 
