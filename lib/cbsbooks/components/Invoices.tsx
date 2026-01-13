@@ -557,10 +557,11 @@ export const Invoices: React.FC<InvoicesProps> = ({
         return currentY;
     };
 
-    // Add CBS Logo in top right corner (adjusted aspect ratio to prevent squishing)
+    // Add CBS Logo in top right corner (natural aspect ratio)
     try {
         const logoPath = '/images/manual/cbslogo.png';
-        doc.addImage(logoPath, 'PNG', 162, 10, 25, 28); // x, y, width, height - increased height significantly (aspect ratio 0.89:1, nearly square to tall)
+        // Only specify width, let height scale naturally to maintain aspect ratio
+        doc.addImage(logoPath, 'PNG', 162, 10, 25, 0); // x, y, width, height=0 means auto-scale
     } catch (e) {
         console.warn('Could not load CBS logo:', e);
     }
@@ -621,10 +622,10 @@ export const Invoices: React.FC<InvoicesProps> = ({
     doc.setFont(undefined, 'bold');
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     // Vertically center text in pill: pill top is y-5, height is 8, so center is y-1
-    doc.text("Description", 16, y-0.5);
-    doc.text("Qty", 110, y-0.5, { align: 'center' });
-    doc.text("Rate", 135, y-0.5, { align: 'right' });
-    doc.text("Amount", 185, y-0.5, { align: 'right' });
+    doc.text("Description", 16, y-1);
+    doc.text("Qty", 110, y-1, { align: 'center' });
+    doc.text("Rate", 135, y-1, { align: 'right' });
+    doc.text("Amount", 185, y-1, { align: 'right' });
     doc.setFont(undefined, 'normal');
     doc.setTextColor(0);
     
@@ -664,11 +665,11 @@ export const Invoices: React.FC<InvoicesProps> = ({
     doc.setFont(undefined, 'bold');
     doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
     
-    // Align Total label and Amount - closer together
-    doc.text("Total", 142, y-0.5); // Vertically centered, moved right
+    // Align Total label and Amount - vertically centered in pill (height 10, center is y-1)
+    doc.text("Total", 142, y-1);
     // Ensure total is a number safe for toFixed
     const safeTotal = typeof invoice.total === 'number' ? invoice.total : 0;
-    doc.text(`$${safeTotal.toFixed(0)}`, 188, y-0.5, { align: 'right' }); // Vertically centered, moved right
+    doc.text(`$${safeTotal.toFixed(0)}`, 188, y-1, { align: 'right' });
 
     // Payment Button
     // Only render if paymentLink exists
@@ -690,9 +691,9 @@ export const Invoices: React.FC<InvoicesProps> = ({
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(10);
         doc.setFont(undefined, 'bold');
-        
+
         // Pill center: x=175 (155 + 40/2), y center: y-2 (pill top is y-7, height 10, so center is y-2)
-        doc.text("PAY ONLINE", 175, y-1.5, { align: 'center' });
+        doc.text("PAY ONLINE", 175, y-2, { align: 'center' });
         
         // Clickable Link
         doc.link(155, y-7, 40, 10, { url: invoice.paymentLink });
