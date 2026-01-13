@@ -1214,26 +1214,28 @@ If this repair work is billable, please let me know prior to scheduling.`);
                               <span className="text-xs text-secondary-on-container dark:text-gray-400 opacity-70">{msg.recipient}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <button
-                                onClick={() => {
-                                  // Navigate to the Notes tab with message context and pre-filled body
-                                  const project = claim.jobName || claim.address;
-                                  const contextLabel = `${msg.subject} • ${project}`;
-                                  const prefilledBody = `Message ${project} back.`;
-                                  
-                                  useTaskStore.getState().openTasks(
-                                    claim.id,
-                                    contextLabel,
-                                    'message',
-                                    prefilledBody
-                                  );
-                                }}
-                                className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
-                                title={`Add a note about: ${msg.subject}`}
-                              >
-                                <StickyNote className="h-3.5 w-3.5" />
-                                <span>Note</span>
-                              </button>
+                              {!isHomeowner && (
+                                <button
+                                  onClick={() => {
+                                    // Navigate to the Notes tab with message context and pre-filled body
+                                    const project = claim.jobName || claim.address;
+                                    const contextLabel = `${msg.subject} • ${project}`;
+                                    const prefilledBody = `Message ${project} back.`;
+                                    
+                                    useTaskStore.getState().openTasks(
+                                      claim.id,
+                                      contextLabel,
+                                      'message',
+                                      prefilledBody
+                                    );
+                                  }}
+                                  className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
+                                  title={`Add a note about: ${msg.subject}`}
+                                >
+                                  <StickyNote className="h-3.5 w-3.5" />
+                                  <span>Note</span>
+                                </button>
+                              )}
                               <span className="text-xs text-secondary-on-container dark:text-gray-400 opacity-70">
                                 {new Date(msg.timestamp).toLocaleString()}
                               </span>
@@ -1842,18 +1844,20 @@ If this repair work is billable, please let me know prior to scheduling.`);
       
       {/* Footer - Fixed at bottom */}
       <div className="flex-none py-2 px-6 pb-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end space-x-3">
-        <Button
-          type="button"
-          variant="filled"
-          onClick={() => {
-            const contextLabel = `${claim.title || 'Untitled'} • Claim #${claim.claimNumber || claim.id.substring(0, 8)} • ${claim.jobName || claim.address}`;
-            useTaskStore.getState().openTasks(claim.id, contextLabel, 'claim');
-          }}
-          title={`Add a note for ${claim.claimNumber || 'this claim'}`}
-          className="!h-9"
-        >
-          Note
-        </Button>
+        {!isHomeowner && (
+          <Button
+            type="button"
+            variant="filled"
+            onClick={() => {
+              const contextLabel = `${claim.title || 'Untitled'} • Claim #${claim.claimNumber || claim.id.substring(0, 8)} • ${claim.jobName || claim.address}`;
+              useTaskStore.getState().openTasks(claim.id, contextLabel, 'claim');
+            }}
+            title={`Add a note for ${claim.claimNumber || 'this claim'}`}
+            className="!h-9"
+          >
+            Note
+          </Button>
+        )}
         {!isHomeowner && (
           <Button 
             type="button" 
