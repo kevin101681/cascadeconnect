@@ -14,7 +14,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { ChatWindow } from './chat/ChatWindow';
 import { ChatSidebar } from './chat/ChatSidebar';
 import { type Channel } from '../services/internalChatService';
-import { ChevronLeft } from 'lucide-react';
 
 interface TeamChatProps {
   currentUserId: string;
@@ -82,10 +81,37 @@ const TeamChat: React.FC<TeamChatProps> = ({
     }
   };
 
+  // Helper to extract just the other person's name from channel name
+  const getOtherPersonName = (channel: Channel | null): string => {
+    if (!channel) return 'Chat';
+    
+    // Prefer otherUser.name if available
+    if (channel.otherUser?.name) {
+      return channel.otherUser.name;
+    }
+    
+    // If channel name includes current user, extract the other person
+    const channelName = channel.name || '';
+    const currentName = currentUserName.trim().toLowerCase();
+    
+    // Try splitting by '&' or 'and'
+    const parts = channelName.split(/\s*[&]\s*|\s+and\s+/i).map(p => p.trim());
+    
+    if (parts.length === 2) {
+      const [first, second] = parts;
+      // Return the name that doesn't match current user
+      if (first.toLowerCase() === currentName) return second;
+      if (second.toLowerCase() === currentName) return first;
+    }
+    
+    // Fallback to full channel name
+    return channelName;
+  };
+
   return (
     <div className="h-full flex bg-white dark:bg-gray-900">
-      {/* Sidebar */}
-      <div className={`md:flex ${activeChat ? 'hidden' : 'flex w-full'} md:w-64 md:flex-shrink-0 border-r border-gray-200 dark:border-gray-700`}>
+      {/* Sidebar - Full width on mobile, fixed width on desktop */}
+      <div className={`${activeChat ? 'hidden' : 'flex w-full'} md:flex md:w-full md:max-w-sm md:flex-shrink-0 border-r border-gray-200 dark:border-gray-700`}>
         <ChatSidebar
           currentUserId={currentUserId}
           selectedChannelId={selectedChannel?.id || null}
@@ -107,29 +133,10 @@ const TeamChat: React.FC<TeamChatProps> = ({
       <div
         className={`md:flex md:static md:inset-auto md:z-auto md:bg-transparent ${activeChat ? 'flex w-full fixed inset-0 z-50 bg-background' : 'hidden'} flex-1 flex-col`}
       >
-        {/* Mobile header (Back to List) */}
-        {activeChat && (
-          <div className="md:hidden h-14 shrink-0 px-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2 bg-white dark:bg-gray-900">
-            <button
-              type="button"
-              onClick={() => handleSelectChannel(null)}
-              className="inline-flex items-center gap-2 px-2 py-2 -ml-2 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg touch-manipulation"
-              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
-              aria-label="Back to List"
-            >
-              <ChevronLeft className="h-5 w-5" />
-              Back to List
-            </button>
-            <div className="min-w-0 flex-1 text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-              {selectedChannel?.otherUser?.name || selectedChannel?.name || 'Chat'}
-            </div>
-          </div>
-        )}
-
         {selectedChannel ? (
           <ChatWindow
             channelId={selectedChannel.id}
-            channelName={selectedChannel.otherUser?.name || selectedChannel.name}
+            channelName={getOtherPersonName(selectedChannel)}
             channelType={selectedChannel.type}
             currentUserId={currentUserId}
             currentUserName={currentUserName}

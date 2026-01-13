@@ -60,9 +60,8 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
     try {
       setIsLoadingTeam(true);
       const members = await getAllTeamMembers();
-      // Filter out current user
-      const otherMembers = members.filter((m) => m.id !== currentUserId);
-      setTeamMembers(otherMembers);
+      // Keep all members (including current user for name lookups), but we'll filter for display
+      setTeamMembers(members);
     } catch (error) {
       console.error('Error loading team members:', error);
     } finally {
@@ -126,16 +125,21 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
     }
   };
 
+  // Get current user's name for filtering channel names
+  const currentUserName = teamMembers.find((m) => m.id === currentUserId)?.name || '';
+
   // Get user IDs we already have DMs with
   const existingDmUserIds = new Set(
     channels.flatMap((ch) => ch.dmParticipants || []).filter((id) => id !== currentUserId)
   );
 
-  // Filter team members by search
-  const filteredTeamMembers = teamMembers.filter((member) =>
-    (member.name || "").toLowerCase().includes((searchQuery || "").toLowerCase()) ||
-    (member.email || "").toLowerCase().includes((searchQuery || "").toLowerCase())
-  );
+  // Filter team members by search (exclude current user from list)
+  const filteredTeamMembers = teamMembers
+    .filter((member) => member.id !== currentUserId)
+    .filter((member) =>
+      (member.name || "").toLowerCase().includes((searchQuery || "").toLowerCase()) ||
+      (member.email || "").toLowerCase().includes((searchQuery || "").toLowerCase())
+    );
 
   // Filter existing channels by search (name or last message content)
   const getRecipientName = (channel: Channel): string => {
@@ -153,7 +157,22 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
       if (member?.name) return member.name;
     }
 
-    return channel.otherUser?.name || channel.name || 'Conversation';
+    // Final fallback: if channel.name contains both names, extract just the other person's name
+    if (channel.name && currentUserName) {
+      const parts = channel.name.split(/\s*[&]\s*|\s+and\s+/i).map(p => p.trim());
+      if (parts.length === 2) {
+        const [first, second] = parts;
+        const currentNameLower = currentUserName.toLowerCase();
+        // Return the name that doesn't match the current user
+        if (first.toLowerCase() === currentNameLower) return second;
+        if (second.toLowerCase() === currentNameLower) return first;
+        // If neither matches exactly, just return the second name
+        return second;
+      }
+      return channel.name;
+    }
+
+    return channel.name || 'Conversation';
   };
 
   const filteredChannels = channels.filter((channel) => {
