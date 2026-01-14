@@ -1,12 +1,14 @@
 /**
- * InvoicesListPanel Component
+ * InvoicesListPanel Component (Comprehensive Tab-Aware Version)
  * 
- * A split-view left panel for displaying invoice list (Master-Detail pattern).
+ * A split-view left panel for displaying lists across multiple tabs (Master-Detail pattern).
  * Matches the visual structure of the Warranty Claims list.
+ * 
+ * Supports: Invoices, Builders, P&L Reports, Expenses
  */
 
 import React, { useState } from 'react';
-import { Search, ChevronLeft, Plus } from 'lucide-react';
+import { Search, ChevronLeft, Plus, FileText, Building2, PieChart, Receipt } from 'lucide-react';
 import Button from './Button';
 import { InvoiceCard } from './ui/InvoiceCard';
 
@@ -32,21 +34,49 @@ export interface Invoice {
   }>;
 }
 
+export interface Client {
+  id: string;
+  companyName: string;
+  email: string;
+  checkPayorName?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  address?: string;
+}
+
+export type TabType = 'invoices' | 'builders' | 'p&l' | 'expenses';
+
 interface InvoicesListPanelProps {
-  invoices: Invoice[];
-  filteredInvoices: Invoice[];
-  onInvoiceSelect: (invoice: Invoice) => void;
-  onCreateNew: () => void;
-  onBack?: () => void;
+  // Tab Control
+  activeTab: TabType;
+  onTabChange: (tab: TabType) => void;
+  
+  // Invoices Tab
+  invoices?: Invoice[];
+  filteredInvoices?: Invoice[];
+  onInvoiceSelect?: (invoice: Invoice) => void;
   selectedInvoiceId?: string | null;
   statusFilter?: 'all' | 'draft' | 'sent' | 'paid';
   onStatusFilterChange?: (filter: 'all' | 'draft' | 'sent' | 'paid') => void;
-  // Actions passed through to InvoiceCard
+  
+  // Builders Tab
+  builders?: Client[];
+  onBuilderSelect?: (builder: Client) => void;
+  selectedBuilderId?: string | null;
+  
+  // Actions
+  onCreateNew?: () => void;
+  onBack?: () => void;
+  
+  // Invoice Card Actions (pass-through)
   onMarkPaid?: (invoice: Invoice, checkNum: string) => void;
   onCheckNumberUpdate?: (invoice: Invoice, checkNum: string) => void;
   onEmail?: (invoice: Invoice) => void;
   onDownload?: (invoice: Invoice) => void;
-  onDelete?: (invoiceId: string) => void;
+  onDeleteInvoice?: (invoiceId: string) => void;
 }
 
 // Helper to format date YYYY-MM-DD to MM/DD
@@ -70,23 +100,28 @@ const getLocalTodayDate = () => {
 };
 
 const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
-  invoices,
-  filteredInvoices,
+  activeTab,
+  onTabChange,
+  invoices = [],
+  filteredInvoices = [],
   onInvoiceSelect,
-  onCreateNew,
-  onBack,
   selectedInvoiceId,
   statusFilter = 'sent',
   onStatusFilterChange,
+  builders = [],
+  onBuilderSelect,
+  selectedBuilderId,
+  onCreateNew,
+  onBack,
   onMarkPaid,
   onCheckNumberUpdate,
   onEmail,
   onDownload,
-  onDelete,
+  onDeleteInvoice,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Filter by search query
+  // Filter invoices by search query
   const displayInvoices = searchQuery
     ? filteredInvoices.filter(inv => 
         inv.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -94,6 +129,52 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
         inv.projectDetails?.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : filteredInvoices;
+
+  // Filter builders by search query
+  const displayBuilders = searchQuery
+    ? builders.filter(b => 
+        b.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        b.email.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : builders;
+
+  // Dynamic title and button label based on tab
+  const getTitle = () => {
+    switch (activeTab) {
+      case 'invoices': return 'Invoices';
+      case 'builders': return 'Builders';
+      case 'p&l': return 'P&L Reports';
+      case 'expenses': return 'Expenses';
+      default: return 'Invoices';
+    }
+  };
+
+  const getButtonLabel = () => {
+    switch (activeTab) {
+      case 'invoices': return { full: 'New Invoice', short: 'New' };
+      case 'builders': return { full: 'New Builder', short: 'New' };
+      case 'p&l': return null; // No "New" button for reports
+      case 'expenses': return { full: 'New Expense', short: 'New' };
+      default: return { full: 'New', short: 'New' };
+    }
+  };
+
+  const getCount = () => {
+    switch (activeTab) {
+      case 'invoices': return filteredInvoices.length;
+      case 'builders': return builders.length;
+      case 'p&l': return 0; // No count for reports
+      case 'expenses': return 0; // Could add expense count
+      default: return 0;
+    }
+  };
+
+  const showFilters = activeTab === 'invoices';
+  const showSearch = activeTab === 'invoices' || activeTab === 'builders';
+  const showList = activeTab === 'invoices' || activeTab === 'builders';
+
+  const buttonLabel = getButtonLabel();
+  const count = getCount();
 
   return (
     <div className="w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800">
@@ -115,28 +196,80 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
           
           {/* Title with count badge */}
           <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2 min-w-0">
-            {filteredInvoices.length > 0 && (
+            {count > 0 && (
               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-primary text-primary bg-primary/10 text-xs font-medium flex-shrink-0">
-                {filteredInvoices.length}
+                {count}
               </span>
             )}
-            <span className="truncate">Invoices</span>
+            <span className="truncate">{getTitle()}</span>
           </h3>
         </div>
         
-        {/* New Invoice button */}
-        <Button
-          variant="filled"
-          onClick={onCreateNew}
-          className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
-        >
-          <span className="hidden sm:inline">New Invoice</span>
-          <span className="sm:hidden">New</span>
-        </Button>
+        {/* New Button (if applicable) */}
+        {buttonLabel && onCreateNew && (
+          <Button
+            variant="filled"
+            onClick={onCreateNew}
+            className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
+          >
+            <span className="hidden sm:inline">{buttonLabel.full}</span>
+            <span className="sm:hidden">{buttonLabel.short}</span>
+          </Button>
+        )}
       </div>
 
-      {/* ==================== FILTER PILLS ==================== */}
-      {onStatusFilterChange && (
+      {/* ==================== TABS ROW ==================== */}
+      <div className="px-4 py-2 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
+        <div className="flex items-center gap-2 overflow-x-auto">
+          <button
+            onClick={() => onTabChange('invoices')}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
+              activeTab === 'invoices'
+                ? 'bg-white dark:bg-gray-600 border border-primary text-primary shadow-sm'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
+            }`}
+          >
+            <FileText className="h-4 w-4" />
+            Invoices
+          </button>
+          <button
+            onClick={() => onTabChange('builders')}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
+              activeTab === 'builders'
+                ? 'bg-white dark:bg-gray-600 border border-primary text-primary shadow-sm'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
+            }`}
+          >
+            <Building2 className="h-4 w-4" />
+            Builders
+          </button>
+          <button
+            onClick={() => onTabChange('p&l')}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
+              activeTab === 'p&l'
+                ? 'bg-white dark:bg-gray-600 border border-primary text-primary shadow-sm'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
+            }`}
+          >
+            <PieChart className="h-4 w-4" />
+            P&L
+          </button>
+          <button
+            onClick={() => onTabChange('expenses')}
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
+              activeTab === 'expenses'
+                ? 'bg-white dark:bg-gray-600 border border-primary text-primary shadow-sm'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
+            }`}
+          >
+            <Receipt className="h-4 w-4" />
+            Expenses
+          </button>
+        </div>
+      </div>
+
+      {/* ==================== FILTER PILLS (Invoices Only) ==================== */}
+      {showFilters && onStatusFilterChange && (
         <div className="px-4 py-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
           <div className="flex items-center gap-2">
             <button
@@ -184,69 +317,141 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
       )}
 
       {/* ==================== SEARCH BAR ==================== */}
-      <div className="px-4 pt-3 pb-2">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search invoices..."
-            className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 rounded-full text-sm text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
-          />
+      {showSearch && (
+        <div className="px-4 pt-3 pb-2">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={activeTab === 'invoices' ? 'Search invoices...' : 'Search builders...'}
+              className="w-full pl-10 pr-4 py-2 bg-white dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 rounded-full text-sm text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* ==================== INVOICE LIST ==================== */}
+      {/* ==================== LIST CONTENT ==================== */}
       <div 
         className="flex-1 overflow-y-auto px-2 py-4 md:p-4 min-h-0"
         style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
       >
-        {displayInvoices.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
+        {/* INVOICES LIST */}
+        {activeTab === 'invoices' && showList && (
+          <>
+            {displayInvoices.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
+                <span className="text-sm">
+                  {searchQuery ? 'No invoices match your search' : 'No invoices found'}
+                </span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {displayInvoices.map((inv) => {
+                  let cardStatus: 'Draft' | 'Sent' | 'Overdue' | 'Paid' = 'Draft';
+                  if (inv.status === 'paid') {
+                    cardStatus = 'Paid';
+                  } else if (inv.status === 'sent') {
+                    const today = new Date();
+                    const dueDate = new Date(inv.dueDate);
+                    cardStatus = dueDate < today ? 'Overdue' : 'Sent';
+                  }
+
+                  const isSelected = selectedInvoiceId === inv.id;
+
+                  return (
+                    <div key={inv.id} className="relative">
+                      <InvoiceCard
+                        invoiceNumber={inv.invoiceNumber}
+                        status={cardStatus}
+                        amount={`$${inv.total.toFixed(2)}`}
+                        createdDate={formatDateMobile(inv.date)}
+                        dueDate={formatDateMobile(inv.dueDate)}
+                        builder={inv.clientName}
+                        address={inv.projectDetails}
+                        checkNumber={inv.checkNumber}
+                        isSelected={isSelected}
+                        onClick={() => onInvoiceSelect?.(inv)}
+                        onMarkPaid={onMarkPaid ? (checkNum) => {
+                          const today = getLocalTodayDate();
+                          onMarkPaid({ ...inv, status: 'paid' as const, datePaid: today, checkNumber: checkNum }, checkNum);
+                        } : undefined}
+                        onCheckNumberUpdate={onCheckNumberUpdate ? (checkNum) => onCheckNumberUpdate(inv, checkNum) : undefined}
+                        onEmail={onEmail ? () => onEmail(inv) : undefined}
+                        onDownload={onDownload ? () => onDownload(inv) : undefined}
+                        onDelete={onDeleteInvoice ? () => onDeleteInvoice(inv.id) : undefined}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* BUILDERS LIST */}
+        {activeTab === 'builders' && showList && (
+          <>
+            {displayBuilders.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
+                <span className="text-sm">
+                  {searchQuery ? 'No builders match your search' : 'No builders found'}
+                </span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {displayBuilders.map((builder) => {
+                  const isSelected = selectedBuilderId === builder.id;
+                  
+                  return (
+                    <button
+                      key={builder.id}
+                      type="button"
+                      onClick={() => onBuilderSelect?.(builder)}
+                      className={`w-full text-left rounded-card p-4 transition-all ${
+                        isSelected 
+                          ? 'bg-blue-50 border-blue-500 shadow-md border-2' 
+                          : 'bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Building2 className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm text-gray-900 truncate">{builder.companyName}</h4>
+                          <p className="text-xs text-gray-600 truncate mt-0.5">{builder.email}</p>
+                          {builder.address && (
+                            <p className="text-xs text-gray-500 truncate mt-1">{builder.address}</p>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* P&L PLACEHOLDER (List view not applicable - full report in right column) */}
+        {activeTab === 'p&l' && (
+          <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2 text-center px-4">
+            <PieChart className="h-12 w-12 opacity-20" />
             <span className="text-sm">
-              {searchQuery ? 'No invoices match your search' : 'No invoices found'}
+              Select filters and view detailed reports in the right panel
             </span>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-3">
-            {displayInvoices.map((inv) => {
-              let cardStatus: 'Draft' | 'Sent' | 'Overdue' | 'Paid' = 'Draft';
-              if (inv.status === 'paid') {
-                cardStatus = 'Paid';
-              } else if (inv.status === 'sent') {
-                const today = new Date();
-                const dueDate = new Date(inv.dueDate);
-                cardStatus = dueDate < today ? 'Overdue' : 'Sent';
-              }
+        )}
 
-              const isSelected = selectedInvoiceId === inv.id;
-
-              return (
-                <div key={inv.id} className="relative">
-                  <InvoiceCard
-                    invoiceNumber={inv.invoiceNumber}
-                    status={cardStatus}
-                    amount={`$${inv.total.toFixed(2)}`}
-                    createdDate={formatDateMobile(inv.date)}
-                    dueDate={formatDateMobile(inv.dueDate)}
-                    builder={inv.clientName}
-                    address={inv.projectDetails}
-                    checkNumber={inv.checkNumber}
-                    isSelected={isSelected}
-                    onClick={() => onInvoiceSelect(inv)}
-                    onMarkPaid={onMarkPaid ? (checkNum) => {
-                      const today = getLocalTodayDate();
-                      onMarkPaid({ ...inv, status: 'paid' as const, datePaid: today, checkNumber: checkNum }, checkNum);
-                    } : undefined}
-                    onCheckNumberUpdate={onCheckNumberUpdate ? (checkNum) => onCheckNumberUpdate(inv, checkNum) : undefined}
-                    onEmail={onEmail ? () => onEmail(inv) : undefined}
-                    onDownload={onDownload ? () => onDownload(inv) : undefined}
-                    onDelete={onDelete ? () => onDelete(inv.id) : undefined}
-                  />
-                </div>
-              );
-            })}
+        {/* EXPENSES PLACEHOLDER (List view not applicable - full list in right column) */}
+        {activeTab === 'expenses' && (
+          <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2 text-center px-4">
+            <Receipt className="h-12 w-12 opacity-20" />
+            <span className="text-sm">
+              View and manage expenses in the right panel
+            </span>
           </div>
         )}
       </div>

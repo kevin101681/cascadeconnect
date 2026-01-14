@@ -1995,6 +1995,17 @@ export const Invoices: React.FC<InvoicesProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-[400px_1fr] h-[85vh] w-full bg-white rounded-xl overflow-hidden shadow-2xl border border-gray-200">
         {/* LEFT COLUMN - New InvoicesListPanel */}
         <InvoicesListPanel
+          activeTab="invoices"
+          onTabChange={(tab) => {
+            // Map tab changes to navigation
+            const viewMap = {
+              'invoices': 'invoices',
+              'builders': 'clients',
+              'p&l': 'reports',
+              'expenses': 'expenses',
+            } as const;
+            onNavigate(viewMap[tab]);
+          }}
           invoices={invoices}
           filteredInvoices={visibleInvoices}
           onInvoiceSelect={(inv) => {
@@ -2005,13 +2016,14 @@ export const Invoices: React.FC<InvoicesProps> = ({
           selectedInvoiceId={selectedPanelInvoice?.id}
           statusFilter={statusFilter}
           onStatusFilterChange={setStatusFilter}
+          builders={clients}
           onMarkPaid={(inv, checkNum) => {
             onUpdate({ ...inv, status: 'paid' as const, datePaid: inv.datePaid || getLocalTodayDate(), checkNumber: checkNum });
           }}
           onCheckNumberUpdate={(inv, checkNum) => onUpdate({ ...inv, checkNumber: checkNum })}
           onEmail={(inv) => handlePrepareEmail(inv)}
           onDownload={(inv) => handleDownloadPDF(inv)}
-          onDelete={(id) => handleDeleteInvoice(id)}
+          onDeleteInvoice={(id) => handleDeleteInvoice(id)}
         />
 
         {/* RIGHT COLUMN - Invoice Form Panel */}
