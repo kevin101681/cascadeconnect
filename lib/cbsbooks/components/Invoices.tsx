@@ -15,7 +15,7 @@ import { parseInvoiceFromText } from '../services/geminiService';
 import CalendarPicker from './CalendarPicker';
 import { InvoiceCard } from '../../../components/ui/InvoiceCard';
 import { InvoicePanel } from './InvoicePanel';
-import InvoiceModalNew from '../../../components/InvoiceModalNew';
+import InvoiceFormPanel from '../../../components/InvoiceFormPanel';
 
 interface InvoicesProps {
   invoices: Invoice[];
@@ -98,9 +98,9 @@ export const Invoices: React.FC<InvoicesProps> = ({
   const [expandedId, setExpandedId] = useState<string | null>(null); // For Inline Edit
   const [currentInvoice, setCurrentInvoice] = useState<Partial<Invoice>>({});
   
-  // New Modal State
-  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
-  const [modalInvoice, setModalInvoice] = useState<Invoice | null>(null);
+  // Split-view panel state
+  const [selectedPanelInvoice, setSelectedPanelInvoice] = useState<Invoice | null>(null);
+  const [showInvoicePanel, setShowInvoicePanel] = useState(false);
   
   // URL-based modal state management (single source of truth)
   const [searchParams, setSearchParams] = useState(() => new URLSearchParams(window.location.search));
@@ -412,9 +412,9 @@ export const Invoices: React.FC<InvoicesProps> = ({
   };
 
   const handleCreate = () => {
-    // Open the new modal instead of inline form
-    setModalInvoice(null); // null = create mode
-    setIsInvoiceModalOpen(true);
+    // Open the panel in create mode
+    setSelectedPanelInvoice(null); // null = create mode
+    setShowInvoicePanel(true);
     setActiveFab('none');
   };
 
@@ -429,8 +429,8 @@ export const Invoices: React.FC<InvoicesProps> = ({
     }
   }, [selectedInvoice, searchParams]);
 
-  // Handler for saving invoice from the new modal
-  const handleModalSave = async (invoice: Partial<Invoice>) => {
+  // Handler for saving invoice from the panel
+  const handlePanelSave = async (invoice: Partial<Invoice>) => {
     const itemsToSave = invoice.items || [];
     const total = itemsToSave.reduce((acc, item) => acc + item.amount, 0);
     
@@ -475,8 +475,15 @@ export const Invoices: React.FC<InvoicesProps> = ({
       onAdd(invoiceToSave);
     }
     
-    setIsInvoiceModalOpen(false);
-    setModalInvoice(null);
+    // Close the panel after save
+    setShowInvoicePanel(false);
+    setSelectedPanelInvoice(null);
+  };
+
+  // Handler for cancel
+  const handlePanelCancel = () => {
+    setShowInvoicePanel(false);
+    setSelectedPanelInvoice(null);
   };
 
   const handleSave = async (): Promise<Invoice | null> => {
@@ -2061,9 +2068,9 @@ export const Invoices: React.FC<InvoicesProps> = ({
                       address={inv.projectDetails}
                       checkNumber={inv.checkNumber}
                       onClick={() => {
-                        // Open modal for editing instead of inline form
-                        setModalInvoice(inv);
-                        setIsInvoiceModalOpen(true);
+                        // Open panel for editing
+                        setSelectedPanelInvoice(inv);
+                        setShowInvoicePanel(true);
                       }}
                       onMarkPaid={(checkNum) => {
                         const today = getLocalTodayDate();
@@ -2089,79 +2096,18 @@ export const Invoices: React.FC<InvoicesProps> = ({
           </div>
         </div>
 
-        {/* RIGHT COLUMN */}
-        <div className={`${showRightPanel ? 'flex' : 'hidden md:flex'} flex-col h-full min-h-0 bg-white relative`}>
-          {/* Mobile back row */}
-          <div className="md:hidden shrink-0 h-16 px-4 border-b border-gray-200 flex items-center">
-            <button
-              type="button"
-              onClick={closeRightPanel}
-              className="p-2 -ml-2 text-gray-600 hover:bg-gray-50 rounded-full"
-              aria-label="Back"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* SCROLLABLE FORM */}
-          <div
-            className="flex-1 min-h-0 overflow-y-auto p-8"
-            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
-          >
-            {selectedInvoiceId ? (
-              selectedInvoice ? (
-                renderInvoiceForm()
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
-                  <p className="text-sm font-medium">Invoice not found.</p>
-                </div>
-              )
-            ) : showNewInvoice ? (
-              renderInvoiceForm()
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-2">
-                <p className="text-sm font-medium">Select an invoice to view details</p>
-              </div>
-            )}
-          </div>
-
-          {/* STICKY FOOTER (only when a panel is open) */}
-          {showRightPanel ? (
-            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center z-10 shrink-0">
-              <div className="text-sm font-medium text-gray-700">
-                Total: <span className="font-semibold">${formTotal.toFixed(0)}</span>
-              </div>
-              <div className="flex items-center gap-3 flex-wrap justify-end">
-                <Button variant="outline" onClick={closeRightPanel} disabled={isSaving}>
-                  Cancel
-                </Button>
-                <Button variant="outline" onClick={handleSaveAndEmail} disabled={isSaving}>
-                  Save & Email
-                </Button>
-                <Button variant="outline" onClick={handleSaveAndMarkSent} disabled={isSaving}>
-                  Save & Mark Sent
-                </Button>
-                <Button onClick={handleSave} disabled={isSaving}>
-                  Save
-                </Button>
-              </div>
-            </div>
-          ) : null}
+        {/* RIGHT COLUMN - Invoice Form Panel */}
+        <div className="flex flex-col h-full min-h-0 bg-white relative">
+          <InvoiceFormPanel
+            isVisible={showInvoicePanel}
+            onSave={handlePanelSave}
+            onCancel={handlePanelCancel}
+            builders={clients.map(c => ({ id: c.id, name: c.companyName, email: c.email }))}
+            prefillData={prefillInvoice}
+            editInvoice={selectedPanelInvoice}
+          />
         </div>
       </div>
-
-      {/* Invoice Modal (New) */}
-      <InvoiceModalNew
-        isOpen={isInvoiceModalOpen}
-        onClose={() => {
-          setIsInvoiceModalOpen(false);
-          setModalInvoice(null);
-        }}
-        onSave={handleModalSave}
-        builders={clients.map(c => ({ id: c.id, name: c.companyName, email: c.email }))}
-        prefillData={prefillInvoice}
-        editInvoice={modalInvoice}
-      />
     </div>
   );
 };
