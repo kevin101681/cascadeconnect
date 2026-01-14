@@ -8,7 +8,7 @@ export default function HomeownerSignUpPage() {
       {/* The Wrapper Card */}
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 w-full max-w-[480px] overflow-hidden flex flex-col">
         {/* 1. CUSTOM HEADER (Order 1) */}
-        <div className="order-1 px-8 pt-8 pb-2 text-center z-10 relative">
+        <div className="order-1 px-8 pt-8 pb-6 text-center z-10 relative bg-gray-50 border-b border-gray-200">
           <h1 className="text-xl font-bold text-gray-900">Create your account</h1>
           <p className="text-sm text-gray-600 mt-2">
             Creating your account? Enter the email address from your invitation.
@@ -49,6 +49,17 @@ export default function HomeownerSignUpPage() {
               background: transparent !important;
               border: none !important;
               box-shadow: none !important;
+            }
+
+            /*
+              Clerk shows an informational "alert" box on some sign-up flows (e.g. invitation copy).
+              Hide ONLY the info variant to avoid removing error alerts.
+            */
+            #clerk-signup-merge .cl-alert__info,
+            #clerk-signup-merge .cl-alert__default,
+            #clerk-signup-merge [class*="cl-alert__info"],
+            #clerk-signup-merge [class*="cl-alert__default"] {
+              display: none !important;
             }
           `}</style>
 
