@@ -15,6 +15,7 @@ import { parseInvoiceFromText } from '../services/geminiService';
 import CalendarPicker from './CalendarPicker';
 import { InvoiceCard } from '../../../components/ui/InvoiceCard';
 import { InvoicePanel } from './InvoicePanel';
+import InvoiceModalNew from '../../../components/InvoiceModalNew';
 
 interface InvoicesProps {
   invoices: Invoice[];
@@ -96,6 +97,10 @@ export const Invoices: React.FC<InvoicesProps> = ({
   const [isCreating, setIsCreating] = useState(false); // Only for "New Invoice" mode
   const [expandedId, setExpandedId] = useState<string | null>(null); // For Inline Edit
   const [currentInvoice, setCurrentInvoice] = useState<Partial<Invoice>>({});
+  
+  // New Modal State
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [modalInvoice, setModalInvoice] = useState<Invoice | null>(null);
   
   // URL-based modal state management (single source of truth)
   const [searchParams, setSearchParams] = useState(() => new URLSearchParams(window.location.search));
@@ -407,19 +412,9 @@ export const Invoices: React.FC<InvoicesProps> = ({
   };
 
   const handleCreate = () => {
-    setExpandedId(null);
-    setCurrentInvoice({
-      invoiceNumber: `INV-${Date.now().toString().slice(-6)}`,
-      date: getLocalTodayDate(),
-      dueDate: new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0],
-      items: [{ id: crypto.randomUUID(), description: 'Walk through and warranty management services', quantity: 1, rate: 0, amount: 0 }],
-      status: 'draft',
-      total: 0,
-      clientName: ''
-    });
-    setBuilderQuery('');
-    setShowBuilderDropdown(false);
-    updateSearchParams({ view: 'new', invoiceId: null });
+    // Open the new modal instead of inline form
+    setModalInvoice(null); // null = create mode
+    setIsInvoiceModalOpen(true);
     setActiveFab('none');
   };
 
@@ -433,6 +428,56 @@ export const Invoices: React.FC<InvoicesProps> = ({
       setCurrentInvoice({});
     }
   }, [selectedInvoice, searchParams]);
+
+  // Handler for saving invoice from the new modal
+  const handleModalSave = async (invoice: Partial<Invoice>) => {
+    const itemsToSave = invoice.items || [];
+    const total = itemsToSave.reduce((acc, item) => acc + item.amount, 0);
+    
+    let finalPaymentLink = invoice.paymentLink;
+
+    // Auto-generate link if missing and total > 0 (and we have a client name)
+    if (!finalPaymentLink && total > 0 && invoice.clientName) {
+      try {
+        const invNum = invoice.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`;
+        finalPaymentLink = await api.invoices.createPaymentLink(invNum, total, invoice.clientName);
+      } catch (e: any) {
+        console.error("Auto-generation of payment link failed", e);
+        const proceed = confirm(`Failed to auto-generate Square payment link: ${e.message || 'Unknown error'}. \n\nSave invoice anyway without the link?`);
+        if (!proceed) {
+          throw new Error('User cancelled save');
+        }
+      }
+    }
+
+    const client = clients.find(c => c.companyName === invoice.clientName);
+    const email = invoice.clientEmail || client?.email || '';
+
+    const invoiceToSave: Invoice = {
+      id: invoice.id || crypto.randomUUID(),
+      invoiceNumber: invoice.invoiceNumber || 'DRAFT',
+      clientName: invoice.clientName || '',
+      clientEmail: email,
+      projectDetails: invoice.projectDetails || '',
+      paymentLink: finalPaymentLink,
+      checkNumber: invoice.checkNumber,
+      date: invoice.date || getLocalTodayDate(),
+      dueDate: invoice.dueDate || getLocalTodayDate(),
+      datePaid: invoice.datePaid,
+      items: itemsToSave,
+      total: total,
+      status: invoice.status || 'draft'
+    };
+
+    if (invoice.id) {
+      onUpdate(invoiceToSave);
+    } else {
+      onAdd(invoiceToSave);
+    }
+    
+    setIsInvoiceModalOpen(false);
+    setModalInvoice(null);
+  };
 
   const handleSave = async (): Promise<Invoice | null> => {
     if (!currentInvoice.clientName) {
@@ -2015,7 +2060,11 @@ export const Invoices: React.FC<InvoicesProps> = ({
                       builder={inv.clientName}
                       address={inv.projectDetails}
                       checkNumber={inv.checkNumber}
-                      onClick={() => updateSearchParams({ invoiceId: inv.id, view: null })}
+                      onClick={() => {
+                        // Open modal for editing instead of inline form
+                        setModalInvoice(inv);
+                        setIsInvoiceModalOpen(true);
+                      }}
                       onMarkPaid={(checkNum) => {
                         const today = getLocalTodayDate();
                         onUpdate({ ...inv, status: 'paid' as const, datePaid: today, checkNumber: checkNum });
@@ -2100,6 +2149,19 @@ export const Invoices: React.FC<InvoicesProps> = ({
           ) : null}
         </div>
       </div>
+
+      {/* Invoice Modal (New) */}
+      <InvoiceModalNew
+        isOpen={isInvoiceModalOpen}
+        onClose={() => {
+          setIsInvoiceModalOpen(false);
+          setModalInvoice(null);
+        }}
+        onSave={handleModalSave}
+        builders={clients.map(c => ({ id: c.id, name: c.companyName, email: c.email }))}
+        prefillData={prefillInvoice}
+        editInvoice={modalInvoice}
+      />
     </div>
   );
 };

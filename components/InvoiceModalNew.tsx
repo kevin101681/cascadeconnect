@@ -27,7 +27,7 @@ export interface Invoice {
   invoiceNumber: string;
   clientName: string;
   clientEmail: string;
-  projectDetails: string;
+  projectDetails?: string;
   paymentLink?: string;
   checkNumber?: string;
   date: string; // YYYY-MM-DD
@@ -42,7 +42,7 @@ const invoiceSchema = z.object({
   invoiceNumber: z.string().min(1, 'Invoice number is required'),
   clientName: z.string().min(1, 'Builder name is required'),
   clientEmail: z.string().email('Valid email is required').or(z.literal('')),
-  projectDetails: z.string(),
+  projectDetails: z.string().optional(),
   date: z.string(),
   dueDate: z.string(),
   items: z.array(z.object({
