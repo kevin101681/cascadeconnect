@@ -6,9 +6,9 @@ export default function HomeownerSignUpPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 py-12">
       {/* 1. The Wrapper Card (White Box) */}
-      <div className="w-full max-w-[480px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="w-full max-w-[480px] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg">
         {/* 2. Custom Header Section */}
-        <div className="px-10 pt-10 pb-2 text-center">
+        <div className="px-8 pt-8 pb-2 text-center">
           <h1 className="mb-2 text-xl font-bold text-gray-900">Create your account</h1>
 
           <p className="text-sm leading-relaxed text-gray-600">
@@ -21,29 +21,58 @@ export default function HomeownerSignUpPage() {
         </div>
 
         {/* 4. The "Seamless" Clerk Form */}
-        <SignUp
-          routing="path"
-          path="/sign-up"
-          appearance={{
-            elements: {
-              // Hide the default Clerk header completely
-              header: 'hidden',
-              headerTitle: 'hidden',
-              headerSubtitle: 'hidden',
+        <div id="clerk-merge-wrapper">
+          <style>{`
+            /* Fallback: force Clerk "card" to become transparent/flat */
+            #clerk-merge-wrapper .cl-card,
+            #clerk-merge-wrapper [class*="cl-card"] {
+              box-shadow: none !important;
+              border: none !important;
+              background: transparent !important;
+              border-radius: 0 !important;
+            }
+            #clerk-merge-wrapper .cl-scrollBox,
+            #clerk-merge-wrapper [class*="cl-scrollBox"] {
+              padding: 0 !important;
+            }
+          `}</style>
 
-              // Strip the internal card styles so it blends into OUR wrapper
-              rootBox: 'w-full',
-              card: 'w-full shadow-none border-none bg-transparent p-0',
-              cardBox: 'w-full shadow-none border-none bg-transparent p-0',
+          <SignUp
+            routing="path"
+            path="/sign-up"
+            signInUrl="/sign-in"
+            appearance={{
+              layout: {
+                socialButtonsPlacement: 'bottom',
+                showOptionalFields: false,
+              },
+              elements: {
+                // 1. Hide the Default Header completely
+                header: 'hidden',
+                headerTitle: 'hidden',
+                headerSubtitle: 'hidden',
 
-              // Align internal padding to match the custom header
-              main: 'px-10 pt-4',
-              form: 'px-10',
-              formFieldRow: 'w-full',
-              footer: 'px-10 pb-8',
-            },
-          }}
-        />
+                // Also hide any internal top nav/step header so nothing "floats" above our card
+                navbar: 'hidden',
+
+                // 2. KILL THE CLERK CARD STYLES (Make it transparent)
+                card: 'shadow-none border-none bg-transparent rounded-none',
+                cardBox: 'shadow-none border-none bg-transparent rounded-none',
+
+                // 3. Reset internal sizing so it fills our wrapper
+                rootBox: 'w-full',
+
+                // 4. Adjust padding to flow naturally from our custom header
+                scrollBox: 'p-0',
+                formFieldRow: 'w-full',
+
+                // 5. Ensure the footer (if any) looks integrated
+                footer: 'bg-transparent pb-6 px-8',
+                footerAction: 'hidden',
+              },
+            }}
+          />
+        </div>
       </div>
     </div>
   );
