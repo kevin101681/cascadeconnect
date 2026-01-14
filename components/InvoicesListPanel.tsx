@@ -404,16 +404,26 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
                 {displayBuilders.map((builder) => {
                   const isSelected = selectedBuilderId === builder.id;
                   
+                  // Format address from components
+                  const fullAddress = [
+                    builder.addressLine1,
+                    builder.addressLine2,
+                    builder.city,
+                    builder.state,
+                    builder.zip
+                  ].filter(Boolean).join(', ') || builder.address;
+                  
                   return (
                     <button
                       key={builder.id}
                       type="button"
                       onClick={() => onBuilderSelect?.(builder)}
-                      className={`w-full text-left rounded-card p-4 transition-all ${
+                      className={`w-full text-left rounded-card p-4 transition-all touch-manipulation ${
                         isSelected 
                           ? 'bg-blue-50 border-blue-500 shadow-md border-2' 
                           : 'bg-white border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-300'
                       }`}
+                      style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
                     >
                       <div className="flex items-start gap-3">
                         <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -421,9 +431,15 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-sm text-gray-900 truncate">{builder.companyName}</h4>
+                          {builder.checkPayorName && builder.checkPayorName !== builder.companyName && (
+                            <p className="text-xs text-gray-500 truncate mt-0.5">Check: {builder.checkPayorName}</p>
+                          )}
                           <p className="text-xs text-gray-600 truncate mt-0.5">{builder.email}</p>
-                          {builder.address && (
-                            <p className="text-xs text-gray-500 truncate mt-1">{builder.address}</p>
+                          {fullAddress && (
+                            <p className="text-xs text-gray-500 truncate mt-1 flex items-start gap-1">
+                              <span className="text-gray-400 shrink-0">📍</span>
+                              <span className="truncate">{fullAddress}</span>
+                            </p>
                           )}
                         </div>
                       </div>
