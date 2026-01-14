@@ -2,7 +2,7 @@ import React from 'react';
 import { ChevronLeft } from 'lucide-react';
 
 interface InvoicePanelProps {
-  title: string;
+  title?: string;
   onBack?: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
@@ -14,23 +14,38 @@ interface InvoicePanelProps {
  * - Mobile gets a back chevron to return to the list
  */
 export const InvoicePanel: React.FC<InvoicePanelProps> = ({ title, onBack, children, footer }) => {
+  const hasTitle = Boolean(title && title.trim().length > 0);
   return (
     <div className="flex min-w-0 flex-col h-full bg-white dark:bg-gray-900">
-      <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center gap-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-10">
-        {onBack && (
+      {hasTitle ? (
+        <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center gap-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-10">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-800 rounded-full transition-colors"
+              aria-label="Back"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          )}
+          <h2 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 truncate">
+            {title}
+          </h2>
+        </div>
+      ) : onBack ? (
+        // No desktop header (matches WarrantyView); keep a mobile-only back affordance.
+        <div className="md:hidden h-16 shrink-0 px-4 border-b border-surface-outline-variant dark:border-gray-700 flex items-center bg-white/80 dark:bg-gray-900/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-10">
           <button
             type="button"
             onClick={onBack}
-            className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-800 rounded-full transition-colors"
+            className="p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-800 rounded-full transition-colors"
             aria-label="Back"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
-        )}
-        <h2 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 truncate">
-          {title}
-        </h2>
-      </div>
+        </div>
+      ) : null}
 
       <div className="flex-1 min-h-0 min-w-0 flex flex-col">
         <div

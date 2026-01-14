@@ -1936,87 +1936,56 @@ export const Invoices: React.FC<InvoicesProps> = ({
       <div className="grid min-w-0 grid-cols-1 md:grid-cols-[400px_1fr] h-full min-h-0 overflow-hidden">
       {/* LEFT COLUMN (List) */}
       <div
-        className={`flex min-w-0 flex-col min-h-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 ${
+        className={`flex min-w-0 flex-col min-h-0 border-r border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 ${
           showRightPanel ? 'hidden md:flex' : 'flex'
         }`}
       >
-        <div className="sticky top-0 z-20 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
-          <div className="p-6 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 min-w-0">
-              <h1 className="text-2xl font-bold text-surface-on dark:text-gray-100 truncate">
-                Invoices
-              </h1>
+        {/* HEADER (Clone Warranty Claims header classes) */}
+        <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2 min-w-0">
               {filteredInvoices.length > 0 && (
-                <span className="inline-flex items-center justify-center h-7 min-w-7 px-2 rounded-full border border-primary text-primary bg-primary/10 text-xs font-semibold flex-shrink-0">
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-primary text-primary bg-primary/10 text-xs font-medium flex-shrink-0">
                   {filteredInvoices.length}
                 </span>
               )}
-            </div>
-
-            <Button variant="outline" onClick={handleCreate} icon={<Plus size={16} />}>
-              New Invoice
-            </Button>
+              <span className="truncate">Invoices</span>
+            </h3>
           </div>
 
-          <div className="px-6 pb-6 space-y-3">
-            <div className="hidden md:block">
-              <TabBar activeView="invoices" onNavigate={onNavigate} />
-            </div>
+          {/* Button Right (outline, no icon; match Warranty sizing) */}
+          <Button
+            variant="outline"
+            onClick={handleCreate}
+            className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
+          >
+            <span className="hidden sm:inline">New Invoice</span>
+            <span className="sm:hidden">New</span>
+          </Button>
+        </div>
 
-            <div className="grid grid-cols-1 gap-2">
-              {statusFilter !== 'paid' && (
-                <div className="bg-surface-container-high dark:bg-gray-700 text-surface-on dark:text-gray-200 border border-surface-outline-variant/50 dark:border-gray-600 px-4 h-10 rounded-full flex items-center justify-between gap-2">
-                  <p className="text-xs font-bold uppercase tracking-wider">Outstanding</p>
-                  <p className="text-lg font-bold">${stats.outstanding.toFixed(0)}</p>
-                </div>
-              )}
-              <div className="bg-surface-container-high dark:bg-gray-700 text-surface-on dark:text-gray-200 border border-surface-outline-variant/50 dark:border-gray-600 px-4 h-10 rounded-full flex items-center justify-between gap-2">
-                <p className="text-xs font-bold uppercase tracking-wider">Revenue YTD</p>
-                <p className="text-lg font-bold">${stats.ytd.toFixed(0)}</p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-outline dark:text-gray-400" size={18} />
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search invoices..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-surface-container-high dark:bg-gray-700 pl-9 pr-10 h-10 rounded-full outline-none focus:ring-2 focus:ring-primary text-surface-on dark:text-gray-200 placeholder:text-surface-on-variant dark:placeholder:text-gray-400 text-sm font-medium"
-              />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <X size={18} className="text-surface-outline dark:text-gray-400" />
-                </button>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-              {(['all', 'draft', 'sent', 'paid'] as const).map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setStatusFilter(s)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-                    statusFilter === s
-                      ? 'border border-primary text-primary bg-primary/10'
-                      : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-300 hover:bg-surface-container-high dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
-                </button>
-              ))}
-            </div>
-
-            <div className="hidden md:block">
-              <Dropdown value={sortValue} onChange={setSortValue} options={sortOptions} placeholder="Sort By" />
-            </div>
+        {/* Filter Pills (clone Warranty pill classes + spacing) */}
+        <div className="px-4 py-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50 bg-surface dark:bg-gray-800">
+          <div className="flex items-center gap-2">
+            {(['all', 'draft', 'sent', 'paid'] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatusFilter(s)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  statusFilter === s
+                    ? 'border border-primary text-primary bg-primary/10'
+                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                }`}
+              >
+                {s.charAt(0).toUpperCase() + s.slice(1)}
+              </button>
+            ))}
           </div>
         </div>
 
         <div
-          className="flex-1 min-h-0 overflow-y-auto px-2 py-4 md:p-4"
+          className="flex-1 min-h-0 overflow-y-auto bg-surface-container/30 dark:bg-gray-800/50 px-2 py-4 md:p-4"
           style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
         >
           {visibleInvoices.length === 0 ? (
@@ -2075,7 +2044,6 @@ export const Invoices: React.FC<InvoicesProps> = ({
       <div className={`min-h-0 min-w-0 overflow-hidden ${showRightPanel ? 'flex' : 'hidden md:flex'} flex-col`}>
         {selectedInvoiceId ? (
           <InvoicePanel
-            title={selectedInvoice ? `Invoice ${selectedInvoice.invoiceNumber}` : 'Invoice'}
             onBack={() => {
               closeRightPanel();
             }}
@@ -2091,7 +2059,6 @@ export const Invoices: React.FC<InvoicesProps> = ({
           </InvoicePanel>
         ) : showNewInvoice ? (
           <InvoicePanel
-            title="New Invoice"
             onBack={() => {
               closeRightPanel();
             }}
