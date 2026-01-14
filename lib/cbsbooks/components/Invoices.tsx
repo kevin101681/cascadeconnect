@@ -14,6 +14,7 @@ import { Dropdown } from './ui/Dropdown';
 import { parseInvoiceFromText } from '../services/geminiService';
 import CalendarPicker from './CalendarPicker';
 import { InvoiceCard } from '../../../components/ui/InvoiceCard';
+import { InvoicePanel } from './InvoicePanel';
 
 interface InvoicesProps {
   invoices: Invoice[];
@@ -1335,7 +1336,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                             setExpandedId(null);
                           } else {
                             setIsCreating(false);
-                            updateSearchParams({ invoiceId: null }); // Close modal via URL
+                            updateSearchParams({ invoiceId: null, view: null }); // Close panel via URL
                           }
                           setBuilderQuery('');
                           setShowBuilderDropdown(false);
@@ -1713,174 +1714,218 @@ export const Invoices: React.FC<InvoicesProps> = ({
   const showRightPanel = showNewInvoice || showEditInvoice;
 
   return (
-    <div className="h-[calc(100vh-80px)] flex flex-col overflow-hidden">
-      {/* Navigation Bar - Always visible on desktop, hidden on mobile when detail shown */}
-      <div className={`flex-shrink-0 flex flex-wrap gap-2 mb-4 items-center justify-between px-4 ${showRightPanel ? 'hidden md:flex' : 'flex'}`}>
-        <TabBar activeView="invoices" onNavigate={onNavigate} />
-      </div>
-
-      {/* Split Layout Container */}
-      <div className="flex-1 flex gap-4 px-4 overflow-hidden">
-        {/* LEFT PANEL - Invoice List (hidden on mobile when detail shown) */}
-        <div className={`flex flex-col gap-4 ${showRightPanel ? 'hidden md:flex md:w-[400px] lg:w-[480px]' : 'flex flex-1'} overflow-hidden`}>
-
-      <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleCsvUpload}/>
-      <CheckScanner isOpen={showCheckScanner} onClose={() => setShowCheckScanner(false)} clients={clients} invoices={invoices} onProcessPayments={handleCheckScanPayments} />
-      
-      {/* Invoice Scanner Integration */}
-      <InvoiceScanner 
-        isOpen={showInvoiceScanner} 
-        onClose={() => setShowInvoiceScanner(false)}
-        onScanComplete={handleParsedInvoice} 
+    <div className="relative h-full min-h-0">
+      {/* Global (unconditional) UI elements - keep out of split-pane grid */}
+      <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleCsvUpload} />
+      <CheckScanner
+        isOpen={showCheckScanner}
+        onClose={() => setShowCheckScanner(false)}
+        clients={clients}
+        invoices={invoices}
+        onProcessPayments={handleCheckScanPayments}
       />
-      
+      <InvoiceScanner
+        isOpen={showInvoiceScanner}
+        onClose={() => setShowInvoiceScanner(false)}
+        onScanComplete={handleParsedInvoice}
+      />
+
       {/* AI Import Modal */}
       {showAIImport && (
         <div className="fixed inset-0 z-[70] bg-black/50 flex items-center justify-center p-4">
-            <div className="bg-surface dark:bg-gray-800 rounded-3xl p-6 w-full max-w-lg shadow-xl border border-surface-outline-variant dark:border-gray-700 animate-slide-up max-h-[90vh] overflow-y-auto">
-                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <Sparkles className="text-primary" />
-                    AI Import
-                </h3>
-                <p className="text-sm text-surface-outline dark:text-gray-400 mb-2">Paste the text from an email or document below. Gemini will extract the invoice details for you.</p>
-                
-                <textarea 
-                    className="w-full bg-surface-container dark:bg-gray-700 p-4 rounded-xl h-40 outline-none focus:ring-2 focus:ring-primary resize-none mb-4 text-sm"
-                    placeholder="Paste invoice text here..."
-                    value={aiImportText}
-                    onChange={e => setAiImportText(e.target.value)}
-                />
+          <div className="bg-surface dark:bg-gray-800 rounded-3xl p-6 w-full max-w-lg shadow-xl border border-surface-outline-variant dark:border-gray-700 animate-slide-up max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+              <Sparkles className="text-primary" />
+              AI Import
+            </h3>
+            <p className="text-sm text-surface-outline dark:text-gray-400 mb-2">
+              Paste the text from an email or document below. Gemini will extract the invoice details for you.
+            </p>
 
-                <div className="mb-6">
-                    <p className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider mb-2">Custom Instructions (Optional)</p>
-                    <textarea 
-                        className="w-full bg-surface-container dark:bg-gray-700 p-3 rounded-xl h-20 outline-none focus:ring-2 focus:ring-primary resize-none text-sm placeholder-outline/50"
-                        placeholder="E.g., If text says 'Lot 5', set Address to 'Lot 5 - Smith'. Always default Rate to 100."
-                        value={aiInstructions}
-                        onChange={e => setAiInstructions(e.target.value)}
-                    />
-                </div>
+            <textarea
+              className="w-full bg-surface-container dark:bg-gray-700 p-4 rounded-xl h-40 outline-none focus:ring-2 focus:ring-primary resize-none mb-4 text-sm"
+              placeholder="Paste invoice text here..."
+              value={aiImportText}
+              onChange={(e) => setAiImportText(e.target.value)}
+            />
 
-                <div className="flex justify-end gap-3">
-                    <Button variant="text" onClick={() => setShowAIImport(false)}>Cancel</Button>
-                    <Button onClick={handleAIParse} disabled={isProcessingAI}>
-                        {isProcessingAI ? <Loader2 className="animate-spin" /> : 'Process Text'}
-                    </Button>
-                </div>
+            <div className="mb-6">
+              <p className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider mb-2">
+                Custom Instructions (Optional)
+              </p>
+              <textarea
+                className="w-full bg-surface-container dark:bg-gray-700 p-3 rounded-xl h-20 outline-none focus:ring-2 focus:ring-primary resize-none text-sm placeholder-outline/50"
+                placeholder="E.g., If text says 'Lot 5', set Address to 'Lot 5 - Smith'. Always default Rate to 100."
+                value={aiInstructions}
+                onChange={(e) => setAiInstructions(e.target.value)}
+              />
             </div>
+
+            <div className="flex justify-end gap-3">
+              <Button variant="text" onClick={() => setShowAIImport(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAIParse} disabled={isProcessingAI}>
+                {isProcessingAI ? <Loader2 className="animate-spin" /> : 'Process Text'}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Email Modal */}
       {emailingInvoice && (
         <div className="fixed inset-0 z-[70] bg-black/50 dark:bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-surface dark:bg-gray-800 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-surface-outline-variant dark:border-gray-700 animate-slide-up">
-                <div className="flex justify-between items-center mb-6">
-                    <h3 className="text-xl font-bold flex items-center gap-2 text-surface-on dark:text-gray-100">
-                        <Mail className="text-primary" />
-                        Email Invoice
-                    </h3>
-                    <button onClick={() => setEmailingInvoice(null)} className="p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
-                        <X size={20} />
-                    </button>
-                </div>
-
-                <div className="space-y-4">
-                    <div>
-                        <label className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider ml-1 mb-1 block">To</label>
-                        <input
-                            type="email"
-                            className="w-full bg-surface-container dark:bg-gray-700 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400"
-                            placeholder="client@example.com"
-                            value={emailTo}
-                            onChange={(e) => setEmailTo(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider ml-1 mb-1 block">Subject</label>
-                        <input
-                            type="text"
-                            className="w-full bg-surface-container dark:bg-gray-700 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400"
-                            value={emailSubject}
-                            onChange={(e) => setEmailSubject(e.target.value)}
-                        />
-                    </div>
-                    <div>
-                        <label className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider ml-1 mb-1 block">Message</label>
-                        <textarea
-                            className="w-full bg-surface-container dark:bg-gray-700 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary h-32 resize-none text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400"
-                            value={emailBody}
-                            onChange={(e) => setEmailBody(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="flex items-center gap-2 text-sm text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700/50 p-3 rounded-xl">
-                        <Download size={16} />
-                        <span>Invoice #{emailingInvoice.invoiceNumber}.pdf will be attached.</span>
-                    </div>
-                </div>
-
-                <div className="mt-6 flex justify-end gap-3">
-                    <Button variant="text" onClick={() => setEmailingInvoice(null)} disabled={isSendingEmail} className="text-surface-on dark:text-gray-100">Cancel</Button>
-                    <Button onClick={handleSendEmail} disabled={isSendingEmail} icon={isSendingEmail ? <Loader2 className="animate-spin" /> : <Send size={16} />}>
-                        {isSendingEmail ? 'Sending...' : 'Send Email'}
-                    </Button>
-                </div>
+          <div className="bg-surface dark:bg-gray-800 rounded-3xl p-6 w-full max-w-md shadow-2xl border border-surface-outline-variant dark:border-gray-700 animate-slide-up">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold flex items-center gap-2 text-surface-on dark:text-gray-100">
+                <Mail className="text-primary" />
+                Email Invoice
+              </h3>
+              <button
+                onClick={() => setEmailingInvoice(null)}
+                className="p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100"
+              >
+                <X size={20} />
+              </button>
             </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider ml-1 mb-1 block">
+                  To
+                </label>
+                <input
+                  type="email"
+                  className="w-full bg-surface-container dark:bg-gray-700 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400"
+                  placeholder="client@example.com"
+                  value={emailTo}
+                  onChange={(e) => setEmailTo(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider ml-1 mb-1 block">
+                  Subject
+                </label>
+                <input
+                  type="text"
+                  className="w-full bg-surface-container dark:bg-gray-700 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400"
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider ml-1 mb-1 block">
+                  Message
+                </label>
+                <textarea
+                  className="w-full bg-surface-container dark:bg-gray-700 px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary h-32 resize-none text-surface-on dark:text-gray-100 placeholder:text-surface-on-variant dark:placeholder:text-gray-400"
+                  value={emailBody}
+                  onChange={(e) => setEmailBody(e.target.value)}
+                />
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700/50 p-3 rounded-xl">
+                <Download size={16} />
+                <span>Invoice #{emailingInvoice.invoiceNumber}.pdf will be attached.</span>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <Button
+                variant="text"
+                onClick={() => setEmailingInvoice(null)}
+                disabled={isSendingEmail}
+                className="text-surface-on dark:text-gray-100"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSendEmail}
+                disabled={isSendingEmail}
+                icon={isSendingEmail ? <Loader2 className="animate-spin" /> : <Send size={16} />}
+              >
+                {isSendingEmail ? 'Sending...' : 'Send Email'}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Selection Bar */}
       {selectedIds.size > 0 && (
-          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 border border-primary text-primary bg-primary/10 px-4 py-2 rounded-full shadow-xl flex items-center gap-2 animate-slide-up max-w-[95vw]">
-              <span className="font-medium text-sm whitespace-nowrap">{selectedIds.size} Selected</span>
-              <div className="h-4 w-px bg-primary/30"></div>
-              
-              {/* Check Input */}
-              <input 
-                type="text" 
-                placeholder="Check #" 
-                value={bulkCheckNumber}
-                onChange={(e) => setBulkCheckNumber(e.target.value)}
-                className="bg-white/20 text-white placeholder-white/70 px-2 py-1 rounded-lg text-sm w-24 outline-none focus:bg-white/30 transition-colors"
-                onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                        handleBulkPay();
-                    }
-                }}
-              />
-              <button 
-                onClick={handleBulkPay} 
-                className="bg-white/20 hover:bg-white/30 p-1.5 rounded-lg transition-colors"
-                title="Mark Paid"
-              >
-                  <Check size={16} />
-              </button>
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 border border-primary text-primary bg-primary/10 px-4 py-2 rounded-full shadow-xl flex items-center gap-2 animate-slide-up max-w-[95vw]">
+          <span className="font-medium text-sm whitespace-nowrap">{selectedIds.size} Selected</span>
+          <div className="h-4 w-px bg-primary/30"></div>
 
-              <div className="h-4 w-px bg-white/30 ml-1"></div>
-              <button onClick={() => setSelectedIds(new Set())} className="p-1 hover:bg-white/20 rounded-full">
-                  <X size={18} />
-              </button>
-          </div>
+          <input
+            type="text"
+            placeholder="Check #"
+            value={bulkCheckNumber}
+            onChange={(e) => setBulkCheckNumber(e.target.value)}
+            className="bg-white/20 text-white placeholder-white/70 px-2 py-1 rounded-lg text-sm w-24 outline-none focus:bg-white/30 transition-colors"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleBulkPay();
+              }
+            }}
+          />
+          <button
+            onClick={handleBulkPay}
+            className="bg-white/20 hover:bg-white/30 p-1.5 rounded-lg transition-colors"
+            title="Mark Paid"
+          >
+            <Check size={16} />
+          </button>
+
+          <div className="h-4 w-px bg-white/30 ml-1"></div>
+          <button onClick={() => setSelectedIds(new Set())} className="p-1 hover:bg-white/20 rounded-full">
+            <X size={18} />
+          </button>
+        </div>
       )}
 
-      {/* Filter Modal - shown when filter action is triggered from menu */}
+      {/* Filter Modal (mobile) */}
       {activeFab === 'filter' && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]" onClick={() => setActiveFab('none')}>
-          <div className="w-[calc(100vw-32px)] max-w-xs flex flex-col gap-4 bg-surface-container dark:bg-gray-700 rounded-2xl p-4 shadow-xl border border-surfaceContainerHigh animate-slide-up" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+          onClick={() => setActiveFab('none')}
+        >
+          <div
+            className="w-[calc(100vw-32px)] max-w-xs flex flex-col gap-4 bg-surface-container dark:bg-gray-700 rounded-2xl p-4 shadow-xl border border-surfaceContainerHigh animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex flex-col gap-2">
-              <p className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider mb-1">Status</p>
-              {(['all', 'draft', 'sent', 'paid'] as const).map(s => (
-                <button key={s} onClick={() => handleFilterSelection('status', s)} className={`px-4 h-10 rounded-full text-sm font-medium flex items-center justify-start border transition-all ${statusFilter === s ? 'bg-white border-primary text-primary shadow-sm' : 'bg-gray-100 text-gray-600 hover:text-gray-900 border-transparent'}`}>{s.charAt(0).toUpperCase() + s.slice(1)}</button>
+              <p className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider mb-1">
+                Status
+              </p>
+              {(['all', 'draft', 'sent', 'paid'] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => handleFilterSelection('status', s)}
+                  className={`px-4 h-10 rounded-full text-sm font-medium flex items-center justify-start border transition-all ${
+                    statusFilter === s
+                      ? 'bg-white border-primary text-primary shadow-sm'
+                      : 'bg-gray-100 text-gray-600 hover:text-gray-900 border-transparent'
+                  }`}
+                >
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                </button>
               ))}
             </div>
             <div className="flex flex-col gap-2 pt-2 border-t border-surface-outline-variant/50 dark:border-gray-600">
-              <p className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider mb-1">Sort By</p>
-              {sortOptions.map(opt => (
-                <button 
-                  key={opt.value} 
+              <p className="text-xs font-bold text-surface-outline dark:text-gray-400 uppercase tracking-wider mb-1">
+                Sort By
+              </p>
+              {sortOptions.map((opt) => (
+                <button
+                  key={opt.value}
                   onClick={() => handleFilterSelection('sort', opt.value)}
-                  className={`px-4 h-10 rounded-full text-sm font-medium flex items-center justify-start border transition-all ${sortValue === opt.value ? 'bg-white border-2 border-primary text-primary' : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 border-surface-outline-variant/50 dark:border-gray-600 hover:bg-surface-container-high/80 dark:hover:bg-gray-500'}`}
+                  className={`px-4 h-10 rounded-full text-sm font-medium flex items-center justify-start border transition-all ${
+                    sortValue === opt.value
+                      ? 'bg-white border-2 border-primary text-primary'
+                      : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 border-surface-outline-variant/50 dark:border-gray-600 hover:bg-surface-container-high/80 dark:hover:bg-gray-500'
+                  }`}
                 >
                   {opt.label}
                 </button>
@@ -1890,201 +1935,186 @@ export const Invoices: React.FC<InvoicesProps> = ({
         </div>
       )}
 
-      {/* Removed FAB GROUP - Actions now in header dropdown menus */}
+      <div className="grid grid-cols-1 md:grid-cols-[384px_1fr] h-full min-h-0 overflow-hidden">
+      {/* LEFT COLUMN (List) */}
+      <div
+        className={`flex flex-col min-h-0 border-r border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 ${
+          showRightPanel ? 'hidden md:flex' : 'flex'
+        }`}
+      >
+        <div className="sticky top-0 z-20 bg-surface dark:bg-gray-800 border-b border-surface-outline-variant dark:border-gray-700">
+          <div className="px-4 py-3 md:p-4 flex items-center justify-between gap-3">
+            <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2 min-w-0">
+              {filteredInvoices.length > 0 && (
+                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-primary text-primary bg-primary/10 text-xs font-medium flex-shrink-0">
+                  {filteredInvoices.length}
+                </span>
+              )}
+              <span className="truncate">Invoices</span>
+            </h3>
 
-      {/* Header Stats & Controls - Reorganized for even distribution */}
-      <div className="space-y-3 mb-6">
-        {/* Row 1: Metrics - Evenly spaced */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {statusFilter !== 'paid' && (
-            <div className="bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 border border-surface-outline-variant/50 dark:border-gray-600 px-4 h-10 rounded-full flex items-center justify-between gap-2">
-              <p className="text-xs font-bold uppercase tracking-wider">Outstanding</p>
-              <p className="text-lg font-bold">${stats.outstanding.toFixed(0)}</p>
+            <Button
+              variant="outline"
+              onClick={handleCreate}
+              icon={<Plus size={16} />}
+              className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:!text-xs shrink-0"
+            >
+              <span className="hidden sm:inline">New Invoice</span>
+              <span className="sm:hidden">New</span>
+            </Button>
+          </div>
+
+          <div className="px-4 pb-4 space-y-3">
+            <div className="hidden md:block">
+              <TabBar activeView="invoices" onNavigate={onNavigate} />
             </div>
-          )}
-          <div className="bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 border border-surface-outline-variant/50 dark:border-gray-600 px-4 h-10 rounded-full flex items-center justify-between gap-2">
-            <p className="text-xs font-bold uppercase tracking-wider">Revenue YTD</p>
-            <p className="text-lg font-bold">${stats.ytd.toFixed(0)}</p>
-          </div>
-        </div>
 
-        {/* Row 2: Search & Filters - Evenly distributed */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-          {/* Search - Takes 3 columns */}
-          <div className="md:col-span-3 relative transition-all duration-300">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-outline dark:text-gray-400" size={20} />
-            <input 
-              ref={searchInputRef}
-              type="text" 
-              placeholder="" 
-              value={searchQuery} 
-              onChange={e => setSearchQuery(e.target.value)} 
-              className="w-full bg-surface-container-high dark:bg-gray-600 pl-10 pr-10 h-10 rounded-full outline-none focus:ring-2 focus:ring-primary text-surface-on dark:text-gray-200 placeholder:text-surface-on-variant dark:placeholder:text-gray-400 text-sm font-medium"
-            />
-            {searchQuery && <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2"><X size={18} className="text-surface-outline dark:text-gray-400"/></button>}
-          </div>
-          
-          {/* Sort Dropdown - Takes 3 columns */}
-          <div className="hidden md:block md:col-span-3">
-            <Dropdown 
-              value={sortValue} 
-              onChange={setSortValue} 
-              options={sortOptions} 
-              placeholder="Sort By" 
-            />
-          </div>
-          
-          {/* Status Filters - Takes 6 columns */}
-          <div className="hidden md:flex md:col-span-6 items-center gap-2">
-            {(['all', 'draft', 'sent', 'paid'] as const).map(s => (
-              <button 
-                key={s} 
-                onClick={() => setStatusFilter(s)} 
-                className={`flex-1 h-10 rounded-full text-sm font-medium transition-all ${
-                  statusFilter === s 
-                    ? 'bg-white border border-primary text-primary shadow-sm' 
-                    : 'bg-gray-100 text-gray-600 hover:text-gray-900 border border-transparent'
-                }`}
-              >
-                {s.charAt(0).toUpperCase() + s.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Invoice List Header / Count Pill */}
-      <div className="flex justify-start items-center mb-2">
-          {/* Unified Count Pill on Left */}
-          <span className="bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-200 px-3 py-1 rounded-full text-xs font-medium">
-              {filteredInvoices.length} Invoices
-          </span>
-      </div>
-
-      <div className="flex flex-col items-start w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-            {visibleInvoices.map(inv => {
-              // Determine status for InvoiceCard
-              let cardStatus: "Draft" | "Sent" | "Overdue" | "Paid" = "Draft";
-              if (inv.status === 'paid') {
-                cardStatus = "Paid";
-              } else if (inv.status === 'sent') {
-                // Check if overdue
-                const today = new Date();
-                const dueDate = new Date(inv.dueDate);
-                if (dueDate < today) {
-                  cardStatus = "Overdue";
-                } else {
-                  cardStatus = "Sent";
-                }
-              }
-
-              return (
-                <InvoiceCard
-                  key={inv.id}
-                  invoiceNumber={inv.invoiceNumber}
-                  status={cardStatus}
-                  amount={`$${inv.total.toFixed(2)}`}
-                  createdDate={formatDateMobile(inv.date)}
-                  dueDate={formatDateMobile(inv.dueDate)}
-                  builder={inv.clientName}
-                  address={inv.projectDetails}
-                  checkNumber={inv.checkNumber}
-                  onClick={() => {
-                    updateSearchParams({ invoiceId: inv.id, view: null });
-                  }}
-                  onMarkPaid={(checkNum) => {
-                    const today = getLocalTodayDate();
-                    const updatedInv = { 
-                      ...inv, 
-                      status: 'paid' as const,
-                      datePaid: today,
-                      checkNumber: checkNum
-                    };
-                    onUpdate(updatedInv);
-                  }}
-                  onCheckNumberUpdate={(checkNum) => {
-                    const updatedInv = { 
-                      ...inv, 
-                      checkNumber: checkNum
-                    };
-                    onUpdate(updatedInv);
-                  }}
-                  onEmail={() => {
-                    handlePrepareEmail(inv);
-                  }}
-                  onDownload={() => {
-                    handleDownloadPDF(inv);
-                  }}
-                  onDelete={() => {
-                    handleDeleteInvoice(inv.id);
-                  }}
-                />
-              );
-            })}
-            {filteredInvoices.length === 0 && <div className="col-span-full text-center py-12 text-surface-outline dark:text-gray-400">No invoices found.</div>}
-            
-            {visibleInvoices.length < filteredInvoices.length && (
-                <div className="col-span-full text-center pt-4 pb-8">
-                    <Button variant="tonal" onClick={handleShowMore}>Show More</Button>
+            <div className="grid grid-cols-1 gap-2">
+              {statusFilter !== 'paid' && (
+                <div className="bg-surface-container-high dark:bg-gray-700 text-surface-on dark:text-gray-200 border border-surface-outline-variant/50 dark:border-gray-600 px-4 h-10 rounded-full flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold uppercase tracking-wider">Outstanding</p>
+                  <p className="text-lg font-bold">${stats.outstanding.toFixed(0)}</p>
                 </div>
-            )}
-        </div>
-      </div>
+              )}
+              <div className="bg-surface-container-high dark:bg-gray-700 text-surface-on dark:text-gray-200 border border-surface-outline-variant/50 dark:border-gray-600 px-4 h-10 rounded-full flex items-center justify-between gap-2">
+                <p className="text-xs font-bold uppercase tracking-wider">Revenue YTD</p>
+                <p className="text-lg font-bold">${stats.ytd.toFixed(0)}</p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-outline dark:text-gray-400" size={18} />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search invoices..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-surface-container-high dark:bg-gray-700 pl-9 pr-10 h-10 rounded-full outline-none focus:ring-2 focus:ring-primary text-surface-on dark:text-gray-200 placeholder:text-surface-on-variant dark:placeholder:text-gray-400 text-sm font-medium"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <X size={18} className="text-surface-outline dark:text-gray-400" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+              {(['all', 'draft', 'sent', 'paid'] as const).map((s) => (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                    statusFilter === s
+                      ? 'border border-primary text-primary bg-primary/10'
+                      : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-300 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            <div className="hidden md:block">
+              <Dropdown value={sortValue} onChange={setSortValue} options={sortOptions} placeholder="Sort By" />
+            </div>
+          </div>
         </div>
 
-        {/* RIGHT PANEL - Detail/Edit View (full-screen on mobile when shown) */}
-        <div className={`flex flex-col ${showRightPanel ? 'flex-1' : 'hidden'} overflow-hidden`}>
-          {showRightPanel && (
-            <div className="flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg border border-surface-outline-variant dark:border-gray-700 overflow-hidden">
-              {/* Header */}
-              <div className="flex justify-between items-center p-4 border-b border-surface-outline-variant dark:border-gray-700 flex-shrink-0">
-                {/* Mobile: Back button */}
-                <button
-                  onClick={() => {
-                    updateSearchParams({ invoiceId: null, view: null });
-                    setCurrentInvoice({});
-                    setBuilderQuery('');
-                    setShowBuilderDropdown(false);
-                  }}
-                  className="md:hidden p-2 -ml-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors"
-                  aria-label="Back"
-                >
-                  <ChevronLeft className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
-                </button>
-                
-                <h2 className="text-lg md:text-xl font-semibold text-surface-on dark:text-gray-100 flex-1 md:flex-none">
-                  {showNewInvoice ? 'New Invoice' : selectedInvoice ? `Edit Invoice ${selectedInvoice.invoiceNumber}` : ''}
-                </h2>
-                
-                {/* Desktop: X button */}
-                <button
-                  onClick={() => {
-                    updateSearchParams({ invoiceId: null, view: null });
-                    setCurrentInvoice({});
-                    setBuilderQuery('');
-                    setShowBuilderDropdown(false);
-                  }}
-                  className="hidden md:block p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full transition-colors"
-                >
-                  <X className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
-                </button>
-              </div>
+        <div
+          className="flex-1 min-h-0 overflow-y-auto px-2 py-4 md:p-4"
+          style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+        >
+          {visibleInvoices.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
+              <span className="text-sm">No invoices found.</span>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-3">
+              {visibleInvoices.map((inv) => {
+                let cardStatus: 'Draft' | 'Sent' | 'Overdue' | 'Paid' = 'Draft';
+                if (inv.status === 'paid') {
+                  cardStatus = 'Paid';
+                } else if (inv.status === 'sent') {
+                  const today = new Date();
+                  const dueDate = new Date(inv.dueDate);
+                  cardStatus = dueDate < today ? 'Overdue' : 'Sent';
+                }
 
-              {/* Content - Scrollable */}
-              <div className="flex-1 overflow-y-auto p-4 md:p-6">
-                {showNewInvoice || selectedInvoice ? (
-                  renderInvoiceForm(false)
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-center text-gray-400">
-                    <p className="text-lg font-medium">Select an invoice to edit</p>
-                    <p className="text-sm mt-2">or create a new one</p>
-                  </div>
-                )}
-              </div>
+                return (
+                  <InvoiceCard
+                    key={inv.id}
+                    invoiceNumber={inv.invoiceNumber}
+                    status={cardStatus}
+                    amount={`$${inv.total.toFixed(2)}`}
+                    createdDate={formatDateMobile(inv.date)}
+                    dueDate={formatDateMobile(inv.dueDate)}
+                    builder={inv.clientName}
+                    address={inv.projectDetails}
+                    checkNumber={inv.checkNumber}
+                    onClick={() => updateSearchParams({ invoiceId: inv.id, view: null })}
+                    onMarkPaid={(checkNum) => {
+                      const today = getLocalTodayDate();
+                      onUpdate({ ...inv, status: 'paid' as const, datePaid: today, checkNumber: checkNum });
+                    }}
+                    onCheckNumberUpdate={(checkNum) => onUpdate({ ...inv, checkNumber: checkNum })}
+                    onEmail={() => handlePrepareEmail(inv)}
+                    onDownload={() => handleDownloadPDF(inv)}
+                    onDelete={() => handleDeleteInvoice(inv.id)}
+                  />
+                );
+              })}
+
+              {visibleInvoices.length < filteredInvoices.length && (
+                <div className="pt-2 pb-6 flex justify-center">
+                  <Button variant="tonal" onClick={handleShowMore}>
+                    Show More
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>
+      </div>
+
+      {/* RIGHT COLUMN (Panel) */}
+      <div className={`min-h-0 ${showRightPanel ? 'flex' : 'hidden md:flex'} flex-col`}>
+        {selectedInvoiceId ? (
+          <InvoicePanel
+            title={selectedInvoice ? `Invoice ${selectedInvoice.invoiceNumber}` : 'Invoice'}
+            onBack={() => {
+              updateSearchParams({ invoiceId: null, view: null });
+              setCurrentInvoice({});
+              setBuilderQuery('');
+              setShowBuilderDropdown(false);
+            }}
+          >
+            {selectedInvoice ? (
+              renderInvoiceForm(false)
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-center text-surface-on-variant dark:text-gray-400">
+                <p className="text-sm font-medium">Invoice not found.</p>
+              </div>
+            )}
+          </InvoicePanel>
+        ) : showNewInvoice ? (
+          <InvoicePanel
+            title="New Invoice"
+            onBack={() => {
+              updateSearchParams({ invoiceId: null, view: null });
+              setCurrentInvoice({});
+              setBuilderQuery('');
+              setShowBuilderDropdown(false);
+            }}
+          >
+            {renderInvoiceForm(false)}
+          </InvoicePanel>
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-surface-on-variant dark:text-gray-400 gap-2 bg-white dark:bg-gray-900">
+            <p className="text-sm font-medium">Select an invoice to view details</p>
+          </div>
+        )}
+      </div>
       </div>
     </div>
   );

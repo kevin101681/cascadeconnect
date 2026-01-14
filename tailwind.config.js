@@ -84,6 +84,10 @@ export default {
   ],
   theme: {
     extend: {
+      spacing: {
+        // Used by split-pane views to subtract the fixed header height
+        header: '80px',
+      },
       fontFamily: {
         sans: ['"Google Sans Flex"', 'Outfit', 'Roboto', 'sans-serif'],
       },
@@ -282,6 +286,11 @@ export default {
           '0%': { transform: 'perspective(1000px) rotateY(90deg)', opacity: '0' },
           '100%': { transform: 'perspective(1000px) rotateY(0deg)', opacity: '1' },
         },
+        'delayed-fade-in': {
+          '0%': { opacity: '0' },
+          '45%': { opacity: '0' },  // Stay invisible for ~250ms (45% of 550ms)
+          '100%': { opacity: '1' },  // Fade in over the remaining time
+        },
       },
       animation: {
         // Cascade Connect animations
@@ -315,6 +324,9 @@ export default {
         'slide-in-right': 'slideInRight 0.3s ease-out forwards',
         'slide-in-from-right': 'slideInFromRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         'slide-in-left': 'slideInLeft 0.3s ease-out forwards',
+        // Delayed fade-in for loading states: prevents flash on fast connections
+        // Stays invisible for 250ms, then fades in smoothly over 300ms
+        'delayed-fade-in': 'delayed-fade-in 550ms ease-out forwards',
       }
     }
   },
