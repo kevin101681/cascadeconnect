@@ -14,7 +14,7 @@ interface InvoicePanelProps {
  */
 export const InvoicePanel: React.FC<InvoicePanelProps> = ({ title, onBack, children }) => {
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-gray-900">
+    <div className="flex min-w-0 flex-col h-full bg-white dark:bg-gray-900">
       <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center gap-3 bg-white/80 dark:bg-gray-900/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 sticky top-0 z-10">
         {onBack && (
           <button
@@ -32,7 +32,7 @@ export const InvoicePanel: React.FC<InvoicePanelProps> = ({ title, onBack, child
       </div>
 
       <div
-        className="flex-1 min-h-0 overflow-y-auto p-6"
+        className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden p-4 sm:p-6"
         style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
       >
         {children}

@@ -1149,8 +1149,8 @@ export const Invoices: React.FC<InvoicesProps> = ({
       
       return (
         <div className={isInline ? "pt-4" : "space-y-4"}>
-            {/* Form Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Form Grid (responsive for narrow right-pane) */}
+            <div className="grid min-w-0 grid-cols-1 xl:grid-cols-2 gap-4">
                 <div className="relative">
                     <label className="text-xs text-surface-outline dark:text-gray-400 font-medium ml-1">Builder</label>
                     {!currentInvoice.id ? (
@@ -1251,17 +1251,17 @@ export const Invoices: React.FC<InvoicesProps> = ({
             <div className="mb-6 mt-6">
                 <h4 className="text-lg font-medium mb-3 ml-1">Items</h4>
                 {items.map((item) => (
-                    <div key={item.id} className="flex flex-col md:flex-row gap-2 mb-2 items-start border-b border-surfaceContainerHigh/30 pb-4 md:pb-0 md:border-none last:border-none">
-                    <input placeholder="Description" value={item.description} onChange={(e) => updateItem(item.id, 'description', e.target.value)} className="w-full md:flex-grow bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary"/>
-                    <div className="flex gap-2 w-full md:w-auto items-center">
+                    <div key={item.id} className="flex min-w-0 flex-col xl:flex-row gap-2 mb-2 items-start border-b border-surfaceContainerHigh/30 pb-4 xl:pb-0 xl:border-none last:border-none">
+                    <input placeholder="Description" value={item.description} onChange={(e) => updateItem(item.id, 'description', e.target.value)} className="w-full min-w-0 xl:flex-1 bg-surface-container dark:bg-gray-700 px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary"/>
+                    <div className="flex flex-wrap gap-2 w-full xl:w-auto items-center min-w-0">
                         <input 
                             type="number" 
                             placeholder="Qty" 
                             value={item.quantity} 
                             onChange={(e) => updateItem(item.id, 'quantity', Number(e.target.value))} 
-                            className="w-12 bg-surface-container dark:bg-gray-700 px-2 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-16 bg-surface-container dark:bg-gray-700 px-2 py-2 rounded-xl outline-none focus:ring-2 focus:ring-primary text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
-                        <div className="relative flex-1 md:w-28">
+                        <div className="relative flex-1 min-w-0 xl:w-28">
                             <input 
                                 type="number" 
                                 placeholder="Rate" 
@@ -1279,7 +1279,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
 
             {/* Payment Link Section */}
             <div className="flex flex-col gap-2 pt-4 border-t border-surfaceContainerHigh mb-2">
-                <div className="flex justify-start items-center gap-2">
+                <div className="flex flex-wrap justify-start items-center gap-2 min-w-0">
                     {currentInvoice.paymentLink ? (
                         <div className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1.5 rounded-lg border border-green-200">
                             <Check size={14} />
@@ -1306,7 +1306,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                     {/* Manual Link Entry Toggle */}
                     <button 
                         onClick={() => setShowManualLinkInput(!showManualLinkInput)}
-                        className="p-2 bg-surface-container-high dark:bg-gray-600 hover:bg-surface-container dark:bg-gray-700 text-primary rounded-full transition-colors"
+                        className="p-2 bg-surface-container-high hover:bg-surface-container dark:bg-gray-700 dark:hover:bg-gray-600 text-primary rounded-full transition-colors"
                         title="Enter Link Manually"
                     >
                         <Pencil size={14} />
@@ -1315,7 +1315,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                 
                 {/* Manual Link Input */}
                 {showManualLinkInput && (
-                    <div className="flex items-center gap-2 animate-slide-up">
+                    <div className="flex min-w-0 items-center gap-2 animate-slide-up">
                         <input 
                             type="text"
                             placeholder="Paste payment URL here..."
@@ -1327,9 +1327,9 @@ export const Invoices: React.FC<InvoicesProps> = ({
                 )}
             </div>
 
-            <div className="flex flex-col md:flex-row justify-between items-center pt-2 gap-4">
+            <div className="flex flex-col xl:flex-row justify-between items-center pt-2 gap-4 min-w-0">
                 <div className="h-9 px-6 rounded-full bg-white border-2 border-primary text-primary text-sm font-medium flex items-center justify-center">Total: ${total.toFixed(0)}</div>
-                <div className="flex gap-2 w-full md:w-auto">
+                <div className="flex flex-wrap gap-2 w-full xl:w-auto min-w-0">
                     <button 
                         onClick={() => {
                           if (isInline) {
@@ -1342,14 +1342,14 @@ export const Invoices: React.FC<InvoicesProps> = ({
                           setShowBuilderDropdown(false);
                         }} 
                         disabled={isSaving} 
-                        className="flex-1 md:flex-none h-9 px-6 rounded-full bg-white border-2 border-primary text-primary hover:bg-primary/10 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                        className="flex-1 xl:flex-none h-9 px-6 rounded-full bg-white border-2 border-primary text-primary hover:bg-primary/10 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                     >
                         Cancel
                     </button>
                     <button 
                         onClick={handleSaveAndEmail} 
                         disabled={isSaving}
-                        className="flex-1 md:flex-none h-9 px-6 rounded-full bg-white border-2 border-primary text-primary hover:bg-primary/10 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 xl:flex-none h-9 px-6 rounded-full bg-white border-2 border-primary text-primary hover:bg-primary/10 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         title="Save invoice and send via email"
                     >
                         {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <Mail size={16} />}
@@ -1358,7 +1358,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                     <button 
                         onClick={handleSaveAndMarkSent} 
                         disabled={isSaving}
-                        className="flex-1 md:flex-none h-9 px-6 rounded-full bg-white border-2 border-gray-400 text-gray-700 hover:bg-gray-50 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 xl:flex-none h-9 px-6 rounded-full bg-white border-2 border-gray-400 text-gray-700 hover:bg-gray-50 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         title="Save invoice and mark as sent (without emailing)"
                     >
                         {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <Check size={16} />}
@@ -1367,7 +1367,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
                     <button 
                         onClick={handleSave} 
                         disabled={isSaving}
-                        className="flex-1 md:flex-none h-9 px-6 rounded-full bg-white border-2 border-primary text-primary hover:bg-primary/10 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 xl:flex-none h-9 px-6 rounded-full bg-white border-2 border-primary text-primary hover:bg-primary/10 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
                         {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : null}
                         {isSaving ? 'Saving...' : 'Save'}
@@ -1935,10 +1935,10 @@ export const Invoices: React.FC<InvoicesProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-[384px_1fr] h-full min-h-0 overflow-hidden">
+      <div className="grid min-w-0 grid-cols-1 md:grid-cols-[384px_1fr] h-full min-h-0 overflow-hidden">
       {/* LEFT COLUMN (List) */}
       <div
-        className={`flex flex-col min-h-0 border-r border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 ${
+        className={`flex min-w-0 flex-col min-h-0 border-r border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 ${
           showRightPanel ? 'hidden md:flex' : 'flex'
         }`}
       >
@@ -2078,7 +2078,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
       </div>
 
       {/* RIGHT COLUMN (Panel) */}
-      <div className={`min-h-0 ${showRightPanel ? 'flex' : 'hidden md:flex'} flex-col`}>
+      <div className={`min-h-0 min-w-0 overflow-hidden ${showRightPanel ? 'flex' : 'hidden md:flex'} flex-col`}>
         {selectedInvoiceId ? (
           <InvoicePanel
             title={selectedInvoice ? `Invoice ${selectedInvoice.invoiceNumber}` : 'Invoice'}
