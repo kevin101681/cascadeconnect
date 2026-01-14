@@ -398,16 +398,11 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
                 Financial
               </h2>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3">
                 <ModuleButton
                   icon={<FileText className="h-5 w-5" />}
                   label="Invoices"
                   onClick={() => onNavigateToModule('INVOICES')}
-                />
-                <ModuleButton
-                  icon={<DollarSign className="h-5 w-5" />}
-                  label="Payroll"
-                  onClick={() => onNavigateToModule('PAYROLL')}
                 />
               </div>
             </div>

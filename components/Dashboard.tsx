@@ -28,7 +28,6 @@ import { SmoothHeightWrapper } from './motion/SmoothHeightWrapper';
 // Lazy-load heavy dashboard tabs / tools so they don't ship in the initial bundle.
 const AIIntakeDashboard = React.lazy(() => import('./AIIntakeDashboard'));
 const HomeownerManual = React.lazy(() => import('./HomeownerManual'));
-const PayrollDashboard = React.lazy(() => import('./PayrollDashboard'));
 const ScheduleTab = React.lazy(() => import('./ScheduleTab'));
 const HomeownerWarrantyGuide = React.lazy(() =>
   import('./HomeownerWarrantyGuide').then((m) => ({ default: m.HomeownerWarrantyGuide }))
@@ -693,13 +692,13 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, []);
   
   // View State for Dashboard - derived from URL
-  type TabType = 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PAYROLL' | 'INVOICES' | 'SCHEDULE' | 'PUNCHLIST' | 'CHAT' | null;
+  type TabType = 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'INVOICES' | 'SCHEDULE' | 'PUNCHLIST' | 'CHAT' | null;
 
   const currentTab = useMemo<TabType>(() => {
     const view = searchParams.get('view');
     if (!view) return null;
 
-    const validTabs: TabType[] = ['CLAIMS', 'MESSAGES', 'TASKS', 'NOTES', 'CALLS', 'DOCUMENTS', 'MANUAL', 'HELP', 'PAYROLL', 'INVOICES', 'SCHEDULE', 'PUNCHLIST', 'CHAT'];
+    const validTabs: TabType[] = ['CLAIMS', 'MESSAGES', 'TASKS', 'NOTES', 'CALLS', 'DOCUMENTS', 'MANUAL', 'HELP', 'INVOICES', 'SCHEDULE', 'PUNCHLIST', 'CHAT'];
     const upperView = view.toUpperCase() as TabType;
     
     return validTabs.includes(upperView) ? upperView : null;
@@ -804,7 +803,6 @@ const Dashboard: React.FC<DashboardProps> = ({
     'documents',
     'manual',
     'help',
-    'payroll',
     'invoices',
     'schedule',
     'chat',
@@ -968,9 +966,8 @@ const Dashboard: React.FC<DashboardProps> = ({
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('CALLS'); // CALLS tab (admin only)
       tabs.push('SCHEDULE'); // SCHEDULE tab (admin only)
-      // Only show Payroll and Invoices for Administrator role, not Employee role
+      // Only show Invoices for Administrator role, not Employee role
       if (!isEmployee) {
-        tabs.push('PAYROLL'); // PAYROLL tab (administrator only)
         tabs.push('INVOICES'); // INVOICES tab (administrator only)
       }
     }
@@ -4009,7 +4006,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 'NOTES': 'NOTES',
                 'CALLS': 'CALLS',
                 'INVOICES': 'INVOICES',
-                'PAYROLL': 'PAYROLL',
                 'DOCUMENTS': 'DOCUMENTS',
                 'MANUAL': 'MANUAL',
                 'HELP': 'HELP',
@@ -4468,7 +4464,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                       HELP: { label: 'Help', icon: <HelpCircle className="h-4 w-4" /> },
                       CALLS: { label: 'Calls', icon: <Phone className="h-4 w-4" /> },
                       SCHEDULE: { label: 'Schedule', icon: <Calendar className="h-4 w-4" /> },
-                      PAYROLL: { label: 'Payroll', icon: <DollarSign className="h-4 w-4" /> },
                       INVOICES: { label: 'Invoices', icon: <Receipt className="h-4 w-4" /> },
                       PUNCHLIST: { label: 'BlueTag', icon: <HardHat className="h-4 w-4" /> },
                       CHAT: { label: 'Chat', icon: <MessageCircle className="h-4 w-4" /> },
@@ -4786,22 +4781,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             )}
 
-            {/* PAYROLL Tab - Administrator Only (hidden for employees) */}
-            {isAdmin && currentUser?.role !== 'Employee' && (
-              <div 
-                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
-              >
-                <div className="w-full min-h-[calc(100vh-300px)]">
-                  <div className="max-w-7xl mx-auto py-4">
-                    <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                      <PayrollDashboard />
-                    </Suspense>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* INVOICES Tab - Administrator Only (hidden for employees) */}
             {isAdmin && currentUser?.role !== 'Employee' && (
               <div 
@@ -4828,22 +4807,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                         Switch to Invoices tab to view
                       </div>
                     )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* PAYROLL Tab - Administrator Only (hidden for employees) - Duplicate for carousel */}
-            {isAdmin && currentUser?.role !== 'Employee' && (
-              <div 
-                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
-              >
-                <div className="w-full min-h-[calc(100vh-300px)]">
-                  <div className="max-w-7xl mx-auto py-4">
-                    <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                      <PayrollDashboard />
-                    </Suspense>
                   </div>
                 </div>
               </div>
@@ -5001,20 +4964,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                     }
                   }}
                 />
-              </div>
-            </AnimatedTabContent>
-          )}
-
-          {currentTab === 'PAYROLL' && isAdmin && currentUser?.role !== 'Employee' && (
-            <AnimatedTabContent tabKey="payroll">
-              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
-                <div className="flex-1 overflow-y-auto md:overflow-visible">
-                  <div className="flex flex-col h-full md:h-auto">
-                    <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                      <PayrollDashboard />
-                    </Suspense>
-                  </div>
-                </div>
               </div>
             </AnimatedTabContent>
           )}

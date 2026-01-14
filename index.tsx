@@ -6,7 +6,6 @@ import { DarkModeProvider } from './components/DarkModeProvider';
 import { PostHogProvider } from './components/providers/PostHogProvider';
 import { ClerkProvider } from '@clerk/clerk-react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import GustoSuccessPage from './components/pages/gusto-success';
 import { SignIn } from '@clerk/clerk-react';
 import HomeownerSignUpPage from './components/pages/homeowner-sign-up';
 import MaintenancePage from './src/pages/MaintenancePage';
@@ -98,7 +97,6 @@ function Root() {
                 element={<SignIn routing="path" path="/sign-in" />}
               />
               <Route path="/sign-up/*" element={<HomeownerSignUpPage />} />
-              <Route path="/gusto-success" element={<GustoSuccessPage />} />
 
               {/* Protected / main app */}
               <Route path="/*" element={<App />} />
