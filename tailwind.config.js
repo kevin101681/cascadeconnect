@@ -67,6 +67,7 @@ export default {
     'animate-dialog-enter',
     'animate-slide-up',
     'animate-scale-out',
+    'animate-delayed-fade-in',
     // Text and spacing
     'font-bold',
     'font-semibold',

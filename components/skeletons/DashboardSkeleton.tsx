@@ -3,13 +3,17 @@
  * 
  * Edge-to-edge loading skeleton that matches the HomeownerDashboardView layout geometry.
  * Prevents layout shift by matching exact spacing/structure of the real dashboard.
+ * 
+ * UX Enhancement: Delayed fade-in prevents jarring flash on fast desktop connections.
+ * The skeleton starts invisible and only fades in after 250ms. If loading completes
+ * faster than that, the user sees instant load (no flash).
  */
 
 import React from 'react';
 
 export const DashboardSkeleton: React.FC = () => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background opacity-0 animate-delayed-fade-in">
       {/* Match HomeownerDashboardView's edge-to-edge structure */}
       <div className="w-full">
         
