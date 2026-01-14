@@ -50,6 +50,9 @@ import { desc, eq } from 'drizzle-orm';
 // Clerk integration
 import { useUser as useClerkUser, useAuth as useClerkAuth } from '@clerk/clerk-react';
 
+// Monitoring integration
+import { identifyUserInMonitoring, clearUserFromMonitoring } from './lib/monitoring';
+
 // Clerk hooks with compatibility mapping
 const useUser = () => {
   const { isLoaded, isSignedIn, user } = useClerkUser();
@@ -76,6 +79,9 @@ const useAuth = () => {
   return { 
     signOut: async () => {
       try {
+        // Clear monitoring data (Sentry & PostHog)
+        clearUserFromMonitoring();
+        
         // Sign out from Clerk
         await signOut();
         
@@ -318,6 +324,20 @@ function App() {
       }
     }
   }, [employees]);
+
+  // --- MONITORING INTEGRATION ---
+  // Identify user in Sentry and PostHog when they sign in
+  useEffect(() => {
+    if (isSignedIn && authUser) {
+      identifyUserInMonitoring({
+        id: authUser.id,
+        email: authUser.primaryEmailAddress?.emailAddress,
+        firstName: authUser.firstName,
+        lastName: authUser.lastName,
+        fullName: authUser.fullName,
+      });
+    }
+  }, [isSignedIn, authUser]);
 
   // --- REFRESH/RELOAD DATA FUNCTION ---
   // Exposed function to reload all data from the database (used by import after reset/import)

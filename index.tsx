@@ -3,11 +3,40 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 import { DarkModeProvider } from './components/DarkModeProvider';
+import { PostHogProvider } from './components/providers/PostHogProvider';
 import { ClerkProvider } from '@clerk/clerk-react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import GustoSuccessPage from './components/pages/gusto-success';
 import { SignIn } from '@clerk/clerk-react';
 import HomeownerSignUpPage from './components/pages/homeowner-sign-up';
+import MaintenancePage from './src/pages/MaintenancePage';
+
+// Initialize Sentry before any other code runs
+import { initializeSentry } from './sentry.config';
+initializeSentry();
+
+const isMaintenance = import.meta.env.VITE_MAINTENANCE_MODE === 'true';
+
+const getMaintenanceBypass = (): boolean => {
+  // Optional bypass:
+  // - Visit with `?admin=true` once to set a localStorage flag
+  // - Or set the localStorage flag directly
+  // LocalStorage key name is intentionally app-specific to avoid collisions.
+  const BYPASS_KEY = 'cascade_maintenance_bypass';
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('admin') === 'true') {
+      localStorage.setItem(BYPASS_KEY, 'true');
+      return true;
+    }
+    return localStorage.getItem(BYPASS_KEY) === 'true';
+  } catch {
+    return false;
+  }
+};
+
+const maintenanceBypass = getMaintenanceBypass();
+const shouldRenderApp = !(isMaintenance && !maintenanceBypass);
 
 // Load fonts locally (avoids render-blocking Google Fonts CSS)
 // Use latin-only subsets to avoid shipping dozens of font files.
@@ -32,60 +61,70 @@ console.log('✅ React root created');
 // Get Clerk publishable key from environment variables
 // Vite automatically loads .env.local with highest priority
 // This will use the production key from .env.local if present
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const PUBLISHABLE_KEY = shouldRenderApp
+  ? import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+  : undefined;
 
-if (!PUBLISHABLE_KEY) {
-  throw new Error("Missing Clerk Publishable Key. Please set VITE_CLERK_PUBLISHABLE_KEY in your .env.local file.");
+if (shouldRenderApp && !PUBLISHABLE_KEY) {
+  throw new Error(
+    'Missing Clerk Publishable Key. Please set VITE_CLERK_PUBLISHABLE_KEY in your .env.local file.'
+  );
 }
 
-// Log that we're using Clerk (without exposing the key)
-console.log('✅ Clerk configured with publishable key from environment');
+if (shouldRenderApp) {
+  // Log that we're using Clerk (without exposing the key)
+  console.log('✅ Clerk configured with publishable key from environment');
+}
 
 console.log('✅ Starting app render...');
 root.render(
   <React.StrictMode>
     <ErrorBoundary>
-      <ClerkProvider 
-        publishableKey={PUBLISHABLE_KEY} 
-        afterSignOutUrl="/"
-        signInFallbackRedirectUrl="/"
-        signUpFallbackRedirectUrl="/"
-        appearance={{
-          elements: {
-            rootBox: 'w-full',
-            modalContent: 'bg-surface dark:bg-gray-800',
-            formButtonPrimary: 'bg-primary hover:bg-primary/90 text-primary-on',
-            formFieldInput: 'bg-surface-container dark:bg-gray-700 border-surface-outline-variant text-surface-on',
-            footerActionLink: 'text-primary',
-            socialButtonsBlockButton: 'hidden', // Hide social login buttons
-            dividerLine: 'hidden', // Hide divider
-            dividerText: 'hidden', // Hide divider text
-          }
-        }}
-      >
-        <DarkModeProvider>
-          <BrowserRouter>
-            <Routes>
-              {/* Public routes */}
-              <Route
-                path="/sign-in/*"
-                element={<SignIn routing="path" path="/sign-in" />}
-              />
-              <Route
-                path="/sign-up/*"
-                element={<HomeownerSignUpPage />}
-              />
-              <Route path="/gusto-success" element={<GustoSuccessPage />} />
+      {isMaintenance && !maintenanceBypass ? (
+        <MaintenancePage />
+      ) : (
+        <ClerkProvider
+          publishableKey={PUBLISHABLE_KEY!}
+          afterSignOutUrl="/"
+          signInFallbackRedirectUrl="/"
+          signUpFallbackRedirectUrl="/"
+          appearance={{
+            elements: {
+              rootBox: 'w-full',
+              modalContent: 'bg-surface dark:bg-gray-800',
+              formButtonPrimary: 'bg-primary hover:bg-primary/90 text-primary-on',
+              formFieldInput:
+                'bg-surface-container dark:bg-gray-700 border-surface-outline-variant text-surface-on',
+              footerActionLink: 'text-primary',
+              socialButtonsBlockButton: 'hidden', // Hide social login buttons
+              dividerLine: 'hidden', // Hide divider
+              dividerText: 'hidden', // Hide divider text
+            },
+          }}
+        >
+          <DarkModeProvider>
+            <BrowserRouter>
+              <PostHogProvider>
+                <Routes>
+                  {/* Public routes */}
+                  <Route
+                    path="/sign-in/*"
+                    element={<SignIn routing="path" path="/sign-in" />}
+                  />
+                  <Route path="/sign-up/*" element={<HomeownerSignUpPage />} />
+                  <Route path="/gusto-success" element={<GustoSuccessPage />} />
 
-              {/* Protected / main app */}
-              <Route path="/*" element={<App />} />
+                  {/* Protected / main app */}
+                  <Route path="/*" element={<App />} />
 
-              {/* Catch-all */}
-              <Route path="*" element={<Navigate to="/sign-in" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </DarkModeProvider>
-      </ClerkProvider>
+                  {/* Catch-all */}
+                  <Route path="*" element={<Navigate to="/sign-in" replace />} />
+                </Routes>
+              </PostHogProvider>
+            </BrowserRouter>
+          </DarkModeProvider>
+        </ClerkProvider>
+      )}
     </ErrorBoundary>
   </React.StrictMode>
 );

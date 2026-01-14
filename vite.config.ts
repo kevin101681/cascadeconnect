@@ -2,6 +2,7 @@
 import { defineConfig, loadEnv, Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 import path from 'path';
 import fs from 'fs';
 
@@ -68,6 +69,36 @@ export default defineConfig(({ mode }) => {
     plugins: [
       serveStaticHtml(),
       react(),
+      
+      // Sentry plugin for source maps and release tracking
+      // Only run in production builds when auth token is available
+      env.SENTRY_AUTH_TOKEN && mode === 'production' && sentryVitePlugin({
+        org: env.SENTRY_ORG,
+        project: env.SENTRY_PROJECT,
+        authToken: env.SENTRY_AUTH_TOKEN,
+        
+        // Upload source maps for better error tracking
+        sourcemaps: {
+          assets: './dist/**',
+          ignore: ['node_modules'],
+          filesToDeleteAfterUpload: ['./dist/**/*.map'], // Delete maps after upload for security
+        },
+        
+        // Release configuration
+        release: {
+          name: env.VITE_SENTRY_RELEASE || 'cascade-connect@1.0.0',
+          setCommits: {
+            auto: true, // Automatically associate commits
+          },
+        },
+        
+        // Debug output
+        debug: false,
+        
+        // Telemetry
+        telemetry: false,
+      }),
+      
       VitePWA({
         registerType: 'autoUpdate',
         // We'll register the Service Worker ourselves after first paint (see index.tsx),

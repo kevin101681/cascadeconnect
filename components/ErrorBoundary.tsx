@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import * as Sentry from '@sentry/react';
 
 interface Props {
   children: ReactNode;
@@ -7,20 +8,34 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  eventId: string | null;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
-    error: null
+    error: null,
+    eventId: null
   };
 
   public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, eventId: null };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+    
+    // Send error to Sentry and get the event ID
+    const eventId = Sentry.captureException(error, {
+      contexts: {
+        react: {
+          componentStack: errorInfo.componentStack,
+        },
+      },
+    });
+    
+    // Store event ID for user feedback
+    this.setState({ eventId });
   }
 
   public render() {
@@ -65,22 +80,48 @@ class ErrorBoundary extends Component<Props, State> {
                 </pre>
               </details>
             )}
-            <button
-              onClick={() => window.location.reload()}
-              style={{
-                marginTop: '20px',
-                padding: '12px 24px',
-                backgroundColor: '#3c6b80',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '16px',
-                fontWeight: '500'
-              }}
-            >
-              Refresh Page
-            </button>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '20px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => window.location.reload()}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#3c6b80',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '16px',
+                  fontWeight: '500'
+                }}
+              >
+                Refresh Page
+              </button>
+              
+              {this.state.eventId && (
+                <button
+                  onClick={() => {
+                    Sentry.showReportDialog({ 
+                      eventId: this.state.eventId || undefined,
+                      title: 'It looks like we\'re having issues.',
+                      subtitle: 'Our team has been notified, but you can help us fix this faster.',
+                      subtitle2: 'If you\'d like to help, tell us what happened below.',
+                    });
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    backgroundColor: '#ffffff',
+                    color: '#3c6b80',
+                    border: '2px solid #3c6b80',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontWeight: '500'
+                  }}
+                >
+                  Report Feedback
+                </button>
+              )}
+            </div>
           </div>
         </div>
       );
