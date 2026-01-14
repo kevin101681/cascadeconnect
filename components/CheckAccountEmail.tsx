@@ -34,7 +34,15 @@ type LookupState =
   | { status: 'success'; maskedEmail: string }
   | { status: 'error'; message: string };
 
-export function CheckAccountEmail() {
+type CheckAccountEmailProps = {
+  /**
+   * Optional custom label for the trigger (renders as a link-style button).
+   * Useful for placing this inline inside other copy.
+   */
+  triggerText?: string;
+};
+
+export function CheckAccountEmail({ triggerText = 'Forgot which email to use?' }: CheckAccountEmailProps) {
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<LookupState>({ status: 'idle' });
 
@@ -98,10 +106,10 @@ export function CheckAccountEmail() {
     <>
       <button
         type="button"
-        className="text-sm text-primary hover:underline underline-offset-4"
+        className="cursor-pointer text-sm text-blue-600 hover:underline underline-offset-4"
         onClick={() => setOpen(true)}
       >
-        Forgot which email to use?
+        {triggerText}
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
