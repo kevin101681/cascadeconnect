@@ -10,7 +10,7 @@
  */
 
 import React, { Suspense, lazy, useEffect, useState, useCallback, useRef } from 'react';
-import { X, Loader2, Plus } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import { createPortal } from 'react-dom';
 
 interface InvoicesModalProps {
@@ -140,57 +140,26 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
         " 
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header - COMPACT & STANDARDIZED */}
-        <div className="flex items-center justify-between px-6 h-16 border-b border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
-          <h2 className="text-xl font-semibold text-surface-on dark:text-gray-100">
-            CBS Books - Invoices
-          </h2>
-          <div className="flex items-center gap-2">
-            {/* New Invoice Button - Compact Pill Outline */}
-            <button
-              onClick={() => {
-                // Dispatch event to trigger invoice creation in CBS Books
-                window.dispatchEvent(new Event('cbsbooks-create-invoice'));
-              }}
-              style={{
-                height: '36px',
-                padding: '0 16px',
-                backgroundColor: "white",
-                color: "#3c6b80",
-                border: "2px solid #3c6b80",
-                borderRadius: "9999px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                fontSize: "0.875rem",
-                fontWeight: "500"
-              }}
-              className="hover:bg-gray-50 transition-colors"
-              title="Create new invoice"
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden md:inline">New Invoice</span>
-            </button>
-            {/* Close Button */}
-            <button
-              ref={closeButtonRef}
-              onClick={onClose}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
-              title="Close (Esc)"
-              aria-label="Close invoices modal"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
+        {/* Accessible title (visual title is inside the left column in CBS Books) */}
+        <h2 id="invoices-modal-title" className="sr-only">
+          CBS Books - Invoices
+        </h2>
+
+        {/* Floating close button (does not affect split-pane divider height) */}
+        <button
+          ref={closeButtonRef}
+          onClick={onClose}
+          className="absolute right-4 top-4 z-20 p-2 rounded-full bg-white/90 hover:bg-white shadow-sm border border-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
+          title="Close (Esc)"
+          aria-label="Close invoices modal"
+        >
+          <X className="h-5 w-5" />
+        </button>
         
         {/* Content Area - Scrollable with max height constraint */}
         <div 
           className="
             flex-1 overflow-y-auto overflow-x-hidden
-            /* Ensure content scrolls inside modal, not the modal itself */
-            max-h-[calc(100vh-80px)] md:max-h-[calc(90vh-80px)]
             
             /* Higher z-index context for nested modals/pickers */
             relative isolate

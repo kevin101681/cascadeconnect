@@ -113,6 +113,13 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
             ) : (
               <div>
                 <h2 className="text-xl font-medium text-surface-on dark:text-gray-100 mb-4">Create Account</h2>
+                <p className="text-sm text-surface-on-variant dark:text-gray-400 mb-3">
+                  Creating your account? Enter the email address from your invitation.
+                  <br />
+                  <span className="text-blue-600 cursor-pointer underline hover:text-blue-700">
+                    <CheckAccountEmail triggerText="Forgot which email to use?" />
+                  </span>
+                </p>
                 <CustomSignUp 
                   onSuccess={() => {
                     setShowSignUp(false);
@@ -150,14 +157,7 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
         </div>
       </div>
 
-      {/* Account Email Lookup Helper - Only show on Sign Up */}
-      <SignedOut>
-        {showSignUp && (
-          <div className="w-full max-w-md mt-4">
-            <CheckAccountEmail />
-          </div>
-        )}
-      </SignedOut>
+      {/* Keep the email lookup link inside the sign-up header area (no below-card helper). */}
       
       {/* Development-Only: Skip Login Button (only shows when running locally) */}
       {(typeof window !== 'undefined' && (

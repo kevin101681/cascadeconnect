@@ -1143,12 +1143,12 @@ export const Invoices: React.FC<InvoicesProps> = ({
   };
 
   // Reusable Form Render Logic
-  const renderInvoiceForm = (isInline: boolean) => {
+  const renderInvoiceForm = () => {
       const items = currentInvoice.items || [];
       const total = items.reduce((sum, i) => sum + i.amount, 0);
       
       return (
-        <div className={isInline ? "pt-4" : "space-y-4"}>
+        <div className="space-y-4">
             {/* Form Grid (responsive for narrow right-pane) */}
             <div className="grid min-w-0 grid-cols-1 xl:grid-cols-2 gap-4">
                 <div className="relative">
@@ -1327,54 +1327,6 @@ export const Invoices: React.FC<InvoicesProps> = ({
                 )}
             </div>
 
-            <div className="flex flex-col xl:flex-row justify-between items-center pt-2 gap-4 min-w-0">
-                <div className="h-9 px-6 rounded-full bg-white border-2 border-primary text-primary text-sm font-medium flex items-center justify-center">Total: ${total.toFixed(0)}</div>
-                <div className="flex flex-wrap gap-2 w-full xl:w-auto min-w-0">
-                    <button 
-                        onClick={() => {
-                          if (isInline) {
-                            setExpandedId(null);
-                          } else {
-                            setIsCreating(false);
-                            updateSearchParams({ invoiceId: null, view: null }); // Close panel via URL
-                          }
-                          setBuilderQuery('');
-                          setShowBuilderDropdown(false);
-                        }} 
-                        disabled={isSaving} 
-                        className="flex-1 xl:flex-none h-9 px-6 rounded-full bg-white border-2 border-primary text-primary hover:bg-primary/10 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                    >
-                        Cancel
-                    </button>
-                    <button 
-                        onClick={handleSaveAndEmail} 
-                        disabled={isSaving}
-                        className="flex-1 xl:flex-none h-9 px-6 rounded-full bg-white border-2 border-primary text-primary hover:bg-primary/10 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        title="Save invoice and send via email"
-                    >
-                        {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <Mail size={16} />}
-                        {isSaving ? 'Saving...' : 'Save & Email'}
-                    </button>
-                    <button 
-                        onClick={handleSaveAndMarkSent} 
-                        disabled={isSaving}
-                        className="flex-1 xl:flex-none h-9 px-6 rounded-full bg-white border-2 border-gray-400 text-gray-700 hover:bg-gray-50 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                        title="Save invoice and mark as sent (without emailing)"
-                    >
-                        {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : <Check size={16} />}
-                        {isSaving ? 'Saving...' : 'Save & Mark Sent'}
-                    </button>
-                    <button 
-                        onClick={handleSave} 
-                        disabled={isSaving}
-                        className="flex-1 xl:flex-none h-9 px-6 rounded-full bg-white border-2 border-primary text-primary hover:bg-primary/10 font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                    >
-                        {isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : null}
-                        {isSaving ? 'Saving...' : 'Save'}
-                    </button>
-                </div>
-            </div>
-            
             {/* Calendar Pickers */}
             {showDatePicker && (
               <CalendarPicker
@@ -1713,6 +1665,52 @@ export const Invoices: React.FC<InvoicesProps> = ({
   const showEditInvoice = !!selectedInvoiceId;
   const showRightPanel = showNewInvoice || showEditInvoice;
 
+  const closeRightPanel = () => {
+    setIsCreating(false);
+    updateSearchParams({ invoiceId: null, view: null });
+    setCurrentInvoice({});
+    setBuilderQuery('');
+    setShowBuilderDropdown(false);
+  };
+
+  const formTotal = (currentInvoice.items || []).reduce((sum, i) => sum + i.amount, 0);
+  const rightPanelFooter = (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="text-sm font-medium text-surface-on dark:text-gray-100">
+        Total: <span className="font-semibold">${formTotal.toFixed(0)}</span>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        <Button variant="outline" onClick={closeRightPanel} disabled={isSaving}>
+          Cancel
+        </Button>
+        <Button
+          variant="outline"
+          onClick={handleSaveAndEmail}
+          disabled={isSaving}
+          icon={isSaving ? <Loader2 className="animate-spin" /> : <Mail size={16} />}
+        >
+          {isSaving ? 'Saving...' : 'Save & Email'}
+        </Button>
+        <Button
+          variant="outline"
+          onClick={handleSaveAndMarkSent}
+          disabled={isSaving}
+          icon={isSaving ? <Loader2 className="animate-spin" /> : <Check size={16} />}
+        >
+          {isSaving ? 'Saving...' : 'Save & Mark Sent'}
+        </Button>
+        <Button
+          onClick={handleSave}
+          disabled={isSaving}
+          icon={isSaving ? <Loader2 className="animate-spin" /> : undefined}
+        >
+          {isSaving ? 'Saving...' : 'Save'}
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="relative h-full min-h-0">
       {/* Global (unconditional) UI elements - keep out of split-pane grid */}
@@ -1935,36 +1933,32 @@ export const Invoices: React.FC<InvoicesProps> = ({
         </div>
       )}
 
-      <div className="grid min-w-0 grid-cols-1 md:grid-cols-[384px_1fr] h-full min-h-0 overflow-hidden">
+      <div className="grid min-w-0 grid-cols-1 md:grid-cols-[400px_1fr] h-full min-h-0 overflow-hidden">
       {/* LEFT COLUMN (List) */}
       <div
-        className={`flex min-w-0 flex-col min-h-0 border-r border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 ${
+        className={`flex min-w-0 flex-col min-h-0 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 ${
           showRightPanel ? 'hidden md:flex' : 'flex'
         }`}
       >
-        <div className="sticky top-0 z-20 bg-surface dark:bg-gray-800 border-b border-surface-outline-variant dark:border-gray-700">
-          <div className="px-4 py-3 md:p-4 flex items-center justify-between gap-3">
-            <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2 min-w-0">
+        <div className="sticky top-0 z-20 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+          <div className="p-6 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <h1 className="text-2xl font-bold text-surface-on dark:text-gray-100 truncate">
+                Invoices
+              </h1>
               {filteredInvoices.length > 0 && (
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-primary text-primary bg-primary/10 text-xs font-medium flex-shrink-0">
+                <span className="inline-flex items-center justify-center h-7 min-w-7 px-2 rounded-full border border-primary text-primary bg-primary/10 text-xs font-semibold flex-shrink-0">
                   {filteredInvoices.length}
                 </span>
               )}
-              <span className="truncate">Invoices</span>
-            </h3>
+            </div>
 
-            <Button
-              variant="outline"
-              onClick={handleCreate}
-              icon={<Plus size={16} />}
-              className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:!text-xs shrink-0"
-            >
-              <span className="hidden sm:inline">New Invoice</span>
-              <span className="sm:hidden">New</span>
+            <Button variant="outline" onClick={handleCreate} icon={<Plus size={16} />}>
+              New Invoice
             </Button>
           </div>
 
-          <div className="px-4 pb-4 space-y-3">
+          <div className="px-6 pb-6 space-y-3">
             <div className="hidden md:block">
               <TabBar activeView="invoices" onNavigate={onNavigate} />
             </div>
@@ -2083,14 +2077,12 @@ export const Invoices: React.FC<InvoicesProps> = ({
           <InvoicePanel
             title={selectedInvoice ? `Invoice ${selectedInvoice.invoiceNumber}` : 'Invoice'}
             onBack={() => {
-              updateSearchParams({ invoiceId: null, view: null });
-              setCurrentInvoice({});
-              setBuilderQuery('');
-              setShowBuilderDropdown(false);
+              closeRightPanel();
             }}
+            footer={selectedInvoice ? rightPanelFooter : undefined}
           >
             {selectedInvoice ? (
-              renderInvoiceForm(false)
+              renderInvoiceForm()
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center text-surface-on-variant dark:text-gray-400">
                 <p className="text-sm font-medium">Invoice not found.</p>
@@ -2101,13 +2093,11 @@ export const Invoices: React.FC<InvoicesProps> = ({
           <InvoicePanel
             title="New Invoice"
             onBack={() => {
-              updateSearchParams({ invoiceId: null, view: null });
-              setCurrentInvoice({});
-              setBuilderQuery('');
-              setShowBuilderDropdown(false);
+              closeRightPanel();
             }}
+            footer={rightPanelFooter}
           >
-            {renderInvoiceForm(false)}
+            {renderInvoiceForm()}
           </InvoicePanel>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-surface-on-variant dark:text-gray-400 gap-2 bg-white dark:bg-gray-900">
