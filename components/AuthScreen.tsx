@@ -113,13 +113,15 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
             ) : (
               <div>
                 <h2 className="text-xl font-medium text-surface-on dark:text-gray-100 mb-4">Create Account</h2>
-                <p className="text-sm text-surface-on-variant dark:text-gray-400 mb-3">
-                  Creating your account? Enter the email address from your invitation.
-                  <br />
-                  <span className="text-blue-600 cursor-pointer underline hover:text-blue-700">
-                    <CheckAccountEmail triggerText="Forgot which email to use?" />
-                  </span>
-                </p>
+                <div className="mb-4 rounded-lg border border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 p-4">
+                  <p className="text-sm text-surface-on dark:text-gray-100">
+                    Creating your account? Enter the email address from your invitation.
+                    <br />
+                    <span className="text-blue-600 cursor-pointer underline hover:text-blue-700">
+                      <CheckAccountEmail triggerText="Forgot which email to use?" />
+                    </span>
+                  </p>
+                </div>
                 <CustomSignUp 
                   onSuccess={() => {
                     setShowSignUp(false);

@@ -194,12 +194,6 @@ const CustomSignUp: React.FC<CustomSignUpProps> = ({ onSuccess, onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="mb-4 p-4 bg-primary/10 dark:bg-primary/20 border border-primary/30 rounded-lg">
-        <p className="text-sm text-surface-on dark:text-gray-100">
-          <strong>Creating your account?</strong> Enter the email address from your invitation to link your account.
-        </p>
-      </div>
-
       <div>
         <label htmlFor="firstName" className="block text-sm font-medium text-surface-on dark:text-gray-100 mb-1">
           First Name
