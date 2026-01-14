@@ -1933,145 +1933,172 @@ export const Invoices: React.FC<InvoicesProps> = ({
         </div>
       )}
 
-      <div className="grid min-w-0 grid-cols-1 md:grid-cols-[400px_1fr] h-full min-h-0 overflow-hidden">
-      {/* LEFT COLUMN (List) */}
-      <div
-        className={`flex min-w-0 flex-col min-h-0 border-r border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 ${
-          showRightPanel ? 'hidden md:flex' : 'flex'
-        }`}
-      >
-        {/* HEADER (Clone Warranty Claims header classes) */}
-        <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2 min-w-0">
-              {filteredInvoices.length > 0 && (
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-primary text-primary bg-primary/10 text-xs font-medium flex-shrink-0">
+      {/* The "Modal" Frame (fixed height + overflow clip) */}
+      <div className="grid grid-cols-1 md:grid-cols-[400px_1fr] h-[85vh] w-full bg-white rounded-xl overflow-hidden shadow-2xl border border-gray-200">
+        {/* LEFT COLUMN */}
+        <div
+          className={`flex flex-col h-full min-h-0 border-r border-gray-200 bg-white ${
+            showRightPanel ? 'hidden md:flex' : 'flex'
+          }`}
+        >
+          {/* HEADER SECTION */}
+          <div className="p-5 pb-2 shrink-0">
+            {/* Row 1: Title/Badge/Button */}
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full border text-xs font-medium text-gray-600 flex-shrink-0">
                   {filteredInvoices.length}
                 </span>
-              )}
-              <span className="truncate">Invoices</span>
-            </h3>
+                <h1 className="text-xl font-bold text-gray-900 truncate">Invoices</h1>
+              </div>
+              <Button variant="outline" onClick={handleCreate} className="shrink-0">
+                New Invoice
+              </Button>
+            </div>
+
+            {/* Row 2: Status Filters */}
+            <div className="flex gap-2 mb-3 overflow-x-auto">
+              {(['all', 'draft', 'sent', 'paid'] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setStatusFilter(s)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+                    statusFilter === s
+                      ? 'border border-primary text-primary bg-primary/10'
+                      : 'bg-gray-100 text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  {s.charAt(0).toUpperCase() + s.slice(1)}
+                </button>
+              ))}
+            </div>
+
+            {/* Divider */}
+            <div className="h-px bg-gray-200 my-3" />
+
+            {/* Row 3: RESTORED NAV TABS */}
+            <div className="overflow-x-auto pb-2">
+              <TabBar activeView="invoices" onNavigate={onNavigate} />
+            </div>
           </div>
 
-          {/* Button Right (outline, no icon; match Warranty sizing) */}
-          <Button
-            variant="outline"
-            onClick={handleCreate}
-            className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
+          {/* SCROLLABLE LIST */}
+          <div
+            className="flex-1 min-h-0 overflow-y-auto bg-gray-50/50 p-4"
+            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
           >
-            <span className="hidden sm:inline">New Invoice</span>
-            <span className="sm:hidden">New</span>
-          </Button>
-        </div>
-
-        {/* Filter Pills (clone Warranty pill classes + spacing) */}
-        <div className="px-4 py-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50 bg-surface dark:bg-gray-800">
-          <div className="flex items-center gap-2">
-            {(['all', 'draft', 'sent', 'paid'] as const).map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setStatusFilter(s)}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
-                  statusFilter === s
-                    ? 'border border-primary text-primary bg-primary/10'
-                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
-                }`}
-              >
-                {s.charAt(0).toUpperCase() + s.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div
-          className="flex-1 min-h-0 overflow-y-auto bg-surface-container/30 dark:bg-gray-800/50 px-2 py-4 md:p-4"
-          style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
-        >
-          {visibleInvoices.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
-              <span className="text-sm">No invoices found.</span>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-3">
-              {visibleInvoices.map((inv) => {
-                let cardStatus: 'Draft' | 'Sent' | 'Overdue' | 'Paid' = 'Draft';
-                if (inv.status === 'paid') {
-                  cardStatus = 'Paid';
-                } else if (inv.status === 'sent') {
-                  const today = new Date();
-                  const dueDate = new Date(inv.dueDate);
-                  cardStatus = dueDate < today ? 'Overdue' : 'Sent';
-                }
-
-                return (
-                  <InvoiceCard
-                    key={inv.id}
-                    invoiceNumber={inv.invoiceNumber}
-                    status={cardStatus}
-                    amount={`$${inv.total.toFixed(2)}`}
-                    createdDate={formatDateMobile(inv.date)}
-                    dueDate={formatDateMobile(inv.dueDate)}
-                    builder={inv.clientName}
-                    address={inv.projectDetails}
-                    checkNumber={inv.checkNumber}
-                    onClick={() => updateSearchParams({ invoiceId: inv.id, view: null })}
-                    onMarkPaid={(checkNum) => {
-                      const today = getLocalTodayDate();
-                      onUpdate({ ...inv, status: 'paid' as const, datePaid: today, checkNumber: checkNum });
-                    }}
-                    onCheckNumberUpdate={(checkNum) => onUpdate({ ...inv, checkNumber: checkNum })}
-                    onEmail={() => handlePrepareEmail(inv)}
-                    onDownload={() => handleDownloadPDF(inv)}
-                    onDelete={() => handleDeleteInvoice(inv.id)}
-                  />
-                );
-              })}
-
-              {visibleInvoices.length < filteredInvoices.length && (
-                <div className="pt-2 pb-6 flex justify-center">
-                  <Button variant="tonal" onClick={handleShowMore}>
-                    Show More
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* RIGHT COLUMN (Panel) */}
-      <div className={`min-h-0 min-w-0 overflow-hidden ${showRightPanel ? 'flex' : 'hidden md:flex'} flex-col`}>
-        {selectedInvoiceId ? (
-          <InvoicePanel
-            onBack={() => {
-              closeRightPanel();
-            }}
-            footer={selectedInvoice ? rightPanelFooter : undefined}
-          >
-            {selectedInvoice ? (
-              renderInvoiceForm()
+            {visibleInvoices.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-48 text-gray-500 gap-2">
+                <span className="text-sm">No invoices found.</span>
+              </div>
             ) : (
-              <div className="flex flex-col items-center justify-center h-full text-center text-surface-on-variant dark:text-gray-400">
-                <p className="text-sm font-medium">Invoice not found.</p>
+              <div className="grid grid-cols-1 gap-3">
+                {visibleInvoices.map((inv) => {
+                  let cardStatus: 'Draft' | 'Sent' | 'Overdue' | 'Paid' = 'Draft';
+                  if (inv.status === 'paid') {
+                    cardStatus = 'Paid';
+                  } else if (inv.status === 'sent') {
+                    const today = new Date();
+                    const dueDate = new Date(inv.dueDate);
+                    cardStatus = dueDate < today ? 'Overdue' : 'Sent';
+                  }
+
+                  return (
+                    <InvoiceCard
+                      key={inv.id}
+                      invoiceNumber={inv.invoiceNumber}
+                      status={cardStatus}
+                      amount={`$${inv.total.toFixed(2)}`}
+                      createdDate={formatDateMobile(inv.date)}
+                      dueDate={formatDateMobile(inv.dueDate)}
+                      builder={inv.clientName}
+                      address={inv.projectDetails}
+                      checkNumber={inv.checkNumber}
+                      onClick={() => updateSearchParams({ invoiceId: inv.id, view: null })}
+                      onMarkPaid={(checkNum) => {
+                        const today = getLocalTodayDate();
+                        onUpdate({ ...inv, status: 'paid' as const, datePaid: today, checkNumber: checkNum });
+                      }}
+                      onCheckNumberUpdate={(checkNum) => onUpdate({ ...inv, checkNumber: checkNum })}
+                      onEmail={() => handlePrepareEmail(inv)}
+                      onDownload={() => handleDownloadPDF(inv)}
+                      onDelete={() => handleDeleteInvoice(inv.id)}
+                    />
+                  );
+                })}
+
+                {visibleInvoices.length < filteredInvoices.length && (
+                  <div className="pt-2 pb-6 flex justify-center">
+                    <Button variant="tonal" onClick={handleShowMore}>
+                      Show More
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
-          </InvoicePanel>
-        ) : showNewInvoice ? (
-          <InvoicePanel
-            onBack={() => {
-              closeRightPanel();
-            }}
-            footer={rightPanelFooter}
-          >
-            {renderInvoiceForm()}
-          </InvoicePanel>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-surface-on-variant dark:text-gray-400 gap-2 bg-white dark:bg-gray-900">
-            <p className="text-sm font-medium">Select an invoice to view details</p>
           </div>
-        )}
-      </div>
+        </div>
+
+        {/* RIGHT COLUMN */}
+        <div className={`${showRightPanel ? 'flex' : 'hidden md:flex'} flex-col h-full min-h-0 bg-white relative`}>
+          {/* Mobile back row */}
+          <div className="md:hidden shrink-0 h-16 px-4 border-b border-gray-200 flex items-center">
+            <button
+              type="button"
+              onClick={closeRightPanel}
+              className="p-2 -ml-2 text-gray-600 hover:bg-gray-50 rounded-full"
+              aria-label="Back"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* SCROLLABLE FORM */}
+          <div
+            className="flex-1 min-h-0 overflow-y-auto p-8"
+            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+          >
+            {selectedInvoiceId ? (
+              selectedInvoice ? (
+                renderInvoiceForm()
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
+                  <p className="text-sm font-medium">Invoice not found.</p>
+                </div>
+              )
+            ) : showNewInvoice ? (
+              renderInvoiceForm()
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-gray-500 gap-2">
+                <p className="text-sm font-medium">Select an invoice to view details</p>
+              </div>
+            )}
+          </div>
+
+          {/* STICKY FOOTER (only when a panel is open) */}
+          {showRightPanel ? (
+            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center z-10 shrink-0">
+              <div className="text-sm font-medium text-gray-700">
+                Total: <span className="font-semibold">${formTotal.toFixed(0)}</span>
+              </div>
+              <div className="flex items-center gap-3 flex-wrap justify-end">
+                <Button variant="outline" onClick={closeRightPanel} disabled={isSaving}>
+                  Cancel
+                </Button>
+                <Button variant="outline" onClick={handleSaveAndEmail} disabled={isSaving}>
+                  Save & Email
+                </Button>
+                <Button variant="outline" onClick={handleSaveAndMarkSent} disabled={isSaving}>
+                  Save & Mark Sent
+                </Button>
+                <Button onClick={handleSave} disabled={isSaving}>
+                  Save
+                </Button>
+              </div>
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );
