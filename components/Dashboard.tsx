@@ -33,8 +33,8 @@ const HomeownerWarrantyGuide = React.lazy(() =>
   import('./HomeownerWarrantyGuide').then((m) => ({ default: m.HomeownerWarrantyGuide }))
 );
 
-// Import CBS Books App directly for inline rendering in tab
-const CBSBooksApp = React.lazy(() => import('../lib/cbsbooks/App'));
+// Import CBS Books Page (new split-view design - no ghost headers)
+const CBSBooksPageWrapper = React.lazy(() => import('./pages/CBSBooksPageWrapper'));
 // Lazy load heavy components to improve initial load time
 // Add error handling for failed dynamic imports
 const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err => {
@@ -4781,7 +4781,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             )}
 
-            {/* INVOICES Tab - Administrator Only (hidden for employees) */}
+            {/* INVOICES Tab - Administrator Only (hidden for employees) - NO GHOST HEADERS! */}
             {isAdmin && currentUser?.role !== 'Employee' && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
@@ -4790,18 +4790,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
                     {currentTab === 'INVOICES' ? (
-                      <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-[calc(100vh-300px)]">
-                        <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
-                          <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                            Invoices & Billing
-                          </h2>
-                        </div>
-                        <div className="flex-1 overflow-y-auto">
-                          <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
-                            <CBSBooksApp />
-                          </Suspense>
-                        </div>
-                      </div>
+                      <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
+                        <CBSBooksPageWrapper />
+                      </Suspense>
                     ) : (
                       <div className="flex items-center justify-center h-full text-surface-on-variant dark:text-gray-400">
                         Switch to Invoices tab to view
@@ -4812,7 +4803,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             )}
 
-            {/* INVOICES Tab - Administrator Only (hidden for employees) - Duplicate for carousel */}
+            {/* INVOICES Tab - Administrator Only (hidden for employees) - Duplicate for carousel - NO GHOST HEADERS! */}
             {isAdmin && currentUser?.role !== 'Employee' && (
               <div 
                 className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
@@ -4821,18 +4812,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
                     {currentTab === 'INVOICES' ? (
-                      <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-[calc(100vh-300px)]">
-                        <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0 rounded-t-3xl">
-                          <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                            Invoices & Billing
-                          </h2>
-                        </div>
-                        <div className="flex-1 overflow-y-auto">
-                          <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
-                            <CBSBooksApp />
-                          </Suspense>
-                        </div>
-                      </div>
+                      <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
+                        <CBSBooksPageWrapper />
+                      </Suspense>
                     ) : (
                       <div className="flex items-center justify-center h-full text-surface-on-variant dark:text-gray-400">
                         Switch to Invoices tab to view
@@ -4972,41 +4954,9 @@ const Dashboard: React.FC<DashboardProps> = ({
             <AnimatedTabContent tabKey="invoices">
               <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
                 <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                  <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col h-full">
-                    <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex-shrink-0 md:rounded-t-3xl flex items-center justify-between">
-                      <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                        Invoices
-                      </h2>
-                      <button
-                        onClick={() => {
-                          // Trigger new invoice creation in CBSBooksApp
-                          const event = new CustomEvent('cbsbooks-create-invoice');
-                          window.dispatchEvent(event);
-                        }}
-                        style={{
-                          backgroundColor: "white",
-                          color: "#3c6b80",
-                          border: "2px solid #3c6b80",
-                          borderRadius: "9999px",
-                          padding: "8px 16px",
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          fontSize: "0.875rem",
-                          fontWeight: "500"
-                        }}
-                        className="hover:bg-gray-50 transition-opacity"
-                      >
-                        New Invoice
-                      </button>
-                    </div>
-                    <div className="flex-1 overflow-y-auto">
-                      <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
-                        <CBSBooksApp />
-                      </Suspense>
-                    </div>
-                  </div>
+                  <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
+                    <CBSBooksPageWrapper />
+                  </Suspense>
                 </div>
               </div>
             </AnimatedTabContent>
