@@ -177,7 +177,8 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
   const count = getCount();
 
   return (
-    <div className="w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800">
+    <>
+      {/* NOTE: No outer wrapper - parent (CBSBooksPage) provides the wrapper with borders */}
       
       {/* ==================== HEADER ==================== */}
       <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0">
@@ -471,7 +472,7 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
           </div>
         )}
       </div>
-    </div>
+    </>
   );
 };
 

@@ -300,9 +300,9 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
   }
   
   return (
-    <div className="h-full flex flex-col bg-white dark:bg-gray-50">
+    <div className="flex flex-col h-full bg-surface dark:bg-gray-800">
       {/* ==================== HEADER ==================== */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-200 bg-surface-container/30 dark:bg-gray-100/30 flex-shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
         <div>
           <h2 className="text-xl font-normal text-surface-on dark:text-gray-900">
             {editInvoice ? 'Edit Invoice' : 'New Invoice'}
@@ -323,7 +323,10 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
 
       {/* ==================== BODY (Scrollable) ==================== */}
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+        <div 
+          className="flex-1 overflow-y-auto px-6 py-6 space-y-6"
+          style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+        >
           
           {/* Invoice Details Section */}
           <div className="space-y-4">
@@ -699,7 +702,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
         </div>
 
         {/* ==================== FOOTER (Sticky) ==================== */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-surface-outline-variant dark:border-gray-200 bg-white dark:bg-gray-50 flex-shrink-0">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex-shrink-0">
           <Button
             type="button"
             variant="ghost"

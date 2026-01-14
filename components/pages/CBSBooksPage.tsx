@@ -179,14 +179,16 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
   
   // STRICT RULE: NO HEADERS OR TABS ALLOWED HERE.
   // ONLY THE GRID WRAPPER IS ALLOWED.
+  // CLONE WARRANTY CLAIMS LAYOUT EXACTLY (flex-row, no gap, border-r on left)
   return (
     <div className="h-[calc(100vh-4rem)] p-4 md:p-6 lg:p-8 overflow-hidden">
-      <div className="grid grid-cols-12 gap-6 h-full">
+      {/* Wrapper: Match Warranty Claims EXACTLY */}
+      <div className="bg-surface dark:bg-gray-800 rounded-modal border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full min-h-0">
         
         {/* ==================== LEFT COLUMN (Master List) ==================== */}
-        {/* Only show Left Column for Split View tabs */}
+        {/* Clone Warranty: w-full md:w-96, border-r on desktop, flex flex-col */}
         {(activeTab === 'invoices' || activeTab === 'builders') && (
-          <div className="col-span-12 lg:col-span-4 h-full overflow-hidden">
+          <div className="w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800">
             <InvoicesListPanel
               activeTab={activeTab}
               onTabChange={handleTabChange}
@@ -236,7 +238,8 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
         )}
 
         {/* ==================== RIGHT COLUMN (Detail View) ==================== */}
-        <div className={`${(activeTab === 'invoices' || activeTab === 'builders') ? 'col-span-12 lg:col-span-8' : 'col-span-12'} h-full overflow-hidden`}>
+        {/* Clone Warranty: flex-1, flex flex-col, bg-surface */}
+        <div className="flex-1 flex flex-col bg-surface dark:bg-gray-800 min-h-0">
           
           {/* INVOICES TAB - Invoice Form Panel */}
           {activeTab === 'invoices' && (
