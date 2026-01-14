@@ -13,6 +13,7 @@ interface InvoiceCardProps {
   builder?: string;
   address?: string;
   checkNumber?: string;
+  isSelected?: boolean; // NEW: Selected state for split-view
   onClick?: () => void;
   onMarkPaid?: (checkNum: string) => void;
   onCheckNumberUpdate?: (checkNum: string) => void;
@@ -30,6 +31,7 @@ export function InvoiceCard({
   builder,
   address,
   checkNumber = "",
+  isSelected = false, // Default to false
   onClick,
   onMarkPaid,
   onCheckNumberUpdate,
@@ -70,8 +72,12 @@ export function InvoiceCard({
   return (
     <div 
       onClick={onClick}
-      className={`group relative bg-white rounded-card border border-gray-200 p-5 shadow-sm transition-all flex flex-col h-full touch-manipulation ${
-        onClick ? 'cursor-pointer md:hover:shadow-md md:hover:border-blue-300' : ''
+      className={`group relative rounded-card p-5 transition-all flex flex-col h-full touch-manipulation ${
+        onClick ? 'cursor-pointer' : ''
+      } ${
+        isSelected 
+          ? 'bg-blue-50 border-blue-500 shadow-md border-2' 
+          : 'bg-white border border-gray-200 shadow-sm md:hover:shadow-md md:hover:border-blue-300'
       }`}
       style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
     >

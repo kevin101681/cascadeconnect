@@ -16,6 +16,7 @@ import CalendarPicker from './CalendarPicker';
 import { InvoiceCard } from '../../../components/ui/InvoiceCard';
 import { InvoicePanel } from './InvoicePanel';
 import InvoiceFormPanel from '../../../components/InvoiceFormPanel';
+import InvoicesListPanel from '../../../components/InvoicesListPanel';
 
 interface InvoicesProps {
   invoices: Invoice[];
@@ -1985,116 +1986,33 @@ export const Invoices: React.FC<InvoicesProps> = ({
         </div>
       )}
 
+      {/* TabBar Navigation (above the split-view) */}
+      <div className="mb-4 px-2">
+        <TabBar activeView="invoices" onNavigate={onNavigate} />
+      </div>
+
       {/* The "Modal" Frame (fixed height + overflow clip) */}
       <div className="grid grid-cols-1 md:grid-cols-[400px_1fr] h-[85vh] w-full bg-white rounded-xl overflow-hidden shadow-2xl border border-gray-200">
-        {/* LEFT COLUMN */}
-        <div
-          className={`flex flex-col h-full min-h-0 border-r border-gray-200 bg-white ${
-            showRightPanel ? 'hidden md:flex' : 'flex'
-          }`}
-        >
-          {/* HEADER SECTION */}
-          <div className="p-5 pb-2 shrink-0">
-            {/* Row 1: Title/Badge/Button */}
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full border text-xs font-medium text-gray-600 flex-shrink-0">
-                  {filteredInvoices.length}
-                </span>
-                <h1 className="text-xl font-bold text-gray-900 truncate">Invoices</h1>
-              </div>
-              <Button variant="outline" onClick={handleCreate} className="shrink-0">
-                New Invoice
-              </Button>
-            </div>
-
-            {/* Row 2: Status Filters */}
-            <div className="flex gap-2 mb-3 overflow-x-auto">
-              {(['all', 'draft', 'sent', 'paid'] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setStatusFilter(s)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
-                    statusFilter === s
-                      ? 'border border-primary text-primary bg-primary/10'
-                      : 'bg-gray-100 text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
-                </button>
-              ))}
-            </div>
-
-            {/* Divider */}
-            <div className="h-px bg-gray-200 my-3" />
-
-            {/* Row 3: RESTORED NAV TABS */}
-            <div className="overflow-x-auto pb-2">
-              <TabBar activeView="invoices" onNavigate={onNavigate} />
-            </div>
-          </div>
-
-          {/* SCROLLABLE LIST */}
-          <div
-            className="flex-1 min-h-0 overflow-y-auto bg-gray-50/50 p-4"
-            style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
-          >
-            {visibleInvoices.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-48 text-gray-500 gap-2">
-                <span className="text-sm">No invoices found.</span>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-3">
-                {visibleInvoices.map((inv) => {
-                  let cardStatus: 'Draft' | 'Sent' | 'Overdue' | 'Paid' = 'Draft';
-                  if (inv.status === 'paid') {
-                    cardStatus = 'Paid';
-                  } else if (inv.status === 'sent') {
-                    const today = new Date();
-                    const dueDate = new Date(inv.dueDate);
-                    cardStatus = dueDate < today ? 'Overdue' : 'Sent';
-                  }
-
-                  return (
-                    <InvoiceCard
-                      key={inv.id}
-                      invoiceNumber={inv.invoiceNumber}
-                      status={cardStatus}
-                      amount={`$${inv.total.toFixed(2)}`}
-                      createdDate={formatDateMobile(inv.date)}
-                      dueDate={formatDateMobile(inv.dueDate)}
-                      builder={inv.clientName}
-                      address={inv.projectDetails}
-                      checkNumber={inv.checkNumber}
-                      onClick={() => {
-                        // Open panel for editing
-                        setSelectedPanelInvoice(inv);
-                        setShowInvoicePanel(true);
-                      }}
-                      onMarkPaid={(checkNum) => {
-                        const today = getLocalTodayDate();
-                        onUpdate({ ...inv, status: 'paid' as const, datePaid: today, checkNumber: checkNum });
-                      }}
-                      onCheckNumberUpdate={(checkNum) => onUpdate({ ...inv, checkNumber: checkNum })}
-                      onEmail={() => handlePrepareEmail(inv)}
-                      onDownload={() => handleDownloadPDF(inv)}
-                      onDelete={() => handleDeleteInvoice(inv.id)}
-                    />
-                  );
-                })}
-
-                {visibleInvoices.length < filteredInvoices.length && (
-                  <div className="pt-2 pb-6 flex justify-center">
-                    <Button variant="tonal" onClick={handleShowMore}>
-                      Show More
-                    </Button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+        {/* LEFT COLUMN - New InvoicesListPanel */}
+        <InvoicesListPanel
+          invoices={invoices}
+          filteredInvoices={visibleInvoices}
+          onInvoiceSelect={(inv) => {
+            setSelectedPanelInvoice(inv);
+            setShowInvoicePanel(true);
+          }}
+          onCreateNew={handleCreate}
+          selectedInvoiceId={selectedPanelInvoice?.id}
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          onMarkPaid={(inv, checkNum) => {
+            onUpdate({ ...inv, status: 'paid' as const, datePaid: inv.datePaid || getLocalTodayDate(), checkNumber: checkNum });
+          }}
+          onCheckNumberUpdate={(inv, checkNum) => onUpdate({ ...inv, checkNumber: checkNum })}
+          onEmail={(inv) => handlePrepareEmail(inv)}
+          onDownload={(inv) => handleDownloadPDF(inv)}
+          onDelete={(id) => handleDeleteInvoice(id)}
+        />
 
         {/* RIGHT COLUMN - Invoice Form Panel */}
         <div className="flex flex-col h-full min-h-0 bg-white relative">
