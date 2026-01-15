@@ -99,7 +99,7 @@ export const TaskCreationCard: React.FC<TaskCreationCardProps> = ({
         <div className="flex gap-2">
           {onCreateEvalTask && (
             <DropdownButton
-              label="Eval"
+              label="Evaluation"
               variant="outlined"
               className="!h-9 !px-3 !min-w-0 flex-1"
               disabled={!selectedAssignee}

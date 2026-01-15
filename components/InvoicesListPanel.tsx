@@ -227,7 +227,7 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
             className={`px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'invoices'
                 ? 'bg-white dark:bg-gray-600 border border-primary text-primary shadow-sm'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
+                : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
             }`}
           >
             Invoices
@@ -237,7 +237,7 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
             className={`px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'builders'
                 ? 'bg-white dark:bg-gray-600 border border-primary text-primary shadow-sm'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
+                : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
             }`}
           >
             Builders
@@ -247,7 +247,7 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
             className={`px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'p&l'
                 ? 'bg-white dark:bg-gray-600 border border-primary text-primary shadow-sm'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
+                : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
             }`}
           >
             P&L

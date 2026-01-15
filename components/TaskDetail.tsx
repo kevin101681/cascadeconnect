@@ -299,13 +299,13 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
                   {availableClaims.map(claim => {
                     const isSelected = editSelectedClaimIds.includes(claim.id);
                     return (
-                      <div 
-                        key={claim.id} 
-                        className={`flex items-start gap-3 p-3 rounded-lg border transition-all cursor-pointer ${
-                          isSelected 
-                            ? 'bg-surface dark:bg-gray-800 border-primary ring-1 ring-primary' 
+                      <div
+                        key={claim.id}
+                        className={`flex items-start gap-3 p-3 m-0.5 rounded-lg border transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-surface dark:bg-gray-800 border-primary ring-1 ring-primary'
                             : 'bg-surface dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 hover:border-surface-outline dark:hover:border-gray-500'
-                        }`} 
+                        }`}
                         onClick={() => toggleClaimSelection(claim.id)}
                       >
                         <div className={`mt-0.5 w-5 h-5 rounded border flex items-center justify-center transition-colors ${isSelected ? 'bg-primary border-primary text-white' : 'border-surface-outline dark:border-gray-600 bg-white dark:bg-gray-700'}`}>
@@ -369,7 +369,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
       {/* Edit Actions Footer - Sticky */}
       {isEditing && (
         <div className="mt-auto border-t border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800 p-4 flex justify-end gap-2 flex-shrink-0">
-          <Button variant="ghost" onClick={handleCancelEdit}>Cancel</Button>
+          <Button variant="outline" onClick={handleCancelEdit}>Cancel</Button>
           <Button onClick={handleSaveEdit}>Save</Button>
         </div>
       )}

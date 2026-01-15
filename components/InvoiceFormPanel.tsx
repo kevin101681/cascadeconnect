@@ -781,7 +781,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
         <div className="flex items-center justify-between px-6 py-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex-shrink-0">
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             onClick={onCancel}
             disabled={isSaving}
           >

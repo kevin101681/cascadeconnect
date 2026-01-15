@@ -858,7 +858,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
         />
       
         {/* Fixed Footer with buttons */}
-        <div className="flex-none p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end gap-3 flex-wrap">
+        <div className="flex-none px-6 py-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end gap-3 flex-wrap">
           <Button 
             type="button" 
             variant="filled" 

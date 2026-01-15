@@ -3055,11 +3055,11 @@ const Dashboard: React.FC<DashboardProps> = ({
           {/* Search box on desktop only */}
           <div className="hidden md:block p-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-black dark:text-gray-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-500" />
                 <input 
                   type="text" 
                   placeholder="" 
-                  className="w-full bg-white dark:bg-gray-700 rounded-full pl-9 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant dark:placeholder-gray-500 border border-black dark:border-gray-600"
+                  className="w-full bg-white dark:bg-gray-700 rounded-full pl-9 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant dark:placeholder-gray-500 border border-gray-200 dark:border-gray-600"
                 />
              </div>
           </div>
@@ -3704,7 +3704,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       return (
         claimEmail === homeownerEmail &&
         c.status !== ClaimStatus.COMPLETED &&
-        c.status !== ClaimStatus.CLOSED
+        c.status !== ClaimStatus.CLOSED &&
+        c.isReviewed === true
       );
     });
 
@@ -3788,16 +3789,10 @@ const Dashboard: React.FC<DashboardProps> = ({
     // Wrappers for TaskDetail Quick Actions (accept assigneeId parameter)
     const handleScheduleTaskWithAssignee = async (assigneeId: string) => {
       const x = openClaimsForHomeowner.length;
-      const claimLines = openClaimsForHomeowner
-        .map((c) => {
-          const claimRef = c.claimNumber ? `Claim #${c.claimNumber}` : `Claim ${c.id.substring(0, 8)}`;
-          return `- ${claimRef}: ${c.title} (#claims?claimId=${c.id})`;
-        })
-        .join('\n');
 
       await createHomeownerTask({
         title: `Ready to schedule ${x} open claims`,
-        description: `Tags: ${tagsLine}\n\nOpen claims:\n${claimLines || '- (none)'}`,
+        description: `Tags: ${tagsLine}`,
         relatedClaimIds: openClaimsForHomeowner.map((c) => c.id),
         assignedToId: assigneeId,
       });
@@ -4400,7 +4395,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         data-tab={tab}
                         onClick={() => setCurrentTab(tab)}
                         className={[
-                          'shrink-0 inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition-all duration-300',
+                          'flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm transition-all duration-300',
                           // Base state with transparent border
                           'border border-transparent',
                           // Hover state: gray background, raised, shadow

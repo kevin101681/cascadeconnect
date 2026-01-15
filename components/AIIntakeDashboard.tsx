@@ -601,8 +601,8 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                 )}
 
                 {/* Actions */}
-                <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 space-y-3">
-                  {/* Add Note Button */}
+                <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 flex flex-row gap-2">
+                  {/* Note Button */}
                   <button
                     onClick={() => {
                       const callerName = actualSelectedCall.homeownerName || 'Unknown Caller';
@@ -617,10 +617,9 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                         prefilledBody
                       );
                     }}
-                    className="w-full px-4 py-2 bg-primary/10 text-primary border border-primary rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-2 bg-primary/10 text-primary border border-primary rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center"
                   >
-                    <StickyNote className="h-4 w-4" />
-                    Add Note
+                    Note
                   </button>
                   
                   {actualSelectedCall.homeownerId && (
@@ -628,35 +627,36 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                       onClick={() => {
                         handleViewHomeowner(actualSelectedCall.homeownerId);
                       }}
-                      className="w-full px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                      className="flex-1 px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center"
                     >
-                      <ExternalLink className="h-4 w-4" />
                       View Homeowner
                     </button>
                   )}
                   
-                  {/* Call Recording Audio Player */}
+                  {/* Audio Play/Pause Button */}
                   {actualSelectedCall.recordingUrl && (
-                    <div className="mt-4 p-4 border border-surface-outline-variant dark:border-gray-700 rounded-lg bg-surface-container/30 dark:bg-gray-800/30">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Play className="h-4 w-4 text-primary" />
-                        <p className="text-sm font-medium text-surface-on dark:text-gray-200">Call Recording</p>
-                      </div>
-                      <audio 
-                        controls 
-                        src={actualSelectedCall.recordingUrl} 
-                        className="w-full"
-                        preload="metadata"
-                      />
-                      <a
-                        href={actualSelectedCall.recordingUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
-                      >
-                        Open in new tab
-                      </a>
-                    </div>
+                    <audio 
+                      id={`call-audio-${actualSelectedCall.id}`}
+                      src={actualSelectedCall.recordingUrl} 
+                      preload="metadata"
+                      className="hidden"
+                    />
+                  )}
+                  {actualSelectedCall.recordingUrl && (
+                    <button
+                      onClick={() => {
+                        const audio = document.getElementById(`call-audio-${actualSelectedCall.id}`) as HTMLAudioElement;
+                        if (audio.paused) {
+                          audio.play();
+                        } else {
+                          audio.pause();
+                        }
+                      }}
+                      className="px-4 py-2 bg-surface-container dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 text-surface-on dark:text-gray-100 rounded-lg hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+                      title="Play/Pause recording"
+                    >
+                      <Play className="h-4 w-4" />
+                    </button>
                   )}
                 </div>
               </div>
@@ -876,8 +876,8 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
             )}
 
             {/* Actions */}
-            <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 space-y-3">
-              {/* Add Note Button */}
+            <div className="pt-4 border-t border-surface-outline-variant dark:border-gray-700 flex flex-row gap-2">
+              {/* Note Button */}
               <button
                 onClick={() => {
                   const callerName = actualSelectedCall.homeownerName || 'Unknown Caller';
@@ -892,10 +892,9 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                     prefilledBody
                   );
                 }}
-                className="w-full px-4 py-2 bg-primary/10 text-primary border border-primary rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center gap-2"
+                className="flex-1 px-4 py-2 bg-primary/10 text-primary border border-primary rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center"
               >
-                <StickyNote className="h-4 w-4" />
-                Add Note
+                Note
               </button>
               
               {actualSelectedCall.homeownerId && (
@@ -903,35 +902,36 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                   onClick={() => {
                     handleViewHomeowner(actualSelectedCall.homeownerId);
                   }}
-                  className="w-full px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 px-4 py-2 bg-primary text-primary-on rounded-lg hover:bg-primary/90 transition-colors flex items-center justify-center"
                 >
-                  <ExternalLink className="h-4 w-4" />
                   View Homeowner
                 </button>
               )}
               
-              {/* Call Recording Audio Player */}
+              {/* Audio Play/Pause Button */}
               {actualSelectedCall.recordingUrl && (
-                <div className="mt-4 p-4 border border-surface-outline-variant dark:border-gray-700 rounded-lg bg-surface-container/30 dark:bg-gray-800/30">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Play className="h-4 w-4 text-primary" />
-                    <p className="text-sm font-medium text-surface-on dark:text-gray-200">Call Recording</p>
-                  </div>
-                  <audio 
-                    controls 
-                    src={actualSelectedCall.recordingUrl} 
-                    className="w-full"
-                    preload="metadata"
-                  />
-                  <a
-                    href={actualSelectedCall.recordingUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
-                  >
-                    Open in new tab
-                  </a>
-                </div>
+                <audio 
+                  id={`call-audio-mobile-${actualSelectedCall.id}`}
+                  src={actualSelectedCall.recordingUrl} 
+                  preload="metadata"
+                  className="hidden"
+                />
+              )}
+              {actualSelectedCall.recordingUrl && (
+                <button
+                  onClick={() => {
+                    const audio = document.getElementById(`call-audio-mobile-${actualSelectedCall.id}`) as HTMLAudioElement;
+                    if (audio.paused) {
+                      audio.play();
+                    } else {
+                      audio.pause();
+                    }
+                  }}
+                  className="px-4 py-2 bg-surface-container dark:bg-gray-700 border border-surface-outline-variant dark:border-gray-600 text-surface-on dark:text-gray-100 rounded-lg hover:bg-surface-container-high dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+                  title="Play/Pause recording"
+                >
+                  <Play className="h-4 w-4" />
+                </button>
               )}
             </div>
           </div>

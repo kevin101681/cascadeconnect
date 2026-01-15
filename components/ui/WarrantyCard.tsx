@@ -56,7 +56,7 @@ export function WarrantyCard({
           )}
           
           {isReviewed && !isClosed && (
-             <Badge className="text-[10px] h-5 px-1.5 font-medium bg-green-100 text-green-700 hover:bg-green-100 border-0 rounded-md gap-1 flex items-center">
+             <Badge className="text-[10px] h-5 px-1.5 font-medium bg-green-100 text-green-800 hover:bg-green-100 border-0 rounded-md gap-1 flex items-center">
                <CheckCircle2 className="w-3 h-3" /> Reviewed
              </Badge>
           )}
