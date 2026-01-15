@@ -972,12 +972,6 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     ) : (
                       <>
                         <Upload className="h-8 w-8 text-surface-outline-variant dark:text-gray-500" />
-                        <span className="text-sm text-surface-on-variant dark:text-gray-400">
-                          Click to upload or drag and drop
-                        </span>
-                        <span className="text-xs text-surface-on-variant dark:text-gray-500">
-                          Images, PDFs, and documents (max 10MB)
-                        </span>
                       </>
                     )}
                     <span className="text-xs text-surface-on-variant dark:text-gray-400 font-medium">
@@ -1844,6 +1838,14 @@ If this repair work is billable, please let me know prior to scheduling.`);
       
       {/* Footer - Fixed at bottom */}
       <div className="flex-none py-2 px-6 pb-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end space-x-3">
+        <Button
+          type="button"
+          variant="filled"
+          onClick={() => onSendMessage(claim)}
+          className="!h-9"
+        >
+          Message
+        </Button>
         {!isHomeowner && (
           <Button
             type="button"
@@ -1861,9 +1863,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
         {!isHomeowner && (
           <Button 
             type="button" 
-            variant={isReviewed ? "filled" : "outline"}
+            variant="filled"
             onClick={handleToggleReviewed}
-            className={`!h-9 ${isReviewed ? "!bg-green-100 hover:!bg-green-200 dark:!bg-green-900/30 dark:hover:!bg-green-900/40 !text-green-700 dark:!text-green-400" : ""}`}
+            className="!h-9"
           >
             {isReviewed ? 'Reviewed' : 'Process'}
           </Button>

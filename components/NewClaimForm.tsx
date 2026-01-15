@@ -491,19 +491,9 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                   )}
                 </>
               ) : (
-                <>
-                  <Upload className="h-8 w-8 text-surface-outline-variant dark:text-gray-500" />
-                  <span className="text-sm text-surface-on-variant dark:text-gray-400">
-                    Click to upload or drag and drop
-                  </span>
-                  <span className="text-xs text-surface-on-variant dark:text-gray-500">
-                    Images, PDFs, and documents (max 10MB)
-                  </span>
-                </>
+                <Upload className="h-8 w-8 text-surface-outline-variant dark:text-gray-500" />
               )}
-              <span className="text-xs text-surface-on-variant dark:text-gray-400 font-medium">
-                {isUploading ? 'Optimized for mobile uploads' : 'Multiple files supported'}
-              </span>
+
               <input 
                 type="file" 
                 className="hidden" 
@@ -597,11 +587,11 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                   <button
                     type="button"
                     onClick={() => setShowDateEvaluatedPicker(true)}
-                    className="w-full h-[56px] flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-800 hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
+                    className="w-full h-10 flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-800 hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
                   >
                     <CalendarIcon className="h-5 w-5 text-surface-on-variant dark:text-gray-400 mr-3" />
                     <span className="text-surface-on dark:text-gray-100">
-                      {dateEvaluated ? new Date(dateEvaluated).toLocaleDateString('en-US', { 
+                      {dateEvaluated ? new Date(dateEvaluated).toLocaleDateString('en-US', {
                         weekday: 'short',
                         year: 'numeric',
                         month: 'short',
@@ -737,11 +727,11 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                   <button
                     type="button"
                     onClick={() => setShowCalendarPicker(true)}
-                    className="w-full h-[56px] flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-800 hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
+                    className="w-full h-10 flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-800 hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
                   >
                     <CalendarIcon className="h-5 w-5 text-surface-on-variant dark:text-gray-400 mr-3" />
                     <span className="text-surface-on dark:text-gray-100">
-                      {proposeDate ? new Date(proposeDate).toLocaleDateString('en-US', { 
+                      {proposeDate ? new Date(proposeDate).toLocaleDateString('en-US', {
                         weekday: 'short',
                         year: 'numeric',
                         month: 'short',
@@ -869,16 +859,6 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
       
         {/* Fixed Footer with buttons */}
         <div className="flex-none p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end gap-3 flex-wrap">
-          {onSendMessage && (
-            <Button 
-              type="button" 
-              variant="filled" 
-              onClick={onSendMessage}
-              className="whitespace-nowrap"
-            >
-              Message
-            </Button>
-          )}
           <Button 
             type="button" 
             variant="filled" 

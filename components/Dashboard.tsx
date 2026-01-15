@@ -3055,11 +3055,11 @@ const Dashboard: React.FC<DashboardProps> = ({
           {/* Search box on desktop only */}
           <div className="hidden md:block p-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-black dark:text-gray-500" />
                 <input 
                   type="text" 
-                  placeholder="Search mail..." 
-                  className="w-full bg-white dark:bg-gray-700 rounded-full pl-9 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant dark:placeholder-gray-500 border border-gray-200 dark:border-gray-600"
+                  placeholder="" 
+                  className="w-full bg-white dark:bg-gray-700 rounded-full pl-9 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant dark:placeholder-gray-500 border border-black dark:border-gray-600"
                 />
              </div>
           </div>
