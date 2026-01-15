@@ -122,7 +122,7 @@ function getAppUrl(): string {
  */
 export async function sendEmail(request: EmailRequest): Promise<EmailResponse> {
   console.log('📨 Sending email...');
-  console.log('📨 To:', typeof request.to === 'string' ? request.to : request.to.email);
+  console.log('📨 To:', Array.isArray(request.to) ? request.to.map(r => r.email).join(', ') : request.to.email);
   console.log('📨 Subject:', request.subject);
 
   // Check if SendGrid is configured
