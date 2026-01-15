@@ -2423,7 +2423,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
         {/* Left Column: Claims List */}
         <div className={`w-full md:w-96 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800 md:rounded-tl-modal md:rounded-tr-none md:rounded-bl-modal ${selectedClaimForModal ? 'hidden md:flex' : 'flex'}`}>
-          <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-modal md:rounded-tr-none">
+          <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-modal md:rounded-tr-none">
             <div className="flex items-center gap-2 min-w-0">
               {/* Mobile back: Claims list → Dashboard */}
               <button
@@ -2470,7 +2470,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
           
           {/* Filter Pills */}
-          <div className="px-4 py-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
+          <div className="px-4 py-2 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setClaimsFilter('Open')}

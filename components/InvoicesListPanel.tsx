@@ -181,7 +181,7 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
       {/* NOTE: No outer wrapper - parent (CBSBooksPage) provides the wrapper with borders */}
       
       {/* ==================== HEADER ==================== */}
-      <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0">
+      <div className="sticky top-0 z-10 px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0">
         <div className="flex items-center gap-2 min-w-0">
           {/* Mobile back button (if provided) */}
           {onBack && (
@@ -220,7 +220,7 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
       </div>
 
       {/* ==================== TABS ROW ==================== */}
-      <div className="px-4 py-2 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
+      <div className="px-4 py-2 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700">
         <div className="flex items-center gap-2 overflow-x-auto">
           <button
             onClick={() => onTabChange('invoices')}

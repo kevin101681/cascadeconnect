@@ -147,7 +147,7 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
   const renderContent = () => (
     <>
       {/* Header - Match Warranty Claims Style EXACTLY */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex-shrink-0">
         <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">
           Notes
         </h2>

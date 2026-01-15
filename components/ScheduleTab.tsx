@@ -330,7 +330,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
   return (
     <div className="h-full flex flex-col">
       {/* Header - Match Notes/Warranty Standard */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 md:rounded-t-3xl">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex-shrink-0 md:rounded-t-3xl">
         <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">
           Schedule
         </h2>
