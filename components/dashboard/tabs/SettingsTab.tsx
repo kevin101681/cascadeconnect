@@ -215,8 +215,11 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
 
   // ==================== RENDER ====================
   
+  console.log('🔧 SettingsTab rendering, activeCategory:', activeCategory);
+  console.log('🔧 Props received:', { employees: employees.length, homeowners: homeowners.length });
+  
   return (
-    <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
+    <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]" style={{ minHeight: '500px', border: '2px solid red' }}>
       
       {/* ==================== LEFT SIDEBAR (Navigation) ==================== */}
       <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800">
