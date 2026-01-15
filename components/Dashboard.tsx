@@ -2468,14 +2468,14 @@ const Dashboard: React.FC<DashboardProps> = ({
           </div>
           
           {/* Filter Pills */}
-          <div className="px-4 py-2 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700">
+          <div className="px-4 py-2 border-b border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800">
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setClaimsFilter('Open')}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   claimsFilter === 'Open'
                     ? 'border border-primary text-primary bg-primary/10'
-                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                    : 'bg-white dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
                 }`}
               >
                 Open
@@ -2485,7 +2485,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   claimsFilter === 'Closed'
                     ? 'border border-primary text-primary bg-primary/10'
-                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                    : 'bg-white dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
                 }`}
               >
                 Closed
@@ -2495,7 +2495,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                   claimsFilter === 'All'
                     ? 'border border-primary text-primary bg-primary/10'
-                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                    : 'bg-white dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
                 }`}
               >
                 All
@@ -3061,7 +3061,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <input 
                   type="text" 
                   placeholder="Search mail..." 
-                  className="w-full bg-surface-container dark:bg-gray-700 rounded-full pl-9 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant dark:placeholder-gray-500"
+                  className="w-full bg-white dark:bg-gray-700 rounded-full pl-9 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant dark:placeholder-gray-500 border border-gray-200 dark:border-gray-600"
                 />
              </div>
           </div>
@@ -3705,8 +3705,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       const homeownerEmail = displayHomeowner.email?.toLowerCase().trim() || '';
       return (
         claimEmail === homeownerEmail &&
-        c.status !== ClaimStatus.COMPLETED &&
-        c.status !== ClaimStatus.SCHEDULED
+        c.status === ClaimStatus.PROCESSED // Only include claims that have been processed
       );
     });
 

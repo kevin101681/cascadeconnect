@@ -21,9 +21,9 @@ export function TaskCard({
   return (
     <div 
       onClick={onClick}
-      className={`group relative bg-white rounded-card border p-3 shadow-sm transition-all h-full flex flex-col justify-between
+      className={`group relative bg-white rounded-lg border p-3 shadow-sm transition-all h-full flex flex-col justify-between
         ${onClick ? 'cursor-pointer' : ''}
-        ${isCompleted ? 'border-gray-100 opacity-75 hover:opacity-100' : 'border-gray-200 hover:shadow-md hover:border-blue-300'}
+        ${isCompleted ? 'border-transparent opacity-75 hover:opacity-100' : 'border-gray-200 hover:shadow-md hover:border-blue-300'}
       `}
     >
       

@@ -114,15 +114,12 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full relative max-w-5xl mx-auto">
+    <div className="flex flex-col h-full overflow-hidden relative max-w-5xl mx-auto">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="mb-6 flex items-center justify-between gap-4 flex-shrink-0">
         <div className="flex-1">
           {isEditing ? (
             <div>
-              <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
-                Task Title *
-              </label>
               <input 
                 type="text" 
                 value={editTaskTitle}
@@ -160,7 +157,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
       </div>
 
       {/* Content */}
-      <div className="space-y-6 pb-10">
+      <div className="flex-1 overflow-y-auto space-y-6 pb-4">
         {/* Assignee Editor (Edit Mode Only) */}
         {isEditing && (
           <div className="bg-surface-container dark:bg-gray-800 p-6 rounded-2xl border border-surface-outline-variant dark:border-gray-700">
@@ -367,14 +364,15 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
           )}
         </div>
 
-        {/* Edit Actions */}
-        {isEditing && (
-          <div className="flex justify-end gap-2">
-            <Button variant="text" onClick={handleCancelEdit}>Cancel</Button>
-            <Button onClick={handleSaveEdit}>Save Task Details</Button>
-          </div>
-        )}
       </div>
+
+      {/* Edit Actions Footer - Sticky */}
+      {isEditing && (
+        <div className="mt-auto border-t border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800 p-4 flex justify-end gap-2 flex-shrink-0">
+          <Button variant="ghost" onClick={handleCancelEdit}>Cancel</Button>
+          <Button onClick={handleSaveEdit}>Save</Button>
+        </div>
+      )}
     </div>
   );
 };
