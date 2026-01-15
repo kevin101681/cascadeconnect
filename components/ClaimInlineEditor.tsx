@@ -1093,9 +1093,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
                       <button
                         type="button"
                         onClick={() => setShowDateEvaluatedPicker(true)}
-                        className="w-full h-[56px] flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
+                        className="w-full h-9 flex items-center px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
                       >
-                        <CalendarIcon className="h-5 w-5 text-surface-on-variant dark:text-gray-400 mr-3" />
+                        <CalendarIcon className="h-4 w-4 text-surface-on-variant dark:text-gray-400 mr-2" />
                         <span className="text-surface-on dark:text-gray-100">
                           {editDateEvaluated ? new Date(editDateEvaluated).toLocaleDateString('en-US', { 
                             weekday: 'short',
@@ -1337,7 +1337,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     variant="filled" 
                     onClick={handlePrepareServiceOrder} 
                     icon={<FileText className="h-4 w-4" />}
-                    className="!h-12 whitespace-nowrap flex-shrink-0"
+                    className="!h-9 whitespace-nowrap flex-shrink-0 !text-sm"
                   >
                     Email SO
                   </Button>
@@ -1358,9 +1358,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     <button
                       type="button"
                       onClick={() => setShowScheduledDatePicker(true)}
-                      className="w-full h-[56px] flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-800 hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
+                      className="w-full h-9 flex items-center px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-800 hover:bg-surface-container-highest dark:hover:bg-gray-700 transition-colors text-left"
                     >
-                      <CalendarIcon className="h-5 w-5 text-surface-on-variant dark:text-gray-400 mr-3" />
+                      <CalendarIcon className="h-4 w-4 text-surface-on-variant dark:text-gray-400 mr-2" />
                       <span className="text-surface-on dark:text-gray-100">
                         {proposeDate ? new Date(proposeDate).toLocaleDateString('en-US', { 
                           weekday: 'short',

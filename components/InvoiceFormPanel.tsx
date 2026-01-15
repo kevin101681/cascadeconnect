@@ -301,30 +301,10 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
   
   return (
     <div className="flex flex-col h-full bg-surface dark:bg-gray-800">
-      {/* ==================== HEADER ==================== */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
-        <div>
-          <h2 className="text-xl font-normal text-surface-on dark:text-gray-900">
-            {editInvoice ? 'Edit Invoice' : 'New Invoice'}
-          </h2>
-          <p className="text-sm text-surface-on-variant dark:text-gray-600 mt-1">
-            {editInvoice ? `Editing ${editInvoice.invoiceNumber}` : 'Create a new invoice for billing'}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="text-surface-on-variant dark:text-gray-600 hover:text-surface-on dark:hover:text-gray-900 transition-colors md:hidden"
-          title="Close"
-        >
-          <X className="h-5 w-5" />
-        </button>
-      </div>
-
-      {/* ==================== BODY (Scrollable) ==================== */}
+      {/* ==================== BODY (Scrollable) - No Header ==================== */}
       <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
         <div 
-          className="flex-1 overflow-y-auto px-6 py-6 space-y-6"
+          className="flex-1 overflow-y-auto px-6 pt-4 pb-6 space-y-6"
           style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
         >
           
@@ -344,7 +324,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                   type="text"
                   value={invoiceNumber}
                   onChange={(e) => setInvoiceNumber(e.target.value)}
-                  className="w-full h-[56px] px-4 rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+                  className="w-full h-9 px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
                   placeholder="INV-001"
                 />
                 {errors.invoiceNumber && (
@@ -378,9 +358,9 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowDatePicker(true)}
-                  className="w-full h-[56px] flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white hover:bg-surface-container-highest dark:hover:bg-gray-50 transition-colors text-left"
+                  className="w-full h-9 flex items-center px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white hover:bg-surface-container-highest dark:hover:bg-gray-50 transition-colors text-left"
                 >
-                  <CalendarIcon className="h-5 w-5 text-surface-on-variant dark:text-gray-600 mr-3" />
+                  <CalendarIcon className="h-4 w-4 text-surface-on-variant dark:text-gray-600 mr-2" />
                   <span className="text-surface-on dark:text-gray-900">
                     {date ? new Date(date).toLocaleDateString('en-US', { 
                       month: 'short',
@@ -408,9 +388,9 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowDueDatePicker(true)}
-                  className="w-full h-[56px] flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white hover:bg-surface-container-highest dark:hover:bg-gray-50 transition-colors text-left"
+                  className="w-full h-9 flex items-center px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white hover:bg-surface-container-highest dark:hover:bg-gray-50 transition-colors text-left"
                 >
-                  <CalendarIcon className="h-5 w-5 text-surface-on-variant dark:text-gray-600 mr-3" />
+                  <CalendarIcon className="h-4 w-4 text-surface-on-variant dark:text-gray-600 mr-2" />
                   <span className="text-surface-on dark:text-gray-900">
                     {dueDate ? new Date(dueDate).toLocaleDateString('en-US', { 
                       month: 'short',
@@ -439,9 +419,9 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                   <button
                     type="button"
                     onClick={() => setShowDatePaidPicker(true)}
-                    className="w-full h-[56px] flex items-center px-4 rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white hover:bg-surface-container-highest dark:hover:bg-gray-50 transition-colors text-left"
+                    className="w-full h-9 flex items-center px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white hover:bg-surface-container-highest dark:hover:bg-gray-50 transition-colors text-left"
                   >
-                    <CalendarIcon className="h-5 w-5 text-surface-on-variant dark:text-gray-600 mr-3" />
+                    <CalendarIcon className="h-4 w-4 text-surface-on-variant dark:text-gray-600 mr-2" />
                     <span className="text-surface-on dark:text-gray-900">
                       {datePaid ? new Date(datePaid).toLocaleDateString('en-US', { 
                         month: 'short',
@@ -484,7 +464,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                     setShowBuilderDropdown(true);
                   }}
                   onFocus={() => setShowBuilderDropdown(true)}
-                  className="w-full h-[56px] px-4 rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+                  className="w-full h-9 px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
                   placeholder="Type to search builders..."
                 />
                 
@@ -525,7 +505,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                   type="email"
                   value={clientEmail}
                   onChange={(e) => setClientEmail(e.target.value)}
-                  className="w-full h-[56px] px-4 rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+                  className="w-full h-9 px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
                   placeholder="builder@example.com"
                 />
                 {errors.clientEmail && (
@@ -543,7 +523,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                 type="text"
                 value={projectDetails}
                 onChange={(e) => setProjectDetails(e.target.value)}
-                className="w-full h-[56px] px-4 rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+                className="w-full h-9 px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
                 placeholder="123 Main St, City, State"
               />
             </div>
@@ -679,7 +659,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                     type="text"
                     value={checkNumber}
                     onChange={(e) => setCheckNumber(e.target.value)}
-                    className="w-full h-[56px] px-4 rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+                    className="w-full h-9 px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
                     placeholder="Check #123456"
                   />
                 </div>
@@ -692,7 +672,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                     type="url"
                     value={paymentLink}
                     onChange={(e) => setPaymentLink(e.target.value)}
-                    className="w-full h-[56px] px-4 rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+                    className="w-full h-9 px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
                     placeholder="https://payment.link"
                   />
                 </div>
