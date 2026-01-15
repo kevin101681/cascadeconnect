@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef, forwardRef, Suspense, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
 // Lazy load heavy libraries - only load when needed
 // import Papa from 'papaparse';
 // import * as XLSX from 'xlsx';
@@ -587,6 +588,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const mountTimeRef = useRef(Date.now());
   const userInteractionRef = useRef(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const router = useRouter();
   
   // Track user interactions (clicks, touches) to distinguish user-initiated vs auto-opens
   useEffect(() => {
@@ -1142,7 +1144,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [replyContent, setReplyContent] = useState('');
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
   const [showSubListModal, setShowSubListModal] = useState(false);
-  const [showCallsModal, setShowCallsModal] = useState(false);
+  // Removed showCallsModal - now navigates to /calls page with search filter
   const [newMessageSubject, setNewMessageSubject] = useState('');
 
   // Handle browser back button for nested modals that are NOT URL-driven.
@@ -1391,7 +1393,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   useEffect(() => {
     const isAnyModalOpen = showNewTaskModal || showNewMessageModal || showNewClaimModal ||
                           showDocsModal || showInviteModal || showEditHomeownerModal ||
-                          showSubListModal || (currentTab === 'PUNCHLIST') || (currentTab === 'CHAT') || isPDFViewerOpen || showCallsModal;
+                          showSubListModal || (currentTab === 'PUNCHLIST') || (currentTab === 'CHAT') || isPDFViewerOpen;
 
     if (isAnyModalOpen) {
       // Use overflow hidden only to prevent scrolling without layout shifts
@@ -1408,7 +1410,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       };
     }
   }, [showNewTaskModal, showNewMessageModal, showNewClaimModal, showDocsModal,
-      showInviteModal, showEditHomeownerModal, showSubListModal, currentTab, isPDFViewerOpen, showCallsModal]);
+      showInviteModal, showEditHomeownerModal, showSubListModal, currentTab, isPDFViewerOpen]);
 
   // Note: Do NOT sync initialTab - tabs should only open when user clicks them
   // The initialTab prop is only used for the default value in old code paths
@@ -1506,12 +1508,8 @@ const Dashboard: React.FC<DashboardProps> = ({
     loadHomeownerCalls();
   }, [effectiveHomeowner?.id]);
 
-  // Set initial selected call when calls load or modal opens
-  useEffect(() => {
-    if (showCallsModal && homeownerCalls.length > 0 && !selectedCallId) {
-      setSelectedCallId(homeownerCalls[0].id);
-    }
-  }, [showCallsModal, homeownerCalls, selectedCallId]);
+  // Removed: Set initial selected call - no longer needed since we navigate to /calls page
+  // (Previously used to initialize selected call when modal opened)
 
   // Sync state when editing starts
   const parseEditSubcontractorFile = (file: File) => {
@@ -4305,7 +4303,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                     {/* Calls Button - Show if homeowner has matched calls */}
                     {homeownerCalls.length > 0 && (
                       <Button 
-                        onClick={() => setShowCallsModal(true)}
+                        onClick={() => {
+                          // Navigate to Calls page with search filter for this homeowner's phone
+                          const searchParam = encodeURIComponent(displayHomeowner.phone || '');
+                          router.push(`/calls?search=${searchParam}`);
+                        }}
                         variant="outlined"
                         icon={<Phone className="h-4 w-4" />}
                         className="!h-9 w-full md:w-auto"
@@ -5428,7 +5430,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           document.body
         )}
 
-        {/* HOMEOWNER CALLS MODAL - Two Column Layout */}
+        {/* HOMEOWNER CALLS MODAL - REMOVED - Now navigates to /calls page with filter
         {showCallsModal && displayHomeowner && homeownerCalls.length > 0 && (() => {
           // ✅ FIX: State moved to component scope (line 1443) to fix React #310
           const selectedCall = homeownerCalls.find(c => c.id === selectedCallId);
@@ -5650,7 +5652,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>,
             document.body
           );
-        })()}
+        })()} */}
 
         {/* PUNCH LIST APP MODAL */}
         {currentTab === 'PUNCHLIST' && effectiveHomeowner && createPortal(
