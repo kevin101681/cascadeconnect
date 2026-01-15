@@ -3705,7 +3705,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         claimEmail === homeownerEmail &&
         c.status !== ClaimStatus.COMPLETED &&
         c.status !== ClaimStatus.CLOSED &&
-        c.isReviewed === true
+        c.reviewed === true
       );
     });
 
