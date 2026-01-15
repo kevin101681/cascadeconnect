@@ -2614,27 +2614,9 @@ const Dashboard: React.FC<DashboardProps> = ({
             </>
           ) : selectedClaimForModal ? (
             <>
-              {/* Claim Header Toolbar */}
-              <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 sticky top-0 z-10 rounded-tr-3xl">
-                <div className="flex items-center gap-4">
-                  <button 
-                    onClick={() => setSelectedClaimForModal(null)} 
-                    className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                </div>
-                <button 
-                  onClick={() => setSelectedClaimForModal(null)}
-                  className="hidden md:block p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
               {/* Scrollable Claim Editor Content */}
               <div 
-                className="flex-1 overflow-y-auto p-6 overscroll-contain"
+                className="flex-1 overflow-y-auto px-6 pt-4 pb-6 overscroll-contain"
                 style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
               >
                 <Suspense fallback={
@@ -2957,7 +2939,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             claims={claims}
             onTaskSelect={(task) => {
               setSelectedTaskForModal(task);
-              setTasksTabStartInEditMode(false);
+              setTasksTabStartInEditMode(true);
             }}
           />
         </div>
@@ -2966,30 +2948,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedTaskForModal ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
           {selectedTaskForModal ? (
             <>
-              {/* Task Header Toolbar */}
-              <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 sticky top-0 z-10 rounded-tr-3xl">
-                <div className="flex items-center gap-4">
-                  <button 
-                    onClick={() => setSelectedTaskForModal(null)} 
-                    className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                  <h3 className="text-sm font-medium text-surface-on dark:text-gray-100">
-                    {selectedTaskForModal.title}
-                  </h3>
-                </div>
-                <button 
-                  onClick={() => setSelectedTaskForModal(null)}
-                  className="hidden md:block p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
               {/* Scrollable Task Detail Content */}
               <div 
-                className="flex-1 overflow-y-auto p-6 overscroll-contain"
+                className="flex-1 overflow-y-auto px-6 pt-4 pb-6 overscroll-contain"
                 style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
               >
                 <Suspense fallback={
@@ -3036,24 +2997,9 @@ const Dashboard: React.FC<DashboardProps> = ({
       {/* Mobile Full-Screen Overlay for Task Detail */}
       {selectedTaskForModal && (
         <div className="md:hidden fixed inset-0 z-50 bg-surface dark:bg-gray-900 flex flex-col">
-          {/* Task Header Toolbar */}
-          <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30">
-            <div className="flex items-center gap-4">
-              <button 
-                onClick={() => setSelectedTaskForModal(null)} 
-                className="p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <h3 className="text-sm font-medium text-surface-on dark:text-gray-100">
-                {selectedTaskForModal.title}
-              </h3>
-            </div>
-          </div>
-
           {/* Scrollable Task Detail Content */}
           <div 
-            className="flex-1 overflow-y-auto p-6 overscroll-contain"
+            className="flex-1 overflow-y-auto px-6 pt-4 pb-6 overscroll-contain"
             style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
           >
             <Suspense fallback={
