@@ -9,7 +9,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Calendar as CalendarIcon, DollarSign, X } from 'lucide-react';
 import { z } from 'zod';
 import Button from './Button';
-import MaterialSelect from './MaterialSelect';
 import CalendarPicker from './CalendarPicker';
 
 // ==================== TYPES & SCHEMA ====================
@@ -89,7 +88,8 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
   const [datePaid, setDatePaid] = useState('');
   const [checkNumber, setCheckNumber] = useState('');
   const [paymentLink, setPaymentLink] = useState('');
-  const [status, setStatus] = useState<'draft' | 'sent' | 'paid'>('draft');
+  // Status removed - now managed automatically by backend
+  // draft: when created, sent: when sent/emailed, paid: when payment received or manually marked
   const [items, setItems] = useState<InvoiceItem[]>([]);
   
   // Builder search/autocomplete
@@ -135,7 +135,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
         setDatePaid(editInvoice.datePaid || '');
         setCheckNumber(editInvoice.checkNumber || '');
         setPaymentLink(editInvoice.paymentLink || '');
-        setStatus(editInvoice.status);
+        // Status removed - managed by backend
         setItems(editInvoice.items || []);
         setBuilderQuery(editInvoice.clientName);
       } else {
@@ -152,7 +152,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
         setDatePaid('');
         setCheckNumber('');
         setPaymentLink('');
-        setStatus('draft');
+        // Status removed - will be 'draft' by default in backend
         setItems([
           {
             id: crypto.randomUUID(),
@@ -263,7 +263,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
         dueDate,
         datePaid: datePaid || undefined,
         total: calculateTotal(),
-        status,
+        // Status removed - backend will set to 'draft' by default
         items,
       };
       
@@ -321,7 +321,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
     
     setIsSaving(true);
     try {
-      // First save the invoice with 'sent' status
+      // Backend will automatically set status to 'sent' when email is dispatched
       await onSave({ ...invoice, status: 'sent' });
       
       // Then send the email
@@ -415,39 +415,21 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
               Invoice Details
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Invoice Number */}
-              <div>
-                <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
-                  Invoice Number *
-                </label>
-                <input
-                  type="text"
-                  value={invoiceNumber}
-                  onChange={(e) => setInvoiceNumber(e.target.value)}
-                  className="w-full h-9 px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
-                  placeholder="INV-001"
-                />
-                {errors.invoiceNumber && (
-                  <p className="text-xs text-error mt-1">{errors.invoiceNumber}</p>
-                )}
-              </div>
-              
-              {/* Status */}
-              <div>
-                <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
-                  Status
-                </label>
-                <MaterialSelect
-                  value={status}
-                  onChange={(value) => setStatus(value as 'draft' | 'sent' | 'paid')}
-                  options={[
-                    { value: 'draft', label: 'Draft' },
-                    { value: 'sent', label: 'Sent' },
-                    { value: 'paid', label: 'Paid' },
-                  ]}
-                />
-              </div>
+            {/* Invoice Number - Full Width (Status field removed) */}
+            <div>
+              <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
+                Invoice Number *
+              </label>
+              <input
+                type="text"
+                value={invoiceNumber}
+                onChange={(e) => setInvoiceNumber(e.target.value)}
+                className="w-full h-9 px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+                placeholder="INV-001"
+              />
+              {errors.invoiceNumber && (
+                <p className="text-xs text-error mt-1">{errors.invoiceNumber}</p>
+              )}
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -510,38 +492,6 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                   selectedDate={dueDate ? new Date(dueDate) : null}
                 />
               </div>
-              
-              {/* Date Paid (Optional) */}
-              {status === 'paid' && (
-                <div className="relative">
-                  <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
-                    Date Paid
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowDatePaidPicker(true)}
-                    className="w-full h-9 flex items-center px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white hover:bg-surface-container-highest dark:hover:bg-gray-50 transition-colors text-left"
-                  >
-                    <CalendarIcon className="h-4 w-4 text-surface-on-variant dark:text-gray-600 mr-2" />
-                    <span className="text-surface-on dark:text-gray-900">
-                      {datePaid ? new Date(datePaid).toLocaleDateString('en-US', { 
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      }) : 'Select date'}
-                    </span>
-                  </button>
-                  <CalendarPicker
-                    isOpen={showDatePaidPicker}
-                    onClose={() => setShowDatePaidPicker(false)}
-                    onSelectDate={(d) => {
-                      setDatePaid(d.toISOString().split('T')[0]);
-                      setShowDatePaidPicker(false);
-                    }}
-                    selectedDate={datePaid ? new Date(datePaid) : null}
-                  />
-                </div>
-              )}
             </div>
           </div>
           
@@ -561,16 +511,23 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                   type="text"
                   value={builderQuery}
                   onChange={(e) => {
-                    setBuilderQuery(e.target.value);
-                    setShowBuilderDropdown(true);
+                    const query = e.target.value;
+                    setBuilderQuery(query);
+                    // Only show dropdown when user is typing (not on focus, only when input has content)
+                    setShowBuilderDropdown(query.length > 0);
                   }}
-                  onFocus={() => setShowBuilderDropdown(true)}
+                  onFocus={() => {
+                    // Only open if there's already text in the input
+                    if (builderQuery.length > 0) {
+                      setShowBuilderDropdown(true);
+                    }
+                  }}
                   className="w-full h-9 px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
                   placeholder="Type to search builders..."
                 />
                 
                 {/* Builder Dropdown */}
-                {showBuilderDropdown && filteredBuilders.length > 0 && (
+                {showBuilderDropdown && builderQuery.length > 0 && filteredBuilders.length > 0 && (
                   <div 
                     data-builder-dropdown
                     className="absolute z-50 w-full mt-2 bg-white dark:bg-white rounded-lg shadow-elevation-3 border border-surface-outline-variant dark:border-gray-300 max-h-40 overflow-y-auto"
@@ -582,7 +539,14 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                         onMouseDown={(e) => {
                           e.preventDefault(); // Prevent input blur
                           console.log('🔹 Selected Builder:', builder.name, builder.email);
-                          handleBuilderSelect(builder);
+                          // Set both the query (display) and the actual client name
+                          setBuilderQuery(builder.name);
+                          setClientName(builder.name);
+                          if (builder.email) {
+                            setClientEmail(builder.email);
+                          }
+                          // Close dropdown immediately after selection
+                          setShowBuilderDropdown(false);
                         }}
                         className="w-full text-left px-4 py-3 hover:bg-surface-container dark:hover:bg-gray-50 transition-colors border-b border-surface-outline-variant dark:border-gray-200 last:border-0"
                       >
@@ -750,43 +714,6 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
               </span>
             </div>
           </div>
-          
-          {/* Payment Info (Optional) */}
-          {status === 'paid' && (
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-surface-on-variant dark:text-gray-700 uppercase tracking-wide">
-                Payment Information
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
-                    Check Number
-                  </label>
-                  <input
-                    type="text"
-                    value={checkNumber}
-                    onChange={(e) => setCheckNumber(e.target.value)}
-                    className="w-full h-9 px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
-                    placeholder="Check #123456"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
-                    Payment Link
-                  </label>
-                  <input
-                    type="url"
-                    value={paymentLink}
-                    onChange={(e) => setPaymentLink(e.target.value)}
-                    className="w-full h-9 px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
-                    placeholder="https://payment.link"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* ==================== FOOTER (Sticky) - 3 Action Buttons ==================== */}

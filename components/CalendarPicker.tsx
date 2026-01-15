@@ -121,38 +121,38 @@ const CalendarPicker: React.FC<CalendarPickerProps> = ({
   return (
     <div 
       ref={calendarRef}
-      className="absolute z-50 mt-2 bg-surface dark:bg-gray-800 rounded-lg shadow-elevation-3 w-80 border border-surface-outline-variant/50 dark:border-gray-700/50 animate-[scale-in_0.15s_ease-out]"
+      className="absolute z-50 mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-lg w-80 border border-surface-outline-variant/50 dark:border-gray-700/50 animate-[scale-in_0.15s_ease-out] overflow-hidden"
       onClick={(e) => e.stopPropagation()}
     >
-      {/* Calendar - Compact popover style */}
-      <div className="p-4 bg-surface dark:bg-gray-800">
-          {/* Month Navigation - Compact */}
-          <div className="flex items-center justify-between mb-4">
+      {/* Calendar - Material 3 popover style */}
+      <div className="p-5 bg-surface dark:bg-gray-800">
+          {/* Month Navigation - Material 3 */}
+          <div className="flex items-center justify-between mb-5">
             <button
               onClick={handlePrevMonth}
-              className="p-1.5 rounded-full hover:bg-surface-container-high dark:hover:bg-gray-700 transition-colors text-surface-on dark:text-gray-100"
+              className="p-2 rounded-full hover:bg-surface-container-high dark:hover:bg-gray-700 transition-all duration-200 text-surface-on dark:text-gray-100 hover:shadow-sm active:scale-95"
               aria-label="Previous month"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <h4 className="text-sm font-medium text-surface-on dark:text-gray-100">
+            <h4 className="text-base font-semibold text-surface-on dark:text-gray-100 tracking-tight">
               {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
             </h4>
             <button
               onClick={handleNextMonth}
-              className="p-1.5 rounded-full hover:bg-surface-container-high dark:hover:bg-gray-700 transition-colors text-surface-on dark:text-gray-100"
+              className="p-2 rounded-full hover:bg-surface-container-high dark:hover:bg-gray-700 transition-all duration-200 text-surface-on dark:text-gray-100 hover:shadow-sm active:scale-95"
               aria-label="Next month"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
-          {/* Day Names - Compact */}
-          <div className="grid grid-cols-7 gap-1 mb-2">
+          {/* Day Names - Material 3 */}
+          <div className="grid grid-cols-7 gap-1 mb-3">
             {dayNames.map(day => (
               <div
                 key={day}
-                className="text-center text-xs font-medium text-surface-on-variant dark:text-gray-400 py-2"
+                className="text-center text-xs font-semibold text-surface-on-variant dark:text-gray-400 py-2 uppercase tracking-wider"
               >
                 {day}
               </div>
@@ -177,15 +177,15 @@ const CalendarPicker: React.FC<CalendarPickerProps> = ({
                   onClick={() => handleDateClick(day)}
                   disabled={disabled}
                   className={`
-                    aspect-square rounded-full text-sm font-medium transition-all duration-200
+                    aspect-square rounded-full text-sm font-semibold transition-all duration-200
                     flex items-center justify-center relative
                     ${disabled
                       ? 'text-surface-on-variant/30 dark:text-gray-600/30 cursor-not-allowed'
                       : selected
-                      ? 'bg-primary dark:bg-primary text-primary-on dark:text-primary-on shadow-elevation-1 hover:shadow-elevation-2 hover:bg-primary/90 dark:hover:bg-primary/90'
+                      ? 'bg-primary dark:bg-primary text-primary-on dark:text-white shadow-md hover:shadow-lg hover:bg-primary/90 dark:hover:bg-primary/90 scale-105'
                       : isTodayDate
-                      ? 'bg-primary-container dark:bg-primary-container/30 text-primary-on-container dark:text-primary-on-container border-2 border-primary dark:border-primary/50 hover:bg-primary-container/80 dark:hover:bg-primary-container/40'
-                      : 'text-surface-on dark:text-gray-100 hover:bg-surface-container-high dark:hover:bg-gray-700 active:bg-surface-container dark:active:bg-gray-600'
+                      ? 'bg-primary-container dark:bg-primary-container/30 text-primary-on-container dark:text-primary-on-container ring-2 ring-primary dark:ring-primary/50 ring-offset-1 hover:bg-primary-container/80 dark:hover:bg-primary-container/40'
+                      : 'text-surface-on dark:text-gray-100 hover:bg-surface-container-high dark:hover:bg-gray-700 hover:scale-105 active:bg-surface-container dark:active:bg-gray-600 active:scale-100'
                     }
                   `}
                   aria-label={`Select ${monthNames[currentMonth.getMonth()]} ${day}, ${currentMonth.getFullYear()}`}
