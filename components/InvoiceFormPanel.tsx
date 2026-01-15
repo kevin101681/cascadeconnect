@@ -231,8 +231,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
     }));
   };
   
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validateAndGetInvoice = (): Partial<Invoice> | null => {
     setErrors({});
     
     try {
@@ -246,8 +245,6 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
         dueDate,
         items,
       });
-      
-      setIsSaving(true);
       
       const invoice: Partial<Invoice> = {
         ...(editInvoice?.id ? { id: editInvoice.id } : {}),
@@ -265,10 +262,8 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
         items,
       };
       
-      await onSave(invoice);
-      setIsSaving(false);
+      return invoice;
     } catch (error) {
-      setIsSaving(false);
       if (error instanceof z.ZodError) {
         const fieldErrors: Record<string, string> = {};
         error.errors.forEach(err => {
@@ -277,6 +272,107 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
         });
         setErrors(fieldErrors);
       }
+      return null;
+    }
+  };
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const invoice = validateAndGetInvoice();
+    if (!invoice) return;
+    
+    setIsSaving(true);
+    try {
+      await onSave(invoice);
+      setIsSaving(false);
+    } catch (error) {
+      setIsSaving(false);
+      console.error('Failed to save invoice:', error);
+    }
+  };
+  
+  const handleSaveAndMarkSent = async () => {
+    const invoice = validateAndGetInvoice();
+    if (!invoice) return;
+    
+    setIsSaving(true);
+    try {
+      await onSave({ ...invoice, status: 'sent' });
+      setIsSaving(false);
+    } catch (error) {
+      setIsSaving(false);
+      console.error('Failed to save and mark sent:', error);
+    }
+  };
+  
+  const handleSaveAndEmail = async () => {
+    const invoice = validateAndGetInvoice();
+    if (!invoice) return;
+    
+    if (!clientEmail) {
+      setErrors({ clientEmail: 'Email is required to send invoice' });
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      // First save the invoice with 'sent' status
+      await onSave({ ...invoice, status: 'sent' });
+      
+      // Then send the email
+      const { api } = await import('../lib/cbsbooks/services/api');
+      const subject = `Invoice ${invoiceNumber} from Cascade Connect`;
+      const text = `Dear ${clientName},\n\nPlease find attached your invoice ${invoiceNumber}.\n\nTotal: $${calculateTotal().toFixed(2)}\nDue Date: ${new Date(dueDate).toLocaleDateString()}\n\nThank you for your business!\n\nCascade Connect`;
+      const html = `
+        <h2>Invoice ${invoiceNumber}</h2>
+        <p>Dear ${clientName},</p>
+        <p>Please find your invoice details below:</p>
+        <table style="border-collapse: collapse; width: 100%; margin: 20px 0;">
+          <tr style="background-color: #f5f5f5;">
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Description</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Quantity</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Rate</th>
+            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Amount</th>
+          </tr>
+          ${items.map(item => `
+            <tr>
+              <td style="border: 1px solid #ddd; padding: 8px;">${item.description}</td>
+              <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${item.quantity}</td>
+              <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${item.rate.toFixed(2)}</td>
+              <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${item.amount.toFixed(2)}</td>
+            </tr>
+          `).join('')}
+          <tr style="background-color: #f5f5f5; font-weight: bold;">
+            <td colspan="3" style="border: 1px solid #ddd; padding: 8px; text-align: right;">Total:</td>
+            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${calculateTotal().toFixed(2)}</td>
+          </tr>
+        </table>
+        <p><strong>Due Date:</strong> ${new Date(dueDate).toLocaleDateString()}</p>
+        ${paymentLink ? `<p><a href="${paymentLink}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">Pay Now</a></p>` : ''}
+        <p>Thank you for your business!</p>
+        <p>Cascade Connect</p>
+      `;
+      
+      // Generate PDF as base64 (stub for now - can be enhanced later)
+      const pdfData = btoa(`Invoice ${invoiceNumber}\n${text}`);
+      
+      await api.invoices.sendEmail(
+        clientEmail,
+        subject,
+        text,
+        html,
+        {
+          filename: `invoice-${invoiceNumber}.pdf`,
+          data: pdfData
+        }
+      );
+      
+      setIsSaving(false);
+      alert('Invoice saved and emailed successfully!');
+    } catch (error) {
+      setIsSaving(false);
+      console.error('Failed to save and email:', error);
+      alert(`Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
   
@@ -681,8 +777,8 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
           )}
         </div>
 
-        {/* ==================== FOOTER (Sticky) ==================== */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex-shrink-0">
+        {/* ==================== FOOTER (Sticky) - 3 Action Buttons ==================== */}
+        <div className="flex items-center justify-between px-6 py-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex-shrink-0">
           <Button
             type="button"
             variant="ghost"
@@ -691,13 +787,25 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            variant="filled"
-            disabled={isSaving}
-          >
-            {isSaving ? 'Saving...' : editInvoice ? 'Update Invoice' : 'Create Invoice'}
-          </Button>
+          
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outlined"
+              onClick={handleSaveAndMarkSent}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save & Mark Sent'}
+            </Button>
+            <Button
+              type="button"
+              variant="filled"
+              onClick={handleSaveAndEmail}
+              disabled={isSaving}
+            >
+              {isSaving ? 'Sending...' : 'Save & Email'}
+            </Button>
+          </div>
         </div>
       </form>
     </div>
