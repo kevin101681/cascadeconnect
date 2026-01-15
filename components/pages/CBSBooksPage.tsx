@@ -256,35 +256,22 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
             />
           )}
           
-          {/* BUILDERS TAB - Placeholder or Builder Details */}
+          {/* BUILDERS TAB - Always show Clients component */}
           {activeTab === 'builders' && (
-            <>
-              {!selectedBuilder ? (
-                // Placeholder when no builder selected
-                <div className="flex items-center justify-center h-full bg-gray-50/50 dark:bg-gray-900/50">
-                  <div className="text-center text-gray-500 dark:text-gray-400">
-                    <p className="text-sm font-medium">Select a builder to view details</p>
-                    <p className="text-xs mt-1">or click "New Builder" to create one</p>
-                  </div>
-                </div>
-              ) : (
-                // Show builder details/form when selected
-                <div className="h-full overflow-auto bg-white dark:bg-gray-800">
-                  <div className="p-6">
-                    <Clients
-                      clients={clients}
-                      invoices={invoices}
-                      onAdd={onAddClient}
-                      onUpdate={onUpdateClient}
-                      onDelete={onDeleteClient}
-                      onBulkAdd={onBulkAddClients || (() => {})}
-                      onNavigate={handleNavigate}
-                      onBackup={onBackup || (() => {})}
-                    />
-                  </div>
-                </div>
-              )}
-            </>
+            <div className="h-full overflow-auto bg-white dark:bg-gray-800">
+              <div className="p-6">
+                <Clients
+                  clients={clients}
+                  invoices={invoices}
+                  onAdd={onAddClient}
+                  onUpdate={onUpdateClient}
+                  onDelete={onDeleteClient}
+                  onBulkAdd={onBulkAddClients || (() => {})}
+                  onNavigate={handleNavigate}
+                  onBackup={onBackup || (() => {})}
+                />
+              </div>
+            </div>
           )}
           
           {/* P&L TAB - Legacy Reports Component */}
