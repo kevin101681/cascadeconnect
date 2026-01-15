@@ -167,13 +167,13 @@ export function HomeownerCard({
       </div>
 
       {/* Action Buttons - Bottom Right */}
-      <div className="absolute bottom-4 right-4 flex items-center gap-2">
+      <div className="absolute bottom-4 right-4 flex items-center gap-2 z-10">
         {onViewAs && (
           <Button
             onClick={onViewAs}
             size="sm"
             variant="ghost"
-            className="h-8 w-8 p-0 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/30"
+            className="h-8 w-8 p-0 rounded-full bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-700"
             title="View As Homeowner"
           >
             <Eye className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -184,7 +184,7 @@ export function HomeownerCard({
             onClick={onEdit}
             size="sm"
             variant="ghost"
-            className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            className="h-8 w-8 p-0 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600"
             title="Edit Homeowner"
           >
             <Edit2 className="h-4 w-4 text-gray-600 dark:text-gray-400" />

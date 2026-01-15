@@ -3963,6 +3963,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             }}
           />
           {/* Floating Chat Widget - Desktop Only (hidden on mobile) */}
+          {console.log('🔧 Chat Widget Check:', { isAdmin, screenWidth: typeof window !== 'undefined' ? window.innerWidth : 'unknown', isChatWidgetOpen })}
           {isAdmin && (
             <div className="hidden md:block">
               {!isChatWidgetOpen && (
@@ -4247,17 +4248,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               onClick={() => setIsHomeownerCardCollapsed(true)}
               title="Click to collapse"
             >
-              {/* Edit Button - Positioned absolutely in top right */}
-              {isAdmin && !isHomeownerView && (
-                <button 
-                  onClick={(e) => { e.stopPropagation(); handleOpenEditHomeowner(); }}
-                  className="absolute top-6 right-6 z-10 p-1.5 text-surface-outline-variant dark:text-gray-400 hover:text-primary bg-white dark:bg-gray-800 hover:bg-primary/10 rounded-full transition-colors shadow-sm"
-                  title="Edit Homeowner Info"
-                >
-                  <Edit2 className="h-4 w-4" />
-                </button>
-              )}
-             
               {/* Homeowner Card Component */}
               <HomeownerCard
                 name={displayHomeowner.name}
