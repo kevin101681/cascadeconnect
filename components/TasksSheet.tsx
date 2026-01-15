@@ -146,8 +146,8 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
   // Render the content (shared between inline and modal modes)
   const renderContent = () => (
     <>
-      {/* Header - COMPACT & STANDARDIZED */}
-      <div className="flex items-center justify-between px-6 h-16 border-b border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
+      {/* Header - Match Warranty Claims Style */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
         <h2 className="text-xl font-semibold text-surface-on dark:text-gray-100">
           Notes
         </h2>
@@ -162,8 +162,8 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
         )}
       </div>
 
-      {/* Input Area */}
-      <div className="flex-shrink-0 px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700">
+      {/* Input Area - Compact */}
+      <div className="flex-shrink-0 px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800">
         <form onSubmit={handleAddTask} className="flex gap-2 items-start">
           <div className="flex-1">
             <input
@@ -191,48 +191,52 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
         </form>
       </div>
 
-      {/* Task List */}
-      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+      {/* 2-COLUMN GRID LAYOUT - Match Warranty Claims */}
+      <div className="flex-1 overflow-y-auto px-6 py-6 bg-white dark:bg-gray-800">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
           </div>
         ) : (
           <>
-            {/* Active Tasks */}
+            {/* Active Tasks - 2 Column Grid */}
             {activeTasks.length > 0 && (
-              <div className="space-y-2 mb-6">
-                {activeTasks.map((task) => (
-                  <TaskItem
-                    key={task.id}
-                    task={task}
-                    onToggle={handleToggleTask}
-                    onDelete={handleDeleteTask}
-                    onNavigateToClaim={onNavigateToClaim}
-                    showClaimBadge={true}
-                    claims={claims}
-                  />
-                ))}
+              <div className="mb-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {activeTasks.map((task) => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      onToggle={handleToggleTask}
+                      onDelete={handleDeleteTask}
+                      onNavigateToClaim={onNavigateToClaim}
+                      showClaimBadge={true}
+                      claims={claims}
+                    />
+                  ))}
+                </div>
               </div>
             )}
 
-            {/* Completed Tasks */}
+            {/* Completed Tasks - 2 Column Grid */}
             {completedTasks.length > 0 && (
-              <div className="space-y-2">
-                <h3 className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-2">
+              <div>
+                <h3 className="text-xs font-semibold text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-3">
                   Completed
                 </h3>
-                {completedTasks.map((task) => (
-                  <TaskItem
-                    key={task.id}
-                    task={task}
-                    onToggle={handleToggleTask}
-                    onDelete={handleDeleteTask}
-                    onNavigateToClaim={onNavigateToClaim}
-                    showClaimBadge={true}
-                    claims={claims}
-                  />
-                ))}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {completedTasks.map((task) => (
+                    <TaskItem
+                      key={task.id}
+                      task={task}
+                      onToggle={handleToggleTask}
+                      onDelete={handleDeleteTask}
+                      onNavigateToClaim={onNavigateToClaim}
+                      showClaimBadge={true}
+                      claims={claims}
+                    />
+                  ))}
+                </div>
               </div>
             )}
 
@@ -250,10 +254,10 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
     </>
   );
 
-  // Inline mode - render directly in a card
+  // Inline mode - render with Warranty Claims styling (white bg, rounded, border, shadow)
   if (isInline) {
     return (
-      <div className="bg-primary/10 dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-surface-outline-variant dark:border-gray-700 shadow-sm overflow-hidden flex flex-col">
         {renderContent()}
       </div>
     );
@@ -322,4 +326,3 @@ const TaskItem: React.FC<TaskItemProps> = ({
 };
 
 export default TasksSheet;
-
