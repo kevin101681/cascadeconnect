@@ -8,7 +8,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, BuilderUser, Task, Contractor, Call } from '../types';
 import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle, HelpCircle, CheckCheck } from 'lucide-react';
+import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle, HelpCircle, CheckCheck, Settings } from 'lucide-react';
 import { useTaskStore } from '../stores/useTaskStore';
 import { calls, claims as claimsSchema } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -35,6 +35,8 @@ const HomeownerWarrantyGuide = React.lazy(() =>
 
 // Import CBS Books Page (new split-view design - no ghost headers)
 const CBSBooksPageWrapper = React.lazy(() => import('./pages/CBSBooksPageWrapper'));
+// Import Settings Tab
+const SettingsTab = React.lazy(() => import('./dashboard/tabs/SettingsTab'));
 // Lazy load heavy components to improve initial load time
 // Add error handling for failed dynamic imports
 const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err => {
@@ -474,7 +476,7 @@ interface DashboardProps {
   currentUserEmail?: string; // Current user's email for contractor matching
 
   // Initial State Control (Optional)
-  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'INVOICES' | 'SCHEDULE';
+  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'INVOICES' | 'SCHEDULE' | 'SETTINGS';
   initialThreadId?: string | null;
 
   // Tasks Widget Support
@@ -692,13 +694,13 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, []);
   
   // View State for Dashboard - derived from URL
-  type TabType = 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'INVOICES' | 'SCHEDULE' | 'PUNCHLIST' | 'CHAT' | null;
+  type TabType = 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'INVOICES' | 'SCHEDULE' | 'SETTINGS' | 'PUNCHLIST' | 'CHAT' | null;
 
   const currentTab = useMemo<TabType>(() => {
     const view = searchParams.get('view');
     if (!view) return null;
 
-    const validTabs: TabType[] = ['CLAIMS', 'MESSAGES', 'TASKS', 'NOTES', 'CALLS', 'DOCUMENTS', 'MANUAL', 'HELP', 'INVOICES', 'SCHEDULE', 'PUNCHLIST', 'CHAT'];
+    const validTabs: TabType[] = ['CLAIMS', 'MESSAGES', 'TASKS', 'NOTES', 'CALLS', 'DOCUMENTS', 'MANUAL', 'HELP', 'INVOICES', 'SCHEDULE', 'SETTINGS', 'PUNCHLIST', 'CHAT'];
     const upperView = view.toUpperCase() as TabType;
     
     return validTabs.includes(upperView) ? upperView : null;
@@ -4382,6 +4384,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       CALLS: { label: 'Calls', icon: <Phone className="h-4 w-4" /> },
                       SCHEDULE: { label: 'Schedule', icon: <Calendar className="h-4 w-4" /> },
                       INVOICES: { label: 'Invoices', icon: <Receipt className="h-4 w-4" /> },
+                      SETTINGS: { label: 'Settings', icon: <Settings className="h-4 w-4" /> },
                       PUNCHLIST: { label: 'BlueTag', icon: <HardHat className="h-4 w-4" /> },
                       CHAT: { label: 'Chat', icon: <MessageCircle className="h-4 w-4" /> },
                     };
@@ -4722,8 +4725,8 @@ const Dashboard: React.FC<DashboardProps> = ({
 
             {/* INVOICES Tab - Administrator Only (hidden for employees) - Duplicate for carousel - NO GHOST HEADERS! */}
             {isAdmin && currentUser?.role !== 'Employee' && (
-              <div 
-                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
+              <div
+                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]"
                 style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
@@ -4735,6 +4738,47 @@ const Dashboard: React.FC<DashboardProps> = ({
                     ) : (
                       <div className="flex items-center justify-center h-full text-surface-on-variant dark:text-gray-400">
                         Switch to Invoices tab to view
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* SETTINGS Tab - Admin Only */}
+            {isAdmin && (
+              <div
+                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]"
+                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
+              >
+                <div className="w-full min-h-[calc(100vh-300px)]">
+                  <div className="max-w-7xl mx-auto py-4">
+                    {currentTab === 'SETTINGS' ? (
+                      <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                        <SettingsTab
+                          employees={employees}
+                          onAddEmployee={(emp) => console.log('Add employee:', emp)}
+                          onUpdateEmployee={(emp) => console.log('Update employee:', emp)}
+                          onDeleteEmployee={(id) => console.log('Delete employee:', id)}
+                          contractors={contractors}
+                          onAddContractor={(sub) => console.log('Add contractor:', sub)}
+                          onUpdateContractor={(sub) => console.log('Update contractor:', sub)}
+                          onDeleteContractor={(id) => console.log('Delete contractor:', id)}
+                          builderUsers={builderUsers}
+                          builderGroups={builderGroups}
+                          onAddBuilderUser={(user) => console.log('Add builder user:', user)}
+                          onUpdateBuilderUser={(user) => console.log('Update builder user:', user)}
+                          onDeleteBuilderUser={(id) => console.log('Delete builder user:', id)}
+                          homeowners={homeowners}
+                          onUpdateHomeowner={onUpdateHomeowner || ((h) => console.log('Update homeowner:', h))}
+                          onDeleteHomeowner={(id) => console.log('Delete homeowner:', id)}
+                          onDataReset={() => console.log('Data reset requested')}
+                          currentUser={currentUser}
+                        />
+                      </Suspense>
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-surface-on-variant dark:text-gray-400">
+                        Switch to Settings tab to view
                       </div>
                     )}
                   </div>
