@@ -705,12 +705,12 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                     
                     {/* Amount (Read-only) */}
                     <div className="md:col-span-2 flex items-end gap-2">
-                      <div className="flex-1">
+                      <div className="flex-1 min-w-0">
                         <label className="text-xs text-surface-on-variant dark:text-gray-600 mb-1 block">
                           Amount
                         </label>
-                        <div className="w-full h-10 px-3 rounded-md border border-surface-outline-variant dark:border-gray-200 bg-surface-container/50 dark:bg-gray-50 text-sm text-surface-on dark:text-gray-900 flex items-center font-medium">
-                          ${item.amount.toFixed(2)}
+                        <div className="w-full h-10 px-2 rounded-md border border-surface-outline-variant dark:border-gray-200 bg-surface-container/50 dark:bg-gray-50 text-sm text-surface-on dark:text-gray-900 flex items-center font-medium overflow-hidden">
+                          <span className="truncate">${item.amount.toFixed(2)}</span>
                         </div>
                       </div>
                       
