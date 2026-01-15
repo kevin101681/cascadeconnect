@@ -13,7 +13,7 @@ interface InvoiceCardProps {
   builder?: string;
   address?: string;
   checkNumber?: string;
-  isSelected?: boolean; // NEW: Selected state for split-view
+  isSelected?: boolean; // Selected state for split-view
   onClick?: () => void;
   onMarkPaid?: (checkNum: string) => void;
   onCheckNumberUpdate?: (checkNum: string) => void;
@@ -31,7 +31,7 @@ export function InvoiceCard({
   builder,
   address,
   checkNumber = "",
-  isSelected = false, // Default to false
+  isSelected = false,
   onClick,
   onMarkPaid,
   onCheckNumberUpdate,
@@ -51,7 +51,6 @@ export function InvoiceCard({
       case "Draft": 
         return "!bg-gray-100 !text-gray-700 hover:!bg-gray-100 !border-0";
       default: 
-        // "Sent" (and "Overdue") - Light background with dark text for readability
         return "!bg-blue-50 !text-blue-800 hover:!bg-blue-50 !border-0";
     }
   };
@@ -62,17 +61,14 @@ export function InvoiceCard({
   
   // Auto-save check number
   const handleSaveCheckNumber = () => {
-    // Don't save if nothing changed
     if (checkNum === checkNumber) return;
-    
-    // Call the update callback
     onCheckNumberUpdate?.(checkNum);
   };
 
   return (
     <div 
       onClick={onClick}
-      className={`group relative rounded-card p-5 transition-all flex flex-col h-full touch-manipulation ${
+      className={`group relative rounded-card p-3 transition-all flex flex-col touch-manipulation ${
         onClick ? 'cursor-pointer' : ''
       } ${
         isSelected 
@@ -82,69 +78,54 @@ export function InvoiceCard({
       style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
     >
       
-      {/* 1. HEADER: Invoice #, Status, Amount */}
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-semibold text-gray-900 text-sm">{invoiceNumber}</span>
-            <Badge className={`rounded-md px-2 py-0.5 text-[10px] uppercase font-bold border-0 ${getStatusColor(status)}`}>
-              {displayStatus}
-            </Badge>
-          </div>
-          {/* Big Amount Display */}
-          <div className="flex items-center text-gray-900 font-bold text-lg">
-            {amount}
-          </div>
+      {/* COMPACT HEADER: Invoice # | Status Badge | Amount */}
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-gray-900 text-sm">{invoiceNumber}</span>
+          <Badge className={`rounded-md px-2 py-0.5 text-[10px] uppercase font-bold ${getStatusColor(status)}`}>
+            {displayStatus}
+          </Badge>
+        </div>
+        <div className="text-gray-900 font-bold text-base">
+          {amount}
         </div>
       </div>
 
-      {/* 2. BODY: Context Info (Builder/Address) */}
-      <div className="space-y-2 mb-4">
-         {/* Builder */}
-         <div className="flex items-start">
-            <Hammer className="w-3.5 h-3.5 mt-0.5 mr-2 text-gray-400 shrink-0" />
-            <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-[10px] text-gray-400 uppercase tracking-wider leading-none mb-0.5">Builder</span>
-              <span className="text-xs text-gray-700 truncate overflow-hidden">{builder || "--"}</span>
-            </div>
-          </div>
-          
-          {/* Address */}
-          <div className="flex items-start">
-            <MapPin className="w-3.5 h-3.5 mt-0.5 mr-2 text-gray-400 shrink-0" />
-            <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-[10px] text-gray-400 uppercase tracking-wider leading-none mb-0.5">Project Address</span>
-              <span className="text-xs text-gray-700 truncate overflow-hidden">{address || "--"}</span>
-            </div>
-          </div>
-      </div>
-
-      {/* 3. DATES GRID */}
-      <div className="grid grid-cols-2 gap-2 mb-4 pt-3 border-t border-gray-50">
-        <div className="flex flex-col">
-          <span className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Created</span>
-          <div className="flex items-center text-xs text-gray-600">
-            <FileText className="w-3 h-3 mr-1.5 text-gray-400" />
-            {createdDate}
-          </div>
+      {/* COMPACT DATES ROW: Side-by-side */}
+      <div className="flex items-center gap-3 mb-2 text-xs text-gray-600">
+        <div className="flex items-center gap-1">
+          <FileText className="w-3 h-3 text-gray-400" />
+          <span className="text-[10px] text-gray-400 uppercase tracking-wider">Created:</span>
+          <span>{createdDate}</span>
         </div>
-        <div className="flex flex-col border-l border-gray-100 pl-2">
-          <span className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Due Date</span>
-          {/* Removed red text logic. Dates are always neutral gray now. */}
-          <div className="flex items-center text-xs font-medium text-gray-600">
-            <Calendar className="w-3 h-3 mr-1.5 text-gray-400" />
-            {dueDate}
-          </div>
+        <span className="text-gray-300">•</span>
+        <div className="flex items-center gap-1">
+          <Calendar className="w-3 h-3 text-gray-400" />
+          <span className="text-[10px] text-gray-400 uppercase tracking-wider">Due:</span>
+          <span className="font-medium">{dueDate}</span>
         </div>
       </div>
 
-      {/* 4. FOOTER: Actions & Input */}
-      <div className="mt-auto pt-3 border-t border-gray-100 bg-gray-50/50 -mx-5 -mb-5 p-5 rounded-b-card">
+      {/* COMPACT BUILDER/ADDRESS: Single line with bullet separator */}
+      <div className="flex items-center gap-2 mb-2 text-xs text-gray-700 min-w-0">
+        <Hammer className="w-3 h-3 text-gray-400 shrink-0" />
+        <span className="truncate">{builder || "--"}</span>
+        {address && (
+          <>
+            <span className="text-gray-300 shrink-0">•</span>
+            <MapPin className="w-3 h-3 text-gray-400 shrink-0" />
+            <span className="truncate text-gray-600">{address}</span>
+          </>
+        )}
+      </div>
+
+      {/* COMPACT FOOTER: Payment Input */}
+      <div className="mt-2 pt-2 border-t border-gray-100">
         
-        {/* Check Number Field */}
-        <div className="mb-3">
+        {/* Compact Check Number Field */}
+        <div className="mb-2">
           <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">
-            {isPaid ? "Paid via Check #" : "Record Payment (Check #)"}
+            {isPaid ? "Paid via Check #" : "Check #"}
           </label>
           <div className="relative">
              <Input 
@@ -158,20 +139,20 @@ export function InvoiceCard({
                   }
                 }}
                 disabled={isPaid}
-                placeholder="Enter check number..."
-                className="h-8 text-xs bg-white pr-8 rounded-md border-gray-300 focus-visible:ring-blue-500"
+                placeholder="Enter check #..."
+                className="h-7 text-xs bg-white pr-8 rounded-md border-gray-300 focus-visible:ring-blue-500"
              />
-             {isPaid && <Check className="w-3 h-3 text-green-500 absolute right-3 top-2.5" />}
+             {isPaid && <Check className="w-3 h-3 text-green-500 absolute right-2 top-2" />}
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 justify-between">
-          {/* Primary Action */}
+        {/* Compact Action Buttons */}
+        <div className="flex items-center gap-1.5">
+          {/* Primary Action - Smaller */}
           {!isPaid ? (
             <Button 
               size="sm" 
-              className="h-8 text-xs !bg-green-50 hover:!bg-green-100 !text-green-800 flex-1 rounded-md !border-0"
+              className="h-7 text-xs !bg-green-50 hover:!bg-green-100 !text-green-800 flex-1 rounded-md !border-0"
               onClick={(e) => {
                 e.stopPropagation();
                 onMarkPaid?.(checkNum);
@@ -180,50 +161,48 @@ export function InvoiceCard({
               Pay
             </Button>
           ) : (
-             <Button size="sm" variant="outline" className="h-8 text-xs flex-1 cursor-default !bg-gray-50 !text-gray-600 !border-gray-200 hover:!bg-gray-50 rounded-md">
+             <Button size="sm" variant="outline" className="h-7 text-xs flex-1 cursor-default !bg-gray-50 !text-gray-600 !border-gray-200 hover:!bg-gray-50 rounded-md">
                 Paid
              </Button>
           )}
 
-          {/* Secondary Actions (Icon Only) */}
-          <div className="flex items-center gap-1">
-             <Button 
-               variant="ghost" 
-               size="icon" 
-               className="h-8 w-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full" 
-               title="Email PDF" 
-               onClick={(e) => {
-                 e.stopPropagation();
-                 onEmail?.();
-               }}
-             >
-                <Mail className="w-3.5 h-3.5" />
-             </Button>
-             <Button 
-               variant="ghost" 
-               size="icon" 
-               className="h-8 w-8 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full" 
-               title="Download PDF" 
-               onClick={(e) => {
-                 e.stopPropagation();
-                 onDownload?.();
-               }}
-             >
-                <Download className="w-3.5 h-3.5" />
-             </Button>
-             <Button 
-               variant="ghost" 
-               size="icon" 
-               className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full" 
-               title="Delete Invoice" 
-               onClick={(e) => {
-                 e.stopPropagation();
-                 onDelete?.();
-               }}
-             >
-                <Trash2 className="w-3.5 h-3.5" />
-             </Button>
-          </div>
+          {/* Icon-Only Actions - Smaller */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-7 w-7 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full" 
+            title="Email PDF" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onEmail?.();
+            }}
+          >
+             <Mail className="w-3 h-3" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-7 w-7 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full" 
+            title="Download PDF" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onDownload?.();
+            }}
+          >
+             <Download className="w-3 h-3" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-7 w-7 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full" 
+            title="Delete" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete?.();
+            }}
+          >
+             <Trash2 className="w-3 h-3" />
+          </Button>
         </div>
       </div>
 

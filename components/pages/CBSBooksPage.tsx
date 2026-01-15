@@ -180,10 +180,9 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
   // STRICT RULE: NO HEADERS OR TABS ALLOWED HERE.
   // ONLY THE GRID WRAPPER IS ALLOWED.
   // CLONE WARRANTY CLAIMS LAYOUT EXACTLY (flex-row, no gap, border-r on left)
+  // NO OUTER PADDING - Dashboard already provides it!
   return (
-    <div className="h-[calc(100vh-4rem)] p-4 md:p-6 lg:p-8 overflow-hidden">
-      {/* Wrapper: Match Warranty Claims EXACTLY */}
-      <div className="bg-surface dark:bg-gray-800 rounded-modal border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full min-h-0">
+    <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
         
         {/* ==================== LEFT COLUMN (Master List) ==================== */}
         {/* Clone Warranty: w-full md:w-96, border-r on desktop, flex flex-col */}
@@ -257,22 +256,35 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
             />
           )}
           
-          {/* BUILDERS TAB - Legacy Clients Component */}
+          {/* BUILDERS TAB - Placeholder or Builder Details */}
           {activeTab === 'builders' && (
-            <div className="h-full overflow-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
-              <div className="p-6">
-                <Clients
-                  clients={clients}
-                  invoices={invoices}
-                  onAdd={onAddClient}
-                  onUpdate={onUpdateClient}
-                  onDelete={onDeleteClient}
-                  onBulkAdd={onBulkAddClients || (() => {})}
-                  onNavigate={handleNavigate}
-                  onBackup={onBackup || (() => {})}
-                />
-              </div>
-            </div>
+            <>
+              {!selectedBuilder ? (
+                // Placeholder when no builder selected
+                <div className="flex items-center justify-center h-full bg-gray-50/50 dark:bg-gray-900/50">
+                  <div className="text-center text-gray-500 dark:text-gray-400">
+                    <p className="text-sm font-medium">Select a builder to view details</p>
+                    <p className="text-xs mt-1">or click "New Builder" to create one</p>
+                  </div>
+                </div>
+              ) : (
+                // Show builder details/form when selected
+                <div className="h-full overflow-auto bg-white dark:bg-gray-800">
+                  <div className="p-6">
+                    <Clients
+                      clients={clients}
+                      invoices={invoices}
+                      onAdd={onAddClient}
+                      onUpdate={onUpdateClient}
+                      onDelete={onDeleteClient}
+                      onBulkAdd={onBulkAddClients || (() => {})}
+                      onNavigate={handleNavigate}
+                      onBackup={onBackup || (() => {})}
+                    />
+                  </div>
+                </div>
+              )}
+            </>
           )}
           
           {/* P&L TAB - Legacy Reports Component */}
@@ -308,7 +320,6 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
           
         </div>
       </div>
-    </div>
   );
 };
 
