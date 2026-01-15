@@ -4251,6 +4251,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                 email={displayHomeowner.email}
                 clerkId={displayHomeowner.clerkId}
                 inviteEmailRead={displayHomeowner.inviteEmailRead}
+                onEdit={isAdmin ? () => {
+                  alert('Edit functionality requires integration with App.tsx parent component');
+                } : undefined}
+                onViewAs={isAdmin ? () => {
+                  alert('View As functionality requires role switching integration with App.tsx');
+                } : undefined}
               />
              </div>
 
