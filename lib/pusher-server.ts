@@ -77,3 +77,16 @@ export async function triggerSmsMessageEvent(data: {
   await triggerPusherEvent('sms-channel', 'new-message', data);
 }
 
+/**
+ * Trigger call update event
+ * Convenience function for call-specific events
+ */
+export async function triggerCallUpdateEvent(data: {
+  callId: string;
+  type: 'new-call' | 'call-updated' | 'claim-created';
+  homeownerId?: string | null;
+  claimId?: string | null;
+}): Promise<void> {
+  await triggerPusherEvent('calls-channel', 'call-update', data);
+}
+

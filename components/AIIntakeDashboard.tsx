@@ -7,10 +7,17 @@ import { eq, desc, sql } from 'drizzle-orm';
 import SMSChatView from './SMSChatView';
 import { useTaskStore } from '../stores/useTaskStore';
 import { CallerCard } from './ui/CallerCard';
+import { formatPhoneNumber } from '../lib/utils';
+import { subscribeCallsChannel } from '../lib/pusher-client';
 
 interface AIIntakeDashboardProps {
   onNavigate?: (view: string) => void;
   onSelectHomeowner?: (homeownerId: string) => void;
+}
+
+interface TranscriptMessage {
+  speaker: 'assistant' | 'caller';
+  text: string;
 }
 
 const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSelectHomeowner }) => {
@@ -24,6 +31,45 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
   const ITEMS_PER_PAGE = 9;
   const callDetailsRef = useRef<HTMLDivElement>(null);
+
+  // Parse transcript into chat messages
+  const parseTranscript = (transcript: string): TranscriptMessage[] => {
+    if (!transcript) return [];
+    
+    const messages: TranscriptMessage[] = [];
+    const lines = transcript.split('\n');
+    
+    for (const line of lines) {
+      const trimmedLine = line.trim();
+      if (!trimmedLine) continue;
+      
+      // Check for speaker labels (AI:, Assistant:, User:, Caller:, etc.)
+      if (trimmedLine.match(/^(AI|Assistant):/i)) {
+        messages.push({
+          speaker: 'assistant',
+          text: trimmedLine.replace(/^(AI|Assistant):\s*/i, '').trim()
+        });
+      } else if (trimmedLine.match(/^(User|Caller|Customer|Homeowner):/i)) {
+        messages.push({
+          speaker: 'caller',
+          text: trimmedLine.replace(/^(User|Caller|Customer|Homeowner):\s*/i, '').trim()
+        });
+      } else {
+        // If no label, try to infer or append to last message
+        if (messages.length > 0) {
+          messages[messages.length - 1].text += ' ' + trimmedLine;
+        } else {
+          // Default to caller if first line has no label
+          messages.push({
+            speaker: 'caller',
+            text: trimmedLine
+          });
+        }
+      }
+    }
+    
+    return messages;
+  };
 
   // Detect mobile on mount and resize
   useEffect(() => {
@@ -40,12 +86,26 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
   useEffect(() => {
     loadCalls();
     
-    // Auto-refresh calls every 30 seconds to pick up new calls
+    // Auto-refresh calls every 30 seconds as fallback
     const interval = setInterval(() => {
       loadCalls();
     }, 30000);
     
-    return () => clearInterval(interval);
+    // Subscribe to real-time call updates via Pusher
+    const unsubscribe = subscribeCallsChannel((data) => {
+      console.log('📞 Received call update:', data);
+      
+      // Reload calls immediately when a new call or claim is created
+      if (data.type === 'new-call' || data.type === 'claim-created') {
+        console.log('🔄 Refreshing calls list due to:', data.type);
+        loadCalls();
+      }
+    });
+    
+    return () => {
+      clearInterval(interval);
+      unsubscribe();
+    };
   }, []);
 
   // Scroll to top of call details when a new call is selected (desktop only)
@@ -255,7 +315,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
 
   return (
     <>
-    <div className="bg-white dark:bg-white md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col max-h-[calc(100vh-8rem)]">
+    <div className="bg-white dark:bg-white md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col max-h-[calc(100vh-8rem)] overflow-hidden">
       {/* Two Column Layout */}
       {filteredCalls.length === 0 ? (
         <div className="flex-1 flex items-center justify-center p-6">
@@ -391,7 +451,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                       <div>
                         <p className="text-xs text-surface-on-variant dark:text-gray-400">Phone</p>
                         <p className="text-sm font-medium text-surface-on dark:text-gray-100">
-                          {actualSelectedCall.phoneNumber}
+                          {formatPhoneNumber(actualSelectedCall.phoneNumber)}
                         </p>
                       </div>
                     </div>
@@ -472,7 +532,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                   </div>
                 )}
 
-                {/* Transcript */}
+                {/* Transcript - Chat UI */}
                 {actualSelectedCall.transcript && (
                   <div>
                     <button
@@ -487,10 +547,30 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                       )}
                     </button>
                     {isTranscriptExpanded && (
-                      <div className="p-4 bg-surface-container dark:bg-gray-700 rounded-lg max-h-64 overflow-y-auto">
-                        <p className="text-sm text-surface-on dark:text-gray-100 whitespace-pre-wrap">
-                          {actualSelectedCall.transcript}
-                        </p>
+                      <div className="bg-surface-container dark:bg-gray-700 rounded-lg p-4 max-h-96 overflow-y-auto space-y-3">
+                        {parseTranscript(actualSelectedCall.transcript).map((msg, idx) => (
+                          <div
+                            key={idx}
+                            className={`flex ${msg.speaker === 'caller' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div className="flex flex-col max-w-[80%]">
+                              <span className={`text-xs mb-1 ${msg.speaker === 'caller' ? 'text-right' : 'text-left'} text-surface-on-variant dark:text-gray-400`}>
+                                {msg.speaker === 'caller' ? 'Caller' : 'Assistant'}
+                              </span>
+                              <div
+                                className={`rounded-2xl px-4 py-2 ${
+                                  msg.speaker === 'caller'
+                                    ? 'bg-primary text-primary-on rounded-br-sm'
+                                    : 'bg-surface dark:bg-gray-600 text-surface-on dark:text-gray-100 rounded-bl-sm'
+                                }`}
+                              >
+                                <p className="text-sm whitespace-pre-wrap break-words">
+                                  {msg.text}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -646,7 +726,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                   <div>
                     <p className="text-xs text-surface-on-variant dark:text-gray-400">Phone</p>
                     <p className="text-sm font-medium text-surface-on dark:text-gray-100">
-                      {actualSelectedCall.phoneNumber}
+                      {formatPhoneNumber(actualSelectedCall.phoneNumber)}
                     </p>
                   </div>
                 </div>
@@ -727,7 +807,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
               </div>
             )}
 
-            {/* Transcript */}
+            {/* Transcript - Chat UI */}
             {actualSelectedCall.transcript && (
               <div>
                 <button
@@ -742,10 +822,30 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                   )}
                 </button>
                 {isTranscriptExpanded && (
-                  <div className="p-4 bg-surface-container dark:bg-gray-700 rounded-lg max-h-64 overflow-y-auto">
-                    <p className="text-sm text-surface-on dark:text-gray-100 whitespace-pre-wrap">
-                      {actualSelectedCall.transcript}
-                    </p>
+                  <div className="bg-surface-container dark:bg-gray-700 rounded-lg p-4 max-h-96 overflow-y-auto space-y-3">
+                    {parseTranscript(actualSelectedCall.transcript).map((msg, idx) => (
+                      <div
+                        key={idx}
+                        className={`flex ${msg.speaker === 'caller' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div className="flex flex-col max-w-[80%]">
+                          <span className={`text-xs mb-1 ${msg.speaker === 'caller' ? 'text-right' : 'text-left'} text-surface-on-variant dark:text-gray-400`}>
+                            {msg.speaker === 'caller' ? 'Caller' : 'Assistant'}
+                          </span>
+                          <div
+                            className={`rounded-2xl px-4 py-2 ${
+                              msg.speaker === 'caller'
+                                ? 'bg-primary text-primary-on rounded-br-sm'
+                                : 'bg-surface dark:bg-gray-600 text-surface-on dark:text-gray-100 rounded-bl-sm'
+                            }`}
+                          >
+                            <p className="text-sm whitespace-pre-wrap break-words">
+                              {msg.text}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

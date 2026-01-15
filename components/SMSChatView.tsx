@@ -12,6 +12,7 @@ import { db, isDbConfigured } from '../db';
 import { smsThreads, smsMessages } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { format } from 'date-fns';
+import { formatPhoneNumber } from '../lib/utils';
 
 interface SmsMessage {
   id: string;
@@ -200,13 +201,12 @@ const SMSChatView: React.FC<SMSChatViewProps> = ({
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700">
         <div className="flex items-center gap-3">
-          <MessageSquare className="h-5 w-5 text-primary" />
           <div>
             <h3 className="text-lg font-medium text-surface-on dark:text-gray-100">
               Chat
             </h3>
             <p className="text-sm text-surface-on-variant dark:text-gray-400">
-              {homeownerName} • {homeownerPhone}
+              {homeownerName} • {formatPhoneNumber(homeownerPhone)}
             </p>
           </div>
         </div>

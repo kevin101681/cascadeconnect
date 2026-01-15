@@ -13,6 +13,7 @@ import {
 } from '../../lib/services/vapiService';
 import { sendUniversalNotification } from '../../lib/services/emailService';
 import { findMatchingHomeowner } from '../../lib/services/homeownerMatchingService';
+import { triggerCallUpdateEvent } from '../../lib/pusher-server';
 
 /**
  * VAPI WEBHOOK - UNIVERSAL EMAIL NOTIFICATIONS
@@ -264,8 +265,9 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     }
 
     // Save call record (ALWAYS, regardless of match)
+    let savedCallId: string | null = null;
     try {
-      await db
+      const result = await db
         .insert(calls)
         .values({
           vapiCallId: vapiCallId,
@@ -294,9 +296,25 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
             isVerified: isVerified,
             addressMatchSimilarity: matchedHomeowner ? similarity.toFixed(3) : null,
           } as any,
-        });
+        })
+        .returning();
 
-      console.log(`✅ Call saved to database`);
+      savedCallId = result[0]?.id || null;
+      console.log(`✅ Call saved to database (ID: ${savedCallId})`);
+
+      // Trigger Pusher event for real-time updates
+      if (savedCallId) {
+        try {
+          await triggerCallUpdateEvent({
+            callId: savedCallId,
+            type: 'new-call',
+            homeownerId: matchedHomeowner?.id || null,
+          });
+          console.log(`📡 Pusher event triggered for new call`);
+        } catch (pusherError: any) {
+          console.error(`⚠️ Failed to trigger Pusher event (non-critical):`, pusherError.message);
+        }
+      }
     } catch (dbError: any) {
       console.error(`❌ Database error:`, dbError.message);
     }
@@ -362,6 +380,21 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           claimCreated = true;
           claimId = insertResult[0]?.id || null;
           console.log(`✅ Claim #${claimNumber} created (ID: ${claimId})`);
+
+          // Trigger Pusher event for claim creation
+          if (claimId && savedCallId) {
+            try {
+              await triggerCallUpdateEvent({
+                callId: savedCallId,
+                type: 'claim-created',
+                homeownerId: matchedHomeowner.id,
+                claimId: claimId,
+              });
+              console.log(`📡 Pusher event triggered for claim creation`);
+            } catch (pusherError: any) {
+              console.error(`⚠️ Failed to trigger Pusher event (non-critical):`, pusherError.message);
+            }
+          }
         }
       } catch (claimError: any) {
         console.error(`❌ Claim creation error:`, claimError.message);

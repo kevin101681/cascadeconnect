@@ -385,7 +385,13 @@ export function extractCallData(payload: VapiWebhookPayload): Partial<ExtractedC
   }
 
   const transcript = getProperty(callData, 'transcript', 'transcription') || getProperty(message, 'transcript') || null;
-  const recordingUrl = getProperty(callData, 'recordingUrl', 'recording_url') || null;
+  
+  // Check multiple possible locations for recording URL
+  const recordingUrl = 
+    getProperty(callData, 'recordingUrl', 'recording_url', 'stereoRecordingUrl') ||
+    getProperty(callData?.artifact, 'recordingUrl', 'recording_url', 'stereoRecordingUrl') ||
+    getProperty(message?.artifact, 'recordingUrl', 'recording_url', 'stereoRecordingUrl') ||
+    null;
 
   return {
     vapiCallId: callId || '',

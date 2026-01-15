@@ -68,6 +68,35 @@ export function subscribeSmsChannel(
 }
 
 /**
+ * Subscribe to calls channel and listen for new/updated calls
+ * @param onCallUpdate - Callback function to handle call updates
+ * @returns Unsubscribe function
+ */
+export function subscribeCallsChannel(
+  onCallUpdate: (data: {
+    callId: string;
+    type: 'new-call' | 'call-updated' | 'claim-created';
+    homeownerId?: string | null;
+    claimId?: string | null;
+  }) => void
+): () => void {
+  const pusher = getPusherClient();
+  const channel = pusher.subscribe('calls-channel');
+
+  channel.bind('call-update', (data: any) => {
+    console.log('📞 Call update received via Pusher:', data);
+    onCallUpdate(data);
+  });
+
+  // Return unsubscribe function
+  return () => {
+    channel.unbind('call-update');
+    pusher.unsubscribe('calls-channel');
+    console.log('🔌 Unsubscribed from calls channel');
+  };
+}
+
+/**
  * Disconnect Pusher client
  */
 export function disconnectPusher(): void {
