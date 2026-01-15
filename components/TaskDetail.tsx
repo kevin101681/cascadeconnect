@@ -119,13 +119,18 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
       <div className="mb-6 flex items-center justify-between gap-4">
         <div className="flex-1">
           {isEditing ? (
-            <input 
-              type="text" 
-              value={editTaskTitle}
-              onChange={e => setEditTaskTitle(e.target.value)}
-              autoFocus
-              className="text-2xl font-normal bg-surface-container dark:bg-gray-700 border border-primary rounded px-2 py-1 text-surface-on dark:text-gray-100 focus:outline-none w-full"
-            />
+            <div>
+              <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
+                Task Title *
+              </label>
+              <input 
+                type="text" 
+                value={editTaskTitle}
+                onChange={e => setEditTaskTitle(e.target.value)}
+                className="w-full h-9 px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+                placeholder="Enter task title"
+              />
+            </div>
           ) : (
             <div className="text-sm text-surface-on-variant dark:text-gray-400 flex items-center gap-2 whitespace-nowrap flex-wrap">
               <span className="flex items-center gap-1.5">
