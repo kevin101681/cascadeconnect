@@ -177,7 +177,12 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
   
   // Close builder dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = () => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      // Don't close if clicking inside the dropdown
+      if (target.closest('[data-builder-dropdown]')) {
+        return;
+      }
       setShowBuilderDropdown(false);
     };
     
@@ -566,12 +571,19 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                 
                 {/* Builder Dropdown */}
                 {showBuilderDropdown && filteredBuilders.length > 0 && (
-                  <div className="absolute z-50 w-full mt-2 bg-white dark:bg-white rounded-lg shadow-elevation-3 border border-surface-outline-variant dark:border-gray-300 max-h-40 overflow-y-auto">
+                  <div 
+                    data-builder-dropdown
+                    className="absolute z-50 w-full mt-2 bg-white dark:bg-white rounded-lg shadow-elevation-3 border border-surface-outline-variant dark:border-gray-300 max-h-40 overflow-y-auto"
+                  >
                     {filteredBuilders.map(builder => (
                       <button
                         key={builder.id}
                         type="button"
-                        onClick={() => handleBuilderSelect(builder)}
+                        onMouseDown={(e) => {
+                          e.preventDefault(); // Prevent input blur
+                          console.log('🔹 Selected Builder:', builder.name, builder.email);
+                          handleBuilderSelect(builder);
+                        }}
                         className="w-full text-left px-4 py-3 hover:bg-surface-container dark:hover:bg-gray-50 transition-colors border-b border-surface-outline-variant dark:border-gray-200 last:border-0"
                       >
                         <div className="font-medium text-sm text-surface-on dark:text-gray-900">
@@ -726,14 +738,14 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
           
           {/* Total (IN BODY, NOT FOOTER) */}
           <div className="bg-primary/5 dark:bg-primary/10 p-4 rounded-lg border border-primary/20">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium text-surface-on dark:text-gray-900">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <DollarSign className="h-5 w-5 text-primary shrink-0" />
+                <span className="text-sm font-medium text-surface-on dark:text-gray-900 whitespace-nowrap">
                   Total Amount
                 </span>
               </div>
-              <span className="text-2xl font-bold text-primary">
+              <span className="text-xl md:text-2xl font-bold text-primary shrink-0">
                 ${calculateTotal().toFixed(2)}
               </span>
             </div>
