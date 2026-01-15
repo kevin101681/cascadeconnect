@@ -951,12 +951,12 @@ const Dashboard: React.FC<DashboardProps> = ({
   const getAvailableTabs = (): Array<Exclude<TabType, null>> => {
     const isHomeownerViewRole = userRole === UserRole.HOMEOWNER;
     const isEmployee = currentUser?.role === 'Employee';
-    const tabs: Array<Exclude<TabType, null>> = ['CLAIMS'];
+    const tabs: Array<Exclude<TabType, null>> = ['CLAIMS']; // Warranty
+    tabs.push('MESSAGES');
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('TASKS');
-      tabs.push('NOTES'); // NOTES tab between TASKS and MESSAGES
+      tabs.push('NOTES');
     }
-    tabs.push('MESSAGES');
     // Homeowner tabs - only show for homeowners
     if (isHomeownerViewRole) {
       tabs.push('DOCUMENTS'); // DOCUMENTS tab for homeowners

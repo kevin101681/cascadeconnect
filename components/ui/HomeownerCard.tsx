@@ -141,7 +141,7 @@ export function HomeownerCard({
         </div>
 
         {/* Builder */}
-        <div className="flex items-start group/item border-t border-gray-50 dark:border-gray-700 pt-4 mt-2">
+        <div className="flex items-start group/item">
           <Hammer className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 shrink-0" />
           <div className="flex flex-col">
             <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Builder</span>
