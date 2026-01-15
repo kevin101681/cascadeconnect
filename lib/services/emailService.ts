@@ -175,6 +175,11 @@ export async function sendEmail(request: EmailRequest): Promise<EmailResponse> {
 
     // Add optional fields
     if (request.html) {
+      // Ensure html is a string
+      if (typeof request.html !== 'string') {
+        console.error('❌ HTML field is not a string:', typeof request.html);
+        throw new Error(`HTML field must be a string, got ${typeof request.html}`);
+      }
       msg.html = request.html;
     }
 
@@ -314,18 +319,27 @@ function buildUniversalNotificationContent(
   }
 
   // Render React Email template to HTML
+  const React = require('react');
   const { render } = require('@react-email/render');
   const UniversalNotificationEmail = require('../../emails/UniversalNotificationEmail').default;
   
-  const html = render(
-    UniversalNotificationEmail({
-      scenario,
-      data,
-      callsLink,
-      homeownerLink,
-      claimLink,
-    })
-  );
+  // Create React element and render to HTML string
+  const emailElement = React.createElement(UniversalNotificationEmail, {
+    scenario,
+    data,
+    callsLink,
+    homeownerLink,
+    claimLink,
+  });
+  
+  const html = render(emailElement);
+  
+  // Ensure html is a string
+  const htmlString = typeof html === 'string' ? html : String(html);
+  
+  // Log for debugging
+  console.log('📧 HTML type:', typeof html);
+  console.log('📧 HTML length:', htmlString.length);
 
   // Build plain text version
   const headerTitle = scenario === 'CLAIM_CREATED' ? 'New Warranty Claim Created' 
@@ -358,7 +372,7 @@ ${scenario === 'CLAIM_CREATED' ? 'View Claim' : scenario === 'MATCH_NO_CLAIM' ? 
 View All Calls: ${callsLink}
   `.trim();
 
-  return { subject, html, text };
+  return { subject, html: htmlString, text };
 }
 
 /**
