@@ -68,6 +68,10 @@ const PunchListApp = React.lazy(() => import('./PunchListApp').catch(err => {
   // Return a fallback component
   return { default: () => <div className="p-4 text-red-500">Failed to load punch list. Please refresh the page.</div> };
 }));
+
+// Lazy-load Floating Chat Widget (desktop only)
+const FloatingChatWidget = React.lazy(() => import('./chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
+
 import { HOMEOWNER_MANUAL_IMAGES } from '../lib/bluetag/constants';
 import { WarrantyCard } from './ui/WarrantyCard';
 import { HomeownerCard } from './ui/HomeownerCard';
@@ -3932,9 +3936,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               }
             }}
           />
-          {/* REMOVED: Floating Chat Widget (redundant - use "Team Chat" button in Communication section instead) */}
-          {/* {isAdmin && (
-            <>
+          {/* Floating Chat Widget - Desktop Only (hidden on mobile) */}
+          {isAdmin && (
+            <div className="hidden md:block">
               {!isChatWidgetOpen && (
                 <button
                   type="button"
@@ -3962,8 +3966,8 @@ const Dashboard: React.FC<DashboardProps> = ({
                   />
                 </Suspense>
               )}
-            </>
-          )} */}
+            </div>
+          )}
         </>
       );
     }
