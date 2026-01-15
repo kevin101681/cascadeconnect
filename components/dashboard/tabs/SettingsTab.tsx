@@ -11,11 +11,11 @@ import { Users, Home, Database, BarChart, Server, FileText, ChevronRight } from 
 import { InternalEmployee, Contractor, BuilderUser, BuilderGroup, Homeowner } from '../../../types';
 
 // Lazy load view adapters (non-modal versions)
-const InternalUsersView = React.lazy(() => import('../views/InternalUsersView'));
-const HomeownersDirectoryView = React.lazy(() => import('../views/HomeownersDirectoryView'));
-const DataImportView = React.lazy(() => import('../views/DataImportView'));
-const BackendStatusView = React.lazy(() => import('../views/BackendStatusView'));
-const TemplatesView = React.lazy(() => import('../views/TemplatesView'));
+const InternalUsersView = React.lazy(() => import('../views/InternalUsersView').then(m => ({ default: m.default })));
+const HomeownersDirectoryView = React.lazy(() => import('../views/HomeownersDirectoryView').then(m => ({ default: m.default })));
+const DataImportView = React.lazy(() => import('../views/DataImportView').then(m => ({ default: m.default })));
+const BackendStatusView = React.lazy(() => import('../views/BackendStatusView').then(m => ({ default: m.default })));
+const TemplatesView = React.lazy(() => import('../views/TemplatesView').then(m => ({ default: m.default })));
 
 // Define category types
 type CategoryType = 
