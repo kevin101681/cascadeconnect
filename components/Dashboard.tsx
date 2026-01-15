@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef, forwardRef, Suspense, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { useRouter } from 'next/navigation';
 // Lazy load heavy libraries - only load when needed
 // import Papa from 'papaparse';
 // import * as XLSX from 'xlsx';
@@ -588,7 +587,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   const mountTimeRef = useRef(Date.now());
   const userInteractionRef = useRef(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const router = useRouter();
   
   // Track user interactions (clicks, touches) to distinguish user-initiated vs auto-opens
   useEffect(() => {
@@ -3705,7 +3703,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       const homeownerEmail = displayHomeowner.email?.toLowerCase().trim() || '';
       return (
         claimEmail === homeownerEmail &&
-        c.status === ClaimStatus.PROCESSED // Only include claims that have been processed
+        c.status !== ClaimStatus.COMPLETED &&
+        c.status !== ClaimStatus.CLOSED
       );
     });
 
@@ -4305,7 +4304,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                         onClick={() => {
                           // Navigate to Calls page with search filter for this homeowner's phone
                           const searchParam = encodeURIComponent(displayHomeowner.phone || '');
-                          router.push(`/calls?search=${searchParam}`);
+                          if (onNavigate) {
+                            onNavigate('CALLS');
+                            // Set search filter via hash
+                            setTimeout(() => {
+                              window.location.hash = `calls?search=${searchParam}`;
+                            }, 100);
+                          }
                         }}
                         variant="outlined"
                         icon={<Phone className="h-4 w-4" />}

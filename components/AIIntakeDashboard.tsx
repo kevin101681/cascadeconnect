@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
 import { Call, Homeowner } from '../types';
 import { Phone, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Building2, User, Mail, ExternalLink, Play, Download, Search, ChevronLeft, ChevronRight, Trash2, ChevronDown, ChevronUp, StickyNote } from 'lucide-react';
 import { db, isDbConfigured } from '../db';
@@ -22,7 +21,6 @@ interface TranscriptMessage {
 }
 
 const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSelectHomeowner }) => {
-  const searchParams = useSearchParams();
   const [callsData, setCallsData] = useState<Call[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'verified' | 'unverified' | 'urgent'>('all');
@@ -85,16 +83,18 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Apply search filter from URL params (deep link from Dashboard)
+  // Apply search filter from URL hash (deep link from Dashboard)
   useEffect(() => {
-    const searchParam = searchParams.get('search');
-    if (searchParam) {
+    const hash = window.location.hash;
+    const searchMatch = hash.match(/[?&]search=([^&]*)/);
+    if (searchMatch) {
+      const searchParam = decodeURIComponent(searchMatch[1]);
       console.log('🔍 Deep link: Applying search filter from URL:', searchParam);
       setSearchQuery(searchParam);
       // Reset to first page when applying filter
       setCurrentPage(1);
     }
-  }, [searchParams]);
+  }, []);
 
   useEffect(() => {
     loadCalls();
