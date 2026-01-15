@@ -119,15 +119,11 @@ export function InvoiceCard({
         )}
       </div>
 
-      {/* COMPACT FOOTER: Payment Input */}
+      {/* ULTRA-COMPACT FOOTER: Single Row Layout */}
       <div className="mt-2 pt-2 border-t border-gray-100">
-        
-        {/* Compact Check Number Field */}
-        <div className="mb-2">
-          <label className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 block">
-            {isPaid ? "Paid via Check #" : "Check #"}
-          </label>
-          <div className="relative">
+        <div className="flex items-center gap-1.5">
+          {/* Check Number Input - Inline */}
+          <div className="relative flex-1">
              <Input 
                 value={checkNum}
                 onChange={(e) => setCheckNum(e.target.value)}
@@ -139,20 +135,17 @@ export function InvoiceCard({
                   }
                 }}
                 disabled={isPaid}
-                placeholder="Enter check #..."
-                className="h-7 text-xs bg-white pr-8 rounded-md border-gray-300 focus-visible:ring-blue-500"
+                placeholder={isPaid ? `Paid: ${checkNum || 'N/A'}` : "Check #..."}
+                className="h-7 text-xs bg-white pr-7 rounded-md border-gray-300 focus-visible:ring-blue-500"
              />
              {isPaid && <Check className="w-3 h-3 text-green-500 absolute right-2 top-2" />}
           </div>
-        </div>
 
-        {/* Compact Action Buttons */}
-        <div className="flex items-center gap-1.5">
-          {/* Primary Action - Smaller */}
+          {/* Pay Button - Inline */}
           {!isPaid ? (
             <Button 
               size="sm" 
-              className="h-7 text-xs !bg-green-50 hover:!bg-green-100 !text-green-800 flex-1 rounded-md !border-0"
+              className="h-7 px-3 text-xs !bg-green-50 hover:!bg-green-100 !text-green-800 rounded-md !border-0 whitespace-nowrap"
               onClick={(e) => {
                 e.stopPropagation();
                 onMarkPaid?.(checkNum);
@@ -161,16 +154,16 @@ export function InvoiceCard({
               Pay
             </Button>
           ) : (
-             <Button size="sm" variant="outline" className="h-7 text-xs flex-1 cursor-default !bg-gray-50 !text-gray-600 !border-gray-200 hover:!bg-gray-50 rounded-md">
+             <Button size="sm" variant="outline" className="h-7 px-3 text-xs cursor-default !bg-gray-50 !text-gray-600 !border-gray-200 hover:!bg-gray-50 rounded-md whitespace-nowrap">
                 Paid
              </Button>
           )}
 
-          {/* Icon-Only Actions - Smaller */}
+          {/* Icon Actions - Inline */}
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-7 w-7 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full" 
+            className="h-7 w-7 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full shrink-0" 
             title="Email PDF" 
             onClick={(e) => {
               e.stopPropagation();
@@ -182,7 +175,7 @@ export function InvoiceCard({
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-7 w-7 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full" 
+            className="h-7 w-7 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-full shrink-0" 
             title="Download PDF" 
             onClick={(e) => {
               e.stopPropagation();
@@ -194,7 +187,7 @@ export function InvoiceCard({
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-7 w-7 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full" 
+            className="h-7 w-7 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full shrink-0" 
             title="Delete" 
             onClick={(e) => {
               e.stopPropagation();
