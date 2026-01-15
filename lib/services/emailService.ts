@@ -122,13 +122,16 @@ function getAppUrl(): string {
  */
 export async function sendEmail(request: EmailRequest): Promise<EmailResponse> {
   console.log('📨 Sending email...');
+  console.log('📨 To:', typeof request.to === 'string' ? request.to : request.to.email);
+  console.log('📨 Subject:', request.subject);
 
   // Check if SendGrid is configured
   if (!isSendGridConfigured()) {
-    console.log('⚠️ SendGrid not configured, skipping email');
+    console.error('❌ SendGrid not configured, cannot send email');
+    console.error('❌ Set SENDGRID_API_KEY environment variable to enable email sending');
     return {
       success: false,
-      error: 'SendGrid not configured',
+      error: 'SendGrid not configured - SENDGRID_API_KEY missing',
     };
   }
 
@@ -199,12 +202,21 @@ export async function sendEmail(request: EmailRequest): Promise<EmailResponse> {
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     console.error('❌ Failed to send email:', errorMessage);
+    console.error('❌ Error type:', typeof error);
+    console.error('❌ Error details:', error);
     
     if (error && typeof error === 'object' && 'response' in error) {
       const sgError = error as any;
+      console.error('❌ SendGrid error code:', sgError.code);
+      console.error('❌ SendGrid error status:', sgError.response?.statusCode);
       if (sgError.response?.body) {
-        console.error('SendGrid error details:', sgError.response.body);
+        console.error('❌ SendGrid error body:', JSON.stringify(sgError.response.body, null, 2));
       }
+    }
+    
+    // Check for common configuration errors
+    if (errorMessage.includes('API key') || errorMessage.includes('Unauthorized')) {
+      console.error('❌ SENDGRID_API_KEY may be invalid or expired. Please check your environment variables.');
     }
     
     return {
@@ -359,10 +371,23 @@ export async function sendUniversalNotification(
   db: any
 ): Promise<void> {
   console.log(`📧 Sending '${scenario}' notification...`);
+  console.log(`📧 Data summary:`, {
+    propertyAddress: data.propertyAddress,
+    homeownerName: data.homeownerName,
+    phoneNumber: data.phoneNumber ? '***' + data.phoneNumber.slice(-4) : null,
+    isVerified: data.isVerified,
+    claimCreated: !!data.claimId,
+    vapiCallId: data.vapiCallId,
+  });
 
   // Check if SendGrid is configured
-  if (!isSendGridConfigured()) {
-    console.log('⚠️ SendGrid not configured, skipping email');
+  const sendGridConfigured = isSendGridConfigured();
+  console.log(`📧 SendGrid configured:`, sendGridConfigured);
+  console.log(`📧 SENDGRID_API_KEY exists:`, !!process.env.SENDGRID_API_KEY);
+  
+  if (!sendGridConfigured) {
+    console.error('❌ CRITICAL: SendGrid not configured! SENDGRID_API_KEY environment variable is missing.');
+    console.error('❌ Email notifications will NOT be sent until SENDGRID_API_KEY is configured.');
     return;
   }
 

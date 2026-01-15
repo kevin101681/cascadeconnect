@@ -412,6 +412,8 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     // (ALWAYS SENT, OUTSIDE ANY IF/ELSE)
     // ==========================================
     console.log(`📧 [${requestId}] STEP 4: Sending universal email notification`);
+    console.log(`📧 Event type: ${body.message?.type || body.type}`);
+    console.log(`📧 isFinalEvent check:`, isFinalEvent(body, callData));
 
     if (isFinalEvent(body, callData)) {
       // Determine scenario
@@ -426,29 +428,46 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       }
 
       console.log(`📧 Determined scenario: ${scenario}`);
+      console.log(`📧 Email data:`, {
+        propertyAddress,
+        homeownerName,
+        phoneNumber,
+        issueDescription,
+        callIntent,
+        isUrgent,
+        isVerified,
+        claimCreated,
+      });
 
-      // Send email using centralized email service
-      await sendUniversalNotification(
-        scenario,
-        {
-          propertyAddress: propertyAddress || null,
-          homeownerName: homeownerName || null,
-          phoneNumber: phoneNumber || null,
-          issueDescription: issueDescription || null,
-          callIntent: callIntent || null,
-          isUrgent: isUrgent || false,
-          isVerified: isVerified,
-          matchedHomeownerId: matchedHomeowner?.id || null,
-          matchedHomeownerName: matchedHomeowner?.name || null,
-          claimNumber: claimNumber,
-          claimId: claimId,
-          vapiCallId: vapiCallId,
-          similarity: similarity,
-        },
-        db
-      );
+      // Send email using centralized email service (with error handling)
+      try {
+        await sendUniversalNotification(
+          scenario,
+          {
+            propertyAddress: propertyAddress || null,
+            homeownerName: homeownerName || null,
+            phoneNumber: phoneNumber || null,
+            issueDescription: issueDescription || null,
+            callIntent: callIntent || null,
+            isUrgent: isUrgent || false,
+            isVerified: isVerified,
+            matchedHomeownerId: matchedHomeowner?.id || null,
+            matchedHomeownerName: matchedHomeowner?.name || null,
+            claimNumber: claimNumber,
+            claimId: claimId,
+            vapiCallId: vapiCallId,
+            similarity: similarity,
+          },
+          db
+        );
+        console.log(`✅ [${requestId}] Email notification sent successfully`);
+      } catch (emailError: any) {
+        console.error(`❌ [${requestId}] Email notification failed (non-blocking):`, emailError.message);
+        console.error(`❌ Email error stack:`, emailError.stack);
+        // Don't throw - email failure should not crash the webhook
+      }
     } else {
-      console.log(`⏭️ Not a final event, skipping email`);
+      console.log(`⏭️ Not a final event (type: ${body.message?.type || body.type}), skipping email`);
     }
 
     // ==========================================
