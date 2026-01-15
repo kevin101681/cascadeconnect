@@ -1000,6 +1000,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       if (!isEmployee) {
         tabs.push('INVOICES'); // INVOICES tab (administrator only)
       }
+      // Settings tab - admin only
+      tabs.push('SETTINGS'); // SETTINGS tab (admin only)
     }
     // DOCUMENTS tab for homeowners is now in the tabs, but for admin it's still a button in homeowner info card
     return tabs;
