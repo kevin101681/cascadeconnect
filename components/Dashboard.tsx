@@ -2945,9 +2945,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Right Column: Task Detail View - Desktop Only */}
-        <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedTaskForModal ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
+        <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedTaskForModal ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none overflow-hidden`}>
           {selectedTaskForModal ? (
-            <>
+            <div className="flex flex-col h-full">
               {/* Scrollable Task Detail Content */}
               <div 
                 className="flex-1 overflow-y-auto px-6 pt-4 pb-6 overscroll-contain"
@@ -2982,7 +2982,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   />
                 </Suspense>
               </div>
-            </>
+            </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-surface-on-variant dark:text-gray-400 gap-4 bg-surface-container/10 dark:bg-gray-700/10">
               <div className="w-20 h-20 bg-surface-container dark:bg-gray-700 rounded-full flex items-center justify-center">
@@ -2996,7 +2996,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       
       {/* Mobile Full-Screen Overlay for Task Detail */}
       {selectedTaskForModal && (
-        <div className="md:hidden fixed inset-0 z-50 bg-surface dark:bg-gray-900 flex flex-col">
+        <div className="md:hidden fixed inset-0 z-50 bg-surface dark:bg-gray-900 flex flex-col overflow-hidden">
           {/* Scrollable Task Detail Content */}
           <div 
             className="flex-1 overflow-y-auto px-6 pt-4 pb-6 overscroll-contain"
@@ -3103,12 +3103,12 @@ const Dashboard: React.FC<DashboardProps> = ({
        </div>
 
        {/* Right Column: Email Thread View - Desktop Only */}
-       <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
+       <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none overflow-hidden`}>
           {selectedThread ? (
-            <>
+            <div className="flex flex-col h-full">
                {/* Scrollable Thread Content */}
                <div 
-                 className="flex-1 overflow-y-auto overscroll-contain px-6 pt-4 pb-6"
+                 className="flex-1 overflow-y-auto overscroll-contain px-6 pt-4"
                  style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
                >
                  <div className="px-8 py-6 bg-white dark:bg-white rounded-2xl mx-4 my-4">
@@ -3188,13 +3188,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                       })}
                    </div>
                    
-                   {/* Bottom Padding for Reply Box visibility */}
-                   <div className="h-32"></div>
                  </div>
                </div>
 
-               {/* Reply Box (Sticky Bottom or Inline at end) */}
-               <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 sticky bottom-0 z-10 rounded-br-3xl">
+               {/* Reply Box (Sticky Bottom) */}
+               <div className="border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 p-6 shrink-0 rounded-br-3xl">
                  {/* Builders Read-Only: Cannot Reply */}
                  {isBuilder ? (
                    <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600 border-dashed">
@@ -3252,7 +3250,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     )
                  )}
                </div>
-            </>
+            </div>
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center text-surface-on-variant dark:text-gray-400 gap-4 bg-surface-container/10 dark:bg-gray-700/10">
                <div className="w-20 h-20 bg-surface-container dark:bg-gray-700 rounded-full flex items-center justify-center">
@@ -3266,10 +3264,10 @@ const Dashboard: React.FC<DashboardProps> = ({
     
     {/* Mobile Full-Screen Overlay for Message Thread */}
     {selectedThread && (
-      <div className="md:hidden fixed inset-0 z-50 bg-surface dark:bg-gray-900 flex flex-col">
+      <div className="md:hidden fixed inset-0 z-50 bg-surface dark:bg-gray-900 flex flex-col overflow-hidden">
         {/* Scrollable Thread Content */}
         <div 
-          className="flex-1 overflow-y-auto overscroll-contain px-6 pt-4 pb-6"
+          className="flex-1 overflow-y-auto overscroll-contain px-6 pt-4"
           style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
         >
           <div className="px-8 py-6 bg-white dark:bg-white rounded-2xl mx-4 my-4">
@@ -3343,14 +3341,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                 );
               })}
             </div>
-            
-            {/* Bottom Padding */}
-            <div className="h-32"></div>
           </div>
         </div>
 
-        {/* Reply Box */}
-        <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
+        {/* Reply Box (Sticky Bottom) */}
+        <div className="border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 p-6 shrink-0">
           {isBuilder ? (
             <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600 border-dashed">
               <LockIcon className="h-4 w-4 mx-auto mb-2 opacity-50"/>
