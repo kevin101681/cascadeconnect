@@ -146,9 +146,9 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
   // Render the content (shared between inline and modal modes)
   const renderContent = () => (
     <>
-      {/* Header - Match Warranty Claims Style */}
+      {/* Header - Match Warranty Claims Style EXACTLY */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
-        <h2 className="text-xl font-semibold text-surface-on dark:text-gray-100">
+        <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">
           Notes
         </h2>
         {!isInline && (
@@ -184,7 +184,7 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
           </div>
           <button
             type="submit"
-            className="flex-shrink-0 px-4 py-2 h-10 bg-primary hover:bg-primary/90 text-primary-on rounded-full transition-colors font-medium"
+            className="flex-shrink-0 px-4 py-2 h-10 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-full transition-colors font-medium"
           >
             Add
           </button>
@@ -254,10 +254,10 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
     </>
   );
 
-  // Inline mode - render with Warranty Claims styling (white bg, rounded, border, shadow)
+  // Inline mode - render with Warranty Claims styling (MATCH EXACTLY)
   if (isInline) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-surface-outline-variant dark:border-gray-700 shadow-sm overflow-hidden flex flex-col">
+      <div className="bg-white dark:bg-gray-800 md:rounded-modal border border-surface-outline-variant dark:border-gray-700 shadow-sm overflow-hidden flex flex-col">
         {renderContent()}
       </div>
     );
