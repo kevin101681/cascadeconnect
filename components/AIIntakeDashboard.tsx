@@ -256,15 +256,6 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
   return (
     <>
     <div className="bg-white dark:bg-white md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col max-h-[calc(100vh-8rem)]">
-      {/* Header */}
-      <div className="flex-shrink-0 px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 md:rounded-t-3xl">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-            Calls
-          </h2>
-        </div>
-      </div>
-
       {/* Two Column Layout */}
       {filteredCalls.length === 0 ? (
         <div className="flex-1 flex items-center justify-center p-6">
@@ -279,6 +270,11 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
         <div className="flex-1 min-h-0 flex overflow-hidden">
           {/* LEFT COLUMN - Call Cards List */}
           <div className={`w-full md:w-96 border-r border-surface-outline-variant dark:border-gray-700 overflow-y-auto flex-shrink-0 ${actualSelectedCall ? 'hidden md:block' : 'block'}`}>
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
+              <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">Calls</h2>
+            </div>
+            
             {/* Search Bar - Pill shaped */}
             <div className="p-4 pb-2">
               <div className="relative">

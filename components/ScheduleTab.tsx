@@ -329,29 +329,14 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header - COMPACT & STANDARDIZED */}
-      <div className="flex items-center justify-between px-6 h-16 border-b border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 md:rounded-t-3xl">
-        <h2 className="text-xl font-semibold text-surface-on dark:text-gray-100 flex items-center gap-2">
-          <CalendarIcon className="h-5 w-5 text-primary" />
+      {/* Header - Match Notes/Warranty Standard */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0 md:rounded-t-3xl">
+        <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">
           Schedule
         </h2>
         <button
           onClick={openCreateModal}
-          style={{
-            height: '36px',
-            padding: '0 16px',
-            backgroundColor: "white",
-            color: "#3c6b80",
-            border: "2px solid #3c6b80",
-            borderRadius: "9999px",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px",
-            fontSize: "0.875rem",
-            fontWeight: "500"
-          }}
-          className="hover:bg-gray-50 transition-colors"
+          className="px-4 h-9 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-full transition-colors font-medium flex items-center gap-2"
           title="New Appointment"
         >
           <Plus className="h-4 w-4" />
