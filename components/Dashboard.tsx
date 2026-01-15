@@ -5429,8 +5429,8 @@ const Dashboard: React.FC<DashboardProps> = ({
           document.body
         )}
 
-        {/* HOMEOWNER CALLS MODAL - REMOVED - Now navigates to /calls page with filter
-        {showCallsModal && displayHomeowner && homeownerCalls.length > 0 && (() => {
+        {/* HOMEOWNER CALLS MODAL - REMOVED - Now navigates to /calls page with filter */}
+        {/* {showCallsModal && displayHomeowner && homeownerCalls.length > 0 && (() => {
           // ✅ FIX: State moved to component scope (line 1443) to fix React #310
           const selectedCall = homeownerCalls.find(c => c.id === selectedCallId);
           
@@ -5652,6 +5652,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             document.body
           );
         })()} */}
+        {/* End of commented Calls Modal */}
 
         {/* PUNCH LIST APP MODAL */}
         {currentTab === 'PUNCHLIST' && effectiveHomeowner && createPortal(
