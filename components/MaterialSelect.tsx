@@ -68,13 +68,13 @@ const MaterialSelect: React.FC<MaterialSelectProps> = ({
         onBlur={() => setFocused(false)}
         tabIndex={disabled ? -1 : 0}
       >
-        <div className="flex items-center justify-between px-4 h-[56px]">
+        <div className="flex items-center justify-between px-3 h-9">
           <span className={`text-sm ${value ? 'text-surface-on dark:text-gray-100' : 'text-surface-on-variant dark:text-gray-400'}`}>
             {selectedOption?.label || 'Select...'}
           </span>
-          <div className="w-6 h-6 rounded-full bg-surface-container dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+          <div className="w-5 h-5 rounded-full bg-surface-container dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
             <ChevronDown 
-              className={`h-4 w-4 text-surface-on-variant dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+              className={`h-3.5 w-3.5 text-surface-on-variant dark:text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
             />
           </div>
         </div>

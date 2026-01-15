@@ -447,7 +447,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Invoice Date */}
-              <div>
+              <div className="relative">
                 <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
                   Invoice Date *
                 </label>
@@ -477,7 +477,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
               </div>
               
               {/* Due Date */}
-              <div>
+              <div className="relative">
                 <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
                   Due Date *
                 </label>
@@ -508,7 +508,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
               
               {/* Date Paid (Optional) */}
               {status === 'paid' && (
-                <div>
+                <div className="relative">
                   <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
                     Date Paid
                   </label>

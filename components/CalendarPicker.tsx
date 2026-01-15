@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface CalendarPickerProps {
@@ -22,6 +22,28 @@ const CalendarPicker: React.FC<CalendarPickerProps> = ({
     const date = selectedDate ? new Date(selectedDate) : new Date();
     return new Date(date.getFullYear(), date.getMonth(), 1);
   });
+  const calendarRef = useRef<HTMLDivElement>(null);
+
+  // Handle click outside to close
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+
+    // Add small delay to prevent immediate close from the button click that opened it
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('mousedown', handleClickOutside);
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -98,49 +120,35 @@ const CalendarPicker: React.FC<CalendarPickerProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/60 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+      ref={calendarRef}
+      className="absolute z-50 mt-2 bg-surface dark:bg-gray-800 rounded-lg shadow-elevation-3 w-80 border border-surface-outline-variant/50 dark:border-gray-700/50 animate-[scale-in_0.15s_ease-out]"
+      onClick={(e) => e.stopPropagation()}
     >
-      <div 
-        className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-3 w-full max-w-sm mx-4 overflow-hidden animate-[scale-in_0.2s_ease-out] border border-surface-outline-variant/50 dark:border-gray-700/50"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header - Material 3 style with surface container */}
-        <div className="bg-surface-container-high dark:bg-gray-700/50 px-6 py-4 flex items-center justify-between border-b border-surface-outline-variant/50 dark:border-gray-700/50">
-          <h3 className="text-lg font-medium text-surface-on dark:text-gray-100">Select Date</h3>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-surface-container dark:hover:bg-gray-600 transition-colors text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Calendar - Material 3 spacing and styling */}
-        <div className="p-6 bg-surface dark:bg-gray-800">
-          {/* Month Navigation - Material 3 icon buttons */}
-          <div className="flex items-center justify-between mb-6">
+      {/* Calendar - Compact popover style */}
+      <div className="p-4 bg-surface dark:bg-gray-800">
+          {/* Month Navigation - Compact */}
+          <div className="flex items-center justify-between mb-4">
             <button
               onClick={handlePrevMonth}
-              className="p-2 rounded-full hover:bg-surface-container-high dark:hover:bg-gray-700 active:bg-surface-container dark:active:bg-gray-600 transition-colors text-surface-on dark:text-gray-100"
+              className="p-1.5 rounded-full hover:bg-surface-container-high dark:hover:bg-gray-700 transition-colors text-surface-on dark:text-gray-100"
               aria-label="Previous month"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-4 w-4" />
             </button>
-            <h4 className="text-base font-medium text-surface-on dark:text-gray-100">
+            <h4 className="text-sm font-medium text-surface-on dark:text-gray-100">
               {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
             </h4>
             <button
               onClick={handleNextMonth}
-              className="p-2 rounded-full hover:bg-surface-container-high dark:hover:bg-gray-700 active:bg-surface-container dark:active:bg-gray-600 transition-colors text-surface-on dark:text-gray-100"
+              className="p-1.5 rounded-full hover:bg-surface-container-high dark:hover:bg-gray-700 transition-colors text-surface-on dark:text-gray-100"
               aria-label="Next month"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
-          {/* Day Names - Material 3 typography */}
-          <div className="grid grid-cols-7 gap-1 mb-3">
+          {/* Day Names - Compact */}
+          <div className="grid grid-cols-7 gap-1 mb-2">
             {dayNames.map(day => (
               <div
                 key={day}
@@ -189,7 +197,6 @@ const CalendarPicker: React.FC<CalendarPickerProps> = ({
             })}
           </div>
         </div>
-      </div>
     </div>
   );
 };

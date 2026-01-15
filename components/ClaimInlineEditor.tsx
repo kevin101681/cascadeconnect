@@ -1086,7 +1086,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 </div>
 
                 {/* Date Evaluated Field - Material 3 */}
-                <div className="space-y-2">
+                <div className="space-y-2 relative">
                   <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">Date Evaluated</label>
                   {isEditing && !isReadOnly && isAdmin ? (
                     <>
@@ -1105,7 +1105,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                           }) : 'Select date...'}
                         </span>
                       </button>
-                      
+
                       <CalendarPicker
                         isOpen={showDateEvaluatedPicker}
                         onClose={() => setShowDateEvaluatedPicker(false)}
@@ -1351,7 +1351,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
             <h3 className="font-semibold leading-none tracking-tight">Scheduling</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Scheduled Date Field - Material 3 */}
-              <div className="space-y-2">
+              <div className="space-y-2 relative">
                 <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">Scheduled Date</label>
                 {isAdmin && isEditing && !isReadOnly ? (
                   <>
