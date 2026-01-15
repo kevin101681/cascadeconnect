@@ -3106,22 +3106,9 @@ const Dashboard: React.FC<DashboardProps> = ({
        <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
           {selectedThread ? (
             <>
-               {/* Thread Header Toolbar */}
-               <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 sticky top-0 z-10 rounded-tr-3xl">
-                  <div className="flex items-center gap-4">
-                     <button onClick={() => setSelectedThreadId(null)} className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full">
-                        <ChevronLeft className="h-5 w-5" />
-                     </button>
-                  </div>
-                  <div className="flex gap-2 text-surface-on-variant dark:text-gray-400">
-                     <button className="p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"><ChevronLeft className="h-4 w-4"/></button>
-                     <button className="p-2 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"><ChevronRight className="h-4 w-4"/></button>
-                  </div>
-               </div>
-
                {/* Scrollable Thread Content */}
                <div 
-                 className="flex-1 overflow-y-auto overscroll-contain"
+                 className="flex-1 overflow-y-auto overscroll-contain px-6 pt-4 pb-6"
                  style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
                >
                  <div className="px-8 py-6 bg-white dark:bg-white rounded-2xl mx-4 my-4">
@@ -3280,21 +3267,9 @@ const Dashboard: React.FC<DashboardProps> = ({
     {/* Mobile Full-Screen Overlay for Message Thread */}
     {selectedThread && (
       <div className="md:hidden fixed inset-0 z-50 bg-surface dark:bg-gray-900 flex flex-col">
-        {/* Thread Header Toolbar */}
-        <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setSelectedThreadId(null)} 
-              className="p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </button>
-          </div>
-        </div>
-
         {/* Scrollable Thread Content */}
         <div 
-          className="flex-1 overflow-y-auto overscroll-contain"
+          className="flex-1 overflow-y-auto overscroll-contain px-6 pt-4 pb-6"
           style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
         >
           <div className="px-8 py-6 bg-white dark:bg-white rounded-2xl mx-4 my-4">
