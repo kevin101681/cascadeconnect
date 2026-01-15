@@ -490,6 +490,19 @@ interface DashboardProps {
   onDeleteTask: (taskId: string) => void;
   onUpdateTask?: (taskId: string, updates: Partial<Task>) => void;
   onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS') => void;
+
+  // Internal Users Management (for Settings Tab)
+  onAddEmployee?: (emp: InternalEmployee) => void;
+  onUpdateEmployee?: (emp: InternalEmployee) => void;
+  onDeleteEmployee?: (id: string) => void;
+  onAddContractor?: (contractor: Contractor) => void;
+  onUpdateContractor?: (contractor: Contractor) => void;
+  onDeleteContractor?: (id: string) => void;
+  onAddBuilderUser?: (user: BuilderUser, password?: string) => void;
+  onUpdateBuilderUser?: (user: BuilderUser, password?: string) => void;
+  onDeleteBuilderUser?: (id: string) => void;
+  onDeleteHomeowner?: (id: string) => void;
+  onDataReset?: () => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -535,7 +548,18 @@ const Dashboard: React.FC<DashboardProps> = ({
   onToggleTask,
   onDeleteTask,
   onUpdateTask,
-  onNavigate
+  onNavigate,
+  onAddEmployee,
+  onUpdateEmployee,
+  onDeleteEmployee,
+  onAddContractor,
+  onUpdateContractor,
+  onDeleteContractor,
+  onAddBuilderUser,
+  onUpdateBuilderUser,
+  onDeleteBuilderUser,
+  onDeleteHomeowner,
+  onDataReset
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
@@ -4767,22 +4791,22 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
                         <SettingsTab
                           employees={employees}
-                          onAddEmployee={(emp) => console.log('Add employee:', emp)}
-                          onUpdateEmployee={(emp) => console.log('Update employee:', emp)}
-                          onDeleteEmployee={(id) => console.log('Delete employee:', id)}
+                          onAddEmployee={onAddEmployee || ((emp) => console.warn('No onAddEmployee handler'))}
+                          onUpdateEmployee={onUpdateEmployee || ((emp) => console.warn('No onUpdateEmployee handler'))}
+                          onDeleteEmployee={onDeleteEmployee || ((id) => console.warn('No onDeleteEmployee handler'))}
                           contractors={contractors}
-                          onAddContractor={(sub) => console.log('Add contractor:', sub)}
-                          onUpdateContractor={(sub) => console.log('Update contractor:', sub)}
-                          onDeleteContractor={(id) => console.log('Delete contractor:', id)}
+                          onAddContractor={onAddContractor || ((sub) => console.warn('No onAddContractor handler'))}
+                          onUpdateContractor={onUpdateContractor || ((sub) => console.warn('No onUpdateContractor handler'))}
+                          onDeleteContractor={onDeleteContractor || ((id) => console.warn('No onDeleteContractor handler'))}
                           builderUsers={builderUsers}
                           builderGroups={builderGroups}
-                          onAddBuilderUser={(user) => console.log('Add builder user:', user)}
-                          onUpdateBuilderUser={(user) => console.log('Update builder user:', user)}
-                          onDeleteBuilderUser={(id) => console.log('Delete builder user:', id)}
+                          onAddBuilderUser={onAddBuilderUser || ((user) => console.warn('No onAddBuilderUser handler'))}
+                          onUpdateBuilderUser={onUpdateBuilderUser || ((user) => console.warn('No onUpdateBuilderUser handler'))}
+                          onDeleteBuilderUser={onDeleteBuilderUser || ((id) => console.warn('No onDeleteBuilderUser handler'))}
                           homeowners={homeowners}
-                          onUpdateHomeowner={onUpdateHomeowner || ((h) => console.log('Update homeowner:', h))}
-                          onDeleteHomeowner={(id) => console.log('Delete homeowner:', id)}
-                          onDataReset={() => console.log('Data reset requested')}
+                          onUpdateHomeowner={onUpdateHomeowner || ((h) => console.warn('No onUpdateHomeowner handler'))}
+                          onDeleteHomeowner={onDeleteHomeowner || ((id) => console.warn('No onDeleteHomeowner handler'))}
+                          onDataReset={onDataReset || (() => console.warn('No onDataReset handler'))}
                           currentUser={currentUser}
                         />
                       </Suspense>

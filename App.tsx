@@ -4471,6 +4471,17 @@ Assigned By: ${assignerName}
           onDeleteTask={handleDeleteTask}
           onUpdateTask={handleUpdateTask}
           onNavigate={setCurrentView}
+          onAddEmployee={handleAddEmployee}
+          onUpdateEmployee={handleUpdateEmployee}
+          onDeleteEmployee={handleDeleteEmployee}
+          onAddContractor={handleAddContractor}
+          onUpdateContractor={handleUpdateContractor}
+          onDeleteContractor={handleDeleteContractor}
+          onAddBuilderUser={handleAddBuilderUser}
+          onUpdateBuilderUser={handleUpdateBuilderUser}
+          onDeleteBuilderUser={handleDeleteBuilderUser}
+          onDeleteHomeowner={handleDeleteHomeowner}
+          onDataReset={() => console.log('Data reset - implement in App.tsx')}
         />
       )}
       {currentView === 'TASKS' && (
@@ -4519,6 +4530,17 @@ Assigned By: ${assignerName}
           onDeleteTask={handleDeleteTask}
           onUpdateTask={handleUpdateTask}
           onNavigate={setCurrentView}
+          onAddEmployee={handleAddEmployee}
+          onUpdateEmployee={handleUpdateEmployee}
+          onDeleteEmployee={handleDeleteEmployee}
+          onAddContractor={handleAddContractor}
+          onUpdateContractor={handleUpdateContractor}
+          onDeleteContractor={handleDeleteContractor}
+          onAddBuilderUser={handleAddBuilderUser}
+          onUpdateBuilderUser={handleUpdateBuilderUser}
+          onDeleteBuilderUser={handleDeleteBuilderUser}
+          onDeleteHomeowner={handleDeleteHomeowner}
+          onDataReset={() => console.log('Data reset - implement in App.tsx')}
         />
       )}
       {currentView === 'TEAM' && (
