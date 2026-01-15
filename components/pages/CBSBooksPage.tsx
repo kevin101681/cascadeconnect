@@ -12,9 +12,10 @@
 import React, { useState, useMemo } from 'react';
 import InvoicesListPanel, { TabType, Invoice, Client } from '../InvoicesListPanel';
 import InvoiceFormPanel from '../InvoiceFormPanel';
-import { Clients } from '../../lib/cbsbooks/components/Clients';
+import { BuilderForm } from '../../lib/cbsbooks/components/BuilderForm';
 import { Reports } from '../../lib/cbsbooks/components/Reports';
 import { Expenses } from '../../lib/cbsbooks/components/Expenses';
+import { Building2 } from 'lucide-react';
 import type { Invoice as CBSInvoice, Client as CBSClient, Expense, ViewState } from '../../lib/cbsbooks/types';
 
 interface CBSBooksPageProps {
@@ -82,8 +83,9 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
   const [showInvoicePanel, setShowInvoicePanel] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'sent' | 'paid'>('sent');
   
-  // Builder state
-  const [selectedBuilder, setSelectedBuilder] = useState<CBSClient | null>(null);
+  // Builder state - tracks which builder to show in right pane
+  // Can be: null (empty), "new" (create form), or builder.id (edit form)
+  const [activeBuilderId, setActiveBuilderId] = useState<string | "new" | null>(null);
   
   // ==================== FILTERED DATA ====================
   
@@ -101,7 +103,7 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
     // Reset selections when switching tabs
     setShowInvoicePanel(false);
     setSelectedInvoice(null);
-    setSelectedBuilder(null);
+    setActiveBuilderId(null);
   };
   
   // Invoice handlers
@@ -156,11 +158,11 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
   
   // Builder handlers
   const handleBuilderSelect = (builder: CBSClient) => {
-    setSelectedBuilder(builder);
+    setActiveBuilderId(builder.id);
   };
   
   const handleCreateNewBuilder = () => {
-    setSelectedBuilder(null);
+    setActiveBuilderId("new");
   };
   
   // Navigation handler (for legacy components)
@@ -203,7 +205,7 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
               // Builders
               builders={clients}
               onBuilderSelect={handleBuilderSelect}
-              selectedBuilderId={selectedBuilder?.id}
+              selectedBuilderId={activeBuilderId === "new" ? undefined : activeBuilderId || undefined}
               
               // Actions
               onCreateNew={() => {
@@ -256,22 +258,68 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
             />
           )}
           
-          {/* BUILDERS TAB - Always show Clients component */}
+          {/* BUILDERS TAB - Three states: Empty, Create, Edit */}
           {activeTab === 'builders' && (
-            <div className="h-full overflow-auto bg-white dark:bg-gray-800">
-              <div className="p-6">
-                <Clients
-                  clients={clients}
-                  invoices={invoices}
-                  onAdd={onAddClient}
-                  onUpdate={onUpdateClient}
-                  onDelete={onDeleteClient}
-                  onBulkAdd={onBulkAddClients || (() => {})}
-                  onNavigate={handleNavigate}
-                  onBackup={onBackup || (() => {})}
-                />
-              </div>
-            </div>
+            <>
+              {activeBuilderId === null ? (
+                // STATE 1: Empty - Show placeholder
+                <div className="flex-1 flex items-center justify-center bg-gray-50/50 dark:bg-gray-900/50">
+                  <div className="text-center text-gray-500 dark:text-gray-400">
+                    <Building2 className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm font-medium">Select a builder to view details</p>
+                    <p className="text-xs mt-1">or click "New Builder" to create one</p>
+                  </div>
+                </div>
+              ) : activeBuilderId === "new" ? (
+                // STATE 2: Create Mode - Show empty form
+                <div className="h-full overflow-auto bg-white dark:bg-gray-800">
+                  <div className="p-6">
+                    <BuilderForm
+                      mode="create"
+                      initialData={null}
+                      clients={clients}
+                      onSave={(client) => {
+                        onAddClient(client);
+                        setActiveBuilderId(client.id); // Switch to edit mode after creation
+                      }}
+                      onCancel={() => setActiveBuilderId(null)}
+                    />
+                  </div>
+                </div>
+              ) : (
+                // STATE 3: Edit Mode - Show form with selected builder data
+                (() => {
+                  const selectedBuilder = clients.find(c => c.id === activeBuilderId);
+                  if (!selectedBuilder) {
+                    // Builder not found - reset to empty
+                    setActiveBuilderId(null);
+                    return null;
+                  }
+                  return (
+                    <div className="h-full overflow-auto bg-white dark:bg-gray-800">
+                      <div className="p-6">
+                        <BuilderForm
+                          mode="edit"
+                          initialData={selectedBuilder}
+                          clients={clients}
+                          onSave={(client) => {
+                            onUpdateClient(client);
+                            // Stay in edit mode
+                          }}
+                          onDelete={(id) => {
+                            if (confirm('Are you sure you want to delete this builder?')) {
+                              onDeleteClient(id);
+                              setActiveBuilderId(null);
+                            }
+                          }}
+                          onCancel={() => setActiveBuilderId(null)}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
+            </>
           )}
           
           {/* P&L TAB - Legacy Reports Component */}
