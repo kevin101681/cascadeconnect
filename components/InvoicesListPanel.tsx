@@ -8,7 +8,7 @@
  */
 
 import React, { useState } from 'react';
-import { Search, ChevronLeft, Plus, FileText, Building2, PieChart, Receipt } from 'lucide-react';
+import { Search, ChevronLeft, Plus, Building2, PieChart, Receipt } from 'lucide-react';
 import Button from './Button';
 import { InvoiceCard } from './ui/InvoiceCard';
 
@@ -224,46 +224,42 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
         <div className="flex items-center gap-2 overflow-x-auto">
           <button
             onClick={() => onTabChange('invoices')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
+            className={`px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'invoices'
                 ? 'bg-white dark:bg-gray-600 border border-primary text-primary shadow-sm'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
             }`}
           >
-            <FileText className="h-4 w-4" />
             Invoices
           </button>
           <button
             onClick={() => onTabChange('builders')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
+            className={`px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'builders'
                 ? 'bg-white dark:bg-gray-600 border border-primary text-primary shadow-sm'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
             }`}
           >
-            <Building2 className="h-4 w-4" />
             Builders
           </button>
           <button
             onClick={() => onTabChange('p&l')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
+            className={`px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'p&l'
                 ? 'bg-white dark:bg-gray-600 border border-primary text-primary shadow-sm'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
             }`}
           >
-            <PieChart className="h-4 w-4" />
             P&L
           </button>
           <button
             onClick={() => onTabChange('expenses')}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
+            className={`px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'expenses'
                 ? 'bg-white dark:bg-gray-600 border border-primary text-primary shadow-sm'
                 : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
             }`}
           >
-            <Receipt className="h-4 w-4" />
             Expenses
           </button>
         </div>
