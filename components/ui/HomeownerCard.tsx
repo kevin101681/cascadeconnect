@@ -14,6 +14,7 @@ interface HomeownerCardProps {
   phone?: string;
   email?: string;
   onEdit?: () => void;
+  onViewAs?: () => void;
   // Status tracking
   clerkId?: string;
   inviteEmailRead?: boolean;
@@ -76,6 +77,7 @@ export function HomeownerCard({
   phone,
   email,
   onEdit,
+  onViewAs,
   clerkId,
   inviteEmailRead,
 }: HomeownerCardProps) {
@@ -83,7 +85,7 @@ export function HomeownerCard({
   
   return (
     // Material 3 Design: Using semantic rounded-card token
-    <div className="bg-white dark:bg-gray-800 rounded-card border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group">
+    <div className="bg-white dark:bg-gray-800 rounded-card border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group pb-16">
       
       {/* HEADER: Name & Project */}
       <div className="flex flex-col mb-6">
@@ -162,6 +164,32 @@ export function HomeownerCard({
           </div>
         </div>
 
+      </div>
+
+      {/* Action Buttons - Bottom Right */}
+      <div className="absolute bottom-4 right-4 flex items-center gap-2">
+        {onViewAs && (
+          <Button
+            onClick={onViewAs}
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 p-0 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/30"
+            title="View As Homeowner"
+          >
+            <Eye className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          </Button>
+        )}
+        {onEdit && (
+          <Button
+            onClick={onEdit}
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 p-0 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+            title="Edit Homeowner"
+          >
+            <Edit2 className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+          </Button>
+        )}
       </div>
 
     </div>

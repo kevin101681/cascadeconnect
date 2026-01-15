@@ -12,6 +12,7 @@ export const builderGroups = pgTable('builder_groups', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
   email: text('email'),
+  enrollmentSlug: text('enrollment_slug').unique(), // Unique slug for per-builder enrollment URLs
   createdAt: timestamp('created_at').defaultNow(),
 });
 

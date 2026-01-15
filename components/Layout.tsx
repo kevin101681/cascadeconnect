@@ -420,31 +420,11 @@ const Layout: React.FC<LayoutProps> = ({
                             Settings
                           </button>
                           
-                          <div className="my-2"></div>
-                          
-                          <button 
-                            onClick={() => handleMenuAction(onOpenEnrollment)}
-                            className="w-full text-left px-4 py-2.5 text-sm text-primary font-medium hover:bg-primary/10 dark:hover:bg-primary/20 rounded-full flex items-center gap-3 transition-colors"
-                          >
-                            <UserPlus className="h-4 w-4 text-primary" />
-                            Enroll Homeowner
-                          </button>
                         </>
                       )}
 
-                      <div className="my-2"></div>
-
-                      {/* Switch Role */}
-                      <button 
-                        onClick={() => handleMenuAction(onSwitchRole)}
-                        className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
-                      >
-                        {userRole === UserRole.ADMIN ? (
-                          <><UserCircle className="h-4 w-4 text-surface-on-variant dark:text-gray-400" /> Switch to Homeowner View</>
-                        ) : (
-                          <><Users className="h-4 w-4 text-surface-on-variant dark:text-gray-400" /> Switch to Admin View</>
-                        )}
-                      </button>
+                      {/* Enrollment removed - now per-builder public URLs */}
+                      {/* Role Switch removed - not needed with new workflow */}
                     </div>
                   </div>
                 )}
