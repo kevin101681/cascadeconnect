@@ -8,7 +8,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, BuilderUser, Task, Contractor, Call } from '../types';
 import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowLeft, ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle, HelpCircle, CheckCheck, Settings } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle, HelpCircle, CheckCheck } from 'lucide-react';
 import { useTaskStore } from '../stores/useTaskStore';
 import { calls, claims as claimsSchema } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -478,7 +478,7 @@ interface DashboardProps {
   currentUserEmail?: string; // Current user's email for contractor matching
 
   // Initial State Control (Optional)
-  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'INVOICES' | 'SCHEDULE' | 'SETTINGS';
+  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'INVOICES' | 'SCHEDULE';
   initialThreadId?: string | null;
 
   // Tasks Widget Support
@@ -720,14 +720,14 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, []);
   
   // View State for Dashboard - derived from URL
-  type TabType = 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'INVOICES' | 'SCHEDULE' | 'SETTINGS' | 'PUNCHLIST' | 'CHAT' | null;
+  type TabType = 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'INVOICES' | 'SCHEDULE' | 'PUNCHLIST' | 'CHAT' | null;
 
   const currentTab = useMemo<TabType>(() => {
     const view = searchParams.get('view');
     console.log("🔍 Current tab from URL:", view, "| userRole:", userRole, "| isAdmin:", isAdmin);
     if (!view) return null;
 
-    const validTabs: TabType[] = ['CLAIMS', 'MESSAGES', 'TASKS', 'NOTES', 'CALLS', 'DOCUMENTS', 'MANUAL', 'HELP', 'INVOICES', 'SCHEDULE', 'SETTINGS', 'PUNCHLIST', 'CHAT'];
+    const validTabs: TabType[] = ['CLAIMS', 'MESSAGES', 'TASKS', 'NOTES', 'CALLS', 'DOCUMENTS', 'MANUAL', 'HELP', 'INVOICES', 'SCHEDULE', 'PUNCHLIST', 'CHAT'];
     const upperView = view.toUpperCase() as TabType;
 
     console.log("🔍 Uppercase view:", upperView, "| Valid?", validTabs.includes(upperView));
@@ -1000,8 +1000,6 @@ const Dashboard: React.FC<DashboardProps> = ({
       if (!isEmployee) {
         tabs.push('INVOICES'); // INVOICES tab (administrator only)
       }
-      // Settings tab - admin only
-      tabs.push('SETTINGS'); // SETTINGS tab (admin only)
     }
     // DOCUMENTS tab for homeowners is now in the tabs, but for admin it's still a button in homeowner info card
     return tabs;
@@ -4415,7 +4413,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                       CALLS: { label: 'Calls', icon: <Phone className="h-4 w-4" /> },
                       SCHEDULE: { label: 'Schedule', icon: <Calendar className="h-4 w-4" /> },
                       INVOICES: { label: 'Invoices', icon: <Receipt className="h-4 w-4" /> },
-                      SETTINGS: { label: 'Settings', icon: <Settings className="h-4 w-4" /> },
                       PUNCHLIST: { label: 'BlueTag', icon: <HardHat className="h-4 w-4" /> },
                       CHAT: { label: 'Chat', icon: <MessageCircle className="h-4 w-4" /> },
                     };

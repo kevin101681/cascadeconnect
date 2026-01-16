@@ -22,6 +22,7 @@ const BuilderManagement: React.FC<BuilderManagementProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isGeneratingBulk, setIsGeneratingBulk] = useState(false);
 
   // Form state
   const [name, setName] = useState('');
@@ -121,6 +122,53 @@ const BuilderManagement: React.FC<BuilderManagementProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleBulkGenerateLinks = async () => {
+    const buildersWithoutSlugs = builderGroups.filter(b => !b.enrollmentSlug);
+    
+    if (buildersWithoutSlugs.length === 0) {
+      alert('All builders already have enrollment links!');
+      return;
+    }
+
+    if (!confirm(`Generate enrollment links for ${buildersWithoutSlugs.length} builders?`)) {
+      return;
+    }
+
+    setIsGeneratingBulk(true);
+
+    try {
+      for (const builder of buildersWithoutSlugs) {
+        // Generate slug from name
+        const slug = builder.name
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-+|-+$/g, '');
+        
+        // Check for duplicates and append number if needed
+        let finalSlug = slug;
+        let counter = 1;
+        while (builderGroups.some(b => b.enrollmentSlug === finalSlug && b.id !== builder.id)) {
+          finalSlug = `${slug}-${counter}`;
+          counter++;
+        }
+        
+        // Update the builder with the new slug
+        const updatedBuilder = { ...builder, enrollmentSlug: finalSlug };
+        await onUpdateBuilderGroup(updatedBuilder);
+      }
+
+      alert(`Successfully generated ${buildersWithoutSlugs.length} enrollment links!`);
+    } catch (error) {
+      console.error('Bulk generation error:', error);
+      alert('Failed to generate some links. Please try again.');
+    } finally {
+      setIsGeneratingBulk(false);
+    }
+  };
+
   const inputClass = "w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-sm text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none";
   const labelClass = "block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1";
 
@@ -155,10 +203,20 @@ const BuilderManagement: React.FC<BuilderManagementProps> = ({
         <div className="flex-1 flex overflow-hidden">
           {/* Left Pane: Builder List */}
           <aside className="w-1/3 border-r border-surface-outline-variant dark:border-gray-700 flex flex-col">
-            <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700">
+            <div className="p-4 border-b border-surface-outline-variant dark:border-gray-700 space-y-2">
               <Button onClick={handleCreateNew} icon={<Plus className="h-4 w-4" />} className="w-full">
                 Add Builder
               </Button>
+              {builderGroups.some(b => !b.enrollmentSlug) && (
+                <Button 
+                  onClick={handleBulkGenerateLinks} 
+                  icon={<LinkIcon className="h-4 w-4" />} 
+                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  disabled={isGeneratingBulk}
+                >
+                  {isGeneratingBulk ? 'Generating...' : 'Generate Missing Links'}
+                </Button>
+              )}
             </div>
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
               {builderGroups.map(builder => (
