@@ -548,7 +548,7 @@ const BuilderManagement: React.FC<BuilderManagementProps> = ({
                       placeholder="brikat-homes"
                       className="flex-1 px-4 py-2 bg-white dark:bg-gray-800 border border-surface-outline dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     />
-                    <Button onClick={generateSlug} icon={<LinkIcon className="h-4 w-4" />}>
+                    <Button onClick={generateSlug} icon={<LinkIcon className="h-4 w-4" />} className="bg-blue-600 hover:bg-blue-700 text-white">
                       Generate
                     </Button>
                   </div>
@@ -625,7 +625,7 @@ const BuilderManagement: React.FC<BuilderManagementProps> = ({
                           onChange={(e) => setEnrollmentSlug(e.target.value)}
                           className="flex-1 px-4 py-2 bg-white dark:bg-gray-800 border border-surface-outline dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                         />
-                        <Button onClick={generateSlug} icon={<LinkIcon className="h-4 w-4" />}>
+                        <Button onClick={generateSlug} icon={<LinkIcon className="h-4 w-4" />} className="bg-blue-600 hover:bg-blue-700 text-white">
                           Generate
                         </Button>
                       </div>
@@ -668,7 +668,7 @@ const BuilderManagement: React.FC<BuilderManagementProps> = ({
                     <Button
                       onClick={copyEnrollmentLink}
                       icon={copied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                      className={copied ? 'bg-green-600 hover:bg-green-700 text-white' : ''}
+                      className={copied ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}
                     >
                       {copied ? 'Copied!' : 'Copy Link'}
                     </Button>

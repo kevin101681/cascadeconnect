@@ -394,7 +394,8 @@ function App() {
         const mappedGroups = dbBuilderGroups.map(bg => ({
           id: bg.id,
           name: bg.name,
-          email: bg.email || ''
+          email: bg.email || '',
+          enrollmentSlug: bg.enrollmentSlug || undefined
         }));
         setBuilderGroups(mappedGroups);
       } else {
@@ -878,7 +879,8 @@ function App() {
               const mappedGroups = builderGroupsResult.data.map(bg => ({
                 id: bg.id,
                 name: bg.name,
-                email: bg.email || ''
+                email: bg.email || '',
+                enrollmentSlug: bg.enrollmentSlug || undefined
               }));
               setBuilderGroups(mappedGroups);
             }
