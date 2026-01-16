@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Database, Users, Home, FileText, ClipboardList, MessageSquare, Building2, HardHat, CheckCircle, XCircle, RefreshCw, AlertCircle, TrendingUp, Server, Globe, Code, Key, Zap, X, Mail } from 'lucide-react';
+import { Database, Users, Home, FileText, ClipboardList, MessageSquare, Building2, HardHat, CheckCircle, XCircle, RefreshCw, AlertCircle, TrendingUp, Server, Globe, Code, Key, Zap, X, Mail, Bug, BarChart3 } from 'lucide-react';
 import Button from './Button';
 import { db, isDbConfigured } from '../db';
 import { users as usersTable, homeowners as homeownersTable, claims as claimsTable, documents as documentsTable, tasks as tasksTable, messageThreads as messageThreadsTable, builderGroups as builderGroupsTable, contractors as contractorsTable } from '../db/schema';
 import { eq, count, desc } from 'drizzle-orm';
 import { getNetlifyInfo, getNetlifyDeploys, rollbackDeployment as rollbackDeploymentService, getNeonStats } from '../lib/services/netlifyService';
+import { getSentryErrors, getPostHogTrends, type SentryErrorsResponse, type PostHogTrendsResponse } from '../lib/services/adminAnalyticsService';
 import EmailHistory from './EmailHistory';
 
 interface BackendDashboardProps {
@@ -38,7 +39,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'NETLIFY' | 'NEON' | 'EMAILS'>('NETLIFY');
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'NETLIFY' | 'NEON' | 'EMAILS' | 'SENTRY' | 'POSTHOG'>('NETLIFY');
   const [detailedData, setDetailedData] = useState<any>(null);
   const [netlifyInfo, setNetlifyInfo] = useState<any>(null);
   const [netlifyLoading, setNetlifyLoading] = useState(false);
@@ -47,6 +48,14 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
   const [neonStats, setNeonStats] = useState<any>(null);
   const [neonStatsLoading, setNeonStatsLoading] = useState(false);
   const [badgeRefreshKey, setBadgeRefreshKey] = useState(0);
+  
+  // Sentry state
+  const [sentryData, setSentryData] = useState<SentryErrorsResponse | null>(null);
+  const [sentryLoading, setSentryLoading] = useState(false);
+  
+  // PostHog state
+  const [posthogData, setPosthogData] = useState<PostHogTrendsResponse | null>(null);
+  const [posthogLoading, setPosthogLoading] = useState(false);
 
   const fetchStats = async () => {
     if (!isDbConfigured) {
@@ -286,12 +295,50 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
     }
   };
 
+  const fetchSentryData = async () => {
+    setSentryLoading(true);
+    try {
+      const result = await getSentryErrors();
+      setSentryData(result);
+      if (!result.success) {
+        setError(result.error || 'Failed to fetch Sentry data');
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load Sentry data';
+      console.error('❌ Failed to fetch Sentry data:', errorMessage);
+      setError(errorMessage);
+    } finally {
+      setSentryLoading(false);
+    }
+  };
+
+  const fetchPostHogData = async () => {
+    setPosthogLoading(true);
+    try {
+      const result = await getPostHogTrends();
+      setPosthogData(result);
+      if (!result.success) {
+        setError(result.error || 'Failed to fetch PostHog data');
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load PostHog data';
+      console.error('❌ Failed to fetch PostHog data:', errorMessage);
+      setError(errorMessage);
+    } finally {
+      setPosthogLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'NETLIFY') {
       fetchNetlifyInfo();
       fetchNetlifyDeploys();
     } else if (activeTab === 'NEON') {
       fetchNeonStats();
+    } else if (activeTab === 'SENTRY') {
+      fetchSentryData();
+    } else if (activeTab === 'POSTHOG') {
+      fetchPostHogData();
     } else if (activeTab !== 'OVERVIEW') {
       fetchDetailedData(activeTab);
     } else {
@@ -412,7 +459,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
         <div className="p-6 space-y-6 overflow-y-auto flex-1" style={{ height: 'calc(85vh - 120px)' }}>
           {/* Tabs */}
           <div className="flex gap-2 mb-6 border-b border-surface-outline-variant dark:border-gray-700 overflow-x-auto">
-            {(['NETLIFY', 'EMAILS', 'OVERVIEW', 'NEON'] as const).map(tab => (
+            {(['NETLIFY', 'SENTRY', 'POSTHOG', 'EMAILS', 'OVERVIEW', 'NEON'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -426,6 +473,8 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
                 {tab === 'NETLIFY' && 'Netlify'}
                 {tab === 'NEON' && 'Neon'}
                 {tab === 'EMAILS' && 'Emails'}
+                {tab === 'SENTRY' && 'Sentry'}
+                {tab === 'POSTHOG' && 'PostHog'}
               </button>
             ))}
           </div>
@@ -1448,6 +1497,285 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
           {activeTab === 'EMAILS' && (
             <div className="mt-6">
               <EmailHistory inline={true} />
+            </div>
+          )}
+
+          {/* Sentry Tab - Error Monitoring */}
+          {activeTab === 'SENTRY' && (
+            <div className="mt-6 space-y-6">
+              {sentryLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+                  <span className="ml-3 text-surface-on-variant dark:text-gray-400">Loading Sentry data...</span>
+                </div>
+              ) : sentryData?.success ? (
+                <>
+                  {/* Health Status Card */}
+                  <div className={`rounded-xl p-6 border ${
+                    sentryData.status === 'healthy' 
+                      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                      : sentryData.status === 'warning'
+                      ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800'
+                      : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                  }`}>
+                    <div className="flex items-start gap-3">
+                      {sentryData.status === 'healthy' ? (
+                        <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                      ) : sentryData.status === 'warning' ? (
+                        <AlertCircle className="h-6 w-6 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                      ) : (
+                        <XCircle className="h-6 w-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                      )}
+                      <div className="flex-1">
+                        <h3 className={`text-lg font-medium mb-2 ${
+                          sentryData.status === 'healthy'
+                            ? 'text-green-900 dark:text-green-100'
+                            : sentryData.status === 'warning'
+                            ? 'text-yellow-900 dark:text-yellow-100'
+                            : 'text-red-900 dark:text-red-100'
+                        }`}>
+                          {sentryData.status === 'healthy' && 'System Healthy'}
+                          {sentryData.status === 'warning' && 'Warning: Elevated Errors'}
+                          {sentryData.status === 'critical' && 'Critical: High Error Rate'}
+                        </h3>
+                        <div className={`text-2xl font-medium mb-2 ${
+                          sentryData.status === 'healthy'
+                            ? 'text-green-700 dark:text-green-300'
+                            : sentryData.status === 'warning'
+                            ? 'text-yellow-700 dark:text-yellow-300'
+                            : 'text-red-700 dark:text-red-300'
+                        }`}>
+                          {sentryData.errorCount24h || 0} errors in last 24 hours
+                        </div>
+                        <p className={`text-sm ${
+                          sentryData.status === 'healthy'
+                            ? 'text-green-800 dark:text-green-200'
+                            : sentryData.status === 'warning'
+                            ? 'text-yellow-800 dark:text-yellow-200'
+                            : 'text-red-800 dark:text-red-200'
+                        }`}>
+                          {sentryData.status === 'healthy' && '< 5 errors - All systems operating normally'}
+                          {sentryData.status === 'warning' && '5-50 errors - Monitor for patterns'}
+                          {sentryData.status === 'critical' && '> 50 errors - Immediate attention required'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Recent Issues */}
+                  {sentryData.recentIssues && sentryData.recentIssues.length > 0 && (
+                    <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-6 border border-surface-outline-variant">
+                      <div className="flex items-center gap-2 mb-4">
+                        <Bug className="h-5 w-5 text-primary" />
+                        <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">Recent Issues</h2>
+                      </div>
+                      <div className="space-y-3">
+                        {sentryData.recentIssues.map((issue) => (
+                          <div 
+                            key={issue.id}
+                            className="bg-surface-container-high dark:bg-gray-600 rounded-lg p-4 border border-surface-outline-variant hover:shadow-md transition-shadow"
+                          >
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                    issue.level === 'fatal' || issue.level === 'error'
+                                      ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                                      : issue.level === 'warning'
+                                      ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+                                      : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'
+                                  }`}>
+                                    {issue.level}
+                                  </span>
+                                  <span className="text-xs text-surface-on-variant dark:text-gray-400">
+                                    {issue.count} occurrences
+                                  </span>
+                                </div>
+                                <h4 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-1">
+                                  {issue.title}
+                                </h4>
+                                <p className="text-xs text-surface-on-variant dark:text-gray-400">
+                                  Last seen: {new Date(issue.lastSeen).toLocaleString()}
+                                </p>
+                              </div>
+                              {issue.permalink && (
+                                <a
+                                  href={issue.permalink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:underline text-sm whitespace-nowrap"
+                                >
+                                  View →
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Configuration Info */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">About Sentry Monitoring</h3>
+                        <div className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
+                          <p>
+                            Sentry tracks errors and exceptions in production. Data is fetched from Sentry's API using your auth token.
+                          </p>
+                          <p>
+                            <strong>Health Thresholds:</strong> Green (&lt;5 errors), Yellow (5-50 errors), Red (&gt;50 errors) in 24h period.
+                          </p>
+                          <p className="text-xs text-blue-700 dark:text-blue-300">
+                            To view full details, click "View" on any issue to open it in Sentry dashboard.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12 bg-surface-container dark:bg-gray-700 rounded-xl">
+                  <Bug className="h-12 w-12 text-surface-outline-variant dark:text-gray-500 mx-auto mb-4 opacity-50" />
+                  <p className="text-surface-on-variant dark:text-gray-400 mb-4">
+                    {sentryData?.error || 'Failed to load Sentry data'}
+                  </p>
+                  {sentryData?.error?.includes('not configured') && (
+                    <div className="mt-4 max-w-md mx-auto text-left bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                      <p className="text-sm text-yellow-900 dark:text-yellow-100 mb-2 font-medium">Required Environment Variables:</p>
+                      <ul className="text-xs text-yellow-800 dark:text-yellow-200 space-y-1 font-mono">
+                        <li>• VITE_SENTRY_AUTH_TOKEN</li>
+                        <li>• VITE_SENTRY_ORG_SLUG</li>
+                        <li>• VITE_SENTRY_PROJECT_SLUG</li>
+                      </ul>
+                    </div>
+                  )}
+                  <Button onClick={fetchSentryData} variant="outlined" className="mt-4">Retry</Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* PostHog Tab - Analytics */}
+          {activeTab === 'POSTHOG' && (
+            <div className="mt-6 space-y-6">
+              {posthogLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+                  <span className="ml-3 text-surface-on-variant dark:text-gray-400">Loading PostHog data...</span>
+                </div>
+              ) : posthogData?.success ? (
+                <>
+                  {/* Summary Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-6 border border-surface-outline-variant">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-surface-on-variant dark:text-gray-400">Total Pageviews (7 days)</span>
+                        <BarChart3 className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="text-3xl font-medium text-surface-on dark:text-gray-100">
+                        {formatNumber(posthogData.activeUsers7d || 0)}
+                      </div>
+                      <div className="text-xs text-surface-on-variant dark:text-gray-400 mt-1">
+                        Last 7 days
+                      </div>
+                    </div>
+
+                    <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-6 border border-surface-outline-variant">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-surface-on-variant dark:text-gray-400">Average Daily</span>
+                        <TrendingUp className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="text-3xl font-medium text-surface-on dark:text-gray-100">
+                        {formatNumber(Math.round((posthogData.activeUsers7d || 0) / 7))}
+                      </div>
+                      <div className="text-xs text-surface-on-variant dark:text-gray-400 mt-1">
+                        Pageviews per day
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 7-Day Trend Chart */}
+                  {posthogData.dailyData && posthogData.dailyData.length > 0 && (
+                    <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-6 border border-surface-outline-variant">
+                      <div className="flex items-center gap-2 mb-6">
+                        <BarChart3 className="h-5 w-5 text-primary" />
+                        <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">7-Day Pageview Trend</h2>
+                      </div>
+                      
+                      {/* Simple Bar Chart using CSS */}
+                      <div className="space-y-3">
+                        {posthogData.dailyData.map((day, idx) => {
+                          const maxCount = Math.max(...posthogData.dailyData!.map(d => d.count));
+                          const percentage = maxCount > 0 ? (day.count / maxCount) * 100 : 0;
+                          
+                          return (
+                            <div key={idx}>
+                              <div className="flex items-center justify-between text-xs text-surface-on-variant dark:text-gray-400 mb-1">
+                                <span>{new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                <span className="font-medium text-surface-on dark:text-gray-100">{formatNumber(day.count)}</span>
+                              </div>
+                              <div className="w-full bg-surface-container-high dark:bg-gray-600 rounded-full h-8 overflow-hidden">
+                                <div 
+                                  className="bg-primary h-full rounded-full transition-all duration-300 flex items-center justify-end pr-2"
+                                  style={{ width: `${Math.max(percentage, 2)}%` }}
+                                >
+                                  {day.count > 0 && percentage > 15 && (
+                                    <span className="text-xs font-medium text-white">{day.count}</span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Info Card */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">About PostHog Analytics</h3>
+                        <div className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
+                          <p>
+                            PostHog tracks user behavior, pageviews, and custom events. Data is fetched from PostHog's Query API.
+                          </p>
+                          <p>
+                            <strong>Current Metric:</strong> $pageview events over the last 7 days.
+                          </p>
+                          <p className="text-xs text-blue-700 dark:text-blue-300">
+                            For more detailed analytics, visit your PostHog dashboard.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12 bg-surface-container dark:bg-gray-700 rounded-xl">
+                  <BarChart3 className="h-12 w-12 text-surface-outline-variant dark:text-gray-500 mx-auto mb-4 opacity-50" />
+                  <p className="text-surface-on-variant dark:text-gray-400 mb-4">
+                    {posthogData?.error || 'Failed to load PostHog data'}
+                  </p>
+                  {posthogData?.error?.includes('not configured') && (
+                    <div className="mt-4 max-w-md mx-auto text-left bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                      <p className="text-sm text-yellow-900 dark:text-yellow-100 mb-2 font-medium">Required Environment Variables:</p>
+                      <ul className="text-xs text-yellow-800 dark:text-yellow-200 space-y-1 font-mono">
+                        <li>• VITE_POSTHOG_PROJECT_ID</li>
+                        <li>• VITE_POSTHOG_PERSONAL_API_KEY</li>
+                      </ul>
+                      <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-2">
+                        Note: Use Personal API Key, not the public token.
+                      </p>
+                    </div>
+                  )}
+                  <Button onClick={fetchPostHogData} variant="outlined" className="mt-4">Retry</Button>
+                </div>
+              )}
             </div>
           )}
         </div>
