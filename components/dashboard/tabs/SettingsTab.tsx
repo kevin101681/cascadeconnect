@@ -168,21 +168,37 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
     }
   };
 
-  // NUCLEAR FIX - FIXED POSITION TO BREAK OUT OF BROKEN PARENT LAYOUT
+  // INLINE STYLES - FORCE VISIBILITY (HIGHEST SPECIFICITY)
   return (
-    <div className="fixed inset-0 z-[9999] bg-red-100 flex flex-col pt-24 pl-64 pointer-events-auto">
-      {/* ^ FIXED POSITION BREAKS IT OUT OF ANY BROKEN PARENT LAYOUT */}
-
-      <div className="bg-white border-4 border-blue-600 p-10 shadow-2xl w-3/4 h-3/4 overflow-auto rounded-xl">
-        <h1 className="text-4xl text-red-600 font-black mb-4">
-          🚨 DEBUG MODE: SETTINGS TAB 🚨
-        </h1>
-        <div className="text-xl font-bold mb-4 text-black">
-          Active Category: {activeCategory || "NULL"}
-        </div>
-
-        {/* CATEGORY BUTTONS - HARD CODED FOR TEST */}
-        <div className="flex gap-4 mb-8 flex-wrap">
+    <div 
+      style={{
+        position: 'fixed', 
+        top: '100px', /* Push down below header */
+        left: '0', 
+        right: '0', 
+        bottom: '0', 
+        zIndex: 9999, 
+        backgroundColor: '#ffffff', /* Force White Background */
+        display: 'flex',
+        flexDirection: 'row',
+        border: '5px solid red' /* Debug Border */
+      }}
+    >
+      {/* SIDEBAR */}
+      <div style={{
+        width: '300px',
+        backgroundColor: '#fef3c7', /* Yellow */
+        borderRight: '2px solid black',
+        padding: '20px',
+        overflowY: 'auto',
+        flexShrink: 0
+      }}>
+        <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '20px', color: '#000' }}>
+          Settings
+        </h2>
+        
+        {/* CATEGORY BUTTONS */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           {categories.map((cat) => (
             <button
               key={cat.id}
@@ -190,20 +206,40 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
                 console.log("🔄 Category changed to:", cat.id);
                 setActiveCategory(cat.id);
               }}
-              className={`px-4 py-2 border-2 rounded font-medium ${
-                activeCategory === cat.id
-                  ? "bg-blue-600 text-white border-blue-800"
-                  : "bg-gray-200 text-black border-gray-400 hover:bg-gray-300"
-              }`}
+              style={{
+                padding: '10px 15px',
+                backgroundColor: activeCategory === cat.id ? '#2563eb' : '#e5e7eb',
+                color: activeCategory === cat.id ? '#ffffff' : '#000000',
+                border: '2px solid #000',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontWeight: activeCategory === cat.id ? 'bold' : 'normal',
+                textAlign: 'left'
+              }}
             >
               {cat.label}
             </button>
           ))}
         </div>
+      </div>
+
+      {/* CONTENT AREA */}
+      <div style={{
+        flex: 1,
+        backgroundColor: '#d1fae5', /* Green */
+        padding: '30px',
+        overflowY: 'auto'
+      }}>
+        <h1 style={{ fontSize: '36px', fontWeight: 'black', color: '#dc2626', marginBottom: '20px' }}>
+          🚨 DEBUG MODE: SETTINGS TAB 🚨
+        </h1>
+        <div style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '20px', color: '#000' }}>
+          Active Category: {activeCategory || "NULL"}
+        </div>
 
         {/* CONTENT RENDER */}
-        <div className="border-t-2 border-black pt-4">
-          <div className="text-lg font-semibold mb-2 text-green-600">
+        <div style={{ borderTop: '2px solid black', paddingTop: '20px' }}>
+          <div style={{ fontSize: '18px', fontWeight: '600', marginBottom: '10px', color: '#16a34a' }}>
             ✅ Rendering: {activeCategory}
           </div>
           {renderContent()}
