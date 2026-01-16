@@ -1,97 +1,79 @@
-import React, { useState, useEffect, Suspense } from 'react';
-import { createPortal } from 'react-dom';
+import React, { useState, Suspense } from 'react';
+import { Settings, Users, FileText, Home, Database } from 'lucide-react';
 
-// 1. RESTORE IMPORTS - Using lazy load to match original architecture
+// Lazy load views to match original architecture
 const InternalUsersView = React.lazy(() => import('../views/InternalUsersView'));
 const TemplatesView = React.lazy(() => import('../views/TemplatesView'));
 const HomeownersDirectoryView = React.lazy(() => import('../views/HomeownersDirectoryView'));
 
 export default function SettingsTab(props: any) {
-  const [mounted, setMounted] = useState(false);
   const [activeCategory, setActiveCategory] = useState('Internal Users');
 
-  useEffect(() => {
-    setMounted(true);
-    console.log("🔮 SettingsTab: Portal Ready - Loading Real Components");
-    console.log("📦 Props received:", Object.keys(props));
-  }, []);
+  // Category configuration with icons
+  const categories = [
+    { id: 'Internal Users', label: 'Internal Users', icon: Users },
+    { id: 'Templates', label: 'Templates', icon: FileText },
+    { id: 'Homeowners', label: 'Homeowners', icon: Home },
+    { id: 'Data Import', label: 'Data Import', icon: Database }
+  ];
 
-  if (!mounted) return null;
-
-  const content = (
-    <div 
-      style={{
-        position: 'fixed',
-        top: '80px',
-        left: '20px',
-        right: '20px',
-        bottom: '20px',
-        zIndex: 99999,
-        backgroundColor: '#f8fafc', // Light gray background
-        border: '5px solid #2563eb', // Blue border (Changing to Blue for "Data Mode")
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-        display: 'flex',
-        flexDirection: 'column',
-        borderRadius: '8px',
-        overflow: 'hidden'
-      }}
-    >
-      {/* Header */}
-      <div className="bg-white p-4 border-b flex justify-between items-center">
-        <h2 className="text-xl font-bold text-blue-700">
-          🛠️ SETTINGS DIAGNOSTIC MODE
-        </h2>
-        <div className="space-x-2">
-          {['Internal Users', 'Templates', 'Homeowners'].map(cat => (
-            <button
-              key={cat}
-              onClick={() => {
-                console.log(`🔄 Switching to: ${cat}`);
-                setActiveCategory(cat);
-              }}
-              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                activeCategory === cat ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+  return (
+    // ROOT CONTAINER: Fills the Dashboard slot with full height flex layout
+    <div className="flex flex-col md:flex-row h-full w-full bg-background overflow-hidden">
+      
+      {/* SIDEBAR */}
+      <div className="w-full md:w-64 bg-muted/30 border-r border-border flex flex-col flex-shrink-0">
+        <div className="p-4 font-semibold text-lg border-b border-border flex items-center gap-2">
+          <Settings className="h-5 w-5" />
+          Settings
+        </div>
+        <div className="p-2 space-y-1 overflow-y-auto flex-1">
+          {categories.map(cat => {
+            const Icon = cat.icon;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors flex items-center gap-2 ${
+                  activeCategory === cat.id 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'hover:bg-muted'
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+                {cat.label}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Content Area - THE REAL TEST */}
-      <div className="flex-1 overflow-auto p-6 bg-white">
-        <Suspense fallback={
-          <div className="p-10 text-center">
-            <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-blue-500 font-medium">Loading {activeCategory} Component...</p>
-          </div>
-        }>
-          
-          {/* PASS PROPS THROUGH (Spread the props we received) */}
-          {activeCategory === 'Internal Users' && (() => {
-            console.log("✅ Rendering InternalUsersView");
-            return <InternalUsersView {...props} />;
-          })()}
-          
-          {activeCategory === 'Templates' && (() => {
-            console.log("✅ Rendering TemplatesView");
-            return <TemplatesView {...props} />;
-          })()}
-          
-          {activeCategory === 'Homeowners' && (() => {
-            console.log("✅ Rendering HomeownersDirectoryView");
-            return <HomeownersDirectoryView {...props} />;
-          })()}
-          
-          {!['Internal Users', 'Templates', 'Homeowners'].includes(activeCategory) && (
-            <div className="p-10 text-center text-gray-400">View not connected in debug mode</div>
-          )}
-
-        </Suspense>
+      {/* CONTENT AREA */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden bg-card">
+        {/* Header */}
+        <div className="h-14 border-b border-border flex items-center px-6 shrink-0">
+          <h2 className="font-semibold text-lg">{activeCategory}</h2>
+        </div>
+        
+        {/* Scrollable View Container */}
+        <div className="flex-1 overflow-y-auto p-6">
+          <Suspense fallback={
+            <div className="p-10 text-center">
+              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading {activeCategory}...</p>
+            </div>
+          }>
+            {activeCategory === 'Internal Users' && <InternalUsersView {...props} />}
+            {activeCategory === 'Templates' && <TemplatesView {...props} />}
+            {activeCategory === 'Homeowners' && <HomeownersDirectoryView {...props} />}
+            {activeCategory === 'Data Import' && (
+              <div className="p-10 text-center text-muted-foreground">
+                Data Import feature coming soon
+              </div>
+            )}
+          </Suspense>
+        </div>
       </div>
     </div>
   );
-
-  return createPortal(content, document.body);
 }
