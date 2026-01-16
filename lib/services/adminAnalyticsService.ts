@@ -64,7 +64,8 @@ const PostHogTrendResultSchema = z.object({
     })
   ),
   hasMore: z.boolean().optional(),
-  timings: z.array(z.any()).optional(),
+  timings: z.array(z.any()).nullable().optional(), // Can be null or undefined
+  is_cached: z.boolean().nullable().optional(), // Can be null or undefined
 });
 
 // ==========================================
@@ -181,15 +182,22 @@ export async function getSentryErrors(): Promise<SentryErrorsResponse> {
   console.log('🔹 Sentry Project:', project);
   
   try {
-    // Calculate 24h ago timestamp
-    const now = new Date();
-    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    // Calculate Unix timestamps (required by Sentry Stats API)
+    const now = Math.floor(Date.now() / 1000);
+    const oneDayAgo = now - (24 * 60 * 60);
+    
+    // Build properly encoded query params for Issues API
+    const issuesParams = new URLSearchParams({
+      query: 'is:unresolved',
+      statsPeriod: '24h',
+      limit: '10'
+    });
     
     // Fetch both stats and issues in parallel
     const [statsRes, issuesRes] = await Promise.allSettled([
-      // Stats API: Get error count for last 24h (all environments)
+      // Stats API: Get error count for last 24h (requires since/until, NOT statsPeriod)
       fetch(
-        `https://sentry.io/api/0/projects/${org}/${project}/stats/?statsPeriod=24h&stat=received`,
+        `https://sentry.io/api/0/projects/${org}/${project}/stats/?since=${oneDayAgo}&until=${now}&stat=received`,
         {
           headers: {
             Authorization: `Bearer ${authToken}`,
@@ -197,9 +205,9 @@ export async function getSentryErrors(): Promise<SentryErrorsResponse> {
           },
         }
       ),
-      // Issues API: Get recent issues (all environments)
+      // Issues API: Get recent issues (properly encoded query string)
       fetch(
-        `https://sentry.io/api/0/projects/${org}/${project}/issues/?query=is:unresolved&statsPeriod=24h&limit=10`,
+        `https://sentry.io/api/0/projects/${org}/${project}/issues/?${issuesParams.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${authToken}`,
