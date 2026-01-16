@@ -69,9 +69,10 @@ interface EmailAnalyticsData {
 
 interface EmailHistoryProps {
   onClose?: () => void;
+  inline?: boolean;
 }
 
-const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
+const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose, inline = false }) => {
   const [data, setData] = useState<EmailAnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -330,36 +331,56 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
   );
 
   if (loading && !data) {
+    const content = (
+      <>
+        {renderHeader()}
+        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+          <div className="flex items-center justify-center py-12">
+            <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-3 text-surface-on-variant dark:text-gray-400">Loading email analytics...</span>
+          </div>
+        </div>
+      </>
+    );
+
+    if (inline) {
+      return <div className="bg-surface dark:bg-gray-800 w-full rounded-xl shadow-lg overflow-hidden">{content}</div>;
+    }
+
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]">
         <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
-          {renderHeader()}
-          <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-center py-12">
-              <RefreshCw className="h-8 w-8 animate-spin text-primary" />
-              <span className="ml-3 text-surface-on-variant dark:text-gray-400">Loading email analytics...</span>
-            </div>
-          </div>
+          {content}
         </div>
       </div>
     );
   }
 
   if (error && !data) {
+    const content = (
+      <>
+        {renderHeader(
+          <Button onClick={fetchAnalytics} variant="outlined" icon={<RefreshCw className="h-4 w-4" />}>
+            Retry
+          </Button>
+        )}
+        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+          <div className="flex items-center justify-center py-12">
+            <AlertCircle className="h-8 w-8 text-error" />
+            <span className="ml-3 text-error">{error}</span>
+          </div>
+        </div>
+      </>
+    );
+
+    if (inline) {
+      return <div className="bg-surface dark:bg-gray-800 w-full rounded-xl shadow-lg overflow-hidden">{content}</div>;
+    }
+
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]">
         <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
-          {renderHeader(
-            <Button onClick={fetchAnalytics} variant="outlined" icon={<RefreshCw className="h-4 w-4" />}>
-              Retry
-            </Button>
-          )}
-          <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-center py-12">
-              <AlertCircle className="h-8 w-8 text-error" />
-              <span className="ml-3 text-error">{error}</span>
-            </div>
-          </div>
+          {content}
         </div>
       </div>
     );
@@ -391,19 +412,18 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
     });
   };
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]">
-      <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
-        {renderHeader(
-          <Button
-            variant="outlined"
-            onClick={fetchAnalytics}
-            icon={<RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />}
-          >
-            Refresh
-          </Button>
-        )}
-        <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+  const mainContent = (
+    <>
+      {renderHeader(
+        <Button
+          variant="outlined"
+          onClick={fetchAnalytics}
+          icon={<RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />}
+        >
+          Refresh
+        </Button>
+      )}
+      <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
           
           {/* Filters */}
           <div className="mb-6 flex flex-col sm:flex-row gap-4 p-4 bg-surface-container dark:bg-gray-700 rounded-xl">
@@ -638,6 +658,17 @@ const EmailHistory: React.FC<EmailHistoryProps> = ({ onClose }) => {
             )}
           </div>
         </div>
+    </>
+  );
+
+  if (inline) {
+    return <div className="bg-surface dark:bg-gray-800 w-full rounded-xl shadow-lg overflow-hidden">{mainContent}</div>;
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]">
+      <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8">
+        {mainContent}
       </div>
     </div>
   );

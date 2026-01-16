@@ -351,9 +351,9 @@ const BuilderManagement: React.FC<BuilderManagementProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-surface dark:bg-gray-900 z-50 flex flex-col">
+    <div className="w-full h-full bg-surface dark:bg-gray-900 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-surface-outline-variant dark:border-gray-700">
+      <div className="flex items-center justify-between p-4 border-b border-surface-outline-variant dark:border-gray-700 flex-shrink-0">
         <div className="flex items-center gap-3">
           <Building2 className="h-6 w-6 text-primary dark:text-primary-light" />
           <h2 className="text-xl font-semibold text-surface-on dark:text-white">Builder Groups</h2>

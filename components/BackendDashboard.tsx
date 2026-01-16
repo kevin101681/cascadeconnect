@@ -412,7 +412,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
         <div className="p-6 space-y-6 overflow-y-auto flex-1" style={{ height: 'calc(85vh - 120px)' }}>
           {/* Tabs */}
           <div className="flex gap-2 mb-6 border-b border-surface-outline-variant dark:border-gray-700 overflow-x-auto">
-            {(['OVERVIEW', 'NETLIFY', 'NEON', 'EMAILS'] as const).map(tab => (
+            {(['NETLIFY', 'EMAILS', 'OVERVIEW', 'NEON'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -1447,7 +1447,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
           {/* Emails Tab */}
           {activeTab === 'EMAILS' && (
             <div className="mt-6">
-              <EmailHistory />
+              <EmailHistory inline={true} />
             </div>
           )}
         </div>

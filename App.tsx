@@ -4656,15 +4656,33 @@ Assigned By: ${assignerName}
         </React.Suspense>
       )}
       {currentView === 'BUILDERS' && (
-        <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
-          <BuilderManagement
-            builderGroups={builderGroups}
-            onAddBuilderGroup={handleAddBuilderGroup}
-            onUpdateBuilderGroup={handleUpdateBuilderGroup}
-            onDeleteBuilderGroup={handleDeleteBuilderGroup}
-            onClose={() => setCurrentView('DASHBOARD')}
-          />
-        </React.Suspense>
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setCurrentView('DASHBOARD');
+            }
+          }}
+        >
+          <div 
+            className="bg-surface dark:bg-gray-800 w-full max-w-7xl rounded-xl shadow-2xl overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <React.Suspense fallback={
+              <div className="flex items-center justify-center h-full">
+                <div className="p-6 text-surface-on-variant">Loading…</div>
+              </div>
+            }>
+              <BuilderManagement
+                builderGroups={builderGroups}
+                onAddBuilderGroup={handleAddBuilderGroup}
+                onUpdateBuilderGroup={handleUpdateBuilderGroup}
+                onDeleteBuilderGroup={handleDeleteBuilderGroup}
+                onClose={() => setCurrentView('DASHBOARD')}
+              />
+            </React.Suspense>
+          </div>
+        </div>
       )}
       {currentView === 'NEW' && (
         <div className="flex flex-col h-screen overflow-hidden">
