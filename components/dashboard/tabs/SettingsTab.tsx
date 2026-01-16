@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 
-// KEEP IMPORTS DISABLED FOR NOW TO ENSURE STABILITY
-// import InternalUsersView from ... 
+// 1. RESTORE IMPORTS - Using lazy load to match original architecture
+const InternalUsersView = React.lazy(() => import('../views/InternalUsersView'));
+const TemplatesView = React.lazy(() => import('../views/TemplatesView'));
+const HomeownersDirectoryView = React.lazy(() => import('../views/HomeownersDirectoryView'));
 
 export default function SettingsTab(props: any) {
   const [mounted, setMounted] = useState(false);
@@ -10,68 +12,86 @@ export default function SettingsTab(props: any) {
 
   useEffect(() => {
     setMounted(true);
-    console.log("🔮 SettingsTab: Portal Ready");
-    return () => console.log("👋 SettingsTab: Unmounting");
+    console.log("🔮 SettingsTab: Portal Ready - Loading Real Components");
+    console.log("📦 Props received:", Object.keys(props));
   }, []);
 
-  // Hydration safety
   if (!mounted) return null;
 
-  // THE CONTENT
   const content = (
     <div 
       style={{
         position: 'fixed',
-        top: '100px', // Below your main navbar
+        top: '80px',
         left: '20px',
         right: '20px',
         bottom: '20px',
-        backgroundColor: '#fff1f2', // Rose-50
-        border: '8px solid #e11d48', // Red-600
-        zIndex: 2147483647, // Max 32-bit Integer (Highest possible Z-index)
-        boxShadow: '0 0 0 100vmax rgba(0,0,0,0.5)', // Dim background
+        zIndex: 99999,
+        backgroundColor: '#f8fafc', // Light gray background
+        border: '5px solid #2563eb', // Blue border (Changing to Blue for "Data Mode")
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
         display: 'flex',
         flexDirection: 'column',
-        borderRadius: '12px',
-        padding: '24px',
+        borderRadius: '8px',
         overflow: 'hidden'
       }}
     >
-      <div className="flex justify-between items-center mb-6 border-b pb-4 border-red-200">
-        <h1 className="text-3xl font-black text-red-600">
-          🔮 PORTAL MODE ACTIVE
-        </h1>
-        <button 
-           onClick={() => console.log("✅ Clicked test")}
-           className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-        >
-          Test Interaction
-        </button>
+      {/* Header */}
+      <div className="bg-white p-4 border-b flex justify-between items-center">
+        <h2 className="text-xl font-bold text-blue-700">
+          🛠️ SETTINGS DIAGNOSTIC MODE
+        </h2>
+        <div className="space-x-2">
+          {['Internal Users', 'Templates', 'Homeowners'].map(cat => (
+            <button
+              key={cat}
+              onClick={() => {
+                console.log(`🔄 Switching to: ${cat}`);
+                setActiveCategory(cat);
+              }}
+              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                activeCategory === cat ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <p className="mb-4 text-lg">
-        This content is rendered via <code>createPortal(document.body)</code>. 
-        It cannot be clipped by the Dashboard.
-      </p>
+      {/* Content Area - THE REAL TEST */}
+      <div className="flex-1 overflow-auto p-6 bg-white">
+        <Suspense fallback={
+          <div className="p-10 text-center">
+            <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p className="text-blue-500 font-medium">Loading {activeCategory} Component...</p>
+          </div>
+        }>
+          
+          {/* PASS PROPS THROUGH (Spread the props we received) */}
+          {activeCategory === 'Internal Users' && (() => {
+            console.log("✅ Rendering InternalUsersView");
+            return <InternalUsersView {...props} />;
+          })()}
+          
+          {activeCategory === 'Templates' && (() => {
+            console.log("✅ Rendering TemplatesView");
+            return <TemplatesView {...props} />;
+          })()}
+          
+          {activeCategory === 'Homeowners' && (() => {
+            console.log("✅ Rendering HomeownersDirectoryView");
+            return <HomeownersDirectoryView {...props} />;
+          })()}
+          
+          {!['Internal Users', 'Templates', 'Homeowners'].includes(activeCategory) && (
+            <div className="p-10 text-center text-gray-400">View not connected in debug mode</div>
+          )}
 
-      <div className="flex gap-2 mb-6">
-        {['Internal Users', 'Templates', 'Homeowners'].map(cat => (
-          <button
-            key={cat}
-            onClick={() => setActiveCategory(cat)}
-            className={`px-4 py-2 rounded border ${activeCategory === cat ? 'bg-blue-600 text-white' : 'bg-white'}`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      <div className="flex-1 bg-white border-2 border-dashed border-gray-300 p-8 flex items-center justify-center text-gray-500">
-        placeholder for: {activeCategory}
+        </Suspense>
       </div>
     </div>
   );
 
-  // TELEPORT TO BODY
   return createPortal(content, document.body);
 }
