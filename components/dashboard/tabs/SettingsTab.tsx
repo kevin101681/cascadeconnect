@@ -137,6 +137,15 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
   // ==================== RENDER RIGHT PANE CONTENT ====================
   
   const renderRightPaneContent = () => {
+    // Safety check: ensure activeCategory is valid
+    if (!activeCategory) {
+      return (
+        <div className="flex items-center justify-center h-full p-8 text-red-500">
+          Error: No category selected
+        </div>
+      );
+    }
+
     switch (activeCategory) {
       case 'internal-users':
         return (
@@ -216,7 +225,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
   // ==================== RENDER ====================
   
   return (
-    <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden min-h-screen h-full md:max-h-[calc(100vh-8rem)] text-foreground border-4 border-red-500">
+    <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden flex-1 h-full w-full min-h-screen md:max-h-[calc(100vh-8rem)] text-foreground border-4 border-blue-500">
       
       {/* ==================== LEFT SIDEBAR (Navigation) ==================== */}
       <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800">

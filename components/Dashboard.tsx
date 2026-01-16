@@ -4239,6 +4239,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   handleOpenEditHomeowner();
                 } : undefined}
                 onViewAs={isAdmin && onSelectHomeowner ? () => {
+                  console.log('👁️ View As clicked for:', displayHomeowner.name);
                   onSelectHomeowner(displayHomeowner);
                 } : undefined}
               />
