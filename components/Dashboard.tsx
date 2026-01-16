@@ -5129,6 +5129,38 @@ const Dashboard: React.FC<DashboardProps> = ({
             </AnimatedTabContent>
           )}
 
+          {/* SETTINGS Tab - Admin Only */}
+          {currentTab === 'SETTINGS' && isAdmin && (
+            <AnimatedTabContent tabKey="settings" className="flex-1 min-h-0 flex flex-col">
+              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
+                <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+                  <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                    <SettingsTab
+                      employees={employees}
+                      onAddEmployee={onAddEmployee || ((emp) => console.warn('No onAddEmployee handler'))}
+                      onUpdateEmployee={onUpdateEmployee || ((emp) => console.warn('No onUpdateEmployee handler'))}
+                      onDeleteEmployee={onDeleteEmployee || ((id) => console.warn('No onDeleteEmployee handler'))}
+                      contractors={contractors}
+                      onAddContractor={onAddContractor || ((sub) => console.warn('No onAddContractor handler'))}
+                      onUpdateContractor={onUpdateContractor || ((sub) => console.warn('No onUpdateContractor handler'))}
+                      onDeleteContractor={onDeleteContractor || ((id) => console.warn('No onDeleteContractor handler'))}
+                      builderUsers={builderUsers}
+                      builderGroups={builderGroups}
+                      onAddBuilderUser={onAddBuilderUser || ((user) => console.warn('No onAddBuilderUser handler'))}
+                      onUpdateBuilderUser={onUpdateBuilderUser || ((user) => console.warn('No onUpdateBuilderUser handler'))}
+                      onDeleteBuilderUser={onDeleteBuilderUser || ((id) => console.warn('No onDeleteBuilderUser handler'))}
+                      homeowners={homeowners}
+                      onUpdateHomeowner={onUpdateHomeowner || ((h) => console.warn('No onUpdateHomeowner handler'))}
+                      onDeleteHomeowner={onDeleteHomeowner || ((id) => console.warn('No onDeleteHomeowner handler'))}
+                      onDataReset={onDataReset || (() => console.warn('No onDataReset handler'))}
+                      currentUser={currentUser}
+                    />
+                  </Suspense>
+                </div>
+              </div>
+            </AnimatedTabContent>
+          )}
+
               </AnimatePresence>
               </div>
               </SmoothHeightWrapper>
