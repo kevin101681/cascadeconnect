@@ -4239,7 +4239,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   handleOpenEditHomeowner();
                 } : undefined}
                 onViewAs={isAdmin && onSelectHomeowner ? () => {
-                  console.log('👁️ View As clicked for:', displayHomeowner.name);
+                  console.log("🚀 Dashboard received View As request");
                   onSelectHomeowner(displayHomeowner);
                 } : undefined}
               />

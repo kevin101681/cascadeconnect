@@ -1,4 +1,4 @@
-import { MapPin, Hammer, Calendar, Phone, Mail, Edit2, Check, Eye, Clock } from "lucide-react";
+import { MapPin, Hammer, Calendar, Phone, Mail, Edit2, Check, Eye, Clock, Pencil } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -167,35 +167,35 @@ export function HomeownerCard({
       </div>
 
       {/* Action Buttons - Bottom Right */}
-      <div className="absolute bottom-4 right-4 flex items-center gap-2 z-10">
-        {onViewAs && (
-          <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              onViewAs();
-            }}
-            size="sm"
-            variant="ghost"
-            className="h-8 w-8 p-0 rounded-full bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-700"
-            title="View As Homeowner"
-          >
-            <Eye className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-          </Button>
-        )}
-        {onEdit && (
-          <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
-            }}
-            size="sm"
-            variant="ghost"
-            className="h-8 w-8 p-0 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600"
-            title="Edit Homeowner"
-          >
-            <Edit2 className="h-4 w-4 text-gray-600 dark:text-gray-400" />
-          </Button>
-        )}
+      <div className="flex items-center gap-2 mt-4 justify-end">
+        {/* View As Button */}
+        <Button
+          size="icon"
+          variant="outline"
+          className="rounded-full h-8 w-8 bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+          onClick={(e) => {
+            e.stopPropagation(); // CRITICAL: Stop card collapse
+            console.log("👁️ View As Clicked for:", name); // CRITICAL: Log verification
+            if (onViewAs) onViewAs();
+          }}
+          title="View As Homeowner"
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+
+        {/* Edit Button */}
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8 text-gray-500 hover:text-gray-900"
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log("✏️ Edit Clicked");
+            if (onEdit) onEdit();
+          }}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
       </div>
 
     </div>
