@@ -129,7 +129,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
       {!isOpen && (
         <button
           onClick={handleToggle}
-          className="fixed bottom-4 right-4 z-50 h-14 w-14 bg-white hover:bg-gray-50 text-primary border-2 border-primary rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+          className="fixed bottom-4 right-4 z-[9999] h-14 w-14 bg-white hover:bg-gray-50 text-primary border-2 border-primary rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
         >
           <MessageCircle className="h-6 w-6" />
           {totalUnreadCount > 0 && (
@@ -142,7 +142,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
       {/* Chat Popup - Responsive: Full screen mobile, popover desktop */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 w-full h-full bg-surface dark:bg-gray-900 rounded-none shadow-none border-0 flex flex-col overflow-hidden sm:bottom-4 sm:right-4 sm:inset-auto sm:w-[400px] sm:h-[600px] sm:rounded-3xl sm:shadow-elevation-5 sm:border sm:border-surface-outline-variant dark:sm:border-gray-700">
+        <div className="fixed inset-0 z-[9999] w-full h-full bg-surface dark:bg-gray-900 rounded-none shadow-none border-0 flex flex-col overflow-hidden sm:bottom-4 sm:right-4 sm:inset-auto sm:w-[400px] sm:h-[600px] sm:rounded-3xl sm:shadow-elevation-5 sm:border sm:border-surface-outline-variant dark:sm:border-gray-700">
           {/* Header - Material 3 surface colors */}
           <div className="flex items-center justify-between px-4 py-3 bg-surface-container dark:bg-gray-800 border-b border-surface-outline-variant dark:border-gray-700 flex-shrink-0">
             <div className="flex items-center gap-2">

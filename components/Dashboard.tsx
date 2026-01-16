@@ -3970,7 +3970,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsChatWidgetOpen(true)}
-                  className="fixed bottom-4 right-4 z-50 h-14 w-14 bg-white hover:bg-gray-50 text-primary border-2 border-primary rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
+                  className="fixed bottom-4 right-4 z-[9999] h-14 w-14 bg-white hover:bg-gray-50 text-primary border-2 border-primary rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
                   aria-label="Open Team Chat"
                 >
                   <MessageCircle className="h-6 w-6" />
@@ -4268,10 +4268,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                 clerkId={displayHomeowner.clerkId}
                 inviteEmailRead={displayHomeowner.inviteEmailRead}
                 onEdit={isAdmin ? () => {
-                  alert('Edit functionality requires integration with App.tsx parent component');
+                  handleOpenEditHomeowner();
                 } : undefined}
-                onViewAs={isAdmin ? () => {
-                  alert('View As functionality requires role switching integration with App.tsx');
+                onViewAs={isAdmin && onSelectHomeowner ? () => {
+                  onSelectHomeowner(displayHomeowner);
                 } : undefined}
               />
              </div>
