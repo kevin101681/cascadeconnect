@@ -4790,32 +4790,56 @@ const Dashboard: React.FC<DashboardProps> = ({
               <main className="flex-1 flex flex-col overflow-hidden relative bg-gray-100 h-full">
                   
                   {/* 1. SETTINGS TAB - BYPASS ANIMATION COMPLETELY - GUARANTEED VISIBILITY LAYOUT */}
-                  {currentTab === 'SETTINGS' && isAdmin ? (
-                    <div className="flex-1 w-full h-full relative overflow-hidden flex flex-col" key="settings-no-animation">
-                      <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                        <SettingsTab
-                          employees={employees}
-                          onAddEmployee={onAddEmployee || ((emp) => console.warn('No onAddEmployee handler'))}
-                          onUpdateEmployee={onUpdateEmployee || ((emp) => console.warn('No onUpdateEmployee handler'))}
-                          onDeleteEmployee={onDeleteEmployee || ((id) => console.warn('No onDeleteEmployee handler'))}
-                          contractors={contractors}
-                          onAddContractor={onAddContractor || ((sub) => console.warn('No onAddContractor handler'))}
-                          onUpdateContractor={onUpdateContractor || ((sub) => console.warn('No onUpdateContractor handler'))}
-                          onDeleteContractor={onDeleteContractor || ((id) => console.warn('No onDeleteContractor handler'))}
-                          builderUsers={builderUsers}
-                          builderGroups={builderGroups}
-                          onAddBuilderUser={onAddBuilderUser || ((user) => console.warn('No onAddBuilderUser handler'))}
-                          onUpdateBuilderUser={onUpdateBuilderUser || ((user) => console.warn('No onUpdateBuilderUser handler'))}
-                          onDeleteBuilderUser={onDeleteBuilderUser || ((id) => console.warn('No onDeleteBuilderUser handler'))}
-                          homeowners={homeowners}
-                          onUpdateHomeowner={onUpdateHomeowner || ((h) => console.warn('No onUpdateHomeowner handler'))}
-                          onDeleteHomeowner={onDeleteHomeowner || ((id) => console.warn('No onDeleteHomeowner handler'))}
-                          onDataReset={onDataReset || (() => console.warn('No onDataReset handler'))}
-                          currentUser={currentUser}
-                        />
-                      </Suspense>
-                    </div>
-                  ) : (
+                  {(() => {
+                    // Safe check with case-insensitive comparison
+                    const isSettingsTab = currentTab === 'SETTINGS' && isAdmin;
+                    console.log("🛑 DASHBOARD RENDER CHECK:", {
+                      currentTab,
+                      isAdmin,
+                      isSettingsTab,
+                      condition: `${currentTab} === 'SETTINGS' && ${isAdmin}`
+                    });
+                    
+                    if (isSettingsTab) {
+                      console.log("✅ RENDERING SETTINGS WRAPPER - Should see RED background");
+                      return (
+                        <div 
+                          className="flex-1 w-full min-h-screen flex flex-col relative z-50 bg-red-500 border-8 border-yellow-400" 
+                          key="settings-no-animation"
+                          style={{ minHeight: '100vh' }}
+                        >
+                          <div className="p-4 bg-yellow-300 text-black font-bold text-center">
+                            🚨 SETTINGS WRAPPER VISIBLE - If you see this, the wrapper renders!
+                          </div>
+                          <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                            <SettingsTab
+                              employees={employees}
+                              onAddEmployee={onAddEmployee || ((emp) => console.warn('No onAddEmployee handler'))}
+                              onUpdateEmployee={onUpdateEmployee || ((emp) => console.warn('No onUpdateEmployee handler'))}
+                              onDeleteEmployee={onDeleteEmployee || ((id) => console.warn('No onDeleteEmployee handler'))}
+                              contractors={contractors}
+                              onAddContractor={onAddContractor || ((sub) => console.warn('No onAddContractor handler'))}
+                              onUpdateContractor={onUpdateContractor || ((sub) => console.warn('No onUpdateContractor handler'))}
+                              onDeleteContractor={onDeleteContractor || ((id) => console.warn('No onDeleteContractor handler'))}
+                              builderUsers={builderUsers}
+                              builderGroups={builderGroups}
+                              onAddBuilderUser={onAddBuilderUser || ((user) => console.warn('No onAddBuilderUser handler'))}
+                              onUpdateBuilderUser={onUpdateBuilderUser || ((user) => console.warn('No onUpdateBuilderUser handler'))}
+                              onDeleteBuilderUser={onDeleteBuilderUser || ((id) => console.warn('No onDeleteBuilderUser handler'))}
+                              homeowners={homeowners}
+                              onUpdateHomeowner={onUpdateHomeowner || ((h) => console.warn('No onUpdateHomeowner handler'))}
+                              onDeleteHomeowner={onDeleteHomeowner || ((id) => console.warn('No onDeleteHomeowner handler'))}
+                              onDataReset={onDataReset || (() => console.warn('No onDataReset handler'))}
+                              currentUser={currentUser}
+                            />
+                          </Suspense>
+                        </div>
+                      );
+                    }
+                    
+                    // Return null to fall through to the else block
+                    return null;
+                  })() || (
                     /* 2. ALL OTHER TABS - USE ANIMATION WITH SCROLLABLE CONTAINER */
                     <div className="flex-1 overflow-y-auto w-full h-full relative">
                       <AnimatePresence mode="wait" initial={false}>
