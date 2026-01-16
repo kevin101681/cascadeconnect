@@ -4786,11 +4786,46 @@ const Dashboard: React.FC<DashboardProps> = ({
         {currentTab && (() => {
           const overlayInner = (
             <>
-              {/* Main Content Area - FIXED LAYOUT */}
-              <main className="flex-1 flex flex-col overflow-hidden relative bg-background h-full">
+              {/* Main Content Area - FIXED LAYOUT - SETTINGS BYPASSES ANIMATION */}
+              <main className="flex-1 flex flex-col overflow-hidden relative bg-gray-100 h-full">
                 <div className="flex-1 overflow-y-auto w-full h-full relative">
-                  <AnimatePresence mode="wait" initial={false}>
-                    {/* Removed floating close FAB (use browser/back navigation instead). */}
+                  
+                  {/* 1. SETTINGS TAB - BYPASS ANIMATION COMPLETELY */}
+                  {currentTab === 'SETTINGS' && isAdmin ? (
+                    <div className="w-full h-full relative z-50" key="settings-no-animation">
+                      {(() => {
+                        console.log("🚀 RENDERING SETTINGS TAB - NO ANIMATION WRAPPER");
+                        console.log("currentTab:", currentTab, "isAdmin:", isAdmin);
+                        return (
+                          <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                            <SettingsTab
+                              employees={employees}
+                              onAddEmployee={onAddEmployee || ((emp) => console.warn('No onAddEmployee handler'))}
+                              onUpdateEmployee={onUpdateEmployee || ((emp) => console.warn('No onUpdateEmployee handler'))}
+                              onDeleteEmployee={onDeleteEmployee || ((id) => console.warn('No onDeleteEmployee handler'))}
+                              contractors={contractors}
+                              onAddContractor={onAddContractor || ((sub) => console.warn('No onAddContractor handler'))}
+                              onUpdateContractor={onUpdateContractor || ((sub) => console.warn('No onUpdateContractor handler'))}
+                              onDeleteContractor={onDeleteContractor || ((id) => console.warn('No onDeleteContractor handler'))}
+                              builderUsers={builderUsers}
+                              builderGroups={builderGroups}
+                              onAddBuilderUser={onAddBuilderUser || ((user) => console.warn('No onAddBuilderUser handler'))}
+                              onUpdateBuilderUser={onUpdateBuilderUser || ((user) => console.warn('No onUpdateBuilderUser handler'))}
+                              onDeleteBuilderUser={onDeleteBuilderUser || ((id) => console.warn('No onDeleteBuilderUser handler'))}
+                              homeowners={homeowners}
+                              onUpdateHomeowner={onUpdateHomeowner || ((h) => console.warn('No onUpdateHomeowner handler'))}
+                              onDeleteHomeowner={onDeleteHomeowner || ((id) => console.warn('No onDeleteHomeowner handler'))}
+                              onDataReset={onDataReset || (() => console.warn('No onDataReset handler'))}
+                              currentUser={currentUser}
+                            />
+                          </Suspense>
+                        );
+                      })()}
+                    </div>
+                  ) : (
+                    /* 2. ALL OTHER TABS - USE ANIMATION */
+                    <AnimatePresence mode="wait" initial={false}>
+                      {/* Removed floating close FAB (use browser/back navigation instead). */}
 
           {currentTab === 'CLAIMS' && (
             <AnimatedTabContent tabKey="claims" className="flex-1 min-h-0 flex flex-col">
@@ -5097,39 +5132,10 @@ const Dashboard: React.FC<DashboardProps> = ({
             </AnimatedTabContent>
           )}
 
-          {/* SETTINGS Tab - Admin Only - RESTORED WITH FIXED LAYOUT */}
-          {currentTab === 'SETTINGS' && isAdmin && (() => {
-            console.log("🖥️ Rendering SettingsTab (FIXED LAYOUT) - Success");
-            console.log("currentTab:", currentTab, "isAdmin:", isAdmin);
-            return (
-              <AnimatedTabContent tabKey="settings" className="flex-1 min-h-0 flex flex-col">
-                <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                  <SettingsTab
-                      employees={employees}
-                      onAddEmployee={onAddEmployee || ((emp) => console.warn('No onAddEmployee handler'))}
-                      onUpdateEmployee={onUpdateEmployee || ((emp) => console.warn('No onUpdateEmployee handler'))}
-                      onDeleteEmployee={onDeleteEmployee || ((id) => console.warn('No onDeleteEmployee handler'))}
-                      contractors={contractors}
-                      onAddContractor={onAddContractor || ((sub) => console.warn('No onAddContractor handler'))}
-                      onUpdateContractor={onUpdateContractor || ((sub) => console.warn('No onUpdateContractor handler'))}
-                      onDeleteContractor={onDeleteContractor || ((id) => console.warn('No onDeleteContractor handler'))}
-                      builderUsers={builderUsers}
-                      builderGroups={builderGroups}
-                      onAddBuilderUser={onAddBuilderUser || ((user) => console.warn('No onAddBuilderUser handler'))}
-                      onUpdateBuilderUser={onUpdateBuilderUser || ((user) => console.warn('No onUpdateBuilderUser handler'))}
-                      onDeleteBuilderUser={onDeleteBuilderUser || ((id) => console.warn('No onDeleteBuilderUser handler'))}
-                      homeowners={homeowners}
-                      onUpdateHomeowner={onUpdateHomeowner || ((h) => console.warn('No onUpdateHomeowner handler'))}
-                      onDeleteHomeowner={onDeleteHomeowner || ((id) => console.warn('No onDeleteHomeowner handler'))}
-                      onDataReset={onDataReset || (() => console.warn('No onDataReset handler'))}
-                    currentUser={currentUser}
-                  />
-                </Suspense>
-              </AnimatedTabContent>
-            );
-          })()}
+          {/* SETTINGS Tab is now rendered ABOVE (outside AnimatePresence) */}
 
-                  </AnimatePresence>
+                    </AnimatePresence>
+                  )}
                 </div>
               </main>
             </>
