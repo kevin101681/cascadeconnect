@@ -431,6 +431,7 @@ interface DashboardProps {
   onSearchChange?: (query: string) => void;
   searchResults?: Homeowner[];
   onSelectHomeowner?: (homeowner: Homeowner) => void;
+  onViewAsHomeowner?: (homeowner: Homeowner) => void;
   
   // Documents
   documents: HomeownerDocument[];
@@ -520,6 +521,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   onSearchChange,
   searchResults,
   onSelectHomeowner,
+  onViewAsHomeowner,
   documents,
   onUploadDocument,
   onDeleteDocument,
@@ -4272,9 +4274,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onEdit={isAdmin ? () => {
                   handleOpenEditHomeowner();
                 } : undefined}
-                onViewAs={isAdmin && onSelectHomeowner ? () => {
+                onViewAs={isAdmin && onViewAsHomeowner ? () => {
                   console.log("🚀 Dashboard received View As request");
-                  onSelectHomeowner(displayHomeowner);
+                  onViewAsHomeowner(displayHomeowner);
                 } : undefined}
               />
              </div>

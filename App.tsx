@@ -1404,20 +1404,33 @@ function App() {
 
   const handleSelectHomeowner = (homeowner: Homeowner) => {
     // 1. Debug Log (MANDATORY)
-    console.log("🖱️ User selected:", homeowner.id, homeowner.firstName || homeowner.name);
+    console.log("🖱️ Admin selected homeowner from search:", homeowner.id, homeowner.firstName || homeowner.name);
     
-    // 2. Set React State
+    // 2. Set React State - STAY IN ADMIN VIEW
     setSelectedAdminHomeownerId(homeowner.id);
     setSearchQuery('');
     setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
     setCurrentView('DASHBOARD');
     
-    // 3. CRITICAL: Switch to homeowner view mode
+    // Note: Does NOT switch view mode - only updates selected homeowner for display
+    // View mode switch is handled ONLY by handleViewAsHomeowner (View As button)
+  };
+
+  const handleViewAsHomeowner = (homeowner: Homeowner) => {
+    // This is the ONLY function that should switch to homeowner view mode
+    console.log("👁️ View As button clicked - Switching to homeowner view:", homeowner.id, homeowner.firstName || homeowner.name);
+    
+    // 1. Set the selected homeowner
+    setSelectedAdminHomeownerId(homeowner.id);
+    setSearchQuery('');
+    setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
+    setCurrentView('DASHBOARD');
+    
+    // 2. CRITICAL: Switch to homeowner view mode
     setActiveHomeowner(homeowner);
     setUserRole(UserRole.HOMEOWNER);
     
     // Note: Persistence now handled by State Watcher useEffect
-    // This ensures it survives crashes in notification/other services
   };
 
   const handleClearHomeownerSelection = () => {
@@ -4443,6 +4456,7 @@ Assigned By: ${assignerName}
       selectedHomeownerId={selectedAdminHomeownerId}
       onClearSelection={handleClearHomeownerSelection}
       onNavigate={setCurrentView}
+      onViewAsHomeowner={handleViewAsHomeowner}
       onOpenEnrollment={() => setIsEnrollmentOpen(true)}
       currentView={currentView}
       onSignOut={async () => {
@@ -4476,6 +4490,7 @@ Assigned By: ${assignerName}
           onSearchChange={setSearchQuery}
           searchResults={searchResults}
           onSelectHomeowner={handleSelectHomeowner}
+          onViewAsHomeowner={handleViewAsHomeowner}
           documents={documents}
           onUploadDocument={handleUploadDocument}
           onDeleteDocument={handleDeleteDocument}
