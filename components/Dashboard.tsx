@@ -4788,49 +4788,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </div>
             )}
 
-            {/* SETTINGS Tab - Admin Only */}
-            {isAdmin && (
-              <div
-                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]"
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
-              >
-                <div className="w-full min-h-[calc(100vh-300px)]">
-                  <div className="max-w-7xl mx-auto py-4">
-                    {currentTab === 'SETTINGS' && (() => {
-                      console.log("✅ Rendering SettingsTab (mobile view) - currentTab:", currentTab);
-                      return (
-                        <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                          <SettingsTab
-                          employees={employees}
-                          onAddEmployee={onAddEmployee || ((emp) => console.warn('No onAddEmployee handler'))}
-                          onUpdateEmployee={onUpdateEmployee || ((emp) => console.warn('No onUpdateEmployee handler'))}
-                          onDeleteEmployee={onDeleteEmployee || ((id) => console.warn('No onDeleteEmployee handler'))}
-                          contractors={contractors}
-                          onAddContractor={onAddContractor || ((sub) => console.warn('No onAddContractor handler'))}
-                          onUpdateContractor={onUpdateContractor || ((sub) => console.warn('No onUpdateContractor handler'))}
-                          onDeleteContractor={onDeleteContractor || ((id) => console.warn('No onDeleteContractor handler'))}
-                          builderUsers={builderUsers}
-                          builderGroups={builderGroups}
-                          onAddBuilderUser={onAddBuilderUser || ((user) => console.warn('No onAddBuilderUser handler'))}
-                          onUpdateBuilderUser={onUpdateBuilderUser || ((user) => console.warn('No onUpdateBuilderUser handler'))}
-                          onDeleteBuilderUser={onDeleteBuilderUser || ((id) => console.warn('No onDeleteBuilderUser handler'))}
-                          homeowners={homeowners}
-                          onUpdateHomeowner={onUpdateHomeowner || ((h) => console.warn('No onUpdateHomeowner handler'))}
-                          onDeleteHomeowner={onDeleteHomeowner || ((id) => console.warn('No onDeleteHomeowner handler'))}
-                          onDataReset={onDataReset || (() => console.warn('No onDataReset handler'))}
-                            currentUser={currentUser}
-                          />
-                        </Suspense>
-                      );
-                    })() || (
-                      <div className="flex items-center justify-center h-full text-surface-on-variant dark:text-gray-400">
-                        Switch to Settings tab to view
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* SETTINGS Tab - Mobile Scroll Section - Removed (now only renders in main desktop area) */}
         </AnimatePresence>
         </div>
 
@@ -5151,13 +5109,13 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* SETTINGS Tab - Admin Only */}
           {currentTab === 'SETTINGS' && isAdmin && (() => {
-            console.log("✅ Rendering SettingsTab - currentTab:", currentTab, "isAdmin:", isAdmin);
+            console.log("🖥️ Rendering SettingsTab (DESKTOP MAIN) - Success");
+            console.log("currentTab:", currentTab, "isAdmin:", isAdmin);
             return (
               <AnimatedTabContent tabKey="settings" className="flex-1 min-h-0 flex flex-col">
-                <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
-                  <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                    <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                      <SettingsTab
+                <div className="h-full w-full flex-1 overflow-hidden">
+                  <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                    <SettingsTab
                       employees={employees}
                       onAddEmployee={onAddEmployee || ((emp) => console.warn('No onAddEmployee handler'))}
                       onUpdateEmployee={onUpdateEmployee || ((emp) => console.warn('No onUpdateEmployee handler'))}
@@ -5175,10 +5133,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                       onUpdateHomeowner={onUpdateHomeowner || ((h) => console.warn('No onUpdateHomeowner handler'))}
                       onDeleteHomeowner={onDeleteHomeowner || ((id) => console.warn('No onDeleteHomeowner handler'))}
                       onDataReset={onDataReset || (() => console.warn('No onDataReset handler'))}
-                        currentUser={currentUser}
-                      />
-                    </Suspense>
-                  </div>
+                      currentUser={currentUser}
+                    />
+                  </Suspense>
                 </div>
               </AnimatedTabContent>
             );
