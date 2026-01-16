@@ -1647,8 +1647,8 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
                       <p className="text-sm text-yellow-900 dark:text-yellow-100 mb-2 font-medium">Required Environment Variables:</p>
                       <ul className="text-xs text-yellow-800 dark:text-yellow-200 space-y-1 font-mono">
                         <li>• VITE_SENTRY_AUTH_TOKEN</li>
-                        <li>• VITE_SENTRY_ORG_SLUG</li>
-                        <li>• VITE_SENTRY_PROJECT_SLUG</li>
+                        <li>• VITE_SENTRY_ORG</li>
+                        <li>• VITE_SENTRY_PROJECT</li>
                       </ul>
                     </div>
                   )}

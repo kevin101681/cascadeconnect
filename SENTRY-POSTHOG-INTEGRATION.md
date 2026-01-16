@@ -217,15 +217,15 @@ Required environment variables:
 
 ```env
 VITE_SENTRY_AUTH_TOKEN=your_sentry_auth_token
-VITE_SENTRY_ORG_SLUG=your_org_slug
-VITE_SENTRY_PROJECT_SLUG=your_project_slug
+VITE_SENTRY_ORG=your_org
+VITE_SENTRY_PROJECT=your_project
 ```
 
 **How to get these**:
 1. **Auth Token**: Sentry → Settings → Auth Tokens → Create New Token
    - Scopes: `project:read`, `org:read`
-2. **Org Slug**: Found in Sentry URL: `https://sentry.io/organizations/{org-slug}/`
-3. **Project Slug**: Found in project URL: `https://sentry.io/organizations/{org-slug}/projects/{project-slug}/`
+2. **Org**: Found in Sentry URL: `https://sentry.io/organizations/{org}/`
+3. **Project**: Found in project URL: `https://sentry.io/organizations/{org}/projects/{project}/`
 
 ### PostHog Configuration
 
@@ -462,8 +462,8 @@ NETLIFY → SENTRY → POSTHOG → EMAILS → OVERVIEW → NEON
 **Solution**: Add these to `.env.local`:
 ```env
 VITE_SENTRY_AUTH_TOKEN=your_token
-VITE_SENTRY_ORG_SLUG=your_org
-VITE_SENTRY_PROJECT_SLUG=your_project
+VITE_SENTRY_ORG=your_org
+VITE_SENTRY_PROJECT=your_project
 ```
 
 #### "PostHog API not configured"
@@ -499,8 +499,8 @@ Add these in Netlify Dashboard → Site Settings → Environment Variables:
 
 ```env
 VITE_SENTRY_AUTH_TOKEN=your_sentry_auth_token
-VITE_SENTRY_ORG_SLUG=cascade-builder-services
-VITE_SENTRY_PROJECT_SLUG=javascript-react
+VITE_SENTRY_ORG=cascade-builder-services
+VITE_SENTRY_PROJECT=javascript-react
 VITE_POSTHOG_PROJECT_ID=12345
 VITE_POSTHOG_PERSONAL_API_KEY=phx_xxxxxxxxxxxxx
 ```

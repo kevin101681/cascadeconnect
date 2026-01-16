@@ -130,10 +130,10 @@ export interface BackendDashboardStats {
  */
 export function isSentryApiConfigured(): boolean {
   const authToken = import.meta.env.VITE_SENTRY_AUTH_TOKEN;
-  const orgSlug = import.meta.env.VITE_SENTRY_ORG_SLUG;
-  const projectSlug = import.meta.env.VITE_SENTRY_PROJECT_SLUG;
+  const org = import.meta.env.VITE_SENTRY_ORG;
+  const project = import.meta.env.VITE_SENTRY_PROJECT;
   
-  return !!(authToken && orgSlug && projectSlug);
+  return !!(authToken && org && project);
 }
 
 /**
@@ -152,8 +152,8 @@ export function isPostHogApiConfigured(): boolean {
 function getSentryConfig() {
   return {
     authToken: import.meta.env.VITE_SENTRY_AUTH_TOKEN as string,
-    orgSlug: import.meta.env.VITE_SENTRY_ORG_SLUG as string,
-    projectSlug: import.meta.env.VITE_SENTRY_PROJECT_SLUG as string,
+    org: import.meta.env.VITE_SENTRY_ORG as string,
+    project: import.meta.env.VITE_SENTRY_PROJECT as string,
   };
 }
 
@@ -180,11 +180,11 @@ export async function getSentryErrors(): Promise<SentryErrorsResponse> {
   if (!isSentryApiConfigured()) {
     return {
       success: false,
-      error: 'Sentry API not configured. Set VITE_SENTRY_AUTH_TOKEN, VITE_SENTRY_ORG_SLUG, and VITE_SENTRY_PROJECT_SLUG.',
+      error: 'Sentry API not configured. Set VITE_SENTRY_AUTH_TOKEN, VITE_SENTRY_ORG, and VITE_SENTRY_PROJECT.',
     };
   }
 
-  const { authToken, orgSlug, projectSlug } = getSentryConfig();
+  const { authToken, org, project } = getSentryConfig();
   
   try {
     // Calculate 24h ago timestamp
@@ -195,7 +195,7 @@ export async function getSentryErrors(): Promise<SentryErrorsResponse> {
     const [statsRes, issuesRes] = await Promise.allSettled([
       // Stats API: Get error count for last 24h
       fetch(
-        `https://sentry.io/api/0/projects/${orgSlug}/${projectSlug}/stats/?stat=received&since=${Math.floor(yesterday.getTime() / 1000)}&until=${Math.floor(now.getTime() / 1000)}&resolution=1h`,
+        `https://sentry.io/api/0/projects/${org}/${project}/stats/?stat=received&since=${Math.floor(yesterday.getTime() / 1000)}&until=${Math.floor(now.getTime() / 1000)}&resolution=1h`,
         {
           headers: {
             Authorization: `Bearer ${authToken}`,
@@ -205,7 +205,7 @@ export async function getSentryErrors(): Promise<SentryErrorsResponse> {
       ),
       // Issues API: Get recent issues
       fetch(
-        `https://sentry.io/api/0/projects/${orgSlug}/${projectSlug}/issues/?query=is:unresolved&statsPeriod=24h&limit=10`,
+        `https://sentry.io/api/0/projects/${org}/${project}/issues/?query=is:unresolved&statsPeriod=24h&limit=10`,
         {
           headers: {
             Authorization: `Bearer ${authToken}`,
