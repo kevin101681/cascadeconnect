@@ -53,23 +53,14 @@ const SentryIssuesSchema = z.array(SentryIssueSchema);
 /**
  * PostHog Trends Query Schema
  * Validates response from https://us.posthog.com/api/projects/{id}/query/
+ * Note: PostHog returns parallel arrays (data and labels), not an array of objects
  */
 const PostHogTrendResultSchema = z.object({
   results: z.array(
     z.object({
-      action: z.object({
-        id: z.string().or(z.number()).optional(),
-        type: z.string().optional(),
-        order: z.number().optional(),
-        name: z.string().optional(),
-        custom_name: z.string().optional(),
-      }).optional(),
-      label: z.string(),
-      count: z.number(),
-      data: z.array(z.number()),
-      labels: z.array(z.string()),
-      days: z.array(z.string()),
-      chartLabel: z.string().optional(),
+      data: z.array(z.number()), // The counts (parallel array)
+      labels: z.array(z.string()), // The dates (parallel array)
+      days: z.array(z.string()).optional(), // Alternative date format
     })
   ),
   hasMore: z.boolean().optional(),
@@ -186,6 +177,9 @@ export async function getSentryErrors(): Promise<SentryErrorsResponse> {
 
   const { authToken, org, project } = getSentryConfig();
   
+  // Debug log to verify project
+  console.log('🔹 Sentry Project:', project);
+  
   try {
     // Calculate 24h ago timestamp
     const now = new Date();
@@ -193,9 +187,9 @@ export async function getSentryErrors(): Promise<SentryErrorsResponse> {
     
     // Fetch both stats and issues in parallel
     const [statsRes, issuesRes] = await Promise.allSettled([
-      // Stats API: Get error count for last 24h
+      // Stats API: Get error count for last 24h (all environments)
       fetch(
-        `https://sentry.io/api/0/projects/${org}/${project}/stats/?stat=received&since=${Math.floor(yesterday.getTime() / 1000)}&until=${Math.floor(now.getTime() / 1000)}&resolution=1h`,
+        `https://sentry.io/api/0/projects/${org}/${project}/stats/?statsPeriod=24h&stat=received`,
         {
           headers: {
             Authorization: `Bearer ${authToken}`,
@@ -203,7 +197,7 @@ export async function getSentryErrors(): Promise<SentryErrorsResponse> {
           },
         }
       ),
-      // Issues API: Get recent issues
+      // Issues API: Get recent issues (all environments)
       fetch(
         `https://sentry.io/api/0/projects/${org}/${project}/issues/?query=is:unresolved&statsPeriod=24h&limit=10`,
         {
@@ -350,7 +344,7 @@ export async function getPostHogTrends(): Promise<PostHogTrendsResponse> {
     const data = await response.json();
     const validatedData = PostHogTrendResultSchema.parse(data);
 
-    // Extract daily data and calculate totals
+    // Extract daily data and calculate totals from parallel arrays
     const result = validatedData.results[0];
     if (!result) {
       return {
@@ -361,12 +355,15 @@ export async function getPostHogTrends(): Promise<PostHogTrendsResponse> {
       };
     }
 
-    const dailyData = result.days.map((day, idx) => ({
-      date: day,
+    // Map parallel arrays (data and labels) to our expected format
+    const dates = result.days || result.labels; // Prefer days, fallback to labels
+    const dailyData = dates.map((date, idx) => ({
+      date,
       count: result.data[idx] || 0,
     }));
 
-    const totalEvents = result.count || 0;
+    // Calculate total events by summing all daily counts
+    const totalEvents = result.data.reduce((sum, count) => sum + count, 0);
 
     return {
       success: true,
