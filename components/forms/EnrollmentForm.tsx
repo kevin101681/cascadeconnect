@@ -6,13 +6,13 @@ import Button from '../Button';
 import CalendarPicker from '../CalendarPicker';
 
 interface EnrollmentFormProps {
-  forcedBuilderId?: string; // If provided, builder selection is hidden and this ID is used
+  forcedGroupId?: string; // If provided, builder group selection is hidden and this ID is used
   onSubmit?: (data: any, tradeFile: File | null, parsedSubs?: any[]) => void;
-  builderGroups?: Array<{ id: string; name: string }>; // Only required if forcedBuilderId is not provided
+  builderGroups?: Array<{ id: string; name: string }>; // Only required if forcedGroupId is not provided
 }
 
 const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
-  forcedBuilderId,
+  forcedGroupId,
   onSubmit,
   builderGroups = [],
 }) => {
@@ -163,7 +163,7 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
       return;
     }
 
-    if (!forcedBuilderId && !selectedBuilderId) {
+    if (!forcedGroupId && !selectedBuilderId) {
       alert("Please select a builder.");
       return;
     }
@@ -176,7 +176,7 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
       phone,
       buyer2Email,
       buyer2Phone,
-      builderId: forcedBuilderId || selectedBuilderId,
+      builderGroupId: forcedGroupId || selectedBuilderId,
       street,
       city,
       state,
@@ -311,9 +311,9 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
 
           {/* Column 2: Property & Meta */}
           <div className="space-y-6">
-            
-            {/* Builder Selection (only if not forced) */}
-            {!forcedBuilderId && builderGroups.length > 0 && (
+
+            {/* Builder Group Selection (only if not forced) */}
+            {!forcedGroupId && builderGroups.length > 0 && (
               <div className={sectionClass}>
                 <h3 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4 flex items-center gap-2">
                   <Building2 className="h-4 w-4 text-primary" />
