@@ -1,9 +1,8 @@
 /**
- * Settings Tab Component
+ * Settings Tab Component - SIMPLIFIED ROBUST VERSION
  * 
  * A dedicated settings page with vertical sidebar navigation.
- * Migrated from the header dropdown menu.
- * Uses split-pane layout matching the Builders tab design.
+ * Completely rewritten for visibility and reliability.
  */
 
 import React, { useState, Suspense } from 'react';
@@ -83,12 +82,12 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
   onDataReset,
   currentUser,
 }) => {
-  // ==================== STATE ====================
-  
+  // Force initial category to be "internal-users"
   const [activeCategory, setActiveCategory] = useState<CategoryType>('internal-users');
 
-  // ==================== CATEGORIES ====================
-  
+  console.log("🎨 SettingsTab rendering with category:", activeCategory);
+
+  // Categories definition
   const categories: Category[] = [
     {
       id: 'internal-users',
@@ -128,19 +127,20 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
     },
   ];
 
-  // ==================== HANDLERS ====================
-  
+  // Handler for category selection
   const handleCategorySelect = (categoryId: CategoryType) => {
+    console.log("🔄 Switching category to:", categoryId);
     setActiveCategory(categoryId);
   };
 
-  // ==================== RENDER RIGHT PANE CONTENT ====================
-  
-  const renderRightPaneContent = () => {
-    // Safety check: ensure activeCategory is valid
-    if (!activeCategory) return <div className="p-10 text-red-500">Error: No Category Selected</div>;
+  // Render content based on active category
+  const renderContent = () => {
+    // Failsafe: force to internal-users if somehow null
+    const category = activeCategory || 'internal-users';
+    
+    console.log("📄 Rendering content for:", category);
 
-    switch (activeCategory) {
+    switch (category) {
       case 'internal-users':
         return (
           <Suspense fallback={<LoadingSpinner />}>
@@ -186,12 +186,12 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
 
       case 'analytics':
         return (
-          <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-            <BarChart className="h-16 w-16 mb-4 text-gray-400 dark:text-gray-500" />
-            <h3 className="text-lg font-semibold text-surface-on dark:text-gray-100 mb-2">
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <BarChart className="h-16 w-16 mb-4 text-gray-400" />
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
               Analytics Dashboard
             </h3>
-            <p className="text-sm text-surface-on-variant dark:text-gray-400">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
               Analytics and reporting features coming soon.
             </p>
           </div>
@@ -212,77 +212,71 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
         );
 
       default:
-        return null;
+        return (
+          <div className="p-10 text-red-500 font-bold">
+            Error: Unknown category "{category}"
+          </div>
+        );
     }
   };
 
-  // ==================== RENDER ====================
-  
+  // SIMPLIFIED UNIFIED LAYOUT
   return (
-    <div className="flex flex-col md:flex-row w-full h-full min-h-[600px] bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div className="flex flex-col md:flex-row w-full h-full min-h-[80vh] bg-white dark:bg-gray-900 text-black dark:text-white">
       
-      {/* ==================== LEFT SIDEBAR (Navigation) ==================== */}
-      <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800">
+      {/* LEFT SIDEBAR - Category Navigation */}
+      <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 p-4 flex-shrink-0 bg-gray-50 dark:bg-gray-800">
+        <h2 className="font-bold text-xl mb-6 text-gray-900 dark:text-gray-100">Settings</h2>
         
-        {/* Header */}
-        <div className="p-4 md:p-6 border-b border-surface-outline-variant dark:border-gray-700 flex-shrink-0">
-          <h2 className="text-xl font-semibold text-surface-on dark:text-gray-100">
-            Settings
-          </h2>
-          <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-1">
-            Manage system settings and data
-          </p>
-        </div>
-
-        {/* Navigation Menu */}
-        <div className="flex-1 overflow-y-auto p-2">
-          <nav className="space-y-1">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => handleCategorySelect(category.id)}
-                className={`
-                  w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all duration-200
-                  ${
-                    activeCategory === category.id
-                      ? 'bg-primary/10 dark:bg-primary/20 text-primary border border-primary/20'
-                      : 'text-surface-on dark:text-gray-300 hover:bg-surface-container dark:hover:bg-gray-700/50 border border-transparent'
-                  }
-                `}
-              >
-                <div className="flex-shrink-0">
-                  {category.icon}
+        <nav className="space-y-2">
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => handleCategorySelect(category.id)}
+              className={`
+                w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors
+                ${activeCategory === category.id
+                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-medium'
+                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }
+              `}
+            >
+              <div className="flex-shrink-0">
+                {category.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium">
+                  {category.label}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">
-                    {category.label}
-                  </div>
-                  <div className="text-xs text-surface-on-variant dark:text-gray-400 truncate mt-0.5">
-                    {category.description}
-                  </div>
-                </div>
-                {activeCategory === category.id && (
-                  <ChevronRight className="h-4 w-4 flex-shrink-0" />
-                )}
-              </button>
-            ))}
-          </nav>
-        </div>
+              </div>
+              {activeCategory === category.id && (
+                <ChevronRight className="h-4 w-4 flex-shrink-0" />
+              )}
+            </button>
+          ))}
+        </nav>
       </div>
 
-      {/* ==================== RIGHT PANE (Content) ==================== */}
-      <div className="flex-1 w-full flex flex-col bg-surface dark:bg-gray-800 min-h-0 overflow-hidden">
-        {renderRightPaneContent()}
+      {/* RIGHT CONTENT AREA */}
+      <div className="flex-1 p-6 overflow-auto bg-gray-50 dark:bg-gray-800">
+        <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
+          {categories.find(c => c.id === activeCategory)?.label || 'Settings'}
+        </h3>
+        
+        {/* Render the selected category content */}
+        <div className="bg-white dark:bg-gray-900 rounded-lg">
+          {renderContent()}
+        </div>
       </div>
+      
     </div>
   );
 };
 
-// ==================== LOADING SPINNER ====================
-
+// Loading Spinner Component
 const LoadingSpinner: React.FC = () => (
-  <div className="flex items-center justify-center h-full">
-    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+  <div className="flex items-center justify-center p-12">
+    <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-600"></div>
   </div>
 );
 

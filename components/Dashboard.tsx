@@ -3978,8 +3978,28 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="fixed top-20 right-4 z-50">
             <button
               onClick={() => {
-                console.log("🚪 Exiting homeowner view, returning to admin");
-                onClearHomeownerSelection();
+                console.log("🚪 EXIT VIEW CLICKED - Returning to admin");
+                console.log("Current state - userRole:", userRole, "isHomeownerView:", isHomeownerView);
+                
+                // 1. Try the prop callback
+                if (onClearHomeownerSelection) {
+                  console.log("✅ Calling onClearHomeownerSelection");
+                  onClearHomeownerSelection();
+                  
+                  // 2. FAILSAFE: If state doesn't update after 500ms, force reload
+                  setTimeout(() => {
+                    console.log("⚠️ Checking if view changed...");
+                    // If still in homeowner view after callback, something is stuck
+                    if (userRole === UserRole.HOMEOWNER) {
+                      console.log("❌ State stuck! Forcing page reload...");
+                      window.location.href = window.location.origin + window.location.pathname;
+                    } else {
+                      console.log("✅ Successfully exited homeowner view");
+                    }
+                  }, 500);
+                } else {
+                  console.error("❌ onClearHomeownerSelection prop is missing!");
+                }
               }}
               className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-full shadow-lg transition-all hover:shadow-xl hover:scale-105"
               title="Return to Admin View"

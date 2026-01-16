@@ -1418,7 +1418,14 @@ function App() {
   };
 
   const handleClearHomeownerSelection = () => {
+    console.log("🔙 Clearing homeowner selection and returning to admin view");
     setSelectedAdminHomeownerId(null);
+    // CRITICAL: Switch role back to ADMIN
+    setUserRole(UserRole.ADMIN);
+    // Clear the active homeowner to return to admin mode
+    setActiveHomeowner(PLACEHOLDER_HOMEOWNER);
+    // Navigate back to dashboard
+    setCurrentView('DASHBOARD');
     // Note: Persistence clearing now handled by State Watcher useEffect
   };
 
