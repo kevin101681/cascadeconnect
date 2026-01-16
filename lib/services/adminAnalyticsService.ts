@@ -186,35 +186,36 @@ export async function getSentryErrors(): Promise<SentryErrorsResponse> {
     const now = Math.floor(Date.now() / 1000);
     const oneDayAgo = now - (24 * 60 * 60);
     
-    // Build properly encoded query params for Issues API
+    // Build properly encoded query params for Issues API (simplified - no statsPeriod)
     const issuesParams = new URLSearchParams({
       query: 'is:unresolved',
-      statsPeriod: '24h',
       limit: '10'
     });
     
-    // Fetch both stats and issues in parallel
+    // Build Stats API URL with resolution and generated stat (ALL environments)
+    const statsUrl = `https://sentry.io/api/0/projects/${org}/${project}/stats/?since=${oneDayAgo}&until=${now}&resolution=1h&stat=generated`;
+    const issuesUrl = `https://sentry.io/api/0/projects/${org}/${project}/issues/?${issuesParams.toString()}`;
+    
+    // Debug: Log exact URLs being used
+    console.log('🔹 Sentry Stats Query:', statsUrl);
+    console.log('🔹 Sentry Issues Query:', issuesUrl);
+    
+    // Fetch both stats and issues in parallel (ALL ENVIRONMENTS - no filter)
     const [statsRes, issuesRes] = await Promise.allSettled([
-      // Stats API: Get error count for last 24h (requires since/until, NOT statsPeriod)
-      fetch(
-        `https://sentry.io/api/0/projects/${org}/${project}/stats/?since=${oneDayAgo}&until=${now}&stat=received`,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      ),
-      // Issues API: Get recent issues (properly encoded query string)
-      fetch(
-        `https://sentry.io/api/0/projects/${org}/${project}/issues/?${issuesParams.toString()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${authToken}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      ),
+      // Stats API: Get error count for last 24h (all environments)
+      fetch(statsUrl, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      }),
+      // Issues API: Get recent unresolved issues (all environments)
+      fetch(issuesUrl, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          'Content-Type': 'application/json',
+        },
+      }),
     ]);
 
     let errorCount24h = 0;
@@ -223,16 +224,20 @@ export async function getSentryErrors(): Promise<SentryErrorsResponse> {
     // Process stats result
     if (statsRes.status === 'fulfilled') {
       if (!statsRes.value.ok) {
+        const errorText = await statsRes.value.text();
         console.error('❌ Sentry Stats API error:', statsRes.value.status, statsRes.value.statusText);
+        console.error('❌ Response body:', errorText);
       } else {
         try {
           const statsData = await statsRes.value.json();
+          console.log('✅ Sentry Stats response:', statsData);
           const validatedStats = SentryStatsSchema.parse(statsData);
           
           // Sum all error counts
           errorCount24h = validatedStats.groups.reduce((sum, group) => {
             return sum + (group.totals['sum(quantity)'] || 0);
           }, 0);
+          console.log('✅ Total errors (24h):', errorCount24h);
         } catch (parseError) {
           console.error('❌ Failed to parse Sentry stats:', parseError);
         }
@@ -244,10 +249,13 @@ export async function getSentryErrors(): Promise<SentryErrorsResponse> {
     // Process issues result
     if (issuesRes.status === 'fulfilled') {
       if (!issuesRes.value.ok) {
+        const errorText = await issuesRes.value.text();
         console.error('❌ Sentry Issues API error:', issuesRes.value.status, issuesRes.value.statusText);
+        console.error('❌ Response body:', errorText);
       } else {
         try {
           const issuesData = await issuesRes.value.json();
+          console.log('✅ Sentry Issues response:', issuesData.length, 'issues found');
           const validatedIssues = SentryIssuesSchema.parse(issuesData);
           
           recentIssues = validatedIssues.slice(0, 5).map((issue) => ({
