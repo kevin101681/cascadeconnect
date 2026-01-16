@@ -4782,15 +4782,15 @@ const Dashboard: React.FC<DashboardProps> = ({
         </AnimatePresence>
         </div>
 
-        {/* Content Area - Full-screen overlay on mobile (when tab is active), inline on desktop */}
+        {/* Content Area - FIXED LAYOUT - Full-screen overlay on mobile (when tab is active), inline on desktop */}
         {currentTab && (() => {
           const overlayInner = (
             <>
-              {/* Disable height animation here to prevent "condensed then fullscreen" growth on open. */}
-              <SmoothHeightWrapper enabled={false} className="flex-1 min-h-0 flex flex-col md:min-h-[300px]">
-              <div className="flex-1 min-h-0 flex flex-col">
-              <AnimatePresence mode="wait" initial={false}>
-          {/* Removed floating close FAB (use browser/back navigation instead). */}
+              {/* Main Content Area - FIXED LAYOUT */}
+              <main className="flex-1 flex flex-col overflow-hidden relative bg-background h-full">
+                <div className="flex-1 overflow-y-auto w-full h-full relative">
+                  <AnimatePresence mode="wait" initial={false}>
+                    {/* Removed floating close FAB (use browser/back navigation instead). */}
 
           {currentTab === 'CLAIMS' && (
             <AnimatedTabContent tabKey="claims" className="flex-1 min-h-0 flex flex-col">
@@ -5097,33 +5097,14 @@ const Dashboard: React.FC<DashboardProps> = ({
             </AnimatedTabContent>
           )}
 
-          {/* SETTINGS Tab - Admin Only */}
+          {/* SETTINGS Tab - Admin Only - RESTORED WITH FIXED LAYOUT */}
           {currentTab === 'SETTINGS' && isAdmin && (() => {
-            console.log("🛑 DASHBOARD DIRECT RENDER TEST");
+            console.log("🖥️ Rendering SettingsTab (FIXED LAYOUT) - Success");
             console.log("currentTab:", currentTab, "isAdmin:", isAdmin);
             return (
               <AnimatedTabContent tabKey="settings" className="flex-1 min-h-0 flex flex-col">
-                <div className="w-full h-full min-h-[500px] bg-red-600 border-[20px] border-black text-white text-4xl font-black p-10 z-[9999] relative">
-                  <h1 className="mb-4">🚨 TESTING DASHBOARD SLOT 🚨</h1>
-                  <p className="text-2xl mb-4">If you see this, Dashboard.tsx is working perfectly.</p>
-                  <p className="text-xl">The issue is the Import or the SettingsTab file itself.</p>
-                  <div className="mt-8 p-4 bg-yellow-400 text-black text-lg">
-                    <strong>Diagnosis:</strong> The rendering slot is functional. The problem was with SettingsTab component.
-                  </div>
-                </div>
-              </AnimatedTabContent>
-            );
-          })()}
-
-          {/* OLD CODE - COMMENTED OUT FOR TEST
-          {currentTab === 'SETTINGS' && isAdmin && (() => {
-            console.log("🖥️ Rendering SettingsTab (DESKTOP MAIN) - Success");
-            console.log("currentTab:", currentTab, "isAdmin:", isAdmin);
-            return (
-              <AnimatedTabContent tabKey="settings" className="flex-1 min-h-0 flex flex-col">
-                <div className="relative z-40 w-full flex-1 h-full min-h-0 bg-gray-500/10">
-                  <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                    <SettingsTab
+                <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                  <SettingsTab
                       employees={employees}
                       onAddEmployee={onAddEmployee || ((emp) => console.warn('No onAddEmployee handler'))}
                       onUpdateEmployee={onUpdateEmployee || ((emp) => console.warn('No onUpdateEmployee handler'))}
@@ -5141,18 +5122,16 @@ const Dashboard: React.FC<DashboardProps> = ({
                       onUpdateHomeowner={onUpdateHomeowner || ((h) => console.warn('No onUpdateHomeowner handler'))}
                       onDeleteHomeowner={onDeleteHomeowner || ((id) => console.warn('No onDeleteHomeowner handler'))}
                       onDataReset={onDataReset || (() => console.warn('No onDataReset handler'))}
-                      currentUser={currentUser}
-                    />
-                  </Suspense>
-                </div>
+                    currentUser={currentUser}
+                  />
+                </Suspense>
               </AnimatedTabContent>
             );
           })()}
-          END OLD CODE */}
 
-              </AnimatePresence>
-              </div>
-              </SmoothHeightWrapper>
+                  </AnimatePresence>
+                </div>
+              </main>
             </>
           );
 
