@@ -219,7 +219,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
   // ==================== RENDER ====================
   
   return (
-    <div className="flex flex-col md:flex-row w-full h-full min-h-[600px] bg-background text-foreground border-2 border-blue-500">
+    <div className="flex flex-col md:flex-row w-full h-full min-h-[600px] bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       
       {/* ==================== LEFT SIDEBAR (Navigation) ==================== */}
       <div className="w-full md:w-80 border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800">

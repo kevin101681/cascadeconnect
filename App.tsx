@@ -1409,6 +1409,10 @@ function App() {
     setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
     setCurrentView('DASHBOARD');
     
+    // 3. CRITICAL: Switch to homeowner view mode
+    setActiveHomeowner(homeowner);
+    setUserRole(UserRole.HOMEOWNER);
+    
     // Note: Persistence now handled by State Watcher useEffect
     // This ensures it survives crashes in notification/other services
   };
