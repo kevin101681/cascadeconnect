@@ -1,87 +1,77 @@
-import React, { useState } from 'react';
-import { Users, Home, Database, BarChart, Server, FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
-// NO EXTERNAL IMPORTS - PREVENT CRASHES
-// import InternalUsersView from ... (REMOVED)
+// KEEP IMPORTS DISABLED FOR NOW TO ENSURE STABILITY
+// import InternalUsersView from ... 
 
 export default function SettingsTab(props: any) {
+  const [mounted, setMounted] = useState(false);
   const [activeCategory, setActiveCategory] = useState('Internal Users');
 
-  console.log("🚀 SettingsTab MOUNTED - Zero Dependencies");
-  console.log("Props received:", Object.keys(props || {}).join(', '));
+  useEffect(() => {
+    setMounted(true);
+    console.log("🔮 SettingsTab: Portal Ready");
+    return () => console.log("👋 SettingsTab: Unmounting");
+  }, []);
 
-  return (
+  // Hydration safety
+  if (!mounted) return null;
+
+  // THE CONTENT
+  const content = (
     <div 
       style={{
-        position: 'fixed', 
-        top: '80px', 
-        left: '20px', 
-        right: '20px', 
-        bottom: '20px', 
-        zIndex: 99999, 
-        backgroundColor: '#fee2e2', 
-        border: '10px solid red',
+        position: 'fixed',
+        top: '100px', // Below your main navbar
+        left: '20px',
+        right: '20px',
+        bottom: '20px',
+        backgroundColor: '#fff1f2', // Rose-50
+        border: '8px solid #e11d48', // Red-600
+        zIndex: 2147483647, // Max 32-bit Integer (Highest possible Z-index)
+        boxShadow: '0 0 0 100vmax rgba(0,0,0,0.5)', // Dim background
         display: 'flex',
         flexDirection: 'column',
-        boxShadow: '0 0 100px rgba(0,0,0,0.5)'
+        borderRadius: '12px',
+        padding: '24px',
+        overflow: 'hidden'
       }}
     >
-      <div className="p-8 bg-white text-black" style={{ overflow: 'auto' }}>
-        <h1 className="text-4xl font-black text-red-600 mb-4">
-          🎉 IT WORKS! 🎉
+      <div className="flex justify-between items-center mb-6 border-b pb-4 border-red-200">
+        <h1 className="text-3xl font-black text-red-600">
+          🔮 PORTAL MODE ACTIVE
         </h1>
-        <p className="text-2xl font-bold text-green-600 mb-4">
-          The previous white screen was caused by a crashing import (likely InternalUsersView).
-        </p>
-        
-        <div className="bg-yellow-100 border-2 border-yellow-600 p-4 mb-6 rounded">
-          <h2 className="text-xl font-bold mb-2">Diagnosis:</h2>
-          <p className="text-lg">
-            SettingsTab.tsx itself is functional. The issue was with React.lazy() imports 
-            failing to load child components.
-          </p>
-        </div>
+        <button 
+           onClick={() => console.log("✅ Clicked test")}
+           className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+        >
+          Test Interaction
+        </button>
+      </div>
 
-        <h3 className="text-2xl font-bold mb-4">Test Categories:</h3>
-        <div className="flex gap-4 mb-8 flex-wrap">
-           {['Internal Users', 'Homeowners', 'Templates', 'Data Import', 'Analytics', 'Backend'].map(cat => (
-             <button 
-               key={cat}
-               onClick={() => {
-                 console.log("Category clicked:", cat);
-                 setActiveCategory(cat);
-               }}
-               style={{
-                 padding: '12px 24px',
-                 backgroundColor: activeCategory === cat ? '#2563eb' : '#9ca3af',
-                 color: 'white',
-                 borderRadius: '8px',
-                 border: 'none',
-                 cursor: 'pointer',
-                 fontSize: '16px',
-                 fontWeight: 'bold'
-               }}
-             >
-               {cat}
-             </button>
-           ))}
-        </div>
+      <p className="mb-4 text-lg">
+        This content is rendered via <code>createPortal(document.body)</code>. 
+        It cannot be clipped by the Dashboard.
+      </p>
 
-        <div className="p-6 border-4 border-dashed border-blue-400 bg-blue-50 rounded-lg">
-           <h4 className="text-xl font-bold mb-2">Current Selection:</h4>
-           <p className="text-3xl font-black text-blue-600">{activeCategory}</p>
-           <p className="text-gray-600 mt-4">
-             (Real views are disabled to prove visibility)
-           </p>
-        </div>
+      <div className="flex gap-2 mb-6">
+        {['Internal Users', 'Templates', 'Homeowners'].map(cat => (
+          <button
+            key={cat}
+            onClick={() => setActiveCategory(cat)}
+            className={`px-4 py-2 rounded border ${activeCategory === cat ? 'bg-blue-600 text-white' : 'bg-white'}`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
 
-        <div className="mt-6 p-4 bg-green-100 border-2 border-green-600 rounded">
-          <h4 className="text-lg font-bold mb-2">Props Received:</h4>
-          <pre className="text-sm bg-gray-800 text-green-400 p-3 rounded overflow-auto">
-            {JSON.stringify(Object.keys(props || {}), null, 2)}
-          </pre>
-        </div>
+      <div className="flex-1 bg-white border-2 border-dashed border-gray-300 p-8 flex items-center justify-center text-gray-500">
+        placeholder for: {activeCategory}
       </div>
     </div>
   );
+
+  // TELEPORT TO BODY
+  return createPortal(content, document.body);
 }
