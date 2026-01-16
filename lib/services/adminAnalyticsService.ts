@@ -1,7 +1,9 @@
 /**
- * ADMIN ANALYTICS SERVICE
- * Fetches analytics data from Sentry and PostHog for Backend Dashboard
- * Follows .cursorrules: Strict TypeScript, Zod-first validation, Promise.allSettled
+ * ADMIN ANALYTICS SERVICE (CLIENT-SIDE)
+ * Calls Netlify serverless function to fetch analytics data server-side
+ * This avoids CORS/origin issues with Sentry and PostHog APIs
+ * 
+ * Server-side logic: netlify/functions/analytics.ts
  */
 
 import { z } from 'zod';
@@ -161,11 +163,11 @@ function getPostHogConfig() {
 }
 
 // ==========================================
-// SENTRY API FUNCTIONS
+// NETLIFY SERVERLESS FUNCTION CALLS
 // ==========================================
 
 /**
- * Fetch 24-hour error count from Sentry
+ * Fetch 24-hour error count from Sentry (via Netlify function)
  * Returns error count and recent issues
  */
 export async function getSentryErrors(): Promise<SentryErrorsResponse> {
@@ -178,116 +180,34 @@ export async function getSentryErrors(): Promise<SentryErrorsResponse> {
 
   const { authToken, org, project } = getSentryConfig();
   
-  // Debug log to verify project
-  console.log('🔹 Sentry Project:', project);
+  console.log('🌐 Calling Netlify function for Sentry data (server-side)...');
   
   try {
-    // Calculate Unix timestamps (required by Sentry Stats API)
-    const now = Math.floor(Date.now() / 1000);
-    const oneDayAgo = now - (24 * 60 * 60);
-    
-    // Build properly encoded query params for Issues API (simplified - no statsPeriod)
-    const issuesParams = new URLSearchParams({
-      query: 'is:unresolved',
-      limit: '10'
+    const response = await fetch('/.netlify/functions/analytics', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        service: 'sentry',
+        authToken,
+        org,
+        project,
+      }),
     });
-    
-    // Build Stats API URL with resolution and generated stat (ALL environments)
-    const statsUrl = `https://sentry.io/api/0/projects/${org}/${project}/stats/?since=${oneDayAgo}&until=${now}&resolution=1h&stat=generated`;
-    const issuesUrl = `https://sentry.io/api/0/projects/${org}/${project}/issues/?${issuesParams.toString()}`;
-    
-    // Debug: Log exact URLs being used
-    console.log('🔹 Sentry Stats Query:', statsUrl);
-    console.log('🔹 Sentry Issues Query:', issuesUrl);
-    
-    // Fetch both stats and issues in parallel (ALL ENVIRONMENTS - no filter)
-    const [statsRes, issuesRes] = await Promise.allSettled([
-      // Stats API: Get error count for last 24h (all environments)
-      fetch(statsUrl, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-        },
-      }),
-      // Issues API: Get recent unresolved issues (all environments)
-      fetch(issuesUrl, {
-        headers: {
-          Authorization: `Bearer ${authToken}`,
-          'Content-Type': 'application/json',
-        },
-      }),
-    ]);
 
-    let errorCount24h = 0;
-    let recentIssues: SentryErrorsResponse['recentIssues'] = [];
-
-    // Process stats result
-    if (statsRes.status === 'fulfilled') {
-      if (!statsRes.value.ok) {
-        const errorText = await statsRes.value.text();
-        console.error('❌ Sentry Stats API error:', statsRes.value.status, statsRes.value.statusText);
-        console.error('❌ Response body:', errorText);
-      } else {
-        try {
-          const statsData = await statsRes.value.json();
-          console.log('✅ Sentry Stats response:', statsData);
-          const validatedStats = SentryStatsSchema.parse(statsData);
-          
-          // Sum all error counts
-          errorCount24h = validatedStats.groups.reduce((sum, group) => {
-            return sum + (group.totals['sum(quantity)'] || 0);
-          }, 0);
-          console.log('✅ Total errors (24h):', errorCount24h);
-        } catch (parseError) {
-          console.error('❌ Failed to parse Sentry stats:', parseError);
-        }
-      }
-    } else {
-      console.error('❌ Sentry stats fetch failed:', statsRes.reason);
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Netlify function error:', response.status, errorText);
+      return {
+        success: false,
+        error: `Server error: ${response.status} ${response.statusText}`,
+      };
     }
 
-    // Process issues result
-    if (issuesRes.status === 'fulfilled') {
-      if (!issuesRes.value.ok) {
-        const errorText = await issuesRes.value.text();
-        console.error('❌ Sentry Issues API error:', issuesRes.value.status, issuesRes.value.statusText);
-        console.error('❌ Response body:', errorText);
-      } else {
-        try {
-          const issuesData = await issuesRes.value.json();
-          console.log('✅ Sentry Issues response:', issuesData.length, 'issues found');
-          const validatedIssues = SentryIssuesSchema.parse(issuesData);
-          
-          recentIssues = validatedIssues.slice(0, 5).map((issue) => ({
-            id: issue.id,
-            title: issue.title,
-            count: typeof issue.count === 'string' ? parseInt(issue.count, 10) : issue.count,
-            lastSeen: issue.lastSeen,
-            level: issue.level || 'error',
-            permalink: issue.permalink,
-          }));
-        } catch (parseError) {
-          console.error('❌ Failed to parse Sentry issues:', parseError);
-        }
-      }
-    } else {
-      console.error('❌ Sentry issues fetch failed:', issuesRes.reason);
-    }
-
-    // Determine status
-    let status: SentryErrorsResponse['status'] = 'healthy';
-    if (errorCount24h > 50) {
-      status = 'critical';
-    } else if (errorCount24h > 5) {
-      status = 'warning';
-    }
-
-    return {
-      success: true,
-      errorCount24h,
-      recentIssues,
-      status,
-    };
+    const data = await response.json();
+    console.log('✅ Sentry data received from server:', data);
+    return data;
   } catch (error) {
     console.error('❌ getSentryErrors failed:', error);
     return {
@@ -297,13 +217,9 @@ export async function getSentryErrors(): Promise<SentryErrorsResponse> {
   }
 }
 
-// ==========================================
-// POSTHOG API FUNCTIONS
-// ==========================================
-
 /**
- * Fetch PostHog trends (Weekly Active Users or Pageviews)
- * Uses PostHog Query API for last 7 days
+ * Fetch PostHog trends (via Netlify function)
+ * Returns 7-day pageview trends
  */
 export async function getPostHogTrends(): Promise<PostHogTrendsResponse> {
   if (!isPostHogApiConfigured()) {
@@ -315,90 +231,36 @@ export async function getPostHogTrends(): Promise<PostHogTrendsResponse> {
 
   const { projectId, apiKey, host } = getPostHogConfig();
   
+  console.log('🌐 Calling Netlify function for PostHog data (server-side)...');
+  
   try {
-    // PostHog Query API: Trends Query for Pageviews
-    const query = {
-      kind: 'TrendsQuery',
-      series: [
-        {
-          kind: 'EventsNode',
-          event: '$pageview',
-          name: '$pageview',
-        },
-      ],
-      trendsFilter: {
-        display: 'ActionsLineGraph',
+    const response = await fetch('/.netlify/functions/analytics', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      interval: 'day',
-      dateRange: {
-        date_from: '-7d',
-        date_to: null,
-      },
-    };
-
-    const response = await fetch(
-      `${host}/api/projects/${projectId}/query/`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
-      }
-    );
+      body: JSON.stringify({
+        service: 'posthog',
+        projectId,
+        apiKey,
+        host,
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ PostHog API error:', response.status, errorText);
+      console.error('❌ Netlify function error:', response.status, errorText);
       return {
         success: false,
-        error: `PostHog API error: ${response.status} ${response.statusText}`,
+        error: `Server error: ${response.status} ${response.statusText}`,
       };
     }
 
     const data = await response.json();
-    const validatedData = PostHogTrendResultSchema.parse(data);
-
-    // Extract daily data and calculate totals from parallel arrays
-    const result = validatedData.results[0];
-    if (!result) {
-      return {
-        success: true,
-        activeUsers7d: 0,
-        dailyData: [],
-        totalEvents: 0,
-      };
-    }
-
-    // Map parallel arrays (data and labels) to our expected format
-    const dates = result.days || result.labels; // Prefer days, fallback to labels
-    const dailyData = dates.map((date, idx) => ({
-      date,
-      count: result.data[idx] || 0,
-    }));
-
-    // Calculate total events by summing all daily counts
-    const totalEvents = result.data.reduce((sum, count) => sum + count, 0);
-
-    return {
-      success: true,
-      activeUsers7d: totalEvents,
-      dailyData,
-      totalEvents,
-    };
+    console.log('✅ PostHog data received from server:', data);
+    return data;
   } catch (error) {
     console.error('❌ getPostHogTrends failed:', error);
-    
-    // Zod validation errors
-    if (error instanceof z.ZodError) {
-      console.error('❌ PostHog data validation failed:', error.errors);
-      return {
-        success: false,
-        error: 'Invalid data format from PostHog API',
-      };
-    }
-    
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error fetching PostHog data',
