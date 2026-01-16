@@ -5099,6 +5099,24 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* SETTINGS Tab - Admin Only */}
           {currentTab === 'SETTINGS' && isAdmin && (() => {
+            console.log("🛑 DASHBOARD DIRECT RENDER TEST");
+            console.log("currentTab:", currentTab, "isAdmin:", isAdmin);
+            return (
+              <AnimatedTabContent tabKey="settings" className="flex-1 min-h-0 flex flex-col">
+                <div className="w-full h-full min-h-[500px] bg-red-600 border-[20px] border-black text-white text-4xl font-black p-10 z-[9999] relative">
+                  <h1 className="mb-4">🚨 TESTING DASHBOARD SLOT 🚨</h1>
+                  <p className="text-2xl mb-4">If you see this, Dashboard.tsx is working perfectly.</p>
+                  <p className="text-xl">The issue is the Import or the SettingsTab file itself.</p>
+                  <div className="mt-8 p-4 bg-yellow-400 text-black text-lg">
+                    <strong>Diagnosis:</strong> The rendering slot is functional. The problem was with SettingsTab component.
+                  </div>
+                </div>
+              </AnimatedTabContent>
+            );
+          })()}
+
+          {/* OLD CODE - COMMENTED OUT FOR TEST
+          {currentTab === 'SETTINGS' && isAdmin && (() => {
             console.log("🖥️ Rendering SettingsTab (DESKTOP MAIN) - Success");
             console.log("currentTab:", currentTab, "isAdmin:", isAdmin);
             return (
@@ -5130,6 +5148,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               </AnimatedTabContent>
             );
           })()}
+          END OLD CODE */}
 
               </AnimatePresence>
               </div>
