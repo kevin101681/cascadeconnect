@@ -1,12 +1,12 @@
 /**
- * Settings Tab Component - SIMPLIFIED ROBUST VERSION
+ * Settings Tab Component - UNIFIED RESPONSIVE LAYOUT
  * 
- * A dedicated settings page with vertical sidebar navigation.
- * Completely rewritten for visibility and reliability.
+ * Single layout that works on both mobile and desktop.
+ * No conditional rendering or hidden/visible conflicts.
  */
 
 import React, { useState, Suspense } from 'react';
-import { Users, Home, Database, BarChart, Server, FileText, ChevronRight } from 'lucide-react';
+import { Users, Home, Database, BarChart, Server, FileText } from 'lucide-react';
 import { InternalEmployee, Contractor, BuilderUser, BuilderGroup, Homeowner } from '../../../types';
 
 // Lazy load view adapters (non-modal versions)
@@ -15,22 +15,6 @@ const HomeownersDirectoryView = React.lazy(() => import('../views/HomeownersDire
 const DataImportView = React.lazy(() => import('../views/DataImportView').then(m => ({ default: m.default })));
 const BackendStatusView = React.lazy(() => import('../views/BackendStatusView').then(m => ({ default: m.default })));
 const TemplatesView = React.lazy(() => import('../views/TemplatesView').then(m => ({ default: m.default })));
-
-// Define category types
-type CategoryType = 
-  | 'internal-users'
-  | 'homeowners'
-  | 'data-import'
-  | 'analytics'
-  | 'backend'
-  | 'templates';
-
-interface Category {
-  id: CategoryType;
-  label: string;
-  icon: React.ReactNode;
-  description: string;
-}
 
 interface SettingsTabProps {
   // Internal Users props
@@ -55,7 +39,7 @@ interface SettingsTabProps {
   onUpdateHomeowner: (homeowner: Homeowner) => void;
   onDeleteHomeowner: (id: string) => void;
 
-  // Data import props (if needed)
+  // Data import props
   onDataReset?: () => void;
 
   // Current user (for permissions)
@@ -82,66 +66,27 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
   onDataReset,
   currentUser,
 }) => {
-  // Force initial category to be "internal-users"
-  const [activeCategory, setActiveCategory] = useState<CategoryType>('internal-users');
+  // Force initial category
+  const [activeCategory, setActiveCategory] = useState<string>('Internal Users');
 
-  console.log("🎨 SettingsTab rendering with category:", activeCategory);
+  console.log("🎨 SettingsTab UNIFIED LAYOUT rendering - category:", activeCategory);
 
-  // Categories definition
-  const categories: Category[] = [
-    {
-      id: 'internal-users',
-      label: 'Internal Users',
-      icon: <Users className="h-5 w-5" />,
-      description: 'Manage employees, contractors, and builder users',
-    },
-    {
-      id: 'homeowners',
-      label: 'Homeowners',
-      icon: <Home className="h-5 w-5" />,
-      description: 'View and manage homeowner directory',
-    },
-    {
-      id: 'data-import',
-      label: 'Data Import',
-      icon: <Database className="h-5 w-5" />,
-      description: 'Import builder data and manage test data',
-    },
-    {
-      id: 'analytics',
-      label: 'Analytics',
-      icon: <BarChart className="h-5 w-5" />,
-      description: 'View system analytics and reports',
-    },
-    {
-      id: 'backend',
-      label: 'Backend',
-      icon: <Server className="h-5 w-5" />,
-      description: 'Monitor backend services and deployments',
-    },
-    {
-      id: 'templates',
-      label: 'Templates',
-      icon: <FileText className="h-5 w-5" />,
-      description: 'Manage response templates',
-    },
+  // Category definitions
+  const categories = [
+    { id: 'Internal Users', label: 'Internal Users', icon: <Users className="h-4 w-4 mr-2" /> },
+    { id: 'Homeowners', label: 'Homeowners', icon: <Home className="h-4 w-4 mr-2" /> },
+    { id: 'Data Import', label: 'Data Import', icon: <Database className="h-4 w-4 mr-2" /> },
+    { id: 'Analytics', label: 'Analytics', icon: <BarChart className="h-4 w-4 mr-2" /> },
+    { id: 'Backend', label: 'Backend', icon: <Server className="h-4 w-4 mr-2" /> },
+    { id: 'Templates', label: 'Templates', icon: <FileText className="h-4 w-4 mr-2" /> },
   ];
-
-  // Handler for category selection
-  const handleCategorySelect = (categoryId: CategoryType) => {
-    console.log("🔄 Switching category to:", categoryId);
-    setActiveCategory(categoryId);
-  };
 
   // Render content based on active category
   const renderContent = () => {
-    // Failsafe: force to internal-users if somehow null
-    const category = activeCategory || 'internal-users';
-    
-    console.log("📄 Rendering content for:", category);
+    console.log("📄 Rendering content for:", activeCategory);
 
-    switch (category) {
-      case 'internal-users':
+    switch (activeCategory) {
+      case 'Internal Users':
         return (
           <Suspense fallback={<LoadingSpinner />}>
             <InternalUsersView
@@ -164,7 +109,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
           </Suspense>
         );
 
-      case 'homeowners':
+      case 'Homeowners':
         return (
           <Suspense fallback={<LoadingSpinner />}>
             <HomeownersDirectoryView
@@ -177,34 +122,30 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
           </Suspense>
         );
 
-      case 'data-import':
+      case 'Data Import':
         return (
           <Suspense fallback={<LoadingSpinner />}>
             <DataImportView onDataReset={onDataReset} />
           </Suspense>
         );
 
-      case 'analytics':
+      case 'Analytics':
         return (
-          <div className="flex flex-col items-center justify-center p-8 text-center">
-            <BarChart className="h-16 w-16 mb-4 text-gray-400" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              Analytics Dashboard
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Analytics and reporting features coming soon.
-            </p>
+          <div className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400 text-center">
+            <BarChart className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+            <h3 className="text-lg font-semibold mb-2">Analytics Dashboard</h3>
+            <p className="text-sm">Analytics and reporting features coming soon.</p>
           </div>
         );
 
-      case 'backend':
+      case 'Backend':
         return (
           <Suspense fallback={<LoadingSpinner />}>
             <BackendStatusView />
           </Suspense>
         );
 
-      case 'templates':
+      case 'Templates':
         return (
           <Suspense fallback={<LoadingSpinner />}>
             <TemplatesView />
@@ -213,58 +154,51 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
 
       default:
         return (
-          <div className="p-10 text-red-500 font-bold">
-            Error: Unknown category "{category}"
+          <div className="p-4 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded text-gray-500 dark:text-gray-400">
+            Placeholder for {activeCategory}
           </div>
         );
     }
   };
 
-  // SIMPLIFIED UNIFIED LAYOUT
+  // UNIFIED RESPONSIVE LAYOUT - No mobile/desktop split
   return (
-    <div className="flex flex-col md:flex-row w-full h-full min-h-[80vh] bg-white dark:bg-gray-900 text-black dark:text-white">
+    <div className="flex flex-col md:flex-row w-full h-full min-h-[80vh] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
       
-      {/* LEFT SIDEBAR - Category Navigation */}
-      <div className="w-full md:w-64 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 p-4 flex-shrink-0 bg-gray-50 dark:bg-gray-800">
-        <h2 className="font-bold text-xl mb-6 text-gray-900 dark:text-gray-100">Settings</h2>
-        
-        <nav className="space-y-2">
-          {categories.map((category) => (
+      {/* Left Sidebar - Always visible on desktop, top on mobile */}
+      <div className="w-full md:w-64 bg-gray-50 dark:bg-gray-800 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="p-4 font-semibold text-lg border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100">
+          Settings
+        </div>
+        <div className="flex md:flex-col overflow-x-auto md:overflow-visible p-2 gap-1">
+          {categories.map((cat) => (
             <button
-              key={category.id}
-              onClick={() => handleCategorySelect(category.id)}
-              className={`
-                w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors
-                ${activeCategory === category.id
-                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 font-medium'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }
-              `}
+              key={cat.id}
+              onClick={() => {
+                console.log("🔄 Category changed to:", cat.id);
+                setActiveCategory(cat.id);
+              }}
+              className={`flex items-center text-left px-3 py-2 rounded-md text-sm transition-colors whitespace-nowrap ${
+                activeCategory === cat.id
+                  ? "bg-blue-600 text-white font-medium"
+                  : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+              }`}
             >
-              <div className="flex-shrink-0">
-                {category.icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium">
-                  {category.label}
-                </div>
-              </div>
-              {activeCategory === category.id && (
-                <ChevronRight className="h-4 w-4 flex-shrink-0" />
-              )}
+              {cat.icon}
+              {cat.label}
             </button>
           ))}
-        </nav>
+        </div>
       </div>
 
-      {/* RIGHT CONTENT AREA */}
-      <div className="flex-1 p-6 overflow-auto bg-gray-50 dark:bg-gray-800">
-        <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-          {categories.find(c => c.id === activeCategory)?.label || 'Settings'}
-        </h3>
-        
-        {/* Render the selected category content */}
-        <div className="bg-white dark:bg-gray-900 rounded-lg">
+      {/* Right Content Pane - Grows to fill space */}
+      <div className="flex-1 p-6 overflow-y-auto bg-white dark:bg-gray-900">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">
+            {activeCategory}
+          </h2>
+          
+          {/* Content Switch */}
           {renderContent()}
         </div>
       </div>
@@ -276,7 +210,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
 // Loading Spinner Component
 const LoadingSpinner: React.FC = () => (
   <div className="flex items-center justify-center p-12">
-    <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 border-t-blue-600"></div>
+    <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-200 dark:border-gray-700 border-t-blue-600"></div>
   </div>
 );
 

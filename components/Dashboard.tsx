@@ -3977,35 +3977,43 @@ const Dashboard: React.FC<DashboardProps> = ({
         {isHomeownerView && isAdminAccount && (
           <div className="fixed top-20 right-4 z-50">
             <button
-              onClick={() => {
-                console.log("🚪 EXIT VIEW CLICKED - Returning to admin");
-                console.log("Current state - userRole:", userRole, "isHomeownerView:", isHomeownerView);
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 
-                // 1. Try the prop callback
+                console.log("🛑 EXITING HOMEOWNER VIEW - RESETTING TO ADMIN");
+                console.log("Before exit - userRole:", userRole, "isHomeownerView:", isHomeownerView);
+                
+                // 1. Clear the homeowner data and force admin mode
                 if (onClearHomeownerSelection) {
-                  console.log("✅ Calling onClearHomeownerSelection");
+                  console.log("✅ Calling onClearHomeownerSelection (should set userRole to ADMIN)");
                   onClearHomeownerSelection();
                   
-                  // 2. FAILSAFE: If state doesn't update after 500ms, force reload
+                  // 2. FAILSAFE: If state doesn't update after 1 second, force reload
                   setTimeout(() => {
-                    console.log("⚠️ Checking if view changed...");
-                    // If still in homeowner view after callback, something is stuck
-                    if (userRole === UserRole.HOMEOWNER) {
-                      console.log("❌ State stuck! Forcing page reload...");
+                    console.log("⚠️ Checking if exit succeeded...");
+                    console.log("After 1s - userRole:", userRole, "activeHomeowner:", activeHomeowner?.name || 'none');
+                    
+                    // If still stuck in homeowner view, force reload
+                    const currentUserRole = userRole; // Capture current value
+                    if (currentUserRole === UserRole.HOMEOWNER) {
+                      console.log("❌ State stuck in HOMEOWNER mode! Forcing page reload...");
+                      alert("View switch failed. Reloading page...");
                       window.location.href = window.location.origin + window.location.pathname;
                     } else {
-                      console.log("✅ Successfully exited homeowner view");
+                      console.log("✅ Successfully exited to ADMIN mode");
                     }
-                  }, 500);
+                  }, 1000);
                 } else {
-                  console.error("❌ onClearHomeownerSelection prop is missing!");
+                  console.error("❌ CRITICAL: onClearHomeownerSelection prop is missing!");
+                  alert("Exit handler not configured. Contact support.");
                 }
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-full shadow-lg transition-all hover:shadow-xl hover:scale-105"
+              className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-full shadow-lg transition-all hover:shadow-xl hover:scale-105 active:scale-95"
               title="Return to Admin View"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span className="text-sm">Exit View</span>
+              <span className="text-sm font-semibold">Exit View</span>
             </button>
           </div>
         )}
