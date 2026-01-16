@@ -88,25 +88,32 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
     switch (activeCategory) {
       case 'Internal Users':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <InternalUsersView
-              employees={employees}
-              onAddEmployee={onAddEmployee}
-              onUpdateEmployee={onUpdateEmployee}
-              onDeleteEmployee={onDeleteEmployee}
-              contractors={contractors}
-              onAddContractor={onAddContractor}
-              onUpdateContractor={onUpdateContractor}
-              onDeleteContractor={onDeleteContractor}
-              builderUsers={builderUsers}
-              builderGroups={builderGroups}
-              homeowners={homeowners}
-              onAddBuilderUser={onAddBuilderUser}
-              onUpdateBuilderUser={onUpdateBuilderUser}
-              onDeleteBuilderUser={onDeleteBuilderUser}
-              currentUser={currentUser}
-            />
-          </Suspense>
+          <>
+            <div className="bg-orange-200 border-2 border-orange-600 p-4 mb-4 rounded">
+              <h3 className="text-xl font-bold text-orange-900">
+                📍 Internal Users View Loading...
+              </h3>
+            </div>
+            <Suspense fallback={<LoadingSpinner />}>
+              <InternalUsersView
+                employees={employees}
+                onAddEmployee={onAddEmployee}
+                onUpdateEmployee={onUpdateEmployee}
+                onDeleteEmployee={onDeleteEmployee}
+                contractors={contractors}
+                onAddContractor={onAddContractor}
+                onUpdateContractor={onUpdateContractor}
+                onDeleteContractor={onDeleteContractor}
+                builderUsers={builderUsers}
+                builderGroups={builderGroups}
+                homeowners={homeowners}
+                onAddBuilderUser={onAddBuilderUser}
+                onUpdateBuilderUser={onUpdateBuilderUser}
+                onDeleteBuilderUser={onDeleteBuilderUser}
+                currentUser={currentUser}
+              />
+            </Suspense>
+          </>
         );
 
       case 'Homeowners':
@@ -161,12 +168,12 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
     }
   };
 
-  // UNIFIED RESPONSIVE LAYOUT - No mobile/desktop split
+  // UNIFIED RESPONSIVE LAYOUT - HIGH VISIBILITY DEBUG MODE
   return (
-    <div className="flex flex-col md:flex-row w-full h-full min-h-[80vh] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+    <div className="relative z-50 flex flex-col md:flex-row w-full h-full min-h-[600px] bg-blue-100 text-black border-4 border-red-600 shadow-2xl">
       
-      {/* Left Sidebar - Always visible on desktop, top on mobile */}
-      <div className="w-full md:w-64 bg-gray-50 dark:bg-gray-800 border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-700 flex-shrink-0">
+      {/* Left Sidebar - YELLOW DEBUG */}
+      <div className="w-full md:w-64 bg-yellow-100 border-b md:border-b-0 md:border-r border-black flex-shrink-0">
         <div className="p-4 font-semibold text-lg border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100">
           Settings
         </div>
@@ -191,10 +198,15 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
         </div>
       </div>
 
-      {/* Right Content Pane - Grows to fill space */}
-      <div className="flex-1 p-6 overflow-y-auto bg-white dark:bg-gray-900">
+      {/* Right Content Pane - GREEN DEBUG */}
+      <div className="flex-1 p-6 overflow-y-auto bg-green-100">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">
+          {/* VISUAL PROOF OF RENDER */}
+          <h1 className="text-4xl font-black text-purple-600 mb-4 animate-pulse">
+            🎯 SETTINGS TAB IS HERE 🎯
+          </h1>
+          
+          <h2 className="text-2xl font-bold mb-6 text-black">
             {activeCategory}
           </h2>
           

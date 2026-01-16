@@ -5113,7 +5113,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             console.log("currentTab:", currentTab, "isAdmin:", isAdmin);
             return (
               <AnimatedTabContent tabKey="settings" className="flex-1 min-h-0 flex flex-col">
-                <div className="h-full w-full flex-1 overflow-hidden">
+                <div className="relative z-40 w-full flex-1 h-full min-h-0 bg-gray-500/10">
                   <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
                     <SettingsTab
                       employees={employees}
