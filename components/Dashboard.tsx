@@ -4782,66 +4782,55 @@ const Dashboard: React.FC<DashboardProps> = ({
         </AnimatePresence>
         </div>
 
-        {/* Content Area - FIXED LAYOUT - Full-screen overlay on mobile (when tab is active), inline on desktop */}
+        {/* Content Area - Full-height layout with settings overlay */}
         {currentTab && (() => {
           const overlayInner = (
             <>
-              {/* Main Content Area - FIXED LAYOUT - SETTINGS BYPASSES ANIMATION */}
-              <main className="flex-1 flex flex-col overflow-hidden relative bg-gray-100 h-full">
-                  
-                  {/* 1. SETTINGS TAB - BYPASS ANIMATION COMPLETELY - GUARANTEED VISIBILITY LAYOUT */}
-                  {(() => {
-                    // Safe check with case-insensitive comparison
-                    const isSettingsTab = currentTab === 'SETTINGS' && isAdmin;
-                    console.log("🛑 DASHBOARD RENDER CHECK:", {
-                      currentTab,
-                      isAdmin,
-                      isSettingsTab,
-                      condition: `${currentTab} === 'SETTINGS' && ${isAdmin}`
-                    });
-                    
-                    if (isSettingsTab) {
-                      console.log("✅ RENDERING SETTINGS WRAPPER - Should see RED background");
-                      return (
-                        <div 
-                          className="flex-1 w-full min-h-screen flex flex-col relative z-50 bg-red-500 border-8 border-yellow-400" 
-                          key="settings-no-animation"
-                          style={{ minHeight: '100vh' }}
+              {/* Main Content Area - Standard full-height flex layout */}
+              <main className="flex-1 relative flex flex-col overflow-hidden bg-background">
+                {(() => {
+                  const isSettingsTab =
+                    isAdmin &&
+                    typeof currentTab === 'string' &&
+                    currentTab.toLowerCase() === 'settings';
+
+                  if (isSettingsTab) {
+                    return (
+                      <div className="absolute inset-0 z-10 flex flex-col bg-background" key="settings-no-animation">
+                        <Suspense
+                          fallback={
+                            <div className="flex items-center justify-center py-12">
+                              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                            </div>
+                          }
                         >
-                          <div className="p-4 bg-yellow-300 text-black font-bold text-center">
-                            🚨 SETTINGS WRAPPER VISIBLE - If you see this, the wrapper renders!
-                          </div>
-                          <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                            <SettingsTab
-                              employees={employees}
-                              onAddEmployee={onAddEmployee || ((emp) => console.warn('No onAddEmployee handler'))}
-                              onUpdateEmployee={onUpdateEmployee || ((emp) => console.warn('No onUpdateEmployee handler'))}
-                              onDeleteEmployee={onDeleteEmployee || ((id) => console.warn('No onDeleteEmployee handler'))}
-                              contractors={contractors}
-                              onAddContractor={onAddContractor || ((sub) => console.warn('No onAddContractor handler'))}
-                              onUpdateContractor={onUpdateContractor || ((sub) => console.warn('No onUpdateContractor handler'))}
-                              onDeleteContractor={onDeleteContractor || ((id) => console.warn('No onDeleteContractor handler'))}
-                              builderUsers={builderUsers}
-                              builderGroups={builderGroups}
-                              onAddBuilderUser={onAddBuilderUser || ((user) => console.warn('No onAddBuilderUser handler'))}
-                              onUpdateBuilderUser={onUpdateBuilderUser || ((user) => console.warn('No onUpdateBuilderUser handler'))}
-                              onDeleteBuilderUser={onDeleteBuilderUser || ((id) => console.warn('No onDeleteBuilderUser handler'))}
-                              homeowners={homeowners}
-                              onUpdateHomeowner={onUpdateHomeowner || ((h) => console.warn('No onUpdateHomeowner handler'))}
-                              onDeleteHomeowner={onDeleteHomeowner || ((id) => console.warn('No onDeleteHomeowner handler'))}
-                              onDataReset={onDataReset || (() => console.warn('No onDataReset handler'))}
-                              currentUser={currentUser}
-                            />
-                          </Suspense>
-                        </div>
-                      );
-                    }
-                    
-                    // Return null to fall through to the else block
-                    return null;
-                  })() || (
-                    /* 2. ALL OTHER TABS - USE ANIMATION WITH SCROLLABLE CONTAINER */
-                    <div className="flex-1 overflow-y-auto w-full h-full relative">
+                          <SettingsTab
+                            employees={employees}
+                            onAddEmployee={onAddEmployee || ((emp) => console.warn('No onAddEmployee handler'))}
+                            onUpdateEmployee={onUpdateEmployee || ((emp) => console.warn('No onUpdateEmployee handler'))}
+                            onDeleteEmployee={onDeleteEmployee || ((id) => console.warn('No onDeleteEmployee handler'))}
+                            contractors={contractors}
+                            onAddContractor={onAddContractor || ((sub) => console.warn('No onAddContractor handler'))}
+                            onUpdateContractor={onUpdateContractor || ((sub) => console.warn('No onUpdateContractor handler'))}
+                            onDeleteContractor={onDeleteContractor || ((id) => console.warn('No onDeleteContractor handler'))}
+                            builderUsers={builderUsers}
+                            builderGroups={builderGroups}
+                            onAddBuilderUser={onAddBuilderUser || ((user) => console.warn('No onAddBuilderUser handler'))}
+                            onUpdateBuilderUser={onUpdateBuilderUser || ((user) => console.warn('No onUpdateBuilderUser handler'))}
+                            onDeleteBuilderUser={onDeleteBuilderUser || ((id) => console.warn('No onDeleteBuilderUser handler'))}
+                            homeowners={homeowners}
+                            onUpdateHomeowner={onUpdateHomeowner || ((h) => console.warn('No onUpdateHomeowner handler'))}
+                            onDeleteHomeowner={onDeleteHomeowner || ((id) => console.warn('No onDeleteHomeowner handler'))}
+                            onDataReset={onDataReset || (() => console.warn('No onDataReset handler'))}
+                            currentUser={currentUser}
+                          />
+                        </Suspense>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="w-full h-full overflow-y-auto">
                       <AnimatePresence mode="wait" initial={false}>
                       {/* Removed floating close FAB (use browser/back navigation instead). */}
 
@@ -5152,25 +5141,13 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           {/* SETTINGS Tab is now rendered ABOVE (outside AnimatePresence) */}
 
-                    </AnimatePresence>
+                      </AnimatePresence>
                     </div>
-                  )}
+                  );
+                })()}
               </main>
             </>
           );
-
-          // IMPORTANT: On iOS/Safari (and when using Framer Motion), `position: fixed` elements
-          // rendered inside an ancestor with a `transform` can be treated as "fixed to that ancestor"
-          // during initial animation frame(s). That creates a brief "smaller version" flash before
-          // the overlay becomes truly full-screen. Portaling to `document.body` avoids this.
-          if (isMobileView && typeof document !== 'undefined') {
-            return createPortal(
-              <div className="fixed top-16 left-0 right-0 bottom-0 z-[5000] bg-surface dark:bg-gray-900 flex flex-col pt-4 overflow-hidden">
-                {overlayInner}
-              </div>,
-              document.body
-            );
-          }
 
           return (
             <div className="relative bg-transparent flex flex-col pt-0">
