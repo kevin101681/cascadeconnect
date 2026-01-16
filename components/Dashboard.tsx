@@ -8,7 +8,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, BuilderUser, Task, Contractor, Call } from '../types';
 import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle, HelpCircle, CheckCheck, Settings } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle, HelpCircle, CheckCheck, Settings } from 'lucide-react';
 import { useTaskStore } from '../stores/useTaskStore';
 import { calls, claims as claimsSchema } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
@@ -726,13 +726,15 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const currentTab = useMemo<TabType>(() => {
     const view = searchParams.get('view');
+    console.log("🔍 Current tab from URL:", view, "| userRole:", userRole, "| isAdmin:", isAdmin);
     if (!view) return null;
 
     const validTabs: TabType[] = ['CLAIMS', 'MESSAGES', 'TASKS', 'NOTES', 'CALLS', 'DOCUMENTS', 'MANUAL', 'HELP', 'INVOICES', 'SCHEDULE', 'SETTINGS', 'PUNCHLIST', 'CHAT'];
     const upperView = view.toUpperCase() as TabType;
-    
+
+    console.log("🔍 Uppercase view:", upperView, "| Valid?", validTabs.includes(upperView));
     return validTabs.includes(upperView) ? upperView : null;
-  }, [searchParams]);
+  }, [searchParams, userRole, isAdmin]);
   
   const previousTabRef = useRef<TabType>(null);
   
@@ -3970,6 +3972,24 @@ const Dashboard: React.FC<DashboardProps> = ({
     return (
       <>
         {renderModals()}
+        
+        {/* ADMIN EXIT BUTTON - Only show when admin is viewing as homeowner */}
+        {isHomeownerView && isAdminAccount && (
+          <div className="fixed top-20 right-4 z-50">
+            <button
+              onClick={() => {
+                console.log("🚪 Exiting homeowner view, returning to admin");
+                onClearHomeownerSelection();
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-full shadow-lg transition-all hover:shadow-xl hover:scale-105"
+              title="Return to Admin View"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="text-sm">Exit View</span>
+            </button>
+          </div>
+        )}
+        
         <div className={shouldHideDashboardUnderlay ? 'hidden' : 'block'}>
         {/* Main Layout Container - Sidebar + Content with Staggered Cascade Animation */}
         <StaggerContainer className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 bg-white dark:bg-gray-900" staggerDelay={0.08}>
@@ -4748,9 +4768,11 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto py-4">
-                    {currentTab === 'SETTINGS' ? (
-                      <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                        <SettingsTab
+                    {currentTab === 'SETTINGS' && (() => {
+                      console.log("✅ Rendering SettingsTab (mobile view) - currentTab:", currentTab);
+                      return (
+                        <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                          <SettingsTab
                           employees={employees}
                           onAddEmployee={onAddEmployee || ((emp) => console.warn('No onAddEmployee handler'))}
                           onUpdateEmployee={onUpdateEmployee || ((emp) => console.warn('No onUpdateEmployee handler'))}
@@ -4768,10 +4790,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                           onUpdateHomeowner={onUpdateHomeowner || ((h) => console.warn('No onUpdateHomeowner handler'))}
                           onDeleteHomeowner={onDeleteHomeowner || ((id) => console.warn('No onDeleteHomeowner handler'))}
                           onDataReset={onDataReset || (() => console.warn('No onDataReset handler'))}
-                          currentUser={currentUser}
-                        />
-                      </Suspense>
-                    ) : (
+                            currentUser={currentUser}
+                          />
+                        </Suspense>
+                      );
+                    })() || (
                       <div className="flex items-center justify-center h-full text-surface-on-variant dark:text-gray-400">
                         Switch to Settings tab to view
                       </div>
@@ -5099,12 +5122,14 @@ const Dashboard: React.FC<DashboardProps> = ({
           )}
 
           {/* SETTINGS Tab - Admin Only */}
-          {currentTab === 'SETTINGS' && isAdmin && (
-            <AnimatedTabContent tabKey="settings" className="flex-1 min-h-0 flex flex-col">
-              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
-                <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                  <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                    <SettingsTab
+          {currentTab === 'SETTINGS' && isAdmin && (() => {
+            console.log("✅ Rendering SettingsTab - currentTab:", currentTab, "isAdmin:", isAdmin);
+            return (
+              <AnimatedTabContent tabKey="settings" className="flex-1 min-h-0 flex flex-col">
+                <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
+                  <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+                    <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                      <SettingsTab
                       employees={employees}
                       onAddEmployee={onAddEmployee || ((emp) => console.warn('No onAddEmployee handler'))}
                       onUpdateEmployee={onUpdateEmployee || ((emp) => console.warn('No onUpdateEmployee handler'))}
@@ -5122,13 +5147,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                       onUpdateHomeowner={onUpdateHomeowner || ((h) => console.warn('No onUpdateHomeowner handler'))}
                       onDeleteHomeowner={onDeleteHomeowner || ((id) => console.warn('No onDeleteHomeowner handler'))}
                       onDataReset={onDataReset || (() => console.warn('No onDataReset handler'))}
-                      currentUser={currentUser}
-                    />
-                  </Suspense>
+                        currentUser={currentUser}
+                      />
+                    </Suspense>
+                  </div>
                 </div>
-              </div>
-            </AnimatedTabContent>
-          )}
+              </AnimatedTabContent>
+            );
+          })()}
 
               </AnimatePresence>
               </div>
