@@ -66,7 +66,8 @@ export interface Homeowner {
   address: string; // Combined Full Address for display/search
   
   builder: string; // Display Name (legacy text field)
-  builderId?: string; // Legacy: Link to BuilderGroup (deprecated)
+  builderId?: string; // Legacy: Link to BuilderGroup (deprecated, use builderGroupId)
+  builderGroupId?: string; // Database field: Link to BuilderGroup (legacy, being phased out)
   builderUserId?: string; // NEW: Direct link to Builder User in users table
   
   jobName: string; // Replaces Lot/Project/LLC
