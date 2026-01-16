@@ -30,6 +30,7 @@ const BackendDashboard = React.lazy(() => import('./components/BackendDashboard'
 const UnifiedImportDashboard = React.lazy(() => import('./app/dashboard/admin/import/page'));
 const WarrantyAnalytics = React.lazy(() => import('./components/WarrantyAnalytics'));
 const FloatingChatWidget = React.lazy(() => import('./components/chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
+const BuilderManagement = React.lazy(() => import('./components/BuilderManagement'));
 
 // Edge-to-edge loading skeleton
 import { DashboardSkeleton } from './components/skeletons/DashboardSkeleton';
@@ -1078,7 +1079,7 @@ function App() {
 
   // UI State - Persistent (but reset INVOICES on page load to prevent auto-opening)
   // Check URL hash for invoice creation link
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS'>(() => {
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'BUILDERS'>(() => {
     // Check if URL has invoice creation parameters
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
@@ -3611,7 +3612,8 @@ Assigned By: ${assignerName}
         try {
            await db.insert(builderGroupsTable).values({
               name: group.name,
-              email: group.email
+              email: group.email || null,
+              enrollmentSlug: group.enrollmentSlug || null
            } as any);
         } catch(e) { console.error(e); }
       }
@@ -3623,7 +3625,8 @@ Assigned By: ${assignerName}
          try {
            await db.update(builderGroupsTable).set({
               name: group.name,
-              email: group.email
+              email: group.email || null,
+              enrollmentSlug: group.enrollmentSlug || null
            } as any).where(eq(builderGroupsTable.id, group.id));
          } catch(e) { console.error(e); }
       }
@@ -4648,6 +4651,17 @@ Assigned By: ${assignerName}
       {currentView === 'SETTINGS' && (
         <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
           <Settings onNavigate={setCurrentView} />
+        </React.Suspense>
+      )}
+      {currentView === 'BUILDERS' && (
+        <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
+          <BuilderManagement
+            builderGroups={builderGroups}
+            onAddBuilderGroup={handleAddBuilderGroup}
+            onUpdateBuilderGroup={handleUpdateBuilderGroup}
+            onDeleteBuilderGroup={handleDeleteBuilderGroup}
+            onClose={() => setCurrentView('DASHBOARD')}
+          />
         </React.Suspense>
       )}
       {currentView === 'NEW' && (

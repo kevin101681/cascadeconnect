@@ -27,9 +27,9 @@ interface LayoutProps {
   onGlobalSearchNavigate?: (url: string) => void;
 
   // Navigation & Actions
-  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS') => void;
+  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'BUILDERS') => void;
   onOpenEnrollment: () => void;
-  currentView?: 'DASHBOARD' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'DETAIL' | 'NEW';
+  currentView?: 'DASHBOARD' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'BUILDERS' | 'DETAIL' | 'NEW';
 
   // Auth
   onSignOut: () => Promise<void>;
@@ -390,6 +390,13 @@ const Layout: React.FC<LayoutProps> = ({
                               >
                                 <Database className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
                                 Data Import
+                              </button>
+                              <button 
+                                onClick={() => handleMenuAction(() => onNavigate('BUILDERS'))}
+                                className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
+                              >
+                                <Building2 className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                                Builders
                               </button>
                               <button 
                                 onClick={() => handleMenuAction(() => {

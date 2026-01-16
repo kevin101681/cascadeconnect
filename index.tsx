@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { SignIn } from '@clerk/clerk-react';
 import HomeownerSignUpPage from './components/pages/homeowner-sign-up';
 import MaintenancePage from './src/pages/MaintenancePage';
+import PublicEnrollmentPage from './components/pages/PublicEnrollmentPage';
 
 // Initialize Sentry before any other code runs
 import { initializeSentry } from './sentry.config';
@@ -97,6 +98,7 @@ function Root() {
                 element={<SignIn routing="path" path="/sign-in" />}
               />
               <Route path="/sign-up/*" element={<HomeownerSignUpPage />} />
+              <Route path="/enroll/:slug" element={<PublicEnrollmentPage />} />
 
               {/* Protected / main app */}
               <Route path="/*" element={<App />} />

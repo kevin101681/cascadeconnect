@@ -33,6 +33,7 @@ export interface BuilderGroup {
   address?: string;
   primaryContact?: string;
   email?: string;
+  enrollmentSlug?: string; // Unique slug for per-builder enrollment URLs
 }
 
 export interface BuilderUser {

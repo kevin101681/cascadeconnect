@@ -35,8 +35,6 @@ const HomeownerWarrantyGuide = React.lazy(() =>
 
 // Import CBS Books Page (new split-view design - no ghost headers)
 const CBSBooksPageWrapper = React.lazy(() => import('./pages/CBSBooksPageWrapper'));
-// Import Settings Tab
-const SettingsTab = React.lazy(() => import('./dashboard/tabs/SettingsTab'));
 // Lazy load heavy components to improve initial load time
 // Add error handling for failed dynamic imports
 const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err => {
@@ -4789,46 +4787,6 @@ const Dashboard: React.FC<DashboardProps> = ({
               {/* Main Content Area - Standard full-height flex layout */}
               <main className="flex-1 relative flex flex-col overflow-hidden bg-background">
                 {(() => {
-                  const isSettingsTab =
-                    isAdmin &&
-                    typeof currentTab === 'string' &&
-                    currentTab.toLowerCase() === 'settings';
-
-                  if (isSettingsTab) {
-                    return (
-                      <div className="absolute inset-0 z-10 flex flex-col bg-background" key="settings-no-animation">
-                        <Suspense
-                          fallback={
-                            <div className="flex items-center justify-center py-12">
-                              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                            </div>
-                          }
-                        >
-                          <SettingsTab
-                            employees={employees}
-                            onAddEmployee={onAddEmployee || ((emp) => console.warn('No onAddEmployee handler'))}
-                            onUpdateEmployee={onUpdateEmployee || ((emp) => console.warn('No onUpdateEmployee handler'))}
-                            onDeleteEmployee={onDeleteEmployee || ((id) => console.warn('No onDeleteEmployee handler'))}
-                            contractors={contractors}
-                            onAddContractor={onAddContractor || ((sub) => console.warn('No onAddContractor handler'))}
-                            onUpdateContractor={onUpdateContractor || ((sub) => console.warn('No onUpdateContractor handler'))}
-                            onDeleteContractor={onDeleteContractor || ((id) => console.warn('No onDeleteContractor handler'))}
-                            builderUsers={builderUsers}
-                            builderGroups={builderGroups}
-                            onAddBuilderUser={onAddBuilderUser || ((user) => console.warn('No onAddBuilderUser handler'))}
-                            onUpdateBuilderUser={onUpdateBuilderUser || ((user) => console.warn('No onUpdateBuilderUser handler'))}
-                            onDeleteBuilderUser={onDeleteBuilderUser || ((id) => console.warn('No onDeleteBuilderUser handler'))}
-                            homeowners={homeowners}
-                            onUpdateHomeowner={onUpdateHomeowner || ((h) => console.warn('No onUpdateHomeowner handler'))}
-                            onDeleteHomeowner={onDeleteHomeowner || ((id) => console.warn('No onDeleteHomeowner handler'))}
-                            onDataReset={onDataReset || (() => console.warn('No onDataReset handler'))}
-                            currentUser={currentUser}
-                          />
-                        </Suspense>
-                      </div>
-                    );
-                  }
-
                   return (
                     <div className="w-full h-full overflow-y-auto">
                       <AnimatePresence mode="wait" initial={false}>
