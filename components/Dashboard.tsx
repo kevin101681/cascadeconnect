@@ -3975,42 +3975,32 @@ const Dashboard: React.FC<DashboardProps> = ({
         
         {/* ADMIN EXIT BUTTON - Only show when admin is viewing as homeowner */}
         {isHomeownerView && isAdminAccount && (
-          <div className="fixed top-20 right-4 z-50">
+          <div className="fixed top-20 right-4 z-[9999]">
             <button
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                console.log("🛑 EXITING HOMEOWNER VIEW - RESETTING TO ADMIN");
-                console.log("Before exit - userRole:", userRole, "isHomeownerView:", isHomeownerView);
+                console.log("🛑 NUCLEAR EXIT: Reloading Page...");
+                console.log("Current state - userRole:", userRole, "isHomeownerView:", isHomeownerView);
                 
-                // 1. Clear the homeowner data and force admin mode
-                if (onClearHomeownerSelection) {
-                  console.log("✅ Calling onClearHomeownerSelection (should set userRole to ADMIN)");
-                  onClearHomeownerSelection();
-                  
-                  // 2. FAILSAFE: If state doesn't update after 1 second, force reload
-                  setTimeout(() => {
-                    console.log("⚠️ Checking if exit succeeded...");
-                    console.log("After 1s - userRole:", userRole, "activeHomeowner:", activeHomeowner?.name || 'none');
-                    
-                    // If still stuck in homeowner view, force reload
-                    const currentUserRole = userRole; // Capture current value
-                    if (currentUserRole === UserRole.HOMEOWNER) {
-                      console.log("❌ State stuck in HOMEOWNER mode! Forcing page reload...");
-                      alert("View switch failed. Reloading page...");
-                      window.location.href = window.location.origin + window.location.pathname;
-                    } else {
-                      console.log("✅ Successfully exited to ADMIN mode");
-                    }
-                  }, 1000);
-                } else {
-                  console.error("❌ CRITICAL: onClearHomeownerSelection prop is missing!");
-                  alert("Exit handler not configured. Contact support.");
+                // Clear any persistence
+                if (typeof window !== 'undefined') {
+                  try {
+                    localStorage.removeItem('selectedHomeownerId');
+                    localStorage.removeItem('isHomeownerView');
+                    sessionStorage.removeItem('homeownerView');
+                  } catch (err) {
+                    console.warn("Storage clear failed:", err);
+                  }
                 }
+                
+                // NUCLEAR OPTION: Hard reload to reset all state
+                console.log("💥 Forcing page reload...");
+                window.location.reload();
               }}
               className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-full shadow-lg transition-all hover:shadow-xl hover:scale-105 active:scale-95"
-              title="Return to Admin View"
+              title="Return to Admin View (Force Reload)"
             >
               <ArrowLeft className="h-4 w-4" />
               <span className="text-sm font-semibold">Exit View</span>

@@ -168,16 +168,21 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
     }
   };
 
-  // UNIFIED RESPONSIVE LAYOUT - HIGH VISIBILITY DEBUG MODE
+  // NUCLEAR FIX - FIXED POSITION TO BREAK OUT OF BROKEN PARENT LAYOUT
   return (
-    <div className="relative z-50 flex flex-col md:flex-row w-full h-full min-h-[600px] bg-blue-100 text-black border-4 border-red-600 shadow-2xl">
-      
-      {/* Left Sidebar - YELLOW DEBUG */}
-      <div className="w-full md:w-64 bg-yellow-100 border-b md:border-b-0 md:border-r border-black flex-shrink-0">
-        <div className="p-4 font-semibold text-lg border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100">
-          Settings
+    <div className="fixed inset-0 z-[9999] bg-red-100 flex flex-col pt-24 pl-64 pointer-events-auto">
+      {/* ^ FIXED POSITION BREAKS IT OUT OF ANY BROKEN PARENT LAYOUT */}
+
+      <div className="bg-white border-4 border-blue-600 p-10 shadow-2xl w-3/4 h-3/4 overflow-auto rounded-xl">
+        <h1 className="text-4xl text-red-600 font-black mb-4">
+          🚨 DEBUG MODE: SETTINGS TAB 🚨
+        </h1>
+        <div className="text-xl font-bold mb-4 text-black">
+          Active Category: {activeCategory || "NULL"}
         </div>
-        <div className="flex md:flex-col overflow-x-auto md:overflow-visible p-2 gap-1">
+
+        {/* CATEGORY BUTTONS - HARD CODED FOR TEST */}
+        <div className="flex gap-4 mb-8 flex-wrap">
           {categories.map((cat) => (
             <button
               key={cat.id}
@@ -185,36 +190,25 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
                 console.log("🔄 Category changed to:", cat.id);
                 setActiveCategory(cat.id);
               }}
-              className={`flex items-center text-left px-3 py-2 rounded-md text-sm transition-colors whitespace-nowrap ${
+              className={`px-4 py-2 border-2 rounded font-medium ${
                 activeCategory === cat.id
-                  ? "bg-blue-600 text-white font-medium"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                  ? "bg-blue-600 text-white border-blue-800"
+                  : "bg-gray-200 text-black border-gray-400 hover:bg-gray-300"
               }`}
             >
-              {cat.icon}
               {cat.label}
             </button>
           ))}
         </div>
-      </div>
 
-      {/* Right Content Pane - GREEN DEBUG */}
-      <div className="flex-1 p-6 overflow-y-auto bg-green-100">
-        <div className="max-w-4xl mx-auto">
-          {/* VISUAL PROOF OF RENDER */}
-          <h1 className="text-4xl font-black text-purple-600 mb-4 animate-pulse">
-            🎯 SETTINGS TAB IS HERE 🎯
-          </h1>
-          
-          <h2 className="text-2xl font-bold mb-6 text-black">
-            {activeCategory}
-          </h2>
-          
-          {/* Content Switch */}
+        {/* CONTENT RENDER */}
+        <div className="border-t-2 border-black pt-4">
+          <div className="text-lg font-semibold mb-2 text-green-600">
+            ✅ Rendering: {activeCategory}
+          </div>
           {renderContent()}
         </div>
       </div>
-      
     </div>
   );
 };
