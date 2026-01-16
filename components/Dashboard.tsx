@@ -69,8 +69,8 @@ const PunchListApp = React.lazy(() => import('./PunchListApp').catch(err => {
   return { default: () => <div className="p-4 text-red-500">Failed to load punch list. Please refresh the page.</div> };
 }));
 
-// Lazy-load Floating Chat Widget (desktop only)
-const FloatingChatWidget = React.lazy(() => import('./chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
+// REMOVED: Floating Chat Widget - Now in App.tsx at root level
+// const FloatingChatWidget = React.lazy(() => import('./chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
 
 import { HOMEOWNER_MANUAL_IMAGES } from '../lib/bluetag/constants';
 import { WarrantyCard } from './ui/WarrantyCard';
@@ -602,8 +602,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [selectedDocument, setSelectedDocument] = useState<HomeownerDocument | null>(null);
   const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false);
 
-  // Team Chat widget (lazy mounted)
-  const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(false);
+  // REMOVED: Team Chat widget state - Now managed in App.tsx
+  // const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(false);
   
   // Manual page viewer state
   const [manualPageDimensions, setManualPageDimensions] = useState({ width: 800, height: 1200 });
@@ -3962,39 +3962,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               }
             }}
           />
-          {/* Floating Chat Widget - Desktop Only (hidden on mobile) */}
-          {console.log('🔧 Chat Widget Check:', { isAdmin, screenWidth: typeof window !== 'undefined' ? window.innerWidth : 'unknown', isChatWidgetOpen })}
-          {isAdmin && (
-            <div className="hidden md:block">
-              {!isChatWidgetOpen && (
-                <button
-                  type="button"
-                  onClick={() => setIsChatWidgetOpen(true)}
-                  className="fixed bottom-4 right-4 z-[9999] h-14 w-14 bg-white hover:bg-gray-50 text-primary border-2 border-primary rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-105 active:scale-95"
-                  aria-label="Open Team Chat"
-                >
-                  <MessageCircle className="h-6 w-6" />
-                </button>
-              )}
-
-              {isChatWidgetOpen && (
-                <Suspense fallback={null}>
-                  <FloatingChatWidget
-                    currentUserId={currentUser?.id || ''}
-                    currentUserName={currentUser?.name || 'Unknown User'}
-                    isOpen={isChatWidgetOpen}
-                    onOpenChange={setIsChatWidgetOpen}
-                    onOpenHomeownerModal={(homeownerId) => {
-                      const homeowner = homeowners.find((h) => h.id === homeownerId);
-                      if (homeowner && onSelectHomeowner) {
-                        onSelectHomeowner(homeowner);
-                      }
-                    }}
-                  />
-                </Suspense>
-              )}
-            </div>
-          )}
+          {/* REMOVED: Floating Chat Widget - Now rendered at root level in App.tsx to escape stacking context */}
         </>
       );
     }

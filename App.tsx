@@ -29,6 +29,7 @@ const EmailHistory = React.lazy(() => import('./components/EmailHistory'));
 const BackendDashboard = React.lazy(() => import('./components/BackendDashboard'));
 const UnifiedImportDashboard = React.lazy(() => import('./app/dashboard/admin/import/page'));
 const WarrantyAnalytics = React.lazy(() => import('./components/WarrantyAnalytics'));
+const FloatingChatWidget = React.lazy(() => import('./components/chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
 
 // Edge-to-edge loading skeleton
 import { DashboardSkeleton } from './components/skeletons/DashboardSkeleton';
@@ -239,6 +240,9 @@ function App() {
     }
     return null;
   });
+
+  // Floating chat widget state (admin only)
+  const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(false);
 
   // --- LOAD MOCK DATA ON FIRST MOUNT IF LOCALSTORAGE IS EMPTY ---
   useEffect(() => {
@@ -4696,6 +4700,24 @@ Assigned By: ${assignerName}
         <LazyAppProviders />
       </React.Suspense>
     </Layout>
+
+    {/* Floating Chat Widget - Admin Only - Positioned at root level to escape stacking context */}
+    {isAdminAccount && (
+      <React.Suspense fallback={null}>
+        <FloatingChatWidget
+          currentUserId={activeEmployee?.id || ''}
+          currentUserName={activeEmployee?.name || 'Unknown User'}
+          isOpen={isChatWidgetOpen}
+          onOpenChange={setIsChatWidgetOpen}
+          onOpenHomeownerModal={(homeownerId) => {
+            const homeowner = homeowners.find((h) => h.id === homeownerId);
+            if (homeowner) {
+              handleSelectHomeowner(homeowner);
+            }
+          }}
+        />
+      </React.Suspense>
+    )}
     </>
   );
 }

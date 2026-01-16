@@ -170,7 +170,10 @@ export function HomeownerCard({
       <div className="absolute bottom-4 right-4 flex items-center gap-2 z-10">
         {onViewAs && (
           <Button
-            onClick={onViewAs}
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewAs();
+            }}
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0 rounded-full bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 border border-blue-200 dark:border-blue-700"
@@ -181,7 +184,10 @@ export function HomeownerCard({
         )}
         {onEdit && (
           <Button
-            onClick={onEdit}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
             size="sm"
             variant="ghost"
             className="h-8 w-8 p-0 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-300 dark:border-gray-600"
