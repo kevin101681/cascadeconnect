@@ -173,6 +173,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   }, [messages.length]);
 
+  // Auto-scroll when typing indicator appears/disappears
+  useEffect(() => {
+    if (isOtherUserTyping) {
+      scrollToBottom();
+    }
+  }, [isOtherUserTyping]);
+
   // Sync transcript to input value
   useEffect(() => {
     if (transcript) {
@@ -597,7 +604,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 pb-8 space-y-4">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -710,7 +717,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         
         {/* ✅ Google-style typing indicator (no avatars, just bubble) */}
         {isOtherUserTyping && (
-          <TypingIndicator className="ml-2 mb-2" />
+          <div className="pb-6 pl-2 scroll-mt-4">
+            <TypingIndicator className="ml-2" />
+          </div>
         )}
         
         <div ref={messagesEndRef} />

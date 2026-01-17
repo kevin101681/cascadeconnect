@@ -69,7 +69,27 @@ export const handler: Handler = async (event) => {
       };
     }
 
+    // ✅ CRITICAL: Get OLD lastReadAt timestamp BEFORE updating
+    // This is needed to find which messages were unread
+    const oldLastReadResult = await db
+      .select({ lastReadAt: channelMembers.lastReadAt })
+      .from(channelMembers)
+      .where(
+        and(
+          eq(channelMembers.userId, userId),
+          eq(channelMembers.channelId, channelId)
+        )
+      )
+      .limit(1);
+
+    const oldLastReadAt = oldLastReadResult[0]?.lastReadAt || new Date(0);
     const readAt = new Date();
+
+    console.log(`📊 [chat-mark-read] Read timestamps:`, {
+      oldLastReadAt: oldLastReadAt.toISOString(),
+      newReadAt: readAt.toISOString(),
+      willCheckMessagesAfter: oldLastReadAt.toISOString()
+    });
 
     // Update lastReadAt timestamp
     await db
