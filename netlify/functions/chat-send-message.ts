@@ -54,12 +54,21 @@ export const handler: Handler = async (event) => {
     const requestData: SendMessageRequest = JSON.parse(event.body || '{}');
     const { channelId, senderId, content, attachments = [], mentions = [], replyTo } = requestData;
 
-    // Validate required fields
-    if (!channelId || !senderId || !content) {
+    // Validate required fields - Allow empty content IF there are attachments
+    if (!channelId || !senderId) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'Missing required fields: channelId, senderId, content' }),
+        body: JSON.stringify({ error: 'Missing required fields: channelId, senderId' }),
+      };
+    }
+
+    // Content OR attachments required (can't send completely empty message)
+    if (!content && (!attachments || attachments.length === 0)) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Message must have content or attachments' }),
       };
     }
 
@@ -71,7 +80,7 @@ export const handler: Handler = async (event) => {
       .values({
         channelId,
         senderId,
-        content,
+        content: content || '',  // ✅ Allow empty content for media-only messages
         attachments,
         mentions,
         replyToId: replyTo || null,
