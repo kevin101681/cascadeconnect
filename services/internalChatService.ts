@@ -129,7 +129,7 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
             senderName: users.name,
           })
           .from(internalMessages)
-          .innerJoin(users, eq(internalMessages.senderId, users.clerkId))
+          .leftJoin(users, eq(internalMessages.senderId, users.clerkId))  // ✅ SAFETY: LEFT JOIN
           .where(
             and(
               eq(internalMessages.channelId, ch.channelId),
@@ -308,7 +308,7 @@ export async function getChannelMessages(
         createdAt: internalMessages.createdAt,
       })
       .from(internalMessages)
-      .innerJoin(users, eq(internalMessages.senderId, users.clerkId))
+      .leftJoin(users, eq(internalMessages.senderId, users.clerkId))  // ✅ SAFETY: LEFT JOIN instead of INNER
       .where(eq(internalMessages.channelId, channelId))
       .orderBy(desc(internalMessages.createdAt))
       .limit(limit)
@@ -344,7 +344,7 @@ export async function getChannelMessages(
               content: internalMessages.content,
             })
             .from(internalMessages)
-            .innerJoin(users, eq(internalMessages.senderId, users.clerkId))
+            .leftJoin(users, eq(internalMessages.senderId, users.clerkId))  // ✅ SAFETY: LEFT JOIN
             .where(eq(internalMessages.id, msg.replyToId))
             .limit(1);
 

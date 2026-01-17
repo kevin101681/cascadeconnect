@@ -106,7 +106,7 @@ export const handler: Handler = async (event) => {
           content: internalMessages.content,
         })
         .from(internalMessages)
-        .innerJoin(users, eq(internalMessages.senderId, users.clerkId))
+        .leftJoin(users, eq(internalMessages.senderId, users.clerkId))  // ✅ SAFETY: LEFT JOIN
         .where(eq(internalMessages.id, replyTo))
         .limit(1);
 
