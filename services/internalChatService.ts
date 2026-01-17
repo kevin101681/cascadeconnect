@@ -335,6 +335,7 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
 /**
  * Get all admin/employee users for DM discovery
  * ✅ TASK 2: Ensure all ADMIN role users are included (Administrators, Employees, etc.)
+ * 🕵️‍♂️ SHERLOCK MODE: Enhanced logging to debug missing users
  */
 export async function getAllTeamMembers(): Promise<Array<{
   id: string;
@@ -343,23 +344,57 @@ export async function getAllTeamMembers(): Promise<Array<{
   internalRole?: string;
 }>> {
   try {
+    console.log('🕵️‍♂️ [getAllTeamMembers] Starting query for team members...');
+    
+    // First, let's see ALL users in the database (DEBUG)
+    const allUsers = await db
+      .select({
+        id: users.id,
+        clerkId: users.clerkId,
+        name: users.name,
+        email: users.email,
+        role: users.role,
+        internalRole: users.internalRole,
+      })
+      .from(users)
+      .limit(50);
+    
+    console.log('🕵️‍♂️ [getAllTeamMembers] ALL USERS IN DATABASE:', allUsers.map(u => ({
+      name: u.name,
+      email: u.email,
+      role: u.role,
+      internalRole: u.internalRole,
+      hasClerkId: !!u.clerkId,
+      clerkIdPrefix: u.clerkId?.substring(0, 10) || 'NULL',
+    })));
+
+    // Now fetch ADMIN users specifically
     const teamMembers = await db
       .select({
         id: users.clerkId,  // ✅ Return Clerk ID for consistency with chat system
         name: users.name,
         email: users.email,
+        role: users.role,  // 🕵️‍♂️ ADDED: Include role for debugging
         internalRole: users.internalRole,
       })
       .from(users)
       .where(
         and(
-          eq(users.role, 'ADMIN'),  // ✅ Get all ADMIN users (includes all internal roles)
+          eq(users.role, 'ADMIN'),  // ✅ Get all ADMIN users
           sql`${users.clerkId} IS NOT NULL`  // ✅ Exclude users without Clerk IDs
         )
       )
       .orderBy(users.name);
 
-    console.log(`📋 [getAllTeamMembers] Found ${teamMembers.length} team members with ADMIN role`);
+    console.log('🕵️‍♂️ [getAllTeamMembers] ADMIN USERS FOUND:', teamMembers.length);
+    console.log('🕵️‍♂️ [getAllTeamMembers] ADMIN users detail:', teamMembers.map(m => ({ 
+      name: m.name,
+      email: m.email,
+      role: m.role,
+      internalRole: m.internalRole,
+      hasClerkId: !!m.id, 
+      idPrefix: m.id?.substring(0, 10) || 'NULL'
+    })));
     
     // ✅ Additional validation: Filter out any users with invalid Clerk IDs
     const validMembers = teamMembers.filter(member => {
@@ -370,8 +405,19 @@ export async function getAllTeamMembers(): Promise<Array<{
       return true;
     });
 
-    console.log(`✅ [getAllTeamMembers] Returning ${validMembers.length} valid team members`);
-    return validMembers;
+    console.log(`✅ [getAllTeamMembers] Returning ${validMembers.length} valid team members (filtered ${teamMembers.length - validMembers.length})`);
+    console.log('🕵️‍♂️ [getAllTeamMembers] FINAL VALID MEMBERS:', validMembers.map(m => ({
+      name: m.name,
+      email: m.email,
+      clerkIdPrefix: m.id.substring(0, 10)
+    })));
+    
+    return validMembers.map(m => ({
+      id: m.id,
+      name: m.name,
+      email: m.email,
+      internalRole: m.internalRole,
+    }));
   } catch (error) {
     console.error('❌ Error getting team members:', error);
     throw error;
