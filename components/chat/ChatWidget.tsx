@@ -87,21 +87,45 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   };
 
   const handleSelectChannel = (channel: Channel) => {
+    console.log('🔔 Badge Clear: Selecting channel', {
+      channelId: channel.id,
+      channelName: channel.name,
+      previousUnreadCount: channel.unreadCount,
+      currentTotal: totalUnreadCount
+    });
+    
     setSelectedChannel(channel);
     
-    // ✅ OPTIMISTIC: Immediately clear unread count for better UX
-    const previousCount = channel.unreadCount || 0;
-    setTotalUnreadCount(prev => Math.max(0, prev - previousCount));
+    // ⚡️ CRITICAL: Optimistic Update - Clear badge INSTANTLY
+    const amountToClear = channel.unreadCount || 0;
     
-    // ✅ Immediately mark as read in background (don't wait)
-    if (previousCount > 0) {
-      markChannelAsRead(currentUserId, channel.id).catch(err => {
-        console.error('Error marking channel as read:', err);
+    if (amountToClear > 0) {
+      // 1. Subtract from Global Total (Red Badge)
+      setTotalUnreadCount(prev => {
+        const newTotal = Math.max(0, prev - amountToClear);
+        console.log('🔔 Badge Clear: Optimistic update', {
+          previousTotal: prev,
+          clearingAmount: amountToClear,
+          newTotal
+        });
+        return newTotal;
+      });
+      
+      // 2. Immediately mark as read in background (don't wait)
+      markChannelAsRead(currentUserId, channel.id).then(() => {
+        console.log('✅ Badge Clear: Server confirmed read');
+      }).catch(err => {
+        console.error('❌ Badge Clear: Server error:', err);
+        // On error, refresh from server to get accurate count
+        loadUnreadCounts();
       });
     }
     
-    // Refresh counts after a short delay to get server confirmation
-    setTimeout(loadUnreadCounts, 500);
+    // 3. Refresh counts after a short delay for server confirmation
+    setTimeout(() => {
+      console.log('🔄 Badge Clear: Confirming with server...');
+      loadUnreadCounts();
+    }, 500);
   };
 
   const handleBack = () => {
