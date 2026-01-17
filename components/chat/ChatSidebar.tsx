@@ -324,27 +324,31 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
               ) : (
                 filteredTeamMembers
                   .filter((member) => !existingDmUserIds.has(member.id))
-                  .map((member) => (
-                    <button
-                      key={member.id}
-                      onClick={() => handleDmClick(member.id, member.name)}
-                      disabled={isCreatingDm}
-                      className="w-full px-4 py-3 flex items-center gap-3 text-surface-on dark:text-gray-300 md:hover:bg-surface-container md:dark:hover:bg-gray-700/50 transition-all disabled:opacity-50 touch-manipulation"
-                      style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
-                    >
-                      {/* Content */}
-                      <div className="flex-1 min-w-0 text-left">
-                        <div className="font-medium">{member.name}</div>
-                        {member.internalRole && (
+                  .map((member) => {
+                    // ✅ TASK 2: Handle NULL internal_role for Admins (like Kevin)
+                    // If internalRole is missing, show 'Admin' as fallback
+                    const displayRole = member.internalRole || 'Admin';
+                    
+                    return (
+                      <button
+                        key={member.id}
+                        onClick={() => handleDmClick(member.id, member.name)}
+                        disabled={isCreatingDm}
+                        className="w-full px-4 py-3 flex items-center gap-3 text-surface-on dark:text-gray-300 md:hover:bg-surface-container md:dark:hover:bg-gray-700/50 transition-all disabled:opacity-50 touch-manipulation"
+                        style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
+                      >
+                        {/* Content */}
+                        <div className="flex-1 min-w-0 text-left">
+                          <div className="font-medium">{member.name}</div>
                           <div className="text-xs text-surface-on-variant dark:text-gray-400">
-                            {member.internalRole}
+                            {displayRole}
                           </div>
-                        )}
-                      </div>
-                      
-                      <Users className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
-                    </button>
-                  ))
+                        </div>
+                        
+                        <Users className="h-4 w-4 text-surface-on-variant dark:text-gray-400 flex-shrink-0" />
+                      </button>
+                    );
+                  })
               )}
             </div>
           </>

@@ -19,7 +19,7 @@ import {
   users,
   homeowners 
 } from '../db/schema';
-import { eq, and, desc, sql, or, ilike, ne, gt, inArray, isNotNull } from 'drizzle-orm';
+import { eq, and, desc, sql, or, ilike, ne, gt, inArray, isNotNull, notInArray } from 'drizzle-orm';
 
 // Types
 export interface Channel {
@@ -334,8 +334,14 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
 
 /**
  * Get all admin/employee users for DM discovery
- * ✅ BROADENED: Includes all ADMIN role users regardless of internal_role
+ * ✅ EXCLUSION FILTER: Includes internal staff by excluding external roles (HOMEOWNER, BUILDER)
  * 🕵️‍♂️ SHERLOCK MODE: Enhanced logging to debug missing users
+ * 
+ * Database Structure:
+ * - Admins: role='ADMIN', internal_role=NULL (like Kevin)
+ * - Employees: role='ADMIN', internal_role='Employee' (like Mary)
+ * - Builders: role='BUILDER', internal_role=NULL (EXCLUDE)
+ * - Homeowners: role='HOMEOWNER', internal_role=NULL (EXCLUDE)
  */
 export async function getAllTeamMembers(): Promise<Array<{
   id: string;
@@ -362,43 +368,49 @@ export async function getAllTeamMembers(): Promise<Array<{
     console.log('🕵️‍♂️ [getAllTeamMembers] ALL USERS IN DATABASE:', allUsers.map(u => ({
       name: u.name,
       email: u.email,
-      role: u.role,
-      internalRole: u.internalRole,
+      primaryRole: u.role,      // ✅ This is what matters for filtering
+      internal: u.internalRole, // ✅ This will be NULL for Kevin (and that's OK!)
       hasClerkId: !!u.clerkId,
       clerkIdPrefix: u.clerkId?.substring(0, 10) || 'NULL',
     })));
 
-    // ✅ BROADENED: Fetch ALL users with role='ADMIN' (enum value)
-    // This includes users with any internalRole: "Administrator", "Employee", etc.
+    // ✅ EXCLUSION STRATEGY: Get all users EXCEPT external roles (HOMEOWNER, BUILDER)
+    // This catches:
+    // - Admins with NULL internal_role (Kevin)
+    // - Admins with populated internal_role (Mary)
+    // - Any other internal staff
     const teamMembers = await db
       .select({
         id: users.clerkId,  // ✅ Return Clerk ID for consistency with chat system
         name: users.name,
         email: users.email,
-        role: users.role,  // 🕵️‍♂️ ADDED: Include role for debugging
+        role: users.role,  // ✅ Primary role for debugging
         internalRole: users.internalRole,
       })
       .from(users)
       .where(
         and(
-          eq(users.role, 'ADMIN'),  // ✅ Only the ADMIN enum value (not HOMEOWNER or BUILDER)
-          isNotNull(users.clerkId)  // ✅ Must have a valid Clerk ID
+          // 1. Must have a Clerk ID (Safety)
+          isNotNull(users.clerkId),
+          
+          // 2. EXCLUDE external roles (HOMEOWNER, BUILDER)
+          // We do NOT check internal_role because it's NULL for Admins like Kevin
+          notInArray(users.role, ['HOMEOWNER', 'BUILDER'])
         )
       )
       .orderBy(users.name);
 
-    console.log('🕵️‍♂️ [getAllTeamMembers] ADMIN USERS FOUND:', teamMembers.length);
-    console.log('🕵️‍♂️ [getAllTeamMembers] ADMIN users detail:', teamMembers.map(m => ({ 
+    console.log('🕵️‍♂️ [getAllTeamMembers] INTERNAL STAFF FOUND (exclusion filter):', teamMembers.length);
+    console.log('🕵️‍♂️ [getAllTeamMembers] Staff detail:', teamMembers.map(m => ({ 
       name: m.name,
       email: m.email,
-      role: m.role,
-      internalRole: m.internalRole,
+      primaryRole: m.role,      // ✅ Shows 'ADMIN' for Kevin
+      internal: m.internalRole, // ✅ Shows NULL for Kevin, 'Employee' for Mary
       hasClerkId: !!m.id, 
       idPrefix: m.id?.substring(0, 10) || 'NULL'
     })));
     
-    // ✅ Validation: Ensure Clerk IDs are in the correct format
-    // BUT: Be more lenient - any non-null, non-empty string is acceptable
+    // ✅ Validation: Ensure Clerk IDs are valid
     const validMembers = teamMembers.filter(member => {
       // Must have an ID
       if (!member.id) {
@@ -412,9 +424,8 @@ export async function getAllTeamMembers(): Promise<Array<{
         return false;
       }
       
-      // ✅ BROADENED: Accept ANY non-empty Clerk ID
-      // Removed the strict "user_" prefix requirement to catch edge cases
-      console.log(`✅ [getAllTeamMembers] Valid team member: ${member.name} (${member.id.substring(0, 10)}...)`);
+      // ✅ Log each valid member with their role info
+      console.log(`✅ [getAllTeamMembers] Valid team member: ${member.name} (role=${member.role}, internal=${member.internalRole || 'NULL'})`);
       return true;
     });
 
@@ -422,7 +433,8 @@ export async function getAllTeamMembers(): Promise<Array<{
     console.log('🕵️‍♂️ [getAllTeamMembers] FINAL VALID MEMBERS:', validMembers.map(m => ({
       name: m.name,
       email: m.email,
-      internalRole: m.internalRole,
+      primaryRole: m.role,
+      internal: m.internalRole || 'NULL',
       clerkIdPrefix: m.id.substring(0, 10)
     })));
     
