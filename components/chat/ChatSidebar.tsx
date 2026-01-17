@@ -62,6 +62,13 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
     try {
       setIsLoadingTeam(true);
       const members = await getAllTeamMembers();
+      
+      console.log('👥 [ChatSidebar] Team members loaded:', {
+        count: members.length,
+        currentUserId,
+        members: members.map(m => ({ id: m.id, name: m.name }))
+      });
+      
       // Keep all members (including current user for name lookups), but we'll filter for display
       setTeamMembers(members);
     } catch (error) {
@@ -93,19 +100,23 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
         onSelectChannel(existingDm);
       } else {
         // Create new DM channel
-        const channelId = await findOrCreateDmChannel(currentUserId, userId, currentUserId);
+        const dbChannelId = await findOrCreateDmChannel(currentUserId, userId, currentUserId);
+        
+        // ✅ CRITICAL FIX: Generate deterministic ID (findOrCreateDmChannel returns database UUID)
+        const deterministicId = `dm-${[currentUserId, userId].sort().join('-')}`;
         
         // Reload channels
         await loadChannels();
         
-        // Find and select the new channel
-        const newChannel = channels.find((ch) => ch.id === channelId);
+        // Find and select the new channel using deterministic ID
+        const newChannel = channels.find((ch) => ch.id === deterministicId);
         if (newChannel) {
           onSelectChannel(newChannel);
         } else {
-          // Temporary channel object
+          // Temporary channel object with deterministic ID
           onSelectChannel({
-            id: channelId,
+            id: deterministicId,  // ✅ Use deterministic ID, not database UUID
+            dbId: dbChannelId,    // ✅ Store database UUID for backend operations
             name: userName,
             type: 'dm',
             dmParticipants: [currentUserId, userId].sort(),
@@ -136,28 +147,36 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   );
 
   // Filter team members by search (exclude current user from list)
-  // Check both id fields and use String() to handle any type mismatches
+  // ✅ CRITICAL FIX: getAllTeamMembers returns clerkId as 'id', so member.id === currentUserId
   const filteredTeamMembers = teamMembers
     .filter((member) => {
-      // Aggressive filtering: exclude current user by checking ALL possible ID fields
-      const memberIds = [
-        String(member.id || '').toLowerCase(),
-        // @ts-ignore - clerkId might not be in type but could exist
-        String(member.clerkId || '').toLowerCase(),
-        // @ts-ignore - email as backup identifier
-        String(member.email || '').toLowerCase(),
-      ];
-      const currentIds = [
-        String(currentUserId || '').toLowerCase(),
-      ];
+      // Normalize IDs to lowercase strings for comparison
+      const memberId = String(member.id || '').toLowerCase();
+      const currentId = String(currentUserId || '').toLowerCase();
       
-      // If any member ID matches current user ID, filter it out
-      return !memberIds.some(mid => currentIds.includes(mid));
+      // 🚫 BLOCK: Exclude current user from the list
+      if (memberId === currentId) {
+        console.log('🚫 [ChatSidebar] Filtering out self from team members:', {
+          memberName: member.name,
+          memberId,
+          currentUserId: currentId
+        });
+        return false;
+      }
+      
+      return true;
     })
     .filter((member) =>
       (member.name || "").toLowerCase().includes((searchQuery || "").toLowerCase()) ||
       (member.email || "").toLowerCase().includes((searchQuery || "").toLowerCase())
     );
+  
+  console.log('👥 [ChatSidebar] Filtered team members:', {
+    totalTeamMembers: teamMembers.length,
+    filteredCount: filteredTeamMembers.length,
+    currentUserId,
+    sample: filteredTeamMembers.slice(0, 3).map(m => ({ id: m.id, name: m.name }))
+  });
 
   // Filter existing channels by search (name or last message content)
   const getRecipientName = (channel: Channel): string => {

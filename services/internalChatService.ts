@@ -233,6 +233,14 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
           const participants = ch.dmParticipants as string[];
           const otherUserId = participants.find((id) => id !== userId);
           
+          console.log(`🔍 [DM Channel] Finding other user`, {
+            channelId: ch.channelId,
+            channelName: ch.channelName,
+            currentUserId: userId,
+            allParticipants: participants,
+            otherUserId
+          });
+          
           if (otherUserId) {
             const otherUserData = await db
               .select({
@@ -244,7 +252,14 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
               .where(eq(users.clerkId, otherUserId))
               .limit(1);
 
-            otherUser = otherUserData[0];
+            if (otherUserData.length > 0) {
+              otherUser = otherUserData[0];
+              console.log(`✅ [DM Channel] Found other user: ${otherUser.name}`);
+            } else {
+              console.warn(`⚠️ [DM Channel] No user found for Clerk ID: ${otherUserId}`);
+            }
+          } else {
+            console.warn(`⚠️ [DM Channel] Could not determine other user (participants: ${participants.join(', ')})`);
           }
         }
 
