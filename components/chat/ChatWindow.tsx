@@ -166,19 +166,22 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     loadMessages();
   }, [loadMessages]);
 
-  // Auto-scroll when messages change
+  // ✅ CRITICAL: Initial scroll on channel change - instant jump to bottom
   useEffect(() => {
     if (messages.length > 0) {
-      scrollToBottom();
+      // Use setTimeout to ensure DOM is fully painted
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' }); // 'auto' = instant jump
+      }, 100);
     }
-  }, [messages.length]);
+  }, [channelId]); // Only trigger on channel switch
 
-  // Auto-scroll when typing indicator appears/disappears
+  // Auto-scroll when new messages arrive - smooth scroll
   useEffect(() => {
-    if (isOtherUserTyping) {
-      scrollToBottom();
+    if (messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [isOtherUserTyping]);
+  }, [messages.length, isOtherUserTyping]); // Combine both triggers
 
   // Sync transcript to input value
   useEffect(() => {
@@ -255,20 +258,28 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       }
     };
 
-    const handleMessageRead = (data: { 
-      channelId: string;
-      readBy: string;
-      readAt: string;
-    }) => {
-      if (data.channelId === channelId && data.readBy !== currentUserId) {
-        console.log('✅ Message read event received:', data);
-        // Mark all MY messages in this channel as read
-        setMessages((prev) => prev.map((msg) => 
-          msg.senderId === currentUserId && !msg.readAt
-            ? { ...msg, readAt: new Date(data.readAt) }
-            : msg
-        ));
-      }
+    const handleMessageRead = (data: any) => {
+      console.log('⚡️ [ChatWindow] Read Receipt Event Received:', {
+        data,
+        currentChannelId: channelId,
+        currentUserId,
+        matches: data.channelId === channelId,
+        isNotMe: data.readBy !== currentUserId
+      });
+      
+      // ✅ CRITICAL: Update MY messages when someone else reads them
+      // The event is sent to ME (the sender) when someone reads my messages
+      setMessages((prev) => {
+        const updated = prev.map((msg) => {
+          // Only update MY messages that are currently unread
+          if (msg.senderId === currentUserId && !msg.readAt) {
+            console.log(`📝 [ChatWindow] Marking message ${msg.id} as read`);
+            return { ...msg, readAt: new Date(data.readAt) };
+          }
+          return msg;
+        });
+        return updated;
+      });
     };
 
     // 2. Bind SPECIFIC handlers
@@ -604,7 +615,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 pb-8 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 pb-14 space-y-4 relative">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -715,14 +726,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           ))
         )}
         
-        {/* ✅ Google-style typing indicator (no avatars, just bubble) */}
+        <div ref={messagesEndRef} />
+        
+        {/* ✅ Absolute positioned typing indicator to prevent layout jump */}
         {isOtherUserTyping && (
-          <div className="pb-6 pl-2 scroll-mt-4">
-            <TypingIndicator className="ml-2" />
+          <div className="absolute bottom-2 left-4 z-10 pointer-events-none">
+            <TypingIndicator />
           </div>
         )}
-        
-        <div ref={messagesEndRef} />
       </div>
 
       {/* Mention suggestions */}
