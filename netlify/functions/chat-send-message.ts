@@ -212,13 +212,35 @@ export const handler: Handler = async (event) => {
       content: messageWithSender.content?.substring(0, 50) + '...'
     });
 
-    // 5. ✅ TRIGGER PUSHER EVENT (SERVER-SIDE)
+    // 5. ✅ TRIGGER PUSHER EVENTS (SERVER-SIDE)
+    // Send to PRIVATE user channels for security and targeted delivery
     try {
-      await triggerPusherEvent('team-chat', 'new-message', {
-        channelId,
-        message: messageWithSender,
-      });
-      console.log(`📡 Pusher event triggered for channel ${channelId}`);
+      // For DM channels, extract participant IDs and notify each user
+      if (channelId.startsWith('dm-')) {
+        const participantsStr = channelId.substring(3);
+        const participants = participantsStr.split('-').filter(p => p.trim().length > 0);
+        
+        console.log(`📡 Sending Pusher events to ${participants.length} participants:`, participants);
+        
+        // Send event to each participant's private channel
+        for (const userId of participants) {
+          const privateChannel = `private-user-${userId}`;
+          
+          await triggerPusherEvent(privateChannel, 'new-message', {
+            channelId,
+            message: messageWithSender,
+          });
+          
+          console.log(`✅ Pusher event sent to ${privateChannel}`);
+        }
+      } else {
+        // Fallback to team-chat for public channels (if they exist)
+        await triggerPusherEvent('team-chat', 'new-message', {
+          channelId,
+          message: messageWithSender,
+        });
+        console.log(`📡 Pusher event triggered for public channel ${channelId}`);
+      }
     } catch (pusherError) {
       console.error('⚠️ Failed to trigger Pusher event (message saved):', pusherError);
       // Don't fail the request if Pusher fails - message is already saved

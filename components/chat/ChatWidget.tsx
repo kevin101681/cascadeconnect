@@ -127,10 +127,12 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   useEffect(() => {
     if (!currentUserId) return;
 
-    console.log('🔌 [ChatWidget] Setting up STABLE Pusher listener for user:', currentUserId);
+    // Subscribe to user's PRIVATE channel for targeted notifications
+    const channelName = `private-user-${currentUserId}`;
+    console.log('🔌 [ChatWidget] Setting up STABLE Pusher listener on PRIVATE channel:', channelName);
     
     const pusher = getPusherClient();
-    const channel = pusher.subscribe('team-chat');
+    const channel = pusher.subscribe(channelName);
 
     const handleNewMessage = (data: { 
       channelId: string; 
@@ -142,7 +144,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         createdAt: Date;
       } 
     }) => {
-      console.log('⚡️ [ChatWidget] Instant message received via Pusher:', {
+      console.log('⚡️ [ChatWidget] Instant message received via Pusher (private channel):', {
         channelId: data.channelId,
         senderId: data.message.senderId,
         content: data.message.content.substring(0, 50),
@@ -186,12 +188,13 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
       setTotalUnreadCount(prev => prev + 1);
     };
 
+    // Bind to 'new-message' event (standard convention)
     channel.bind('new-message', handleNewMessage);
 
     return () => {
-      console.log('🔌 [ChatWidget] Cleaning up STABLE Pusher listener');
+      console.log('🔌 [ChatWidget] Cleaning up STABLE Pusher listener from private channel');
       channel.unbind('new-message', handleNewMessage);
-      pusher.unsubscribe('team-chat');
+      pusher.unsubscribe(channelName);
     };
   }, [currentUserId]); // ⚡️ CRITICAL: Only depends on userId, NOT selectedChannel or loadUnreadCounts
 

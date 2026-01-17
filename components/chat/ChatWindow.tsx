@@ -188,10 +188,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   }, [error]);
 
-  // Pusher: Listen for new messages
+  // Pusher: Listen for new messages on PRIVATE user channel
   useEffect(() => {
     const pusher = getPusherClient();
-    const channel = pusher.subscribe('team-chat');
+    const channelName = `private-user-${currentUserId}`;
+    const channel = pusher.subscribe(channelName);
 
     channel.bind('new-message', (data: { channelId: string; message: Message }) => {
       if (data.channelId === channelId) {
@@ -204,7 +205,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             return prev;
           }
           
-          console.log('📨 New message received via Pusher:', data.message.id);
+          console.log('📨 New message received via Pusher (private channel):', data.message.id);
           return [...prev, data.message];
         });
         
@@ -253,7 +254,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       channel.unbind('new-message');
       channel.unbind('typing-indicator');
       channel.unbind('message-read');  // ✅ Cleanup
-      pusher.unsubscribe('team-chat');
+      pusher.unsubscribe(channelName);
     };
   }, [channelId, currentUserId]);
 
