@@ -55,6 +55,9 @@ import { useUser as useClerkUser, useAuth as useClerkAuth } from '@clerk/clerk-r
 // Monitoring integration
 import { identifyUserInMonitoring, clearUserFromMonitoring } from './lib/monitoring';
 
+// User sync action
+import { lazySyncUser } from './actions/syncUser';
+
 // Clerk hooks with compatibility mapping
 const useUser = () => {
   const { isLoaded, isSignedIn, user } = useClerkUser();
@@ -343,6 +346,29 @@ function App() {
       });
     }
   }, [isSignedIn, authUser]);
+
+  // --- AUTO-SYNC CLERK DATA ON LOGIN ---
+  // CRITICAL: Sync Clerk ID to database to prevent "Zombie User" issue
+  // This ensures that users created manually in the database (with just email)
+  // get their clerk_id populated automatically on first login
+  useEffect(() => {
+    if (isSignedIn && authUser && isDbConfigured) {
+      // Run sync in background without blocking the UI
+      lazySyncUser({
+        id: authUser.id,
+        primaryEmailAddress: authUser.primaryEmailAddress,
+        emailAddresses: authUser.user ? 
+          (authUser.user as any).emailAddresses : 
+          authUser.primaryEmailAddress ? [authUser.primaryEmailAddress] : [],
+        firstName: authUser.firstName,
+        lastName: authUser.lastName,
+        imageUrl: (authUser as any).imageUrl
+      }).catch(err => {
+        // Log error but don't block the app
+        console.error('User sync failed:', err);
+      });
+    }
+  }, [isSignedIn, authUser?.id]); // Only run when auth state or user ID changes
 
   // --- REFRESH/RELOAD DATA FUNCTION ---
   // Exposed function to reload all data from the database (used by import after reset/import)
@@ -3673,17 +3699,61 @@ Assigned By: ${assignerName}
   };
 
   const handleUpdateBuilderUser = async (user: BuilderUser, password?: string) => { 
+      // Optimistically update UI
       setBuilderUsers(prev => prev.map(u => u.id === user.id ? user : u)); 
+      
       if (isDbConfigured) {
          try {
-           await db.update(usersTable).set({
-              name: user.name,
-              email: user.email,
-              builderGroupId: user.builderGroupId,
-              // Password update if provided
-              ...(password ? { password } : {})
-           } as any).where(eq(usersTable.id, user.id));
-         } catch(e) { console.error(e); }
+           // Import the server action dynamically
+           const { updateUserProfile } = await import('./lib/actions/user.actions');
+           
+           // Call server action with dual-write (Clerk + DB)
+           const result = await updateUserProfile(
+             user.id,
+             {
+               email: user.email,
+               name: user.name,
+               builderGroupId: user.builderGroupId,
+             },
+             password
+           );
+           
+           if (!result.success) {
+             console.error('❌ Failed to update user:', result.error);
+             alert(`Failed to update user: ${result.error}`);
+             
+             // Revert optimistic update on error
+             setBuilderUsers(prev => {
+               const originalUser = prev.find(u => u.id === user.id);
+               if (originalUser) {
+                 return prev.map(u => u.id === user.id ? originalUser : u);
+               }
+               return prev;
+             });
+             
+             return;
+           }
+           
+           console.log('✅ User updated successfully with Clerk sync');
+           
+           // Force re-fetch to ensure UI matches DB state
+           if (typeof window !== 'undefined') {
+             window.location.reload();
+           }
+           
+         } catch(e) { 
+           console.error('❌ Update error:', e);
+           alert('Failed to update user. Please try again.');
+           
+           // Revert optimistic update on error
+           setBuilderUsers(prev => {
+             const originalUser = prev.find(u => u.id === user.id);
+             if (originalUser) {
+               return prev.map(u => u.id === user.id ? originalUser : u);
+             }
+             return prev;
+           });
+         }
       }
   };
 

@@ -54,6 +54,7 @@ export const users = pgTable('users', {
   // Note: Users always get email notifications when homeowner sends a message (if on thread)
   
   createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 // --- 3. Homeowners ---
