@@ -49,14 +49,30 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     try {
       const channels = await getUserChannels(currentUserId);
       
+      console.log('📊 Badge Sync: Loading unread counts', {
+        channelCount: channels.length,
+        sampleChannels: channels.slice(0, 3).map(ch => ({
+          id: ch.id,
+          type: ch.type,
+          unreadCount: ch.unreadCount,
+          dbId: ch.dbId
+        }))
+      });
+      
       // Build individual channel counts map
       const countsMap: Record<string, number> = {};
       let total = 0;
       
       channels.forEach(ch => {
         const count = ch.unreadCount || 0;
-        countsMap[ch.id] = count;
+        countsMap[ch.id] = count;  // ✅ Using ch.id (should be deterministic for DMs)
         total += count;
+      });
+      
+      console.log('📊 Badge Sync: Counts map built', {
+        totalChannels: Object.keys(countsMap).length,
+        totalUnread: total,
+        sampleKeys: Object.keys(countsMap).slice(0, 5)
       });
       
       setUnreadCounts(countsMap);
@@ -103,10 +119,13 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     
     console.log('🔔 Badge Clear: Selecting channel', {
       channelId,
+      channelType: channel.type,
       channelName: channel.name,
+      dbId: channel.dbId,
       previousUnreadCount: channel.unreadCount,
       storedUnreadCount: unreadCounts[channelId],
-      currentTotal: totalUnreadCount
+      currentTotal: totalUnreadCount,
+      allUnreadKeys: Object.keys(unreadCounts).filter(k => unreadCounts[k] > 0)
     });
     
     // ⚡️ STEP 1: OPTIMISTIC UPDATE - Clear badge INSTANTLY (before anything else)

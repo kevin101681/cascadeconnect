@@ -52,6 +52,20 @@ export const handler: Handler = async (event) => {
 
     console.log(`📖 Marking channel ${channelId} as read for user ${userId}`);
 
+    // ✅ Log to verify we received a UUID (not a deterministic ID)
+    if (channelId.startsWith('dm-')) {
+      console.error(`⚠️ CRITICAL: Received deterministic ID instead of UUID: ${channelId}`);
+      console.error('This should have been resolved in the service layer!');
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Invalid channel ID format. Expected UUID, got deterministic ID.',
+          hint: 'The service layer should resolve dm-... to UUID before calling this function.'
+        }),
+      };
+    }
+
     const readAt = new Date();
 
     // Update lastReadAt timestamp

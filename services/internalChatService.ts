@@ -535,10 +535,20 @@ export async function markChannelAsRead(
   channelId: string
 ): Promise<void> {
   try {
-    console.log(`📖 Marking channel ${channelId} as read for user ${userId}`);
+    console.log(`📖 [Service] markChannelAsRead called`, {
+      inputChannelId: channelId,
+      isDeterministic: channelId.startsWith('dm-'),
+      userId
+    });
 
     // ✅ CRITICAL: Resolve deterministic ID to database UUID
     const backendChannelId = await resolveChannelId(channelId);
+    
+    console.log(`📖 [Service] Channel ID resolution`, {
+      input: channelId,
+      resolved: backendChannelId,
+      resolutionSucceeded: !!backendChannelId
+    });
     
     if (!backendChannelId) {
       console.warn(`⚠️ Cannot mark as read: channel ${channelId} does not exist`);
