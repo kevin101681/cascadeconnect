@@ -201,7 +201,7 @@ export async function getAllTeamMembers(): Promise<Array<{
   try {
     const teamMembers = await db
       .select({
-        id: users.id,
+        id: users.clerkId,  // ✅ FIXED: Return Clerk ID for consistency with chat system
         name: users.name,
         email: users.email,
         internalRole: users.internalRole,
