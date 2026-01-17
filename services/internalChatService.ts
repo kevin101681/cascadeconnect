@@ -71,6 +71,7 @@ export interface Message {
   isDeleted: boolean;
   editedAt?: Date;
   createdAt: Date;
+  readAt?: Date | null;  // WhatsApp-style read receipt timestamp
 }
 
 export interface HomeownerMention {
