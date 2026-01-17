@@ -27,7 +27,9 @@ import {
   Reply,
   CornerUpLeft,
   Mic,
-  MicOff
+  MicOff,
+  Check,
+  CheckCheck
 } from 'lucide-react';
 import { getPusherClient } from '../../lib/pusher-client';
 import {
@@ -507,10 +509,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     <div className={`flex flex-col h-full bg-white dark:bg-gray-900 ${isCompact ? '' : 'border border-gray-200 dark:border-gray-700 rounded-lg'}`}>
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
-        {channelType === 'public' ? (
+        {channelType === 'public' && (
           <Hash className="h-5 w-5 text-gray-500" />
-        ) : (
-          <Users className="h-5 w-5 text-gray-500" />
         )}
         <h2 className="font-semibold text-gray-900 dark:text-white">{channelName}</h2>
       </div>
@@ -529,48 +529,37 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           messages.map((message) => (
             <div
               key={message.id}
-              className={`flex gap-3 group ${message.senderId === currentUserId ? 'flex-row-reverse' : ''}`}
+              className={`flex gap-2 group ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
             >
-              {/* Avatar */}
-              <div className="flex-shrink-0">
-                <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
-                  {(message.senderName || 'Unknown').charAt(0).toUpperCase()}
-                </div>
-              </div>
-
-              {/* Message content */}
-              <div className={`flex flex-col ${message.senderId === currentUserId ? 'items-end' : ''}`}>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+              {/* Message content - WhatsApp style without avatars */}
+              <div className={`flex flex-col max-w-[70%] ${message.senderId === currentUserId ? 'items-end' : 'items-start'}`}>
+                {/* Sender name (only show for other users' messages) */}
+                {message.senderId !== currentUserId && (
+                  <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 px-1">
                     {message.senderName || 'Unknown User'}
                   </span>
-                  <span className="text-xs text-gray-500">
-                    {new Date(message.createdAt).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
+                )}
+
+                {/* Message bubble */}
+                <div
+                  className={`px-3 py-2 rounded-lg shadow-sm relative ${
+                    message.senderId === currentUserId
+                      ? 'bg-blue-500 text-white rounded-br-none'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-none'
+                  }`}
+                >
                   {/* Reply button - visible on hover */}
                   <button
                     onClick={() => setReplyingTo(message)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                    className="absolute -left-8 top-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
                     title="Reply to this message"
                   >
                     <Reply className="h-3 w-3 text-gray-500 dark:text-gray-400" />
                   </button>
-                </div>
 
-                {/* Message bubble */}
-                <div
-                  className={`px-4 py-2 rounded-lg ${
-                    message.senderId === currentUserId
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white'
-                  }`}
-                >
                   {/* Quoted message (if replying to another message) */}
                   {message.replyTo && (
-                    <div className={`border-l-2 border-blue-400 bg-black/5 dark:bg-black/20 p-2 mb-2 text-[10px] italic rounded-r ${
+                    <div className={`border-l-2 border-blue-400 bg-black/5 dark:bg-black/20 p-2 mb-2 text-xs italic rounded-r ${
                       message.senderId === currentUserId ? 'text-white/80' : 'text-gray-600 dark:text-gray-400'
                     }`}>
                       <div className="font-semibold not-italic mb-0.5">
@@ -593,10 +582,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                             <img
                               src={att.url}
                               alt={att.filename || 'Image'}
-                              className="max-w-xs rounded"
+                              className="max-h-[250px] w-auto rounded object-contain"
                             />
                           ) : att.type === 'video' ? (
-                            <video src={att.url} controls className="max-w-xs rounded" />
+                            <video src={att.url} controls className="max-h-[250px] w-auto rounded object-contain" />
                           ) : (
                             <a
                               href={att.url}
@@ -612,6 +601,26 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                       ))}
                     </div>
                   )}
+
+                  {/* WhatsApp-style status and timestamp */}
+                  <div className={`flex items-center gap-1 justify-end mt-1 text-[10px] ${
+                    message.senderId === currentUserId ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'
+                  }`}>
+                    <span>
+                      {new Date(message.createdAt).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                    {/* Status ticks (only for own messages) */}
+                    {message.senderId === currentUserId && (
+                      message.readAt ? (
+                        <CheckCheck className="w-3 h-3 text-blue-300" />  // Double check = Read
+                      ) : (
+                        <Check className="w-3 h-3" />  // Single check = Sent
+                      )
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
