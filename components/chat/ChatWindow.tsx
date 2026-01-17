@@ -25,7 +25,9 @@ import {
   AtSign,
   Smile,
   Reply,
-  CornerUpLeft
+  CornerUpLeft,
+  Mic,
+  MicOff
 } from 'lucide-react';
 import { getPusherClient } from '../../lib/pusher-client';
 import {
@@ -38,6 +40,8 @@ import {
   type HomeownerMention,
 } from '../../services/internalChatService';
 import { uploadToCloudinary } from '../../services/uploadService';
+import { useSpeechToText } from '../../lib/hooks/useSpeechToText';
+import { ToastContainer, Toast } from '../Toast';
 
 interface ChatWindowProps {
   channelId: string;
@@ -71,11 +75,33 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const [selectedMentions, setSelectedMentions] = useState<HomeownerMention[]>([]);
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Voice-to-text integration
+  const { 
+    isListening, 
+    transcript, 
+    startListening, 
+    stopListening, 
+    resetTranscript, 
+    isSupported, 
+    error 
+  } = useSpeechToText();
+
+  // Toast management
+  const addToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    const id = crypto.randomUUID();
+    setToasts(prev => [...prev, { id, message, type }]);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  };
 
   // Scroll to bottom
   const scrollToBottom = () => {
@@ -108,6 +134,24 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       scrollToBottom();
     }
   }, [messages.length]);
+
+  // Sync transcript to input value
+  useEffect(() => {
+    if (transcript) {
+      setInputValue(transcript);
+    }
+  }, [transcript]);
+
+  // Handle voice recognition errors
+  useEffect(() => {
+    if (error === 'not-allowed') {
+      addToast('Microphone permission denied. Please check your browser settings.', 'error');
+    } else if (error === 'not-supported') {
+      addToast('Voice recognition is not supported in your browser.', 'error');
+    } else if (error && error !== 'aborted') {
+      addToast(`Voice recognition error: ${error}`, 'error');
+    }
+  }, [error]);
 
   // Pusher: Listen for new messages
   useEffect(() => {
@@ -282,9 +326,23 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // Toggle voice input
+  const toggleVoiceInput = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
   // Send message
   const handleSendMessage = async () => {
     if (!inputValue.trim() && attachments.length === 0) return;
+
+    // Stop listening if voice input is active
+    if (isListening) {
+      stopListening();
+    }
 
     setIsSending(true);
     try {
@@ -310,6 +368,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       setSelectedMentions([]);
       setMentionQuery(null);
       setReplyingTo(null); // Clear reply state
+      resetTranscript(); // Clear voice transcript
 
       // Stop typing indicator
       sendTypingIndicator({
@@ -318,9 +377,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         userName: currentUserName,
         isTyping: false,
       });
+
+      addToast('Message sent', 'success');
     } catch (error) {
       console.error('Error sending message:', error);
-      alert('Failed to send message. Please try again.');
+      addToast('Failed to send message. Please try again.', 'error');
     } finally {
       setIsSending(false);
     }
@@ -577,6 +638,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploadingMedia}
             className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-50 flex-shrink-0"
+            title="Attach file"
           >
             {isUploadingMedia ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -584,6 +646,26 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
               <Paperclip className="h-5 w-5" />
             )}
           </button>
+
+          {/* Voice input button */}
+          {isSupported && (
+            <button
+              onClick={toggleVoiceInput}
+              disabled={isSending}
+              className={`p-2 transition-all duration-200 disabled:opacity-50 flex-shrink-0 rounded-full ${
+                isListening 
+                  ? 'bg-red-500 text-white animate-pulse shadow-lg' 
+                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+              title={isListening ? 'Stop recording' : 'Start voice input'}
+            >
+              {isListening ? (
+                <MicOff className="h-5 w-5" />
+              ) : (
+                <Mic className="h-5 w-5" />
+              )}
+            </button>
+          )}
 
           {/* Text input - Pill shaped */}
           <textarea
@@ -607,6 +689,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Toast Container */}
+      <ToastContainer toasts={toasts} onDismiss={removeToast} />
     </div>
   );
 };
