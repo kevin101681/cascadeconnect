@@ -15,7 +15,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { MessageCircle, X, ArrowLeft } from 'lucide-react';
 import { ChatWindow } from './ChatWindow';
 import { ChatSidebar } from './ChatSidebar';
-import { getUserChannels, type Channel } from '../../services/internalChatService';
+import { getUserChannels, markChannelAsRead, type Channel } from '../../services/internalChatService';
 import { getPusherClient } from '../../lib/pusher-client';
 
 interface ChatWidgetProps {
