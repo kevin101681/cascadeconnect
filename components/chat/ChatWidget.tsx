@@ -17,6 +17,7 @@ import { ChatWindow } from './ChatWindow';
 import { ChatSidebar } from './ChatSidebar';
 import { getUserChannels, markChannelAsRead, type Channel } from '../../services/internalChatService';
 import { getPusherClient } from '../../lib/pusher-client';
+import PusherJS from 'pusher-js';
 
 interface ChatWidgetProps {
   currentUserId: string;
@@ -45,6 +46,56 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   useEffect(() => {
     selectedChannelRef.current = selectedChannel;
   }, [selectedChannel]);
+
+  // 🕵️‍♂️ PUSHER SNIFFER: Global debug logger to catch ALL Pusher events
+  // This runs ONCE on mount and logs EVERYTHING to help diagnose connection issues
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    console.log('🕵️‍♂️ [PUSHER SNIFFER] Initializing global Pusher debug mode');
+    
+    // Enable Pusher library debug logging (shows connection status, subscriptions, etc.)
+    PusherJS.logToConsole = true;
+
+    const pusher = getPusherClient();
+    const channelName = `public-user-${currentUserId}`;
+    
+    console.log('🕵️‍♂️ [PUSHER SNIFFER] Subscribing to channel for monitoring:', channelName);
+    const channel = pusher.subscribe(channelName);
+
+    // Bind to ALL events on this channel (catches everything, even unknown events)
+    const globalHandler = (eventName: string, data: any) => {
+      console.log('🕵️‍♂️ [PUSHER SNIFFER] Raw event received:', {
+        eventName,
+        channelName,
+        timestamp: new Date().toISOString(),
+        data
+      });
+    };
+
+    channel.bind_global(globalHandler);
+
+    // Log connection state changes
+    pusher.connection.bind('connected', () => {
+      console.log('🕵️‍♂️ [PUSHER SNIFFER] ✅ Connected to Pusher');
+    });
+
+    pusher.connection.bind('disconnected', () => {
+      console.log('🕵️‍♂️ [PUSHER SNIFFER] ❌ Disconnected from Pusher');
+    });
+
+    pusher.connection.bind('error', (err: any) => {
+      console.error('🕵️‍♂️ [PUSHER SNIFFER] ⚠️ Connection error:', err);
+    });
+
+    return () => {
+      console.log('🕵️‍♂️ [PUSHER SNIFFER] Cleaning up global debug listener');
+      channel.unbind_global(globalHandler);
+      pusher.connection.unbind('connected');
+      pusher.connection.unbind('disconnected');
+      pusher.connection.unbind('error');
+    };
+  }, [currentUserId]); // Only run once per user
 
   const isOpen = isOpenProp ?? internalIsOpen;
   const setIsOpen = (next: boolean) => {

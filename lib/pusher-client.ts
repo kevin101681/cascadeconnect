@@ -2,36 +2,54 @@
  * PUSHER CLIENT CONFIGURATION
  * Real-time messaging infrastructure for SMS (client-side)
  * December 29, 2025
+ * 
+ * ⚡️ CRITICAL: Singleton pattern ensures ONE shared connection across all components
  */
 
 import PusherJS from 'pusher-js';
 
-// Singleton instance
+// ⚡️ SINGLETON: Global instance shared across all components
 let pusherClientInstance: PusherJS | null = null;
 
 /**
- * Get or create Pusher client instance
+ * Get or create Pusher client instance (SINGLETON)
  * Uses credentials from environment variables
+ * 
+ * ⚡️ This function is called by ChatWidget, ChatSidebar, and ChatWindow
+ * They all share the SAME Pusher connection via this singleton
  */
 export function getPusherClient(): PusherJS {
   if (pusherClientInstance) {
+    console.log('♻️ [Pusher] Reusing existing singleton instance');
     return pusherClientInstance;
   }
 
-  // Get credentials from environment
-  const key = import.meta.env.VITE_PUSHER_KEY || '7d086bfe1d6c16271315';
-  const cluster = import.meta.env.VITE_PUSHER_CLUSTER || 'us2';
+  // Get credentials from environment (supports both Vite and Next.js)
+  const key = 
+    (typeof window !== 'undefined' && (window as any).NEXT_PUBLIC_PUSHER_KEY) ||
+    import.meta.env.VITE_PUSHER_KEY || 
+    '7d086bfe1d6c16271315';
+  
+  const cluster = 
+    (typeof window !== 'undefined' && (window as any).NEXT_PUBLIC_PUSHER_CLUSTER) ||
+    import.meta.env.VITE_PUSHER_CLUSTER || 
+    'us2';
 
   if (!key) {
     throw new Error('❌ Pusher client key is not configured');
   }
+
+  console.log('🆕 [Pusher] Creating NEW singleton instance', {
+    key: key.substring(0, 8) + '...',
+    cluster
+  });
 
   pusherClientInstance = new PusherJS(key, {
     cluster,
     forceTLS: true,
   });
 
-  console.log('✅ Pusher client initialized');
+  console.log('✅ [Pusher] Singleton client initialized and stored globally');
   return pusherClientInstance;
 }
 
