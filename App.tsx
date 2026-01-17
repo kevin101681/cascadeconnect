@@ -4779,11 +4779,11 @@ Assigned By: ${assignerName}
     </Layout>
 
     {/* Floating Chat Widget - Admin Only - Positioned at root level to escape stacking context */}
-    {isAdminAccount && (
+    {isAdminAccount && authUser && (
       <React.Suspense fallback={null}>
         <FloatingChatWidget
-          currentUserId={activeEmployee?.id || ''}
-          currentUserName={activeEmployee?.name || 'Unknown User'}
+          currentUserId={authUser.id}
+          currentUserName={authUser.fullName || activeEmployee?.name || 'Unknown User'}
           isOpen={isChatWidgetOpen}
           onOpenChange={setIsChatWidgetOpen}
           onOpenHomeownerModal={(homeownerId) => {
