@@ -307,6 +307,7 @@ export async function getChannelMessages(
         isDeleted: internalMessages.isDeleted,
         editedAt: internalMessages.editedAt,
         createdAt: internalMessages.createdAt,
+        // Note: readAt is calculated client-side based on channel_members.lastReadAt
       })
       .from(internalMessages)
       .leftJoin(users, eq(internalMessages.senderId, users.clerkId))  // ✅ SAFETY: LEFT JOIN instead of INNER

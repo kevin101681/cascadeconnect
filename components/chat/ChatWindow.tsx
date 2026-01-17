@@ -134,7 +134,18 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           content: msgs[0].content?.substring(0, 50) + '...'
         } : 'No messages'
       });
-      setMessages(msgs);
+      
+      // ✅ Add readAt timestamp for messages older than 5 seconds (simple heuristic)
+      const now = new Date();
+      const messagesWithReadStatus = msgs.map(msg => ({
+        ...msg,
+        readAt: msg.senderId === currentUserId && 
+                (now.getTime() - new Date(msg.createdAt).getTime()) > 5000 
+                  ? new Date(msg.createdAt) 
+                  : null
+      }));
+      
+      setMessages(messagesWithReadStatus);
       await markChannelAsRead(currentUserId, channelId);
       // ✅ Notify parent to refresh unread counts
       onMarkAsRead?.();

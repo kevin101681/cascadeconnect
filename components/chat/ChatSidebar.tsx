@@ -134,14 +134,23 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   );
 
   // Filter team members by search (exclude current user from list)
-  // Check both id fields to handle UUID vs Clerk ID mismatch
+  // Check both id fields and use String() to handle any type mismatches
   const filteredTeamMembers = teamMembers
     .filter((member) => {
-      // Filter out current user by checking both possible ID fields
-      if (member.id === currentUserId) return false;
-      // @ts-ignore - clerkId might not be in type but could exist
-      if (member.clerkId && member.clerkId === currentUserId) return false;
-      return true;
+      // Aggressive filtering: exclude current user by checking ALL possible ID fields
+      const memberIds = [
+        String(member.id || '').toLowerCase(),
+        // @ts-ignore - clerkId might not be in type but could exist
+        String(member.clerkId || '').toLowerCase(),
+        // @ts-ignore - email as backup identifier
+        String(member.email || '').toLowerCase(),
+      ];
+      const currentIds = [
+        String(currentUserId || '').toLowerCase(),
+      ];
+      
+      // If any member ID matches current user ID, filter it out
+      return !memberIds.some(mid => currentIds.includes(mid));
     })
     .filter((member) =>
       (member.name || "").toLowerCase().includes((searchQuery || "").toLowerCase()) ||
