@@ -19,7 +19,7 @@ import {
   users,
   homeowners 
 } from '../db/schema';
-import { eq, and, desc, sql, or, ilike, ne } from 'drizzle-orm';
+import { eq, and, desc, sql, or, ilike, ne, gt } from 'drizzle-orm';
 
 // Types
 export interface Channel {
@@ -175,26 +175,29 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
       memberChannels.map(async (ch) => {
         // ✅ CRITICAL: Count ONLY unread messages from OTHER users
         // This prevents user's own messages from showing as unread
-        const unreadMessages = await db
+        const unreadResult = await db
           .select({ count: sql<number>`count(*)` })
           .from(internalMessages)
           .where(
             and(
               eq(internalMessages.channelId, ch.channelId),
-              sql`${internalMessages.createdAt} > ${ch.lastReadAt}`,
+              // 1. Must be newer than last read
+              gt(internalMessages.createdAt, ch.lastReadAt || new Date(0)),
+              // 2. Must not be deleted
               eq(internalMessages.isDeleted, false),
-              // ✅ CRITICAL: Exclude messages sent by current user
+              // 3. CRITICAL: MUST NOT BE FROM ME
               ne(internalMessages.senderId, userId)
             )
           );
 
-        const unreadCount = Number(unreadMessages[0]?.count || 0);
+        const unreadCount = Number(unreadResult[0]?.count || 0);
         
         console.log(`📊 [getUserChannels] Unread count for channel ${ch.channelId}`, {
           channelId: ch.channelId,
           unreadCount,
           lastReadAt: ch.lastReadAt,
-          currentUserId: userId
+          currentUserId: userId,
+          filterApplied: 'ne(senderId, userId)'
         });
 
         // Get last message
