@@ -93,6 +93,63 @@ function generateDmChannelId(userId1: string, userId2: string): string {
 }
 
 /**
+ * Resolve a channel ID (deterministic or UUID) to a database UUID
+ * CRITICAL: This prevents "invalid input syntax for type uuid" errors
+ * 
+ * @param channelId - Either a deterministic ID (dm-userA-userB) or a database UUID
+ * @returns Database UUID if found, null if channel doesn't exist
+ */
+async function resolveChannelId(channelId: string): Promise<string | null> {
+  // 1. If it's already a UUID format, return it as-is
+  if (!channelId.startsWith('dm-')) {
+    return channelId;
+  }
+
+  // 2. Parse the deterministic ID to extract participant user IDs
+  // Format: "dm-user_36zHRC-user_42aXYZ"
+  const dmPrefix = 'dm-';
+  const participantsStr = channelId.substring(dmPrefix.length);
+  
+  // Split by '-' and filter out empty strings
+  // This handles: "user_36zHRC-user_42aXYZ" -> ["user_36zHRC", "user_42aXYZ"]
+  const parts = participantsStr.split('-').filter(p => p.trim().length > 0);
+  
+  if (parts.length !== 2) {
+    console.error(`❌ Invalid deterministic ID format: ${channelId}`);
+    return null;
+  }
+
+  const [userA, userB] = parts.sort(); // Ensure alphabetical order
+  const participants = [userA, userB];
+
+  // 3. Query database to find channel with these participants
+  try {
+    const channels = await db
+      .select({ id: internalChannels.id })
+      .from(internalChannels)
+      .where(
+        and(
+          eq(internalChannels.type, 'dm'),
+          sql`${internalChannels.dmParticipants}::jsonb = ${JSON.stringify(participants)}::jsonb`
+        )
+      )
+      .limit(1);
+
+    if (channels.length > 0) {
+      const resolvedId = channels[0].id;
+      console.log(`✅ Resolved deterministic ID ${channelId} to UUID ${resolvedId}`);
+      return resolvedId;
+    }
+
+    console.log(`⚠️ No database UUID found for ${channelId} (channel doesn't exist yet)`);
+    return null;
+  } catch (error) {
+    console.error(`❌ Error resolving channel ID ${channelId}:`, error);
+    return null;
+  }
+}
+
+/**
  * Get all channels for a user (public + their DMs)
  */
 export async function getUserChannels(userId: string): Promise<Channel[]> {
@@ -316,6 +373,17 @@ export async function getChannelMessages(
   console.log('🔎 [Service] Fetching messages for Channel:', channelId, '(limit:', limit, ')');
   
   try {
+    // ✅ CRITICAL: Resolve deterministic ID to database UUID
+    const dbChannelId = await resolveChannelId(channelId);
+    
+    // If no UUID exists, the channel doesn't exist yet (no history)
+    if (!dbChannelId) {
+      console.log('⚠️ [Service] Channel does not exist in database yet, returning empty messages');
+      return [];
+    }
+    
+    console.log('✅ [Service] Using database UUID:', dbChannelId);
+    
     const messages = await db
       .select({
         id: internalMessages.id,
@@ -335,7 +403,7 @@ export async function getChannelMessages(
       })
       .from(internalMessages)
       .leftJoin(users, eq(internalMessages.senderId, users.clerkId))  // ✅ SAFETY: LEFT JOIN instead of INNER
-      .where(eq(internalMessages.channelId, channelId))
+      .where(eq(internalMessages.channelId, dbChannelId))  // ✅ Use resolved UUID
       .orderBy(desc(internalMessages.createdAt))
       .limit(limit)
       .offset(offset);
@@ -469,37 +537,12 @@ export async function markChannelAsRead(
   try {
     console.log(`📖 Marking channel ${channelId} as read for user ${userId}`);
 
-    // ✅ CRITICAL: If this is a deterministic DM ID (dm-...), we need to resolve it to database UUID
-    let backendChannelId = channelId;
+    // ✅ CRITICAL: Resolve deterministic ID to database UUID
+    const backendChannelId = await resolveChannelId(channelId);
     
-    if (channelId.startsWith('dm-')) {
-      // Extract participant IDs from deterministic ID
-      const parts = channelId.replace('dm-', '').split('-');
-      if (parts.length === 2) {
-        // Look up the actual database UUID for this DM
-        const [userId1, userId2] = parts;
-        const participants = [userId1, userId2].sort();
-        
-        // Find channel by participants
-        const channels = await db
-          .select({ id: internalChannels.id })
-          .from(internalChannels)
-          .where(
-            and(
-              eq(internalChannels.type, 'dm'),
-              sql`${internalChannels.dmParticipants}::jsonb = ${JSON.stringify(participants)}::jsonb`
-            )
-          )
-          .limit(1);
-        
-        if (channels.length > 0) {
-          backendChannelId = channels[0].id;
-          console.log(`✅ Resolved deterministic ID ${channelId} to UUID ${backendChannelId}`);
-        } else {
-          console.warn(`⚠️ Could not find database UUID for ${channelId}`);
-          return; // Silently fail - channel might not exist yet
-        }
-      }
+    if (!backendChannelId) {
+      console.warn(`⚠️ Cannot mark as read: channel ${channelId} does not exist`);
+      return; // Silently fail - channel doesn't exist yet
     }
 
     // ✅ Call server-side Netlify function with database UUID

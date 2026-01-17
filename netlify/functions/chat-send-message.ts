@@ -6,8 +6,8 @@
 
 import { Handler } from '@netlify/functions';
 import { db } from '../../db';
-import { internalMessages, users } from '../../db/schema';
-import { eq } from 'drizzle-orm';
+import { internalMessages, internalChannels, channelMembers, users } from '../../db/schema';
+import { eq, and, sql } from 'drizzle-orm';
 import { triggerPusherEvent } from '../../lib/pusher-server';
 
 interface SendMessageRequest {
@@ -74,11 +74,80 @@ export const handler: Handler = async (event) => {
 
     console.log(`📨 Saving message to channel ${channelId} from user ${senderId}`);
 
-    // 1. Insert message into database
+    // ✅ CRITICAL: Resolve deterministic ID to database UUID (or create channel if needed)
+    let dbChannelId = channelId;
+    
+    if (channelId.startsWith('dm-')) {
+      console.log(`🔄 Resolving deterministic ID: ${channelId}`);
+      
+      // Parse participant IDs from deterministic ID format: "dm-userA-userB"
+      const participantsStr = channelId.substring(3); // Remove 'dm-'
+      const parts = participantsStr.split('-').filter(p => p.trim().length > 0);
+      
+      if (parts.length !== 2) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: `Invalid deterministic channel ID format: ${channelId}` }),
+        };
+      }
+      
+      const [userA, userB] = parts.sort(); // Alphabetical order
+      const participants = [userA, userB];
+      
+      // Try to find existing channel
+      const existingChannels = await db
+        .select({ id: internalChannels.id })
+        .from(internalChannels)
+        .where(
+          and(
+            eq(internalChannels.type, 'dm'),
+            sql`${internalChannels.dmParticipants}::jsonb = ${JSON.stringify(participants)}::jsonb`
+          )
+        )
+        .limit(1);
+      
+      if (existingChannels.length > 0) {
+        dbChannelId = existingChannels[0].id;
+        console.log(`✅ Found existing channel UUID: ${dbChannelId}`);
+      } else {
+        // Create new DM channel
+        console.log(`🆕 Creating new DM channel for participants: ${participants.join(', ')}`);
+        
+        const channelName = `dm-${participants[0]}-${participants[1]}`;
+        const [newChannel] = await db
+          .insert(internalChannels)
+          .values({
+            name: channelName,
+            type: 'dm',
+            dmParticipants: participants,
+            createdBy: senderId,
+          })
+          .returning({ id: internalChannels.id });
+        
+        dbChannelId = newChannel.id;
+        
+        // Add both users as channel members
+        await db.insert(channelMembers).values([
+          {
+            channelId: dbChannelId,
+            userId: participants[0],
+          },
+          {
+            channelId: dbChannelId,
+            userId: participants[1],
+          },
+        ]);
+        
+        console.log(`✅ Created new channel with UUID: ${dbChannelId}`);
+      }
+    }
+
+    // 1. Insert message into database using resolved UUID
     const [newMessage] = await db
       .insert(internalMessages)
       .values({
-        channelId,
+        channelId: dbChannelId,  // ✅ Use resolved database UUID
         senderId,
         content: content || '',  // ✅ Allow empty content for media-only messages
         attachments,
