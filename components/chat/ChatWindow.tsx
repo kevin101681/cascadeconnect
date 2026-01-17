@@ -110,14 +110,31 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
   // Load messages
   const loadMessages = useCallback(async () => {
+    console.log('🔄 ChatWindow loadMessages called. Channel ID:', channelId);
+    if (!channelId) {
+      console.warn('⚠️ No Channel ID found, aborting fetch.');
+      return;
+    }
+
     try {
       setIsLoading(true);
+      console.log('📡 Calling getChannelMessages for:', channelId);
       const msgs = await getChannelMessages(channelId);
+      console.log('📥 getChannelMessages Result:', {
+        count: msgs.length,
+        sample: msgs.length > 0 ? {
+          id: msgs[0].id,
+          senderId: msgs[0].senderId,
+          senderName: msgs[0].senderName,
+          senderEmail: msgs[0].senderEmail,
+          content: msgs[0].content?.substring(0, 50) + '...'
+        } : 'No messages'
+      });
       setMessages(msgs);
       await markChannelAsRead(currentUserId, channelId);
       scrollToBottom();
     } catch (error) {
-      console.error('Error loading messages:', error);
+      console.error('❌ Error loading messages:', error);
     } finally {
       setIsLoading(false);
     }
@@ -125,6 +142,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
   // Load messages on mount and channel change
   useEffect(() => {
+    console.log('🎬 ChatWindow MOUNTED/UPDATED. Channel ID:', channelId, 'User ID:', currentUserId);
     loadMessages();
   }, [loadMessages]);
 
@@ -360,12 +378,20 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         stopListening();
       }
 
-      // 4. Clear input optimistically (improves perceived performance)
+      // 4. Log current user info before sending
+      console.log('👤 Current User Info:', {
+        userId: currentUserId,
+        userName: currentUserName,
+        messageContent: messageToSend.substring(0, 50) + '...'
+      });
+
+      // 5. Clear input optimistically (improves perceived performance)
       setInputValue('');
       setAttachments([]);
       resetTranscript();
 
-      // 5. Send message to server
+      // 6. Send message to server
+      console.log('📤 Sending message to server...');
       const newMessage = await sendMessage({
         channelId,
         senderId: currentUserId,
@@ -380,7 +406,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       });
 
       console.log('✅ Message sent successfully:', newMessage.id);
-      console.log('   Sender:', newMessage.senderName, '(', newMessage.senderId, ')');
+      console.log('📋 Server Response:', {
+        id: newMessage.id,
+        senderId: newMessage.senderId,
+        senderName: newMessage.senderName,
+        senderEmail: newMessage.senderEmail,
+        content: newMessage.content?.substring(0, 50) + '...'
+      });
 
       // ✅ OPTIMISTIC UPDATE: Add message immediately to local state
       // Pusher will also broadcast this message, but deduplication will prevent double-add

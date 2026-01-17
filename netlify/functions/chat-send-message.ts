@@ -79,6 +79,7 @@ export const handler: Handler = async (event) => {
       .returning();
 
     // 2. Get sender info (using clerkId since senderId is Clerk ID text)
+    console.log('🔍 [Netlify] Looking up sender info for Clerk ID:', senderId);
     const senderData = await db
       .select({
         name: users.name,
@@ -87,6 +88,13 @@ export const handler: Handler = async (event) => {
       .from(users)
       .where(eq(users.clerkId, senderId))
       .limit(1);
+
+    console.log('👤 [Netlify] Sender lookup result:', {
+      found: senderData.length > 0,
+      name: senderData[0]?.name || 'NOT FOUND',
+      email: senderData[0]?.email || 'NOT FOUND',
+      clerkId: senderId
+    });
 
     // 3. Get replied-to message if exists
     let replyToMessage = null;
@@ -117,7 +125,14 @@ export const handler: Handler = async (event) => {
       replyTo: replyToMessage,
     };
 
-    console.log(`✅ Message saved with ID: ${newMessage.id}`);
+    console.log('✅ [Netlify] Message saved with ID:', newMessage.id);
+    console.log('📦 [Netlify] Returning message:', {
+      id: messageWithSender.id,
+      senderId: messageWithSender.senderId,
+      senderName: messageWithSender.senderName,
+      senderEmail: messageWithSender.senderEmail,
+      content: messageWithSender.content?.substring(0, 50) + '...'
+    });
 
     // 5. ✅ TRIGGER PUSHER EVENT (SERVER-SIDE)
     try {

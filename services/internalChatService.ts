@@ -288,6 +288,8 @@ export async function getChannelMessages(
   limit = 50,
   offset = 0
 ): Promise<Message[]> {
+  console.log('🔎 [Service] Fetching messages for Channel:', channelId, '(limit:', limit, ')');
+  
   try {
     const messages = await db
       .select({
@@ -311,6 +313,24 @@ export async function getChannelMessages(
       .orderBy(desc(internalMessages.createdAt))
       .limit(limit)
       .offset(offset);
+
+    console.log('📊 [Service] Query Result:', {
+      count: messages.length,
+      channelId: channelId
+    });
+
+    if (messages.length > 0) {
+      console.log('📄 [Service] SAMPLE ROW:', {
+        id: messages[0].id,
+        senderId: messages[0].senderId,
+        senderName: messages[0].senderName,
+        senderEmail: messages[0].senderEmail,
+        content: messages[0].content?.substring(0, 50) + '...',
+        createdAt: messages[0].createdAt
+      });
+    } else {
+      console.log('⚠️ [Service] No messages found in DB for channel:', channelId);
+    }
 
     // For each message, fetch the replied-to message if it exists
     const messagesWithReplies = await Promise.all(
@@ -340,6 +360,7 @@ export async function getChannelMessages(
       })
     );
 
+    console.log('✅ [Service] Returning', messagesWithReplies.length, 'messages (with replies populated)');
     return messagesWithReplies.reverse(); // Reverse to show oldest first
   } catch (error) {
     console.error('❌ Error getting channel messages:', error);
