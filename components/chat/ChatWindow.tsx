@@ -336,21 +336,36 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   };
 
   // Send message
-  const handleSendMessage = async () => {
-    if (!inputValue.trim() && attachments.length === 0) return;
+  const handleSendMessage = async (e?: React.FormEvent | React.KeyboardEvent) => {
+    // 1. Prevent default behaviors (stop form submit & bubbling)
+    if (e) e.preventDefault();
 
-    // Stop listening if voice input is active
-    if (isListening) {
-      stopListening();
-    }
+    // 2. Validation & Locking (CRITICAL: Check isSending first to prevent double-firing)
+    if (isSending || (!inputValue.trim() && attachments.length === 0)) return;
 
-    setIsSending(true);
+    // Store current message for restoration on failure
+    const messageToSend = inputValue.trim();
+    const attachmentsToSend = [...attachments];
+
     try {
+      setIsSending(true); // 🔒 Lock to prevent duplicate sends
+
+      // 3. Stop voice if active
+      if (isListening) {
+        stopListening();
+      }
+
+      // 4. Clear input optimistically (improves perceived performance)
+      setInputValue('');
+      setAttachments([]);
+      resetTranscript();
+
+      // 5. Send message to server
       const newMessage = await sendMessage({
         channelId,
         senderId: currentUserId,
-        content: inputValue.trim(),
-        attachments,
+        content: messageToSend,
+        attachments: attachmentsToSend,
         mentions: selectedMentions.map((m) => ({
           homeownerId: m.id,
           projectName: m.projectName,
@@ -362,13 +377,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       // ✅ OPTIMISTIC UPDATE: Add the message immediately to local state
       setMessages((prev) => [...prev, newMessage]);
 
-      // Clear input and attachments
-      setInputValue('');
-      setAttachments([]);
+      // Clear remaining state
       setSelectedMentions([]);
       setMentionQuery(null);
-      setReplyingTo(null); // Clear reply state
-      resetTranscript(); // Clear voice transcript
+      setReplyingTo(null);
 
       // Stop typing indicator
       sendTypingIndicator({
@@ -380,18 +392,21 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
       addToast('Message sent', 'success');
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('❌ Send Error:', error);
+      // Restore message and attachments on failure
+      setInputValue(messageToSend);
+      setAttachments(attachmentsToSend);
       addToast('Failed to send message. Please try again.', 'error');
     } finally {
-      setIsSending(false);
+      setIsSending(false); // 🔓 Unlock (always runs, even on error)
     }
   };
 
   // Handle Enter key
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+      // Pass event to handleSendMessage for preventDefault
+      handleSendMessage(e);
     }
   };
 
