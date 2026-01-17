@@ -161,10 +161,15 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     channel.bind('new-message', (data: { channelId: string; message: Message }) => {
       if (data.channelId === channelId) {
         setMessages((prev) => {
-          // Prevent duplicates (e.g., if sender already added optimistically)
-          if (prev.find(m => m.id === data.message.id)) {
+          // ✅ CRITICAL: Prevent duplicates with strict ID-based deduplication
+          // Check if this message already exists (from optimistic update or previous broadcast)
+          const existingMessage = prev.find(m => m.id === data.message.id);
+          if (existingMessage) {
+            console.log('🔄 Deduplication: Message already exists, skipping:', data.message.id);
             return prev;
           }
+          
+          console.log('📨 New message received via Pusher:', data.message.id);
           return [...prev, data.message];
         });
         
@@ -374,8 +379,20 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         replyTo: replyingTo?.id,
       });
 
-      // ✅ OPTIMISTIC UPDATE: Add the message immediately to local state
-      setMessages((prev) => [...prev, newMessage]);
+      console.log('✅ Message sent successfully:', newMessage.id);
+      console.log('   Sender:', newMessage.senderName, '(', newMessage.senderId, ')');
+
+      // ✅ OPTIMISTIC UPDATE: Add message immediately to local state
+      // Pusher will also broadcast this message, but deduplication will prevent double-add
+      setMessages((prev) => {
+        // Safety check: Don't add if already exists (shouldn't happen, but defensive)
+        if (prev.find(m => m.id === newMessage.id)) {
+          console.log('⚠️ Optimistic update skipped: Message already exists');
+          return prev;
+        }
+        console.log('📝 Optimistic update: Adding message to local state');
+        return [...prev, newMessage];
+      });
 
       // Clear remaining state
       setSelectedMentions([]);
@@ -481,7 +498,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
               {/* Avatar */}
               <div className="flex-shrink-0">
                 <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-medium">
-                  {message.senderName.charAt(0).toUpperCase()}
+                  {(message.senderName || 'Unknown').charAt(0).toUpperCase()}
                 </div>
               </div>
 
@@ -489,7 +506,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
               <div className={`flex flex-col ${message.senderId === currentUserId ? 'items-end' : ''}`}>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {message.senderName}
+                    {message.senderName || 'Unknown User'}
                   </span>
                   <span className="text-xs text-gray-500">
                     {new Date(message.createdAt).toLocaleTimeString([], {
@@ -521,7 +538,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                       message.senderId === currentUserId ? 'text-white/80' : 'text-gray-600 dark:text-gray-400'
                     }`}>
                       <div className="font-semibold not-italic mb-0.5">
-                        {message.replyTo.senderName}
+                        {message.replyTo.senderName || 'Unknown User'}
                       </div>
                       <div className="line-clamp-2">
                         {message.replyTo.content}
