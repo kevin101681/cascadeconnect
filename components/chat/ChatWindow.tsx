@@ -188,10 +188,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   }, [error]);
 
-  // Pusher: Listen for new messages on PRIVATE user channel
+  // Pusher: Listen for new messages on PUBLIC user channel
   useEffect(() => {
     const pusher = getPusherClient();
-    const channelName = `private-user-${currentUserId}`;
+    const channelName = `public-user-${currentUserId}`;
     const channel = pusher.subscribe(channelName);
 
     channel.bind('new-message', (data: { channelId: string; message: Message }) => {

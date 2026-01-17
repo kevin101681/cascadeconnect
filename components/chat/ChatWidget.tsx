@@ -127,9 +127,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   useEffect(() => {
     if (!currentUserId) return;
 
-    // Subscribe to user's PRIVATE channel for targeted notifications
-    const channelName = `private-user-${currentUserId}`;
-    console.log('🔌 [ChatWidget] Setting up STABLE Pusher listener on PRIVATE channel:', channelName);
+    // Subscribe to user's PUBLIC channel for targeted notifications
+    const channelName = `public-user-${currentUserId}`;
+    console.log('🔌 [ChatWidget] Setting up STABLE Pusher listener on PUBLIC channel:', channelName);
     
     const pusher = getPusherClient();
     const channel = pusher.subscribe(channelName);
@@ -144,7 +144,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         createdAt: Date;
       } 
     }) => {
-      console.log('⚡️ [ChatWidget] Instant message received via Pusher (private channel):', {
+      console.log('⚡️ [ChatWidget] Instant message received via Pusher (public channel):', {
         channelId: data.channelId,
         senderId: data.message.senderId,
         content: data.message.content.substring(0, 50),
@@ -192,7 +192,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     channel.bind('new-message', handleNewMessage);
 
     return () => {
-      console.log('🔌 [ChatWidget] Cleaning up STABLE Pusher listener from private channel');
+      console.log('🔌 [ChatWidget] Cleaning up STABLE Pusher listener from public channel');
       channel.unbind('new-message', handleNewMessage);
       pusher.unsubscribe(channelName);
     };

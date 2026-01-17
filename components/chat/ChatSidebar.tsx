@@ -104,9 +104,9 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   useEffect(() => {
     if (!currentUserId) return;
 
-    // Subscribe to user's PRIVATE channel for targeted notifications
-    const channelName = `private-user-${currentUserId}`;
-    console.log('🔌 [ChatSidebar] Setting up STABLE Pusher listener on PRIVATE channel:', channelName);
+    // Subscribe to user's PUBLIC channel for targeted notifications
+    const channelName = `public-user-${currentUserId}`;
+    console.log('🔌 [ChatSidebar] Setting up STABLE Pusher listener on PUBLIC channel:', channelName);
     
     const pusher = getPusherClient();
     const channel = pusher.subscribe(channelName);
@@ -121,7 +121,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
         createdAt: Date;
       };
     }) => {
-      console.log('⚡️ [ChatSidebar] Instant message received (private channel):', {
+      console.log('⚡️ [ChatSidebar] Instant message received (public channel):', {
         channelId: data.channelId,
         senderId: data.message.senderId,
         content: data.message.content.substring(0, 50)
@@ -173,7 +173,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
     channel.bind('new-message', handleNewMessage);
 
     return () => {
-      console.log('🔌 [ChatSidebar] Cleaning up STABLE Pusher listener from private channel');
+      console.log('🔌 [ChatSidebar] Cleaning up STABLE Pusher listener from public channel');
       channel.unbind('new-message', handleNewMessage);
       pusher.unsubscribe(channelName);
     };

@@ -213,7 +213,7 @@ export const handler: Handler = async (event) => {
     });
 
     // 5. ✅ TRIGGER PUSHER EVENTS (SERVER-SIDE)
-    // Send to PRIVATE user channels for security and targeted delivery
+    // Send to PUBLIC user channels for immediate delivery
     try {
       // For DM channels, extract participant IDs and notify each user
       if (channelId.startsWith('dm-')) {
@@ -222,16 +222,16 @@ export const handler: Handler = async (event) => {
         
         console.log(`📡 Sending Pusher events to ${participants.length} participants:`, participants);
         
-        // Send event to each participant's private channel
+        // Send event to each participant's public channel
         for (const userId of participants) {
-          const privateChannel = `private-user-${userId}`;
+          const publicChannel = `public-user-${userId}`;
           
-          await triggerPusherEvent(privateChannel, 'new-message', {
+          await triggerPusherEvent(publicChannel, 'new-message', {
             channelId,
             message: messageWithSender,
           });
           
-          console.log(`✅ Pusher event sent to ${privateChannel}`);
+          console.log(`✅ Pusher event sent to ${publicChannel}`);
         }
       } else {
         // Fallback to team-chat for public channels (if they exist)
