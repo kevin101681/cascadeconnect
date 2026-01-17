@@ -23,7 +23,8 @@ import { eq, and, desc, sql, or, ilike, ne } from 'drizzle-orm';
 
 // Types
 export interface Channel {
-  id: string;
+  id: string;  // Deterministic ID (dm-userA-userB for DMs, UUID for public)
+  dbId?: string;  // Original database UUID (for backend operations)
   name: string;
   type: 'public' | 'dm';
   dmParticipants?: string[];
@@ -79,6 +80,16 @@ export interface HomeownerMention {
   name: string;
   projectName: string;
   address: string;
+}
+
+/**
+ * Generate deterministic channel ID for DMs
+ * CRITICAL: Must match frontend generation logic exactly
+ * Format: dm-{sortedUserA}-{sortedUserB}
+ */
+function generateDmChannelId(userId1: string, userId2: string): string {
+  const [userA, userB] = [userId1, userId2].sort();
+  return `dm-${userA}-${userB}`;
 }
 
 /**
@@ -169,8 +180,21 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
           }
         }
 
+        // ✅ CRITICAL: For DMs, use deterministic ID instead of database UUID
+        // This ensures frontend override mechanism works correctly
+        let displayId = ch.channelId; // Default to database UUID
+        
+        if (ch.channelType === 'dm' && ch.dmParticipants) {
+          const participants = ch.dmParticipants as string[];
+          if (participants.length === 2) {
+            // Generate deterministic ID: dm-sortedUserA-sortedUserB
+            displayId = generateDmChannelId(participants[0], participants[1]);
+          }
+        }
+
         return {
-          id: ch.channelId,
+          id: displayId,  // ✅ Use deterministic ID for DMs, UUID for public channels
+          dbId: ch.channelId,  // ✅ Keep original database UUID for backend operations
           name: ch.channelName,
           type: ch.channelType as 'public' | 'dm',
           dmParticipants: ch.dmParticipants as string[] | undefined,
@@ -434,6 +458,10 @@ export async function sendMessage(params: {
  * Mark a channel as read for a user
  * ✅ Calls server-side Netlify function
  */
+/**
+ * Mark a channel as read for a user
+ * Handles both deterministic IDs (dm-userA-userB) and database UUIDs
+ */
 export async function markChannelAsRead(
   userId: string,
   channelId: string
@@ -441,7 +469,40 @@ export async function markChannelAsRead(
   try {
     console.log(`📖 Marking channel ${channelId} as read for user ${userId}`);
 
-    // ✅ Call server-side Netlify function
+    // ✅ CRITICAL: If this is a deterministic DM ID (dm-...), we need to resolve it to database UUID
+    let backendChannelId = channelId;
+    
+    if (channelId.startsWith('dm-')) {
+      // Extract participant IDs from deterministic ID
+      const parts = channelId.replace('dm-', '').split('-');
+      if (parts.length === 2) {
+        // Look up the actual database UUID for this DM
+        const [userId1, userId2] = parts;
+        const participants = [userId1, userId2].sort();
+        
+        // Find channel by participants
+        const channels = await db
+          .select({ id: internalChannels.id })
+          .from(internalChannels)
+          .where(
+            and(
+              eq(internalChannels.type, 'dm'),
+              sql`${internalChannels.dmParticipants}::jsonb = ${JSON.stringify(participants)}::jsonb`
+            )
+          )
+          .limit(1);
+        
+        if (channels.length > 0) {
+          backendChannelId = channels[0].id;
+          console.log(`✅ Resolved deterministic ID ${channelId} to UUID ${backendChannelId}`);
+        } else {
+          console.warn(`⚠️ Could not find database UUID for ${channelId}`);
+          return; // Silently fail - channel might not exist yet
+        }
+      }
+    }
+
+    // ✅ Call server-side Netlify function with database UUID
     const response = await fetch('/.netlify/functions/chat-mark-read', {
       method: 'POST',
       headers: {
@@ -449,7 +510,7 @@ export async function markChannelAsRead(
       },
       body: JSON.stringify({
         userId,
-        channelId,
+        channelId: backendChannelId,  // Use resolved UUID
       }),
     });
 

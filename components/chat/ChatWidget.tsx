@@ -142,7 +142,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     
     // ⚡️ STEP 3: Call backend API (don't await - fire and forget)
     if (amountToClear > 0) {
-      markChannelAsRead(currentUserId, channelId).then(() => {
+      // ✅ CRITICAL: Use dbId (database UUID) for backend, not deterministic ID
+      const backendChannelId = channel.dbId || channel.id;
+      
+      markChannelAsRead(currentUserId, backendChannelId).then(() => {
         console.log('✅ Badge Clear: Server confirmed read');
       }).catch(err => {
         console.error('❌ Badge Clear: Server error:', err);
