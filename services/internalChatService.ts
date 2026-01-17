@@ -19,7 +19,7 @@ import {
   users,
   homeowners 
 } from '../db/schema';
-import { eq, and, desc, sql, or, ilike, ne, gt } from 'drizzle-orm';
+import { eq, and, desc, sql, or, ilike, ne, gt, inArray } from 'drizzle-orm';
 
 // Types
 export interface Channel {
@@ -290,7 +290,42 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
       })
     );
 
-    return channelsWithDetails;
+    // ✅ TASK 1: Filter out "zombie" channels with invalid/broken participant data
+    // Zombie channels appear when dmParticipants contains UUIDs instead of Clerk IDs,
+    // or when the otherUser lookup fails completely
+    const validChannels = channelsWithDetails.filter(ch => {
+      // 1. Always keep public channels
+      if (ch.type === 'public') return true;
+      
+      // 2. For DM channels, strictly validate the ID and otherUser
+      if (ch.type === 'dm') {
+        // DM channels MUST have a deterministic ID (dm-userA-userB)
+        if (!ch.id.startsWith('dm-')) {
+          console.warn(`👻 [getUserChannels] ZOMBIE: DM channel missing deterministic ID: ${ch.id}`);
+          return false;
+        }
+        
+        // DM channels MUST have otherUser data populated
+        if (!ch.otherUser) {
+          console.warn(`👻 [getUserChannels] ZOMBIE: DM channel missing otherUser data: ${ch.id}`);
+          return false;
+        }
+        
+        // DM otherUser MUST have a valid Clerk ID (starts with "user_")
+        if (!ch.otherUser.id || !ch.otherUser.id.startsWith('user_')) {
+          console.warn(`👻 [getUserChannels] ZOMBIE: DM otherUser has invalid ID: ${ch.otherUser.id}`);
+          return false;
+        }
+        
+        console.log(`✅ [getUserChannels] Valid DM: ${ch.id} -> ${ch.otherUser.name}`);
+      }
+      
+      return true;
+    });
+
+    console.log(`📋 [getUserChannels] Filtered channels: ${channelsWithDetails.length} -> ${validChannels.length} (removed ${channelsWithDetails.length - validChannels.length} zombies)`);
+
+    return validChannels;
   } catch (error) {
     console.error('❌ Error getting user channels:', error);
     throw error;
@@ -299,6 +334,7 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
 
 /**
  * Get all admin/employee users for DM discovery
+ * ✅ TASK 2: Ensure all ADMIN role users are included (Administrators, Employees, etc.)
  */
 export async function getAllTeamMembers(): Promise<Array<{
   id: string;
@@ -309,16 +345,33 @@ export async function getAllTeamMembers(): Promise<Array<{
   try {
     const teamMembers = await db
       .select({
-        id: users.clerkId,  // ✅ FIXED: Return Clerk ID for consistency with chat system
+        id: users.clerkId,  // ✅ Return Clerk ID for consistency with chat system
         name: users.name,
         email: users.email,
         internalRole: users.internalRole,
       })
       .from(users)
-      .where(eq(users.role, 'ADMIN'))  // ✅ FIX: Only ADMIN role (includes Administrators, Employees, etc.)
+      .where(
+        and(
+          eq(users.role, 'ADMIN'),  // ✅ Get all ADMIN users (includes all internal roles)
+          sql`${users.clerkId} IS NOT NULL`  // ✅ Exclude users without Clerk IDs
+        )
+      )
       .orderBy(users.name);
 
-    return teamMembers;
+    console.log(`📋 [getAllTeamMembers] Found ${teamMembers.length} team members with ADMIN role`);
+    
+    // ✅ Additional validation: Filter out any users with invalid Clerk IDs
+    const validMembers = teamMembers.filter(member => {
+      if (!member.id || !member.id.startsWith('user_')) {
+        console.warn(`⚠️ [getAllTeamMembers] Filtering out user with invalid Clerk ID: ${member.name} (${member.id})`);
+        return false;
+      }
+      return true;
+    });
+
+    console.log(`✅ [getAllTeamMembers] Returning ${validMembers.length} valid team members`);
+    return validMembers;
   } catch (error) {
     console.error('❌ Error getting team members:', error);
     throw error;
