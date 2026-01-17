@@ -194,7 +194,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     const channelName = `public-user-${currentUserId}`;
     const channel = pusher.subscribe(channelName);
 
-    channel.bind('new-message', (data: { channelId: string; message: Message }) => {
+    // 1. Define handlers INSIDE the effect
+    const handleNewMessage = (data: { channelId: string; message: Message }) => {
       if (data.channelId === channelId) {
         setMessages((prev) => {
           // ✅ CRITICAL: Prevent duplicates with strict ID-based deduplication
@@ -214,9 +215,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           markChannelAsRead(currentUserId, channelId);
         }
       }
-    });
+    };
 
-    channel.bind('typing-indicator', (data: {
+    const handleTypingIndicator = (data: {
       channelId: string;
       userId: string;
       userName: string;
@@ -231,10 +232,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           }
         });
       }
-    });
+    };
 
-    // ✅ FIX: Listen for read receipts (real-time blue checkmarks)
-    channel.bind('message-read', (data: { 
+    const handleMessageRead = (data: { 
       channelId: string;
       userId: string;
       readAt: string;
@@ -248,16 +248,24 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             : msg
         ));
       }
-    });
+    };
+
+    // 2. Bind SPECIFIC handlers
+    channel.bind('new-message', handleNewMessage);
+    channel.bind('message:new', handleNewMessage); // Bind both just in case
+    channel.bind('typing-indicator', handleTypingIndicator);
+    channel.bind('message-read', handleMessageRead);
 
     return () => {
-      console.log('🔌 [ChatWindow] Unbinding events (Leaving channel open)');
-      // ✅ Only remove the event listeners
-      channel.unbind('new-message');
-      channel.unbind('typing-indicator');
-      channel.unbind('message-read');
-      // ❌ DO NOT unsubscribe - keeps the shared Pusher connection alive
-      // pusher.unsubscribe(channelName);
+      // 3. Unbind ONLY these SPECIFIC handlers (CRITICAL: Pass exact function references)
+      console.log('🔌 [ChatWindow] Unbinding specific listeners');
+      channel.unbind('new-message', handleNewMessage);
+      channel.unbind('message:new', handleNewMessage);
+      channel.unbind('typing-indicator', handleTypingIndicator);
+      channel.unbind('message-read', handleMessageRead);
+      
+      // ❌ NEVER CALL: channel.unbind('new-message'); // This wipes ALL listeners!
+      // ❌ NEVER CALL: pusher.unsubscribe(channelName); // This kills the connection!
     };
   }, [channelId, currentUserId]);
 

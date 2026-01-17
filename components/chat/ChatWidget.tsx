@@ -188,6 +188,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     const pusher = getPusherClient();
     const channel = pusher.subscribe(channelName);
 
+    // 1. Define the handler INSIDE the effect
     const handleNewMessage = (data: { 
       channelId: string; 
       message: { 
@@ -242,15 +243,18 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
       setTotalUnreadCount(prev => prev + 1);
     };
 
-    // Bind to 'new-message' event (standard convention)
+    // 2. Bind SPECIFIC handler to both event names
     channel.bind('new-message', handleNewMessage);
+    channel.bind('message:new', handleNewMessage); // Bind both just in case
 
     return () => {
-      console.log('🔌 [ChatWidget] Unbinding events (Leaving channel open)');
-      // ✅ Only remove the event listener
+      // 3. Unbind ONLY this SPECIFIC handler (CRITICAL: Pass the exact function reference)
+      console.log('🔌 [ChatWidget] Unbinding specific listener');
       channel.unbind('new-message', handleNewMessage);
-      // ❌ DO NOT unsubscribe - keeps the shared Pusher connection alive
-      // pusher.unsubscribe(channelName);
+      channel.unbind('message:new', handleNewMessage);
+      
+      // ❌ NEVER CALL: channel.unbind('new-message'); // This wipes ALL listeners!
+      // ❌ NEVER CALL: pusher.unsubscribe(channelName); // This kills the connection!
     };
   }, [currentUserId]); // ⚡️ CRITICAL: Only depends on userId, NOT selectedChannel or loadUnreadCounts
 
