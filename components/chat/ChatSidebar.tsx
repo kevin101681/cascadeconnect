@@ -10,7 +10,7 @@
  * - No public channels (DMs only)
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Users, Loader2, MessageSquare, Search } from 'lucide-react';
 import {
   getUserChannels,
@@ -18,6 +18,7 @@ import {
   findOrCreateDmChannel,
   type Channel,
 } from '../../services/internalChatService';
+import { getPusherClient } from '../../lib/pusher-client';
 
 interface ChatSidebarProps {
   currentUserId: string;
@@ -43,13 +44,28 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const [isCreatingDm, setIsCreatingDm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // ⚡️ CRITICAL FIX: Use ref to access selectedChannelId without causing re-subscriptions
+  const selectedChannelIdRef = useRef<string | null>(null);
+  
+  // Keep ref synced with prop
+  useEffect(() => {
+    selectedChannelIdRef.current = selectedChannelId;
+  }, [selectedChannelId]);
+
   // Load user's channels (only DMs)
   const loadChannels = async () => {
     try {
       setIsLoadingChannels(true);
       const userChannels = await getUserChannels(currentUserId);
-      // Filter to only show DM channels
-      setChannels(userChannels.filter(ch => ch.type === 'dm'));
+      // Filter to only show DM channels and sort by most recent activity
+      const dmChannels = userChannels
+        .filter(ch => ch.type === 'dm')
+        .sort((a, b) => {
+          const aTime = a.lastMessage?.createdAt ? new Date(a.lastMessage.createdAt).getTime() : 0;
+          const bTime = b.lastMessage?.createdAt ? new Date(b.lastMessage.createdAt).getTime() : 0;
+          return bTime - aTime; // Most recent first
+        });
+      setChannels(dmChannels);
     } catch (error) {
       console.error('Error loading channels:', error);
     } finally {
@@ -82,6 +98,83 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
     loadChannels();
     loadTeamMembers();
   }, [currentUserId]);
+
+  // ⚡️ STABLE PUSHER LISTENER: Listen for new messages via Pusher
+  // CRITICAL: Only depends on currentUserId - NEVER re-subscribes when channels change
+  useEffect(() => {
+    if (!currentUserId) return;
+
+    console.log('🔌 [ChatSidebar] Setting up STABLE Pusher listener for user:', currentUserId);
+    
+    const pusher = getPusherClient();
+    const channel = pusher.subscribe('team-chat');
+
+    const handleNewMessage = (data: {
+      channelId: string;
+      message: {
+        id: string;
+        senderId: string;
+        senderName: string;
+        content: string;
+        createdAt: Date;
+      };
+    }) => {
+      console.log('⚡️ [ChatSidebar] Instant message received:', {
+        channelId: data.channelId,
+        senderId: data.message.senderId,
+        content: data.message.content.substring(0, 50)
+      });
+
+      // Use REF to check active channel (avoids stale closure)
+      const currentActiveId = selectedChannelIdRef.current;
+      const isChatOpen = currentActiveId === data.channelId;
+
+      // OPTIMISTIC UPDATE: Update the channel list instantly using functional update
+      setChannels((prevChannels) => {
+        const channelIndex = prevChannels.findIndex(ch => ch.id === data.channelId);
+        
+        if (channelIndex === -1) {
+          console.log('⚡️ [ChatSidebar] Channel not in list, will be added on next load');
+          return prevChannels;
+        }
+
+        const updatedChannels = [...prevChannels];
+        const existingChannel = updatedChannels[channelIndex];
+
+        // Update the channel with new last message
+        updatedChannels[channelIndex] = {
+          ...existingChannel,
+          lastMessage: {
+            content: data.message.content,
+            senderName: data.message.senderName,
+            createdAt: new Date(data.message.createdAt)
+          }
+        };
+
+        // Sort channels by most recent message (WhatsApp style)
+        updatedChannels.sort((a, b) => {
+          const aTime = a.lastMessage?.createdAt ? new Date(a.lastMessage.createdAt).getTime() : 0;
+          const bTime = b.lastMessage?.createdAt ? new Date(b.lastMessage.createdAt).getTime() : 0;
+          return bTime - aTime;
+        });
+
+        console.log('⚡️ [ChatSidebar] Channel moved to top:', {
+          channelId: data.channelId,
+          newPosition: updatedChannels.findIndex(ch => ch.id === data.channelId)
+        });
+
+        return updatedChannels;
+      });
+    };
+
+    channel.bind('new-message', handleNewMessage);
+
+    return () => {
+      console.log('🔌 [ChatSidebar] Cleaning up STABLE Pusher listener');
+      channel.unbind('new-message', handleNewMessage);
+      pusher.unsubscribe('team-chat');
+    };
+  }, [currentUserId]); // ⚡️ CRITICAL: Only depends on userId, NOT channels or selectedChannelId
 
   // Handle DM click: find or create channel
   const handleDmClick = async (userId: string, userName: string) => {

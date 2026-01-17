@@ -15,10 +15,10 @@
  */
 
 import type { Handler, HandlerEvent } from '@netlify/functions';
-import { Clerk } from '@clerk/backend';
+import { createClerkClient } from '@clerk/backend';
 
 // Initialize Clerk with server API key
-const clerk = new Clerk({ 
+const clerkClient = createClerkClient({ 
   secretKey: process.env.CLERK_SECRET_KEY 
 });
 
@@ -55,7 +55,7 @@ export const handler: Handler = async (event: HandlerEvent) => {
     }
 
     // Update user in Clerk
-    const updatedUser = await clerk.users.updateUser(clerkId, {
+    const updatedUser = await clerkClient.users.updateUser(clerkId, {
       firstName: updates.firstName,
       lastName: updates.lastName,
       publicMetadata: updates.publicMetadata || {},

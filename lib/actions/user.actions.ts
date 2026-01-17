@@ -13,8 +13,8 @@
 
 'use server'
 
-import { db, isDbConfigured } from '../db';
-import { users } from '../db/schema';
+import { db, isDbConfigured } from '../../db';
+import { users } from '../../db/schema';
 import { eq } from 'drizzle-orm';
 
 /**

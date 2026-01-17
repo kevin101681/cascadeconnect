@@ -357,9 +357,7 @@ function App() {
       lazySyncUser({
         id: authUser.id,
         primaryEmailAddress: authUser.primaryEmailAddress,
-        emailAddresses: authUser.user ? 
-          (authUser.user as any).emailAddresses : 
-          authUser.primaryEmailAddress ? [authUser.primaryEmailAddress] : [],
+        emailAddresses: authUser.primaryEmailAddress ? [authUser.primaryEmailAddress] : [],
         firstName: authUser.firstName,
         lastName: authUser.lastName,
         imageUrl: (authUser as any).imageUrl

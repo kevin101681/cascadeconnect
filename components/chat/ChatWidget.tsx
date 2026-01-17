@@ -11,7 +11,7 @@
  * - Responsive: Full screen on mobile, popover on desktop
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import { MessageCircle, X, ArrowLeft } from 'lucide-react';
 import { ChatWindow } from './ChatWindow';
 import { ChatSidebar } from './ChatSidebar';
@@ -37,6 +37,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+
+  // ⚡️ CRITICAL FIX: Use ref to access selectedChannel without causing re-subscriptions
+  const selectedChannelRef = useRef<Channel | null>(null);
+  
+  // Keep ref synced with state
+  useEffect(() => {
+    selectedChannelRef.current = selectedChannel;
+  }, [selectedChannel]);
 
   const isOpen = isOpenProp ?? internalIsOpen;
   const setIsOpen = (next: boolean) => {
@@ -91,20 +99,78 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     return () => clearInterval(interval);
   }, [loadUnreadCounts]);
 
-  // Listen for new messages to update unread count
+  // ⚡️ STABLE PUSHER LISTENER: Listen for new messages to update unread count INSTANTLY
+  // CRITICAL: Only depends on currentUserId - NEVER re-subscribes when selectedChannel changes
   useEffect(() => {
+    if (!currentUserId) return;
+
+    console.log('🔌 [ChatWidget] Setting up STABLE Pusher listener for user:', currentUserId);
+    
     const pusher = getPusherClient();
     const channel = pusher.subscribe('team-chat');
 
-    channel.bind('new-message', () => {
-      loadUnreadCounts();
-    });
+    const handleNewMessage = (data: { 
+      channelId: string; 
+      message: { 
+        id: string;
+        senderId: string; 
+        senderName: string;
+        content: string; 
+        createdAt: Date;
+      } 
+    }) => {
+      console.log('⚡️ [ChatWidget] Instant message received via Pusher:', {
+        channelId: data.channelId,
+        senderId: data.message.senderId,
+        content: data.message.content.substring(0, 50),
+        isCurrentUser: data.message.senderId === currentUserId
+      });
+
+      // If the message is from the current user, don't increment badge
+      if (data.message.senderId === currentUserId) {
+        console.log('⚡️ [ChatWidget] Message is from current user, skipping badge increment');
+        return;
+      }
+
+      // Use REF to check if we're viewing this channel (avoids stale closure)
+      const currentlyViewing = selectedChannelRef.current?.id === data.channelId;
+      
+      if (currentlyViewing) {
+        console.log('⚡️ [ChatWidget] Currently viewing this channel, skipping badge increment');
+        return;
+      }
+
+      // OPTIMISTIC UPDATE: Increment the badge count instantly using functional update
+      setUnreadCounts((prev) => {
+        const currentCount = prev[data.channelId] || 0;
+        const newCount = currentCount + 1;
+        
+        console.log('⚡️ [ChatWidget] Instant badge update:', {
+          channelId: data.channelId,
+          previousCount: currentCount,
+          newCount,
+          totalBefore: Object.values(prev).reduce((sum, count) => sum + count, 0),
+          totalAfter: Object.values(prev).reduce((sum, count) => sum + count, 0) + 1
+        });
+
+        return {
+          ...prev,
+          [data.channelId]: newCount
+        };
+      });
+
+      // Update total count
+      setTotalUnreadCount(prev => prev + 1);
+    };
+
+    channel.bind('new-message', handleNewMessage);
 
     return () => {
-      channel.unbind('new-message');
+      console.log('🔌 [ChatWidget] Cleaning up STABLE Pusher listener');
+      channel.unbind('new-message', handleNewMessage);
       pusher.unsubscribe('team-chat');
     };
-  }, [loadUnreadCounts]);
+  }, [currentUserId]); // ⚡️ CRITICAL: Only depends on userId, NOT selectedChannel or loadUnreadCounts
 
   const handleToggle = () => {
     setIsOpen(!isOpen);
