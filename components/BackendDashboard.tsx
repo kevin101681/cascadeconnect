@@ -1614,27 +1614,6 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
                       </div>
                     </div>
                   )}
-
-                  {/* Configuration Info */}
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">About Sentry Monitoring</h3>
-                        <div className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
-                          <p>
-                            Sentry tracks errors and exceptions in production. Data is fetched from Sentry's API using your auth token.
-                          </p>
-                          <p>
-                            <strong>Health Thresholds:</strong> Green (&lt;5 errors), Yellow (5-50 errors), Red (&gt;50 errors) in 24h period.
-                          </p>
-                          <p className="text-xs text-blue-700 dark:text-blue-300">
-                            To view full details, click "View" on any issue to open it in Sentry dashboard.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </>
               ) : (
                 <div className="text-center py-12 bg-surface-container dark:bg-gray-700 rounded-xl">
@@ -1733,27 +1712,6 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
                       </div>
                     </div>
                   )}
-
-                  {/* Info Card */}
-                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-2">About PostHog Analytics</h3>
-                        <div className="text-sm text-blue-800 dark:text-blue-200 space-y-2">
-                          <p>
-                            PostHog tracks user behavior, pageviews, and custom events. Data is fetched from PostHog's Query API.
-                          </p>
-                          <p>
-                            <strong>Current Metric:</strong> $pageview events over the last 7 days.
-                          </p>
-                          <p className="text-xs text-blue-700 dark:text-blue-300">
-                            For more detailed analytics, visit your PostHog dashboard.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </>
               ) : (
                 <div className="text-center py-12 bg-surface-container dark:bg-gray-700 rounded-xl">
