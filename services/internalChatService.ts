@@ -19,7 +19,7 @@ import {
   users,
   homeowners 
 } from '../db/schema';
-import { eq, and, desc, sql, or, ilike, ne, gt, inArray } from 'drizzle-orm';
+import { eq, and, desc, sql, or, ilike, ne, gt, inArray, isNotNull } from 'drizzle-orm';
 
 // Types
 export interface Channel {
@@ -334,7 +334,7 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
 
 /**
  * Get all admin/employee users for DM discovery
- * ✅ TASK 2: Ensure all ADMIN role users are included (Administrators, Employees, etc.)
+ * ✅ BROADENED: Includes all ADMIN role users regardless of internal_role
  * 🕵️‍♂️ SHERLOCK MODE: Enhanced logging to debug missing users
  */
 export async function getAllTeamMembers(): Promise<Array<{
@@ -368,7 +368,8 @@ export async function getAllTeamMembers(): Promise<Array<{
       clerkIdPrefix: u.clerkId?.substring(0, 10) || 'NULL',
     })));
 
-    // Now fetch ADMIN users specifically
+    // ✅ BROADENED: Fetch ALL users with role='ADMIN' (enum value)
+    // This includes users with any internalRole: "Administrator", "Employee", etc.
     const teamMembers = await db
       .select({
         id: users.clerkId,  // ✅ Return Clerk ID for consistency with chat system
@@ -380,8 +381,8 @@ export async function getAllTeamMembers(): Promise<Array<{
       .from(users)
       .where(
         and(
-          eq(users.role, 'ADMIN'),  // ✅ Get all ADMIN users
-          sql`${users.clerkId} IS NOT NULL`  // ✅ Exclude users without Clerk IDs
+          eq(users.role, 'ADMIN'),  // ✅ Only the ADMIN enum value (not HOMEOWNER or BUILDER)
+          isNotNull(users.clerkId)  // ✅ Must have a valid Clerk ID
         )
       )
       .orderBy(users.name);
@@ -396,12 +397,24 @@ export async function getAllTeamMembers(): Promise<Array<{
       idPrefix: m.id?.substring(0, 10) || 'NULL'
     })));
     
-    // ✅ Additional validation: Filter out any users with invalid Clerk IDs
+    // ✅ Validation: Ensure Clerk IDs are in the correct format
+    // BUT: Be more lenient - any non-null, non-empty string is acceptable
     const validMembers = teamMembers.filter(member => {
-      if (!member.id || !member.id.startsWith('user_')) {
-        console.warn(`⚠️ [getAllTeamMembers] Filtering out user with invalid Clerk ID: ${member.name} (${member.id})`);
+      // Must have an ID
+      if (!member.id) {
+        console.warn(`⚠️ [getAllTeamMembers] Filtering out user with NULL Clerk ID: ${member.name}`);
         return false;
       }
+      
+      // Must not be empty string
+      if (member.id.trim() === '') {
+        console.warn(`⚠️ [getAllTeamMembers] Filtering out user with EMPTY Clerk ID: ${member.name}`);
+        return false;
+      }
+      
+      // ✅ BROADENED: Accept ANY non-empty Clerk ID
+      // Removed the strict "user_" prefix requirement to catch edge cases
+      console.log(`✅ [getAllTeamMembers] Valid team member: ${member.name} (${member.id.substring(0, 10)}...)`);
       return true;
     });
 
@@ -409,6 +422,7 @@ export async function getAllTeamMembers(): Promise<Array<{
     console.log('🕵️‍♂️ [getAllTeamMembers] FINAL VALID MEMBERS:', validMembers.map(m => ({
       name: m.name,
       email: m.email,
+      internalRole: m.internalRole,
       clerkIdPrefix: m.id.substring(0, 10)
     })));
     
