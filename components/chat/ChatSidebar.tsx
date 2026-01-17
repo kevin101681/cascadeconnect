@@ -177,6 +177,20 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
 
   const filteredChannels = channels.filter((channel) => {
     const query = (searchQuery || "").toLowerCase();
+    
+    // Filter out channels with messy/raw UUIDs in name
+    // Keep only channels that have meaningful names or proper otherUser data
+    if (channel.type === 'dm') {
+      // For DMs, only show if we have a proper recipient name
+      const recipientName = getRecipientName(channel);
+      if (!recipientName || 
+          recipientName === 'Conversation' || 
+          recipientName.includes('dm-') ||
+          recipientName.match(/^[0-9a-f]{8}-[0-9a-f]{4}-/)) {  // Looks like UUID
+        return false;  // Hide messy DMs
+      }
+    }
+    
     if (!query) return true;
     
     const nameMatch = (getRecipientName(channel) || "").toLowerCase().includes(query);

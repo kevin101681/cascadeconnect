@@ -88,8 +88,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
   const handleSelectChannel = (channel: Channel) => {
     setSelectedChannel(channel);
-    // ✅ Immediately refresh counts (ChatWindow will call markChannelAsRead)
-    // Add a small delay to allow markChannelAsRead to complete
+    // ✅ Immediately clear unread count optimistically for better UX
+    setTotalUnreadCount(prev => Math.max(0, prev - (channel.unreadCount || 0)));
+    // Refresh counts after a short delay to get server confirmation
     setTimeout(loadUnreadCounts, 500);
   };
 
@@ -191,6 +192,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                   currentUserId={currentUserId}
                   currentUserName={currentUserName}
                   onOpenHomeownerModal={onOpenHomeownerModal}
+                  onMarkAsRead={loadUnreadCounts}
                   isCompact
                 />
               </div>

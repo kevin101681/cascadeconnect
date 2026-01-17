@@ -50,6 +50,7 @@ interface ChatWindowProps {
   currentUserId: string;
   currentUserName: string;
   onOpenHomeownerModal?: (homeownerId: string) => void;
+  onMarkAsRead?: () => void;  // ✅ Callback to notify parent when channel is marked as read
   isCompact?: boolean; // For popup mode
 }
 
@@ -60,6 +61,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   currentUserId,
   currentUserName,
   onOpenHomeownerModal,
+  onMarkAsRead,
   isCompact = false,
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -132,6 +134,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       });
       setMessages(msgs);
       await markChannelAsRead(currentUserId, channelId);
+      // ✅ Notify parent to refresh unread counts
+      onMarkAsRead?.();
       scrollToBottom();
     } catch (error) {
       console.error('❌ Error loading messages:', error);
