@@ -36,6 +36,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   const isOpen = isOpenProp ?? internalIsOpen;
   const setIsOpen = (next: boolean) => {
@@ -47,7 +48,18 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   const loadUnreadCounts = useCallback(async () => {
     try {
       const channels = await getUserChannels(currentUserId);
-      const total = channels.reduce((sum, ch) => sum + (ch.unreadCount || 0), 0);
+      
+      // Build individual channel counts map
+      const countsMap: Record<string, number> = {};
+      let total = 0;
+      
+      channels.forEach(ch => {
+        const count = ch.unreadCount || 0;
+        countsMap[ch.id] = count;
+        total += count;
+      });
+      
+      setUnreadCounts(countsMap);
       setTotalUnreadCount(total);
     } catch (error) {
       console.error('Error loading unread counts:', error);
@@ -87,21 +99,34 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   };
 
   const handleSelectChannel = (channel: Channel) => {
+    const channelId = channel.id;
+    
     console.log('🔔 Badge Clear: Selecting channel', {
-      channelId: channel.id,
+      channelId,
       channelName: channel.name,
       previousUnreadCount: channel.unreadCount,
+      storedUnreadCount: unreadCounts[channelId],
       currentTotal: totalUnreadCount
     });
     
-    setSelectedChannel(channel);
-    
-    // ⚡️ CRITICAL: Optimistic Update - Clear badge INSTANTLY
-    const amountToClear = channel.unreadCount || 0;
+    // ⚡️ STEP 1: OPTIMISTIC UPDATE - Clear badge INSTANTLY (before anything else)
+    const amountToClear = unreadCounts[channelId] || 0;
     
     if (amountToClear > 0) {
-      // 1. Subtract from Global Total (Red Badge)
-      setTotalUnreadCount(prev => {
+      // Clear this specific channel's count
+      setUnreadCounts((prev) => {
+        // If it's already 0, do nothing (saves a render)
+        if (!prev[channelId]) return prev;
+        
+        // Otherwise, return a new object with this specific channel set to 0
+        return {
+          ...prev,
+          [channelId]: 0
+        };
+      });
+      
+      // Update the Global Counter (Red Badge) immediately
+      setTotalUnreadCount((prev) => {
         const newTotal = Math.max(0, prev - amountToClear);
         console.log('🔔 Badge Clear: Optimistic update', {
           previousTotal: prev,
@@ -110,9 +135,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         });
         return newTotal;
       });
-      
-      // 2. Immediately mark as read in background (don't wait)
-      markChannelAsRead(currentUserId, channel.id).then(() => {
+    }
+    
+    // ⚡️ STEP 2: Set active channel (UI update)
+    setSelectedChannel(channel);
+    
+    // ⚡️ STEP 3: Call backend API (don't await - fire and forget)
+    if (amountToClear > 0) {
+      markChannelAsRead(currentUserId, channelId).then(() => {
         console.log('✅ Badge Clear: Server confirmed read');
       }).catch(err => {
         console.error('❌ Badge Clear: Server error:', err);
@@ -121,7 +151,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
       });
     }
     
-    // 3. Refresh counts after a short delay for server confirmation
+    // ⚡️ STEP 4: Server confirmation (delayed sync)
     setTimeout(() => {
       console.log('🔄 Badge Clear: Confirming with server...');
       loadUnreadCounts();
@@ -213,6 +243,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                   currentUserId={currentUserId}
                   selectedChannelId={null}
                   onSelectChannel={handleSelectChannel}
+                  unreadCountsOverride={unreadCounts}
                   isCompact
                 />
               </div>

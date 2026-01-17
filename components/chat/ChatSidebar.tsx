@@ -24,6 +24,7 @@ interface ChatSidebarProps {
   selectedChannelId: string | null;
   onSelectChannel: (channel: Channel) => void;
   isCompact?: boolean;
+  unreadCountsOverride?: Record<string, number>; // ✅ For optimistic updates from parent
 }
 
 export const ChatSidebar: React.FC<ChatSidebarProps> = ({
@@ -31,6 +32,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   selectedChannelId,
   onSelectChannel,
   isCompact = false,
+  unreadCountsOverride,
 }) => {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [teamMembers, setTeamMembers] = useState<
@@ -191,6 +193,16 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
     return channel.name || 'Conversation';
   };
 
+  // ✅ Get display unread count with optimistic override support
+  const getDisplayUnreadCount = (channel: Channel): number => {
+    // If parent provided an override (optimistic update), use it
+    if (unreadCountsOverride && channel.id in unreadCountsOverride) {
+      return unreadCountsOverride[channel.id];
+    }
+    // Otherwise use the channel's own count
+    return channel.unreadCount || 0;
+  };
+
   const filteredChannels = channels.filter((channel) => {
     const query = (searchQuery || "").toLowerCase();
     
@@ -266,12 +278,15 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                       )}
                     </div>
                     
-                    {/* Unread badge - Material 3 */}
-                    {channel.unreadCount && channel.unreadCount > 0 && (
-                      <div className="flex-shrink-0 h-5 min-w-[20px] px-1.5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-medium">
-                        {channel.unreadCount > 9 ? '9+' : channel.unreadCount}
-                      </div>
-                    )}
+                    {/* Unread badge - Material 3 with optimistic updates */}
+                    {(() => {
+                      const displayCount = getDisplayUnreadCount(channel);
+                      return displayCount > 0 ? (
+                        <div className="flex-shrink-0 h-5 min-w-[20px] px-1.5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-medium">
+                          {displayCount > 9 ? '9+' : displayCount}
+                        </div>
+                      ) : null;
+                    })()}
                   </button>
                 ))}
               </div>
