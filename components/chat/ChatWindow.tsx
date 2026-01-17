@@ -251,10 +251,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     });
 
     return () => {
+      console.log('🔌 [ChatWindow] Unbinding events (Leaving channel open)');
+      // ✅ Only remove the event listeners
       channel.unbind('new-message');
       channel.unbind('typing-indicator');
-      channel.unbind('message-read');  // ✅ Cleanup
-      pusher.unsubscribe(channelName);
+      channel.unbind('message-read');
+      // ❌ DO NOT unsubscribe - keeps the shared Pusher connection alive
+      // pusher.unsubscribe(channelName);
     };
   }, [channelId, currentUserId]);
 

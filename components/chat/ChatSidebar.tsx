@@ -173,9 +173,11 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
     channel.bind('new-message', handleNewMessage);
 
     return () => {
-      console.log('🔌 [ChatSidebar] Cleaning up STABLE Pusher listener from public channel');
+      console.log('🔌 [ChatSidebar] Unbinding events (Leaving channel open)');
+      // ✅ Only remove the event listener
       channel.unbind('new-message', handleNewMessage);
-      pusher.unsubscribe(channelName);
+      // ❌ DO NOT unsubscribe - keeps the shared Pusher connection alive
+      // pusher.unsubscribe(channelName);
     };
   }, [currentUserId]); // ⚡️ CRITICAL: Only depends on userId, NOT channels or selectedChannelId
 

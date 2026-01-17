@@ -89,11 +89,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     });
 
     return () => {
-      console.log('🕵️‍♂️ [PUSHER SNIFFER] Cleaning up global debug listener');
+      console.log('🕵️‍♂️ [PUSHER SNIFFER] Unbinding events (Leaving channel open)');
+      // ✅ Only remove the event listeners
       channel.unbind_global(globalHandler);
       pusher.connection.unbind('connected');
       pusher.connection.unbind('disconnected');
       pusher.connection.unbind('error');
+      // ❌ DO NOT unsubscribe - keeps the shared Pusher connection alive
+      // pusher.unsubscribe(channelName);
     };
   }, [currentUserId]); // Only run once per user
 
@@ -243,9 +246,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     channel.bind('new-message', handleNewMessage);
 
     return () => {
-      console.log('🔌 [ChatWidget] Cleaning up STABLE Pusher listener from public channel');
+      console.log('🔌 [ChatWidget] Unbinding events (Leaving channel open)');
+      // ✅ Only remove the event listener
       channel.unbind('new-message', handleNewMessage);
-      pusher.unsubscribe(channelName);
+      // ❌ DO NOT unsubscribe - keeps the shared Pusher connection alive
+      // pusher.unsubscribe(channelName);
     };
   }, [currentUserId]); // ⚡️ CRITICAL: Only depends on userId, NOT selectedChannel or loadUnreadCounts
 
