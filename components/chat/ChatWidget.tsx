@@ -73,7 +73,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
       
       channels.forEach(ch => {
         const count = ch.unreadCount || 0;
-        countsMap[ch.id] = count;  // ✅ Using ch.id (should be deterministic for DMs)
+        countsMap[ch.id] = count;
         total += count;
       });
       
@@ -83,8 +83,31 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         sampleKeys: Object.keys(countsMap).slice(0, 5)
       });
       
-      setUnreadCounts(countsMap);
-      setTotalUnreadCount(total);
+      // ⚡️ CRITICAL FIX: Use functional update to preserve real-time Pusher increments
+      // Don't blindly overwrite - merge with existing state, keeping higher values
+      setUnreadCounts(prev => {
+        const merged: Record<string, number> = { ...prev };
+        
+        // For each channel from database:
+        Object.keys(countsMap).forEach(channelId => {
+          const dbCount = countsMap[channelId];
+          const currentCount = prev[channelId] || 0;
+          
+          // Keep whichever count is higher (protects real-time increments)
+          merged[channelId] = Math.max(dbCount, currentCount);
+        });
+        
+        console.log('📊 Badge Sync: Merged counts (preserving real-time updates)', {
+          before: Object.keys(prev).length,
+          after: Object.keys(merged).length,
+          preserved: Object.keys(prev).filter(id => merged[id] > (countsMap[id] || 0))
+        });
+        
+        return merged;
+      });
+      
+      // Recalculate total from the merged state
+      setTotalUnreadCount(Object.values(countsMap).reduce((sum, count) => sum + count, 0));
     } catch (error) {
       console.error('Error loading unread counts:', error);
     }

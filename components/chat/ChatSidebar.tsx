@@ -305,13 +305,14 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
     return channel.name || 'Conversation';
   };
 
-  // ✅ Get display unread count with optimistic override support
+  // ✅ Get display unread count - Prioritize parent's real-time state
   const getDisplayUnreadCount = (channel: Channel): number => {
-    // If parent provided an override (optimistic update), use it
+    // The parent (ChatWidget) manages unread counts with real-time Pusher updates
+    // This "override" prop IS the source of truth for badge counts
     if (unreadCountsOverride && channel.id in unreadCountsOverride) {
       return unreadCountsOverride[channel.id];
     }
-    // Otherwise use the channel's own count
+    // Fallback to channel's own count (from database polling)
     return channel.unreadCount || 0;
   };
 
