@@ -208,7 +208,7 @@ export async function getAllTeamMembers(): Promise<Array<{
         internalRole: users.internalRole,
       })
       .from(users)
-      .where(eq(users.role, 'ADMIN'))
+      .where(ne(users.role, 'HOMEOWNER'))  // ✅ FIX: Include ADMIN & BUILDER, exclude only HOMEOWNER
       .orderBy(users.name);
 
     return teamMembers;

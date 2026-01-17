@@ -88,8 +88,18 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
   const handleSelectChannel = (channel: Channel) => {
     setSelectedChannel(channel);
-    // ✅ Immediately clear unread count optimistically for better UX
-    setTotalUnreadCount(prev => Math.max(0, prev - (channel.unreadCount || 0)));
+    
+    // ✅ OPTIMISTIC: Immediately clear unread count for better UX
+    const previousCount = channel.unreadCount || 0;
+    setTotalUnreadCount(prev => Math.max(0, prev - previousCount));
+    
+    // ✅ Immediately mark as read in background (don't wait)
+    if (previousCount > 0) {
+      markChannelAsRead(currentUserId, channel.id).catch(err => {
+        console.error('Error marking channel as read:', err);
+      });
+    }
+    
     // Refresh counts after a short delay to get server confirmation
     setTimeout(loadUnreadCounts, 500);
   };

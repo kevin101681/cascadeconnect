@@ -232,9 +232,27 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       }
     });
 
+    // ✅ FIX: Listen for read receipts (real-time blue checkmarks)
+    channel.bind('message-read', (data: { 
+      channelId: string;
+      userId: string;
+      readAt: string;
+    }) => {
+      if (data.channelId === channelId && data.userId !== currentUserId) {
+        console.log('✅ Message read event received:', data);
+        // Mark all MY messages in this channel as read
+        setMessages((prev) => prev.map((msg) => 
+          msg.senderId === currentUserId && !msg.readAt
+            ? { ...msg, readAt: new Date(data.readAt) }
+            : msg
+        ));
+      }
+    });
+
     return () => {
       channel.unbind('new-message');
       channel.unbind('typing-indicator');
+      channel.unbind('message-read');  // ✅ Cleanup
       pusher.unsubscribe('team-chat');
     };
   }, [channelId, currentUserId]);

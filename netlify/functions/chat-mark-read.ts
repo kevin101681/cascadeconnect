@@ -8,6 +8,7 @@ import { Handler } from '@netlify/functions';
 import { db } from '../../db';
 import { channelMembers } from '../../db/schema/internal-chat';
 import { eq, and } from 'drizzle-orm';
+import { triggerPusherEvent } from '../../lib/pusher-server';
 
 interface MarkReadRequest {
   userId: string;
@@ -51,10 +52,12 @@ export const handler: Handler = async (event) => {
 
     console.log(`📖 Marking channel ${channelId} as read for user ${userId}`);
 
+    const readAt = new Date();
+
     // Update lastReadAt timestamp
     await db
       .update(channelMembers)
-      .set({ lastReadAt: new Date() })
+      .set({ lastReadAt: readAt })
       .where(
         and(
           eq(channelMembers.userId, userId),
@@ -63,6 +66,20 @@ export const handler: Handler = async (event) => {
       );
 
     console.log(`✅ Channel marked as read`);
+
+    // ✅ CRITICAL: Trigger Pusher event for real-time blue checkmarks
+    // This notifies the sender that their messages have been read
+    try {
+      await triggerPusherEvent('team-chat', 'message-read', {
+        channelId,
+        userId,
+        readAt: readAt.toISOString(),
+      });
+      console.log(`✅ Pusher event triggered: message-read for channel ${channelId}`);
+    } catch (pusherError) {
+      console.error('⚠️ Failed to trigger Pusher event:', pusherError);
+      // Don't fail the request if Pusher fails - the DB update succeeded
+    }
 
     return {
       statusCode: 200,
