@@ -244,7 +244,7 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
           if (otherUserId) {
             const otherUserData = await db
               .select({
-                id: users.id,
+                id: users.clerkId,  // ✅ CRITICAL FIX: Return Clerk ID, not UUID
                 name: users.name,
                 email: users.email,
               })
@@ -254,7 +254,7 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
 
             if (otherUserData.length > 0) {
               otherUser = otherUserData[0];
-              console.log(`✅ [DM Channel] Found other user: ${otherUser.name}`);
+              console.log(`✅ [DM Channel] Found other user: ${otherUser.name} (Clerk ID: ${otherUser.id})`);
             } else {
               console.warn(`⚠️ [DM Channel] No user found for Clerk ID: ${otherUserId}`);
             }
