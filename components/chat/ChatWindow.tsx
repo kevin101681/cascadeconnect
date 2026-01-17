@@ -44,6 +44,7 @@ import {
 import { uploadToCloudinary } from '../../services/uploadService';
 import { useSpeechToText } from '../../lib/hooks/useSpeechToText';
 import { ToastContainer, Toast } from '../Toast';
+import { TypingIndicator } from './TypingIndicator'; // ✅ Import typing indicator
 
 interface ChatWindowProps {
   channelId: string;
@@ -77,7 +78,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [mentionSuggestions, setMentionSuggestions] = useState<HomeownerMention[]>([]);
   const [selectedMentions, setSelectedMentions] = useState<HomeownerMention[]>([]);
-  const [typingUsers, setTypingUsers] = useState<string[]>([]);
+  const [isOtherUserTyping, setIsOtherUserTyping] = useState(false); // ✅ Google-style single typing indicator
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
@@ -85,6 +86,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const typingStopTimeoutRef = useRef<NodeJS.Timeout | null>(null); // ✅ Safety timeout for typing indicator
+  const lastTypingSentRef = useRef<number>(0); // ✅ For throttling typing events
 
   // Voice-to-text integration
   const { 
@@ -224,22 +227,33 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       isTyping: boolean;
     }) => {
       if (data.channelId === channelId && data.userId !== currentUserId) {
-        setTypingUsers((prev) => {
-          if (data.isTyping) {
-            return prev.includes(data.userName) ? prev : [...prev, data.userName];
-          } else {
-            return prev.filter((name) => name !== data.userName);
+        // ✅ Google-style: Simple boolean state
+        setIsOtherUserTyping(data.isTyping);
+        
+        // ✅ Safety timeout: Auto-clear after 4 seconds if stop event is missed
+        if (data.isTyping) {
+          if (typingStopTimeoutRef.current) {
+            clearTimeout(typingStopTimeoutRef.current);
           }
-        });
+          typingStopTimeoutRef.current = setTimeout(() => {
+            setIsOtherUserTyping(false);
+          }, 4000);
+        } else {
+          // Clear safety timeout when we receive explicit stop
+          if (typingStopTimeoutRef.current) {
+            clearTimeout(typingStopTimeoutRef.current);
+            typingStopTimeoutRef.current = null;
+          }
+        }
       }
     };
 
     const handleMessageRead = (data: { 
       channelId: string;
-      userId: string;
+      readBy: string;
       readAt: string;
     }) => {
-      if (data.channelId === channelId && data.userId !== currentUserId) {
+      if (data.channelId === channelId && data.readBy !== currentUserId) {
         console.log('✅ Message read event received:', data);
         // Mark all MY messages in this channel as read
         setMessages((prev) => prev.map((msg) => 
@@ -253,24 +267,40 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     // 2. Bind SPECIFIC handlers
     channel.bind('new-message', handleNewMessage);
     channel.bind('message:new', handleNewMessage); // Bind both just in case
-    channel.bind('typing-indicator', handleTypingIndicator);
-    channel.bind('message-read', handleMessageRead);
+    channel.bind('user-typing', handleTypingIndicator); // ✅ Updated to match new event name
+    channel.bind('messages-read', handleMessageRead); // ✅ Updated event name
 
     return () => {
       // 3. Unbind ONLY these SPECIFIC handlers (CRITICAL: Pass exact function references)
       console.log('🔌 [ChatWindow] Unbinding specific listeners');
       channel.unbind('new-message', handleNewMessage);
       channel.unbind('message:new', handleNewMessage);
-      channel.unbind('typing-indicator', handleTypingIndicator);
-      channel.unbind('message-read', handleMessageRead);
+      channel.unbind('user-typing', handleTypingIndicator); // ✅ Updated to match new event name
+      channel.unbind('messages-read', handleMessageRead); // ✅ Updated event name
+      
+      // Clear typing timeout on cleanup
+      if (typingStopTimeoutRef.current) {
+        clearTimeout(typingStopTimeoutRef.current);
+      }
       
       // ❌ NEVER CALL: channel.unbind('new-message'); // This wipes ALL listeners!
       // ❌ NEVER CALL: pusher.unsubscribe(channelName); // This kills the connection!
     };
   }, [channelId, currentUserId]);
 
-  // Handle typing
+  // Handle typing with throttling (2 second intervals)
   const handleTyping = useCallback(() => {
+    const now = Date.now();
+    const timeSinceLastSent = now - lastTypingSentRef.current;
+    
+    // ✅ Throttle: Only send if 2 seconds have passed since last send
+    if (timeSinceLastSent < 2000) {
+      console.log('⏱️ Typing throttled (too soon)');
+      return;
+    }
+    
+    lastTypingSentRef.current = now;
+    
     sendTypingIndicator({
       channelId,
       userId: currentUserId,
@@ -283,7 +313,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       clearTimeout(typingTimeoutRef.current);
     }
 
-    // Set timeout to stop typing indicator
+    // Set timeout to stop typing indicator after 2 seconds of inactivity
     typingTimeoutRef.current = setTimeout(() => {
       sendTypingIndicator({
         channelId,
@@ -316,6 +346,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     } else {
       setMentionQuery(null);
     }
+  };
+
+  // ✅ Handle input blur - stop typing indicator
+  const handleInputBlur = () => {
+    sendTypingIndicator({
+      channelId,
+      userId: currentUserId,
+      userName: currentUserName,
+      isTyping: false,
+    });
   };
 
   // Search for homeowners when mention query changes
@@ -667,15 +707,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             </div>
           ))
         )}
+        
+        {/* ✅ Google-style typing indicator (no avatars, just bubble) */}
+        {isOtherUserTyping && (
+          <TypingIndicator className="ml-2 mb-2" />
+        )}
+        
         <div ref={messagesEndRef} />
       </div>
-
-      {/* Typing indicator */}
-      {typingUsers.length > 0 && (
-        <div className="px-4 py-1 text-sm text-gray-500">
-          {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
-        </div>
-      )}
 
       {/* Mention suggestions */}
       {mentionSuggestions.length > 0 && (
@@ -790,6 +829,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             ref={inputRef}
             value={inputValue}
             onChange={handleInputChange}
+            onBlur={handleInputBlur}
             onKeyPress={handleKeyPress}
             placeholder={`Message ${channelName}...`}
             rows={1}

@@ -2,12 +2,15 @@
  * NETLIFY FUNCTION: MARK CHAT AS READ
  * Updates the lastReadAt timestamp for a user in a channel
  * January 7, 2026
+ * 
+ * Features:
+ * - Real-time read receipts (notifies message senders)
  */
 
 import { Handler } from '@netlify/functions';
 import { db } from '../../db';
-import { channelMembers } from '../../db/schema/internal-chat';
-import { eq, and } from 'drizzle-orm';
+import { channelMembers, internalMessages, internalChannels } from '../../db/schema/internal-chat';
+import { eq, and, gt, desc, sql } from 'drizzle-orm';
 import { triggerPusherEvent } from '../../lib/pusher-server';
 
 interface MarkReadRequest {
@@ -81,17 +84,88 @@ export const handler: Handler = async (event) => {
 
     console.log(`✅ Channel marked as read`);
 
-    // ✅ CRITICAL: Trigger Pusher event for real-time blue checkmarks
-    // This notifies the sender that their messages have been read
+    // ✅ TASK 1: Identify senders of unread messages and notify them
     try {
-      await triggerPusherEvent('team-chat', 'message-read', {
-        channelId,
-        userId,
-        readAt: readAt.toISOString(),
-      });
-      console.log(`✅ Pusher event triggered: message-read for channel ${channelId}`);
+      // Get the channel info to determine if it's a DM or public channel
+      const channelInfo = await db
+        .select({
+          type: internalChannels.type,
+          dmParticipants: internalChannels.dmParticipants,
+        })
+        .from(internalChannels)
+        .where(eq(internalChannels.id, channelId))
+        .limit(1);
+
+      if (channelInfo.length === 0) {
+        console.warn(`⚠️ Channel not found: ${channelId}`);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ success: true }),
+        };
+      }
+
+      const channel = channelInfo[0];
+
+      // For DM channels, notify the other user
+      if (channel.type === 'dm' && channel.dmParticipants) {
+        const participants = channel.dmParticipants as string[];
+        const otherUserId = participants.find(id => id !== userId);
+
+        if (otherUserId) {
+          console.log(`📡 Notifying sender ${otherUserId} that their messages were read by ${userId}`);
+          
+          // Trigger event on the sender's public channel
+          await triggerPusherEvent(`public-user-${otherUserId}`, 'messages-read', {
+            channelId,
+            readBy: userId,
+            readAt: readAt.toISOString(),
+          });
+          
+          console.log(`✅ Read receipt sent to public-user-${otherUserId}`);
+        }
+      } else {
+        // For public channels, find all unique senders of unread messages
+        const lastReadResult = await db
+          .select({ lastReadAt: channelMembers.lastReadAt })
+          .from(channelMembers)
+          .where(
+            and(
+              eq(channelMembers.userId, userId),
+              eq(channelMembers.channelId, channelId)
+            )
+          )
+          .limit(1);
+
+        const lastReadAt = lastReadResult[0]?.lastReadAt || new Date(0);
+
+        // Get all unique senders who sent messages since last read
+        const unreadSenders = await db
+          .selectDistinct({ senderId: internalMessages.senderId })
+          .from(internalMessages)
+          .where(
+            and(
+              eq(internalMessages.channelId, channelId),
+              gt(internalMessages.createdAt, lastReadAt),
+              sql`${internalMessages.senderId} != ${userId}` // Don't notify self
+            )
+          );
+
+        // Notify each sender
+        for (const sender of unreadSenders) {
+          console.log(`📡 Notifying sender ${sender.senderId} in public channel`);
+          
+          await triggerPusherEvent(`public-user-${sender.senderId}`, 'messages-read', {
+            channelId,
+            readBy: userId,
+            readAt: readAt.toISOString(),
+          });
+          
+          console.log(`✅ Read receipt sent to public-user-${sender.senderId}`);
+        }
+      }
     } catch (pusherError) {
-      console.error('⚠️ Failed to trigger Pusher event:', pusherError);
+      console.error('⚠️ Failed to trigger Pusher read receipt event:', pusherError);
       // Don't fail the request if Pusher fails - the DB update succeeded
     }
 

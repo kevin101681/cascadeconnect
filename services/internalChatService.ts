@@ -686,27 +686,33 @@ export async function markChannelAsRead(
   channelId: string
 ): Promise<void> {
   try {
-    console.log(`📖 [Service] markChannelAsRead called`, {
+    console.log(`📖 [markChannelAsRead] CALLED - Making network request`, {
       inputChannelId: channelId,
       isDeterministic: channelId.startsWith('dm-'),
-      userId
+      userId,
+      endpoint: '/.netlify/functions/chat-mark-read'
     });
 
     // ✅ CRITICAL: Resolve deterministic ID to database UUID
     const backendChannelId = await resolveChannelId(channelId);
     
-    console.log(`📖 [Service] Channel ID resolution`, {
+    console.log(`📖 [markChannelAsRead] Channel ID resolution`, {
       input: channelId,
       resolved: backendChannelId,
       resolutionSucceeded: !!backendChannelId
     });
     
     if (!backendChannelId) {
-      console.warn(`⚠️ Cannot mark as read: channel ${channelId} does not exist`);
+      console.warn(`⚠️ [markChannelAsRead] Cannot mark as read: channel ${channelId} does not exist`);
       return; // Silently fail - channel doesn't exist yet
     }
 
-    // ✅ Call server-side Netlify function with database UUID
+    console.log(`📡 [markChannelAsRead] Sending POST request with payload:`, {
+      userId,
+      channelId: backendChannelId
+    });
+
+    // ✅ CRITICAL: This is a REAL network call (NOT stubbed)
     const response = await fetch('/.netlify/functions/chat-mark-read', {
       method: 'POST',
       headers: {
@@ -720,12 +726,17 @@ export async function markChannelAsRead(
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error(`❌ [markChannelAsRead] Network request failed:`, {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      });
       throw new Error(errorData.error || `Failed to mark as read: ${response.statusText}`);
     }
 
-    console.log(`✅ Channel marked as read`);
+    console.log(`✅ [markChannelAsRead] Network request successful - Channel marked as read`);
   } catch (error) {
-    console.error('❌ Error marking channel as read:', error);
+    console.error('❌ [markChannelAsRead] Error marking channel as read:', error);
     // Don't throw - marking as read is not critical
   }
 }
@@ -772,6 +783,7 @@ export async function searchHomeownersForMention(
 
 /**
  * Send typing indicator
+ * ✅ Calls server-side Netlify function with throttling
  */
 export async function sendTypingIndicator(params: {
   channelId: string;
@@ -780,12 +792,48 @@ export async function sendTypingIndicator(params: {
   isTyping: boolean;
 }): Promise<void> {
   try {
-    // NOTE: Typing indicators disabled until server-side Pusher endpoint is created
-    // pusher-server library cannot be used in browser/Vite (Node.js crypto incompatible)
-    // await triggerPusherEvent('team-chat', 'typing-indicator', params);
-    console.log('⌨️ Typing indicator (Pusher disabled):', params);
+    const { channelId, userId, userName, isTyping } = params;
+
+    console.log(`⌨️ [sendTypingIndicator] CALLED - Making network request`, {
+      channelId,
+      userId,
+      userName,
+      isTyping,
+      endpoint: '/.netlify/functions/chat-typing'
+    });
+
+    // Determine recipient for DM channels
+    let recipientId: string | undefined;
+    if (channelId.startsWith('dm-')) {
+      const participantsStr = channelId.substring(3);
+      const participants = participantsStr.split('-').filter(p => p.trim().length > 0);
+      recipientId = participants.find(id => id !== userId);
+      console.log(`📨 [sendTypingIndicator] DM channel detected, recipient: ${recipientId}`);
+    }
+
+    // ✅ CRITICAL: This is a REAL network call (NOT stubbed)
+    const response = await fetch('/.netlify/functions/chat-typing', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        recipientId,
+        channelId,
+        userId,
+        userName,
+        isTyping,
+      }),
+    });
+
+    if (!response.ok) {
+      console.warn('⚠️ Failed to send typing indicator:', response.statusText);
+      // Don't throw - typing indicators are not critical
+    } else {
+      console.log(`✅ [sendTypingIndicator] Network request successful: ${isTyping ? 'typing' : 'stopped'}`);
+    }
   } catch (error) {
-    console.error('❌ Error sending typing indicator:', error);
+    console.error('❌ [sendTypingIndicator] Error sending typing indicator:', error);
     // Don't throw - typing indicators are not critical
   }
 }
