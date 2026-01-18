@@ -111,9 +111,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
-  // Scroll to bottom
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // ✅ CRITICAL FIX: Aggressive scroll to bottom with behavior control
+  const scrollToBottom = (behavior: 'auto' | 'smooth' = 'auto') => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior, block: 'end' });
+    }
   };
 
   // Load messages
@@ -153,7 +155,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       await markChannelAsRead(currentUserId, channelId);
       // ✅ Notify parent to refresh unread counts
       onMarkAsRead?.();
-      scrollToBottom();
+      scrollToBottom('auto'); // Force scroll to bottom on initial load
     } catch (error) {
       console.error('❌ Error loading messages:', error);
     } finally {
@@ -167,26 +169,26 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     loadMessages();
   }, [loadMessages]);
 
-  // ✅ CRITICAL FIX: Invisible scroll pattern - scroll BEFORE paint, then reveal
+  // ✅ CRITICAL FIX: Initial load - Instant jump, then reveal (Visibility Hack)
   useLayoutEffect(() => {
     if (messages.length > 0) {
-      // Step 1: Scroll to bottom immediately (before paint)
-      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      // Step 1: Instant scroll to bottom BEFORE paint
+      scrollToBottom('auto');
       
-      // Step 2: Reveal chat after scroll is locked in place
+      // Step 2: Reveal chat after scroll is calculated (prevents visible jump)
       setTimeout(() => {
         setIsReady(true);
-      }, 50);
+      }, 100);
     } else {
-      // Reset ready state when no messages (loading state)
+      // Reset when switching to channel with no messages
       setIsReady(false);
     }
-  }, [channelId, messages.length === 0]); // Run on channel switch or when messages become available
+  }, [channelId]); // Only on channel switch
 
-  // Auto-scroll when new messages arrive - smooth scroll
+  // ✅ New messages - Smooth scroll (only when already visible)
   useEffect(() => {
-    if (messages.length > 0) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (isReady && messages.length > 0) {
+      scrollToBottom('smooth');
     }
   }, [messages.length, isOtherUserTyping]); // Smooth scroll for new messages/typing
 
@@ -621,8 +623,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         <h2 className="font-semibold text-gray-900 dark:text-white">{channelName}</h2>
       </div>
 
-      {/* Messages Area - Scrollable with Invisible Scroll Pattern */}
-      <div className={`flex-1 overflow-y-auto p-4 space-y-4 transition-opacity duration-200 ${isReady ? 'opacity-100' : 'opacity-0'}`}>
+      {/* Messages Area - Scrollable with massive bottom padding to prevent overlap */}
+      <div className={`flex-1 overflow-y-auto p-4 pb-24 space-y-4 transition-opacity duration-200 ${isReady ? 'opacity-100' : 'opacity-0'}`}>
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -733,13 +735,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           ))
         )}
         
-        {/* Scroll anchor - MUST be last element in scroll container */}
-        <div ref={messagesEndRef} />
+        {/* Invisible scroll anchor - MUST be last element */}
+        <div ref={messagesEndRef} className="h-1" />
       </div>
 
-      {/* ✅ CRITICAL FIX: Typing Indicator - Lifted higher above footer to prevent overlap */}
+      {/* ✅ CRITICAL FIX: Typing Indicator - Sits in padding space (85px from bottom) */}
       {isOtherUserTyping && (
-        <div className="absolute bottom-[calc(6.5rem+env(safe-area-inset-bottom))] md:bottom-[calc(5rem+env(safe-area-inset-bottom))] left-6 z-50 pointer-events-none">
+        <div className="absolute bottom-[85px] left-6 z-20 pointer-events-none">
           <TypingIndicator />
         </div>
       )}
