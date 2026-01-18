@@ -553,8 +553,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   };
 
-  // Render message with clickable mentions
-  const renderMessageContent = (message: Message) => {
+  // Render message with clickable mentions (adaptive styling based on sender)
+  const renderMessageContent = (message: Message, isCurrentUser: boolean) => {
     let content = message.content;
     const mentionRegex = /@\[([^\]]+)\]/g;
     const parts: React.ReactNode[] = [];
@@ -567,7 +567,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         parts.push(content.slice(lastIndex, match.index));
       }
 
-      // Add mention chip
+      // Add mention chip with adaptive styling
       const mentionText = match[1];
       const mentionData = message.mentions.find((m) => m.projectName === mentionText);
 
@@ -575,7 +575,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         <span
           key={match.index}
           onClick={() => mentionData && onOpenHomeownerModal?.(mentionData.homeownerId)}
-          className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 rounded-full text-sm cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-sm cursor-pointer transition-colors ${
+            isCurrentUser
+              ? 'bg-white/20 text-white hover:bg-white/30'
+              : 'bg-[#769cab]/10 text-[#769cab] hover:bg-[#769cab]/20'
+          }`}
         >
           <AtSign className="h-3 w-3" />
           {mentionText}
@@ -651,7 +655,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     </div>
                   )}
 
-                  {renderMessageContent(message)}
+                  {renderMessageContent(message, message.senderId === currentUserId)}
 
                   {/* Attachments */}
                   {message.attachments.length > 0 && (
