@@ -85,7 +85,7 @@ export function HomeownerCard({
   
   return (
     // Material 3 Design: Using semantic rounded-card token
-    <div className="bg-white dark:bg-gray-800 rounded-card border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group pb-16">
+    <div className="bg-white dark:bg-gray-800 rounded-card border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group">
       
       {/* HEADER: Name & Project */}
       <div className="flex flex-col mb-6">
@@ -153,49 +153,52 @@ export function HomeownerCard({
           </div>
         </div>
 
-        {/* Closing Date */}
-        <div className="flex items-start group/item">
-          <Calendar className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 shrink-0" />
-          <div className="flex flex-col">
-            <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Closing Date</span>
-            <span className={`text-sm ${closingDate ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
-              {closingDate || "--"}
-            </span>
+        {/* Closing Date Row with Action Buttons */}
+        <div className="flex justify-between items-start mt-4">
+          {/* Left: Closing Date */}
+          <div className="flex items-start group/item">
+            <Calendar className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 shrink-0" />
+            <div className="flex flex-col">
+              <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Closing Date</span>
+              <span className={`text-sm ${closingDate ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
+                {closingDate || "--"}
+              </span>
+            </div>
+          </div>
+
+          {/* Right: Action Buttons */}
+          <div className="flex items-center gap-2">
+            {/* View As Button */}
+            <Button
+              size="icon"
+              variant="outline"
+              className="rounded-full h-8 w-8 bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+              onClick={(e) => {
+                e.stopPropagation(); // CRITICAL: Stop card collapse
+                console.log("👁️ View As Clicked for:", name); // CRITICAL: Log verification
+                if (onViewAs) onViewAs();
+              }}
+              title="View As Homeowner"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+
+            {/* Edit Button */}
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-8 w-8 text-gray-500 hover:text-gray-900"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log("✏️ Edit Clicked");
+                if (onEdit) onEdit();
+              }}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
-      </div>
-
-      {/* Action Buttons - Bottom Right */}
-      <div className="flex items-center gap-2 mt-4 justify-end">
-        {/* View As Button */}
-        <Button
-          size="icon"
-          variant="outline"
-          className="rounded-full h-8 w-8 bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
-          onClick={(e) => {
-            e.stopPropagation(); // CRITICAL: Stop card collapse
-            console.log("👁️ View As Clicked for:", name); // CRITICAL: Log verification
-            if (onViewAs) onViewAs();
-          }}
-          title="View As Homeowner"
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-
-        {/* Edit Button */}
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-8 w-8 text-gray-500 hover:text-gray-900"
-          onClick={(e) => {
-            e.stopPropagation();
-            console.log("✏️ Edit Clicked");
-            if (onEdit) onEdit();
-          }}
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
       </div>
 
     </div>
