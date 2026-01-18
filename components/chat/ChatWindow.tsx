@@ -81,6 +81,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const [isOtherUserTyping, setIsOtherUserTyping] = useState(false); // ✅ Google-style single typing indicator
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [isReady, setIsReady] = useState(false); // ✅ Invisible scroll pattern
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -166,13 +167,21 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     loadMessages();
   }, [loadMessages]);
 
-  // ✅ CRITICAL FIX: Use useLayoutEffect for instant initial scroll (synchronous before paint)
+  // ✅ CRITICAL FIX: Invisible scroll pattern - scroll BEFORE paint, then reveal
   useLayoutEffect(() => {
     if (messages.length > 0) {
-      // Instant scroll without animation on channel change/mount
+      // Step 1: Scroll to bottom immediately (before paint)
       messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+      
+      // Step 2: Reveal chat after scroll is locked in place
+      setTimeout(() => {
+        setIsReady(true);
+      }, 50);
+    } else {
+      // Reset ready state when no messages (loading state)
+      setIsReady(false);
     }
-  }, [channelId]); // Only trigger on channel switch
+  }, [channelId, messages.length === 0]); // Run on channel switch or when messages become available
 
   // Auto-scroll when new messages arrive - smooth scroll
   useEffect(() => {
@@ -612,8 +621,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         <h2 className="font-semibold text-gray-900 dark:text-white">{channelName}</h2>
       </div>
 
-      {/* Messages Area - Scrollable */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Messages Area - Scrollable with Invisible Scroll Pattern */}
+      <div className={`flex-1 overflow-y-auto p-4 space-y-4 transition-opacity duration-200 ${isReady ? 'opacity-100' : 'opacity-0'}`}>
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -728,9 +737,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* ✅ CRITICAL FIX: Typing Indicator - OUTSIDE scroll container, positioned absolutely above footer */}
+      {/* ✅ CRITICAL FIX: Typing Indicator - Lifted higher above footer to prevent overlap */}
       {isOtherUserTyping && (
-        <div className="absolute bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-[calc(4rem+env(safe-area-inset-bottom))] left-6 z-50 pointer-events-none">
+        <div className="absolute bottom-[calc(6.5rem+env(safe-area-inset-bottom))] md:bottom-[calc(5rem+env(safe-area-inset-bottom))] left-6 z-50 pointer-events-none">
           <TypingIndicator />
         </div>
       )}
