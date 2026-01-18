@@ -6,6 +6,7 @@ import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Bu
 import { useDarkMode } from './DarkModeProvider';
 import { UserButton, useUser } from '@clerk/clerk-react';
 import GlobalSearch from './global/GlobalSearch';
+import NetlifyStatusIndicator from './layout/NetlifyStatusIndicator';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -248,6 +249,9 @@ const Layout: React.FC<LayoutProps> = ({
 
               {/* Right Actions */}
               <div className="flex items-center gap-4 flex-shrink-0">
+              {/* Netlify Status Indicator (Dev Tool) */}
+              <NetlifyStatusIndicator />
+              
               {/* Dark Mode Toggle */}
               <button
                 onClick={toggleDarkMode}
