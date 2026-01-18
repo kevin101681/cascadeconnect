@@ -9,6 +9,7 @@ import { db } from '../../db';
 import { internalMessages, internalChannels, channelMembers, users } from '../../db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { triggerPusherEvent } from '../../lib/pusher-server';
+import { sendSmartNotification } from '../../lib/services/pushService';
 
 interface SendMessageRequest {
   channelId: string;
@@ -246,7 +247,40 @@ export const handler: Handler = async (event) => {
       // Don't fail the request if Pusher fails - message is already saved
     }
 
-    // 6. Return the message
+    // 6. ✅ SEND PUSH NOTIFICATIONS
+    // Send push notifications to recipients (respects user preferences)
+    try {
+      if (channelId.startsWith('dm-')) {
+        const participantsStr = channelId.substring(3);
+        const participants = participantsStr.split('-').filter(p => p.trim().length > 0);
+        
+        // Send notification to each participant EXCEPT the sender
+        for (const userId of participants) {
+          if (userId !== senderId) {
+            const senderName = senderData[0]?.name || 'Someone';
+            const messagePreview = content?.substring(0, 100) || 'Sent an attachment';
+            
+            console.log(`📬 Sending push notification to user ${userId}`);
+            
+            // Fire and forget - don't wait for push notifications
+            sendSmartNotification(
+              userId,
+              'CHAT',
+              `New message from ${senderName}`,
+              messagePreview,
+              `/dashboard/chat?channel=${channelId}`
+            ).catch((pushError) => {
+              console.error('⚠️ Failed to send push notification (non-blocking):', pushError);
+            });
+          }
+        }
+      }
+    } catch (pushError) {
+      console.error('⚠️ Failed to send push notifications (message saved):', pushError);
+      // Don't fail the request if push notifications fail - message is already saved
+    }
+
+    // 7. Return the message
     return {
       statusCode: 200,
       headers,

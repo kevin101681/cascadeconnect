@@ -43,7 +43,16 @@ export const users = pgTable('users', {
   notifyClaims: boolean('notify_claims').default(true),
   notifyTasks: boolean('notify_tasks').default(true),
   notifyAppointments: boolean('notify_appointments').default(true),
-  // Push Notification Preferences
+  // Push Notification Preferences (7 core types)
+  notifyClaimSubmit: boolean('notify_claim_submit').default(true), // Claims submitted
+  notifyApptAcceptHomeowner: boolean('notify_appt_accept_homeowner').default(true), // Homeowner accepts appointment
+  notifyApptAcceptSub: boolean('notify_appt_accept_sub').default(true), // Subcontractor accepts appointment
+  notifyReschedule: boolean('notify_reschedule').default(true), // Reschedule requests
+  notifyNewTask: boolean('notify_new_task').default(true), // New task assigned
+  notifyNewMessage: boolean('notify_new_message').default(true), // Chat messages
+  notifyNewEnrollment: boolean('notify_new_enrollment').default(true), // New homeowner enrollment
+  
+  // Legacy push notification preferences (kept for backward compatibility)
   pushNotifyClaimSubmitted: boolean('push_notify_claim_submitted').default(false),
   pushNotifyHomeownerAcceptsAppointment: boolean('push_notify_homeowner_accepts_appointment').default(false),
   pushNotifySubAcceptsAppointment: boolean('push_notify_sub_accepts_appointment').default(false),
@@ -364,3 +373,14 @@ export const clients = pgTable('clients', {
 // --- 15. Internal Chat System (Team Messaging) ---
 // Import and export internal chat tables
 export * from './schema/internal-chat';
+
+// --- 16. Push Subscriptions (Universal Push Notification System) ---
+export const pushSubscriptions = pgTable('push_subscriptions', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id').notNull(), // Clerk ID of the user
+  endpoint: text('endpoint').notNull().unique(), // Push subscription endpoint
+  p256dhKey: text('p256dh_key').notNull(), // Encryption key
+  authKey: text('auth_key').notNull(), // Authentication secret
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});

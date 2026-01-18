@@ -35,6 +35,8 @@
     "create-email-logs-table": "tsx scripts/create-email-logs-table.ts",
     "create-appointments-tables": "tsx scripts/create-appointments-tables.ts",
     "create-internal-chat-tables": "tsx scripts/create-internal-chat-tables.ts",
+    "create-push-notifications-tables": "tsx scripts/create-push-notifications-tables.ts",
+    "setup-push-notifications": "tsx scripts/create-push-notifications-tables.ts",
     "disable-user-mfa": "tsx scripts/disable-user-mfa.ts",
     "check-cloudinary": "node scripts/check-cloudinary.js",
     "migrate:cbsbooks": "tsx scripts/migrate-cbsbooks.ts",
@@ -109,6 +111,7 @@
     "tailwind-merge": "^2.6.0",
     "twilio": "^5.11.1",
     "uuid": "^13.0.0",
+    "web-push": "^3.6.7",
     "xlsx": "^0.18.5",
     "zod": "^3.25.76",
     "zustand": "^5.0.9"
