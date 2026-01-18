@@ -13,7 +13,7 @@
  * - Works in both full-page and popup modes
  */
 
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from 'react';
 import { 
   Send, 
   Paperclip, 
@@ -112,9 +112,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
-  // Simple scroll to bottom - Force jump on every render/update
+  // Simple scroll to bottom for new messages only
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   // Load messages
@@ -167,10 +167,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     loadMessages();
   }, [loadMessages]);
 
-  // Force scroll to bottom on every render/update
-  useLayoutEffect(() => {
-    scrollToBottom();
-  }, [messages.length, channelId, isOtherUserTyping]);
+  // Scroll to bottom only when NEW messages arrive (not on initial load)
+  useEffect(() => {
+    if (messages.length > 0) {
+      scrollToBottom();
+    }
+  }, [messages.length]);
 
   // Sync transcript to input value
   useEffect(() => {
@@ -597,10 +599,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     return <div className="whitespace-pre-wrap break-words">{parts}</div>;
   };
 
+  // Memoized reversed messages for flex-col-reverse rendering
+  const reversedMessages = useMemo(() => [...messages].reverse(), [messages]);
+
   return (
     <div className={`flex flex-col h-full bg-white dark:bg-gray-900 relative ${isCompact ? '' : 'border border-gray-200 dark:border-gray-700 rounded-lg'}`}>
-      {/* Messages Area - Scrollable with reduced bottom padding */}
-      <div className="flex-1 overflow-y-auto p-4 pb-20 space-y-4">
+      {/* Messages Area - Instant loading with flex-col-reverse */}
+      <div className="flex-1 overflow-y-auto p-4 pb-20 flex flex-col-reverse space-y-reverse space-y-4">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -610,11 +615,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             No messages yet. Start the conversation!
           </div>
         ) : (
-          messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex gap-2 group ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
-            >
+          <>
+            {/* Scroll anchor - FIRST element (Visual Bottom) */}
+            <div ref={messagesEndRef} className="h-0 w-0" />
+            
+            {/* Messages render in reverse (oldest at top, newest at bottom visually) */}
+            {reversedMessages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex gap-2 group ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
+              >
               {/* Message content - WhatsApp style without avatars */}
               <div className={`flex flex-col max-w-[70%] ${message.senderId === currentUserId ? 'items-end' : 'items-start'}`}>
                 {/* Sender name (only show for other users' messages) */}
@@ -708,11 +718,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                 </div>
               </div>
             </div>
-          ))
+          ))}
+          </>
         )}
-        
-        {/* Invisible scroll anchor - MUST be last element */}
-        <div ref={messagesEndRef} className="h-1" />
       </div>
 
       {/* Typing Indicator - FLOATING ABOVE FOOTER */}
