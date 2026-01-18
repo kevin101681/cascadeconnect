@@ -602,29 +602,43 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   // Memoized reversed messages for flex-col-reverse rendering
   const reversedMessages = useMemo(() => [...messages].reverse(), [messages]);
 
+  // Chat Skeleton Loader - mimics actual layout
+  const ChatSkeleton = () => (
+    <div className="flex-1 flex flex-col-reverse p-4 pb-20 gap-4 overflow-y-hidden">
+      {[1, 2, 3, 4, 5, 6].map((i) => (
+        <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
+          <div 
+            className={`h-12 rounded-2xl animate-pulse ${
+              i % 2 === 0 
+                ? 'bg-gray-200 dark:bg-gray-700 w-1/2 rounded-br-none' 
+                : 'bg-gray-100 dark:bg-gray-800 w-1/3 rounded-bl-none'
+            }`} 
+          />
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <div className={`flex flex-col h-full bg-white dark:bg-gray-900 relative ${isCompact ? '' : 'border border-gray-200 dark:border-gray-700 rounded-lg'}`}>
       {/* Messages Area - Instant loading with flex-col-reverse */}
-      <div className="flex-1 overflow-y-auto p-4 pb-20 flex flex-col-reverse space-y-reverse space-y-4">
-        {isLoading ? (
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500">
-            No messages yet. Start the conversation!
-          </div>
-        ) : (
-          <>
-            {/* Scroll anchor - FIRST element (Visual Bottom) */}
-            <div ref={messagesEndRef} className="h-0 w-0" />
-            
-            {/* Messages render in reverse (oldest at top, newest at bottom visually) */}
-            {reversedMessages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex gap-2 group ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
-              >
+      {isLoading ? (
+        <ChatSkeleton />
+      ) : messages.length === 0 ? (
+        <div className="flex-1 flex items-center justify-center text-gray-500">
+          No messages yet. Start the conversation!
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto p-4 pb-20 flex flex-col-reverse space-y-reverse space-y-4">
+          {/* Scroll anchor - FIRST element (Visual Bottom) */}
+          <div ref={messagesEndRef} className="h-0 w-0" />
+          
+          {/* Messages render in reverse (oldest at top, newest at bottom visually) */}
+          {reversedMessages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex gap-2 group ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
+            >
               {/* Message content - WhatsApp style without avatars */}
               <div className={`flex flex-col max-w-[70%] ${message.senderId === currentUserId ? 'items-end' : 'items-start'}`}>
                 {/* Sender name (only show for other users' messages) */}
@@ -719,9 +733,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
               </div>
             </div>
           ))}
-          </>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Typing Indicator - FLOATING ABOVE FOOTER */}
       {isOtherUserTyping && (
