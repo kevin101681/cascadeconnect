@@ -39,8 +39,8 @@ const NetlifyStatusIndicator: React.FC = () => {
     // Check immediately
     checkStatus();
 
-    // Poll every 10 seconds
-    const interval = setInterval(checkStatus, 10000);
+    // Poll every 2 seconds
+    const interval = setInterval(checkStatus, 2000);
 
     return () => clearInterval(interval);
   }, [siteId]);

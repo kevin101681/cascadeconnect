@@ -10,7 +10,7 @@ A subtle visual indicator in the Dashboard Header that shows the current Netlify
 1. **Created:** `components/layout/NetlifyStatusIndicator.tsx`
    - Main component that polls Netlify badge API
    - Auto-hides if `VITE_NETLIFY_SITE_ID` is not set
-   - Polls every 10 seconds
+   - Polls every 2 seconds for rapid updates
 
 2. **Modified:** `components/Layout.tsx`
    - Added import for `NetlifyStatusIndicator`
@@ -20,7 +20,8 @@ A subtle visual indicator in the Dashboard Header that shows the current Netlify
 
 ### Environment Variable
 - **Required:** `VITE_NETLIFY_SITE_ID` in your `.env` file
-- If not set, the indicator won't render (perfect for production)
+- If not set, the indicator won't render
+- **Production:** Add this env var to your Netlify deployment settings to show the indicator in production
 
 ### Status Detection
 The component makes a `HEAD` request to:
@@ -38,7 +39,7 @@ It checks the `Content-Disposition` header for status strings:
 - **Size:** 12px circle (`w-3 h-3`)
 - **Border:** White with 20% opacity for subtle elevation
 - **Position:** In header, before dark mode toggle
-- **Behavior:** Polls every 10 seconds for updates
+- **Behavior:** Polls every 2 seconds for rapid updates
 - **Accessibility:** Includes `title` and `aria-label` for tooltips
 
 ## Usage
@@ -57,7 +58,7 @@ It checks the `Content-Disposition` header for status strings:
 ### Testing
 The indicator will:
 - ✅ Show immediately on page load
-- ✅ Update every 10 seconds
+- ✅ Update every 2 seconds
 - ✅ Hide if env var is missing
 - ✅ Hide if status is unknown/error
 - ✅ Show tooltip on hover
@@ -73,10 +74,17 @@ The indicator will:
 
 ## Production Deployment
 
-The indicator is safe for production:
-- If `VITE_NETLIFY_SITE_ID` is not in production env vars, it won't render
+To show the indicator in production:
+1. Go to your Netlify site dashboard
+2. Navigate to: **Site configuration → Environment variables**
+3. Add `VITE_NETLIFY_SITE_ID` with your site ID value
+4. Redeploy your site
+
+The indicator will:
+- Show in production when `VITE_NETLIFY_SITE_ID` is set in Netlify env vars
+- Auto-hide if the env var is not configured
 - No errors or console warnings if missing
-- Zero impact on bundle size when not used
+- Polls every 2 seconds for real-time deploy status
 
 ## Future Enhancements (Optional)
 
