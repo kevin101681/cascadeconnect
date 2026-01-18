@@ -30,7 +30,8 @@ import {
   MicOff,
   Check,
   CheckCheck,
-  ArrowRight
+  ArrowRight,
+  SendHorizontal
 } from 'lucide-react';
 import { getPusherClient } from '../../lib/pusher-client';
 import {
@@ -838,13 +839,17 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             style={{ minHeight: '40px', maxHeight: '120px' }}
           />
 
-          {/* Send button - Pill shaped with white background and blue border */}
+          {/* Send button - Clean ghost style */}
           <button
             onClick={handleSendMessage}
             disabled={isSending || (!inputValue.trim() && attachments.length === 0)}
-            className="p-3 bg-white border-2 border-blue-500 text-blue-500 rounded-full hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
           >
-            {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
+            {isSending ? (
+              <Loader2 className="w-6 h-6 text-[#769cab] animate-spin" />
+            ) : (
+              <SendHorizontal className="w-6 h-6 text-[#769cab]" />
+            )}
           </button>
         </div>
       </div>
