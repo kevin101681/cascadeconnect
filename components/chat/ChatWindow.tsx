@@ -13,7 +13,7 @@
  * - Works in both full-page and popup modes
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react';
 import { 
   Send, 
   Paperclip, 
@@ -166,13 +166,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     loadMessages();
   }, [loadMessages]);
 
-  // ✅ CRITICAL: Initial scroll on channel change - instant jump to bottom
-  useEffect(() => {
+  // ✅ CRITICAL FIX: Use useLayoutEffect for instant initial scroll (synchronous before paint)
+  useLayoutEffect(() => {
     if (messages.length > 0) {
-      // Use setTimeout to ensure DOM is fully painted
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'auto' }); // 'auto' = instant jump
-      }, 100);
+      // Instant scroll without animation on channel change/mount
+      messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
     }
   }, [channelId]); // Only trigger on channel switch
 
@@ -181,7 +179,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     if (messages.length > 0) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [messages.length, isOtherUserTyping]); // Combine both triggers
+  }, [messages.length, isOtherUserTyping]); // Smooth scroll for new messages/typing
 
   // Sync transcript to input value
   useEffect(() => {
@@ -605,7 +603,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   };
 
   return (
-    <div className={`flex flex-col h-full bg-white dark:bg-gray-900 ${isCompact ? '' : 'border border-gray-200 dark:border-gray-700 rounded-lg'}`}>
+    <div className={`flex flex-col h-full bg-white dark:bg-gray-900 relative ${isCompact ? '' : 'border border-gray-200 dark:border-gray-700 rounded-lg'}`}>
       {/* Header */}
       <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex-shrink-0">
         {channelType === 'public' && (
@@ -614,8 +612,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         <h2 className="font-semibold text-gray-900 dark:text-white">{channelName}</h2>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 pb-14 space-y-4 relative">
+      {/* Messages Area - Scrollable */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -726,15 +724,16 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           ))
         )}
         
+        {/* Scroll anchor - MUST be last element in scroll container */}
         <div ref={messagesEndRef} />
-        
-        {/* ✅ Absolute positioned typing indicator to prevent layout jump */}
-        {isOtherUserTyping && (
-          <div className="absolute bottom-2 left-4 z-10 pointer-events-none">
-            <TypingIndicator />
-          </div>
-        )}
       </div>
+
+      {/* ✅ CRITICAL FIX: Typing Indicator - OUTSIDE scroll container, positioned absolutely above footer */}
+      {isOtherUserTyping && (
+        <div className="absolute bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-[calc(4rem+env(safe-area-inset-bottom))] left-6 z-50 pointer-events-none">
+          <TypingIndicator />
+        </div>
+      )}
 
       {/* Mention suggestions */}
       {mentionSuggestions.length > 0 && (
