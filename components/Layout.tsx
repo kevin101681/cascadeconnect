@@ -263,10 +263,11 @@ const Layout: React.FC<LayoutProps> = ({
               
               {/* Homeowner Switcher - Show if homeowner has multiple properties with same email */}
               {!isAdmin && !isBuilder && (() => {
-                // Find all homeowners with the same email as the active homeowner
-                const sameEmailHomeowners = homeowners.filter(h => 
-                  h.email.toLowerCase() === activeHomeowner.email.toLowerCase()
-                );
+                // Find all homeowners with the same email as the active homeowner (handle null emails)
+                const activeEmail = (activeHomeowner.email || '').toLowerCase();
+                const sameEmailHomeowners = activeEmail 
+                  ? homeowners.filter(h => (h.email || '').toLowerCase() === activeEmail)
+                  : [];
                 
                 // Only show switcher if there are multiple properties with same email
                 if (sameEmailHomeowners.length <= 1) return null;

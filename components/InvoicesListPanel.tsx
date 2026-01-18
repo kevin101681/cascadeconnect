@@ -130,11 +130,11 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
       )
     : filteredInvoices;
 
-  // Filter builders by search query
+  // Filter builders by search query (handle null email/companyName gracefully)
   const displayBuilders = searchQuery
     ? builders.filter(b => 
-        b.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        b.email.toLowerCase().includes(searchQuery.toLowerCase())
+        (b.companyName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (b.email || '').toLowerCase().includes(searchQuery.toLowerCase())
       )
     : builders;
 

@@ -546,13 +546,14 @@ function App() {
               // that might be pending database sync (added in same session before refresh)
               setHomeowners(prev => {
                 const dbIds = new Set(mappedHomeowners.map(h => h.id));
-                const dbEmails = new Set(mappedHomeowners.map(h => h.email.toLowerCase()));
+                const dbEmails = new Set(mappedHomeowners.map(h => (h.email || '').toLowerCase()).filter(e => e));
                 
                 // Find local-only homeowners that aren't in DB yet
                 // Match by both ID and email to catch duplicates
                 const localOnly = prev.filter(h => {
                   const notInDbById = !dbIds.has(h.id);
-                  const notInDbByEmail = !dbEmails.has(h.email.toLowerCase());
+                  const hEmail = (h.email || '').toLowerCase();
+                  const notInDbByEmail = !hEmail || !dbEmails.has(hEmail);
                   // Include if not in DB by ID OR email (to catch cases where ID differs but email match)
                   return notInDbById && notInDbByEmail;
                 });
@@ -977,8 +978,8 @@ function App() {
            // Clerk user is mapped to authUser format in useUser hook
            const email = authUser.primaryEmailAddress?.emailAddress.toLowerCase();
            if (email) {
-              // 1. Check Employees
-              const emp = loadedEmployees.find(e => e.email.toLowerCase() === email);
+              // 1. Check Employees (handle null emails gracefully)
+              const emp = loadedEmployees.find(e => (e.email || '').toLowerCase() === email);
               if (emp) {
                  console.log('✅ User logged in as employee:', emp.name, 'Role:', emp.role);
                  setUserRole(UserRole.ADMIN);
@@ -987,8 +988,8 @@ function App() {
                  return;
               }
 
-              // 2. Check Builders
-              const builder = loadedBuilders.find(b => b.email.toLowerCase() === email);
+              // 2. Check Builders (handle null emails gracefully)
+              const builder = loadedBuilders.find(b => (b.email || '').toLowerCase() === email);
               if (builder) {
                  setUserRole(UserRole.BUILDER);
                  setCurrentBuilderId(builder.builderGroupId);
@@ -996,8 +997,8 @@ function App() {
                  return;
               }
 
-              // 3. Check Homeowners - handle multiple homeowners with same email
-              const matchingHomeowners = loadedHomeowners.filter(home => home.email.toLowerCase() === email);
+              // 3. Check Homeowners - handle multiple homeowners with same email (handle null emails gracefully)
+              const matchingHomeowners = loadedHomeowners.filter(home => (home.email || '').toLowerCase() === email);
               if (matchingHomeowners.length > 0) {
                  setUserRole(UserRole.HOMEOWNER);
                  
@@ -1420,8 +1421,8 @@ function App() {
 
   const searchResults = searchQuery 
     ? availableHomeowners.filter(h => 
-        h.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        h.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (h.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+        (h.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         (h.jobName && h.jobName.toLowerCase().includes(searchQuery.toLowerCase()))
       )
     : [];
@@ -2543,10 +2544,10 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
         const name = findColumn(subRow, ['name', 'contact name', 'contact', 'company name', 'company', 'sub name', 'subcontractor name']);
         
         // Check if contractor already exists by email or name (check both local state and database)
-        const existingContractorByEmail = contractors.find(c => c.email.toLowerCase().trim() === normalizedEmail);
+        const existingContractorByEmail = contractors.find(c => (c.email || '').toLowerCase().trim() === normalizedEmail);
         const existingContractorByName = name ? contractors.find(c => 
-          c.contactName?.toLowerCase().trim() === name.toLowerCase().trim() ||
-          c.companyName.toLowerCase().trim() === name.toLowerCase().trim()
+          (c.contactName || '').toLowerCase().trim() === name.toLowerCase().trim() ||
+          (c.companyName || '').toLowerCase().trim() === name.toLowerCase().trim()
         ) : null;
         
         if (existingContractorByEmail || existingContractorByName) {
@@ -3800,10 +3801,10 @@ Assigned By: ${assignerName}
         const name = findColumn(subRow, ['name', 'contact name', 'contact', 'company name', 'company', 'sub name', 'subcontractor name']);
         
         // Check if contractor already exists by email or name (check both local state and database)
-        const existingContractorByEmail = contractors.find(c => c.email.toLowerCase().trim() === normalizedEmail);
+        const existingContractorByEmail = contractors.find(c => (c.email || '').toLowerCase().trim() === normalizedEmail);
         const existingContractorByName = name ? contractors.find(c => 
-          c.contactName?.toLowerCase().trim() === name.toLowerCase().trim() ||
-          c.companyName.toLowerCase().trim() === name.toLowerCase().trim()
+          (c.contactName || '').toLowerCase().trim() === name.toLowerCase().trim() ||
+          (c.companyName || '').toLowerCase().trim() === name.toLowerCase().trim()
         ) : null;
         
         if (existingContractorByEmail || existingContractorByName) {
