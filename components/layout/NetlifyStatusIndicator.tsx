@@ -14,24 +14,17 @@ const NetlifyStatusIndicator: React.FC = () => {
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        const url = `https://api.netlify.com/api/v1/badges/${siteId}/deploy-status`;
-        const response = await fetch(url, { method: 'HEAD' });
+        // Use backend proxy to avoid CORS header restrictions
+        const res = await fetch('/.netlify/functions/deploy-status');
+        const data = await res.json();
         
-        const contentDisposition = response.headers.get('Content-Disposition');
-        
-        if (contentDisposition) {
-          if (contentDisposition.includes('success')) {
-            setStatus('success');
-          } else if (contentDisposition.includes('building')) {
-            setStatus('building');
-          } else if (contentDisposition.includes('failed')) {
-            setStatus('failed');
-          } else {
-            setStatus('unknown');
-          }
+        if (data.status && data.status !== 'unknown') {
+          setStatus(data.status as DeployStatus);
+        } else {
+          setStatus('unknown');
         }
       } catch (error) {
-        console.error('Failed to check Netlify status:', error);
+        console.error('Status check failed:', error);
         setStatus('unknown');
       }
     };
