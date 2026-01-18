@@ -134,10 +134,13 @@ export function usePushNotifications(): UsePushNotificationsResult {
 
         console.log('[usePushNotifications] Subscribing to push manager...');
 
+        // Convert VAPID key to Uint8Array (BufferSource for PushManager)
+        const applicationServerKey: BufferSource = urlBase64ToUint8Array(vapidPublicKey);
+
         // Subscribe to push manager
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+          applicationServerKey,
         });
 
         console.log('[usePushNotifications] Push subscription created:', subscription);
