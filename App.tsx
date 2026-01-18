@@ -1420,9 +1420,9 @@ function App() {
 
   const searchResults = searchQuery 
     ? availableHomeowners.filter(h => 
-        h.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        h.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (h.jobName && h.jobName.toLowerCase().includes(searchQuery.toLowerCase()))
+        (h.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+        (h.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (h.jobName || '').toLowerCase().includes(searchQuery.toLowerCase())
       )
     : [];
 

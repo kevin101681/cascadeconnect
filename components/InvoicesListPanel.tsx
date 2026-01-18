@@ -121,20 +121,20 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Filter invoices by search query
+  // Filter invoices by search query (with null safety)
   const displayInvoices = searchQuery
     ? filteredInvoices.filter(inv => 
-        inv.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        inv.clientName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        inv.projectDetails?.toLowerCase().includes(searchQuery.toLowerCase())
+        (inv.invoiceNumber || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (inv.clientName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (inv.projectDetails || '').toLowerCase().includes(searchQuery.toLowerCase())
       )
     : filteredInvoices;
 
-  // Filter builders by search query
+  // Filter builders by search query (with null safety)
   const displayBuilders = searchQuery
     ? builders.filter(b => 
-        b.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        b.email.toLowerCase().includes(searchQuery.toLowerCase())
+        (b.companyName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (b.email || '').toLowerCase().includes(searchQuery.toLowerCase())
       )
     : builders;
 
