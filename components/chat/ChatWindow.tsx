@@ -81,7 +81,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const [isOtherUserTyping, setIsOtherUserTyping] = useState(false); // ✅ Google-style single typing indicator
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
-  const [isReady, setIsReady] = useState(false); // ✅ Invisible scroll pattern
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -111,11 +110,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     setToasts(prev => prev.filter(t => t.id !== id));
   };
 
-  // ✅ CRITICAL FIX: Aggressive scroll to bottom with behavior control
-  const scrollToBottom = (behavior: 'auto' | 'smooth' = 'auto') => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior, block: 'end' });
-    }
+  // Simple scroll to bottom - Force jump on every render/update
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
   };
 
   // Load messages
@@ -155,7 +152,6 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       await markChannelAsRead(currentUserId, channelId);
       // ✅ Notify parent to refresh unread counts
       onMarkAsRead?.();
-      scrollToBottom('auto'); // Force scroll to bottom on initial load
     } catch (error) {
       console.error('❌ Error loading messages:', error);
     } finally {
@@ -169,28 +165,10 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     loadMessages();
   }, [loadMessages]);
 
-  // ✅ CRITICAL FIX: Initial load - Instant jump, then reveal (Visibility Hack)
+  // Force scroll to bottom on every render/update
   useLayoutEffect(() => {
-    if (messages.length > 0) {
-      // Step 1: Instant scroll to bottom BEFORE paint
-      scrollToBottom('auto');
-      
-      // Step 2: Reveal chat after scroll is calculated (prevents visible jump)
-      setTimeout(() => {
-        setIsReady(true);
-      }, 100);
-    } else {
-      // Reset when switching to channel with no messages
-      setIsReady(false);
-    }
-  }, [channelId]); // Only on channel switch
-
-  // ✅ New messages - Smooth scroll (only when already visible)
-  useEffect(() => {
-    if (isReady && messages.length > 0) {
-      scrollToBottom('smooth');
-    }
-  }, [messages.length, isOtherUserTyping]); // Smooth scroll for new messages/typing
+    scrollToBottom();
+  }, [messages.length, channelId, isOtherUserTyping]);
 
   // Sync transcript to input value
   useEffect(() => {
@@ -624,7 +602,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       </div>
 
       {/* Messages Area - Scrollable with massive bottom padding to prevent overlap */}
-      <div className={`flex-1 overflow-y-auto p-4 pb-24 space-y-4 transition-opacity duration-200 ${isReady ? 'opacity-100' : 'opacity-0'}`}>
+      <div className="flex-1 overflow-y-auto p-4 pb-32 space-y-4">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -739,9 +717,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         <div ref={messagesEndRef} className="h-1" />
       </div>
 
-      {/* ✅ CRITICAL FIX: Typing Indicator - Sits in padding space (85px from bottom) */}
+      {/* Typing Indicator - FLOATING ABOVE FOOTER */}
       {isOtherUserTyping && (
-        <div className="absolute bottom-[85px] left-6 z-20 pointer-events-none">
+        <div className="absolute bottom-24 left-6 z-50 pointer-events-none">
           <TypingIndicator />
         </div>
       )}
