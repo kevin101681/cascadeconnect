@@ -317,10 +317,10 @@ export const Invoices: React.FC<InvoicesProps> = ({
     if (!searchQuery) return invoices;
     const lowerQuery = searchQuery.toLowerCase();
     return invoices.filter(inv => 
-      inv.clientName.toLowerCase().includes(lowerQuery) || 
-      inv.invoiceNumber.toLowerCase().includes(lowerQuery) ||
+      (inv.clientName || '').toLowerCase().includes(lowerQuery) || 
+      (inv.invoiceNumber || '').toLowerCase().includes(lowerQuery) ||
       (inv.projectDetails && inv.projectDetails.toLowerCase().includes(lowerQuery)) ||
-      (inv.items || []).some(item => item.description.toLowerCase().includes(lowerQuery)) ||
+      (inv.items || []).some(item => (item.description || '').toLowerCase().includes(lowerQuery)) ||
       (inv.checkNumber && inv.checkNumber.toLowerCase().includes(lowerQuery))
     );
   }, [invoices, searchQuery]);
@@ -342,7 +342,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
         if (key === 'date') {
             comparison = new Date(a.date).getTime() - new Date(b.date).getTime();
         } else if (key === 'client') {
-            comparison = a.clientName.localeCompare(b.clientName);
+            comparison = (a.clientName || '').localeCompare(b.clientName || '');
         } else if (key === 'total') {
             comparison = a.total - b.total;
         }

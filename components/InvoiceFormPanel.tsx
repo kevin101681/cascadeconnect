@@ -384,7 +384,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
   // ==================== FILTERED BUILDERS ====================
   
   const filteredBuilders = builders.filter(b =>
-    b.name.toLowerCase().includes(builderQuery.toLowerCase())
+    (b.name || '').toLowerCase().includes(builderQuery.toLowerCase())
   );
   
   // ==================== RENDER ====================

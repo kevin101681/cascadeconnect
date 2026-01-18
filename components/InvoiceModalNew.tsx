@@ -284,7 +284,7 @@ const InvoiceModalNew: React.FC<InvoiceModalNewProps> = ({
   // ==================== FILTERED BUILDERS ====================
   
   const filteredBuilders = builders.filter(b =>
-    b.name.toLowerCase().includes(builderQuery.toLowerCase())
+    (b.name || '').toLowerCase().includes(builderQuery.toLowerCase())
   );
   
   // ==================== RENDER ====================
