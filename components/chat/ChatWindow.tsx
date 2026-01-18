@@ -755,11 +755,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       )}
 
-      {/* Input area - Fixed at bottom on mobile with safe area support */}
-      <div className="px-4 pt-3 pb-[calc(2rem+env(safe-area-inset-bottom))] md:pb-[calc(0.75rem+env(safe-area-inset-bottom))] border-t border-gray-200 dark:border-gray-700 flex-shrink-0 bg-white dark:bg-gray-900">
+      {/* Input area - Fixed at bottom with equal padding */}
+      <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 flex-shrink-0 z-40">
         {/* Replying To Banner */}
         {replyingTo && (
-          <div className="mb-2 rounded-t-2xl bg-gray-100 dark:bg-gray-800 border-t border-x border-gray-200 dark:border-gray-600 p-2 text-xs text-gray-600 dark:text-gray-400 flex justify-between items-start">
+          <div className="mx-4 mt-2 rounded-t-2xl bg-gray-100 dark:bg-gray-800 border-t border-x border-gray-200 dark:border-gray-600 p-2 text-xs text-gray-600 dark:text-gray-400 flex justify-between items-start">
             <div className="flex-1">
               <div className="flex items-center gap-1 mb-1">
                 <CornerUpLeft className="h-3 w-3" />
@@ -781,7 +781,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           </div>
         )}
 
-        <div className="flex items-end gap-2">
+        <div className="p-4 flex items-center gap-2">
           {/* File upload */}
           <input
             ref={fileInputRef}
@@ -794,7 +794,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploadingMedia}
-            className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-50 flex-shrink-0 mb-1"
+            className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors disabled:opacity-50 flex-shrink-0"
             title="Attach file"
           >
             {isUploadingMedia ? (
@@ -809,7 +809,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             <button
               onClick={toggleVoiceInput}
               disabled={isSending}
-              className={`p-2 transition-all duration-200 disabled:opacity-50 flex-shrink-0 rounded-full mb-1 ${
+              className={`p-2 transition-all duration-200 disabled:opacity-50 flex-shrink-0 rounded-full ${
                 isListening 
                   ? 'bg-red-500 text-white animate-pulse shadow-lg' 
                   : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
@@ -841,7 +841,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           <button
             onClick={handleSendMessage}
             disabled={isSending || (!inputValue.trim() && attachments.length === 0)}
-            className="p-3 bg-primary text-primary-on rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center mb-1"
+            className="p-3 bg-primary text-primary-on rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
           >
             {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
           </button>
