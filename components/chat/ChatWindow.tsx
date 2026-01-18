@@ -29,7 +29,8 @@ import {
   Mic,
   MicOff,
   Check,
-  CheckCheck
+  CheckCheck,
+  ArrowRight
 } from 'lucide-react';
 import { getPusherClient } from '../../lib/pusher-client';
 import {
@@ -593,7 +594,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
   return (
     <div className={`flex flex-col h-full bg-white dark:bg-gray-900 relative ${isCompact ? '' : 'border border-gray-200 dark:border-gray-700 rounded-lg'}`}>
-      {/* Messages Area - Scrollable with tuned bottom padding */}
+      {/* Messages Area - Scrollable with reduced bottom padding */}
       <div className="flex-1 overflow-y-auto p-4 pb-20 space-y-4">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
@@ -622,7 +623,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                 <div
                   className={`px-3 py-2 rounded-lg shadow-sm relative ${
                     message.senderId === currentUserId
-                      ? 'bg-blue-500 text-white rounded-br-none'
+                      ? 'bg-[#769cab] text-white rounded-br-none'
                       : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-none'
                   }`}
                 >
@@ -711,7 +712,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
       {/* Typing Indicator - FLOATING ABOVE FOOTER */}
       {isOtherUserTyping && (
-        <div className="absolute bottom-20 left-6 z-50 pointer-events-none">
+        <div className="absolute bottom-24 left-6 z-50 pointer-events-none">
           <TypingIndicator />
         </div>
       )}
@@ -837,13 +838,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
             style={{ minHeight: '40px', maxHeight: '120px' }}
           />
 
-          {/* Send button - Pill shaped (circular) */}
+          {/* Send button - Pill shaped with white background and blue border */}
           <button
             onClick={handleSendMessage}
             disabled={isSending || (!inputValue.trim() && attachments.length === 0)}
-            className="p-3 bg-primary text-primary-on rounded-full hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
+            className="p-3 bg-white border-2 border-blue-500 text-blue-500 rounded-full hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 flex items-center justify-center"
           >
-            {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+            {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <ArrowRight className="h-5 w-5" />}
           </button>
         </div>
       </div>
