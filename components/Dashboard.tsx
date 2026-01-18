@@ -4330,8 +4330,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                     {homeownerCalls.length > 0 && (
                       <Button 
                         onClick={() => {
-                          // Navigate to Calls page with search filter for this homeowner's phone
-                          const searchParam = encodeURIComponent(displayHomeowner.phone || '');
+                          // Navigate to Calls page with search filter for this homeowner's address
+                          // Calls are matched by property address, not phone (callers use different numbers)
+                          const searchParam = encodeURIComponent(displayHomeowner.address || '');
                           if (onNavigate) {
                             onNavigate('CALLS');
                             // Set search filter via hash
