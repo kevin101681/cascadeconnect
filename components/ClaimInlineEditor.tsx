@@ -746,6 +746,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
   };
   
   return (
+    <>
     <div className="flex flex-col h-full w-full overflow-hidden bg-surface dark:bg-gray-800">
       {/* Scrollable Body - Takes full space */}
       <div className="flex-1 overflow-y-auto min-h-0">
@@ -1901,6 +1902,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
       )}
 
       {/* Image Viewer Modal */}
+      <ImageViewerModal
         isOpen={imageViewerOpen}
         attachments={claim.attachments || []}
         initialIndex={imageViewerIndex}
@@ -1922,6 +1924,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           }
         }}
       />
+    </>
   );
 };
 
