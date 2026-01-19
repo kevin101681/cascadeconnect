@@ -748,7 +748,8 @@ If this repair work is billable, please let me know prior to scheduling.`);
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Scrollable Body - Takes full space */}
-      <div className="flex-1 overflow-y-auto px-0 py-4 md:p-6 space-y-6 min-h-0">
+      <div className="flex-1 overflow-y-auto px-4 py-4 md:p-6 min-h-0">
+        <div className="max-w-4xl mx-auto space-y-6">
           {/* Title and Description Card */}
           <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
             <div className="space-y-4">
@@ -801,7 +802,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
 
             {/* AI Review Button - Admin Only */}
             {isAdmin && !isReadOnly && (
-              <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-600 flex justify-center">
+              <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-600">
                 <Button
                   onClick={handleAiReview}
                   disabled={isAnalyzing}
@@ -1528,6 +1529,8 @@ If this repair work is billable, please let me know prior to scheduling.`);
               )}
             </div>
           )}
+        </div>
+      </div>
       
       {/* Calendar Picker */}
       {showCalendarPicker && (
