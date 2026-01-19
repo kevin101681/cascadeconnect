@@ -111,8 +111,8 @@ export function HomeownerCard({
         {/* View As Button */}
         <Button
           size="icon"
-          variant="outline"
-          className="rounded-full h-8 w-8 bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700 dark:hover:bg-blue-900/50"
+          variant="ghost"
+          className="rounded-full h-8 w-8 bg-blue-50 text-blue-600 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:hover:bg-blue-900/50"
           onClick={(e) => {
             e.stopPropagation(); // CRITICAL: Stop card collapse
             console.log("👁️ View As Clicked for:", name); // CRITICAL: Log verification
