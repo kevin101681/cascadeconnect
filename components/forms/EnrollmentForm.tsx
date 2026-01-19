@@ -151,7 +151,7 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
     else if (isPDF || isWord) {
       try {
         // Import the server action
-        const { parseDocumentSubs } = await import('../actions/parse-document-subs');
+        const { parseDocumentSubs } = await import('../../actions/parse-document-subs');
         
         // Create FormData and append file
         const formData = new FormData();

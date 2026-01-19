@@ -50,7 +50,7 @@ const getAI = (): GoogleGenAI | null => {
 async function extractPDFText(buffer: Buffer): Promise<string> {
   try {
     // Dynamically import pdfjs-dist (server-side compatible)
-    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
+    const pdfjsLib = await import('pdfjs-dist');
     
     // Load PDF document
     const loadingTask = pdfjsLib.getDocument({
