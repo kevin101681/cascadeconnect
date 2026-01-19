@@ -89,26 +89,75 @@ export function HomeownerCard({
     // Material 3 Design: Using semantic rounded-card token
     <div className="bg-white dark:bg-gray-800 rounded-card border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group">
       
-      {/* HEADER: Name & Project */}
-      <div className="flex flex-col mb-6">
-        {/* Name with Status Badge */}
-        <div className="flex items-center gap-2 flex-wrap mb-2">
-          <h3 className={`font-bold text-lg leading-tight ${name ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500 italic"}`}>
-            {name || "Unknown Homeowner"}
-          </h3>
-          <ClientStatusBadge status={clientStatus} />
-        </div>
+      {/* Action Buttons - Top Right */}
+      <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+        {/* Subs Button */}
+        {onViewSubs && (
+          <Button
+            size="icon"
+            variant="outline"
+            className="rounded-full h-8 w-8 bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-700 dark:hover:bg-orange-900/50"
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log("🔨 View Subs Clicked for:", name);
+              if (onViewSubs) onViewSubs();
+            }}
+            title="View Subcontractors"
+          >
+            <HardHat className="h-4 w-4" />
+          </Button>
+        )}
+
+        {/* View As Button */}
+        <Button
+          size="icon"
+          variant="outline"
+          className="rounded-full h-8 w-8 bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-700 dark:hover:bg-blue-900/50"
+          onClick={(e) => {
+            e.stopPropagation(); // CRITICAL: Stop card collapse
+            console.log("👁️ View As Clicked for:", name); // CRITICAL: Log verification
+            if (onViewAs) onViewAs();
+          }}
+          title="View As Homeowner"
+        >
+          <Eye className="h-4 w-4" />
+        </Button>
+
+        {/* Edit Button */}
+        <Button
+          size="icon"
+          variant="ghost"
+          className="h-8 w-8 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+          onClick={(e) => {
+            e.stopPropagation();
+            console.log("✏️ Edit Clicked");
+            if (onEdit) onEdit();
+          }}
+          title="Edit Homeowner"
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* HEADER: Name, Status Badge & Project */}
+      <div className="flex flex-col mb-6 pr-24">
+        {/* Name */}
+        <h3 className={`font-bold text-lg leading-tight mb-2 ${name ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500 italic"}`}>
+          {name || "Unknown Homeowner"}
+        </h3>
         
-        {project && (
-          <div>
+        {/* Status Badge + Project Badge Row */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <ClientStatusBadge status={clientStatus} />
+          {project && (
             <Badge variant="secondary" className="text-[10px] h-5 px-2 font-normal text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600">
               {project}
             </Badge>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* 3. UNIFIED INFO LIST */}
+      {/* UNIFIED INFO LIST */}
       <div className="space-y-4">
         
         {/* Address */}
@@ -155,66 +204,14 @@ export function HomeownerCard({
           </div>
         </div>
 
-        {/* Closing Date Row with Action Buttons */}
-        <div className="flex justify-between items-start mt-4">
-          {/* Left: Closing Date */}
-          <div className="flex items-start group/item">
-            <Calendar className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 shrink-0" />
-            <div className="flex flex-col">
-              <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Closing Date</span>
-              <span className={`text-sm ${closingDate ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
-                {closingDate || "--"}
-              </span>
-            </div>
-          </div>
-
-          {/* Right: Action Buttons */}
-          <div className="flex items-center gap-2">
-            {/* Subs Button */}
-            {onViewSubs && (
-              <Button
-                size="icon"
-                variant="outline"
-                className="rounded-full h-8 w-8 bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  console.log("🔨 View Subs Clicked for:", name);
-                  if (onViewSubs) onViewSubs();
-                }}
-                title="View Subcontractors"
-              >
-                <HardHat className="h-4 w-4" />
-              </Button>
-            )}
-
-            {/* View As Button */}
-            <Button
-              size="icon"
-              variant="outline"
-              className="rounded-full h-8 w-8 bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
-              onClick={(e) => {
-                e.stopPropagation(); // CRITICAL: Stop card collapse
-                console.log("👁️ View As Clicked for:", name); // CRITICAL: Log verification
-                if (onViewAs) onViewAs();
-              }}
-              title="View As Homeowner"
-            >
-              <Eye className="h-4 w-4" />
-            </Button>
-
-            {/* Edit Button */}
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-8 w-8 text-gray-500 hover:text-gray-900"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log("✏️ Edit Clicked");
-                if (onEdit) onEdit();
-              }}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
+        {/* Closing Date */}
+        <div className="flex items-start group/item mt-4">
+          <Calendar className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 shrink-0" />
+          <div className="flex flex-col">
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Closing Date</span>
+            <span className={`text-sm ${closingDate ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
+              {closingDate || "--"}
+            </span>
           </div>
         </div>
 
