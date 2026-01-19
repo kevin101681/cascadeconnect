@@ -1325,16 +1325,6 @@ function App() {
     }
   }, [currentView, selectedClaimId]);
   
-  // Mark initial load period as complete after 5 seconds
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      initialLoadRef.current = false;
-      console.log('⏰ Initial load period complete (App.tsx - 5 seconds)');
-    }, 5000);
-    
-    return () => clearTimeout(timer);
-  }, []);
-  
   // --- UI PERSISTENCE EFFECTS ---
   useEffect(() => { saveState('cascade_ui_view', currentView); }, [currentView]);
   useEffect(() => { saveState('cascade_ui_claim_id', selectedClaimId); }, [selectedClaimId]);

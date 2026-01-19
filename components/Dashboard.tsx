@@ -616,7 +616,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   const initialLoadRef = useRef(true);
   const mountTimeRef = useRef(Date.now());
   const userInteractionRef = useRef(false);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Track user interactions (clicks, touches) to distinguish user-initiated vs auto-opens
   useEffect(() => {
@@ -863,24 +862,6 @@ const Dashboard: React.FC<DashboardProps> = ({
       console.log('📋 selectedClaimForModal cleared (Dashboard)');
     }
   }, [selectedClaimForModal, currentTab]);
-  
-  // Mark initial load period as complete after 5 seconds
-  useEffect(() => {
-    if (initialLoadRef.current && !timerRef.current) {
-      timerRef.current = setTimeout(() => {
-        console.log('⏰ Initial load period complete (5 seconds)');
-        initialLoadRef.current = false;
-        timerRef.current = null;
-      }, 5000);
-    }
-    
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-  }, []);
   
   // Header scroll sync refs
   
