@@ -6,7 +6,7 @@ import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
 import { ClaimMessage } from './MessageSummaryModal';
 import ImageViewerModal from './ImageViewerModal';
-import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload, FileEdit, Trash2, StickyNote, Calendar as CalendarIcon, Tag, Bot } from 'lucide-react';
+import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload, FileEdit, Trash2, StickyNote, Calendar as CalendarIcon, Tag, Bot, Sparkles } from 'lucide-react';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
@@ -808,7 +808,14 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   variant="outlined"
                   className="!h-9"
                 >
-                  {isAnalyzing ? 'Analyzing...' : 'AI'}
+                  {isAnalyzing ? (
+                    'Analyzing...'
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4" />
+                      Gemini
+                    </span>
+                  )}
                 </Button>
               </div>
             )}
