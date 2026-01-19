@@ -746,9 +746,11 @@ If this repair work is billable, please let me know prior to scheduling.`);
   };
   
   return (
-    <div className="flex flex-col h-full overflow-hidden relative max-w-5xl mx-auto w-full">
+    <div className="flex flex-col h-full w-full overflow-hidden bg-surface dark:bg-gray-800">
       {/* Scrollable Body - Takes full space */}
-      <div className="flex-1 overflow-y-auto px-0 py-4 md:p-6 space-y-6 min-h-0">
+      <div className="flex-1 overflow-y-auto min-h-0">
+        {/* Centered Content Wrapper */}
+        <div className="max-w-5xl mx-auto w-full px-6 py-6 space-y-6">
           {/* Title and Description Card */}
           <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
             <div className="space-y-4">
@@ -1527,7 +1529,66 @@ If this repair work is billable, please let me know prior to scheduling.`);
               )}
             </div>
           )}
+        </div>
+      </div>
       
+      {/* Footer - Fixed at bottom */}
+      <div className="flex-none border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800">
+        <div className="max-w-5xl mx-auto w-full px-6 py-4 flex justify-end space-x-3">
+          <Button
+            type="button"
+            variant="filled"
+            onClick={() => onSendMessage(claim)}
+            className="!h-9"
+          >
+            Message
+          </Button>
+          {!isHomeowner && (
+            <Button
+              type="button"
+              variant="filled"
+              onClick={() => {
+                const contextLabel = `${claim.title || 'Untitled'} • Claim #${claim.claimNumber || claim.id.substring(0, 8)} • ${claim.jobName || claim.address}`;
+                useTaskStore.getState().openTasks(claim.id, contextLabel, 'claim');
+              }}
+              title={`Add a note for ${claim.claimNumber || 'this claim'}`}
+              className="!h-9"
+            >
+              Note
+            </Button>
+          )}
+          {!isHomeowner && (
+            <Button 
+              type="button" 
+              variant="filled"
+              onClick={handleToggleReviewed}
+              className="!h-9"
+            >
+              {isReviewed ? 'Reviewed' : 'Process'}
+            </Button>
+          )}
+          {onCancel && (
+            <Button 
+              type="button" 
+              variant="filled" 
+              onClick={onCancel}
+              className="!h-9"
+            >
+              Cancel
+            </Button>
+          )}
+          <Button 
+            type="button" 
+            variant="filled" 
+            onClick={handleSaveDetails}
+            className="!h-9"
+          >
+            Save
+          </Button>
+        </div>
+      </div>
+    </div>
+
       {/* Calendar Picker */}
       {showCalendarPicker && (
         <CalendarPicker
@@ -1838,64 +1899,8 @@ If this repair work is billable, please let me know prior to scheduling.`);
           </div>
         </div>
       )}
-      </div>
-      
-      {/* Footer - Fixed at bottom */}
-      <div className="flex-none px-6 py-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end space-x-3">
-        <Button
-          type="button"
-          variant="filled"
-          onClick={() => onSendMessage(claim)}
-          className="!h-9"
-        >
-          Message
-        </Button>
-        {!isHomeowner && (
-          <Button
-            type="button"
-            variant="filled"
-            onClick={() => {
-              const contextLabel = `${claim.title || 'Untitled'} • Claim #${claim.claimNumber || claim.id.substring(0, 8)} • ${claim.jobName || claim.address}`;
-              useTaskStore.getState().openTasks(claim.id, contextLabel, 'claim');
-            }}
-            title={`Add a note for ${claim.claimNumber || 'this claim'}`}
-            className="!h-9"
-          >
-            Note
-          </Button>
-        )}
-        {!isHomeowner && (
-          <Button 
-            type="button" 
-            variant="filled"
-            onClick={handleToggleReviewed}
-            className="!h-9"
-          >
-            {isReviewed ? 'Reviewed' : 'Process'}
-          </Button>
-        )}
-        {onCancel && (
-          <Button 
-            type="button" 
-            variant="filled" 
-            onClick={onCancel}
-            className="!h-9"
-          >
-            Cancel
-          </Button>
-        )}
-        <Button 
-          type="button" 
-          variant="filled" 
-          onClick={handleSaveDetails}
-          className="!h-9"
-        >
-          Save
-        </Button>
-      </div>
 
       {/* Image Viewer Modal */}
-      <ImageViewerModal
         isOpen={imageViewerOpen}
         attachments={claim.attachments || []}
         initialIndex={imageViewerIndex}
@@ -1917,7 +1922,6 @@ If this repair work is billable, please let me know prior to scheduling.`);
           }
         }}
       />
-    </div>
   );
 };
 
