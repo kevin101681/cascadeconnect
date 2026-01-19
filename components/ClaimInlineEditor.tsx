@@ -801,7 +801,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
 
             {/* AI Review Button - Admin Only */}
             {isAdmin && !isReadOnly && (
-              <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-600">
+              <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-600 flex justify-center">
                 <Button
                   onClick={handleAiReview}
                   disabled={isAnalyzing}
