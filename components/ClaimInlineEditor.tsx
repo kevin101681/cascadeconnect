@@ -6,7 +6,7 @@ import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
 import { ClaimMessage } from './MessageSummaryModal';
 import ImageViewerModal from './ImageViewerModal';
-import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload, FileEdit, Trash2, StickyNote, Calendar as CalendarIcon, Tag, Bot, Sparkles } from 'lucide-react';
+import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload, FileEdit, Trash2, StickyNote, Calendar as CalendarIcon, Tag, Bot } from 'lucide-react';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
@@ -746,9 +746,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
   };
   
   return (
-    <div className="flex flex-col h-full min-h-0 max-w-5xl mx-auto">
+    <div className="flex flex-col h-full min-h-0">
       {/* Scrollable Body - Takes full space */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 md:p-6 space-y-6 min-h-0">
+      <div className="flex-1 overflow-y-auto px-0 py-4 md:p-6 space-y-6 min-h-0">
           {/* Title and Description Card */}
           <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
             <div className="space-y-4">
@@ -787,22 +787,6 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     label="Description"
                     placeholder="Enter description..."
                     rows={6}
-                    actionButton={
-                      isAdmin ? (
-                        <button
-                          onClick={handleAiReview}
-                          disabled={isAnalyzing}
-                          className="h-8 w-8 rounded-full border border-primary text-primary hover:bg-primary/10 disabled:opacity-50 flex items-center justify-center transition-colors"
-                          title="AI Review with Gemini"
-                        >
-                          {isAnalyzing ? (
-                            <span className="text-xs">...</span>
-                          ) : (
-                            <Sparkles className="h-4 w-4" />
-                          )}
-                        </button>
-                      ) : undefined
-                    }
                   />
                 ) : (
                   <>
@@ -814,6 +798,20 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 )}
               </div>
             </div>
+
+            {/* AI Review Button - Admin Only */}
+            {isAdmin && !isReadOnly && (
+              <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-600">
+                <Button
+                  onClick={handleAiReview}
+                  disabled={isAnalyzing}
+                  variant="outlined"
+                  className="!h-9"
+                >
+                  {isAnalyzing ? 'Analyzing...' : 'AI'}
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* AI Review Results */}
@@ -1525,7 +1523,6 @@ If this repair work is billable, please let me know prior to scheduling.`);
               )}
             </div>
           )}
-      </div>
       
       {/* Calendar Picker */}
       {showCalendarPicker && (
@@ -1837,6 +1834,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           </div>
         </div>
       )}
+      </div>
       
       {/* Footer - Fixed at bottom */}
       <div className="flex-none px-6 py-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end space-x-3">
