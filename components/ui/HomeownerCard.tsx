@@ -85,6 +85,25 @@ export function HomeownerCard({
 }: HomeownerCardProps) {
   const clientStatus = getClientStatus(clerkId, inviteEmailRead);
   
+  // Format address: Split at first comma for better display
+  const formatAddress = (addr?: string) => {
+    if (!addr) return { line1: "No address listed", line2: null };
+    
+    const firstCommaIndex = addr.indexOf(',');
+    if (firstCommaIndex === -1) {
+      // No comma found, return as single line
+      return { line1: addr, line2: null };
+    }
+    
+    // Split at first comma
+    const line1 = addr.substring(0, firstCommaIndex).trim();
+    const line2 = addr.substring(firstCommaIndex + 1).trim();
+    
+    return { line1, line2 };
+  };
+  
+  const formattedAddress = formatAddress(address);
+  
   return (
     // Material 3 Design: Using semantic rounded-card token
     <div className="bg-white dark:bg-gray-800 rounded-card border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group">
@@ -112,7 +131,7 @@ export function HomeownerCard({
         <Button
           size="icon"
           variant="ghost"
-          className="h-8 w-8 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+          className="h-8 w-8 text-gray-500 hover:text-gray-900 hover:bg-transparent dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-transparent"
           onClick={(e) => {
             e.stopPropagation(); // CRITICAL: Stop card collapse
             console.log("👁️ View As Clicked for:", name); // CRITICAL: Log verification
@@ -127,7 +146,7 @@ export function HomeownerCard({
         <Button
           size="icon"
           variant="ghost"
-          className="h-8 w-8 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+          className="h-8 w-8 text-gray-500 hover:text-gray-900 hover:bg-transparent dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-transparent"
           onClick={(e) => {
             e.stopPropagation();
             console.log("✏️ Edit Clicked");
@@ -165,9 +184,12 @@ export function HomeownerCard({
           <MapPin className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 group-hover/item:text-blue-500 dark:group-hover/item:text-blue-400 transition-colors shrink-0" />
           <div className="flex flex-col">
             <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Address</span>
-            <span className={`text-sm leading-snug ${address ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
-              {address || "No address listed"}
-            </span>
+            <div className={`text-sm leading-snug ${address ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
+              <div>{formattedAddress.line1}</div>
+              {formattedAddress.line2 && (
+                <div>{formattedAddress.line2}</div>
+              )}
+            </div>
           </div>
         </div>
 
