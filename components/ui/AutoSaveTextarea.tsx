@@ -13,6 +13,7 @@ interface AutoSaveTextareaProps {
   className?: string;
   disabled?: boolean;
   showSaveStatus?: boolean;
+  actionButton?: React.ReactNode; // Custom action button in bottom-right
 }
 
 /**
@@ -47,6 +48,7 @@ export const AutoSaveTextarea: React.FC<AutoSaveTextareaProps> = ({
   className = '',
   disabled = false,
   showSaveStatus = true,
+  actionButton,
 }) => {
   const [localValue, setLocalValue] = useState(initialValue);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
@@ -193,14 +195,23 @@ export const AutoSaveTextarea: React.FC<AutoSaveTextareaProps> = ({
         placeholder={placeholder}
         rows={rows}
         disabled={disabled}
-        className={`w-full bg-white dark:bg-white border border-surface-outline-variant dark:border-gray-600 rounded-lg px-3 py-2 text-surface-on dark:text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none transition-colors ${
+        className={`w-full bg-white dark:bg-white border border-surface-outline-variant dark:border-gray-600 rounded-lg px-3 py-2 ${
+          actionButton ? 'pr-12' : 'pr-3'
+        } text-surface-on dark:text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none transition-colors ${
           saveStatus === 'error' ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
       />
       
-      {/* Fixed position save status - bottom right, no layout shift */}
+      {/* Action button in bottom-right corner */}
+      {actionButton && (
+        <div className="absolute bottom-2 right-2 z-10">
+          {actionButton}
+        </div>
+      )}
+      
+      {/* Fixed position save status - bottom right, shifted left if action button exists */}
       {showSaveStatus && renderSaveStatus() && (
-        <div className="absolute bottom-2 right-2 pointer-events-none">
+        <div className={`absolute bottom-2 ${actionButton ? 'right-14' : 'right-2'} pointer-events-none`}>
           {renderSaveStatus()}
         </div>
       )}
