@@ -195,9 +195,9 @@ export const AutoSaveTextarea: React.FC<AutoSaveTextareaProps> = ({
         placeholder={placeholder}
         rows={rows}
         disabled={disabled}
-        className={`w-full bg-white dark:bg-white border border-surface-outline-variant dark:border-gray-600 rounded-lg px-3 py-2 ${
-          actionButton ? 'pr-12' : 'pr-3'
-        } text-surface-on dark:text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none transition-colors ${
+        className={`w-full bg-white dark:bg-white border border-surface-outline-variant dark:border-gray-600 rounded-lg px-3 ${
+          actionButton ? 'pr-12 pb-10' : 'pr-3 py-2'
+        } ${!actionButton ? 'py-2' : 'pt-2'} text-surface-on dark:text-gray-900 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none transition-colors ${
           saveStatus === 'error' ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''
         } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
       />
