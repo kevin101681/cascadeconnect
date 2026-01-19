@@ -750,8 +750,8 @@ If this repair work is billable, please let me know prior to scheduling.`);
     <div className="flex flex-col h-full w-full overflow-hidden bg-surface dark:bg-gray-800">
       {/* Scrollable Body - Takes full space */}
       <div className="flex-1 overflow-y-auto min-h-0">
-        {/* Centered Content Wrapper */}
-        <div className="max-w-5xl mx-auto w-full px-6 py-6 space-y-6">
+        {/* Content Wrapper */}
+        <div className="w-full max-w-full px-6 py-6 space-y-6">
           {/* Title and Description Card */}
           <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
             <div className="space-y-4">
@@ -1535,7 +1535,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
       
       {/* Footer - Fixed at bottom */}
       <div className="flex-none border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800">
-        <div className="max-w-5xl mx-auto w-full px-6 py-4 flex justify-end space-x-3">
+        <div className="w-full max-w-full px-6 py-4 flex justify-end space-x-3">
           <Button
             type="button"
             variant="filled"

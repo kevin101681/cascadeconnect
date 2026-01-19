@@ -220,24 +220,7 @@ const Layout: React.FC<LayoutProps> = ({
             <div className="flex justify-between items-center h-16 gap-4">
               {/* Logo */}
               <button onClick={() => onNavigate('DASHBOARD')} className="flex items-center gap-3 flex-shrink-0 focus:outline-none">
-                <div className="bg-gray-200 dark:bg-gray-800 p-2 rounded-xl border border-surface-outline-variant dark:border-gray-600 shadow-sm h-10 w-12 flex items-center justify-center overflow-hidden">
-                  <img 
-                    src="/logo.svg" 
-                    alt="CASCADE CONNECT Logo" 
-                    width={24}
-                    height={24}
-                    className="h-6 w-6 object-contain" 
-                  />
-                </div>
-                <div className="relative hidden md:block">
-                  <img 
-                    src="/connect.svg" 
-                    alt="CASCADE CONNECT" 
-                    width={150}
-                    height={32}
-                    className="h-8 w-auto object-contain"
-                  />
-                </div>
+                <span className="text-xl font-semibold text-surface-on dark:text-gray-100">Dashboard</span>
               </button>
 
               {/* Global Search Bar (Admin & Builder Only) - Always Visible */}
