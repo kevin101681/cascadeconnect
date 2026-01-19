@@ -1842,7 +1842,6 @@ If this repair work is billable, please let me know prior to scheduling.`);
           </div>
         </div>
       )}
-      </div>
       
       {/* Footer - Fixed at bottom */}
       <div className="flex-none px-6 py-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end space-x-3">
