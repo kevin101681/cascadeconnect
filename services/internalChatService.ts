@@ -191,14 +191,6 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
           );
 
         const unreadCount = Number(unreadResult[0]?.count || 0);
-        
-        console.log(`📊 [getUserChannels] Unread count for channel ${ch.channelId}`, {
-          channelId: ch.channelId,
-          unreadCount,
-          lastReadAt: ch.lastReadAt,
-          currentUserId: userId,
-          filterApplied: 'ne(senderId, userId)'
-        });
 
         // Get last message
         const lastMessages = await db
@@ -233,14 +225,6 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
           const participants = ch.dmParticipants as string[];
           const otherUserId = participants.find((id) => id !== userId);
           
-          console.log(`🔍 [DM Channel] Finding other user`, {
-            channelId: ch.channelId,
-            channelName: ch.channelName,
-            currentUserId: userId,
-            allParticipants: participants,
-            otherUserId
-          });
-          
           if (otherUserId) {
             const otherUserData = await db
               .select({
@@ -254,7 +238,6 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
 
             if (otherUserData.length > 0) {
               otherUser = otherUserData[0];
-              console.log(`✅ [DM Channel] Found other user: ${otherUser.name} (Clerk ID: ${otherUser.id})`);
             } else {
               console.warn(`⚠️ [DM Channel] No user found for Clerk ID: ${otherUserId}`);
             }
@@ -301,29 +284,22 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
       if (ch.type === 'dm') {
         // DM channels MUST have a deterministic ID (dm-userA-userB)
         if (!ch.id.startsWith('dm-')) {
-          console.warn(`👻 [getUserChannels] ZOMBIE: DM channel missing deterministic ID: ${ch.id}`);
           return false;
         }
         
         // DM channels MUST have otherUser data populated
         if (!ch.otherUser) {
-          console.warn(`👻 [getUserChannels] ZOMBIE: DM channel missing otherUser data: ${ch.id}`);
           return false;
         }
         
         // DM otherUser MUST have a valid Clerk ID (starts with "user_")
         if (!ch.otherUser.id || !ch.otherUser.id.startsWith('user_')) {
-          console.warn(`👻 [getUserChannels] ZOMBIE: DM otherUser has invalid ID: ${ch.otherUser.id}`);
           return false;
         }
-        
-        console.log(`✅ [getUserChannels] Valid DM: ${ch.id} -> ${ch.otherUser.name}`);
       }
       
       return true;
     });
-
-    console.log(`📋 [getUserChannels] Filtered channels: ${channelsWithDetails.length} -> ${validChannels.length} (removed ${channelsWithDetails.length - validChannels.length} zombies)`);
 
     return validChannels;
   } catch (error) {
@@ -335,7 +311,6 @@ export async function getUserChannels(userId: string): Promise<Channel[]> {
 /**
  * Get all admin/employee users for DM discovery
  * ✅ EXCLUSION FILTER: Includes internal staff by excluding external roles (HOMEOWNER, BUILDER)
- * 🕵️‍♂️ SHERLOCK MODE: Enhanced logging to debug missing users
  * 
  * Database Structure:
  * - Admins: role='ADMIN', internal_role=NULL (like Kevin)
@@ -350,30 +325,6 @@ export async function getAllTeamMembers(): Promise<Array<{
   internalRole?: string;
 }>> {
   try {
-    console.log('🕵️‍♂️ [getAllTeamMembers] Starting query for team members...');
-    
-    // First, let's see ALL users in the database (DEBUG)
-    const allUsers = await db
-      .select({
-        id: users.id,
-        clerkId: users.clerkId,
-        name: users.name,
-        email: users.email,
-        role: users.role,
-        internalRole: users.internalRole,
-      })
-      .from(users)
-      .limit(50);
-    
-    console.log('🕵️‍♂️ [getAllTeamMembers] ALL USERS IN DATABASE:', allUsers.map(u => ({
-      name: u.name,
-      email: u.email,
-      primaryRole: u.role,      // ✅ This is what matters for filtering
-      internal: u.internalRole, // ✅ This will be NULL for Kevin (and that's OK!)
-      hasClerkId: !!u.clerkId,
-      clerkIdPrefix: u.clerkId?.substring(0, 10) || 'NULL',
-    })));
-
     // ✅ EXCLUSION STRATEGY: Get all users EXCEPT external roles (HOMEOWNER, BUILDER)
     // This catches:
     // - Admins with NULL internal_role (Kevin)
@@ -399,16 +350,6 @@ export async function getAllTeamMembers(): Promise<Array<{
         )
       )
       .orderBy(users.name);
-
-    console.log('🕵️‍♂️ [getAllTeamMembers] INTERNAL STAFF FOUND (exclusion filter):', teamMembers.length);
-    console.log('🕵️‍♂️ [getAllTeamMembers] Staff detail:', teamMembers.map(m => ({ 
-      name: m.name,
-      email: m.email,
-      primaryRole: m.role,      // ✅ Shows 'ADMIN' for Kevin
-      internal: m.internalRole, // ✅ Shows NULL for Kevin, 'Employee' for Mary
-      hasClerkId: !!m.id, 
-      idPrefix: m.id?.substring(0, 10) || 'NULL'
-    })));
     
     // ✅ Validation: Ensure Clerk IDs are valid
     const validMembers = teamMembers.filter(member => {
@@ -424,19 +365,8 @@ export async function getAllTeamMembers(): Promise<Array<{
         return false;
       }
       
-      // ✅ Log each valid member with their role info
-      console.log(`✅ [getAllTeamMembers] Valid team member: ${member.name} (role=${member.role}, internal=${member.internalRole || 'NULL'})`);
       return true;
     });
-
-    console.log(`✅ [getAllTeamMembers] Returning ${validMembers.length} valid team members (filtered ${teamMembers.length - validMembers.length})`);
-    console.log('🕵️‍♂️ [getAllTeamMembers] FINAL VALID MEMBERS:', validMembers.map(m => ({
-      name: m.name,
-      email: m.email,
-      primaryRole: m.role,
-      internal: m.internalRole || 'NULL',
-      clerkIdPrefix: m.id.substring(0, 10)
-    })));
     
     return validMembers.map(m => ({
       id: m.id,

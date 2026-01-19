@@ -79,12 +79,6 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
       setIsLoadingTeam(true);
       const members = await getAllTeamMembers();
       
-      console.log('👥 [ChatSidebar] Team members loaded:', {
-        count: members.length,
-        currentUserId,
-        members: members.map(m => ({ id: m.id, name: m.name }))
-      });
-      
       // Keep all members (including current user for name lookups), but we'll filter for display
       setTeamMembers(members);
     } catch (error) {
@@ -258,11 +252,6 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
       
       // 🚫 BLOCK: Exclude current user from the list
       if (memberId === currentId) {
-        console.log('🚫 [ChatSidebar] Filtering out self from team members:', {
-          memberName: member.name,
-          memberId,
-          currentUserId: currentId
-        });
         return false;
       }
       
@@ -272,13 +261,6 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
       (member.name || "").toLowerCase().includes((searchQuery || "").toLowerCase()) ||
       (member.email || "").toLowerCase().includes((searchQuery || "").toLowerCase())
     );
-  
-  console.log('👥 [ChatSidebar] Filtered team members:', {
-    totalTeamMembers: teamMembers.length,
-    filteredCount: filteredTeamMembers.length,
-    currentUserId,
-    sample: filteredTeamMembers.slice(0, 3).map(m => ({ id: m.id, name: m.name }))
-  });
 
   // Filter existing channels by search (name or last message content)
   const getRecipientName = (channel: Channel): string => {
