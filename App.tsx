@@ -457,6 +457,7 @@ function App() {
           pushNotifyTaskAssigned: false,
           pushNotifyHomeownerMessage: false,
           pushNotifyHomeownerEnrollment: false,
+          pushNotifyNewMessage: false,
           emailNotifyHomeownerEnrollment: true
         }));
 
@@ -814,7 +815,8 @@ function App() {
                   pushNotifyHomeownerRescheduleRequest: usersTable.pushNotifyHomeownerRescheduleRequest,
                   pushNotifyTaskAssigned: usersTable.pushNotifyTaskAssigned,
                   pushNotifyHomeownerMessage: usersTable.pushNotifyHomeownerMessage,
-                  pushNotifyHomeownerEnrollment: usersTable.pushNotifyHomeownerEnrollment
+                  pushNotifyHomeownerEnrollment: usersTable.pushNotifyHomeownerEnrollment,
+                  notifyNewMessage: usersTable.notifyNewMessage
                 }).from(usersTable).catch((err: any) => {
                   if (err?.message?.includes('email_notify') || err?.message?.includes('push_notify') || err?.statusCode === 400) {
                     console.log('⚠️ Email notification columns not found, using defaults');
@@ -838,7 +840,8 @@ function App() {
                       pushNotifyTaskAssigned: u.pushNotifyTaskAssigned === true,
                       pushNotifyHomeownerMessage: u.pushNotifyHomeownerMessage === true,
                       pushNotifyHomeownerEnrollment: u.pushNotifyHomeownerEnrollment === true,
-                      emailNotifyHomeownerEnrollment: u.emailNotifyHomeownerEnrollment ?? true
+                      emailNotifyHomeownerEnrollment: u.emailNotifyHomeownerEnrollment ?? true,
+                      pushNotifyNewMessage: u.notifyNewMessage === true
                     });
                   });
                 }
@@ -868,7 +871,8 @@ function App() {
                       pushNotifyTaskAssigned: prefs?.pushNotifyTaskAssigned === true,
                       pushNotifyHomeownerMessage: prefs?.pushNotifyHomeownerMessage === true,
                       pushNotifyHomeownerEnrollment: prefs?.pushNotifyHomeownerEnrollment === true,
-                      emailNotifyHomeownerEnrollment: prefs?.emailNotifyHomeownerEnrollment ?? true
+                      emailNotifyHomeownerEnrollment: prefs?.emailNotifyHomeownerEnrollment ?? true,
+                      pushNotifyNewMessage: prefs?.pushNotifyNewMessage === true
                   };
                 });
               
@@ -3520,7 +3524,8 @@ Assigned By: ${assignerName}
              pushNotifyHomeownerRescheduleRequest: emp.pushNotifyHomeownerRescheduleRequest === true,
              pushNotifyTaskAssigned: emp.pushNotifyTaskAssigned === true,
              pushNotifyHomeownerMessage: emp.pushNotifyHomeownerMessage === true,
-             pushNotifyHomeownerEnrollment: emp.pushNotifyHomeownerEnrollment === true
+             pushNotifyHomeownerEnrollment: emp.pushNotifyHomeownerEnrollment === true,
+             notifyNewMessage: emp.pushNotifyNewMessage === true
            } as any);
            console.log('✅ Employee saved to database successfully');
          } catch(e) { 
@@ -3554,7 +3559,8 @@ Assigned By: ${assignerName}
             pushNotifyHomeownerRescheduleRequest: emp.pushNotifyHomeownerRescheduleRequest === true,
             pushNotifyTaskAssigned: emp.pushNotifyTaskAssigned === true,
             pushNotifyHomeownerMessage: emp.pushNotifyHomeownerMessage === true,
-            pushNotifyHomeownerEnrollment: emp.pushNotifyHomeownerEnrollment === true
+            pushNotifyHomeownerEnrollment: emp.pushNotifyHomeownerEnrollment === true,
+            notifyNewMessage: emp.pushNotifyNewMessage === true
           }).where(eq(usersTable.id, emp.id));
           console.log('✅ Employee updated in database successfully with role:', emp.role);
         } catch(e) { 

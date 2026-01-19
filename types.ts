@@ -118,6 +118,7 @@ export interface InternalEmployee {
   pushNotifyTaskAssigned?: boolean;
   pushNotifyHomeownerMessage?: boolean;
   pushNotifyHomeownerEnrollment?: boolean;
+  pushNotifyNewMessage?: boolean; // Universal Chat (Admin-to-Admin)
 }
 
 export interface Contractor {

@@ -78,6 +78,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
   const [empPushNotifyTaskAssigned, setEmpPushNotifyTaskAssigned] = useState(false);
   const [empPushNotifyHomeownerMessage, setEmpPushNotifyHomeownerMessage] = useState(false);
   const [empPushNotifyHomeownerEnrollment, setEmpPushNotifyHomeownerEnrollment] = useState(false);
+  const [empPushNotifyNewMessage, setEmpPushNotifyNewMessage] = useState(false);
 
   // Sub Form State
   const [subCompany, setSubCompany] = useState('');
@@ -121,6 +122,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     setEmpPushNotifyTaskAssigned(false);
     setEmpPushNotifyHomeownerMessage(false);
     setEmpPushNotifyHomeownerEnrollment(false);
+    setEmpPushNotifyNewMessage(false);
     setShowEmpModal(true);
   };
 
@@ -143,6 +145,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
     setEmpPushNotifyTaskAssigned(emp.pushNotifyTaskAssigned === true);
     setEmpPushNotifyHomeownerMessage(emp.pushNotifyHomeownerMessage === true);
     setEmpPushNotifyHomeownerEnrollment(emp.pushNotifyHomeownerEnrollment === true);
+    setEmpPushNotifyNewMessage(emp.pushNotifyNewMessage === true);
     setEmpEmailNotifyHomeownerEnrollment(emp.emailNotifyHomeownerEnrollment !== false);
     setShowEmpModal(true);
   };
@@ -167,6 +170,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
       pushNotifyTaskAssigned: empPushNotifyTaskAssigned,
       pushNotifyHomeownerMessage: empPushNotifyHomeownerMessage,
       pushNotifyHomeownerEnrollment: empPushNotifyHomeownerEnrollment,
+      pushNotifyNewMessage: empPushNotifyNewMessage,
     };
     
     if (editingEmpId) {
@@ -791,6 +795,21 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                       />
                       <div className={`w-[52px] h-8 rounded-full transition-colors duration-200 ease-out flex items-center ${empPushNotifyHomeownerEnrollment ? 'bg-primary' : 'bg-surface-container-high dark:bg-surface-container-high border border-surface-outline dark:border-gray-600'}`}>
                         <div className={`w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-sm transform transition-transform duration-200 ease-out ${empPushNotifyHomeownerEnrollment ? 'translate-x-6' : 'translate-x-1'}`}></div>
+                      </div>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center justify-between cursor-pointer group">
+                    <span className="text-sm text-surface-on dark:text-gray-100">New chat message (Universal)</span>
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={empPushNotifyNewMessage}
+                        onChange={(e) => setEmpPushNotifyNewMessage(e.target.checked)}
+                        className="sr-only"
+                      />
+                      <div className={`w-[52px] h-8 rounded-full transition-colors duration-200 ease-out flex items-center ${empPushNotifyNewMessage ? 'bg-primary' : 'bg-surface-container-high dark:bg-surface-container-high border border-surface-outline dark:border-gray-600'}`}>
+                        <div className={`w-6 h-6 bg-white dark:bg-gray-100 rounded-full shadow-sm transform transition-transform duration-200 ease-out ${empPushNotifyNewMessage ? 'translate-x-6' : 'translate-x-1'}`}></div>
                       </div>
                     </div>
                   </label>
