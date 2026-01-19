@@ -806,15 +806,13 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   onClick={handleAiReview}
                   disabled={isAnalyzing}
                   variant="outlined"
-                  className="!h-9"
+                  className="!h-9 !w-9 !min-w-0 !rounded-full !p-0 flex items-center justify-center"
+                  title="AI Review with Gemini"
                 >
                   {isAnalyzing ? (
-                    'Analyzing...'
+                    <span className="text-xs">...</span>
                   ) : (
-                    <span className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4" />
-                      Gemini
-                    </span>
+                    <Sparkles className="h-4 w-4" />
                   )}
                 </Button>
               </div>
