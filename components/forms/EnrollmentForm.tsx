@@ -60,7 +60,15 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
                     file.type === 'application/vnd.ms-excel' ||
                     file.name.toLowerCase().endsWith('.xlsx') ||
                     file.name.toLowerCase().endsWith('.xls');
+    
+    const isPDF = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+    
+    const isWord = file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                   file.type === 'application/msword' ||
+                   file.name.toLowerCase().endsWith('.docx') ||
+                   file.name.toLowerCase().endsWith('.doc');
 
+    // Handle CSV files
     if (isCSV) {
       const Papa = (await import('papaparse')).default;
       Papa.parse(file, {
@@ -89,7 +97,9 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
           setIsParsing(false);
         }
       });
-    } else if (isExcel) {
+    } 
+    // Handle Excel files
+    else if (isExcel) {
       const XLSX = await import('xlsx');
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -136,8 +146,34 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
         }
       };
       reader.readAsBinaryString(file);
-    } else {
-      alert('Please upload a valid CSV or Excel file.');
+    } 
+    // Handle PDF and Word documents with AI
+    else if (isPDF || isWord) {
+      try {
+        // Import the server action
+        const { parseDocumentSubs } = await import('../actions/parse-document-subs');
+        
+        // Create FormData and append file
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        // Call server action
+        const result = await parseDocumentSubs(formData);
+        
+        if (result.success && result.data) {
+          setParsedSubs(result.data);
+          setIsParsing(false);
+        } else {
+          alert(result.error || 'Failed to parse document.');
+          setIsParsing(false);
+        }
+      } catch (error) {
+        alert(`Error parsing document: ${error instanceof Error ? error.message : 'Please try again.'}`);
+        setIsParsing(false);
+      }
+    } 
+    else {
+      alert('Please upload a valid CSV, Excel, PDF, or Word document.');
       setIsParsing(false);
     }
   };
@@ -420,21 +456,25 @@ const EnrollmentForm: React.FC<EnrollmentFormProps> = ({
                           <input 
                             type="file" 
                             className="sr-only" 
-                            accept=".csv,.xlsx,.xls,.txt"
+                            accept=".csv,.xlsx,.xls,.pdf,.doc,.docx,.txt"
                             onChange={handleFileChange} 
                           />
                         </label>
                         {!tradeFile && <p className="pl-1">or drag and drop</p>}
                       </div>
                       <p className="text-xs text-surface-outline-variant dark:text-gray-500">
-                        {tradeFile ? tradeFile.name : 'CSV, XLS, XLSX up to 10MB'}
+                        {tradeFile ? tradeFile.name : 'CSV, Excel, PDF, or Word documents'}
                       </p>
                     </div>
                   </div>
                   
                   {isParsing && (
                     <div className="mt-4 p-4 bg-surface-container dark:bg-gray-700 rounded-lg text-center">
-                      <p className="text-sm text-surface-on-variant dark:text-gray-400">Parsing spreadsheet...</p>
+                      <p className="text-sm text-surface-on-variant dark:text-gray-400">
+                        {tradeFile?.name.toLowerCase().endsWith('.pdf') || tradeFile?.name.toLowerCase().endsWith('.doc') || tradeFile?.name.toLowerCase().endsWith('.docx')
+                          ? 'Scanning document with AI...'
+                          : 'Parsing spreadsheet...'}
+                      </p>
                     </div>
                   )}
                   

@@ -1,4 +1,4 @@
-import { MapPin, Hammer, Calendar, Phone, Mail, Edit2, Check, Eye, Clock, Pencil } from "lucide-react";
+import { MapPin, Hammer, Calendar, Phone, Mail, Edit2, Check, Eye, Clock, Pencil, HardHat } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -15,6 +15,7 @@ interface HomeownerCardProps {
   email?: string;
   onEdit?: () => void;
   onViewAs?: () => void;
+  onViewSubs?: () => void;
   // Status tracking
   clerkId?: string;
   inviteEmailRead?: boolean;
@@ -78,6 +79,7 @@ export function HomeownerCard({
   email,
   onEdit,
   onViewAs,
+  onViewSubs,
   clerkId,
   inviteEmailRead,
 }: HomeownerCardProps) {
@@ -168,6 +170,23 @@ export function HomeownerCard({
 
           {/* Right: Action Buttons */}
           <div className="flex items-center gap-2">
+            {/* Subs Button */}
+            {onViewSubs && (
+              <Button
+                size="icon"
+                variant="outline"
+                className="rounded-full h-8 w-8 bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  console.log("🔨 View Subs Clicked for:", name);
+                  if (onViewSubs) onViewSubs();
+                }}
+                title="View Subcontractors"
+              >
+                <HardHat className="h-4 w-4" />
+              </Button>
+            )}
+
             {/* View As Button */}
             <Button
               size="icon"
