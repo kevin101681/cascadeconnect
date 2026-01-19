@@ -101,8 +101,8 @@ export default defineConfig(({ mode }) => {
       
       VitePWA({
         registerType: 'autoUpdate',
-        // We'll register the Service Worker ourselves after first paint (see index.tsx),
-        // so do not inject registerSW.js into index.html.
+        // Auto-registration is handled in index.tsx with delayed load for performance.
+        // Setting to null prevents double-registration but allows our custom timing.
         injectRegister: null,
         includeAssets: ['logo.svg', 'favicon.ico', 'complete_homeowner_manual.html', 'homeowner-manual.html'],
         manifest: {
