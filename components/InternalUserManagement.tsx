@@ -373,33 +373,33 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
               <tr className="bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 text-xs uppercase tracking-wider">
                 {activeTab === 'EMPLOYEES' ? (
                   <>
-                    <th className="px-3 py-2 font-medium">Employee</th>
-                    <th className="px-3 py-2 font-medium">Role</th>
-                    <th className="px-3 py-2 font-medium">Email</th>
+                    <th className="px-2 py-2 font-medium">Employee</th>
+                    <th className="px-2 py-2 font-medium">Role</th>
+                    <th className="px-2 py-2 font-medium">Email</th>
                   </>
                 ) : activeTab === 'SUBS' ? (
                   <>
-                    <th className="px-3 py-2 font-medium">Company</th>
-                    <th className="px-3 py-2 font-medium">Contact</th>
-                    <th className="px-3 py-2 font-medium">Specialty</th>
-                    <th className="px-3 py-2 font-medium">Email</th>
+                    <th className="px-2 py-2 font-medium">Company</th>
+                    <th className="px-2 py-2 font-medium">Contact</th>
+                    <th className="px-2 py-2 font-medium">Specialty</th>
+                    <th className="px-2 py-2 font-medium">Email</th>
                   </>
                 ) : (
                   <>
-                    <th className="px-3 py-2 font-medium">User Name</th>
-                    <th className="px-3 py-2 font-medium">Email</th>
-                    <th className="px-3 py-2 font-medium">Assigned Group</th>
-                    <th className="px-3 py-2 font-medium">Linked Homeowners</th>
+                    <th className="px-2 py-2 font-medium">User Name</th>
+                    <th className="px-2 py-2 font-medium">Email</th>
+                    <th className="px-2 py-2 font-medium">Assigned Group</th>
+                    <th className="px-2 py-2 font-medium">Linked Homeowners</th>
                   </>
                 )}
-                <th className="px-3 py-2 font-medium text-right">Actions</th>
+                <th className="px-2 py-2 font-medium text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface-outline-variant dark:divide-gray-700">
               {activeTab === 'EMPLOYEES' ? (
                 employees.map(emp => (
                   <tr key={emp.id} className="hover:bg-surface-container-high dark:hover:bg-gray-700 transition-colors group">
-                    <td className="px-3 py-2">
+                    <td className="px-2 py-2">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-secondary-on-container font-bold text-xs">
                           {emp.name.charAt(0)}
@@ -407,15 +407,15 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         <span className="font-medium text-surface-on dark:text-gray-100 text-sm">{emp.name}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-2 py-2">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-container-high dark:bg-gray-700 text-surface-on dark:text-gray-100">
                         {emp.role}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-sm text-surface-on-variant dark:text-gray-400">
+                    <td className="px-2 py-2 text-sm text-surface-on-variant dark:text-gray-400">
                       {emp.email}
                     </td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="px-2 py-2 text-right">
                       {isAdministrator && (
                         <div className="flex items-center justify-end gap-2">
                           <Button
@@ -440,7 +440,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
               ) : activeTab === 'SUBS' ? (
                 contractors.map(sub => (
                   <tr key={sub.id} className="hover:bg-surface-container-high dark:hover:bg-gray-700 transition-colors group">
-                    <td className="px-3 py-2">
+                    <td className="px-2 py-2">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-primary-on-container font-bold text-xs">
                           <HardHat className="h-4 w-4" />
@@ -448,18 +448,18 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         <span className="font-medium text-surface-on dark:text-gray-100 text-sm">{sub.companyName}</span>
                       </div>
                     </td>
-                    <td className="px-3 py-2 text-sm text-surface-on dark:text-gray-100">
+                    <td className="px-2 py-2 text-sm text-surface-on dark:text-gray-100">
                       {sub.contactName}
                     </td>
-                    <td className="px-3 py-2">
+                    <td className="px-2 py-2">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-container-high dark:bg-gray-700 text-surface-on dark:text-gray-100">
                         {sub.specialty}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-sm text-surface-on-variant dark:text-gray-400">
+                    <td className="px-2 py-2 text-sm text-surface-on-variant dark:text-gray-400">
                       {sub.email}
                     </td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="px-2 py-2 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
                           variant="outlined"
@@ -495,7 +495,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                   const linkedHomeownersCount = homeowners.filter(h => h.builderUserId === user.id).length;
                   return (
                     <tr key={user.id} className="hover:bg-surface-container-high dark:hover:bg-gray-700 transition-colors group">
-                      <td className="px-3 py-2">
+                      <td className="px-2 py-2">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-secondary-on-container font-bold text-xs">
                             {user.name.charAt(0)}
@@ -503,20 +503,20 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                           <span className="font-medium text-surface-on dark:text-gray-100 text-sm">{user.name}</span>
                         </div>
                       </td>
-                      <td className="px-3 py-2 text-sm text-surface-on-variant dark:text-gray-400">
+                      <td className="px-2 py-2 text-sm text-surface-on-variant dark:text-gray-400">
                         {user.email}
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-2 py-2">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600">
                           {groupName}
                         </span>
                       </td>
-                      <td className="px-3 py-2">
+                      <td className="px-2 py-2">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 dark:bg-primary/20 text-primary dark:text-primary">
                           {linkedHomeownersCount}
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-right">
+                      <td className="px-2 py-2 text-right">
                         {isAdministrator && (
                           <div className="flex items-center justify-end gap-2">
                             <Button
