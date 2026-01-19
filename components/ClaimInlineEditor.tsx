@@ -6,7 +6,7 @@ import CalendarPicker from './CalendarPicker';
 import MaterialSelect from './MaterialSelect';
 import { ClaimMessage } from './MessageSummaryModal';
 import ImageViewerModal from './ImageViewerModal';
-import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload, FileEdit, Trash2, StickyNote, Calendar as CalendarIcon, Tag, Bot } from 'lucide-react';
+import { Calendar, CheckCircle, FileText, Mail, MessageSquare, Clock, HardHat, Info, Lock, Paperclip, Video, X, Edit2, Save, ChevronDown, ChevronUp, Send, Plus, User, ExternalLink, Upload, FileEdit, Trash2, StickyNote, Calendar as CalendarIcon, Tag, Bot, Sparkles, Loader2 } from 'lucide-react';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
@@ -746,7 +746,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
   };
   
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="flex flex-col h-full overflow-hidden relative max-w-5xl mx-auto w-full">
       {/* Scrollable Body - Takes full space */}
       <div className="flex-1 overflow-y-auto px-0 py-4 md:p-6 space-y-6 min-h-0">
           {/* Title and Description Card */}
@@ -773,21 +773,39 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   </>
                 )}
               </div>
-              <div>
+              <div className="relative">
                 {isEditing && !isReadOnly ? (
-                  <AutoSaveTextarea
-                    value={editDescription}
-                    onSave={async (newDescription) => {
-                      setEditDescription(newDescription);
-                      await onUpdateClaim({
-                        ...claim,
-                        description: newDescription,
-                      });
-                    }}
-                    label="Description"
-                    placeholder="Enter description..."
-                    rows={6}
-                  />
+                  <>
+                    <AutoSaveTextarea
+                      value={editDescription}
+                      onSave={async (newDescription) => {
+                        setEditDescription(newDescription);
+                        await onUpdateClaim({
+                          ...claim,
+                          description: newDescription,
+                        });
+                      }}
+                      label="Description"
+                      placeholder="Enter description..."
+                      rows={6}
+                    />
+                    
+                    {/* AI Review Button - Floating Icon (Admin Only) */}
+                    {isAdmin && (
+                      <button
+                        onClick={handleAiReview}
+                        disabled={isAnalyzing}
+                        className="absolute bottom-3 right-3 z-10 h-8 w-8 p-0 rounded-full bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm border border-gray-300 dark:border-gray-600 shadow-md hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"
+                        title="AI Warranty Review"
+                      >
+                        {isAnalyzing ? (
+                          <Loader2 className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                        )}
+                      </button>
+                    )}
+                  </>
                 ) : (
                   <>
                     <label className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Description</label>
@@ -798,20 +816,6 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 )}
               </div>
             </div>
-
-            {/* AI Review Button - Admin Only */}
-            {isAdmin && !isReadOnly && (
-              <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-600">
-                <Button
-                  onClick={handleAiReview}
-                  disabled={isAnalyzing}
-                  variant="outlined"
-                  className="!h-9"
-                >
-                  {isAnalyzing ? 'Analyzing...' : 'AI'}
-                </Button>
-              </div>
-            )}
           </div>
 
           {/* AI Review Results */}
