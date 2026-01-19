@@ -795,7 +795,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                       <button
                         onClick={handleAiReview}
                         disabled={isAnalyzing}
-                        className="absolute bottom-3 right-3 z-10 h-8 w-8 p-0 rounded-full bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm border border-gray-300 dark:border-gray-600 shadow-md hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"
+                        className="absolute bottom-6 right-4 z-10 h-8 w-8 p-0 rounded-full bg-white/90 dark:bg-gray-700/90 backdrop-blur-sm border border-gray-300 dark:border-gray-600 shadow-md hover:shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center"
                         title="AI Warranty Review"
                       >
                         {isAnalyzing ? (
