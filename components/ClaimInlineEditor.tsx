@@ -802,9 +802,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
                         title="AI Warranty Review"
                       >
                         {isAnalyzing ? (
-                          <Loader2 className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-spin" />
+                          <Loader2 className="h-4 w-4 text-primary dark:text-primary animate-spin" />
                         ) : (
-                          <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                          <Sparkles className="h-4 w-4 text-primary dark:text-primary" />
                         )}
                       </button>
                     )}

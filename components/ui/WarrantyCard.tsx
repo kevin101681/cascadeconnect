@@ -1,4 +1,4 @@
-import { Calendar, Paperclip, Send, User, FileText, CheckCircle2 } from "lucide-react";
+import { Calendar, Paperclip, Send, Hammer, FileText, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface WarrantyCardProps {
@@ -101,7 +101,7 @@ export function WarrantyCard({
         {/* Sub Contractor */}
         <div className="flex items-center min-w-0 flex-1 mr-2">
           <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mr-1.5 ${subName ? "bg-blue-50 text-blue-600" : "bg-gray-100 text-gray-400"}`}>
-            <User className="w-3 h-3" />
+            <Hammer className="w-3 h-3" />
           </div>
           <span className={`text-xs font-medium truncate ${subName ? "text-gray-700" : "text-gray-400 italic"}`}>
             {subName || "Unassigned"}
