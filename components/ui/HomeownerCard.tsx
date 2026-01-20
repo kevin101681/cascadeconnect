@@ -60,11 +60,10 @@ const ClientStatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full text-xs font-medium px-2 py-0.5 ${config.bg} ${config.text}`}
+      className={`inline-flex items-center justify-center rounded-full text-xs font-medium w-5 h-5 ${config.bg} ${config.text}`}
       title={`Status: ${config.label}`}
     >
       <Icon className="h-3 w-3" />
-      <span>{config.label}</span>
     </span>
   );
 };
@@ -109,7 +108,7 @@ export function HomeownerCard({
     <div className="bg-white dark:bg-gray-800 rounded-card border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group">
       
       {/* Action Buttons - Top Right */}
-      <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+      <div className="absolute top-4 right-4 flex items-center gap-1 z-10">
         {/* Subs Button */}
         {onViewSubs && (
           <Button
@@ -158,16 +157,15 @@ export function HomeownerCard({
         </Button>
       </div>
 
-      {/* HEADER: Name, Status Badge & Project */}
-      <div className="flex flex-col mb-6 pr-24">
-        {/* Name */}
-        <h3 className={`font-bold text-lg leading-tight mb-2 ${name ? "text-primary dark:text-primary" : "text-gray-400 dark:text-gray-500 italic"}`}>
-          {name || "Unknown Homeowner"}
-        </h3>
-        
-        {/* Status Badge + Project Badge Row */}
-        <div className="flex items-center gap-2 flex-wrap">
+      {/* HEADER: Name with Status Icon & Project */}
+      <div className="flex flex-col mb-6 pr-20">
+        {/* Name + Status Icon Row */}
+        <div className="flex items-center gap-2 mb-2">
+          <h3 className={`font-bold text-lg leading-tight ${name ? "text-primary dark:text-primary" : "text-gray-400 dark:text-gray-500 italic"}`}>
+            {name || "Unknown Homeowner"}
+          </h3>
           <ClientStatusBadge status={clientStatus} />
+        </div>
           {project && (
             <Badge variant="secondary" className="text-[10px] h-5 px-2 font-normal text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600">
               {project}

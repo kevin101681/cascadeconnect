@@ -3991,7 +3991,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         {/* Main Layout Container - Sidebar + Content with Staggered Cascade Animation */}
         <StaggerContainer className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 bg-white dark:bg-gray-900" staggerDelay={0.08}>
           {/* LEFT SIDEBAR - Homeowner Info Card with Search - HIDDEN ON MOBILE when tab is active */}
-          <FadeIn direction="right" className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 bg-surface md:bg-surface-container dark:bg-gray-800 md:dark:bg-gray-700 rounded-3xl ${currentTab ? 'hidden lg:block' : ''} ${isHomeownerCardCollapsed ? 'w-full lg:w-16' : 'w-full lg:w-72'}`}>
+          <FadeIn direction="right" className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 rounded-3xl ${currentTab ? 'hidden lg:block' : ''} ${isHomeownerCardCollapsed ? 'w-full lg:w-16' : 'w-full lg:w-72'}`}>
             {/* Search Bar - Admin & Builder Only - Always visible on mobile, top of card on desktop */}
             {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
               <div className={`lg:hidden mb-4 ${isHomeownerCardCollapsed ? 'block' : 'block'}`}>
