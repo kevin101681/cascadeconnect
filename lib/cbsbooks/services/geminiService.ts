@@ -53,7 +53,7 @@ export const generateFinancialAnalysis = async (
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.0-flash',
       contents: prompt,
       config: {
         thinkingConfig: { thinkingBudget: 0 }
@@ -103,7 +103,7 @@ export const analyzeCheckImage = async (base64Image: string): Promise<CheckAnaly
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.0-flash',
       contents: {
         parts: [
           { inlineData: { mimeType: mimeType, data: data } },
@@ -154,7 +154,7 @@ export const parseInvoiceFromText = async (text: string, customRules?: string): 
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.0-flash',
       contents: prompt,
       config: {
         responseMimeType: 'application/json'
@@ -208,7 +208,7 @@ export const parseInvoiceFromImage = async (base64Image: string, customRules?: s
     `;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.0-flash',
       contents: {
         parts: [
             { inlineData: { mimeType: mimeType, data: data } },

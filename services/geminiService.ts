@@ -34,7 +34,7 @@ export const summarizeClaim = async (claim: Claim): Promise<string> => {
   
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.0-flash',
       contents: `Summarize the following warranty claim description into a concise summary (1-2 sentences).
       
       Title: ${claim.title}
@@ -67,7 +67,7 @@ Cascade Builder Services`;
   
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.0-flash',
       contents: `Draft a professional scheduling email to the homeowner regarding their warranty claim.
       
       Homeowner Name: ${claim.homeownerName}
@@ -123,4 +123,48 @@ Warmly,
 The Team at Cascade Builder Services
 info@cascadebuilderservices.com
 cascadebuilderservices.com`;
+};
+
+/**
+ * Detects if a message contains warranty claim intent.
+ * @param message - The message content to analyze
+ * @returns true if the message is likely a warranty claim, false otherwise
+ */
+export const detectClaimIntent = async (message: string): Promise<boolean> => {
+  const ai = getAI();
+  if (!ai) {
+    // Fail open - if AI is not available, return false so user can still send message
+    return false;
+  }
+  
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.0-flash',
+      contents: `Analyze the following homeowner message and determine if they are describing a physical defect, repair request, or home issue that should be tracked as a "Warranty Claim" (vs. a general question or administrative message).
+
+Message: "${message}"
+
+Instructions:
+- Return ONLY "YES" if this message describes:
+  * A physical defect or damage (e.g., cracked tile, leaking pipe, broken fixture)
+  * A repair request or maintenance issue
+  * A home system malfunction (HVAC, plumbing, electrical, etc.)
+  * Something that needs to be fixed or inspected
+- Return ONLY "NO" if this is:
+  * A general question or inquiry
+  * An administrative message
+  * A scheduling question
+  * A thank you or acknowledgment
+  * A request for information
+
+Respond with ONLY the word "YES" or "NO" (no explanation).`,
+    });
+    
+    const result = response.text?.trim().toUpperCase();
+    return result === 'YES';
+  } catch (error) {
+    console.error("Gemini API Error (detectClaimIntent):", error);
+    // Fail open - if the API fails, return false so user can still send their message
+    return false;
+  }
 };

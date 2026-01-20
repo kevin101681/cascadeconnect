@@ -16,7 +16,7 @@ import { db, isDbConfigured } from '../db';
 import Button from './Button';
 import MaterialSelect from './MaterialSelect';
 import { DropdownButton } from './ui/dropdown-button';
-import { draftInviteEmail } from '../services/geminiService';
+import { draftInviteEmail, detectClaimIntent } from '../services/geminiService';
 import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
 import TaskDetail from './TaskDetail';
@@ -1204,6 +1204,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   });
   const [showMessageTemplateModal, setShowMessageTemplateModal] = useState(false);
+  const [showClaimSuggestionModal, setShowClaimSuggestionModal] = useState(false);
   const [editingMessageTemplateId, setEditingMessageTemplateId] = useState<string | null>(null);
   const [messageTemplateName, setMessageTemplateName] = useState('');
   const [selectedMessageTemplateId, setSelectedMessageTemplateId] = useState<string>('');
@@ -2095,7 +2096,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
 
-  const handleCreateNewThread = async () => {
+  const handleCreateNewThread = async (forceSend: boolean = false) => {
     if (!effectiveHomeowner && !isAdmin) return;
     
     if (!effectiveHomeowner && isAdmin) {
@@ -2122,6 +2123,31 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
 
     if (!newMessageSubject || !newMessageContent) return;
+    
+    // AI Intent Detection - Only for homeowners, not force-sent, and substantial messages
+    if (
+      userRole === UserRole.HOMEOWNER && 
+      !forceSend && 
+      newMessageContent.length > 10
+    ) {
+      setIsSendingMessage(true);
+      
+      try {
+        const isClaimIntent = await detectClaimIntent(newMessageContent);
+        
+        if (isClaimIntent) {
+          // Detected warranty claim intent - show suggestion modal
+          setIsSendingMessage(false);
+          setShowClaimSuggestionModal(true);
+          return; // Exit early - don't create thread yet
+        }
+      } catch (error) {
+        console.error("Intent detection error:", error);
+        // On error, proceed with sending (fail open)
+      }
+      
+      setIsSendingMessage(false);
+    }
     
     setIsSendingMessage(true);
     
@@ -2151,6 +2177,14 @@ const Dashboard: React.FC<DashboardProps> = ({
     setNewMessageSubject('');
     setNewMessageContent('');
     setNewMessageRecipientId('');
+  };
+
+  // Handler to redirect homeowner to Warranty tab and open claim form
+  const handleRedirectToWarranty = () => {
+    setShowClaimSuggestionModal(false);
+    setShowNewMessageModal(false);
+    setCurrentTab('CLAIMS');
+    setIsCreatingNewClaim(true);
   };
 
   // --- Render Helpers ---
@@ -6258,6 +6292,44 @@ const Dashboard: React.FC<DashboardProps> = ({
                 }}>Cancel</Button>
                 <Button variant="filled" onClick={handleSaveMessageTemplate} disabled={!messageTemplateName.trim() || !(editingMessageTemplateId ? messageTemplateEditSubject : newMessageSubject).trim() || !(editingMessageTemplateId ? messageTemplateEditBody : newMessageContent).trim()} icon={<Save className="h-4 w-4" />}>
                   {editingMessageTemplateId ? 'Update Template' : 'Save Template'}
+                </Button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+        
+        {/* Claim Suggestion Modal */}
+        {showClaimSuggestionModal && createPortal(
+          <div className="fixed inset-0 z-[1001] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]">
+            <div className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-3 w-full max-w-md mx-4 overflow-hidden flex flex-col animate-[scale-in_0.2s_ease-out]" onClick={(e) => e.stopPropagation()}>
+              <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700">
+                <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">
+                  Submit a Warranty Claim?
+                </h2>
+              </div>
+              <div className="p-6 bg-surface dark:bg-gray-800">
+                <p className="text-surface-on dark:text-gray-200">
+                  It looks like you might be reporting a repair issue. For the best service and tracking, please submit this as a Warranty Claim.
+                </p>
+              </div>
+              <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex flex-col gap-2 bg-surface-container dark:bg-gray-700">
+                <Button 
+                  variant="filled" 
+                  onClick={handleRedirectToWarranty}
+                  className="w-full"
+                >
+                  Go to Warranty Tab
+                </Button>
+                <Button 
+                  variant="text" 
+                  onClick={() => {
+                    setShowClaimSuggestionModal(false);
+                    handleCreateNewThread(true);
+                  }}
+                  className="w-full"
+                >
+                  No, send as a regular message
                 </Button>
               </div>
             </div>

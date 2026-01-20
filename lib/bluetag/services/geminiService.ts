@@ -33,7 +33,7 @@ export const analyzeDefectImage = async (base64Image: string): Promise<string> =
     const cleanBase64 = base64Image.split(',')[1] || base64Image;
 
     const response = await aiClient.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.0-flash',
       contents: {
         role: 'user',
         parts: [
@@ -66,7 +66,7 @@ export const suggestFix = async (issueDescription: string): Promise<string> => {
 
     try {
         const response = await aiClient.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.0-flash',
             contents: `For the following construction defect: "${issueDescription}", suggest a concise standard repair method (max 20 words).`
         });
         return response.text || "";
