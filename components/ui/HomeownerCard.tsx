@@ -166,12 +166,11 @@ export function HomeownerCard({
           </h3>
           <ClientStatusBadge status={clientStatus} />
         </div>
-          {project && (
-            <Badge variant="secondary" className="text-[10px] h-5 px-2 font-normal text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600">
-              {project}
-            </Badge>
-          )}
-        </div>
+        {project && (
+          <Badge variant="secondary" className="text-[10px] h-5 px-2 font-normal text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600">
+            {project}
+          </Badge>
+        )}
       </div>
 
       {/* UNIFIED INFO LIST */}
