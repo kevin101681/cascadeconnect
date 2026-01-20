@@ -168,3 +168,88 @@ Respond with ONLY the word "YES" or "NO" (no explanation).`,
     return false;
   }
 };
+
+/**
+ * Aggressive Call Intent Detection for AI Gatekeeper
+ * 
+ * Analyzes incoming caller information to detect spam/sales calls.
+ * This is designed to be STRICT - when in doubt, classify as SPAM.
+ * 
+ * @param callerInfo - Information about the caller
+ * @returns "SPAM" if likely spam/sales, "LEGIT" if legitimate caller
+ */
+export interface CallerInfo {
+  callerName?: string;
+  callerPurpose?: string;
+  callerCompany?: string;
+  callTranscript?: string;
+}
+
+export type CallIntentResult = 'SPAM' | 'LEGIT';
+
+export const detectCallIntent = async (callerInfo: CallerInfo): Promise<CallIntentResult> => {
+  const ai = getAI();
+  if (!ai) {
+    // Fail secure - if AI is not available, assume SPAM for safety
+    console.warn("⚠️ Gemini AI unavailable - defaulting to SPAM classification");
+    return 'SPAM';
+  }
+  
+  try {
+    // Build context from available caller information
+    const context = [
+      callerInfo.callerName ? `Caller Name: ${callerInfo.callerName}` : null,
+      callerInfo.callerCompany ? `Company: ${callerInfo.callerCompany}` : null,
+      callerInfo.callerPurpose ? `Stated Purpose: ${callerInfo.callerPurpose}` : null,
+      callerInfo.callTranscript ? `Transcript: ${callerInfo.callTranscript}` : null,
+    ].filter(Boolean).join('\n');
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.0-flash',
+      contents: `You are a cynical security guard protecting someone from spam calls. Your job is to be STRICT and suspicious.
+
+CALLER INFORMATION:
+${context}
+
+CLASSIFICATION RULES:
+
+Classify as SPAM if ANY of these red flags are present:
+- Selling anything (solar panels, insurance, extended warranties, home services, credit cards, loans, etc.)
+- Asking for "the business owner" or "the homeowner" generically
+- Vague or evasive about their purpose
+- Using high-pressure language ("limited time offer", "act now", etc.)
+- Asking to "verify" or "update" information
+- Political campaigns or fundraising
+- Surveys or market research
+- "This is not a sales call" (paradoxically, these usually are)
+- Robocalls or automated messages
+- Unknown company name or suspicious company (e.g., "Energy Solutions", "Home Services", etc.)
+- Any mention of: Medicare, social security, student loans, debt relief, auto warranty, etc.
+
+Classify as LEGIT ONLY if:
+- They provide a SPECIFIC, VERIFIABLE reason for calling (e.g., "Delivery for Kevin at 123 Main St", "Dr. Smith's office calling about your appointment on Tuesday")
+- They mention a specific person, address, or appointment time
+- They're from a known service provider with a specific issue (e.g., "Your internet is down, we're fixing it")
+- They're a personal contact (friend, family, colleague) - but they must be specific
+
+WHEN IN DOUBT, CLASSIFY AS SPAM.
+
+Respond with ONLY the word "SPAM" or "LEGIT" (no explanation).`,
+    });
+    
+    const result = response.text?.trim().toUpperCase();
+    
+    // Default to SPAM if response is unclear
+    if (result === 'LEGIT') {
+      console.log('✅ Call classified as LEGIT:', callerInfo);
+      return 'LEGIT';
+    } else {
+      console.log('🚫 Call classified as SPAM:', callerInfo);
+      return 'SPAM';
+    }
+  } catch (error) {
+    console.error("Gemini API Error (detectCallIntent):", error);
+    // Fail secure - if the API fails, default to SPAM for safety
+    return 'SPAM';
+  }
+};

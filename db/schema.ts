@@ -384,3 +384,12 @@ export const pushSubscriptions = pgTable('push_subscriptions', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+// --- 17. User Contacts (AI Gatekeeper Allowlist) ---
+export const userContacts = pgTable('user_contacts', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id').notNull(), // Link to Clerk ID
+  phoneNumber: text('phone_number').notNull().unique(), // E.164 format (+15550000000)
+  name: text('name'), // Contact name (optional)
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
