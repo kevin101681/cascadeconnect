@@ -1901,7 +1901,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     return false; // Don't show documents if no homeowner is selected in Admin view
   });
 
-  // Filter Messages
+  // Filter Messages - Sort newest first
   const displayThreads = messages.filter(t => {
     if (effectiveHomeowner) {
       return t.homeownerId === effectiveHomeowner.id;
@@ -1909,7 +1909,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     // If Admin/Builder and NO homeowner selected, show ALL threads
     if (isAdmin) return true;
     return false;
-  });
+  }).sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
 
   // Tasks Logic
   const myTasks = tasks.filter(t => t.assignedToId === currentUser.id && !t.isCompleted);
@@ -2022,10 +2022,27 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   const handleSendReply = async () => {
     if (selectedThreadId && replyContent.trim()) {
-      onSendMessage(selectedThreadId, replyContent);
+      // Get the last message in the thread for quoting
+      const thread = messages.find(m => m.id === selectedThreadId);
+      const lastMessage = thread?.messages[thread.messages.length - 1];
+      
+      // Create quoted content (Gmail style)
+      let fullContent = replyContent;
+      if (lastMessage) {
+        const quotedDate = new Date(lastMessage.timestamp).toLocaleString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit'
+        });
+        fullContent = `${replyContent}\n\n---\nOn ${quotedDate}, ${lastMessage.senderName} wrote:\n\n${lastMessage.content}`;
+      }
+      
+      onSendMessage(selectedThreadId, fullContent);
       
       // Simulate sending email notification to the other party
-      const thread = messages.find(m => m.id === selectedThreadId);
       const senderName = isAdmin ? (currentUser?.name || 'Admin') : (activeHomeowner?.name || 'Homeowner');
       
       if (thread && effectiveHomeowner) {
@@ -2042,7 +2059,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         await sendEmail({
           to: recipientEmail,
           subject: `Re: ${thread.subject}`,
-          body: generateNotificationBody(senderName, replyContent, 'MESSAGE', thread.id, messagesLink),
+          body: generateNotificationBody(senderName, fullContent, 'MESSAGE', thread.id, messagesLink),
           fromName: senderName,
           fromRole: userRole,
           replyToId: thread.id,
@@ -2085,7 +2102,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             subject: thread.subject,
             recipient: effectiveHomeowner.name,
             recipientEmail: effectiveHomeowner.email,
-            content: replyContent,
+            content: fullContent,
             senderName: currentUser.name
           });
         }
@@ -3131,13 +3148,21 @@ const Dashboard: React.FC<DashboardProps> = ({
                     
                     // Get message preview from the last message
                     const messagePreview = lastMsg?.content || '';
+                    
+                    // Format date with time
+                    const messageDate = new Date(thread.lastMessageAt).toLocaleString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: '2-digit'
+                    });
 
                     return (
                       <MessageCard
                         key={thread.id}
                         title={thread.subject}
                         senderName={participants}
-                        dateSent={new Date(thread.lastMessageAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        dateSent={messageDate}
                         messagePreview={messagePreview}
                         isRead={thread.isRead}
                         onClick={() => {
@@ -3358,7 +3383,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                  className="flex-1 overflow-y-auto overscroll-contain px-6 pt-4"
                  style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
                >
-                 <div className="px-8 py-6 bg-white dark:bg-white rounded-2xl mx-4 my-4">
+                 <div className="px-4 py-6 bg-white dark:bg-white rounded-2xl mx-4 my-4">
                     {/* Subject Line */}
                     <div className="flex items-start justify-between mb-8">
                        <h2 className="text-2xl font-normal text-surface-on dark:text-gray-100 leading-tight">{selectedThread.subject}</h2>
@@ -3415,13 +3440,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                              </div>
                              
                              {/* Message Body - Full Width Email Style */}
-                             <div className="pl-14 text-sm text-surface-on/90 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+                             <div className="text-sm text-surface-on/90 dark:text-gray-200 whitespace-pre-wrap break-words leading-relaxed">
                                 {msg.content}
                              </div>
                              
                              {/* Divider if not last */}
                              {idx < selectedThread.messages.length - 1 && (
-                               <div className="mt-8 border-b border-surface-outline-variant/30 dark:border-gray-700/30 ml-14"></div>
+                               <div className="mt-8 border-b border-surface-outline-variant/30 dark:border-gray-700/30"></div>
                              )}
                           </div>
                         );
@@ -3562,7 +3587,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </div>
                     
                     {/* Message Body */}
-                    <div className="text-sm text-surface-on/90 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+                    <div className="text-sm text-surface-on/90 dark:text-gray-200 whitespace-pre-wrap break-words leading-relaxed">
                       {msg.content}
                     </div>
                     
