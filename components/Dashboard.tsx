@@ -6222,7 +6222,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </Button>
                   <Button
                     variant="filled"
-                    onClick={handleCreateNewThread}
+                    onClick={() => handleCreateNewThread()}
                     disabled={!newMessageSubject || !newMessageContent || isSendingMessage || (!isAdmin && !newMessageRecipientId)}
                     icon={isSendingMessage ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"/> : <Send className="h-4 w-4" />}
                   >
