@@ -1,4 +1,4 @@
-import { MapPin, Hammer, Calendar, Phone, Mail, Edit2, Check, Eye, Clock, Pencil, HardHat } from "lucide-react";
+import { MapPin, Home, Calendar, Phone, Mail, Edit2, Check, Eye, Clock, Pencil, HardHat } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -161,7 +161,7 @@ export function HomeownerCard({
       {/* HEADER: Name, Status Badge & Project */}
       <div className="flex flex-col mb-6 pr-24">
         {/* Name */}
-        <h3 className={`font-bold text-lg leading-tight mb-2 ${name ? "text-gray-900 dark:text-gray-100" : "text-gray-400 dark:text-gray-500 italic"}`}>
+        <h3 className={`font-bold text-lg leading-tight mb-2 ${name ? "text-primary dark:text-primary" : "text-gray-400 dark:text-gray-500 italic"}`}>
           {name || "Unknown Homeowner"}
         </h3>
         
@@ -217,7 +217,7 @@ export function HomeownerCard({
 
         {/* Builder */}
         <div className="flex items-start group/item">
-          <Hammer className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 shrink-0" />
+          <Home className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 shrink-0" />
           <div className="flex flex-col">
             <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Builder</span>
             <span className={`text-sm ${builder ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
