@@ -158,16 +158,16 @@ export function HomeownerCard({
       </div>
 
       {/* HEADER: Name with Status Icon & Project */}
-      <div className="flex flex-col mb-6 pr-20">
+      <div className="flex flex-col mb-4 pr-20">
         {/* Name + Status Icon Row */}
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-3">
           <h3 className={`font-bold text-lg leading-tight ${name ? "text-primary dark:text-primary" : "text-gray-400 dark:text-gray-500 italic"}`}>
             {name || "Unknown Homeowner"}
           </h3>
           <ClientStatusBadge status={clientStatus} />
         </div>
         {project && (
-          <Badge variant="secondary" className="text-[10px] h-5 px-2 font-normal text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 w-fit">
+          <Badge variant="secondary" className="text-[10px] h-5 px-2 font-normal text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 w-fit my-3">
             {project}
           </Badge>
         )}
