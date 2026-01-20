@@ -3128,6 +3128,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                     const participants = isAdmin 
                       ? thread.participants.filter(p => p !== currentUser.name).join(', ') || 'Me'
                       : thread.participants.filter(p => p !== activeHomeowner.name).join(', ') || 'Me';
+                    
+                    // Get message preview from the last message
+                    const messagePreview = lastMsg?.content || '';
 
                     return (
                       <MessageCard
@@ -3135,6 +3138,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         title={thread.subject}
                         senderName={participants}
                         dateSent={new Date(thread.lastMessageAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        messagePreview={messagePreview}
                         isRead={thread.isRead}
                         onClick={() => {
                           setSelectedThreadId(thread.id);
@@ -3384,13 +3388,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                         return (
                           <div key={msg.id} className="group">
                              <div className="flex items-start gap-4 mb-3">
-                                {/* Avatar */}
-                                <div className={`w-10 h-9 rounded-full flex items-center justify-center text-sm font-bold shadow-sm shrink-0 ${
-                                   isMe ? 'bg-primary text-primary-on' : 'bg-tertiary-container text-tertiary-on-container'
-                                }`}>
-                                   {msg.senderName.charAt(0)}
-                                </div>
-
                                 <div className="flex-1 min-w-0">
                                    <div className="flex items-baseline justify-between">
                                       <div className="flex items-baseline gap-2">
@@ -3469,15 +3466,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                          <div className="flex justify-between items-center p-3 bg-surface-container/10 dark:bg-gray-700/10">
                             <div className="flex gap-2">
                                <button className="p-2 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Paperclip className="h-4 w-4"/></button>
-                               <button className="p-2 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Building2 className="h-4 w-4"/></button>
                             </div>
                             <div className="flex items-center gap-2">
-                               <button 
+                               <Button 
                                  onClick={() => setReplyExpanded(false)}
-                                 className="p-2 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 text-sm font-medium"
+                                 variant="outlined"
+                                 className="!h-9 !px-6"
                                >
                                  Discard
-                               </button>
+                               </Button>
                                <Button 
                                  onClick={handleSendReply} 
                                  disabled={!replyContent.trim()} 
@@ -3548,13 +3545,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 return (
                   <div key={msg.id} className="group">
                     <div className="flex items-start gap-4 mb-3">
-                      {/* Avatar */}
-                      <div className={`w-10 h-9 rounded-full flex items-center justify-center text-sm font-bold shadow-sm shrink-0 ${
-                        isMe ? 'bg-primary text-primary-on' : 'bg-tertiary-container text-tertiary-on-container'
-                      }`}>
-                        {msg.senderName.charAt(0)}
-                      </div>
-
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline justify-between">
                           <div className="flex items-baseline gap-2">
@@ -3572,13 +3562,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                     </div>
                     
                     {/* Message Body */}
-                    <div className="pl-14 text-sm text-surface-on/90 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
+                    <div className="text-sm text-surface-on/90 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">
                       {msg.content}
                     </div>
                     
                     {/* Divider if not last */}
                     {idx < selectedThread.messages.length - 1 && (
-                      <div className="mt-8 border-b border-surface-outline-variant/30 dark:border-gray-700/30 ml-14"></div>
+                      <div className="mt-8 border-b border-surface-outline-variant/30 dark:border-gray-700/30"></div>
                     )}
                   </div>
                 );
@@ -3621,15 +3611,15 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="flex justify-between items-center p-3 bg-surface-container/10 dark:bg-gray-700/10">
                   <div className="flex gap-2">
                     <button className="p-2 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Paperclip className="h-4 w-4"/></button>
-                    <button className="p-2 text-surface-outline-variant dark:text-gray-500 hover:text-primary hover:bg-primary/5 rounded-full"><Building2 className="h-4 w-4"/></button>
                   </div>
                   <div className="flex items-center gap-2">
-                    <button 
+                    <Button 
                       onClick={() => setReplyExpanded(false)}
-                      className="p-2 text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 text-sm font-medium"
+                      variant="outlined"
+                      className="!h-9 !px-6"
                     >
                       Discard
-                    </button>
+                    </Button>
                     <Button 
                       onClick={handleSendReply} 
                       disabled={!replyContent.trim()} 
