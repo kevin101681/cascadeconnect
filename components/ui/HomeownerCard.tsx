@@ -167,7 +167,7 @@ export function HomeownerCard({
           <ClientStatusBadge status={clientStatus} />
         </div>
         {project && (
-          <Badge variant="secondary" className="text-[10px] h-5 px-2 font-normal text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600">
+          <Badge variant="secondary" className="text-[10px] h-5 px-2 font-normal text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 w-fit">
             {project}
           </Badge>
         )}
@@ -178,7 +178,7 @@ export function HomeownerCard({
         
         {/* Address */}
         <div className="flex items-start group/item">
-          <MapPin className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 group-hover/item:text-blue-500 dark:group-hover/item:text-blue-400 transition-colors shrink-0" />
+          <MapPin className="w-4 h-4 mr-3 text-gray-400 dark:text-gray-500 group-hover/item:text-blue-500 dark:group-hover/item:text-blue-400 transition-colors shrink-0" />
           <div className="flex flex-col">
             <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Address</span>
             <div className={`text-sm leading-snug ${address ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
@@ -192,7 +192,7 @@ export function HomeownerCard({
 
         {/* Phone */}
         <div className="flex items-start group/item">
-          <Phone className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 group-hover/item:text-blue-500 dark:group-hover/item:text-blue-400 transition-colors shrink-0" />
+          <Phone className="w-4 h-4 mr-3 text-gray-400 dark:text-gray-500 group-hover/item:text-blue-500 dark:group-hover/item:text-blue-400 transition-colors shrink-0" />
           <div className="flex flex-col">
             <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Phone</span>
             <span className={`text-sm ${phone ? "text-gray-700 dark:text-gray-300 font-medium" : "text-gray-300 dark:text-gray-600 italic"}`}>
@@ -203,7 +203,7 @@ export function HomeownerCard({
 
         {/* Email */}
         <div className="flex items-start group/item">
-          <Mail className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 group-hover/item:text-blue-500 dark:group-hover/item:text-blue-400 transition-colors shrink-0" />
+          <Mail className="w-4 h-4 mr-3 text-gray-400 dark:text-gray-500 group-hover/item:text-blue-500 dark:group-hover/item:text-blue-400 transition-colors shrink-0" />
           <div className="flex flex-col min-w-0">
             <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Email</span>
             <span className={`text-sm truncate block ${email ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`} title={email}>
@@ -214,7 +214,7 @@ export function HomeownerCard({
 
         {/* Builder */}
         <div className="flex items-start group/item">
-          <Home className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 shrink-0" />
+          <Home className="w-4 h-4 mr-3 text-gray-400 dark:text-gray-500 shrink-0" />
           <div className="flex flex-col">
             <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Builder</span>
             <span className={`text-sm ${builder ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
@@ -225,7 +225,7 @@ export function HomeownerCard({
 
         {/* Closing Date */}
         <div className="flex items-start group/item mt-4">
-          <Calendar className="w-4 h-4 mt-0.5 mr-3 text-gray-400 dark:text-gray-500 shrink-0" />
+          <Calendar className="w-4 h-4 mr-3 text-gray-400 dark:text-gray-500 shrink-0" />
           <div className="flex flex-col">
             <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Closing Date</span>
             <span className={`text-sm ${closingDate ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
