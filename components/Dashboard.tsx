@@ -2537,7 +2537,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         </div>
 
         {/* Right Column: Claim Detail View - Desktop Only */}
-        <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedClaimForModal && !isCreatingNewClaim ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-modal rounded-br-modal md:rounded-r-modal md:rounded-l-none`}>
+        <div className={`flex-1 min-w-0 flex flex-col bg-surface dark:bg-gray-800 ${!selectedClaimForModal && !isCreatingNewClaim ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-modal rounded-br-modal md:rounded-r-modal md:rounded-l-none`}>
           {isCreatingNewClaim ? (
             <>
               {/* New Claim Header Toolbar */}
@@ -2625,7 +2625,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <>
               {/* Scrollable Claim Editor Content */}
               <div 
-                className="flex-1 overflow-y-auto overscroll-contain"
+                className="flex-1 min-w-0 overflow-y-auto overscroll-contain"
                 style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
               >
                 <Suspense fallback={

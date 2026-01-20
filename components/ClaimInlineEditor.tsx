@@ -747,9 +747,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
   
   return (
     <>
-    <div className="flex flex-col h-full w-full overflow-hidden bg-surface dark:bg-gray-800">
+    <div className="flex flex-col h-full w-full min-w-0 overflow-hidden bg-surface dark:bg-gray-800">
       {/* Scrollable Body - Takes full space */}
-      <div className="flex-1 overflow-y-auto min-h-0">
+      <div className="flex-1 min-w-0 overflow-y-auto min-h-0">
         {/* Content Wrapper */}
         <div className="w-full px-6 py-6 space-y-6">
           {/* Title and Description Card */}
