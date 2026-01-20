@@ -375,19 +375,19 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                   <>
                     <th className="px-2 py-2 font-medium">Employee</th>
                     <th className="px-2 py-2 font-medium">Role</th>
-                    <th className="px-2 py-2 font-medium">Email</th>
+                    <th className="px-2 py-2 font-medium w-1">Email</th>
                   </>
                 ) : activeTab === 'SUBS' ? (
                   <>
                     <th className="px-2 py-2 font-medium">Company</th>
                     <th className="px-2 py-2 font-medium">Contact</th>
                     <th className="px-2 py-2 font-medium">Specialty</th>
-                    <th className="px-2 py-2 font-medium">Email</th>
+                    <th className="px-2 py-2 font-medium w-1">Email</th>
                   </>
                 ) : (
                   <>
                     <th className="px-2 py-2 font-medium">User Name</th>
-                    <th className="px-2 py-2 font-medium">Email</th>
+                    <th className="px-2 py-2 font-medium w-1">Email</th>
                     <th className="px-2 py-2 font-medium">Assigned Group</th>
                     <th className="px-2 py-2 font-medium">Linked Homeowners</th>
                   </>
@@ -412,7 +412,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         {emp.role}
                       </span>
                     </td>
-                    <td className="px-2 py-2 text-sm text-surface-on-variant dark:text-gray-400">
+                    <td className="px-2 py-2 text-sm text-surface-on-variant dark:text-gray-400 w-1 max-w-0 truncate">
                       {emp.email}
                     </td>
                     <td className="px-2 py-2 text-right">
@@ -456,7 +456,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                         {sub.specialty}
                       </span>
                     </td>
-                    <td className="px-2 py-2 text-sm text-surface-on-variant dark:text-gray-400">
+                    <td className="px-2 py-2 text-sm text-surface-on-variant dark:text-gray-400 w-1 max-w-0 truncate">
                       {sub.email}
                     </td>
                     <td className="px-2 py-2 text-right">
@@ -503,7 +503,7 @@ const InternalUserManagement: React.FC<InternalUserManagementProps> = ({
                           <span className="font-medium text-surface-on dark:text-gray-100 text-sm">{user.name}</span>
                         </div>
                       </td>
-                      <td className="px-2 py-2 text-sm text-surface-on-variant dark:text-gray-400">
+                      <td className="px-2 py-2 text-sm text-surface-on-variant dark:text-gray-400 w-1 max-w-0 truncate">
                         {user.email}
                       </td>
                       <td className="px-2 py-2">

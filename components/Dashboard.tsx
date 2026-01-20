@@ -2625,7 +2625,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             <>
               {/* Scrollable Claim Editor Content */}
               <div 
-                className="flex-1 overflow-y-auto px-6 pt-4 pb-6 overscroll-contain"
+                className="flex-1 overflow-y-auto overscroll-contain"
                 style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
               >
                 <Suspense fallback={
