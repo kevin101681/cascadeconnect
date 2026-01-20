@@ -4058,8 +4058,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div className="bg-surface dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 p-2">
                 <button
                   onClick={() => setIsHomeownerCardCollapsed(false)}
-                  className="flex items-center justify-center w-full p-2 hover:bg-surface-container/50 dark:hover:bg-gray-700/50 rounded transition-all"
-                  title="Expand homeowner info"
+                  className="flex items-center justify-center w-full p-2 rounded transition-all"
                 >
                   <ChevronRight className="h-5 w-5 text-gray-600 dark:text-gray-500 lg:block" />
                   <span className="lg:hidden text-sm text-surface-on dark:text-gray-100 ml-2">Tap to expand homeowner info</span>
