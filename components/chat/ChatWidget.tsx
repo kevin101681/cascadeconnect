@@ -319,7 +319,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         >
           <MessageCircle className="h-6 w-6" />
           {totalUnreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-6 w-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
+            <span className="absolute -top-1 -right-1 h-6 w-6 bg-primary text-white text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
               {totalUnreadCount > 9 ? '9+' : totalUnreadCount}
             </span>
           )}

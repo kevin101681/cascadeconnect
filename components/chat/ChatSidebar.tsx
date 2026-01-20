@@ -386,7 +386,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                     {(() => {
                       const displayCount = getDisplayUnreadCount(channel);
                       return displayCount > 0 ? (
-                        <div className="flex-shrink-0 h-5 min-w-[20px] px-1.5 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-medium">
+                        <div className="flex-shrink-0 h-5 min-w-[20px] px-1.5 bg-primary text-white rounded-full flex items-center justify-center text-xs font-medium">
                           {displayCount > 9 ? '9+' : displayCount}
                         </div>
                       ) : null;
