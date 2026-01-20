@@ -2248,7 +2248,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 onExportExcel();
               }}
               className="hidden md:inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 text-sm font-medium transition-all hover:bg-surface-container-high dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600"
-              title="Export to Excel"
             >
               <FileSpreadsheet className="h-4 w-4" />
             </button>
@@ -2515,7 +2514,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <button
                   onClick={() => handleExportToExcel(claimsList)}
                   className="ml-auto p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
-                  title="Export to Excel"
                 >
                   <FileSpreadsheet className="h-4 w-4" />
                 </button>
