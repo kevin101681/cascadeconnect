@@ -1155,6 +1155,7 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [replyContent, setReplyContent] = useState('');
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
   const [showSubListModal, setShowSubListModal] = useState(false);
+  const [isComposingMessage, setIsComposingMessage] = useState(false);
   // Removed showCallsModal - now navigates to /calls page with search filter
   const [newMessageSubject, setNewMessageSubject] = useState('');
 
@@ -3054,7 +3055,8 @@ const Dashboard: React.FC<DashboardProps> = ({
             <Button
               variant="filled"
               onClick={() => {
-                setShowNewMessageModal(true);
+                setIsComposingMessage(true);
+                setSelectedThreadId(null);
               }}
               className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
             >
@@ -3100,7 +3102,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                         senderName={participants}
                         dateSent={new Date(thread.lastMessageAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         isRead={thread.isRead}
-                        onClick={() => setSelectedThreadId(thread.id)}
+                        onClick={() => {
+                          setSelectedThreadId(thread.id);
+                          setIsComposingMessage(false);
+                        }}
                       />
                     );
                   })}
@@ -3110,8 +3115,205 @@ const Dashboard: React.FC<DashboardProps> = ({
        </div>
 
        {/* Right Column: Email Thread View - Desktop Only */}
-       <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedThreadId ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none overflow-hidden`}>
-          {selectedThread ? (
+       <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedThreadId && !isComposingMessage ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none overflow-hidden`}>
+          {isComposingMessage ? (
+            // Compose New Message Form
+            <div className="flex flex-col h-full">
+              <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700 shrink-0">
+                <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+                  <Mail className="h-5 w-5 text-primary" />
+                  New Message
+                </h2>
+                <button 
+                  onClick={() => {
+                    setIsComposingMessage(false);
+                    setNewMessageSubject('');
+                    setNewMessageContent('');
+                    setNewMessageRecipientId('');
+                    setSelectedMessageTemplateId('');
+                  }} 
+                  className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              
+              <div className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
+                {/* Recipient Display/Selector */}
+                {isAdmin ? (
+                  <div className="bg-surface-container dark:bg-gray-700 p-3 rounded-xl flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-surface-on-variant dark:text-gray-400 uppercase">To</span>
+                      <p className="font-medium text-surface-on dark:text-gray-100">
+                        {effectiveHomeowner ? effectiveHomeowner.name : 'Select a Homeowner'}
+                      </p>
+                    </div>
+                    <div className="bg-surface dark:bg-gray-800 p-2 rounded-full border border-surface-outline-variant dark:border-gray-600">
+                      <Home className="h-4 w-4 text-surface-outline dark:text-gray-500"/>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">To</label>
+                    <MaterialSelect
+                      value={newMessageRecipientId}
+                      onChange={(value) => setNewMessageRecipientId(value)}
+                      options={[
+                        { value: '', label: 'Select a team member' },
+                        ...employees
+                          .filter(emp => emp.role === 'Administrator')
+                          .map(emp => ({
+                            value: emp.id,
+                            label: emp.name
+                          }))
+                      ]}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+
+                {/* Template Selector - Admin Only */}
+                {isAdmin && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400">Email Template</label>
+                    <button
+                      onClick={() => handleOpenMessageTemplateCreator()}
+                      className="text-xs text-primary hover:text-primary/80 flex items-center gap-1"
+                    >
+                      <FileEdit className="h-3 w-3" />
+                      Manage Templates
+                    </button>
+                  </div>
+                  <div className="flex gap-2">
+                    <select
+                      className="flex-1 bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-sm text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                      value={selectedMessageTemplateId}
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          handleMessageTemplateSelect(e.target.value);
+                        } else {
+                          setSelectedMessageTemplateId('');
+                        }
+                      }}
+                    >
+                      <option value="">Default Template</option>
+                      {messageEmailTemplates.map(template => (
+                        <option key={template.id} value={template.id}>{template.name}</option>
+                      ))}
+                    </select>
+                    {selectedMessageTemplateId && (
+                      <>
+                        <button
+                          onClick={() => {
+                            const template = messageEmailTemplates.find(t => t.id === selectedMessageTemplateId);
+                            if (template) handleOpenMessageTemplateCreator(template);
+                          }}
+                          className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                          title="Edit template"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteMessageTemplate(selectedMessageTemplateId)}
+                          className="p-2 text-error hover:bg-error/10 rounded-lg transition-colors"
+                          title="Delete template"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                  {/* Template List for Management */}
+                  {messageEmailTemplates.length > 0 && (
+                    <div className="mt-2 space-y-1 max-h-32 overflow-y-auto">
+                      {messageEmailTemplates.map(template => (
+                        <div key={template.id} className="flex items-center justify-between p-2 bg-surface-container dark:bg-gray-700 rounded-lg">
+                          <span className="text-sm text-surface-on dark:text-gray-100">{template.name}</span>
+                          <div className="flex gap-1">
+                            <button
+                              onClick={() => handleOpenMessageTemplateCreator(template)}
+                              className="p-1 text-primary hover:bg-primary/10 rounded transition-colors"
+                              title="Edit"
+                            >
+                              <Edit2 className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMessageTemplate(template.id)}
+                              className="p-1 text-error hover:bg-error/10 rounded transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Subject</label>
+                  <input 
+                    type="text" 
+                    className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                    value={newMessageSubject}
+                    onChange={(e) => setNewMessageSubject(e.target.value)}
+                    placeholder="e.g. Question about warranty"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Message</label>
+                  <textarea 
+                    rows={8}
+                    className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
+                    value={newMessageContent}
+                    onChange={(e) => setNewMessageContent(e.target.value)}
+                  />
+                </div>
+                
+                {/* Save as Template Button - Admin Only */}
+                {isAdmin && (
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => handleOpenMessageTemplateCreator()}
+                      className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 px-3 py-1.5 hover:bg-primary/5 rounded-lg transition-colors"
+                    >
+                      <Save className="h-4 w-4" />
+                      Save as Template
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 flex justify-end gap-3 shrink-0 border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
+                <Button
+                  variant="filled"
+                  onClick={() => {
+                    setIsComposingMessage(false);
+                    setNewMessageSubject('');
+                    setNewMessageContent('');
+                    setNewMessageRecipientId('');
+                    setSelectedMessageTemplateId('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="filled"
+                  onClick={() => {
+                    handleCreateNewThread();
+                    setIsComposingMessage(false);
+                  }}
+                  disabled={!newMessageSubject || !newMessageContent || isSendingMessage || (!isAdmin && !newMessageRecipientId)}
+                  icon={isSendingMessage ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"/> : <Send className="h-4 w-4" />}
+                >
+                  Send Message
+                </Button>
+              </div>
+            </div>
+          ) : selectedThread ? (
             <div className="flex flex-col h-full">
                {/* Scrollable Thread Content */}
                <div 
