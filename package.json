@@ -109,6 +109,7 @@
     "square": "^43.2.1",
     "strip-bom-stream": "^5.0.0",
     "tailwind-merge": "^2.6.0",
+    "telnyx": "^5.9.0",
     "twilio": "^5.11.1",
     "uuid": "^13.0.0",
     "web-push": "^3.6.7",

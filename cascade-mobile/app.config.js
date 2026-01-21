@@ -19,6 +19,7 @@ module.exports = {
     infoPlist: {
       NSContactsUsageDescription: 'We need access to your contacts to sync them with the AI Gatekeeper allowlist for spam filtering.',
       NSMicrophoneUsageDescription: 'We need microphone access to make and receive voice calls.',
+      UIBackgroundModes: ['audio', 'voip'],
     },
   },
   android: {

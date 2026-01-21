@@ -14,7 +14,7 @@
         "buildConfiguration": "Debug"
       },
       "env": {
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuY2FzY2FkZWNvbm5lY3QuYXBwJA",
         "EXPO_PUBLIC_API_URL": "https://www.cascadeconnect.app"
       }
     },
@@ -24,7 +24,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuY2FzY2FkZWNvbm5lY3QuYXBwJA",
         "EXPO_PUBLIC_API_URL": "https://www.cascadeconnect.app"
       }
     },
@@ -33,7 +33,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "",
+        "EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY": "pk_live_Y2xlcmsuY2FzY2FkZWNvbm5lY3QuYXBwJA",
         "EXPO_PUBLIC_API_URL": "https://www.cascadeconnect.app"
       }
     }

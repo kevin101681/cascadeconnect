@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 interface Props {
   isActive: boolean;
@@ -17,7 +17,7 @@ export function GatekeeperStatus({ isActive, identity = 'kevin_pixel' }: Props) 
         <Text style={styles.subtitle}>
           {isActive 
             ? `Ready to receive calls as '${identity}'` 
-            : 'Connecting to Telnyx Voice...'}
+            : 'Connecting to Twilio Voice...'}
         </Text>
       </View>
     </View>

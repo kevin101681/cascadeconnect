@@ -1,20 +1,20 @@
+import { Invitation } from '@telnyx/react-native';
 import React from 'react';
-import { View, Text, TouchableOpacity, Modal, StyleSheet, Platform } from 'react-native';
-import { CallInvite } from '../services/voice';
+import { Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface Props {
   visible: boolean;
-  callInvite: CallInvite | null;
+  invitation: Invitation | null;
   onAccept: () => void;
   onReject: () => void;
 }
 
-export function IncomingCallModal({ visible, callInvite, onAccept, onReject }: Props) {
-  if (!callInvite) return null;
+export function IncomingCallModal({ visible, invitation, onAccept, onReject }: Props) {
+  if (!invitation) return null;
 
-  const callerInfo = callInvite.getFrom() || 'Unknown Caller';
-  const customParameters = callInvite.getCustomParameters();
-  const callerName = customParameters?.callerName || callerInfo;
+  const callerInfo = invitation.callerName || invitation.callerNumber || 'Unknown Caller';
+  const callerNumber = invitation.callerNumber || callerInfo;
+  const callerName = invitation.callerName || callerNumber;
 
   return (
     <Modal
@@ -40,7 +40,7 @@ export function IncomingCallModal({ visible, callInvite, onAccept, onReject }: P
               {callerName}
             </Text>
             <Text style={styles.callerNumber} numberOfLines={1}>
-              {callerInfo}
+              {callerNumber}
             </Text>
             <Text style={styles.subtitle}>via AI Gatekeeper</Text>
           </View>

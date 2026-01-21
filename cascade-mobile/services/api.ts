@@ -16,7 +16,7 @@ export class APIClient {
    */
   static async fetchTelnyxToken(getToken: () => Promise<string | null>): Promise<{
     token: string;
-    identity: string;
+    username: string;
   }> {
     const authToken = await getToken();
     if (!authToken) {
@@ -40,7 +40,7 @@ export class APIClient {
     }
 
     const data = await response.json();
-    console.log('[API] Telnyx token received, identity:', data.identity);
+    console.log('[API] Telnyx token received, username:', data.username);
     return data;
   }
 

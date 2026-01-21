@@ -229,16 +229,17 @@ function generateTransferResponse(
 ): { statusCode: number; headers: Record<string, string>; body: string } {
   console.log(`✅ [${requestId}] Generating transfer response for known contact: ${contactName}`);
   
-  // TODO: Replace this with your actual forwarding number or SIP address
-  // For now, using a placeholder - you'll need to configure this
-  const forwardingNumber = process.env.KEVIN_PHONE_NUMBER || '+15551234567'; // REPLACE THIS
+  // Transfer to Telnyx phone number (which will forward to mobile via SIP)
+  const telnyxNumber = process.env.TELNYX_PHONE_NUMBER || process.env.KEVIN_PHONE_NUMBER || '+15551234567';
+  
+  console.log(`🔄 Transferring to Telnyx number: ${telnyxNumber}`);
   
   const response: VapiAssistantResponse = {
     transferPlan: {
       destinations: [
         {
           type: 'number',
-          number: forwardingNumber,
+          number: telnyxNumber,
           message: '', // Empty message = silent transfer (no robot voice)
         },
       ],

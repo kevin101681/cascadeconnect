@@ -1,24 +1,25 @@
+import { ClerkProvider, SignedIn, SignedOut, useAuth as useClerkAuth } from '@clerk/clerk-expo';
+import { Invitation } from '@telnyx/react-native';
+import Constants from 'expo-constants';
+import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
 import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  ScrollView,
-  SafeAreaView,
-  StatusBar,
+    ActivityIndicator,
+    Alert,
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { ClerkProvider, SignedIn, SignedOut, useAuth as useClerkAuth } from '@clerk/clerk-expo';
-import * as SecureStore from 'expo-secure-store';
-import Constants from 'expo-constants';
 
-import { useAuth } from './services/auth';
-import { VoiceService, CallInvite } from './services/voice';
-import { ContactSyncService } from './services/contactSync';
 import { GatekeeperStatus } from './components/GatekeeperStatus';
 import { IncomingCallModal } from './components/IncomingCallModal';
+import { useAuth } from './services/auth';
+import { ContactSyncService } from './services/contactSync';
+import { VoiceService } from './services/voice';
 
 const publishableKey = Constants.expoConfig?.extra?.clerkPublishableKey;
 
@@ -46,7 +47,7 @@ function HomeScreen() {
   
   // Voice state
   const [isVoiceReady, setIsVoiceReady] = useState(false);
-  const [incomingCallInvite, setIncomingCallInvite] = useState<CallInvite | null>(null);
+  const [incomingInvitation, setIncomingInvitation] = useState<Invitation | null>(null);
   const [isCallActive, setIsCallActive] = useState(false);
   
   // Contact sync state
@@ -73,21 +74,21 @@ function HomeScreen() {
       const voiceService = VoiceService.getInstance();
       
       // Set up call event listeners
-      voiceService.setOnCallInvite((callInvite) => {
+      voiceService.setOnCallInvite((invitation) => {
         console.log('[App] Incoming call!');
-        setIncomingCallInvite(callInvite);
+        setIncomingInvitation(invitation);
       });
 
       voiceService.setOnCallConnected((call) => {
         console.log('[App] Call connected');
         setIsCallActive(true);
-        setIncomingCallInvite(null);
+        setIncomingInvitation(null);
       });
 
       voiceService.setOnCallDisconnected(() => {
         console.log('[App] Call disconnected');
         setIsCallActive(false);
-        setIncomingCallInvite(null);
+        setIncomingInvitation(null);
       });
 
       // Initialize and register
@@ -147,10 +148,10 @@ function HomeScreen() {
       console.log('[App] Rejecting call...');
       const voiceService = VoiceService.getInstance();
       await voiceService.rejectCall();
-      setIncomingCallInvite(null);
+      setIncomingInvitation(null);
     } catch (error: any) {
       console.error('[App] Reject call error:', error);
-      setIncomingCallInvite(null);
+      setIncomingInvitation(null);
     }
   };
 
@@ -244,8 +245,8 @@ function HomeScreen() {
 
       {/* Incoming Call Modal */}
       <IncomingCallModal
-        visible={!!incomingCallInvite && !isCallActive}
-        callInvite={incomingCallInvite}
+        visible={!!incomingInvitation && !isCallActive}
+        invitation={incomingInvitation}
         onAccept={handleAcceptCall}
         onReject={handleRejectCall}
       />
