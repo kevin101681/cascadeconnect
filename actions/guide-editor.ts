@@ -8,7 +8,6 @@
 import { db } from '@/db';
 import { guideSteps, type GuideStep, type NewGuideStep } from '@/db/schema';
 import { eq, asc } from 'drizzle-orm';
-import { revalidatePath } from 'next/cache';
 
 /**
  * Get all active guide steps ordered by sortOrder
@@ -71,8 +70,6 @@ export async function saveGuideStep(data: {
         .where(eq(guideSteps.id, data.id))
         .returning();
 
-      revalidatePath('/');
-      revalidatePath('/dashboard/admin/guide');
       return updated;
     } else {
       // Create new step - auto-generate sortOrder
@@ -95,8 +92,6 @@ export async function saveGuideStep(data: {
         })
         .returning();
 
-      revalidatePath('/');
-      revalidatePath('/dashboard/admin/guide');
       return created;
     }
   } catch (error) {
@@ -111,9 +106,6 @@ export async function saveGuideStep(data: {
 export async function deleteGuideStep(id: string): Promise<void> {
   try {
     await db.delete(guideSteps).where(eq(guideSteps.id, id));
-
-    revalidatePath('/');
-    revalidatePath('/dashboard/admin/guide');
   } catch (error) {
     console.error('Failed to delete guide step:', error);
     throw new Error('Failed to delete guide step');
@@ -136,9 +128,6 @@ export async function reorderSteps(
           .where(eq(guideSteps.id, item.id));
       }
     });
-
-    revalidatePath('/');
-    revalidatePath('/dashboard/admin/guide');
   } catch (error) {
     console.error('Failed to reorder steps:', error);
     throw new Error('Failed to reorder steps');
@@ -157,9 +146,6 @@ export async function toggleStepActive(
       .update(guideSteps)
       .set({ isActive })
       .where(eq(guideSteps.id, id));
-
-    revalidatePath('/');
-    revalidatePath('/dashboard/admin/guide');
   } catch (error) {
     console.error('Failed to toggle step status:', error);
     throw new Error('Failed to toggle step status');
