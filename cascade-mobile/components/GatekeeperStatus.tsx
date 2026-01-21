@@ -17,7 +17,7 @@ export function GatekeeperStatus({ isActive, identity = 'kevin_pixel' }: Props) 
         <Text style={styles.subtitle}>
           {isActive 
             ? `Ready to receive calls as '${identity}'` 
-            : 'Connecting to Twilio Voice...'}
+            : 'Connecting to Telnyx Voice...'}
         </Text>
       </View>
     </View>

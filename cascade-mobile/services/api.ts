@@ -3,7 +3,7 @@ import Constants from 'expo-constants';
 const API_URL = Constants.expoConfig?.extra?.apiUrl || 'https://www.cascadeconnect.app';
 
 export const API_ENDPOINTS = {
-  TWILIO_TOKEN: `${API_URL}/.netlify/functions/twilio-token`,
+  TELNYX_TOKEN: `${API_URL}/.netlify/functions/telnyx-token`,
   CONTACT_SYNC: `${API_URL}/.netlify/functions/contact-sync`,
 };
 
@@ -12,9 +12,9 @@ export const API_ENDPOINTS = {
  */
 export class APIClient {
   /**
-   * Fetch Twilio access token
+   * Fetch Telnyx access token
    */
-  static async fetchTwilioToken(getToken: () => Promise<string | null>): Promise<{
+  static async fetchTelnyxToken(getToken: () => Promise<string | null>): Promise<{
     token: string;
     identity: string;
   }> {
@@ -23,9 +23,9 @@ export class APIClient {
       throw new Error('Not authenticated');
     }
 
-    console.log('[API] Fetching Twilio token...');
+    console.log('[API] Fetching Telnyx token...');
 
-    const response = await fetch(API_ENDPOINTS.TWILIO_TOKEN, {
+    const response = await fetch(API_ENDPOINTS.TELNYX_TOKEN, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${authToken}`,
@@ -36,11 +36,11 @@ export class APIClient {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('[API] Token fetch failed:', response.status, errorText);
-      throw new Error(`Failed to fetch Twilio token: ${response.status}`);
+      throw new Error(`Failed to fetch Telnyx token: ${response.status}`);
     }
 
     const data = await response.json();
-    console.log('[API] Twilio token received, identity:', data.identity);
+    console.log('[API] Telnyx token received, identity:', data.identity);
     return data;
   }
 

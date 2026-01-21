@@ -13,10 +13,9 @@ import {
 import { ClerkProvider, SignedIn, SignedOut, useAuth as useClerkAuth } from '@clerk/clerk-expo';
 import * as SecureStore from 'expo-secure-store';
 import Constants from 'expo-constants';
-import { CallInvite } from '@twilio/voice-react-native-sdk';
 
 import { useAuth } from './services/auth';
-import { VoiceService } from './services/voice';
+import { VoiceService, CallInvite } from './services/voice';
 import { ContactSyncService } from './services/contactSync';
 import { GatekeeperStatus } from './components/GatekeeperStatus';
 import { IncomingCallModal } from './components/IncomingCallModal';

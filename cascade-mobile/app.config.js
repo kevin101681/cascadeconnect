@@ -1,4 +1,4 @@
-export default {
+module.exports = {
   name: 'AI Gatekeeper',
   slug: 'ai-gatekeeper',
   version: '1.0.0',
@@ -6,6 +6,7 @@ export default {
   icon: './assets/images/icon.png',
   scheme: 'cascade-gatekeeper',
   userInterfaceStyle: 'automatic',
+  sdkVersion: '52.0.0',
   splash: {
     image: './assets/images/splash-icon.png',
     resizeMode: 'contain',
@@ -31,6 +32,11 @@ export default {
       'RECORD_AUDIO',
       'MODIFY_AUDIO_SETTINGS',
       'ACCESS_NETWORK_STATE',
+      'BLUETOOTH',
+      'BLUETOOTH_CONNECT',
+      'POST_NOTIFICATIONS',
+      'WAKE_LOCK',
+      'VIBRATE'
     ]
   },
   plugins: [
@@ -39,18 +45,14 @@ export default {
       {
         android: {
           minSdkVersion: 24,
+          kotlinVersion: "1.9.25",
+          newArchEnabled: false
         },
+        ios: {
+          useFrameworks: 'static',
+          newArchEnabled: false
+        }
       },
-    ],
-    [
-      '@clerk/clerk-expo/plugin',
-      {
-        publishableKey: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY
-      }
-    ],
-    [
-      '@twilio/voice-react-native-sdk',
-      {}
     ],
     [
       'expo-contacts',
@@ -60,6 +62,9 @@ export default {
     ]
   ],
   extra: {
+    eas: {
+      projectId: "757de47f-429c-457b-b9d0-f34fbdb9ec49"
+    },
     clerkPublishableKey: process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY,
     apiUrl: process.env.EXPO_PUBLIC_API_URL || 'https://www.cascadeconnect.app'
   },

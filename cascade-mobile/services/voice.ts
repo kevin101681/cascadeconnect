@@ -1,18 +1,36 @@
-import { Voice, Call, CallInvite } from '@twilio/voice-react-native-sdk';
+import { TelnyxClient, TelnyxCall, TelnyxNotification } from '@telnyx/react-native';
 import { APIClient } from './api';
 
+// Define types for call handling
+export interface CallInvite {
+  callId: string;
+  from: string;
+  to: string;
+  callerName?: string;
+  customParameters?: Record<string, any>;
+  getFrom(): string;
+  getCustomParameters(): Record<string, any>;
+}
+
+export interface ActiveCall {
+  callId: string;
+  state: string;
+  disconnect(): Promise<void>;
+  getSid(): string;
+}
+
 export type CallInviteCallback = (callInvite: CallInvite) => void;
-export type CallConnectedCallback = (call: Call) => void;
+export type CallConnectedCallback = (call: ActiveCall) => void;
 export type CallDisconnectedCallback = () => void;
 
 /**
- * Twilio Voice service for VoIP calls
+ * Telnyx Voice service for VoIP calls
  */
 export class VoiceService {
   private static instance: VoiceService;
-  private voice: Voice;
+  private telnyxClient: TelnyxClient | null = null;
   private initialized = false;
-  private currentCall: Call | null = null;
+  private currentCall: TelnyxCall | null = null;
   private currentCallInvite: CallInvite | null = null;
   
   // Event callbacks
@@ -21,9 +39,7 @@ export class VoiceService {
   private onCallDisconnectedCallback: CallDisconnectedCallback | null = null;
 
   private constructor() {
-    console.log('[Voice] Initializing Voice SDK...');
-    this.voice = new Voice();
-    this.setupEventListeners();
+    console.log('[Voice] Initializing Telnyx Voice...');
   }
 
   static getInstance(): VoiceService {
@@ -34,57 +50,97 @@ export class VoiceService {
   }
 
   private setupEventListeners() {
-    console.log('[Voice] Setting up event listeners...');
+    if (!this.telnyxClient) return;
 
-    // Incoming call invitation
-    this.voice.on(Voice.Event.CallInvite, (callInvite: CallInvite) => {
-      console.log('[Voice] Incoming call invitation:', callInvite.getCallSid());
-      this.currentCallInvite = callInvite;
-      
-      if (this.onCallInviteCallback) {
-        this.onCallInviteCallback(callInvite);
+    console.log('[Voice] Setting up Telnyx event listeners...');
+
+    // Incoming call notification
+    this.telnyxClient.on('telnyx.notification', (notification: TelnyxNotification) => {
+      console.log('[Voice] Telnyx notification:', notification.type);
+
+      if (notification.type === 'callUpdate' && notification.call) {
+        const call = notification.call;
+        
+        // Handle incoming call
+        if (call.state === 'ringing' && !this.currentCall) {
+          console.log('[Voice] Incoming call from:', call.callerIdNumber);
+          
+          const callInvite: CallInvite = {
+            callId: call.callId,
+            from: call.callerIdNumber || 'Unknown',
+            to: call.destinationNumber || '',
+            callerName: call.callerIdName,
+            customParameters: {},
+            getFrom: () => call.callerIdNumber || 'Unknown',
+            getCustomParameters: () => ({}),
+          };
+          
+          this.currentCallInvite = callInvite;
+          
+          if (this.onCallInviteCallback) {
+            this.onCallInviteCallback(callInvite);
+          }
+        }
+
+        // Handle call connected
+        if (call.state === 'active' && this.currentCall) {
+          console.log('[Voice] Call connected:', call.callId);
+          
+          const activeCall: ActiveCall = {
+            callId: call.callId,
+            state: call.state,
+            disconnect: async () => {
+              if (this.currentCall) {
+                await this.currentCall.hangup();
+              }
+            },
+            getSid: () => call.callId,
+          };
+          
+          this.currentCallInvite = null;
+          
+          if (this.onCallConnectedCallback) {
+            this.onCallConnectedCallback(activeCall);
+          }
+        }
+
+        // Handle call disconnected
+        if (call.state === 'done' || call.state === 'hangup') {
+          console.log('[Voice] Call disconnected:', call.callId);
+          this.currentCall = null;
+          this.currentCallInvite = null;
+          
+          if (this.onCallDisconnectedCallback) {
+            this.onCallDisconnectedCallback();
+          }
+        }
       }
     });
 
-    // Call connected
-    this.voice.on(Voice.Event.CallConnected, (call: Call) => {
-      console.log('[Voice] Call connected:', call.getSid());
-      this.currentCall = call;
-      this.currentCallInvite = null;
-      
-      if (this.onCallConnectedCallback) {
-        this.onCallConnectedCallback(call);
-      }
+    // Socket connection events
+    this.telnyxClient.on('telnyx.socket.open', () => {
+      console.log('[Voice] ✅ Telnyx socket connected');
     });
 
-    // Call disconnected
-    this.voice.on(Voice.Event.CallDisconnected, (call: Call, error?: any) => {
-      console.log('[Voice] Call disconnected:', call.getSid(), error);
-      this.currentCall = null;
-      this.currentCallInvite = null;
-      
-      if (this.onCallDisconnectedCallback) {
-        this.onCallDisconnectedCallback();
-      }
+    this.telnyxClient.on('telnyx.socket.close', () => {
+      console.log('[Voice] Telnyx socket closed');
     });
 
-    // Error handling
-    this.voice.on(Voice.Event.Error, (error: any) => {
-      console.error('[Voice] Error:', error);
+    this.telnyxClient.on('telnyx.socket.error', (error: any) => {
+      console.error('[Voice] Telnyx socket error:', error);
     });
 
-    // Registration events
-    this.voice.on(Voice.Event.Registered, () => {
-      console.log('[Voice] ✅ Registered successfully');
+    this.telnyxClient.on('telnyx.ready', () => {
+      console.log('[Voice] ✅ Telnyx client ready');
     });
 
-    this.voice.on(Voice.Event.Unregistered, () => {
-      console.log('[Voice] Unregistered');
+    this.telnyxClient.on('telnyx.error', (error: any) => {
+      console.error('[Voice] Telnyx error:', error);
     });
   }
 
   /**
-   * Initialize and register with Twilio Voice
+   * Initialize and connect with Telnyx Voice
    */
   async initialize(getToken: () => Promise<string | null>): Promise<void> {
     if (this.initialized) {
@@ -93,14 +149,25 @@ export class VoiceService {
     }
 
     try {
-      console.log('[Voice] Fetching access token...');
-      const { token, identity } = await APIClient.fetchTwilioToken(getToken);
+      console.log('[Voice] Fetching Telnyx credentials...');
+      const { token, identity } = await APIClient.fetchTelnyxToken(getToken);
       
-      console.log('[Voice] Registering with Twilio Voice as:', identity);
-      await this.voice.register(token);
+      console.log('[Voice] Initializing Telnyx Client as:', identity);
+      
+      // Initialize Telnyx Client
+      this.telnyxClient = new TelnyxClient({
+        login: identity,
+        password: token,
+        // You can add additional configuration here
+      });
+
+      this.setupEventListeners();
+
+      // Connect to Telnyx
+      await this.telnyxClient.connect();
       
       this.initialized = true;
-      console.log('[Voice] ✅ Voice service initialized successfully');
+      console.log('[Voice] ✅ Telnyx Voice service initialized successfully');
     } catch (error) {
       console.error('[Voice] Failed to initialize:', error);
       throw error;
@@ -111,15 +178,23 @@ export class VoiceService {
    * Accept an incoming call
    */
   async acceptCall(): Promise<void> {
-    if (!this.currentCallInvite) {
-      console.warn('[Voice] No call invite to accept');
+    if (!this.currentCallInvite || !this.telnyxClient) {
+      console.warn('[Voice] No call invite to accept or client not initialized');
       return;
     }
 
     try {
       console.log('[Voice] Accepting call...');
-      const call = await this.currentCallInvite.accept();
+      
+      // Create a new call and answer it
+      const call = await this.telnyxClient.newCall({
+        destinationNumber: this.currentCallInvite.from,
+        callerIdNumber: this.currentCallInvite.to,
+      });
+      
       this.currentCall = call;
+      await call.answer();
+      
       console.log('[Voice] Call accepted');
     } catch (error) {
       console.error('[Voice] Failed to accept call:', error);
@@ -138,8 +213,14 @@ export class VoiceService {
 
     try {
       console.log('[Voice] Rejecting call...');
-      await this.currentCallInvite.reject();
+      
+      // If we have a current call object, hang it up
+      if (this.currentCall) {
+        await this.currentCall.hangup();
+      }
+      
       this.currentCallInvite = null;
+      this.currentCall = null;
       console.log('[Voice] Call rejected');
     } catch (error) {
       console.error('[Voice] Failed to reject call:', error);
@@ -158,7 +239,7 @@ export class VoiceService {
 
     try {
       console.log('[Voice] Ending call...');
-      await this.currentCall.disconnect();
+      await this.currentCall.hangup();
       this.currentCall = null;
       console.log('[Voice] Call ended');
     } catch (error) {
@@ -168,20 +249,21 @@ export class VoiceService {
   }
 
   /**
-   * Unregister from Twilio Voice
+   * Disconnect from Telnyx Voice
    */
   async unregister(): Promise<void> {
-    if (!this.initialized) {
+    if (!this.initialized || !this.telnyxClient) {
       return;
     }
 
     try {
-      console.log('[Voice] Unregistering...');
-      await this.voice.unregister();
+      console.log('[Voice] Disconnecting from Telnyx...');
+      await this.telnyxClient.disconnect();
       this.initialized = false;
-      console.log('[Voice] Unregistered successfully');
+      this.telnyxClient = null;
+      console.log('[Voice] Disconnected successfully');
     } catch (error) {
-      console.error('[Voice] Failed to unregister:', error);
+      console.error('[Voice] Failed to disconnect:', error);
       throw error;
     }
   }
@@ -217,7 +299,7 @@ export class VoiceService {
   /**
    * Get current call
    */
-  getCurrentCall(): Call | null {
+  getCurrentCall(): TelnyxCall | null {
     return this.currentCall;
   }
 

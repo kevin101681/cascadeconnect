@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet, Platform } from 'react-native';
-import { CallInvite } from '@twilio/voice-react-native-sdk';
+import { CallInvite } from '../services/voice';
 
 interface Props {
   visible: boolean;
