@@ -41,7 +41,7 @@
 ### 2. Fix & Upgrade Schedule Tab Calendar Logic
 
 #### Bug Fix: Claim Repair Dates Now Visible
-**Problem**: `claim.repairScheduleDate` was not appearing on calendar
+**Problem**: `claim.scheduledAt` was not appearing on calendar
 
 **Solution**: Added claim repair dates as calendar events
 ```typescript
@@ -51,8 +51,8 @@ const filteredClaims = isGlobalView
   : claims.filter(claim => claim.homeownerId === activeHomeownerId);
 
 filteredClaims.forEach((claim) => {
-  if (claim.repairScheduleDate) {
-    const repairDate = new Date(claim.repairScheduleDate);
+  if (claim.scheduledAt) {
+    const repairDate = new Date(claim.scheduledAt);
     const homeowner = homeowners.find(h => h.id === claim.homeownerId);
     
     claimEvents.push({
