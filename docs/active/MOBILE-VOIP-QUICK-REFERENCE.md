@@ -265,8 +265,8 @@ SELECT * FROM user_contacts WHERE phone_number = '+15551234567';
 ## 🔗 Related Docs
 
 1. [Configuration Guide](./AI-GATEKEEPER-CONFIGURATION-GUIDE.md) - Complete setup
-2. [Mobile Implementation](./MOBILE-APP-IMPLEMENTATION.md) - App code
-3. [Deployment Checklist](./AI-GATEKEEPER-DEPLOYMENT-CHECKLIST.md) - Go-live steps
+2. [Mobile Implementation](../archive/MOBILE-APP-IMPLEMENTATION.md) - App code
+3. [Deployment Checklist](../archive/AI-GATEKEEPER-DEPLOYMENT-CHECKLIST.md) - Go-live steps
 4. [Bearer Token Auth](./VAPI-BEARER-TOKEN-AUTH-UPDATE.md) - Webhook auth
 
 ---

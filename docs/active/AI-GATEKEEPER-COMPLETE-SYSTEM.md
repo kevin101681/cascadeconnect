@@ -282,10 +282,10 @@ eas build --profile development --platform android
 
 ## 📚 Documentation Index
 
-1. **[AI-GATEKEEPER-IMPLEMENTATION.md](./AI-GATEKEEPER-IMPLEMENTATION.md)** - Backend implementation
+1. **[AI-GATEKEEPER-IMPLEMENTATION.md](../archive/AI-GATEKEEPER-IMPLEMENTATION.md)** - Backend implementation
 2. **[AI-GATEKEEPER-CONFIGURATION-GUIDE.md](./AI-GATEKEEPER-CONFIGURATION-GUIDE.md)** - Complete setup
-3. **[CASCADE-MOBILE-IMPLEMENTATION.md](./CASCADE-MOBILE-IMPLEMENTATION.md)** - Mobile app code
-4. **[CASCADE-MOBILE-SETUP.md](./CASCADE-MOBILE-SETUP.md)** - Quick setup
+3. **[CASCADE-MOBILE-IMPLEMENTATION.md](../archive/CASCADE-MOBILE-IMPLEMENTATION.md)** - Mobile app code
+4. **[CASCADE-MOBILE-SETUP.md](../archive/CASCADE-MOBILE-SETUP.md)** - Quick setup
 5. **[MOBILE-VOIP-QUICK-REFERENCE.md](./MOBILE-VOIP-QUICK-REFERENCE.md)** - Quick reference
 6. **[VAPI-BEARER-TOKEN-AUTH-UPDATE.md](./VAPI-BEARER-TOKEN-AUTH-UPDATE.md)** - Auth update
 

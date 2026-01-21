@@ -474,9 +474,9 @@ Before going live:
 
 ## 📚 Related Documentation
 
-- [AI Gatekeeper Implementation](./AI-GATEKEEPER-IMPLEMENTATION.md)
-- [Mobile App Implementation](./MOBILE-APP-IMPLEMENTATION.md)
-- [Deployment Checklist](./AI-GATEKEEPER-DEPLOYMENT-CHECKLIST.md)
+- [AI Gatekeeper Implementation](../archive/AI-GATEKEEPER-IMPLEMENTATION.md)
+- [Mobile App Implementation](../archive/MOBILE-APP-IMPLEMENTATION.md)
+- [Deployment Checklist](../archive/AI-GATEKEEPER-DEPLOYMENT-CHECKLIST.md)
 - [Bearer Token Auth Update](./VAPI-BEARER-TOKEN-AUTH-UPDATE.md)
 
 ---

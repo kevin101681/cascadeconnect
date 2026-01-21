@@ -251,8 +251,8 @@ The following remain **unchanged** and continue to work correctly:
 
 ## 📚 Related Documentation
 
-- [AI Gatekeeper Implementation Guide](./AI-GATEKEEPER-IMPLEMENTATION.md)
-- [Deployment Checklist](./AI-GATEKEEPER-DEPLOYMENT-CHECKLIST.md)
+- [AI Gatekeeper Implementation Guide](../archive/AI-GATEKEEPER-IMPLEMENTATION.md)
+- [Deployment Checklist](../archive/AI-GATEKEEPER-DEPLOYMENT-CHECKLIST.md)
 - [Quick Reference](./AI-GATEKEEPER-QUICK-REFERENCE.md)
 
 ---

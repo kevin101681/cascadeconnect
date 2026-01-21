@@ -136,7 +136,7 @@ Get your Clerk key from: https://dashboard.clerk.com
 
 The mobile app structure exists but needs the VoIP-specific files:
 
-**Copy these files from [CASCADE-MOBILE-IMPLEMENTATION.md](./CASCADE-MOBILE-IMPLEMENTATION.md):**
+**Copy these files from [CASCADE-MOBILE-IMPLEMENTATION.md](../archive/CASCADE-MOBILE-IMPLEMENTATION.md):**
 
 **Create `services/` directory and add:**
 1. `services/auth.ts` - Clerk helper
@@ -231,7 +231,7 @@ npx eas-cli build --profile development --platform android
 
 All implementation details available in:
 
-1. **[CASCADE-MOBILE-IMPLEMENTATION.md](./CASCADE-MOBILE-IMPLEMENTATION.md)**  
+1. **[CASCADE-MOBILE-IMPLEMENTATION.md](../archive/CASCADE-MOBILE-IMPLEMENTATION.md)**  
    Complete mobile app code (13 files, ready to copy)
 
 2. **[CASCADE-MOBILE-DEPLOYMENT-GUIDE.md](./CASCADE-MOBILE-DEPLOYMENT-GUIDE.md)**  
@@ -240,7 +240,7 @@ All implementation details available in:
 3. **[AI-GATEKEEPER-COMPLETE-SYSTEM.md](./AI-GATEKEEPER-COMPLETE-SYSTEM.md)**  
    Full system architecture and configuration
 
-4. **[CASCADE-MOBILE-QUICKSTART.md](./CASCADE-MOBILE-QUICKSTART.md)**  
+4. **[CASCADE-MOBILE-QUICKSTART.md](../archive/CASCADE-MOBILE-QUICKSTART.md)**  
    5-minute quick start guide
 
 ---

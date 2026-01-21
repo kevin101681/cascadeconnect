@@ -304,9 +304,9 @@ You'll know everything is working when:
 ---
 
 **Need Help?** Check the detailed guides:
-- [CASCADE-MOBILE-IMPLEMENTATION.md](./CASCADE-MOBILE-IMPLEMENTATION.md) - All code
+- [CASCADE-MOBILE-IMPLEMENTATION.md](../archive/CASCADE-MOBILE-IMPLEMENTATION.md) - All code
 - [AI-GATEKEEPER-COMPLETE-SYSTEM.md](./AI-GATEKEEPER-COMPLETE-SYSTEM.md) - Architecture
-- [CASCADE-MOBILE-QUICKSTART.md](./CASCADE-MOBILE-QUICKSTART.md) - Quick start
+- [CASCADE-MOBILE-QUICKSTART.md](../archive/CASCADE-MOBILE-QUICKSTART.md) - Quick start
 
 ---
 
