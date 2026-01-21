@@ -70,22 +70,16 @@ export const NoteModal: React.FC<NoteModalProps> = ({ data, modalId }) => {
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Slide-out Panel Container - Right Side */}
       <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      
-      {/* Modal Container */}
-      <div 
-        className="fixed inset-0 flex items-center justify-center p-4 pointer-events-none"
+        className="fixed inset-y-0 right-0 flex items-center justify-end pointer-events-none z-50"
       >
         <div 
-          className="bg-white dark:bg-white rounded-3xl shadow-elevation-5 w-full max-w-lg pointer-events-auto"
+          className="bg-white dark:bg-white rounded-tl-2xl rounded-bl-2xl shadow-2xl w-full max-w-lg h-full pointer-events-auto flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container/30 dark:bg-gray-700/30 rounded-tl-2xl shrink-0">
             <div>
               <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">
                 Add Note
@@ -105,8 +99,8 @@ export const NoteModal: React.FC<NoteModalProps> = ({ data, modalId }) => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6">
-            <div className="mb-4">
+          <form onSubmit={handleSubmit} className="p-6 flex-1 flex flex-col min-h-0">
+            <div className="mb-4 flex-1 flex flex-col min-h-0">
               <label 
                 htmlFor="note-input" 
                 className="block text-sm font-medium text-surface-on dark:text-gray-100 mb-2"
@@ -126,7 +120,7 @@ export const NoteModal: React.FC<NoteModalProps> = ({ data, modalId }) => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 justify-end">
+            <div className="flex gap-3 justify-end shrink-0">
               <button
                 type="button"
                 onClick={onClose}

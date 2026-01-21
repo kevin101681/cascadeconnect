@@ -29,10 +29,17 @@ const CBSBooksPageWrapper: React.FC<CBSBooksPageWrapperProps> = ({ prefillInvoic
   const [clients, setClients] = useState<Client[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  
+  // Track if initial load has completed
+  const hasLoadedRef = React.useRef(false);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    // Only load once on mount
+    if (!hasLoadedRef.current) {
+      hasLoadedRef.current = true;
+      loadData();
+    }
+  }, []); // Empty deps - only run once
 
   const loadData = async () => {
     setIsLoading(true);

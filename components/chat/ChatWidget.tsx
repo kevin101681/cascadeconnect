@@ -46,6 +46,10 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   useEffect(() => {
     selectedChannelRef.current = selectedChannel;
   }, [selectedChannel]);
+  
+  // Track last sync time to prevent spam
+  const lastSyncTimeRef = useRef<number>(0);
+  const SYNC_DEBOUNCE_MS = 2000; // Only sync once every 2 seconds
 
   const isOpen = isOpenProp ?? internalIsOpen;
   const setIsOpen = (next: boolean) => {
@@ -55,6 +59,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
   // Load unread counts
   const loadUnreadCounts = useCallback(async () => {
+    // ⚡️ DEBOUNCE: Prevent spam - only run once every 2 seconds
+    const now = Date.now();
+    if (now - lastSyncTimeRef.current < SYNC_DEBOUNCE_MS) {
+      console.log('🔒 Badge Sync: Debounced (last sync was', Math.round((now - lastSyncTimeRef.current) / 1000), 'seconds ago)');
+      return;
+    }
+    lastSyncTimeRef.current = now;
+    
     try {
       const channels = await getUserChannels(currentUserId);
       
@@ -112,16 +124,18 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     } catch (error) {
       console.error('Error loading unread counts:', error);
     }
-  }, [currentUserId]);
+  }, [currentUserId]); // ⚡️ STABLE: Only depends on userId
 
+  // ⚡️ Load counts ONCE on mount and set up interval
   useEffect(() => {
+    // Initial load
     loadUnreadCounts();
     
     // Refresh counts every 30 seconds
     const interval = setInterval(loadUnreadCounts, 30000);
     
     return () => clearInterval(interval);
-  }, [loadUnreadCounts]);
+  }, [currentUserId]); // ⚡️ STABLE: Only re-run when userId changes
 
   // ⚡️ STABLE PUSHER LISTENER: Listen for new messages to update unread count INSTANTLY
   // CRITICAL: Only depends on currentUserId - NEVER re-subscribes when selectedChannel changes

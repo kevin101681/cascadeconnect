@@ -11,6 +11,7 @@ import ImageViewerModal from './ImageViewerModal';
 import { generateServiceOrderPDF } from '../services/pdfService';
 import { sendEmail } from '../services/emailService';
 import { useTaskStore } from '../stores/useTaskStore';
+import { useModalStore } from '../hooks/use-modal-store';
 
 interface ClaimDetailProps {
   claim: Claim;
@@ -32,12 +33,16 @@ interface ClaimDetailProps {
     content: string;
     senderName: string;
   }) => void; // Function to track claim-related messages
-  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'CALLS', config?: { initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES'; initialThreadId?: string | null }) => void; // Navigation function
+  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'CALLS', config?: { initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS'; initialThreadId?: string | null }) => void; // Navigation function
 }
 
 const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpdateClaim, onBack, contractors, onSendMessage, startInEditMode = false, currentUser, onAddInternalNote, claimMessages = [], onTrackClaimMessage, onNavigate }) => {
   // Ensure claimMessages is always an array
   const safeClaimMessages = claimMessages || [];
+  
+  // Modal store for notes
+  const { onOpen: openModal } = useModalStore();
+  
   const [proposeDate, setProposeDate] = useState('');
   const [proposeTime, setProposeTime] = useState<'AM' | 'PM' | 'All Day'>('AM');
   
@@ -335,21 +340,15 @@ If this repair work is billable, please let me know prior to scheduling.`);
           <Button 
             variant="outlined" 
             onClick={() => {
-              // Navigate to the Notes tab and store context with pre-filled body
+              // Open the slide-out note modal with claim context
               const claimNumber = claim.claimNumber || claim.id.substring(0, 8);
               const project = claim.jobName || claim.address;
               const contextLabel = `${claim.title || 'Untitled'} • Claim #${claimNumber} • ${project}`;
-              const prefilledBody = `Follow up on claim #${claimNumber} for ${project}.`;
               
-              if (onNavigate) {
-                onNavigate('DASHBOARD', { initialTab: 'NOTES' });
-              }
-              // Store context with pre-filled note body
-              useTaskStore.setState({ 
-                activeClaimId: claim.id, 
-                contextLabel, 
-                contextType: 'claim',
-                prefilledNoteBody: prefilledBody
+              openModal('ADD_NOTE', {
+                claimId: claim.id,
+                contextLabel,
+                contextType: 'claim'
               });
             }}
             icon={<StickyNote className="h-4 w-4" />}
@@ -664,13 +663,14 @@ If this repair work is billable, please let me know prior to scheduling.`);
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => {
-                                // Navigate to the Notes tab with message context
+                                // Open the slide-out note modal with message context
                                 const contextLabel = `${msg.subject} • ${claim.jobName || claim.address}`;
-                                if (onNavigate) {
-                                  onNavigate('DASHBOARD', { initialTab: 'NOTES' });
-                                }
-                                // Store context for when user adds a note
-                                useTaskStore.setState({ activeClaimId: claim.id, contextLabel, contextType: 'message' });
+                                
+                                openModal('ADD_NOTE', {
+                                  claimId: claim.id,
+                                  contextLabel,
+                                  contextType: 'message'
+                                });
                               }}
                               className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
                               title={`Add a note about: ${msg.subject}`}

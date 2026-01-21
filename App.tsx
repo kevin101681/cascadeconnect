@@ -1252,7 +1252,7 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [dashboardConfig, setDashboardConfig] = useState<{
-    initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'INVOICES';
+    initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'INVOICES';
     initialThreadId?: string | null;
   }>(() => {
     // Check if we should open invoices tab from URL hash

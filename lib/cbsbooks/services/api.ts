@@ -157,6 +157,10 @@ const fetchWithErrors = async (url: string, options?: RequestInit) => {
 
 // --- API SERVICE ---
 
+// Request deduplication lock
+let isFetchingInvoices = false;
+let pendingInvoiceRequest: Promise<Invoice[]> | null = null;
+
 export const api = {
   get isOffline() {
     // Check if FORCE_OFFLINE is set, otherwise return cached value
@@ -169,6 +173,12 @@ export const api = {
   // --- INVOICES ---
   invoices: {
     list: async (forceFresh = false): Promise<Invoice[]> => {
+      // ⚡️ REQUEST LOCK: Prevent duplicate simultaneous fetches
+      if (isFetchingInvoices && pendingInvoiceRequest) {
+        console.log('🔒 Invoice fetch already in progress, returning pending request');
+        return pendingInvoiceRequest;
+      }
+      
       // Check IndexedDB cache first (much larger storage capacity than localStorage)
       const cacheKey = 'cbs_invoices_cache';
       const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days cache
@@ -188,94 +198,105 @@ export const api = {
         }
       }
       
-      // Fetch from API (cache already checked above)
+      // Set lock and start fetch
+      isFetchingInvoices = true;
       const startTime = performance.now();
-      try {
-        const response = await fetch(`${API_BASE}/invoices`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-          cache: 'no-cache' // Always fetch fresh, but we cache the result
-        });
-        
-        console.log('API response status:', response.status, 'ok:', response.ok);
-        
-        // Read the response text once
-        const text = await response.text();
-        console.log('Response text length:', text.length, 'first 200 chars:', text.substring(0, 200));
-        
-        const contentType = response.headers.get('content-type') || '';
-        console.log('Content-Type:', contentType);
-        
-        // If status is 200, try to parse as JSON
-        if (response.status === 200) {
-          // Handle empty response
-          if (!text || text.trim() === '') {
-            console.warn('API returned 200 with empty body, returning empty array');
-            apiAvailableCache = true;
-            USE_MOCK_DATA = false;
-            return [];
+      
+      // Create the promise and store it
+      pendingInvoiceRequest = (async () => {
+        try {
+          const response = await fetch(`${API_BASE}/invoices`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+            cache: 'no-cache' // Always fetch fresh, but we cache the result
+          });
+          
+          console.log('API response status:', response.status, 'ok:', response.ok);
+          
+          // Read the response text once
+          const text = await response.text();
+          console.log('Response text length:', text.length, 'first 200 chars:', text.substring(0, 200));
+          
+          const contentType = response.headers.get('content-type') || '';
+          console.log('Content-Type:', contentType);
+          
+          // If status is 200, try to parse as JSON
+          if (response.status === 200) {
+            // Handle empty response
+            if (!text || text.trim() === '') {
+              console.warn('API returned 200 with empty body, returning empty array');
+              apiAvailableCache = true;
+              USE_MOCK_DATA = false;
+              return [];
+            }
+            
+            try {
+              const data = JSON.parse(text);
+              const count = Array.isArray(data) ? data.length : 0;
+              const fetchTime = performance.now() - startTime;
+              console.log(`✅ Fetched ${count} invoices in ${fetchTime.toFixed(0)}ms`);
+              if (count === 0) {
+                console.log('   ℹ️  Database is empty. If you have data in localStorage, it will migrate automatically.');
+              }
+              // Update cache to indicate API is available
+              apiAvailableCache = true;
+              USE_MOCK_DATA = false;
+              const result = Array.isArray(data) ? data : [];
+              
+              // Cache the result in IndexedDB (much larger storage capacity than localStorage)
+              if (typeof window !== 'undefined') {
+                try {
+                  await idbCache.set(cacheKey, result);
+                  console.log('✅ Cached', result.length, 'invoices in IndexedDB');
+                } catch (cacheError: any) {
+                  console.warn('⚠️  Failed to cache invoices in IndexedDB:', cacheError.message);
+                  // Don't fail the request if caching fails
+                }
+              }
+              
+              return result;
+            } catch (parseError: any) {
+              console.error('Failed to parse JSON response:', parseError.message, 'Text:', text.substring(0, 100));
+              // If it's not JSON but status is 200, might be HTML
+              if (text.trim().startsWith('<') || text.trim().startsWith('<!DOCTYPE')) {
+                throw new Error('API returned HTML instead of JSON (endpoint may not exist)');
+              }
+              throw new Error(`Invalid JSON response: ${parseError.message}`);
+            }
           }
           
-          try {
-            const data = JSON.parse(text);
-            const count = Array.isArray(data) ? data.length : 0;
-            const fetchTime = performance.now() - startTime;
-            console.log(`✅ Fetched ${count} invoices in ${fetchTime.toFixed(0)}ms`);
-            if (count === 0) {
-              console.log('   ℹ️  Database is empty. If you have data in localStorage, it will migrate automatically.');
+          // If not 200, it's an error
+          console.error('API returned non-200 status:', response.status);
+          if (contentType.includes('application/json') || text.trim().startsWith('{')) {
+            try {
+              const errorData = JSON.parse(text);
+              console.error('API returned error JSON:', errorData);
+              throw new Error(errorData.error || errorData.message || `API error: ${response.status}`);
+            } catch {
+              throw new Error(`API returned ${response.status}: ${text.substring(0, 200)}`);
             }
-            // Update cache to indicate API is available
-            apiAvailableCache = true;
-            USE_MOCK_DATA = false;
-            const result = Array.isArray(data) ? data : [];
-            
-            // Cache the result in IndexedDB (much larger storage capacity than localStorage)
-            if (typeof window !== 'undefined') {
-              try {
-                await idbCache.set(cacheKey, result);
-                console.log('✅ Cached', result.length, 'invoices in IndexedDB');
-              } catch (cacheError: any) {
-                console.warn('⚠️  Failed to cache invoices in IndexedDB:', cacheError.message);
-                // Don't fail the request if caching fails
-              }
-            }
-            
-            return result;
-          } catch (parseError: any) {
-            console.error('Failed to parse JSON response:', parseError.message, 'Text:', text.substring(0, 100));
-            // If it's not JSON but status is 200, might be HTML
-            if (text.trim().startsWith('<') || text.trim().startsWith('<!DOCTYPE')) {
-              throw new Error('API returned HTML instead of JSON (endpoint may not exist)');
-            }
-            throw new Error(`Invalid JSON response: ${parseError.message}`);
           }
+          
+          // If not JSON and not 200, it's probably HTML (404 page)
+          console.error('API returned non-JSON response (likely HTML):', text.substring(0, 200));
+          throw new Error(`API returned ${response.status} with content-type ${contentType}. This usually means the endpoint doesn't exist.`);
+        } catch (error: any) {
+          // Fallback to mock data if API fails
+          console.error('API failed, using mock data. Error:', error.message || error);
+          apiAvailableCache = false;
+          USE_MOCK_DATA = true;
+          await mockDelay();
+          const mockData = getStorage<Invoice>(STORAGE_KEYS.INVOICES, []);
+          console.log('Returning mock data, count:', mockData.length);
+          return mockData;
+        } finally {
+          // Release lock
+          isFetchingInvoices = false;
+          pendingInvoiceRequest = null;
         }
-        
-        // If not 200, it's an error
-        console.error('API returned non-200 status:', response.status);
-        if (contentType.includes('application/json') || text.trim().startsWith('{')) {
-          try {
-            const errorData = JSON.parse(text);
-            console.error('API returned error JSON:', errorData);
-            throw new Error(errorData.error || errorData.message || `API error: ${response.status}`);
-          } catch {
-            throw new Error(`API returned ${response.status}: ${text.substring(0, 200)}`);
-          }
-        }
-        
-        // If not JSON and not 200, it's probably HTML (404 page)
-        console.error('API returned non-JSON response (likely HTML):', text.substring(0, 200));
-        throw new Error(`API returned ${response.status} with content-type ${contentType}. This usually means the endpoint doesn't exist.`);
-      } catch (error: any) {
-        // Fallback to mock data if API fails
-        console.error('API failed, using mock data. Error:', error.message || error);
-        apiAvailableCache = false;
-        USE_MOCK_DATA = true;
-        await mockDelay();
-        const mockData = getStorage<Invoice>(STORAGE_KEYS.INVOICES, []);
-        console.log('Returning mock data, count:', mockData.length);
-        return mockData;
-      }
+      })();
+      
+      return pendingInvoiceRequest;
     },
     add: async (invoice: Invoice): Promise<Invoice> => {
       try {

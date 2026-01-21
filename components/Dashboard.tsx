@@ -10,6 +10,7 @@ import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
 import { ArrowLeft, ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle, HelpCircle, CheckCheck } from 'lucide-react';
 import { useTaskStore } from '../stores/useTaskStore';
+import { useModalStore } from '../hooks/use-modal-store';
 import { calls, claims as claimsSchema } from '../db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { db, isDbConfigured } from '../db';
@@ -479,7 +480,7 @@ interface DashboardProps {
   currentUserEmail?: string; // Current user's email for contractor matching
 
   // Initial State Control (Optional)
-  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'INVOICES' | 'SCHEDULE';
+  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'CALLS' | 'INVOICES' | 'SCHEDULE';
   initialThreadId?: string | null;
 
   // Tasks Widget Support
@@ -602,6 +603,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [selectedDocument, setSelectedDocument] = useState<HomeownerDocument | null>(null);
   const [isPDFViewerOpen, setIsPDFViewerOpen] = useState(false);
 
+  // Modal store for notes
+  const { onOpen: openModal } = useModalStore();
+
   // REMOVED: Team Chat widget state - Now managed in App.tsx
   // const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(false);
   
@@ -721,14 +725,14 @@ const Dashboard: React.FC<DashboardProps> = ({
   }, []);
   
   // View State for Dashboard - derived from URL
-  type TabType = 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'NOTES' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'INVOICES' | 'SCHEDULE' | 'PUNCHLIST' | 'CHAT' | null;
+  type TabType = 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'CALLS' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'INVOICES' | 'SCHEDULE' | 'PUNCHLIST' | 'CHAT' | null;
 
   const currentTab = useMemo<TabType>(() => {
     const view = searchParams.get('view');
     console.log("🔍 Current tab from URL:", view, "| userRole:", userRole, "| isAdmin:", isAdmin);
     if (!view) return null;
 
-    const validTabs: TabType[] = ['CLAIMS', 'MESSAGES', 'TASKS', 'NOTES', 'CALLS', 'DOCUMENTS', 'MANUAL', 'HELP', 'INVOICES', 'SCHEDULE', 'PUNCHLIST', 'CHAT'];
+    const validTabs: TabType[] = ['CLAIMS', 'MESSAGES', 'TASKS', 'CALLS', 'DOCUMENTS', 'MANUAL', 'HELP', 'INVOICES', 'SCHEDULE', 'PUNCHLIST', 'CHAT'];
     const upperView = view.toUpperCase() as TabType;
 
     console.log("🔍 Uppercase view:", upperView, "| Valid?", validTabs.includes(upperView));
@@ -968,7 +972,6 @@ const Dashboard: React.FC<DashboardProps> = ({
     tabs.push('MESSAGES');
     if (isAdmin && !isHomeownerViewRole) {
       tabs.push('TASKS');
-      tabs.push('NOTES');
     }
     // Homeowner tabs - only show for homeowners
     if (isHomeownerViewRole) {
@@ -3393,8 +3396,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                            const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
                            const claimNum = associatedClaim?.claimNumber ? `Claim #${associatedClaim.claimNumber}` : '';
                            const contextLabel = [selectedThread.subject, claimNum, project].filter(Boolean).join(' • ');
-                           setCurrentTab('NOTES');
-                           useTaskStore.setState({ activeClaimId: associatedClaim?.id || null, contextLabel, contextType: 'message' });
+                           
+                           // Open the slide-out note modal
+                           openModal('ADD_NOTE', {
+                             claimId: associatedClaim?.id || null,
+                             contextLabel,
+                             contextType: 'message'
+                           });
                          }}
                          className="p-2 -mr-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full transition-colors"
                          title={`Add a note about: ${selectedThread.subject}`}
@@ -3545,15 +3553,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                   const project = associatedClaim ? (associatedClaim.jobName || associatedClaim.address) : 'Unknown Project';
                   const claimNum = associatedClaim?.claimNumber ? `Claim #${associatedClaim.claimNumber}` : '';
                   const contextLabel = [selectedThread.subject, claimNum, project].filter(Boolean).join(' • ');
-                  const prefilledBody = `Message ${project} back.`;
                   
-                  setCurrentTab('NOTES');
-                  setSelectedThreadId(null);
-                  useTaskStore.setState({ 
-                    activeClaimId: associatedClaim?.id || null, 
-                    contextLabel, 
-                    contextType: 'message',
-                    prefilledNoteBody: prefilledBody
+                  // Open the slide-out note modal
+                  openModal('ADD_NOTE', {
+                    claimId: associatedClaim?.id || null,
+                    contextLabel,
+                    contextType: 'message'
                   });
                 }}
                 className="p-2 -mr-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full transition-colors"
@@ -4172,7 +4177,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 'BLUETAG': null, // Special handling
                 'CLAIMS': 'CLAIMS',
                 'MESSAGES': 'MESSAGES',
-                'NOTES': 'NOTES',
                 'CALLS': 'CALLS',
                 'INVOICES': 'INVOICES',
                 'DOCUMENTS': 'DOCUMENTS',
@@ -4633,7 +4637,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                     > = {
                       CLAIMS: { label: 'Warranty', icon: <ClipboardList className="h-4 w-4" /> },
                       TASKS: { label: 'Tasks', icon: <CheckSquare className="h-4 w-4" /> },
-                      NOTES: { label: 'Notes', icon: <StickyNote className="h-4 w-4" /> },
                       MESSAGES: { label: 'Messages', icon: <Mail className="h-4 w-4" /> },
                       DOCUMENTS: { label: 'Docs', icon: <FileText className="h-4 w-4" /> },
                       MANUAL: { label: 'Manual', icon: <BookOpen className="h-4 w-4" /> },
@@ -4704,29 +4707,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="w-full min-h-[calc(100vh-300px)]">
                   <div className="max-w-7xl mx-auto">
                     {renderTasksTab(userTasks, filteredTasksForModal, handleScheduleTaskWithAssignee, handleEvalTaskWithAssignee)}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* NOTES Tab - Admin Only */}
-            {isAdmin && (
-              <div 
-                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
-              >
-                <div className="w-full min-h-[calc(100vh-300px)]">
-                  <div className="max-w-7xl mx-auto">
-                    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
-                      <TasksSheet 
-                        isInline={true}
-                        onNavigateToClaim={(claimId) => {
-                          const claim = claims.find(c => c.id === claimId);
-                          if (claim) handleClaimSelection(claim);
-                        }} 
-                        claims={claims} 
-                      />
-                    </Suspense>
                   </div>
                 </div>
               </div>
@@ -5033,28 +5013,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
                   <div className="flex flex-col h-full md:h-auto">
                     {renderTasksTab(userTasks, filteredTasksForModal, handleScheduleTaskWithAssignee, handleEvalTaskWithAssignee)}
-                  </div>
-                </div>
-              </div>
-            </AnimatedTabContent>
-          )}
-
-          {/* NOTES Tab - Admin Only */}
-          {currentTab === 'NOTES' && isAdmin && (
-            <AnimatedTabContent tabKey="notes" className="flex-1 min-h-0 flex flex-col">
-              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
-                <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
-                  <div className="flex flex-col h-full md:h-auto">
-                    <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
-                      <TasksSheet 
-                        isInline={true}
-                        onNavigateToClaim={(claimId) => {
-                          const claim = claims.find(c => c.id === claimId);
-                          if (claim) handleClaimSelection(claim);
-                        }} 
-                        claims={claims} 
-                      />
-                    </Suspense>
                   </div>
                 </div>
               </div>
