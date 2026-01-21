@@ -27,6 +27,9 @@
     "noEmit": true
   },
   "exclude": [
+    "cascade-mobile",
+    "node_modules",
+    "dist",
     "lib/cbsbooks/netlify/**/*",
     "lib/bluetag/netlify/**/*",
     "scripts/**/*"

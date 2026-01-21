@@ -120,8 +120,7 @@ export async function syncContacts(
                   .onConflictDoUpdate({
                     target: userContacts.phoneNumber,
                     set: {
-                      name: contact.name,
-                      userId: contact.userId, // Update userId in case contact switched owners
+                      userId: contact.userId,
                     },
                   });
                 
@@ -200,7 +199,7 @@ export async function deleteUserContacts(userId: string): Promise<number> {
     .delete(userContacts)
     .where(eq(userContacts.userId, userId));
 
-  return result.length || 0;
+  return result.rowCount || 0;
 }
 
 /**

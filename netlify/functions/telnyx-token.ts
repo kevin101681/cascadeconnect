@@ -1,5 +1,4 @@
 import { Handler } from '@netlify/functions';
-import Telnyx from 'telnyx';
 
 /**
  * TELNYX TOKEN GENERATOR
@@ -9,7 +8,7 @@ import Telnyx from 'telnyx';
  * 
  * Flow:
  * 1. Authenticate user via Clerk
- * 2. Generate Telnyx credential token
+ * 2. Generate Telnyx credential token using REST API
  * 3. Return JWT token to mobile app
  * 
  * Authentication: Expects Clerk user ID in Authorization header
@@ -28,15 +27,6 @@ function getUserIdFromAuth(authHeader: string | undefined): string | null {
   }
   
   return authHeader;
-}
-
-/**
- * Sanitize user ID for Telnyx SIP username
- * Telnyx usernames should be alphanumeric with underscores/hyphens
- */
-function sanitizeUsername(userId: string): string {
-  // Replace non-alphanumeric characters with underscore
-  return userId.replace(/[^a-zA-Z0-9_-]/g, '_');
 }
 
 /**
@@ -98,21 +88,52 @@ export const handler: Handler = async (event) => {
     
     console.log(`[${requestId}] Client username: ${username} (user: ${userId})`);
 
-    // Initialize Telnyx client
-    const telnyx = new Telnyx(apiKey);
-
-    // Generate on-demand credential
-    // This creates a temporary SIP credential that the mobile client can use
-    const credential = await telnyx.credentials.create({
-      connection_id: connectionId,
-      name: username,
-      // Token expires in 24 hours
-      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    // Create telephony credential using REST API
+    const credResponse = await fetch('https://api.telnyx.com/v2/telephony_credentials', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        connection_id: connectionId,
+        name: username,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }),
     });
 
+    if (!credResponse.ok) {
+      const errorText = await credResponse.text();
+      console.error(`[${requestId}] Failed to create credential:`, errorText);
+      throw new Error(`Telnyx API error: ${credResponse.status}`);
+    }
+
+    const credData = await credResponse.json();
+    const credential = credData.data;
+    
     console.log(`[${requestId}] ✅ Telnyx credential generated:`, credential.id);
 
-    // Return the credential token and username
+    // Generate JWT token from the credential
+    const tokenResponse = await fetch(`https://api.telnyx.com/v2/telephony_credentials/${credential.id}/token`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!tokenResponse.ok) {
+      const errorText = await tokenResponse.text();
+      console.error(`[${requestId}] Failed to create token:`, errorText);
+      throw new Error(`Telnyx token API error: ${tokenResponse.status}`);
+    }
+
+    const tokenData = await tokenResponse.json();
+    const jwt = tokenData.data.token;
+
+    console.log(`[${requestId}] ✅ JWT token generated`);
+
+    // Return the JWT token and SIP credentials
     return {
       statusCode: 200,
       headers: { 
@@ -120,8 +141,9 @@ export const handler: Handler = async (event) => {
         'Access-Control-Allow-Origin': '*',
       },
       body: JSON.stringify({
-        token: credential.token,
-        username: username,
+        token: jwt,
+        username: credential.sip_username,
+        password: credential.sip_password,
         connection_id: connectionId,
         expires_at: credential.expires_at,
       }),
