@@ -393,3 +393,18 @@ export const userContacts = pgTable('user_contacts', {
   name: text('name'), // Contact name (optional)
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
+
+// --- 18. Guide Steps (Homeowner Warranty Guide) ---
+export const guideSteps = pgTable('guide_steps', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  imageUrl: text('image_url').notNull(),
+  sortOrder: text('sort_order').notNull(), // Changed to text for lexicographic sorting
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+// Type inference for Guide Steps
+export type GuideStep = typeof guideSteps.$inferSelect;
+export type NewGuideStep = typeof guideSteps.$inferInsert;

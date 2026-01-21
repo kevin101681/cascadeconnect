@@ -28,6 +28,7 @@ const HomeownersList = React.lazy(() => import('./components/HomeownersList'));
 const EmailHistory = React.lazy(() => import('./components/EmailHistory'));
 const BackendDashboard = React.lazy(() => import('./components/BackendDashboard'));
 const UnifiedImportDashboard = React.lazy(() => import('./app/dashboard/admin/import/page'));
+const GuideEditor = React.lazy(() => import('./app/dashboard/admin/guide/page'));
 const WarrantyAnalytics = React.lazy(() => import('./components/WarrantyAnalytics'));
 const FloatingChatWidget = React.lazy(() => import('./components/chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
 const BuilderManagement = React.lazy(() => import('./components/BuilderManagement'));
@@ -1109,7 +1110,7 @@ function App() {
 
   // UI State - Persistent (but reset INVOICES on page load to prevent auto-opening)
   // Check URL hash for invoice creation link
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'BUILDERS'>(() => {
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'BUILDERS' | 'GUIDE'>(() => {
     // Check if URL has invoice creation parameters
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
@@ -4709,6 +4710,23 @@ Assigned By: ${assignerName}
       {currentView === 'BACKEND' && (
         <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
           <BackendDashboard onClose={() => setCurrentView('DASHBOARD')} />
+        </React.Suspense>
+      )}
+      {currentView === 'GUIDE' && (
+        <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
+          <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto">
+            <div className="max-w-6xl mx-auto">
+              <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+                <button
+                  onClick={() => setCurrentView('DASHBOARD')}
+                  className="text-blue-500 hover:text-blue-600 flex items-center gap-2"
+                >
+                  ← Back to Dashboard
+                </button>
+              </div>
+              <GuideEditor />
+            </div>
+          </div>
         </React.Suspense>
       )}
       {currentView === 'ANALYTICS' && (

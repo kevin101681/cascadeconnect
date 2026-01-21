@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole, Homeowner } from '../types';
-import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2, Phone, Settings } from 'lucide-react';
+import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2, Phone, Settings, BookOpen } from 'lucide-react';
 import { useDarkMode } from './DarkModeProvider';
 import { UserButton, useUser } from '@clerk/clerk-react';
 import GlobalSearch from './global/GlobalSearch';
@@ -29,9 +29,9 @@ interface LayoutProps {
   onGlobalSearchNavigate?: (url: string) => void;
 
   // Navigation & Actions
-  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'BUILDERS') => void;
+  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'BUILDERS' | 'GUIDE') => void;
   onOpenEnrollment: () => void;
-  currentView?: 'DASHBOARD' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'BUILDERS' | 'DETAIL' | 'NEW';
+  currentView?: 'DASHBOARD' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'BUILDERS' | 'DETAIL' | 'NEW' | 'GUIDE';
 
   // Auth
   onSignOut: () => Promise<void>;
@@ -405,6 +405,15 @@ const Layout: React.FC<LayoutProps> = ({
                             >
                               <Server className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
                               Backend
+                            </button>
+                          )}
+                          {isAdministrator && (
+                            <button 
+                              onClick={() => handleMenuAction(() => onNavigate('GUIDE'))}
+                              className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
+                            >
+                              <BookOpen className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                              Guide Editor
                             </button>
                           )}
                           <button 
