@@ -3,8 +3,8 @@ import { Calendar, momentLocalizer, View, Event as CalendarEvent } from 'react-b
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import '../styles/calendar-custom.css';
-import { Lock, Plus, X, Calendar as CalendarIcon, Clock, Mail, FileText, MapPin, Building2, Search } from 'lucide-react';
-import { Homeowner } from '../types';
+import { Lock, Plus, X, Calendar as CalendarIcon, Clock, Mail, FileText, MapPin, Building2, Search, Globe, User } from 'lucide-react';
+import { Homeowner, Claim, UserRole } from '../types';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 const localizer = momentLocalizer(moment);
@@ -30,15 +30,28 @@ interface AppointmentEvent extends CalendarEvent {
   end: Date;
   visibility: 'internal_only' | 'shared_with_homeowner';
   type: string;
+  homeownerId?: string;
+  homeownerName?: string; // For displaying in global mode
   appointment: Appointment;
 }
 
 interface ScheduleTabProps {
   homeowners: Homeowner[];
   currentUserId?: string;
+  claims?: Claim[];
+  userRole?: UserRole;
+  activeHomeownerId?: string;
+  isAdmin?: boolean;
 }
 
-const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) => {
+const ScheduleTab: React.FC<ScheduleTabProps> = ({ 
+  homeowners, 
+  currentUserId, 
+  claims = [], 
+  userRole, 
+  activeHomeownerId,
+  isAdmin = false 
+}) => {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [events, setEvents] = useState<AppointmentEvent[]>([]);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
@@ -47,6 +60,9 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<View>('month');
   const [date, setDate] = useState(new Date());
+  
+  // Global/Scoped toggle state (admin only)
+  const [isGlobalView, setIsGlobalView] = useState(false);
 
   // Homeowner search state
   const [homeownerSearch, setHomeownerSearch] = useState('');
@@ -86,26 +102,76 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
       if (!response.ok) throw new Error('Failed to fetch appointments');
       
       const data = await response.json();
-      setAppointments(data);
       
-      // Transform to calendar events
-      const calendarEvents: AppointmentEvent[] = data.map((appt: Appointment) => ({
-        id: appt.id,
-        title: appt.title,
-        start: new Date(appt.startTime),
-        end: new Date(appt.endTime),
-        visibility: appt.visibility,
-        type: appt.type,
-        appointment: appt,
-      }));
+      // Filter appointments based on scope
+      let filteredAppointments = data;
+      if (!isGlobalView && activeHomeownerId) {
+        filteredAppointments = data.filter((appt: Appointment) => 
+          appt.homeownerId === activeHomeownerId
+        );
+      }
       
-      setEvents(calendarEvents);
+      setAppointments(filteredAppointments);
+      
+      // Transform appointments to calendar events
+      const appointmentEvents: AppointmentEvent[] = filteredAppointments.map((appt: Appointment) => {
+        const homeowner = homeowners.find(h => h.id === appt.homeownerId);
+        return {
+          id: appt.id,
+          title: appt.title,
+          start: new Date(appt.startTime),
+          end: new Date(appt.endTime),
+          visibility: appt.visibility,
+          type: appt.type,
+          homeownerId: appt.homeownerId,
+          homeownerName: homeowner?.name || homeowner?.address,
+          appointment: appt,
+        };
+      });
+      
+      // Add claim repair dates as events
+      const claimEvents: AppointmentEvent[] = [];
+      const filteredClaims = isGlobalView 
+        ? claims 
+        : claims.filter(claim => claim.homeownerId === activeHomeownerId);
+      
+      filteredClaims.forEach((claim) => {
+        if (claim.repairScheduleDate) {
+          const repairDate = new Date(claim.repairScheduleDate);
+          const homeowner = homeowners.find(h => h.id === claim.homeownerId);
+          
+          // Create an all-day event for the repair date
+          claimEvents.push({
+            id: `claim-${claim.id}`,
+            title: `Repair: ${claim.title || 'Warranty Claim'}`,
+            start: repairDate,
+            end: repairDate,
+            visibility: 'shared_with_homeowner',
+            type: 'repair',
+            homeownerId: claim.homeownerId,
+            homeownerName: homeowner?.name || homeowner?.address,
+            appointment: {
+              id: `claim-${claim.id}`,
+              title: `Repair: ${claim.title || 'Warranty Claim'}`,
+              description: `Warranty claim repair scheduled`,
+              startTime: repairDate,
+              endTime: repairDate,
+              homeownerId: claim.homeownerId,
+              visibility: 'shared_with_homeowner',
+              type: 'repair',
+            },
+          });
+        }
+      });
+      
+      // Combine appointments and claim events
+      setEvents([...appointmentEvents, ...claimEvents]);
     } catch (error) {
       console.error('Error fetching appointments:', error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isGlobalView, activeHomeownerId, homeowners, claims]);
 
   useEffect(() => {
     fetchAppointments();
@@ -315,14 +381,22 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
     );
   };
 
-  // Custom event component - show lock icon for internal events
+  // Custom event component - show lock icon for internal events and homeowner tag in global view
   const EventComponent = ({ event }: { event: AppointmentEvent }) => {
     return (
-      <div className="flex items-center gap-1 px-1">
-        {event.visibility === 'internal_only' && (
-          <Lock className="h-3 w-3 flex-shrink-0" />
+      <div className="flex flex-col gap-0.5 px-1">
+        <div className="flex items-center gap-1">
+          {event.visibility === 'internal_only' && (
+            <Lock className="h-3 w-3 flex-shrink-0" />
+          )}
+          <span className="truncate text-xs">{event.title}</span>
+        </div>
+        {/* Show homeowner tag in global mode */}
+        {isGlobalView && event.homeownerName && (
+          <span className="text-[10px] bg-primary/20 text-primary px-1.5 py-0.5 rounded truncate">
+            {event.homeownerName}
+          </span>
         )}
-        <span className="truncate text-xs">{event.title}</span>
       </div>
     );
   };
@@ -334,14 +408,41 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({ homeowners, currentUserId }) 
         <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">
           Schedule
         </h2>
-        <button
-          onClick={openCreateModal}
-          className="px-4 h-9 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-full transition-colors font-medium flex items-center gap-2"
-          title="New Appointment"
-        >
-          <Plus className="h-4 w-4" />
-          <span className="hidden md:inline">New Event</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Global/Scoped Toggle (Admin Only) */}
+          {isAdmin && (
+            <button
+              onClick={() => setIsGlobalView(!isGlobalView)}
+              className={`px-4 h-9 border rounded-full transition-colors font-medium flex items-center gap-2 ${
+                isGlobalView
+                  ? 'bg-primary/10 border-primary text-primary'
+                  : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300'
+              }`}
+              title={isGlobalView ? "Show All Projects" : "Show Current Homeowner Only"}
+            >
+              {isGlobalView ? (
+                <>
+                  <Globe className="h-4 w-4" />
+                  <span className="hidden md:inline">All Projects</span>
+                </>
+              ) : (
+                <>
+                  <User className="h-4 w-4" />
+                  <span className="hidden md:inline">Current Only</span>
+                </>
+              )}
+            </button>
+          )}
+          
+          <button
+            onClick={openCreateModal}
+            className="px-4 h-9 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-full transition-colors font-medium flex items-center gap-2"
+            title="New Appointment"
+          >
+            <Plus className="h-4 w-4" />
+            <span className="hidden md:inline">New Event</span>
+          </button>
+        </div>
       </div>
 
       {/* Content Area - Scrollable */}

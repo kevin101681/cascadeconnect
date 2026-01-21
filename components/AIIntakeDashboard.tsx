@@ -14,6 +14,9 @@ import { subscribeCallsChannel } from '../lib/pusher-client';
 interface AIIntakeDashboardProps {
   onNavigate?: (view: string) => void;
   onSelectHomeowner?: (homeownerId: string) => void;
+  activeHomeownerId?: string;
+  isAdmin?: boolean;
+  userRole?: string;
 }
 
 interface TranscriptMessage {
@@ -21,7 +24,13 @@ interface TranscriptMessage {
   text: string;
 }
 
-const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSelectHomeowner }) => {
+const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ 
+  onNavigate, 
+  onSelectHomeowner,
+  activeHomeownerId,
+  isAdmin = false,
+  userRole
+}) => {
   const [callsData, setCallsData] = useState<Call[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'verified' | 'unverified' | 'urgent'>('all');
@@ -30,6 +39,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
+  const [isGlobalView, setIsGlobalView] = useState(false); // Global/Scoped toggle
   const ITEMS_PER_PAGE = 9;
   const callDetailsRef = useRef<HTMLDivElement>(null);
 
@@ -120,7 +130,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
       clearInterval(interval);
       unsubscribe();
     };
-  }, []);
+  }, [isGlobalView, activeHomeownerId]); // Reload when view scope or homeowner changes
 
   // Scroll to top of call details when a new call is selected (desktop only)
   useEffect(() => {
@@ -160,7 +170,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
 
     try {
       // Fetch calls with joined homeowner data
-      const callsList = await db
+      let query = db
         .select({
           id: calls.id,
           vapiCallId: calls.vapiCallId,
@@ -179,7 +189,14 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
           verifiedClosingDate: homeowners.closingDate,
         })
         .from(calls)
-        .leftJoin(homeowners, eq(calls.homeownerId, homeowners.id))
+        .leftJoin(homeowners, eq(calls.homeownerId, homeowners.id));
+      
+      // Apply scoped filter if not in global mode and activeHomeownerId exists
+      if (!isGlobalView && activeHomeownerId) {
+        query = query.where(eq(calls.homeownerId, activeHomeownerId)) as any;
+      }
+      
+      const callsList = await query
         .orderBy(desc(calls.createdAt))
         .limit(100);
 
@@ -346,7 +363,34 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
           <div className={`w-full md:w-96 border-r border-surface-outline-variant dark:border-gray-700 overflow-y-auto flex-shrink-0 ${actualSelectedCall ? 'hidden md:block' : 'block'}`}>
             {/* Header */}
             <div className="px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700">
-              <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">Calls</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">Calls</h2>
+                
+                {/* Global/Scoped Toggle (Admin Only) */}
+                {isAdmin && (
+                  <button
+                    onClick={() => setIsGlobalView(!isGlobalView)}
+                    className={`px-3 h-8 border rounded-full transition-colors font-medium flex items-center gap-2 text-sm ${
+                      isGlobalView
+                        ? 'bg-primary/10 border-primary text-primary'
+                        : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300'
+                    }`}
+                    title={isGlobalView ? "Show All Calls" : "Show Current Homeowner Only"}
+                  >
+                    {isGlobalView ? (
+                      <>
+                        <Globe className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">All Calls</span>
+                      </>
+                    ) : (
+                      <>
+                        <User className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline">Current</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
             
             {/* Search Bar - Pill shaped */}
