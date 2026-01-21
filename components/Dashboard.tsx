@@ -3397,12 +3397,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                            const claimNum = associatedClaim?.claimNumber ? `Claim #${associatedClaim.claimNumber}` : '';
                            const contextLabel = [selectedThread.subject, claimNum, project].filter(Boolean).join(' • ');
                            
-                           // Open the slide-out note modal
-                           openModal('ADD_NOTE', {
-                             claimId: associatedClaim?.id || null,
+                           // Open the TasksSheet
+                           useTaskStore.getState().openTasks(
+                             associatedClaim?.id || null,
                              contextLabel,
-                             contextType: 'message'
-                           });
+                             'message'
+                           );
                          }}
                          className="p-2 -mr-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full transition-colors"
                          title={`Add a note about: ${selectedThread.subject}`}
@@ -3554,12 +3554,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                   const claimNum = associatedClaim?.claimNumber ? `Claim #${associatedClaim.claimNumber}` : '';
                   const contextLabel = [selectedThread.subject, claimNum, project].filter(Boolean).join(' • ');
                   
-                  // Open the slide-out note modal
-                  openModal('ADD_NOTE', {
-                    claimId: associatedClaim?.id || null,
+                  // Open the TasksSheet
+                  useTaskStore.getState().openTasks(
+                    associatedClaim?.id || null,
                     contextLabel,
-                    contextType: 'message'
-                  });
+                    'message'
+                  );
                 }}
                 className="p-2 -mr-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full transition-colors"
                 title={`Add a note about: ${selectedThread.subject}`}

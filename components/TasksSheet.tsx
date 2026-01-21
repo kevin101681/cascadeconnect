@@ -263,28 +263,18 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
     );
   }
 
-  // Modal/Drawer mode - render with backdrop and animations
+  // Modal/Drawer mode - render with NO backdrop, shadow, and rounded corners
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Drawer with fade animation - NO BACKDROP */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[200]"
-            onClick={closeTasks}
-          />
-
-          {/* Drawer with fade animation */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-surface dark:bg-gray-800 shadow-elevation-5 z-[201] flex flex-col"
+            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-surface dark:bg-gray-800 shadow-2xl z-[201] flex flex-col rounded-tl-2xl rounded-bl-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {renderContent()}
