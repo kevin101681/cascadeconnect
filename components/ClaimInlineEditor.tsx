@@ -12,6 +12,7 @@ import { sendEmail } from '../services/emailService';
 import { CLAIM_CLASSIFICATIONS } from '../constants';
 import { generatePDFThumbnail } from '../lib/pdfThumbnail';
 import { useTaskStore } from '../stores/useTaskStore';
+import { useModalStore } from '../hooks/use-modal-store';
 import { uploadMultipleFiles } from '../lib/services/uploadService';
 import { NonWarrantyInput } from './claims/NonWarrantyInput';
 import { AutoSaveTextarea } from './ui/AutoSaveTextarea';
@@ -55,6 +56,9 @@ const ClaimInlineEditor: React.FC<ClaimInlineEditorProps> = ({
   const isAdmin = userRole === UserRole.ADMIN;
   const isHomeowner = userRole === UserRole.HOMEOWNER;
   const safeClaimMessages = claimMessages || [];
+  
+  // Modal store for notes
+  const { onOpen: openModal } = useModalStore();
   
   // For homeowners, claims are read-only after submission
   // A claim is considered "submitted" if it has a dateSubmitted (meaning it was submitted)
@@ -1218,17 +1222,15 @@ If this repair work is billable, please let me know prior to scheduling.`);
                               {!isHomeowner && (
                                 <button
                                   onClick={() => {
-                                    // Navigate to the Notes tab with message context and pre-filled body
+                                    // Open the slide-out note modal with message context
                                     const project = claim.jobName || claim.address;
                                     const contextLabel = `${msg.subject} • ${project}`;
-                                    const prefilledBody = `Message ${project} back.`;
                                     
-                                    useTaskStore.getState().openTasks(
-                                      claim.id,
+                                    openModal('ADD_NOTE', {
+                                      claimId: claim.id,
                                       contextLabel,
-                                      'message',
-                                      prefilledBody
-                                    );
+                                      contextType: 'message'
+                                    });
                                   }}
                                   className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 px-2 py-1 rounded hover:bg-primary/10 transition-colors"
                                   title={`Add a note about: ${msg.subject}`}
@@ -1550,7 +1552,12 @@ If this repair work is billable, please let me know prior to scheduling.`);
               variant="filled"
               onClick={() => {
                 const contextLabel = `${claim.title || 'Untitled'} • Claim #${claim.claimNumber || claim.id.substring(0, 8)} • ${claim.jobName || claim.address}`;
-                useTaskStore.getState().openTasks(claim.id, contextLabel, 'claim');
+                
+                openModal('ADD_NOTE', {
+                  claimId: claim.id,
+                  contextLabel,
+                  contextType: 'claim'
+                });
               }}
               title={`Add a note for ${claim.claimNumber || 'this claim'}`}
               className="!h-9"

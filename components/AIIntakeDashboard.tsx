@@ -6,6 +6,7 @@ import { calls, homeowners } from '../db/schema';
 import { eq, desc, sql } from 'drizzle-orm';
 import SMSChatView from './SMSChatView';
 import { useTaskStore } from '../stores/useTaskStore';
+import { useModalStore } from '../hooks/use-modal-store';
 import { CallerCard } from './ui/CallerCard';
 import { formatPhoneNumber } from '../lib/utils';
 import { subscribeCallsChannel } from '../lib/pusher-client';
@@ -31,6 +32,9 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
   const ITEMS_PER_PAGE = 9;
   const callDetailsRef = useRef<HTMLDivElement>(null);
+  
+  // Modal store for notes
+  const { onOpen: openModal } = useModalStore();
 
   // Parse transcript into chat messages
   const parseTranscript = (transcript: string): TranscriptMessage[] => {
@@ -608,14 +612,12 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                       const callerName = actualSelectedCall.homeownerName || 'Unknown Caller';
                       const phoneNumber = actualSelectedCall.phoneNumber || 'unknown number';
                       const contextLabel = `Call • ${callerName} • ${formatDate(actualSelectedCall.createdAt)}`;
-                      const prefilledBody = `Call ${callerName} (${phoneNumber}) back.`;
                       
-                      useTaskStore.getState().openTasks(
-                        actualSelectedCall.homeownerId || undefined,
+                      openModal('ADD_NOTE', {
+                        claimId: actualSelectedCall.homeownerId || null,
                         contextLabel,
-                        'call',
-                        prefilledBody
-                      );
+                        contextType: 'call'
+                      });
                     }}
                     className="flex-1 px-4 py-2 bg-primary/10 text-primary border border-primary rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center"
                   >
@@ -883,14 +885,12 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({ onNavigate, onSel
                   const callerName = actualSelectedCall.homeownerName || 'Unknown Caller';
                   const phoneNumber = actualSelectedCall.phoneNumber || 'unknown number';
                   const contextLabel = `Call • ${callerName} • ${formatDate(actualSelectedCall.createdAt)}`;
-                  const prefilledBody = `Call ${callerName} (${phoneNumber}) back.`;
                   
-                  useTaskStore.getState().openTasks(
-                    actualSelectedCall.homeownerId || undefined,
+                  openModal('ADD_NOTE', {
+                    claimId: actualSelectedCall.homeownerId || null,
                     contextLabel,
-                    'call',
-                    prefilledBody
-                  );
+                    contextType: 'call'
+                  });
                 }}
                 className="flex-1 px-4 py-2 bg-primary/10 text-primary border border-primary rounded-lg hover:bg-primary/20 transition-colors flex items-center justify-center"
               >
