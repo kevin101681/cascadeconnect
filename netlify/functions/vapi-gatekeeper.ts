@@ -58,6 +58,7 @@ interface VapiAssistantResponse {
     destinations: Array<{
       type: string;
       number?: string;
+      sipUri?: string;
       message?: string;
     }>;
   };
@@ -229,17 +230,18 @@ function generateTransferResponse(
 ): { statusCode: number; headers: Record<string, string>; body: string } {
   console.log(`✅ [${requestId}] Generating transfer response for known contact: ${contactName}`);
   
-  // Transfer to Telnyx phone number (which will forward to mobile via SIP)
-  const telnyxNumber = process.env.TELNYX_PHONE_NUMBER || process.env.KEVIN_PHONE_NUMBER || '+15551234567';
+  // Transfer directly to Telnyx SIP endpoint (which forwards to mobile app)
+  const sipDestination = 'sip:2877599727107442362@sip.telnyx.com';
   
-  console.log(`🔄 Transferring to Telnyx number: ${telnyxNumber}`);
+  console.log(`🔄 Known contact [${contactName || 'Unnamed'}]. Bypassing AI.`);
+  console.log(`🔄 Transferring to SIP: ${sipDestination}`);
   
   const response: VapiAssistantResponse = {
     transferPlan: {
       destinations: [
         {
-          type: 'number',
-          number: telnyxNumber,
+          type: 'sip',
+          sipUri: sipDestination,
           message: '', // Empty message = silent transfer (no robot voice)
         },
       ],
