@@ -67,13 +67,14 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
       content: newContent,
       isCompleted: false,
       claimId: activeClaimId || null,
+      contextLabel: contextLabel || null, // Save context label
       createdAt: new Date(),
     };
 
     setTasks((prev) => [optimisticTask, ...prev]);
 
     try {
-      const createdTask = await createTask(newContent, activeClaimId || null);
+      const createdTask = await createTask(newContent, activeClaimId || null, contextLabel || null);
       // Replace optimistic task with real one
       setTasks((prev) => prev.map((t) => (t.id === optimisticTask.id ? createdTask : t)));
       
@@ -274,7 +275,7 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-surface dark:bg-gray-800 shadow-2xl z-[201] flex flex-col rounded-tl-2xl rounded-bl-2xl"
+            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-surface dark:bg-gray-800 shadow-2xl z-[201] flex flex-col rounded-tl-3xl rounded-bl-3xl"
             onClick={(e) => e.stopPropagation()}
           >
             {renderContent()}
@@ -309,6 +310,7 @@ const TaskItem: React.FC<TaskItemProps> = ({
     <NoteCard
       content={task.content}
       dateCreated={format(new Date(task.createdAt), 'MMM d, yyyy')}
+      contextLabel={task.contextLabel}
       isCompleted={task.isCompleted}
       onToggle={(checked) => onToggle(task)}
     />

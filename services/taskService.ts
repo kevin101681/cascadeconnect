@@ -3,6 +3,7 @@ export interface SimpleTask {
   content: string;
   isCompleted: boolean;
   claimId?: string | null;
+  contextLabel?: string | null; // Display label for context source
   createdAt: Date;
 }
 
@@ -38,7 +39,7 @@ export async function fetchTasks(claimId?: string | null, notesOnly?: boolean): 
 /**
  * Create a new task
  */
-export async function createTask(content: string, claimId?: string | null): Promise<SimpleTask> {
+export async function createTask(content: string, claimId?: string | null, contextLabel?: string | null): Promise<SimpleTask> {
   try {
     const response = await fetch('/api/tasks', {
       method: 'POST',
@@ -48,6 +49,7 @@ export async function createTask(content: string, claimId?: string | null): Prom
       body: JSON.stringify({
         content,
         claimId: claimId || null,
+        contextLabel: contextLabel || null,
       }),
     });
     

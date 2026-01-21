@@ -91,9 +91,11 @@ const ClaimsListColumn = React.memo<{
   isCreatingNewClaim: boolean;
   claimMessages: ClaimMessage[];
   selectedClaimId: string | null;
+  selectedClaimIds: string[]; // Multi-select state
   onClaimSelect: (claim: Claim) => void;
   onDeleteClaim: (claimId: string) => void;
-}>(({ filteredClaims, emptyMsg, isCreatingNewClaim, claimMessages, selectedClaimId, onClaimSelect, onDeleteClaim }) => {
+  onToggleClaimSelection: (claimId: string) => void; // Toggle checkbox
+}>(({ filteredClaims, emptyMsg, isCreatingNewClaim, claimMessages, selectedClaimId, selectedClaimIds, onClaimSelect, onDeleteClaim, onToggleClaimSelection }) => {
   return (
     <div 
       className="flex-1 overflow-y-auto px-2 py-4 md:p-4 min-h-0"
@@ -134,39 +136,57 @@ const ClaimsListColumn = React.memo<{
             const serviceOrderDate = serviceOrderMessages.length > 0 ? serviceOrderMessages[0]?.timestamp : null;
             const isReviewed = claim.reviewed || false;
             const isSelected = selectedClaimId === claim.id;
+            const isChecked = selectedClaimIds.includes(claim.id);
             
             return (
-              <div key={claim.id} className="relative">
-                <button
-                  type="button"
-                  onClick={() => onClaimSelect(claim)}
-                  className="w-full text-left cursor-pointer [-webkit-tap-highlight-color:transparent]"
-                >
-                  <WarrantyCard
-                    title={claim.title}
-                    classification={claim.classification}
-                    createdDate={claim.dateSubmitted ? new Date(claim.dateSubmitted).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
-                    scheduledDate={scheduledDate?.date ? new Date(scheduledDate.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
-                    soSentDate={serviceOrderDate ? new Date(serviceOrderDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
-                    subName={claim.contractorName}
-                    attachmentCount={claim.attachments?.length || 0}
-                    isReviewed={isReviewed}
-                    isClosed={claim.status === ClaimStatus.CLOSED}
-                    isSelected={isSelected}
+              <div key={claim.id} className="relative flex items-start gap-2">
+                {/* Checkbox for multi-select */}
+                <div className="pt-3 pl-2 shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      onToggleClaimSelection(claim.id);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm('Are you sure you want to delete this claim? This action cannot be undone.')) {
-                      onDeleteClaim(claim.id);
-                    }
-                  }}
-                  className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 transition-colors z-10 opacity-0 hover:opacity-100 focus:opacity-100"
-                  title="Delete claim"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                </div>
+                
+                <div className="flex-1 relative">
+                  <button
+                    type="button"
+                    onClick={() => onClaimSelect(claim)}
+                    className="w-full text-left cursor-pointer [-webkit-tap-highlight-color:transparent]"
+                  >
+                    <WarrantyCard
+                      title={claim.title}
+                      classification={claim.classification}
+                      createdDate={claim.dateSubmitted ? new Date(claim.dateSubmitted).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
+                      scheduledDate={scheduledDate?.date ? new Date(scheduledDate.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
+                      soSentDate={serviceOrderDate ? new Date(serviceOrderDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
+                      subName={claim.contractorName}
+                      attachmentCount={claim.attachments?.length || 0}
+                      isReviewed={isReviewed}
+                      isClosed={claim.status === ClaimStatus.CLOSED}
+                      isSelected={isSelected}
+                    />
+                  </button>
+                  {/* Delete button - always visible, gray color, positioned to not overlap badges */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm('Are you sure you want to delete this claim? This action cannot be undone.')) {
+                        onDeleteClaim(claim.id);
+                      }
+                    }}
+                    className="absolute top-2 right-2 p-1 rounded-md bg-white/80 hover:bg-gray-100 text-gray-400 hover:text-gray-600 dark:bg-gray-700/80 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-gray-300 transition-colors z-10 shadow-sm"
+                    title="Delete claim"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -1090,6 +1110,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Claims filter state
   const [claimsFilter, setClaimsFilter] = useState<'All' | 'Open' | 'Closed'>('Open');
   
+  // Multi-select claims state
+  const [selectedClaimIds, setSelectedClaimIds] = useState<string[]>([]);
+  
   // Tasks filter state
   const [tasksFilter, setTasksFilter] = useState<'all' | 'open' | 'closed'>('open');
   
@@ -1329,12 +1352,59 @@ const Dashboard: React.FC<DashboardProps> = ({
         setSelectedClaimForModal(null);
       }
       
+      // Remove from multi-select if it was checked
+      setSelectedClaimIds(prev => prev.filter(id => id !== claimId));
+      
       // Refresh claims list by triggering a re-render
       // The parent component will re-fetch claims data
       console.log('Claim deleted successfully');
     } catch (error) {
       console.error('Failed to delete claim:', error);
       alert('Failed to delete claim. Please try again.');
+    }
+  };
+  
+  // Toggle claim selection for multi-select
+  const handleToggleClaimSelection = (claimId: string) => {
+    setSelectedClaimIds(prev => {
+      if (prev.includes(claimId)) {
+        return prev.filter(id => id !== claimId);
+      } else {
+        return [...prev, claimId];
+      }
+    });
+  };
+  
+  // Bulk delete selected claims
+  const handleBulkDeleteClaims = async () => {
+    if (selectedClaimIds.length === 0) return;
+    
+    const confirmMessage = `Are you sure you want to delete ${selectedClaimIds.length} claim${selectedClaimIds.length > 1 ? 's' : ''}? This action cannot be undone.`;
+    if (!confirm(confirmMessage)) return;
+    
+    try {
+      if (!isDbConfigured) {
+        console.warn('Database not configured');
+        return;
+      }
+
+      // Delete all selected claims
+      for (const claimId of selectedClaimIds) {
+        await db.delete(claimsSchema).where(eq(claimsSchema.id, claimId));
+      }
+      
+      // Clear selection
+      setSelectedClaimIds([]);
+      
+      // If any deleted claim was the selected one, clear it
+      if (selectedClaimForModal && selectedClaimIds.includes(selectedClaimForModal.id)) {
+        setSelectedClaimForModal(null);
+      }
+      
+      console.log(`${selectedClaimIds.length} claims deleted successfully`);
+    } catch (error) {
+      console.error('Failed to delete claims:', error);
+      alert('Failed to delete claims. Please try again.');
     }
   };
 
@@ -2576,17 +2646,41 @@ const Dashboard: React.FC<DashboardProps> = ({
             </div>
           </div>
 
-          <ClaimsListColumn
-            claims={claimsList}
-            filteredClaims={filteredClaims}
-            isHomeownerView={isHomeownerView}
-            emptyMsg={emptyMsg}
-            isCreatingNewClaim={isCreatingNewClaim}
-            claimMessages={claimMessages}
-            selectedClaimId={selectedClaimForModal?.id || null}
-            onClaimSelect={handleClaimSelection}
-            onDeleteClaim={handleDeleteClaim}
-          />
+          <div className="relative flex-1 min-h-0 flex flex-col">
+            <ClaimsListColumn
+              claims={claimsList}
+              filteredClaims={filteredClaims}
+              isHomeownerView={isHomeownerView}
+              emptyMsg={emptyMsg}
+              isCreatingNewClaim={isCreatingNewClaim}
+              claimMessages={claimMessages}
+              selectedClaimId={selectedClaimForModal?.id || null}
+              selectedClaimIds={selectedClaimIds}
+              onClaimSelect={handleClaimSelection}
+              onDeleteClaim={handleDeleteClaim}
+              onToggleClaimSelection={handleToggleClaimSelection}
+            />
+            
+            {/* Bulk Delete Button - Floating at bottom when claims are selected */}
+            <AnimatePresence>
+              {selectedClaimIds.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 20 }}
+                  className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20"
+                >
+                  <button
+                    onClick={handleBulkDeleteClaims}
+                    className="flex items-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg transition-colors font-medium"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span>Delete {selectedClaimIds.length} Claim{selectedClaimIds.length > 1 ? 's' : ''}</span>
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         {/* Right Column: Claim Detail View - Desktop Only */}

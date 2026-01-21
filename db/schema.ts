@@ -205,6 +205,7 @@ export const tasks = pgTable('tasks', {
   // Google Tasks-style fields (for global task drawer)
   content: text('content'), // If null, use title as content for backward compatibility
   claimId: uuid('claim_id').references(() => claims.id), // Single claim link for task drawer
+  contextLabel: text('context_label'), // Display label for context (e.g., "Drywall cracks • Claim #15")
   createdAt: timestamp('created_at').defaultNow(),
 });
 
