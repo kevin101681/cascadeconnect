@@ -206,6 +206,7 @@ export interface Claim {
   category: string;
   
   // Homeowner / Location Data
+  homeownerId?: string; // Link to homeowner
   address: string;
   homeownerName: string;
   homeownerEmail: string;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Call, Homeowner } from '../types';
-import { Phone, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Building2, User, Mail, ExternalLink, Play, Download, Search, ChevronLeft, ChevronRight, Trash2, ChevronDown, ChevronUp, StickyNote } from 'lucide-react';
+import { Phone, MapPin, Clock, AlertCircle, CheckCircle, XCircle, Calendar, Building2, User, Mail, ExternalLink, Play, Download, Search, ChevronLeft, ChevronRight, Trash2, ChevronDown, ChevronUp, StickyNote, Globe } from 'lucide-react';
 import { db, isDbConfigured } from '../db';
 import { calls, homeowners } from '../db/schema';
 import { eq, desc, sql } from 'drizzle-orm';

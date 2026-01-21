@@ -136,8 +136,8 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({
         : claims.filter(claim => claim.homeownerId === activeHomeownerId);
       
       filteredClaims.forEach((claim) => {
-        if (claim.repairScheduleDate) {
-          const repairDate = new Date(claim.repairScheduleDate);
+        if (claim.scheduledAt) {
+          const repairDate = new Date(claim.scheduledAt);
           const homeowner = homeowners.find(h => h.id === claim.homeownerId);
           
           // Create an all-day event for the repair date

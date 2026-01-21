@@ -1462,7 +1462,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [newTaskAssignee, setNewTaskAssignee] = useState(currentUser.id);
   const [newTaskNotes, setNewTaskNotes] = useState('');
-  const [selectedClaimIds, setSelectedClaimIds] = useState<string[]>([]);
 
   // Modal states
   const [showManualModal, setShowManualModal] = useState(false);
