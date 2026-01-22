@@ -7,6 +7,7 @@ import { askMaintenanceAI } from '../actions/ask-maintenance-ai';
 interface HomeownerSearchWidgetProps {
   className?: string;
   variant?: 'default' | 'header';
+  homeownerId?: string; // Optional: used for future enhancements
 }
 
 const SUGGESTED_QUESTIONS = [
@@ -16,13 +17,21 @@ const SUGGESTED_QUESTIONS = [
   "How often should I clean gutters?",
 ];
 
-export function HomeownerSearchWidget({ className = '', variant = 'default' }: HomeownerSearchWidgetProps) {
+export function HomeownerSearchWidget({ className = '', variant = 'default', homeownerId }: HomeownerSearchWidgetProps) {
   const [query, setQuery] = useState('');
   const [answer, setAnswer] = useState('');
   const [isSearching, setIsSearching] = useState(false);
 
   const handleSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
+    
+    // GUARD CLAUSE: Prevent 400 errors by ensuring homeowner ID is valid (if provided)
+    // This prevents the widget from firing before login is complete
+    if (homeownerId !== undefined && (!homeownerId || homeownerId === 'placeholder' || homeownerId.length < 10)) {
+      console.warn("⚠️ Search Widget waiting for valid Homeowner ID");
+      setAnswer("Please wait while we load your account information...");
+      return;
+    }
     
     setIsSearching(true);
     setAnswer(''); // Clear previous answer
