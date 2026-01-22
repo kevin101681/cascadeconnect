@@ -42,7 +42,9 @@ export function WarrantyCard({
       } ${
         isChecked 
           ? 'bg-red-50 border-red-300 ring-1 ring-red-300 shadow-md' 
-          : 'bg-white border-gray-200 shadow-sm md:hover:shadow-md md:hover:border-blue-300'
+          : isSelected
+            ? 'bg-blue-50 border-blue-500 shadow-md'
+            : 'bg-white border-gray-200 shadow-sm md:hover:shadow-md md:hover:border-blue-300'
       }`}
       style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
     >
