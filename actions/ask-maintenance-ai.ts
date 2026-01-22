@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { getAIModelConfig } from "./app-settings";
 
 // Lazy initialization
 let openai: OpenAI | null = null;
@@ -33,8 +34,13 @@ export const askMaintenanceAI = async (question: string): Promise<string> => {
   }
 
   try {
+    // Get current AI model configuration from database
+    const model = await getAIModelConfig();
+    
+    console.log(`🤖 Using AI model: ${model}`);
+
     const completion = await client.chat.completions.create({
-      model: "gpt-5.2", // Flagship model for highest quality responses
+      model: model, // Dynamic model from database
       messages: [
         {
           role: "system",

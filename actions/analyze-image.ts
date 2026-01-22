@@ -7,6 +7,7 @@
  */
 
 import OpenAI from "openai";
+import { getAIModelConfig } from "./app-settings";
 
 // Lazy initialization
 let openai: OpenAI | null = null;
@@ -58,7 +59,12 @@ export async function analyzeWarrantyImage(
   }
 
   try {
-    console.log('🤖 Analyzing image with OpenAI GPT-5.2 Vision...');
+    console.log('🤖 Analyzing image with OpenAI Vision...');
+    
+    // Get current AI model configuration from database
+    const model = await getAIModelConfig();
+    
+    console.log(`🤖 Using AI model: ${model}`);
     
     // Build prompt based on whether we're creating new or refining existing description
     let textPrompt: string;
@@ -84,7 +90,7 @@ Return ONLY a valid JSON object with this exact structure (no markdown, no code 
     
     // Call OpenAI API with vision support
     const completion = await client.chat.completions.create({
-      model: "gpt-5.2", // Flagship model with superior vision capabilities
+      model: model, // Dynamic model from database
       messages: [
         {
           role: "user",

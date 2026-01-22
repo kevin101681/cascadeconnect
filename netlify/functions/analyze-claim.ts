@@ -1,5 +1,18 @@
 import { Handler } from '@netlify/functions';
 import OpenAI from 'openai';
+import { neon } from '@neondatabase/serverless';
+
+// Get AI model config from database
+async function getAIModelConfig(): Promise<string> {
+  try {
+    const sql = neon(process.env.DATABASE_URL!);
+    const result = await sql`SELECT value FROM app_settings WHERE key = 'ai_model' LIMIT 1`;
+    return result[0]?.value || 'gpt-5.2'; // Default to gpt-5.2
+  } catch (error) {
+    console.error('Error fetching AI model config:', error);
+    return 'gpt-5.2'; // Fallback to default
+  }
+}
 
 // ------------------------------------------------------------------
 // THE OFFICIAL WARRANTY MANUAL (Source Truth: US_W.DS.Sv2_11_2023)
@@ -340,9 +353,13 @@ Please analyze this claim and provide your recommendation in JSON format.`
       console.log('📝 Text-only analysis (no images provided)');
     }
 
+    // Get current AI model configuration from database
+    const model = await getAIModelConfig();
+    console.log(`🤖 Using AI model: ${model}`);
+
     // Call OpenAI API with vision support
     const response = await openai.chat.completions.create({
-      model: 'gpt-5.2', // Flagship model with superior vision and reasoning capabilities
+      model: model, // Dynamic model from database
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessageContent },

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Database, Users, Home, FileText, ClipboardList, MessageSquare, Building2, HardHat, CheckCircle, XCircle, RefreshCw, AlertCircle, TrendingUp, Server, Globe, Code, Key, Zap, X, Mail, Bug, BarChart3 } from 'lucide-react';
+import { Database, Users, Home, FileText, ClipboardList, MessageSquare, Building2, HardHat, CheckCircle, XCircle, RefreshCw, AlertCircle, TrendingUp, Server, Globe, Code, Key, Zap, X, Mail, Bug, BarChart3, Brain } from 'lucide-react';
 import Button from './Button';
 import { db, isDbConfigured } from '../db';
 import { users as usersTable, homeowners as homeownersTable, claims as claimsTable, documents as documentsTable, tasks as tasksTable, messageThreads as messageThreadsTable, builderGroups as builderGroupsTable, contractors as contractorsTable } from '../db/schema';
 import { eq, count, desc } from 'drizzle-orm';
 import { getNetlifyInfo, getNetlifyDeploys, rollbackDeployment as rollbackDeploymentService, getNeonStats } from '../lib/services/netlifyService';
 import { getSentryErrors, getPostHogTrends, type SentryErrorsResponse, type PostHogTrendsResponse } from '../lib/services/adminAnalyticsService';
+import { getAIModelConfig, updateAIModelConfig } from '../actions/app-settings';
 import EmailHistory from './EmailHistory';
 
 interface BackendDashboardProps {
@@ -39,7 +40,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'NETLIFY' | 'NEON' | 'EMAILS' | 'SENTRY' | 'POSTHOG'>('NETLIFY');
+  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'NETLIFY' | 'NEON' | 'EMAILS' | 'SENTRY' | 'POSTHOG' | 'OPENAI'>('NETLIFY');
   const [detailedData, setDetailedData] = useState<any>(null);
   const [netlifyInfo, setNetlifyInfo] = useState<any>(null);
   const [netlifyLoading, setNetlifyLoading] = useState(false);
@@ -56,6 +57,14 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
   // PostHog state
   const [posthogData, setPosthogData] = useState<PostHogTrendsResponse | null>(null);
   const [posthogLoading, setPosthogLoading] = useState(false);
+
+  // OpenAI state
+  const [currentAIModel, setCurrentAIModel] = useState<string>('gpt-5.2');
+  const [aiModelInput, setAiModelInput] = useState<string>('gpt-5.2');
+  const [aiModelLoading, setAiModelLoading] = useState(false);
+  const [aiModelSaving, setAiModelSaving] = useState(false);
+  const [aiModelError, setAiModelError] = useState<string | null>(null);
+  const [aiModelSuccess, setAiModelSuccess] = useState(false);
 
   const fetchStats = async () => {
     if (!isDbConfigured) {
@@ -329,6 +338,55 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
     }
   };
 
+  const fetchAIModelConfig = async () => {
+    setAiModelLoading(true);
+    setAiModelError(null);
+    try {
+      const model = await getAIModelConfig();
+      setCurrentAIModel(model);
+      setAiModelInput(model);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load AI model config';
+      console.error('❌ Failed to fetch AI model config:', errorMessage);
+      setAiModelError(errorMessage);
+    } finally {
+      setAiModelLoading(false);
+    }
+  };
+
+  const saveAIModelConfig = async () => {
+    if (!aiModelInput.trim()) {
+      setAiModelError('Model name cannot be empty');
+      return;
+    }
+
+    setAiModelSaving(true);
+    setAiModelError(null);
+    setAiModelSuccess(false);
+
+    try {
+      const success = await updateAIModelConfig(aiModelInput.trim());
+      
+      if (success) {
+        setCurrentAIModel(aiModelInput.trim());
+        setAiModelSuccess(true);
+        
+        // Auto-hide success message after 3 seconds
+        setTimeout(() => {
+          setAiModelSuccess(false);
+        }, 3000);
+      } else {
+        throw new Error('Failed to save configuration');
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save AI model config';
+      console.error('❌ Failed to save AI model config:', errorMessage);
+      setAiModelError(errorMessage);
+    } finally {
+      setAiModelSaving(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'NETLIFY') {
       fetchNetlifyInfo();
@@ -339,6 +397,8 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
       fetchSentryData();
     } else if (activeTab === 'POSTHOG') {
       fetchPostHogData();
+    } else if (activeTab === 'OPENAI') {
+      fetchAIModelConfig();
     } else if (activeTab !== 'OVERVIEW') {
       fetchDetailedData(activeTab);
     } else {
@@ -459,7 +519,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
         <div className="p-6 space-y-6 overflow-y-auto flex-1" style={{ height: 'calc(85vh - 120px)' }}>
           {/* Tabs */}
           <div className="flex gap-2 mb-6 border-b border-surface-outline-variant dark:border-gray-700 overflow-x-auto">
-            {(['NETLIFY', 'SENTRY', 'POSTHOG', 'EMAILS', 'OVERVIEW', 'NEON'] as const).map(tab => (
+            {(['NETLIFY', 'OPENAI', 'SENTRY', 'POSTHOG', 'EMAILS', 'OVERVIEW', 'NEON'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -475,6 +535,7 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
                 {tab === 'EMAILS' && 'Emails'}
                 {tab === 'SENTRY' && 'Sentry'}
                 {tab === 'POSTHOG' && 'PostHog'}
+                {tab === 'OPENAI' && 'Open AI'}
               </button>
             ))}
           </div>
@@ -1733,6 +1794,183 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
                   )}
                   <Button onClick={fetchPostHogData} variant="outlined" className="mt-4">Retry</Button>
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* OpenAI Tab - AI Model Configuration */}
+          {activeTab === 'OPENAI' && (
+            <div className="mt-6 space-y-6">
+              {aiModelLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <RefreshCw className="h-6 w-6 animate-spin text-primary" />
+                  <span className="ml-3 text-surface-on-variant dark:text-gray-400">Loading AI configuration...</span>
+                </div>
+              ) : (
+                <>
+                  {/* Header with Current Status */}
+                  <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 rounded-xl p-6 border border-purple-200 dark:border-purple-800">
+                    <div className="flex items-start gap-4">
+                      <div className="p-3 bg-purple-100 dark:bg-purple-900/40 rounded-lg">
+                        <Brain className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <div className="flex-1">
+                        <h2 className="text-xl font-semibold text-surface-on dark:text-gray-100 mb-2">
+                          Global AI Model Configuration
+                        </h2>
+                        <p className="text-sm text-surface-on-variant dark:text-gray-400 mb-3">
+                          Configure which OpenAI model powers all AI features across the application.
+                        </p>
+                        <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-gray-800 rounded-full border border-purple-200 dark:border-purple-700">
+                          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                          <span className="text-xs font-medium text-surface-on dark:text-gray-200">
+                            Current Target: <span className="font-mono text-purple-600 dark:text-purple-400">{currentAIModel}</span>
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Model Selection Card */}
+                  <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-6 border border-surface-outline-variant">
+                    <h3 className="text-lg font-medium text-surface-on dark:text-gray-100 mb-4">Model Selection</h3>
+                    
+                    {/* Quick Presets */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-2">
+                        Quick Presets
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {['gpt-5.2', 'gpt-4o', 'gpt-4o-mini'].map((preset) => (
+                          <button
+                            key={preset}
+                            onClick={() => setAiModelInput(preset)}
+                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                              aiModelInput === preset
+                                ? 'bg-primary text-primary-on shadow-md'
+                                : 'bg-surface-container-high dark:bg-gray-600 text-surface-on dark:text-gray-200 hover:bg-surface-container-highest dark:hover:bg-gray-500'
+                            }`}
+                          >
+                            {preset}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Custom Input */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-2">
+                        Custom Model Name
+                      </label>
+                      <input
+                        type="text"
+                        value={aiModelInput}
+                        onChange={(e) => setAiModelInput(e.target.value)}
+                        placeholder="e.g., gpt-6, gpt-4-turbo"
+                        className="w-full px-4 py-2 bg-surface-container-high dark:bg-gray-600 border border-surface-outline-variant dark:border-gray-500 rounded-lg text-surface-on dark:text-gray-100 placeholder-surface-on-variant dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+                      />
+                      <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-2">
+                        Enter any valid OpenAI model identifier. Changes take effect immediately for new requests.
+                      </p>
+                    </div>
+
+                    {/* Success Message */}
+                    {aiModelSuccess && (
+                      <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-2">
+                        <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                        <span className="text-sm text-green-800 dark:text-green-200 font-medium">
+                          Configuration saved successfully!
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Error Message */}
+                    {aiModelError && (
+                      <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                        <span className="text-sm text-red-800 dark:text-red-200">{aiModelError}</span>
+                      </div>
+                    )}
+
+                    {/* Save Button */}
+                    <Button
+                      onClick={saveAIModelConfig}
+                      disabled={aiModelSaving || aiModelInput === currentAIModel}
+                      className="w-full"
+                    >
+                      {aiModelSaving ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Configuration'
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Affected Features List */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+                    <h3 className="text-lg font-medium text-blue-900 dark:text-blue-100 mb-4">
+                      Features Using This Configuration
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-blue-900 dark:text-blue-100">Maintenance Search Widget</p>
+                          <p className="text-sm text-blue-700 dark:text-blue-300">
+                            Homeowner Q&A assistant for home maintenance questions
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">2</span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-blue-900 dark:text-blue-100">Image Analysis (Claim Creation)</p>
+                          <p className="text-sm text-blue-700 dark:text-blue-300">
+                            Automatic title and description generation from warranty photos
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">3</span>
+                        </div>
+                        <div>
+                          <p className="font-medium text-blue-900 dark:text-blue-100">Warranty Review with Vision</p>
+                          <p className="text-sm text-blue-700 dark:text-blue-300">
+                            Server-side claim analysis with photo evidence evaluation
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-blue-200 dark:border-blue-800">
+                      <p className="text-xs text-blue-600 dark:text-blue-400">
+                        <strong>Note:</strong> Changes apply to new AI requests immediately. Active sessions will use the new model on their next query.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* API Key Status */}
+                  <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-6 border border-surface-outline-variant">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Key className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
+                      <h3 className="text-lg font-medium text-surface-on dark:text-gray-100">API Key Configuration</h3>
+                    </div>
+                    <p className="text-sm text-surface-on-variant dark:text-gray-400 mb-2">
+                      Ensure the following environment variables are set:
+                    </p>
+                    <ul className="text-xs text-surface-on-variant dark:text-gray-400 space-y-1 font-mono bg-surface-container-high dark:bg-gray-600 p-3 rounded-lg">
+                      <li>• <span className="text-primary">VITE_OPENAI_API_KEY</span> (Client-side features)</li>
+                      <li>• <span className="text-primary">OPENAI_API_KEY</span> (Server-side features)</li>
+                    </ul>
+                  </div>
+                </>
               )}
             </div>
           )}

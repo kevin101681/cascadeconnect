@@ -409,3 +409,14 @@ export const guideSteps = pgTable('guide_steps', {
 // Type inference for Guide Steps
 export type GuideStep = typeof guideSteps.$inferSelect;
 export type NewGuideStep = typeof guideSteps.$inferInsert;
+
+// --- 19. App Settings (Dynamic Configuration) ---
+export const appSettings = pgTable('app_settings', {
+  key: text('key').primaryKey(), // e.g., 'ai_model'
+  value: text('value').notNull(), // e.g., 'gpt-5.2'
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Type inference for App Settings
+export type AppSetting = typeof appSettings.$inferSelect;
+export type NewAppSetting = typeof appSettings.$inferInsert;
