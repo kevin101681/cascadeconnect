@@ -27,6 +27,7 @@ import { Homeowner } from '../types';
 import { StaggerContainer, FadeIn } from './motion/MotionWrapper';
 import { SmoothHeightWrapper } from './motion/SmoothHeightWrapper';
 import { Input } from './ui/input';
+import { HomeownerSearchWidget } from './HomeownerSearchWidget';
 
 // Appointment interface for type safety
 interface UpcomingAppointment {
@@ -301,6 +302,13 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
                 </div>
               )}
             </SmoothHeightWrapper>
+          </section>
+        </FadeIn>
+
+        {/* Maintenance Search Widget */}
+        <FadeIn direction="up" fullWidth>
+          <section className="w-full px-4 py-4 md:px-6 md:py-6">
+            <HomeownerSearchWidget />
           </section>
         </FadeIn>
 
