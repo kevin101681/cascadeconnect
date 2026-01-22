@@ -45,8 +45,8 @@ export function WarrantyCard({
         isChecked 
           ? 'bg-red-50 border-red-300 ring-1 ring-red-300 shadow-md' 
           : isSelected
-            ? 'bg-blue-50 border-blue-500 shadow-md'
-            : 'bg-white border-gray-200 shadow-sm md:hover:shadow-md md:hover:border-blue-300'
+            ? 'bg-slate-50 dark:bg-slate-900/50 border-slate-500 dark:border-slate-500 shadow-md'
+            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm md:hover:shadow-md md:hover:border-slate-300 dark:md:hover:border-slate-600'
       }`}
       style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
     >
@@ -108,7 +108,7 @@ export function WarrantyCard({
         
         {/* Scheduled */}
         <div className={`flex items-center gap-1 shrink-0 ${scheduledDate ? "text-gray-600" : "text-gray-400"}`}>
-          <Calendar className={`w-3 h-3 ${scheduledDate ? "text-blue-500" : "text-gray-300"}`} />
+          <Calendar className={`w-3 h-3 ${scheduledDate ? "text-slate-600 dark:text-slate-400" : "text-gray-300"}`} />
           <span>{scheduledDate || "--"}</span>
         </div>
         
@@ -125,7 +125,7 @@ export function WarrantyCard({
       <div className="flex items-center justify-between pt-2 border-t border-gray-100">
         {/* Sub Contractor */}
         <div className="flex items-center min-w-0 flex-1 mr-2">
-          <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mr-1.5 ${subName ? "bg-blue-50 text-blue-600" : "bg-gray-100 text-gray-400"}`}>
+          <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mr-1.5 ${subName ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300" : "bg-gray-100 text-gray-400"}`}>
             <Hammer className="w-3 h-3" />
           </div>
           <span className={`text-xs font-medium truncate ${subName ? "text-gray-700" : "text-gray-400 italic"}`}>
