@@ -489,18 +489,16 @@ export const api = {
             console.log("Mock Email Sent:", { to, subject });
             return { message: "Mock Email Sent" };
         }
-        try {
-          return await fetchWithErrors(`${API_BASE}/send-email`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ to, subject, text, html, attachment })
-          });
-        } catch (error) {
-          console.warn('API failed, using mock email:', error);
-          await mockDelay();
-          console.log("Mock Email Sent:", { to, subject });
-          return { message: "Mock Email Sent" };
-        }
+        
+        // ❌ REAL EMAIL: Throw errors on failure (no silent mock fallback)
+        const result = await fetchWithErrors(`${API_BASE}/send-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ to, subject, text, html, attachment })
+        });
+        
+        console.log('✅ Real email sent successfully:', result);
+        return result;
     }
   },
 

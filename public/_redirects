@@ -22,6 +22,7 @@
 # Using wildcard pattern to match all /api/cbsbooks/* routes
 /api/cbsbooks/invoices     /.netlify/functions/cbsbooks-invoices    200!
 /api/cbsbooks/invoices/*   /.netlify/functions/cbsbooks-invoices/:splat    200!
+/api/cbsbooks/send-email   /.netlify/functions/cbsbooks-send-email    200!
 /api/cbsbooks/expenses     /.netlify/functions/cbsbooks-expenses    200!
 /api/cbsbooks/expenses/*   /.netlify/functions/cbsbooks-expenses/:splat    200!
 /api/cbsbooks/clients      /.netlify/functions/cbsbooks-clients     200!
