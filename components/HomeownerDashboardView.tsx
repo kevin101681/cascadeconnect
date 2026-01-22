@@ -165,7 +165,7 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
         {/* Upcoming Appointment (Top) */}
         {upcomingAppointment != null && (
           <FadeIn direction="down" className="w-full">
-            <section className="w-full bg-card px-4 py-4 md:px-6 md:py-6 border-b border-border/40">
+            <section className="w-full bg-card px-4 py-4 md:px-6 md:py-6">
               <div className="flex items-center gap-2 mb-2">
                 <Calendar className="h-4 w-4 text-primary" />
                 <h3 className="text-sm font-semibold text-foreground">
@@ -314,7 +314,7 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
 
         {/* Layer 2 (Middle): Project Grid */}
         <FadeIn direction="up" fullWidth>
-          <section className="w-full bg-card px-4 py-4 md:px-6 md:py-6 border-y border-border/40">
+          <section className="w-full bg-card px-4 py-4 md:px-6 md:py-6">
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
               Project
             </h2>

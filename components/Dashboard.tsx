@@ -4293,7 +4293,8 @@ const Dashboard: React.FC<DashboardProps> = ({
         {renderModals()}
         
         {/* ADMIN EXIT BUTTON - Only show when admin is viewing as homeowner */}
-        {isHomeownerView && isAdminAccount && (
+        {/* ✅ FIX: Only show for Admins/Builders impersonating, NOT for actual homeowners */}
+        {isHomeownerView && isAdminAccount && userRole !== UserRole.HOMEOWNER && (
           <div className="fixed top-20 right-4 z-[9999]">
             <button
               onClick={(e) => {

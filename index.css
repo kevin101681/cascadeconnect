@@ -489,11 +489,25 @@ body {
     visibility: visible !important;
     opacity: 1 !important;
     overflow: hidden !important;
-    /* Remove border and ring */
+    /* ✅ AGGRESSIVE FIX: Remove border and ring completely */
     box-shadow: none !important;
     border: none !important;
     outline: none !important;
     ring: none !important;
+    --tw-ring-shadow: none !important;
+    --tw-shadow: none !important;
+    --cl-userButtonTrigger-shadow: none !important; /* Custom prop override */
+}
+
+/* ✅ AGGRESSIVE FIX: Target the avatar box directly */
+.cl-userButtonBox,
+[class*="cl-userButtonBox"],
+.cl-userButtonTrigger .cl-userButtonBox {
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    --tw-ring-shadow: none !important;
+    --tw-shadow: none !important;
 }
 
 /* Ensure all avatar-related elements inside trigger are visible */
