@@ -6,8 +6,9 @@ let aiInstance: GoogleGenAI | null = null;
 const getAI = (): GoogleGenAI | null => {
   if (aiInstance) return aiInstance;
   
-  // Get API key from environment variables (server-side)
-  const apiKey = process.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+  // Get API key from Vite environment variables (client-side)
+  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || 
+                 (typeof process !== 'undefined' ? process.env.VITE_GEMINI_API_KEY : undefined);
   
   if (!apiKey) {
     console.warn("⚠️ Gemini API key not found. AI features will use fallback responses.");
@@ -24,7 +25,7 @@ const getAI = (): GoogleGenAI | null => {
 };
 
 /**
- * Server action to answer homeowner maintenance questions using AI
+ * Ask the AI maintenance assistant a question
  * 
  * @param question - The maintenance question from the homeowner
  * @returns A concise, helpful answer (2-3 sentences)

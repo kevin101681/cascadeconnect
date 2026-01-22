@@ -49,12 +49,12 @@ export function HomeownerSearchWidget({ className = '', variant = 'default' }: H
     handleSearch(question);
   };
 
-  // Header variant: compact, inline search bar
+  // Header variant: compact, inline search bar with dropdown results
   if (variant === 'header') {
     return (
       <div className={`relative w-full ${className}`}>
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Wrench className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+        <Wrench className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary pointer-events-none z-10" />
         <input
           type="text"
           value={query}
@@ -62,13 +62,60 @@ export function HomeownerSearchWidget({ className = '', variant = 'default' }: H
           onKeyDown={handleKeyDown}
           placeholder="Ask about home maintenance..."
           disabled={isSearching}
-          className="w-full pl-10 pr-10 py-2 rounded-full border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+          className="w-full pl-10 pr-10 py-2 rounded-full border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-sm relative z-20"
         />
         
         {/* Loading indicator for header variant */}
         {isSearching && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 z-30">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          </div>
+        )}
+        
+        {/* Results Dropdown Panel */}
+        {(answer || isSearching) && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl overflow-hidden z-50 max-w-2xl">
+            {isSearching ? (
+              // Loading state
+              <div className="flex items-center gap-3 p-4">
+                <Loader2 className="h-5 w-5 animate-spin text-primary flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-full" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
+                </div>
+              </div>
+            ) : (
+              // Answer display
+              <div className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Wrench className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                      {answer}
+                    </p>
+                    <div className="flex gap-3 mt-3">
+                      <button
+                        onClick={() => {
+                          setQuery('');
+                          setAnswer('');
+                        }}
+                        className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                      >
+                        Ask another question
+                      </button>
+                      <button
+                        onClick={() => setAnswer('')}
+                        className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
