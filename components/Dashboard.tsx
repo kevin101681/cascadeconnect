@@ -4866,9 +4866,9 @@ const Dashboard: React.FC<DashboardProps> = ({
                           'border border-transparent',
                           // Hover state: gray background, raised, shadow
                           'hover:bg-gray-100/50 dark:hover:bg-gray-700/50 hover:-translate-y-0.5 hover:shadow-md',
-                          // Active state: white background, blue text & border, shadow (LOCKED)
+                          // Active state: white background, blue text & border, RAISED with shadow (LOCKED)
                           isActive
-                            ? '!bg-white dark:!bg-gray-800 !text-primary !border-primary shadow-sm'
+                            ? '!bg-white dark:!bg-gray-800 !text-primary !border-primary -translate-y-0.5 shadow-md'
                             : 'bg-transparent text-surface-on dark:text-gray-100 hover:text-primary',
                         ].join(' ')}
                         aria-current={isActive ? 'page' : undefined}
