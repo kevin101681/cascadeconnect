@@ -159,9 +159,14 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-background p-0 md:p-6">
-      {/* Mobile: edge-to-edge stack. Desktop: padded container */}
-      <div className="w-full">
+    <div className="min-h-screen bg-background">
+      {/* Main container with proper spacing to clear header */}
+      <div className="w-full pt-20 md:pt-24 px-0 md:px-6 pb-6">
+        {/* AI Search Widget - First element, prominently placed */}
+        <div className="w-full max-w-4xl mx-auto mb-8 px-4 relative z-10">
+          <HomeownerSearchWidget />
+        </div>
+
         {/* Upcoming Appointment (Top) */}
         {upcomingAppointment != null && (
           <FadeIn direction="down" className="w-full">
@@ -302,13 +307,6 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
                 </div>
               )}
             </SmoothHeightWrapper>
-          </section>
-        </FadeIn>
-
-        {/* Maintenance Search Widget */}
-        <FadeIn direction="up" fullWidth>
-          <section className="w-full px-4 py-4 md:px-6 md:py-6">
-            <HomeownerSearchWidget />
           </section>
         </FadeIn>
 
