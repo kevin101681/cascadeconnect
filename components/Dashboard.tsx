@@ -814,6 +814,11 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [searchParams, updateSearchParams]);
   
+  // Debug: Log when currentTab changes
+  useEffect(() => {
+    console.log('📍 Current tab state changed to:', currentTab);
+  }, [currentTab]);
+  
   // Helper function to set current tab via URL
   const setCurrentTab = useCallback((tab: TabType) => {
     if (tab === null) {

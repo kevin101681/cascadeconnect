@@ -12,10 +12,10 @@ interface HomeownerSearchWidgetProps {
 }
 
 const SAMPLE_QUESTIONS = [
+  "How do I submit a warranty claim?",
   "How do I replace my furnace filter?",
   "How do I light the fireplace pilot?",
   "Why is my garbage disposal humming?",
-  "How do I reset a tripped breaker?",
   "Water is leaking under my sink"
 ];
 
@@ -43,6 +43,9 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
   // Helper function to get contextual icon for suggestion questions
   const getSuggestionIcon = (text: string) => {
     const lowerText = text.toLowerCase();
+    if (lowerText.includes("warranty") || lowerText.includes("claim")) {
+      return <ClipboardList className="w-4 h-4 text-primary" />;
+    }
     if (lowerText.includes("pilot") || lowerText.includes("fire")) {
       return <Flame className="w-4 h-4 text-orange-500" />;
     }
