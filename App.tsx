@@ -1121,6 +1121,43 @@ function App() {
     }
   }, [claims]); // Re-run when claims are loaded
 
+  // URL Hydration - Restore homeownerId from URL parameters
+  // This ensures the app doesn't lose track of the selected homeowner during view transitions
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlHomeownerId = searchParams.get('homeownerId');
+    const urlView = searchParams.get('view');
+    
+    // If homeownerId exists in URL and we don't have it in state, hydrate it
+    if (urlHomeownerId && !selectedAdminHomeownerId) {
+      console.log('🔗 URL Hydration: Found homeownerId in URL, restoring state:', urlHomeownerId);
+      
+      // Find the homeowner in the loaded data
+      const homeowner = homeowners.find(h => h.id === urlHomeownerId);
+      
+      if (homeowner) {
+        console.log('✅ Homeowner found, hydrating state:', homeowner.firstName || homeowner.name);
+        setSelectedAdminHomeownerId(urlHomeownerId);
+        setActiveHomeowner(homeowner);
+        
+        // If view=homeowner is in URL, also set the role
+        if (urlView === 'homeowner') {
+          console.log('✅ Setting userRole to HOMEOWNER from URL');
+          setUserRole(UserRole.HOMEOWNER);
+        }
+      } else {
+        console.warn('⚠️ Homeowner ID from URL not found in loaded data:', urlHomeownerId);
+        // Clean up invalid URL params
+        searchParams.delete('homeownerId');
+        searchParams.delete('view');
+        const newSearch = searchParams.toString();
+        navigate(`${location.pathname}${newSearch ? '?' + newSearch : ''}`, { replace: true });
+      }
+    }
+  }, [homeowners, selectedAdminHomeownerId, location.search]); // Re-run when homeowners load or URL changes
+
   // UI State - Persistent (but reset INVOICES on page load to prevent auto-opening)
   // Check URL hash for invoice creation link
   const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'BUILDERS' | 'GUIDE'>(() => {
@@ -1464,6 +1501,14 @@ function App() {
     setActiveHomeowner(homeowner);
     setUserRole(UserRole.HOMEOWNER);
     
+    // 3. CRITICAL FIX: Add homeownerId to URL as single source of truth
+    // This prevents the app from losing track of the selected homeowner during re-renders
+    const searchParams = new URLSearchParams(window.location.search);
+    searchParams.set('view', 'homeowner');
+    searchParams.set('homeownerId', homeowner.id);
+    navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
+    console.log("✅ URL updated with homeownerId:", homeowner.id);
+    
     // Note: Persistence now handled by State Watcher useEffect
   };
 
@@ -1491,6 +1536,14 @@ function App() {
     
     // 6. Clear search
     setSearchQuery('');
+    
+    // 7. CRITICAL FIX: Remove homeownerId from URL when exiting homeowner view
+    const searchParams = new URLSearchParams(window.location.search);
+    searchParams.delete('homeownerId');
+    searchParams.delete('view');
+    const newSearch = searchParams.toString();
+    navigate(`${location.pathname}${newSearch ? '?' + newSearch : ''}`, { replace: true });
+    console.log("✅ URL params cleared");
     
     console.log("✅ handleClearHomeownerSelection complete - userRole should now be ADMIN");
     // Note: Persistence clearing now handled by State Watcher useEffect
@@ -4396,19 +4449,30 @@ Assigned By: ${assignerName}
   // ==================== SIMPLIFIED HOMEOWNER ROUTING LOGIC ====================
   // Priority-based decision: Determine which homeowner ID should be active
   
-  // PRIORITY 1: Admin Impersonation (selectedAdminHomeownerId set via search)
-  // PRIORITY 2: Real Homeowner (activeHomeowner set during auth, selectedAdminHomeownerId also set)
-  // PRIORITY 3: Multi-property selector (matchingHomeowners set, waiting for selection)
+  // PRIORITY 1: URL Parameter (homeownerId in query string - single source of truth)
+  // PRIORITY 2: Admin Impersonation (selectedAdminHomeownerId set via search)
+  // PRIORITY 3: Real Homeowner (activeHomeowner set during auth, selectedAdminHomeownerId also set)
+  // PRIORITY 4: Multi-property selector (matchingHomeowners set, waiting for selection)
+  
+  // Check URL for homeownerId (single source of truth for admin impersonation)
+  const urlHomeownerId = typeof window !== 'undefined' 
+    ? new URLSearchParams(window.location.search).get('homeownerId')
+    : null;
+  
+  // Determine effective homeowner ID using priority order
+  const effectiveHomeownerId = urlHomeownerId || selectedAdminHomeownerId;
   
   // For homeowners with multiple properties who haven't made a selection yet,
-  // matchingHomeowners is set but selectedAdminHomeownerId is NOT set (line 1033-1036)
+  // matchingHomeowners is set but neither urlHomeownerId nor selectedAdminHomeownerId exists
   // This is our signal to show the selector
   
-  if (matchingHomeowners && matchingHomeowners.length > 1 && !selectedAdminHomeownerId) {
+  if (matchingHomeowners && matchingHomeowners.length > 1 && !effectiveHomeownerId) {
     // Show selector ONLY if:
     // 1. Multiple properties exist (matchingHomeowners.length > 1)
-    // 2. User hasn't made a selection yet (!selectedAdminHomeownerId)
+    // 2. User hasn't made a selection yet (!effectiveHomeownerId)
+    // 3. No homeownerId in URL (!urlHomeownerId)
     // Note: If user HAD made a selection, auth logic would have set selectedAdminHomeownerId (line 1027 or 1044)
+    //       OR the URL would contain homeownerId from "View as Homeowner" action
     console.log('⏳ Showing HomeownerSelector - multiple properties found, no selection made');
     return (
       <HomeownerSelector
@@ -4432,6 +4496,7 @@ Assigned By: ${assignerName}
   }
   
   // If we reach here, one of these is true:
+  // - URL contains homeownerId (admin "View as Homeowner" action)
   // - Admin has selected a homeowner (selectedAdminHomeownerId exists)
   // - Homeowner with single property logged in (selectedAdminHomeownerId set at line 1044)
   // - Homeowner with multiple properties made selection (selectedAdminHomeownerId set at line 1027)
