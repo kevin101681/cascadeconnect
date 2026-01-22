@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, KeyboardEvent, useMemo } from 'react';
-import { Wrench, Loader2, Zap, Droplet, Flame } from 'lucide-react';
+import { Wrench, Loader2, Zap, Droplet, Flame, Wind } from 'lucide-react';
 import { askMaintenanceAI } from '../actions/ask-maintenance-ai';
 
 interface HomeownerSearchWidgetProps {
@@ -24,6 +24,24 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
   const [isSearching, setIsSearching] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+
+  // Helper function to get contextual icon for suggestion questions
+  const getSuggestionIcon = (text: string) => {
+    const lowerText = text.toLowerCase();
+    if (lowerText.includes("pilot") || lowerText.includes("fire")) {
+      return <Flame className="w-4 h-4 text-orange-500" />;
+    }
+    if (lowerText.includes("breaker") || lowerText.includes("power")) {
+      return <Zap className="w-4 h-4 text-yellow-500" />;
+    }
+    if (lowerText.includes("leak") || lowerText.includes("water")) {
+      return <Droplet className="w-4 h-4 text-blue-500" />;
+    }
+    if (lowerText.includes("filter") || lowerText.includes("furnace")) {
+      return <Wind className="w-4 h-4 text-gray-500 dark:text-gray-400" />;
+    }
+    return <Wrench className="w-4 h-4 text-primary" />;
+  };
 
   // Smart icon detection based on query content
   const detectQuestionType = (text: string): 'electrical' | 'plumbing' | 'hvac' | 'general' => {
@@ -185,13 +203,6 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
           className="w-full pl-10 pr-4 py-2 rounded-full border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-sm relative z-20"
         />
         
-        {/* Loading indicator for header variant */}
-        {isSearching && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 z-30">
-            <Loader2 className="h-4 w-4 animate-spin text-primary" />
-          </div>
-        )}
-        
         {/* Suggested Questions Dropdown - Shows when focused and empty */}
         {isFocused && !query && !isSearching && !answer && (
           <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden">
@@ -208,7 +219,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                 }}
                 className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-2"
               >
-                <span className="text-gray-400 dark:text-gray-500">💡</span>
+                {getSuggestionIcon(question)}
                 {question}
               </button>
             ))}
@@ -249,7 +260,10 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                         Ask another question
                       </button>
                       <button
-                        onClick={() => setAnswer('')}
+                        onClick={() => {
+                          setQuery('');
+                          setAnswer('');
+                        }}
                         className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                       >
                         Close
@@ -321,8 +335,9 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
             <button
               key={idx}
               onClick={() => handlePillClick(question)}
-              className="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors border border-primary/20"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors border border-primary/20"
             >
+              {getSuggestionIcon(question)}
               {question}
             </button>
           ))}
