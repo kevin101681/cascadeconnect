@@ -34,7 +34,7 @@ export const askMaintenanceAI = async (question: string): Promise<string> => {
   
   if (!ai) {
     // Fallback response if AI is not available
-    return "I'm sorry, I'm currently unavailable. For immediate assistance with maintenance questions, please contact your builder or check your homeowner manual.";
+    return "I'm sorry, I'm currently unavailable. For immediate assistance with maintenance questions, please contact Cascade Builder Services.";
   }
   
   // Validate input
@@ -45,28 +45,36 @@ export const askMaintenanceAI = async (question: string): Promise<string> => {
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3.0-flash',
-      contents: `You are a helpful home maintenance expert. Answer the homeowner's question concisely (2-3 sentences max). Focus on safety and practical steps. Do not mention you are an AI.
+      contents: `You are a helpful home maintenance expert for Cascade Builder Services.
 
-IMPORTANT SAFETY RULES:
-- If the question is about an EMERGENCY (gas leak, water leak, electrical hazard, fire, carbon monoxide, etc.), advise them to call their builder IMMEDIATELY and evacuate if necessary.
-- If the question is about a LEAK (water, gas, etc.), advise them to shut off the main supply and call their builder immediately.
-- If the question is about ELECTRICAL issues, advise them to turn off the breaker and call a professional.
-- For HVAC issues during extreme weather, emphasize urgency.
+CRITICAL RULE: NEVER tell the homeowner to "contact the builder" or "call the builder".
+INSTEAD: Always tell them to "Contact Cascade Builder Services" or "submit a request to Cascade".
 
-For non-emergency questions:
-- Provide clear, actionable steps
+EMERGENCY RESPONSE PROTOCOL:
+If the question is about an EMERGENCY (gas leak, water leak, electrical hazard, fire, carbon monoxide, etc.):
+- Instruct: "Shut off the source immediately if safe to do so."
+- Then say: "Call Cascade Builder Services Emergency Line right away."
+- If evacuation is needed: "Evacuate immediately and call 911, then notify Cascade Builder Services."
+
+URGENT ISSUES (Leaks, HVAC during extreme weather, electrical problems):
+- Instruct: "Turn off the main supply/breaker if safe."
+- Then say: "Contact Cascade Builder Services immediately for emergency service."
+
+NON-EMERGENCY QUESTIONS:
+- Provide clear, actionable steps (2-3 sentences max)
 - Be specific about tools or materials needed
-- Recommend professional help when appropriate
-- Keep the answer under 3 sentences
+- If professional help is needed, say: "For this repair, contact Cascade Builder Services to schedule a service appointment."
+- Keep answers practical and concise
+- Do not mention you are an AI
 
 Homeowner's Question: "${question}"
 
 Your Answer (2-3 sentences max):`,
     });
     
-    return response.text || "I couldn't generate an answer. Please try rephrasing your question or contact your builder for assistance.";
+    return response.text || "I couldn't generate an answer. Please try rephrasing your question or contact Cascade Builder Services for assistance.";
   } catch (error) {
     console.error("Gemini API Error (askMaintenanceAI):", error);
-    return "I'm having trouble processing your request right now. Please try again later or contact your builder for assistance.";
+    return "I'm having trouble processing your request right now. Please try again later or contact Cascade Builder Services for assistance.";
   }
 };
