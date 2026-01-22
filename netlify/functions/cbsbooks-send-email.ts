@@ -1,5 +1,5 @@
 import { Handler } from '@netlify/functions';
-import { createClerkClient } from '@clerk/backend';
+import { createClerkClient, verifyToken } from '@clerk/backend';
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { users } from '../../db/schema';
@@ -54,20 +54,20 @@ export const handler: Handler = async (event) => {
 
     if (sessionToken) {
       try {
-        const verifiedToken = await clerk.verifyToken(sessionToken, {
-          secretKey: process.env.CLERK_SECRET_KEY,
+        const { sub } = await verifyToken(sessionToken, {
+          secretKey: process.env.CLERK_SECRET_KEY!,
         });
-        clerkUserId = verifiedToken.sub;
+        clerkUserId = sub;
       } catch (error) {
         console.error('Cookie token verification failed:', error);
       }
     } else if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.replace('Bearer ', '');
       try {
-        const verifiedToken = await clerk.verifyToken(token, {
-          secretKey: process.env.CLERK_SECRET_KEY,
+        const { sub } = await verifyToken(token, {
+          secretKey: process.env.CLERK_SECRET_KEY!,
         });
-        clerkUserId = verifiedToken.sub;
+        clerkUserId = sub;
       } catch (error) {
         console.error('Bearer token verification failed:', error);
       }
