@@ -48,10 +48,17 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
     setAnswer(''); // Clear previous answer
     
     try {
+      console.log("🔍 Widget: Calling askMaintenanceAI with query:", searchQuery);
       const result = await askMaintenanceAI(searchQuery);
+      console.log("✅ Widget: Received result from askMaintenanceAI");
       setAnswer(result);
-    } catch (error) {
-      console.error('Search error:', error);
+    } catch (error: any) {
+      console.error("❌ Widget: Search error details:", {
+        message: error?.message,
+        name: error?.name,
+        stack: error?.stack,
+        fullError: error,
+      });
       setAnswer('Sorry, something went wrong. Please try again later.');
     } finally {
       setIsSearching(false);
