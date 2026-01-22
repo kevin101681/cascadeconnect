@@ -34,7 +34,7 @@ export const askMaintenanceAI = async (question: string): Promise<string> => {
 
   try {
     const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini", // Fast, cheap, capable
+      model: "gpt-5.2", // Flagship model for highest quality responses
       messages: [
         {
           role: "system",

@@ -1,33 +1,37 @@
 /**
- * Server Action: Analyze Warranty Image with Gemini AI
- * January 4, 2026
+ * Server Action: Analyze Warranty Image with OpenAI GPT-5.2 Vision
+ * January 22, 2026
  * 
- * Analyzes warranty claim images using Google Gemini AI
+ * Analyzes warranty claim images using OpenAI GPT-5.2 Vision
  * to generate professional titles and descriptions.
  */
 
-import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
 
 // Lazy initialization
-let aiInstance: GoogleGenAI | null = null;
+let openai: OpenAI | null = null;
 
-const getAI = (): GoogleGenAI | null => {
-  if (aiInstance) return aiInstance;
+const getOpenAI = () => {
+  if (openai) return openai;
   
-  // Get API key from Vite environment (client-side)
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+  // Get API key from environment variables
+  const apiKey = (import.meta as any).env?.VITE_OPENAI_API_KEY || 
+                 (typeof process !== 'undefined' ? process.env.OPENAI_API_KEY : undefined);
   
   if (!apiKey) {
-    console.warn("⚠️ Gemini API key not found. AI image analysis unavailable.");
-    console.warn("Make sure VITE_GEMINI_API_KEY is set in your .env.local file");
+    console.warn("⚠️ OpenAI API key not found. AI image analysis unavailable.");
+    console.warn("Make sure VITE_OPENAI_API_KEY is set in your .env file");
     return null;
   }
   
   try {
-    aiInstance = new GoogleGenAI({ apiKey });
-    return aiInstance;
+    openai = new OpenAI({
+      apiKey: apiKey,
+      dangerouslyAllowBrowser: true // Allow client-side usage
+    });
+    return openai;
   } catch (error) {
-    console.error("Failed to initialize Gemini AI:", error);
+    console.error("Failed to initialize OpenAI:", error);
     return null;
   }
 };
@@ -47,36 +51,19 @@ export async function analyzeWarrantyImage(
   imageUrl: string,
   currentDescription?: string
 ): Promise<AnalysisResult> {
-  const ai = getAI();
+  const client = getOpenAI();
   
-  if (!ai) {
+  if (!client) {
     throw new Error("AI service not available. Please check API key configuration.");
   }
 
   try {
-    // Fetch image from URL and convert to base64
-    console.log('📥 Fetching image from:', imageUrl);
-    const response = await fetch(imageUrl);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.statusText}`);
-    }
-    
-    const arrayBuffer = await response.arrayBuffer();
-    // Convert ArrayBuffer to base64 (browser-compatible)
-    const bytes = new Uint8Array(arrayBuffer);
-    let binary = '';
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    const base64 = btoa(binary);
-    
-    console.log('🤖 Analyzing image with Gemini AI...');
+    console.log('🤖 Analyzing image with OpenAI GPT-5.2 Vision...');
     
     // Build prompt based on whether we're creating new or refining existing description
-    let prompt: string;
+    let textPrompt: string;
     if (currentDescription && currentDescription.trim()) {
-      prompt = `You are a helpful home warranty assistant.
+      textPrompt = `You are a helpful home warranty assistant.
 
 The user has uploaded an image and provided these notes:
 "${currentDescription}"
@@ -87,7 +74,7 @@ Use the user's notes as a base but make the description clearer and more profess
 Return ONLY a valid JSON object with this exact structure (no markdown, no code blocks, just raw JSON):
 {"title": "Brief issue title here", "description": "2-3 sentence professional description here"}`;
     } else {
-      prompt = `You are a helpful home warranty assistant.
+      textPrompt = `You are a helpful home warranty assistant.
 
 Task: Analyze the image and identify the home warranty issue shown. Write a clear, concise title and a 2-3 sentence description of the issue.
 
@@ -95,26 +82,32 @@ Return ONLY a valid JSON object with this exact structure (no markdown, no code 
 {"title": "Brief issue title here", "description": "2-3 sentence professional description here"}`;
     }
     
-    // Call Gemini API with image and prompt
-    const result = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: {
-        role: 'user',
-        parts: [
-          {
-            inlineData: {
-              mimeType: 'image/jpeg',
-              data: base64
+    // Call OpenAI API with vision support
+    const completion = await client.chat.completions.create({
+      model: "gpt-5.2", // Flagship model with superior vision capabilities
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: textPrompt
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: imageUrl,
+                detail: "high" // High detail for better analysis
+              }
             }
-          },
-          {
-            text: prompt
-          }
-        ]
-      }
+          ]
+        }
+      ],
+      response_format: { type: "json_object" },
+      max_tokens: 500
     });
 
-    const responseText = result.text;
+    const responseText = completion.choices[0]?.message?.content;
     
     if (!responseText) {
       throw new Error("No response from AI");
@@ -123,7 +116,7 @@ Return ONLY a valid JSON object with this exact structure (no markdown, no code 
     console.log('✅ AI analysis complete');
     
     // Parse JSON response
-    // Remove markdown code blocks if present
+    // Remove markdown code blocks if present (shouldn't be needed with response_format)
     let cleanedResponse = responseText.trim();
     cleanedResponse = cleanedResponse.replace(/```json\n?/g, '').replace(/```\n?/g, '');
     
@@ -154,4 +147,3 @@ Return ONLY a valid JSON object with this exact structure (no markdown, no code 
     throw new Error("An unexpected error occurred during image analysis.");
   }
 }
-

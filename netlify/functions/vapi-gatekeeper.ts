@@ -272,7 +272,7 @@ function generateSpamAssistantResponse(
       firstMessage: "Who is this and what do you want?",
       model: {
         provider: 'openai',
-        model: 'gpt-4',
+        model: 'gpt-5.2', // Flagship model for superior call screening intelligence
         messages: [
           {
             role: 'system',

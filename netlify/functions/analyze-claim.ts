@@ -342,7 +342,7 @@ Please analyze this claim and provide your recommendation in JSON format.`
 
     // Call OpenAI API with vision support
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-5.2', // Flagship model with superior vision and reasoning capabilities
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessageContent },

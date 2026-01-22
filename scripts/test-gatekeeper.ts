@@ -198,7 +198,7 @@ function testWebhookResponses() {
       firstMessage: "Who is this and what do you want?",
       model: {
         provider: 'openai',
-        model: 'gpt-4',
+        model: 'gpt-5.2',
         messages: [
           {
             role: 'system',
