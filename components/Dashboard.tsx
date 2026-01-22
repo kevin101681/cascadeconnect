@@ -2337,9 +2337,11 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="flex items-center gap-2">
                   <span>Open</span>
-                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
-                    {openCount}
-                  </span>
+                  {filter === 'Open' && (
+                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                      {openCount}
+                    </span>
+                  )}
                 </div>
               </button>
               <button
@@ -2355,9 +2357,11 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="flex items-center gap-2">
                   <span>Closed</span>
-                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
-                    {closedCount}
-                  </span>
+                  {filter === 'Closed' && (
+                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                      {closedCount}
+                    </span>
+                  )}
                 </div>
               </button>
               <button
@@ -2373,9 +2377,11 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="flex items-center gap-2">
                   <span>All</span>
-                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
-                    {totalCount}
-                  </span>
+                  {filter === 'All' && (
+                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                      {totalCount}
+                    </span>
+                  )}
                 </div>
               </button>
             </div>
@@ -2631,9 +2637,11 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="flex items-center gap-2">
                   <span>Open</span>
-                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
-                    {openCount}
-                  </span>
+                  {claimsFilter === 'Open' && (
+                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                      {openCount}
+                    </span>
+                  )}
                 </div>
               </button>
               <button
@@ -2646,9 +2654,11 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="flex items-center gap-2">
                   <span>Closed</span>
-                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
-                    {closedCount}
-                  </span>
+                  {claimsFilter === 'Closed' && (
+                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                      {closedCount}
+                    </span>
+                  )}
                 </div>
               </button>
               <button
@@ -2661,9 +2671,11 @@ const Dashboard: React.FC<DashboardProps> = ({
               >
                 <div className="flex items-center gap-2">
                   <span>All</span>
-                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
-                    {totalCount}
-                  </span>
+                  {claimsFilter === 'All' && (
+                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                      {totalCount}
+                    </span>
+                  )}
                 </div>
               </button>
               {isAdmin && (
@@ -3086,9 +3098,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     <span>Open</span>
-                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
-                      {openCount}
-                    </span>
+                    {tasksFilter === 'open' && (
+                      <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                        {openCount}
+                      </span>
+                    )}
                   </div>
                 </button>
                 <button
@@ -3101,9 +3115,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     <span>Closed</span>
-                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
-                      {closedCount}
-                    </span>
+                    {tasksFilter === 'closed' && (
+                      <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                        {closedCount}
+                      </span>
+                    )}
                   </div>
                 </button>
                 <button
@@ -3116,9 +3132,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     <span>All</span>
-                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
-                      {totalCount}
-                    </span>
+                    {tasksFilter === 'all' && (
+                      <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">
+                        {totalCount}
+                      </span>
+                    )}
                   </div>
                 </button>
               </div>
