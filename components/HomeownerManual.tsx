@@ -123,7 +123,7 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
           {manualHtml ? (
             <div 
               ref={contentRef}
-              className="p-8"
+              className="p-8 prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-primary prose-h1:text-3xl prose-h2:text-2xl prose-a:text-blue-600 prose-img:rounded-lg prose-li:marker:text-primary dark:prose-invert"
               dangerouslySetInnerHTML={{ __html: manualHtml }}
             />
           ) : (
