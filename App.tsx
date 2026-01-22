@@ -491,45 +491,11 @@ function App() {
       if (!isLoaded) return;
       
       try {
-        console.log("Attempting DB connection...");
+        console.log("🚀 Syncing Data & User Identity...");
         
         let loadedHomeowners = homeowners;
         let loadedEmployees = employees;
         let loadedBuilders = builderUsers;
-
-        // ==================== PRIORITY 1: URL PARAMETER HYDRATION ====================
-        // Check URL FIRST before any database queries or auth checks
-        // This ensures "View as Homeowner" persists across reloads/re-renders
-        const searchParams = new URLSearchParams(window.location.search);
-        const viewParam = searchParams.get('view');
-        const urlHomeownerId = searchParams.get('homeownerId');
-
-        // PRIORITY: If URL has homeowner view params, force that state immediately
-        if (viewParam === 'homeowner' && urlHomeownerId) {
-            // Use existing loaded homeowners (from state) for instant hydration
-            const foundHomeowner = loadedHomeowners.find(h => h.id === urlHomeownerId);
-            if (foundHomeowner) {
-                console.log("🚀 Hydrating Homeowner View from URL:", foundHomeowner.firstName || foundHomeowner.name);
-                setUserRole(UserRole.HOMEOWNER);
-                setActiveHomeowner(foundHomeowner);
-                setSelectedAdminHomeownerId(foundHomeowner.id);
-                setCurrentView('DASHBOARD');
-                
-                // Clean URL to hide the long ID (optional polish - keeps URL clean)
-                window.history.replaceState({}, '', window.location.pathname);
-                setIsRoleLoading(false);
-                return; // STOP here, do not proceed to normal auth checks
-            } else {
-                console.warn("⚠️ Homeowner ID from URL not found in loaded data:", urlHomeownerId);
-                // Clean up invalid URL params
-                searchParams.delete('homeownerId');
-                searchParams.delete('view');
-                const newSearch = searchParams.toString();
-                window.history.replaceState({}, '', `${window.location.pathname}${newSearch ? '?' + newSearch : ''}`);
-                // Continue to normal auth flow below
-            }
-        }
-        // ==================== END URL PARAMETER HYDRATION ====================
 
         if (isDbConfigured) {
              // 1. Fetch Homeowners with retry logic
@@ -1014,138 +980,120 @@ function App() {
             console.log("Successfully synced with Neon DB.");
         } 
 
-        // --- MAP CLERK USER TO INTERNAL USER ---
+        // ========================================================================
+        // 🔐 AUTHENTICATION & ROLE LOGIC (The Fix)
+        // ========================================================================
         if (isSignedIn && authUser) {
-           // Clerk user is mapped to authUser format in useUser hook
            const email = authUser.primaryEmailAddress?.emailAddress.toLowerCase();
-           if (email) {
-              // ==================== PRIORITY 1: CHECK URL PARAMETERS FIRST ====================
-              // This MUST happen before checking the user's own email to support Admin "View As" impersonation
-              const searchParams = new URLSearchParams(window.location.search);
-              const viewParam = searchParams.get('view');
-              const urlHomeownerId = searchParams.get('homeownerId');
-              
-              if (viewParam === 'homeowner' && urlHomeownerId) {
-                const foundHomeowner = loadedHomeowners.find(h => h.id === urlHomeownerId);
-                if (foundHomeowner) {
-                  console.log("🚀 Hydrating Homeowner View from URL:", foundHomeowner.name);
-                  
-                  // Set ALL state simultaneously to prevent render tearing
-                  setUserRole(UserRole.HOMEOWNER);
-                  setActiveHomeowner(foundHomeowner);
-                  setSelectedAdminHomeownerId(foundHomeowner.id);
-                  setMatchingHomeowners(null); // CRITICAL: Clear selector to prevent flash
-                  setCurrentView('DASHBOARD');
-                  
-                  // Optional: Clean URL for cleaner appearance
-                  window.history.replaceState({}, '', window.location.pathname);
-                  setIsRoleLoading(false);
-                  
-                  console.log('✅ Homeowner View hydrated from URL - skipping role checks');
-                  return; // STOP EXECUTION - bypass all email-based logic
-                } else {
-                  console.warn('⚠️ Homeowner ID from URL not found:', urlHomeownerId);
-                  // Clean up invalid URL params
-                  searchParams.delete('homeownerId');
-                  searchParams.delete('view');
-                  const newSearch = searchParams.toString();
-                  window.history.replaceState({}, '', `${window.location.pathname}${newSearch ? '?' + newSearch : ''}`);
-                  // Continue to normal auth flow below
-                }
-              }
-              // ==================== END PRIORITY 1 ====================
-              
-              // 1. Check Employees
-              const emp = loadedEmployees.find(e => e.email.toLowerCase() === email);
-              if (emp) {
-                 console.log('✅ User logged in as employee:', emp.name, 'Role:', emp.role);
+           
+           // PRIORITY 1: URL PARAMETERS (Admin "View As" Mode)
+           // This MUST be checked first to allow Admins to impersonate homeowners
+           const searchParams = new URLSearchParams(window.location.search);
+           const viewParam = searchParams.get('view');
+           const urlHomeownerId = searchParams.get('homeownerId');
+
+           if (viewParam === 'homeowner' && urlHomeownerId) {
+              const targetHomeowner = loadedHomeowners.find(h => h.id === urlHomeownerId);
+              if (targetHomeowner) {
+                 console.log("👁️ IMPERSONATION MODE: Hydrating view for", targetHomeowner.name);
                  
-                 // Normal admin flow (no URL override since we checked URL first)
-                 setUserRole(UserRole.ADMIN);
-                 setActiveEmployee(emp);
-                 setIsRoleLoading(false);
-                 return;
-              }
-
-              // 2. Check Builders
-              const builder = loadedBuilders.find(b => b.email.toLowerCase() === email);
-              if (builder) {
-                 setUserRole(UserRole.BUILDER);
-                 setCurrentBuilderId(builder.builderGroupId);
-                 setIsRoleLoading(false);
-                 return;
-              }
-
-              // 3. Check Homeowners - The Fix for "Dashboard Flash"
-              const myHomeowners = loadedHomeowners.filter(home => home.email.toLowerCase() === email);
-              if (myHomeowners.length > 0) {
-                 console.log('✅ User logged in as homeowner:', email, 'Properties:', myHomeowners.length);
+                 // Batch these state updates
                  setUserRole(UserRole.HOMEOWNER);
+                 setActiveHomeowner(targetHomeowner);
+                 setSelectedAdminHomeownerId(targetHomeowner.id); // Critical for persistence
+                 setSelectedHomeownerId(targetHomeowner.id);
+                 setCurrentView('DASHBOARD');
                  
-                 if (myHomeowners.length === 1) {
-                   // SINGLE PROPERTY: Immediate Dashboard Access
-                   const homeowner = myHomeowners[0];
-                   console.log('✅ Single property found - auto-loading:', homeowner.name || homeowner.address);
-                   
-                   setActiveHomeowner(homeowner);
-                   setSelectedHomeownerId(homeowner.id);
-                   setSelectedAdminHomeownerId(homeowner.id); // Ensure Dashboard sees it
-                   setMatchingHomeowners(null); // CRITICAL: FORCE HIDE SELECTOR to prevent flash
-                   setCurrentView('DASHBOARD');
-                 } else {
-                   // MULTIPLE PROPERTIES: Check for stored selection first
-                   const storedHomeownerId = typeof window !== 'undefined' 
-                     ? localStorage.getItem(`cascade_selected_homeowner_${email.toLowerCase()}`)
-                     : null;
-                   
-                   const preselected = storedHomeownerId 
-                     ? myHomeowners.find(h => h.id === storedHomeownerId)
-                     : null;
-                   
-                   if (preselected) {
-                     // User has a stored selection, use it
-                     console.log('✅ Auto-selecting preselected property:', preselected.name || preselected.address);
-                     setActiveHomeowner(preselected);
-                     setSelectedHomeownerId(preselected.id);
-                     setSelectedAdminHomeownerId(preselected.id);
-                     setMatchingHomeowners(null); // Clear selector since we have a selection
-                     setCurrentView('DASHBOARD');
-                   } else {
-                     // MULTIPLE PROPERTIES: Show Selector
-                     console.log('⏳ Multiple properties found - showing selector');
-                     setMatchingHomeowners(myHomeowners);
-                     // Do NOT set activeHomeowner or Dashboard view yet
-                   }
-                 }
-                 
-                 // Store user email for later reference
-                 if (typeof window !== 'undefined') {
-                   localStorage.setItem('cascade_user_email', email);
-                 }
-                 
+                 // Clean the URL so if they refresh, it doesn't loop
+                 window.history.replaceState({}, '', window.location.pathname);
                  setIsRoleLoading(false);
-                 return;
+                 return; // STOP HERE
               }
-
-              // 4. Default / Fallback (New Homeowner via Social Login)
-              // If user logs in via Google/Apple but isn't in DB yet, create temporary homeowner profile context
-              const newHomeowner: Homeowner = {
-                 ...PLACEHOLDER_HOMEOWNER,
-                 id: authUser.id,
-                 name: authUser.fullName || 'Homeowner',
-                 email: email,
-                 firstName: authUser.firstName || '',
-                 lastName: authUser.lastName || ''
-              };
-              setUserRole(UserRole.HOMEOWNER);
-              setActiveHomeowner(newHomeowner);
-              setIsRoleLoading(false);
-           } else {
-              // No email found, set loading to false anyway
-              setIsRoleLoading(false);
            }
+
+           // PRIORITY 2: CHECK IF EMPLOYEE (Real Admin)
+           const emp = loadedEmployees.find(e => e.email.toLowerCase() === email);
+           if (emp) {
+              console.log('✅ User is Employee:', emp.name);
+              setUserRole(UserRole.ADMIN);
+              setActiveEmployee(emp);
+              
+              // Restore previous selection if it exists
+              const savedId = localStorage.getItem("cascade_active_homeowner_id");
+              if (savedId) {
+                 const found = loadedHomeowners.find(h => h.id === savedId);
+                 if (found) setSelectedAdminHomeownerId(found.id);
+              }
+              
+              setIsRoleLoading(false);
+              return; // STOP HERE
+           }
+
+           // PRIORITY 3: CHECK IF BUILDER
+           const builder = loadedBuilders.find(b => b.email.toLowerCase() === email);
+           if (builder) {
+              setUserRole(UserRole.BUILDER);
+              setCurrentBuilderId(builder.builderGroupId);
+              setIsRoleLoading(false);
+              return; // STOP HERE
+           }
+
+           // PRIORITY 4: CHECK IF HOMEOWNER (The critical fix)
+           const myHomeowners = loadedHomeowners.filter(home => home.email.toLowerCase() === email);
+           
+           if (myHomeowners.length > 0) {
+              console.log('✅ User is Homeowner. Properties found:', myHomeowners.length);
+              
+              // Force role immediately
+              setUserRole(UserRole.HOMEOWNER);
+
+              if (myHomeowners.length === 1) {
+                 // CASE A: SINGLE PROPERTY -> AUTO-LOGIN
+                 const homeowner = myHomeowners[0];
+                 console.log('🏠 Single property auto-load:', homeowner.name);
+                 
+                 setActiveHomeowner(homeowner);
+                 setSelectedHomeownerId(homeowner.id);
+                 setSelectedAdminHomeownerId(homeowner.id); // Ensure ID is available
+                 setMatchingHomeowners(null); // CRITICAL: Ensure selector is HIDDEN
+                 setCurrentView('DASHBOARD');
+              } else {
+                 // CASE B: MULTIPLE PROPERTIES -> SHOW SELECTOR
+                 console.log('🏘️ Multiple properties -> Show Selector');
+                 
+                 // Check for saved selection preference
+                 const savedPref = localStorage.getItem(`cascade_selected_homeowner_${email}`);
+                 const preselected = savedPref ? myHomeowners.find(h => h.id === savedPref) : null;
+                 
+                 if (preselected) {
+                    setActiveHomeowner(preselected);
+                    setSelectedHomeownerId(preselected.id);
+                    setSelectedAdminHomeownerId(preselected.id);
+                    setMatchingHomeowners(null); // Hide selector if we have a preference
+                    setCurrentView('DASHBOARD');
+                 } else {
+                    setMatchingHomeowners(myHomeowners); // Trigger selector UI
+                 }
+              }
+              
+              setIsRoleLoading(false);
+              return; // STOP HERE
+           }
+
+           // FALLBACK: NEW USER / SOCIAL LOGIN
+           console.log('👤 New User / No Linked Property');
+           const newHomeowner: Homeowner = {
+              ...PLACEHOLDER_HOMEOWNER,
+              id: authUser.id,
+              name: authUser.fullName || 'Guest',
+              email: email || '',
+              firstName: authUser.firstName || '',
+              lastName: authUser.lastName || ''
+           };
+           setUserRole(UserRole.HOMEOWNER);
+           setActiveHomeowner(newHomeowner);
+           setIsRoleLoading(false);
         } else {
-           // Not signed in, set loading to false
            setIsRoleLoading(false);
         }
 
