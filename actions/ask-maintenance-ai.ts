@@ -68,9 +68,9 @@ export const askMaintenanceAI = async (question: string): Promise<string> => {
   
   try {
     console.log("📤 Sending request to Gemini API...");
-    console.log("🎯 Using model: gemini-3.0-flash-preview");
+    console.log("🎯 Using model: gemini-1.5-flash (stable production endpoint)");
     const response = await ai.models.generateContent({
-      model: 'gemini-3.0-flash-preview',
+      model: 'gemini-1.5-flash',
       contents: `You are a helpful home maintenance expert for Cascade Builder Services.
 
 CRITICAL RULE: NEVER tell the homeowner to "contact the builder" or "call the builder".
@@ -115,6 +115,14 @@ Your Answer (2-3 sentences max):`,
       stack: error.stack,
       fullError: error,
     });
+    
+    // Additional detailed JSON dump for complete error visibility
+    console.error("🔥 Full Error Object (JSON):");
+    try {
+      console.error(JSON.stringify(error, null, 2));
+    } catch (stringifyError) {
+      console.error("Could not stringify error:", stringifyError);
+    }
     
     // Return a more informative error message for debugging
     const errorMsg = error.message || "Unknown error";
