@@ -183,10 +183,13 @@ function App() {
   }, [isLoaded]);
   
   // State for mapped user roles
+  // IMPORTANT: Initialize userRole to ADMIN (default) but rely on isRoleLoading=true 
+  // to prevent premature rendering before syncDataAndUser completes
   const [userRole, setUserRole] = useState<UserRole>(UserRole.ADMIN);
   const [activeEmployee, setActiveEmployee] = useState<InternalEmployee>(MOCK_INTERNAL_EMPLOYEES[0]);
   const [activeHomeowner, setActiveHomeowner] = useState<Homeowner>(PLACEHOLDER_HOMEOWNER);
   const [currentBuilderId, setCurrentBuilderId] = useState<string | null>(null);
+  // CRITICAL: Keep isRoleLoading=true until syncDataAndUser sets role definitively
   const [isRoleLoading, setIsRoleLoading] = useState<boolean>(true);
 
   // Data State - Lazy Load from LS first
@@ -493,6 +496,40 @@ function App() {
         let loadedHomeowners = homeowners;
         let loadedEmployees = employees;
         let loadedBuilders = builderUsers;
+
+        // ==================== PRIORITY 1: URL PARAMETER HYDRATION ====================
+        // Check URL FIRST before any database queries or auth checks
+        // This ensures "View as Homeowner" persists across reloads/re-renders
+        const searchParams = new URLSearchParams(window.location.search);
+        const viewParam = searchParams.get('view');
+        const urlHomeownerId = searchParams.get('homeownerId');
+
+        // PRIORITY: If URL has homeowner view params, force that state immediately
+        if (viewParam === 'homeowner' && urlHomeownerId) {
+            // Use existing loaded homeowners (from state) for instant hydration
+            const foundHomeowner = loadedHomeowners.find(h => h.id === urlHomeownerId);
+            if (foundHomeowner) {
+                console.log("🚀 Hydrating Homeowner View from URL:", foundHomeowner.firstName || foundHomeowner.name);
+                setUserRole(UserRole.HOMEOWNER);
+                setActiveHomeowner(foundHomeowner);
+                setSelectedAdminHomeownerId(foundHomeowner.id);
+                setCurrentView('DASHBOARD');
+                
+                // Clean URL to hide the long ID (optional polish - keeps URL clean)
+                window.history.replaceState({}, '', window.location.pathname);
+                setIsRoleLoading(false);
+                return; // STOP here, do not proceed to normal auth checks
+            } else {
+                console.warn("⚠️ Homeowner ID from URL not found in loaded data:", urlHomeownerId);
+                // Clean up invalid URL params
+                searchParams.delete('homeownerId');
+                searchParams.delete('view');
+                const newSearch = searchParams.toString();
+                window.history.replaceState({}, '', `${window.location.pathname}${newSearch ? '?' + newSearch : ''}`);
+                // Continue to normal auth flow below
+            }
+        }
+        // ==================== END URL PARAMETER HYDRATION ====================
 
         if (isDbConfigured) {
              // 1. Fetch Homeowners with retry logic
@@ -1080,6 +1117,8 @@ function App() {
                    setSelectedHomeownerId(homeowner.id);
                    // CRITICAL FIX: Also set selectedAdminHomeownerId so Dashboard can access the homeowner
                    setSelectedAdminHomeownerId(homeowner.id);
+                   // CRITICAL FIX: Clear matchingHomeowners to prevent selector loop
+                   setMatchingHomeowners(null);
                    // Ensure they see the dashboard immediately
                    setCurrentView('DASHBOARD');
                  }
