@@ -986,6 +986,44 @@ function App() {
               const emp = loadedEmployees.find(e => e.email.toLowerCase() === email);
               if (emp) {
                  console.log('✅ User logged in as employee:', emp.name, 'Role:', emp.role);
+                 
+                 // CRITICAL FIX: Check URL parameters for "View as Homeowner" persistence
+                 // If URL contains view=homeowner&homeownerId=..., hydrate homeowner view instead of admin
+                 const searchParams = new URLSearchParams(window.location.search);
+                 const viewParam = searchParams.get('view');
+                 const urlHomeownerId = searchParams.get('homeownerId');
+                 
+                 if (viewParam === 'homeowner' && urlHomeownerId) {
+                   console.log('🚀 Hydrating Homeowner View from URL:', urlHomeownerId);
+                   
+                   // Find the homeowner in loaded data
+                   const foundHomeowner = loadedHomeowners.find(h => h.id === urlHomeownerId);
+                   
+                   if (foundHomeowner) {
+                     console.log('✅ Found homeowner from URL:', foundHomeowner.firstName || foundHomeowner.name);
+                     
+                     // Set state as if admin is viewing as this homeowner
+                     setUserRole(UserRole.HOMEOWNER);
+                     setActiveHomeowner(foundHomeowner);
+                     setSelectedAdminHomeownerId(foundHomeowner.id);
+                     setActiveEmployee(emp); // Keep employee record for admin context
+                     setCurrentView('DASHBOARD');
+                     setIsRoleLoading(false);
+                     
+                     console.log('✅ Homeowner View hydrated from URL - bypassing Admin role');
+                     return; // Skip setting role to ADMIN
+                   } else {
+                     console.warn('⚠️ Homeowner ID from URL not found:', urlHomeownerId);
+                     // Clean up invalid URL params
+                     searchParams.delete('homeownerId');
+                     searchParams.delete('view');
+                     const newSearch = searchParams.toString();
+                     window.history.replaceState({}, '', `${window.location.pathname}${newSearch ? '?' + newSearch : ''}`);
+                     // Continue with normal admin flow below
+                   }
+                 }
+                 
+                 // Normal admin flow (no URL override)
                  setUserRole(UserRole.ADMIN);
                  setActiveEmployee(emp);
                  setIsRoleLoading(false);
