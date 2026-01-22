@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, KeyboardEvent, useMemo } from 'react';
+import React, { useState, KeyboardEvent, useMemo, useRef, useEffect } from 'react';
 import { Wrench, Loader2, Zap, Droplet, Flame, Wind, ClipboardList, MessageSquare } from 'lucide-react';
 import { askMaintenanceAI, MaintenanceAIResponse } from '../actions/ask-maintenance-ai';
 import { useNavigate } from 'react-router-dom';
@@ -21,11 +21,23 @@ const SAMPLE_QUESTIONS = [
 
 export function HomeownerSearchWidget({ className = '', variant = 'default', homeownerId }: HomeownerSearchWidgetProps) {
   const navigate = useNavigate();
+  const widgetRef = useRef<HTMLDivElement>(null);
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<MaintenanceAIResponse | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+
+  // Click outside to close results
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (widgetRef.current && !widgetRef.current.contains(event.target as Node)) {
+        setResult(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Helper function to get contextual icon for suggestion questions
   const getSuggestionIcon = (text: string) => {
@@ -178,7 +190,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
   // Header variant: compact, inline search bar with dropdown results
   if (variant === 'header') {
     return (
-      <div className={`relative w-full ${className}`}>
+      <div ref={widgetRef} className={`relative w-full ${className}`}>
         {/* Smart Icon with Animation and Tooltip */}
         <div 
           className="absolute left-3 top-1/2 -translate-y-1/2 z-10"
@@ -211,7 +223,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
           onBlur={() => setTimeout(() => setIsFocused(false), 200)}
           placeholder="Ask about troubleshooting an issue or home maintenance..."
           disabled={isSearching}
-          className="w-full pl-10 pr-4 py-2 rounded-full border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-sm relative z-20"
+          className="w-full pl-10 pr-4 py-2 rounded-full border border-input bg-white dark:bg-gray-800 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm relative z-0"
         />
         
         {/* Suggested Questions Dropdown - Shows when focused and empty */}
@@ -263,11 +275,14 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                     
                     {/* Action Buttons Based on Intent */}
                     {result.action !== 'INFO' && (
-                      <div className="mt-3 flex gap-2">
+                      <div className="mt-3 flex flex-col gap-2">
                         {result.action === 'CLAIM' && (
                           <button
-                            onClick={() => navigate('/dashboard?tab=claims&new=true')}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-on text-xs font-medium hover:bg-primary/90 transition-colors"
+                            onClick={() => {
+                              navigate('/dashboard?tab=claims&new=true');
+                              setResult(null);
+                            }}
+                            className="w-full bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 flex items-center justify-center gap-2 transition-colors text-xs font-medium"
                           >
                             <ClipboardList className="h-3.5 w-3.5" />
                             File Warranty Claim
@@ -275,8 +290,11 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                         )}
                         {result.action === 'MESSAGE' && (
                           <button
-                            onClick={() => navigate('/dashboard?tab=messages')}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-input bg-background text-foreground text-xs font-medium hover:bg-muted transition-colors"
+                            onClick={() => {
+                              navigate('/dashboard?tab=messages');
+                              setResult(null);
+                            }}
+                            className="w-full bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 flex items-center justify-center gap-2 transition-colors text-xs font-medium"
                           >
                             <MessageSquare className="h-3.5 w-3.5" />
                             Send Message to Builder
@@ -317,7 +335,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
 
   // Default variant: full widget with suggestions and answer display
   return (
-    <div className={`w-full bg-white dark:bg-gray-800 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-lg ${className}`}>
+    <div ref={widgetRef} className={`w-full bg-white dark:bg-gray-800 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-lg ${className}`}>
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <Wrench className="h-5 w-5 text-primary" />
@@ -335,7 +353,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
           onMouseLeave={() => setShowTooltip(false)}
         >
           <IconComponent 
-            className={`h-5 w-5 ${iconColor} transition-all duration-300 ${
+            className={`h-5 w-5 ${iconColor} transition-all duration-300 pointer-events-none ${
               isFocused ? 'animate-pulse' : ''
             } ${
               query && questionType !== 'general' ? 'scale-110' : ''
@@ -360,7 +378,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
           onBlur={() => setIsFocused(false)}
           placeholder="Ask about troubleshooting an issue or home maintenance..."
           disabled={isSearching}
-          className="w-full pl-12 pr-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-base transition-all duration-200"
+          className="w-full pl-12 pr-4 py-3 rounded-xl border border-input bg-white dark:bg-gray-800 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-base relative z-0"
         />
       </div>
 
@@ -405,11 +423,14 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
               
               {/* Action Buttons Based on Intent */}
               {result.action !== 'INFO' && (
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-col gap-2">
                   {result.action === 'CLAIM' && (
                     <button
-                      onClick={() => navigate('/dashboard?tab=claims&new=true')}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-on text-sm font-medium hover:bg-primary/90 transition-colors"
+                      onClick={() => {
+                        navigate('/dashboard?tab=claims&new=true');
+                        setResult(null);
+                      }}
+                      className="w-full bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 flex items-center justify-center gap-2 transition-colors text-sm font-medium"
                     >
                       <ClipboardList className="h-4 w-4" />
                       File Warranty Claim
@@ -417,8 +438,11 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                   )}
                   {result.action === 'MESSAGE' && (
                     <button
-                      onClick={() => navigate('/dashboard?tab=messages')}
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-input bg-background text-foreground text-sm font-medium hover:bg-muted transition-colors"
+                      onClick={() => {
+                        navigate('/dashboard?tab=messages');
+                        setResult(null);
+                      }}
+                      className="w-full bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 flex items-center justify-center gap-2 transition-colors text-sm font-medium"
                     >
                       <MessageSquare className="h-4 w-4" />
                       Send Message to Builder
