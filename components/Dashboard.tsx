@@ -845,6 +845,11 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, [searchParams, updateSearchParams]);
   
+  // Message composition state (must be declared before useEffect that uses them)
+  const [newMessageSubject, setNewMessageSubject] = useState('');
+  const [newMessageContent, setNewMessageContent] = useState('');
+  const [showNewMessageModal, setShowNewMessageModal] = useState(false);
+  
   // Auto-open "New Message" modal when URL contains ?new=true with smart pre-fill
   useEffect(() => {
     const newParam = searchParams.get('new');
@@ -1272,11 +1277,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Messaging State
   const [selectedThreadId, setSelectedThreadId] = useState<string | null>(initialThreadId);
   const [replyContent, setReplyContent] = useState('');
-  const [showNewMessageModal, setShowNewMessageModal] = useState(false);
   const [showSubListModal, setShowSubListModal] = useState(false);
   const [isComposingMessage, setIsComposingMessage] = useState(false);
   // Removed showCallsModal - now navigates to /calls page with search filter
-  const [newMessageSubject, setNewMessageSubject] = useState('');
 
   // Handle browser back button for nested modals that are NOT URL-driven.
   // Claims/Tasks use `?claimId` / `?taskId` in the URL, so Back should be handled by normal
@@ -1302,7 +1305,6 @@ const Dashboard: React.FC<DashboardProps> = ({
       };
     }
   }, [selectedThreadId]);
-  const [newMessageContent, setNewMessageContent] = useState('');
   const [newMessageRecipientId, setNewMessageRecipientId] = useState<string>('');
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [replyExpanded, setReplyExpanded] = useState(false);
