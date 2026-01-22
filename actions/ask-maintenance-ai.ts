@@ -1,133 +1,68 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Lazy initialization - only create AI instance when needed and API key is available
-let aiInstance: GoogleGenAI | null = null;
+// Lazy initialization
+let genAI: GoogleGenerativeAI | null = null;
 
-const getAI = (): GoogleGenAI | null => {
-  if (aiInstance) return aiInstance;
+const getAI = () => {
+  if (genAI) return genAI;
   
-  // 🔍 VERBOSE: Check all possible API key sources
-  console.log("🔍 Checking for Gemini API key...");
-  
-  // Get API key from environment variables (try multiple sources)
-  const apiKey = 
-    (import.meta as any).env?.VITE_GEMINI_API_KEY || 
-    (typeof process !== 'undefined' ? process.env.VITE_GEMINI_API_KEY : undefined) ||
-    (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined) ||
-    (typeof process !== 'undefined' ? process.env.GOOGLE_API_KEY : undefined);
+  // Support both Client (Vite) and Server (Process) env vars
+  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || 
+                 (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined);
   
   if (!apiKey) {
-    console.error("❌ CRITICAL: No Gemini API Key found in environment variables.");
-    console.error("Checked sources:", {
-      'import.meta.env.VITE_GEMINI_API_KEY': !!(import.meta as any).env?.VITE_GEMINI_API_KEY,
-      'process.env.VITE_GEMINI_API_KEY': !!(typeof process !== 'undefined' && process.env.VITE_GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': !!(typeof process !== 'undefined' && process.env.GEMINI_API_KEY),
-      'process.env.GOOGLE_API_KEY': !!(typeof process !== 'undefined' && process.env.GOOGLE_API_KEY),
-    });
+    console.warn("⚠️ Gemini API key not found.");
     return null;
   }
   
-  console.log("✅ API key found, initializing Gemini AI...");
-  
   try {
-    aiInstance = new GoogleGenAI({ apiKey });
-    console.log("✅ Gemini AI initialized successfully");
-    return aiInstance;
-  } catch (error: any) {
-    console.error("❌ Failed to initialize Gemini AI:", {
-      message: error.message,
-      name: error.name,
-      stack: error.stack,
-    });
+    genAI = new GoogleGenerativeAI(apiKey);
+    return genAI;
+  } catch (error) {
+    console.error("Failed to initialize Gemini:", error);
     return null;
   }
 };
 
-/**
- * Ask the AI maintenance assistant a question
- * 
- * @param question - The maintenance question from the homeowner
- * @returns A concise, helpful answer (2-3 sentences)
- */
 export const askMaintenanceAI = async (question: string): Promise<string> => {
-  console.log("🤖 askMaintenanceAI called with question:", question.substring(0, 50) + "...");
-  
   const ai = getAI();
   
   if (!ai) {
-    console.error("❌ AI instance not available (API key missing or initialization failed)");
-    // Fallback response if AI is not available
-    return "I'm sorry, I'm currently unavailable. For immediate assistance with maintenance questions, please contact Cascade Builder Services.";
+    return "I'm currently unavailable. Please contact Cascade Builder Services directly.";
   }
   
-  // Validate input
   if (!question || question.trim().length === 0) {
-    console.warn("⚠️ Empty question provided");
     return "Please enter a question about home maintenance.";
   }
   
   try {
-    console.log("📤 Sending request to Gemini API...");
-    console.log("🎯 Using model: gemini-1.5-flash (stable production endpoint)");
-    const response = await ai.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: `You are a helpful home maintenance expert for Cascade Builder Services.
+    // Use the Stable Model
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-CRITICAL RULE: NEVER tell the homeowner to "contact the builder" or "call the builder".
-INSTEAD: Always tell them to "Contact Cascade Builder Services" or "submit a request to Cascade".
+    const prompt = `You are a helpful home maintenance expert for Cascade Builder Services.
 
-EMERGENCY RESPONSE PROTOCOL:
-If the question is about an EMERGENCY (gas leak, water leak, electrical hazard, fire, carbon monoxide, etc.):
-- Instruct: "Shut off the source immediately if safe to do so."
-- Then say: "Call Cascade Builder Services Emergency Line right away."
-- If evacuation is needed: "Evacuate immediately and call 911, then notify Cascade Builder Services."
+CRITICAL RULE: NEVER tell the homeowner to "contact the builder".
+INSTEAD: Always tell them to "Contact Cascade Builder Services".
 
-URGENT ISSUES (Leaks, HVAC during extreme weather, electrical problems):
-- Instruct: "Turn off the main supply/breaker if safe."
-- Then say: "Contact Cascade Builder Services immediately for emergency service."
+EMERGENCY RESPONSE:
+If (gas leak, water leak, fire, sparks):
+- "Shut off source immediately if safe."
+- "Call Cascade Builder Services Emergency Line."
+- "If life-threatening, call 911."
 
-NON-EMERGENCY QUESTIONS:
-- Provide clear, actionable steps (2-3 sentences max)
-- Be specific about tools or materials needed
-- If professional help is needed, say: "For this repair, contact Cascade Builder Services to schedule a service appointment."
-- Keep answers practical and concise
-- Do not mention you are an AI
+NON-EMERGENCY:
+- Provide clear, actionable steps (2-3 sentences).
+- If professional help needed: "Contact Cascade Builder Services to schedule an appointment."
 
-Homeowner's Question: "${question}"
+Question: "${question}"
+Answer:`;
 
-Your Answer (2-3 sentences max):`,
-    });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
     
-    console.log("📥 Received response from Gemini API");
-    const answer = response.text || "I couldn't generate an answer. Please try rephrasing your question or contact Cascade Builder Services for assistance.";
-    console.log("✅ Successfully generated answer:", answer.substring(0, 50) + "...");
-    
-    return answer;
   } catch (error: any) {
-    console.error("🔥 Gemini API Failure Details:", {
-      message: error.message,
-      name: error.name,
-      status: error.status,
-      statusText: error.statusText,
-      code: error.code,
-      details: error.errorDetails || error.details,
-      response: error.response,
-      stack: error.stack,
-      fullError: error,
-    });
-    
-    // Additional detailed JSON dump for complete error visibility
-    console.error("🔥 Full Error Object (JSON):");
-    try {
-      console.error(JSON.stringify(error, null, 2));
-    } catch (stringifyError) {
-      console.error("Could not stringify error:", stringifyError);
-    }
-    
-    // Return a more informative error message for debugging
-    const errorMsg = error.message || "Unknown error";
-    console.error(`❌ AI Service Error: ${errorMsg}`);
-    
-    return "I'm having trouble processing your request right now. Please try again later or contact Cascade Builder Services for assistance.";
+    console.error("🔥 Gemini Error:", error);
+    return "I'm having trouble processing that request. Please try again or contact support.";
   }
 };
