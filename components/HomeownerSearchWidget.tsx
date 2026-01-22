@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, KeyboardEvent, useMemo } from 'react';
-import { Wrench, Loader2, Zap, Droplet, Flame, Wind } from 'lucide-react';
-import { askMaintenanceAI } from '../actions/ask-maintenance-ai';
+import { Wrench, Loader2, Zap, Droplet, Flame, Wind, ClipboardList, MessageSquare } from 'lucide-react';
+import { askMaintenanceAI, MaintenanceAIResponse } from '../actions/ask-maintenance-ai';
+import { useNavigate } from 'react-router-dom';
 
 interface HomeownerSearchWidgetProps {
   className?: string;
@@ -19,8 +20,9 @@ const SAMPLE_QUESTIONS = [
 ];
 
 export function HomeownerSearchWidget({ className = '', variant = 'default', homeownerId }: HomeownerSearchWidgetProps) {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
-  const [answer, setAnswer] = useState('');
+  const [result, setResult] = useState<MaintenanceAIResponse | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -119,7 +121,10 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
       // If homeownerId is provided, validate it
       if (homeownerId === 'placeholder' || homeownerId.length < 10) {
         console.warn("⚠️ Search Widget: Invalid homeowner ID format");
-        setAnswer("Please wait while we load your account information...");
+        setResult({
+          answer: "Please wait while we load your account information...",
+          action: 'INFO'
+        });
         return;
       }
       
@@ -127,19 +132,22 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(homeownerId)) {
         console.warn(`⚠️ Search Widget: Invalid homeowner UUID format: ${homeownerId}`);
-        setAnswer("Please wait while we load your account information...");
+        setResult({
+          answer: "Please wait while we load your account information...",
+          action: 'INFO'
+        });
         return;
       }
     }
     
     setIsSearching(true);
-    setAnswer(''); // Clear previous answer
+    setResult(null); // Clear previous result
     
     try {
       console.log("🔍 Widget: Calling askMaintenanceAI with query:", searchQuery);
-      const result = await askMaintenanceAI(searchQuery);
-      console.log("✅ Widget: Received result from askMaintenanceAI");
-      setAnswer(result);
+      const response = await askMaintenanceAI(searchQuery);
+      console.log("✅ Widget: Received result from askMaintenanceAI:", response);
+      setResult(response);
     } catch (error: any) {
       console.error("❌ Widget: Search error details:", {
         message: error?.message,
@@ -147,7 +155,10 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
         stack: error?.stack,
         fullError: error,
       });
-      setAnswer('Sorry, something went wrong. Please try again later.');
+      setResult({
+        answer: 'Sorry, something went wrong. Please try again later.',
+        action: 'MESSAGE'
+      });
     } finally {
       setIsSearching(false);
     }
@@ -204,7 +215,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
         />
         
         {/* Suggested Questions Dropdown - Shows when focused and empty */}
-        {isFocused && !query && !isSearching && !answer && (
+        {isFocused && !query && !isSearching && !result && (
           <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden">
             <div className="px-4 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider bg-gray-50 dark:bg-gray-900/50">
               Suggested Questions
@@ -227,7 +238,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
         )}
         
         {/* Results Dropdown Panel */}
-        {(answer || isSearching) && (
+        {(result || isSearching) && (
           <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-xl overflow-hidden z-50 max-w-2xl">
             {isSearching ? (
               // Loading state
@@ -238,8 +249,8 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                   <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-3/4" />
                 </div>
               </div>
-            ) : (
-              // Answer display
+            ) : result ? (
+              // Answer display with action buttons
               <div className="p-4">
                 <div className="flex items-start gap-3">
                   <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -247,13 +258,38 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                      {answer}
+                      {result.answer}
                     </p>
+                    
+                    {/* Action Buttons Based on Intent */}
+                    {result.action !== 'INFO' && (
+                      <div className="mt-3 flex gap-2">
+                        {result.action === 'CLAIM' && (
+                          <button
+                            onClick={() => navigate('/dashboard?tab=claims&new=true')}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary text-primary-on text-xs font-medium hover:bg-primary/90 transition-colors"
+                          >
+                            <ClipboardList className="h-3.5 w-3.5" />
+                            File Warranty Claim
+                          </button>
+                        )}
+                        {result.action === 'MESSAGE' && (
+                          <button
+                            onClick={() => navigate('/dashboard?tab=messages')}
+                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-input bg-background text-foreground text-xs font-medium hover:bg-muted transition-colors"
+                          >
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            Send Message to Builder
+                          </button>
+                        )}
+                      </div>
+                    )}
+                    
                     <div className="flex gap-3 mt-3">
                       <button
                         onClick={() => {
                           setQuery('');
-                          setAnswer('');
+                          setResult(null);
                         }}
                         className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
                       >
@@ -262,7 +298,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                       <button
                         onClick={() => {
                           setQuery('');
-                          setAnswer('');
+                          setResult(null);
                         }}
                         className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                       >
@@ -272,7 +308,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                   </div>
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         )}
       </div>
@@ -329,7 +365,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
       </div>
 
       {/* Suggested Question Pills */}
-      {!answer && !isSearching && (
+      {!result && !isSearching && (
         <div className="flex flex-wrap gap-2 mb-4">
           {SAMPLE_QUESTIONS.map((question, idx) => (
             <button
@@ -356,7 +392,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
       )}
 
       {/* Answer Display */}
-      {answer && !isSearching && (
+      {result && !isSearching && (
         <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
           <div className="flex items-start gap-3">
             <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -364,14 +400,38 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
-                {answer}
+                {result.answer}
               </p>
+              
+              {/* Action Buttons Based on Intent */}
+              {result.action !== 'INFO' && (
+                <div className="mt-3 flex gap-2">
+                  {result.action === 'CLAIM' && (
+                    <button
+                      onClick={() => navigate('/dashboard?tab=claims&new=true')}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-on text-sm font-medium hover:bg-primary/90 transition-colors"
+                    >
+                      <ClipboardList className="h-4 w-4" />
+                      File Warranty Claim
+                    </button>
+                  )}
+                  {result.action === 'MESSAGE' && (
+                    <button
+                      onClick={() => navigate('/dashboard?tab=messages')}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-input bg-background text-foreground text-sm font-medium hover:bg-muted transition-colors"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      Send Message to Builder
+                    </button>
+                  )}
+                </div>
+              )}
               
               {/* New Question Button */}
               <button
                 onClick={() => {
                   setQuery('');
-                  setAnswer('');
+                  setResult(null);
                 }}
                 className="mt-3 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
               >
@@ -383,7 +443,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
       )}
 
       {/* Helper Text */}
-      {!answer && !isSearching && (
+      {!result && !isSearching && (
         <p className="text-xs text-muted-foreground text-center mt-2">
           Get quick answers to common home maintenance questions
         </p>

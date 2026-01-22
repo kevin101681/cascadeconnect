@@ -22,15 +22,26 @@ const getOpenAI = () => {
   return openai;
 };
 
-export const askMaintenanceAI = async (question: string): Promise<string> => {
+export interface MaintenanceAIResponse {
+  answer: string;
+  action: 'CLAIM' | 'MESSAGE' | 'INFO';
+}
+
+export const askMaintenanceAI = async (question: string): Promise<MaintenanceAIResponse> => {
   const client = getOpenAI();
   
   if (!client) {
-    return "I'm currently unavailable. Please contact Cascade Builder Services directly.";
+    return {
+      answer: "I'm currently unavailable. Please contact Cascade Builder Services directly.",
+      action: 'MESSAGE'
+    };
   }
 
   if (!question || question.trim().length === 0) {
-    return "Please enter a question about home maintenance.";
+    return {
+      answer: "Please enter a question about home maintenance.",
+      action: 'INFO'
+    };
   }
 
   try {
@@ -51,15 +62,23 @@ FORMATTING RULE: Do NOT use markdown formatting (no asterisks, no bolding, no bu
 CRITICAL RULE: NEVER tell the homeowner to "contact the builder" or "call the builder".
 INSTEAD: Always tell them to "Contact Cascade Builder Services" or "submit a request to Cascade".
 
+INTENT CLASSIFICATION RULE:
+Analyze the user's issue and classify it into one of these categories:
+- CLAIM: If it appears to be a broken item, defect, warranty failure, damage, or something not working properly that likely requires repair or replacement (e.g., "My pipe burst", "The furnace is broken", "There's a crack in the wall", "The door won't close").
+- MESSAGE: If it is a scheduling request, general question requiring human follow-up, complex issue needing builder assistance, or requests for information that can't be self-serviced (e.g., "Can I schedule a walkthrough?", "When will the builder visit?", "I need to discuss modifications").
+- INFO: If it is a simple how-to question, maintenance tip, or DIY instruction that you can fully answer (e.g., "How do I change my filter?", "How often should I clean the vents?").
+
 EMERGENCY RESPONSE PROTOCOL:
 If the question is about an EMERGENCY (gas leak, water leak, electrical hazard, fire, carbon monoxide, etc.):
 - Instruct: "Shut off the source immediately if safe to do so."
 - Then say: "Call Cascade Builder Services Emergency Line right away."
 - If evacuation is needed: "Evacuate immediately and call 911, then notify Cascade Builder Services."
+- Classify as: CLAIM (since it's a damage/failure requiring immediate attention)
 
 URGENT ISSUES (Leaks, HVAC during extreme weather, electrical problems):
 - Instruct: "Turn off the main supply/breaker if safe."
 - Then say: "Contact Cascade Builder Services immediately for emergency service."
+- Classify as: CLAIM
 
 NON-EMERGENCY QUESTIONS:
 - Provide clear, actionable steps (2-3 sentences max)
@@ -68,16 +87,53 @@ NON-EMERGENCY QUESTIONS:
 - Do NOT add a generic closing phrase telling them to schedule service
 - ONLY suggest contacting Cascade Builder Services if the specific task requires a licensed professional (electrical work, HVAC repairs, plumbing beyond simple fixes) or is dangerous
 - If the homeowner can reasonably fix it themselves with your instructions, just give the instructions without any contact recommendation
-- Do not mention you are an AI`
+- Do not mention you are an AI
+
+OUTPUT FORMAT:
+You MUST respond with valid JSON in this exact format:
+{
+  "answer": "Your plain text answer here...",
+  "action": "CLAIM" | "MESSAGE" | "INFO"
+}
+
+Do NOT include any text outside the JSON object. The response must be parseable JSON.`
         },
         { role: "user", content: question }
       ],
+      response_format: { type: "json_object" }
     });
 
-    return completion.choices[0].message.content || "I couldn't generate an answer. Please try rephrasing your question or contact Cascade Builder Services for assistance.";
+    const responseText = completion.choices[0].message.content || '{"answer": "I couldn\'t generate an answer. Please try rephrasing your question or contact Cascade Builder Services for assistance.", "action": "MESSAGE"}';
+    
+    try {
+      const parsed = JSON.parse(responseText) as MaintenanceAIResponse;
+      
+      // Validate the response has required fields
+      if (!parsed.answer || !parsed.action) {
+        throw new Error('Invalid response structure');
+      }
+      
+      // Validate action is one of the expected values
+      if (!['CLAIM', 'MESSAGE', 'INFO'].includes(parsed.action)) {
+        parsed.action = 'INFO';
+      }
+      
+      console.log('✅ AI Response:', { action: parsed.action, answerLength: parsed.answer.length });
+      
+      return parsed;
+    } catch (parseError) {
+      console.error('❌ Failed to parse AI response as JSON:', parseError);
+      return {
+        answer: responseText,
+        action: 'INFO'
+      };
+    }
     
   } catch (error: any) {
     console.error("🔥 OpenAI Error:", error);
-    return "I'm having trouble connecting to the service. Please try again or contact Cascade Builder Services for assistance.";
+    return {
+      answer: "I'm having trouble connecting to the service. Please try again or contact Cascade Builder Services for assistance.",
+      action: 'MESSAGE'
+    };
   }
 };
