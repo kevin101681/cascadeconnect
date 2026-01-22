@@ -2494,6 +2494,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       )}
     </div>
     );
+  };
 
   const handleExportToExcel = async (claimsList: Claim[]) => {
     // Filter claims based on current filter
@@ -3018,8 +3019,8 @@ const Dashboard: React.FC<DashboardProps> = ({
     onCreateEvalTask?: (type: '60 Day' | '11 Month' | 'Other', assigneeId: string) => Promise<void>
   ) => {
     // Calculate counts for filter pills
-    const openCount = userTasks.filter(task => task.status !== 'COMPLETED').length;
-    const closedCount = userTasks.filter(task => task.status === 'COMPLETED').length;
+    const openCount = userTasks.filter(task => !task.isCompleted).length;
+    const closedCount = userTasks.filter(task => task.isCompleted).length;
     const totalCount = userTasks.length;
 
     return (

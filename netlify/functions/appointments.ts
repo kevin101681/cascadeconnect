@@ -199,7 +199,22 @@ export const handler: Handler = async (event) => {
       );
 
       // 2. Fetch Claims with Repair Dates
-      let claimsQuery = db
+      const claimConditions = [isNotNull(claims.scheduledAt)];
+
+      // Apply homeownerId filter if provided
+      if (homeownerId) {
+        claimConditions.push(eq(claims.homeownerId, homeownerId));
+      }
+
+      // Apply date range filters if provided
+      if (startDate) {
+        claimConditions.push(gte(claims.scheduledAt, new Date(startDate)));
+      }
+      if (endDate) {
+        claimConditions.push(lte(claims.scheduledAt, new Date(endDate)));
+      }
+
+      const claimsQuery = db
         .select({
           id: claims.id,
           title: claims.title,
@@ -210,26 +225,7 @@ export const handler: Handler = async (event) => {
           claimNumber: claims.claimNumber,
         })
         .from(claims)
-        .where(isNotNull(claims.scheduledAt)); // Only claims with scheduled dates
-
-      // Apply homeownerId filter if provided
-      if (homeownerId) {
-        claimsQuery = claimsQuery.where(eq(claims.homeownerId, homeownerId)) as any;
-      }
-
-      // Apply date range filters if provided
-      if (startDate || endDate) {
-        const dateConditions = [];
-        if (startDate) {
-          dateConditions.push(gte(claims.scheduledAt, new Date(startDate)));
-        }
-        if (endDate) {
-          dateConditions.push(lte(claims.scheduledAt, new Date(endDate)));
-        }
-        if (dateConditions.length > 0) {
-          claimsQuery = claimsQuery.where(and(...dateConditions)) as any;
-        }
-      }
+        .where(and(...claimConditions)); // Only claims with scheduled dates (+ optional filters)
 
       const claimResults = await claimsQuery;
 
