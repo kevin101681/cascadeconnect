@@ -7,6 +7,7 @@ import { useDarkMode } from './DarkModeProvider';
 import { UserButton, useUser } from '@clerk/clerk-react';
 import GlobalSearch from './global/GlobalSearch';
 import NetlifyStatusIndicator from './layout/NetlifyStatusIndicator';
+import { SIDEBAR_CONTENT_PADDING_LEFT, CONTENT_MAX_WIDTH, CONTENT_PADDING_X } from '../constants/layout';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -215,11 +216,11 @@ const Layout: React.FC<LayoutProps> = ({
     <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col font-sans">
       {/* M3 Small Top App Bar */}
       <header className="bg-surface dark:bg-gray-800 text-surface-on dark:text-gray-100 sticky top-0 z-50 transition-shadow duration-200 border-b border-surface-container dark:border-gray-700 shadow-elevation-1">
-        <div className="max-w-7xl mx-auto px-4 sm:px-4 lg:px-4">
+        <div className={`${CONTENT_MAX_WIDTH} mx-auto ${CONTENT_PADDING_X} sm:${CONTENT_PADDING_X} lg:${CONTENT_PADDING_X}`}>
           <div className="py-2 md:py-0">
             <div className="flex justify-between items-center h-16 gap-4">
-              {/* Logo */}
-              <button onClick={() => onNavigate('DASHBOARD')} className="flex items-center gap-3 flex-shrink-0 focus:outline-none">
+              {/* Logo - Aligned with sidebar content using layout constant */}
+              <button onClick={() => onNavigate('DASHBOARD')} className={`flex items-center gap-3 flex-shrink-0 focus:outline-none ${SIDEBAR_CONTENT_PADDING_LEFT}`}>
                 <img src="/connect.svg" alt="Cascade Connect" className="h-8" />
               </button>
 
@@ -442,7 +443,7 @@ const Layout: React.FC<LayoutProps> = ({
         </div>
       </header>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-8">
+      <main className={`flex-1 ${CONTENT_MAX_WIDTH} w-full mx-auto ${CONTENT_PADDING_X} py-8`}>
         {children}
       </main>
     </div>

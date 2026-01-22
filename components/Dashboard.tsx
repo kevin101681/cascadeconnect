@@ -25,6 +25,7 @@ import TasksSheet from './TasksSheet';
 import HomeownerDashboardMobile from './HomeownerDashboardMobile';
 import { StaggerContainer, FadeIn, AnimatedTabContent } from './motion/MotionWrapper';
 import { SmoothHeightWrapper } from './motion/SmoothHeightWrapper';
+import { SIDEBAR_CONTENT_PADDING_LEFT } from '../constants/layout';
 
 // Lazy-load heavy dashboard tabs / tools so they don't ship in the initial bundle.
 const AIIntakeDashboard = React.lazy(() => import('./AIIntakeDashboard'));
@@ -4328,7 +4329,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         
         <div className={shouldHideDashboardUnderlay ? 'hidden' : 'block'}>
         {/* Main Layout Container - Sidebar + Content with Staggered Cascade Animation */}
-        <StaggerContainer className="flex flex-col lg:flex-row gap-6 w-full px-4 lg:px-6 bg-white dark:bg-gray-900" staggerDelay={0.08}>
+        <StaggerContainer className={`flex flex-col lg:flex-row gap-6 w-full ${SIDEBAR_CONTENT_PADDING_LEFT} lg:pl-6 pr-4 lg:pr-6 bg-white dark:bg-gray-900`} staggerDelay={0.08}>
           {/* LEFT SIDEBAR - Homeowner Info Card with Search - HIDDEN ON MOBILE when tab is active */}
           <FadeIn direction="right" className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 rounded-3xl ${currentTab ? 'hidden lg:block' : ''} ${isHomeownerCardCollapsed ? 'w-full lg:w-16' : 'w-full lg:w-72'}`}>
             {/* Search Bar - Admin & Builder Only - Always visible on mobile, top of card on desktop */}
