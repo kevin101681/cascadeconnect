@@ -7,6 +7,7 @@ interface TaskCardProps {
   subsToScheduleCount?: number;
   dateAssigned: string;
   isCompleted?: boolean;
+  isSelected?: boolean;
   onClick?: () => void;
 }
 
@@ -16,14 +17,20 @@ export function TaskCard({
   subsToScheduleCount = 0,
   dateAssigned,
   isCompleted = false,
+  isSelected = false,
   onClick,
 }: TaskCardProps) {
   return (
     <div 
       onClick={onClick}
-      className={`group relative bg-white rounded-lg border p-3 shadow-sm transition-all h-full flex flex-col justify-between
+      className={`group relative rounded-lg border p-3 shadow-sm transition-all h-full flex flex-col justify-between
         ${onClick ? 'cursor-pointer' : ''}
-        ${isCompleted ? 'border-transparent opacity-75 hover:opacity-100' : 'border-gray-200 hover:shadow-md hover:border-blue-300'}
+        ${isSelected
+          ? 'bg-blue-50 border-blue-500 shadow-md'
+          : isCompleted 
+            ? 'bg-white border-transparent opacity-75 hover:opacity-100' 
+            : 'bg-white border-gray-200 hover:shadow-md hover:border-blue-300'
+        }
       `}
     >
       

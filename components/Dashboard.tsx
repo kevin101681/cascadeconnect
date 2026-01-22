@@ -208,6 +208,7 @@ const TasksListColumn = React.memo<{
                 subsToScheduleCount={taskClaims.length}
                 dateAssigned={task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Not set'}
                 isCompleted={task.isCompleted ?? false}
+                isSelected={selectedTaskForModal?.id === task.id}
                 onClick={() => onTaskSelect(task)}
               />
             );
@@ -3240,6 +3241,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         dateSent={messageDate}
                         messagePreview={messagePreview}
                         isRead={thread.isRead}
+                        isSelected={selectedThreadId === thread.id}
                         onClick={() => {
                           setSelectedThreadId(thread.id);
                           setIsComposingMessage(false);
@@ -3475,10 +3477,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                              contextLabel,
                              'message'
                            );
-                         }}
-                         className="p-2 -mr-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full transition-colors"
-                         title={`Add a note about: ${selectedThread.subject}`}
-                       >
+                        }}
+                        className="p-2 -mr-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-colors"
+                        title={`Add a note about: ${selectedThread.subject}`}
+                      >
                          <StickyNote className="h-5 w-5" />
                        </button>
                     </div>
@@ -3632,10 +3634,10 @@ const Dashboard: React.FC<DashboardProps> = ({
                     contextLabel,
                     'message'
                   );
-                }}
-                className="p-2 -mr-2 text-gray-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-full transition-colors"
-                title={`Add a note about: ${selectedThread.subject}`}
-              >
+                        }}
+                        className="p-2 -mr-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-full transition-colors"
+                        title={`Add a note about: ${selectedThread.subject}`}
+                      >
                 <StickyNote className="h-5 w-5" />
               </button>
             </div>

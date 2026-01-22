@@ -489,6 +489,11 @@ body {
     visibility: visible !important;
     opacity: 1 !important;
     overflow: hidden !important;
+    /* Remove border and ring */
+    box-shadow: none !important;
+    border: none !important;
+    outline: none !important;
+    ring: none !important;
 }
 
 /* Ensure all avatar-related elements inside trigger are visible */
