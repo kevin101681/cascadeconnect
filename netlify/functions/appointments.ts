@@ -155,6 +155,17 @@ export const handler: Handler = async (event) => {
       const endDate = params.endDate;
       const visibility = params.visibility;
 
+      // ✅ CRITICAL FIX: Validate homeownerId before DB query to prevent UUID crash
+      // If homeownerId is invalid (placeholder, undefined, or too short), skip query and return empty
+      if (homeownerId && (homeownerId === 'placeholder' || homeownerId.length < 10)) {
+        console.warn('⚠️ Invalid homeownerId in appointments query, returning empty list:', homeownerId);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify([]),
+        };
+      }
+
       let query = db.select().from(appointments);
 
       // Apply filters

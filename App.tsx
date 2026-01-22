@@ -1191,9 +1191,11 @@ function App() {
         ? activeHomeowner?.id 
         : selectedAdminHomeownerId;
 
-      if (!targetHomeownerId) {
-        console.log('📋 No homeowner selected, skipping claims fetch');
-        setClaims([]); // Clear claims if no homeowner selected
+      // ✅ CRITICAL FIX: Guard against invalid homeownerId to prevent 400 errors
+      // Check for undefined, null, "placeholder", or invalid length BEFORE fetch
+      if (!targetHomeownerId || targetHomeownerId === 'placeholder' || targetHomeownerId.length < 10) {
+        console.log('📋 Invalid or placeholder homeowner ID, skipping claims fetch:', targetHomeownerId);
+        setClaims([]); // Clear claims if no valid homeowner selected
         return;
       }
 

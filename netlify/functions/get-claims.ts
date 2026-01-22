@@ -57,8 +57,24 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     // Extract homeownerId from query parameters
     const homeownerId = event.queryStringParameters?.homeownerId;
 
-    // STRICT: homeownerId is REQUIRED - Return error and empty array if missing
-    if (!homeownerId || homeownerId.trim() === '') {
+    // ✅ CRITICAL FIX: Guard clause for invalid homeownerId BEFORE validation
+    // Prevent "placeholder" or undefined from reaching UUID validation
+    if (!homeownerId || homeownerId === 'placeholder' || homeownerId.length < 10) {
+      console.warn('⚠️ get-claims called with invalid homeownerId (placeholder or too short), returning empty array:', homeownerId);
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ 
+          success: true,
+          claims: [],
+          count: 0,
+          homeownerId: homeownerId || 'none',
+        }),
+      };
+    }
+
+    // STRICT: homeownerId format validation (after placeholder check)
+    if (homeownerId.trim() === '') {
       console.warn('⚠️ get-claims called without homeownerId parameter');
       return {
         statusCode: 400,
