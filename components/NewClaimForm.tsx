@@ -96,6 +96,26 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
     }
   }, [isAdmin, user?.id]);
 
+  // Smart Pre-fill: Read URL parameters and pre-populate form fields
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const params = new URLSearchParams(window.location.search);
+    const urlTitle = params.get('title');
+    const urlDesc = params.get('desc');
+    
+    // Only pre-fill if fields are currently empty (don't overwrite user input)
+    if (urlTitle && !title.trim()) {
+      console.log('✨ [NewClaimForm] Pre-filling title from URL:', urlTitle);
+      setTitle(urlTitle);
+    }
+    
+    if (urlDesc && !description.trim()) {
+      console.log('✨ [NewClaimForm] Pre-filling description from URL:', urlDesc);
+      setDescription(urlDesc);
+    }
+  }, []); // Run only once on mount
+
   // Handle template selection
   const handleTemplateSelect = (templateId: string) => {
     setSelectedTemplateId(templateId);

@@ -700,14 +700,45 @@ const Dashboard: React.FC<DashboardProps> = ({
     setSearchParams(newParams);
   }, []);
   
-  // Listen to popstate (back/forward button)
+  // Listen to popstate (back/forward button) AND custom navigation events
   useEffect(() => {
     const handlePopState = () => {
+      console.log('🔄 [Dashboard] Popstate detected, syncing URL to state');
+      setSearchParams(new URLSearchParams(window.location.search));
+    };
+    
+    // Custom event for React Router navigation (navigate() calls)
+    const handleNavigate = () => {
+      console.log('🔄 [Dashboard] Navigation detected, syncing URL to state');
       setSearchParams(new URLSearchParams(window.location.search));
     };
     
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    
+    // Intercept history.pushState to detect React Router navigate() calls
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+    
+    window.history.pushState = function(...args) {
+      const result = originalPushState.apply(this, args);
+      // Trigger sync after pushState completes
+      setTimeout(() => handleNavigate(), 0);
+      return result;
+    };
+    
+    window.history.replaceState = function(...args) {
+      const result = originalReplaceState.apply(this, args);
+      // Trigger sync after replaceState completes
+      setTimeout(() => handleNavigate(), 0);
+      return result;
+    };
+    
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      // Restore original methods on cleanup
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+    };
   }, []);
 
   // Deep-link bootstrap:
@@ -813,6 +844,37 @@ const Dashboard: React.FC<DashboardProps> = ({
       }, 100);
     }
   }, [searchParams, updateSearchParams]);
+  
+  // Auto-open "New Message" modal when URL contains ?new=true with smart pre-fill
+  useEffect(() => {
+    const newParam = searchParams.get('new');
+    const view = searchParams.get('view');
+    const subject = searchParams.get('subject');
+    const body = searchParams.get('body');
+    
+    // If navigating to messages tab with new=true, open the new message modal
+    if (view === 'messages' && newParam === 'true') {
+      console.log('🔗 Auto-opening new message modal from URL parameter');
+      
+      // Smart Pre-fill: Only pre-fill if fields are empty
+      if (subject && !newMessageSubject.trim()) {
+        console.log('✨ [Dashboard] Pre-filling message subject:', subject);
+        setNewMessageSubject(subject);
+      }
+      
+      if (body && !newMessageContent.trim()) {
+        console.log('✨ [Dashboard] Pre-filling message body:', body);
+        setNewMessageContent(body);
+      }
+      
+      setShowNewMessageModal(true);
+      
+      // Clean up URL to prevent re-opening on refresh
+      setTimeout(() => {
+        updateSearchParams({ new: null, subject: null, body: null });
+      }, 100);
+    }
+  }, [searchParams, updateSearchParams, newMessageSubject, newMessageContent]);
   
   // Debug: Log when currentTab changes
   useEffect(() => {

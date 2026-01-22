@@ -25,6 +25,11 @@ const getOpenAI = () => {
 export interface MaintenanceAIResponse {
   answer: string;
   action: 'CLAIM' | 'MESSAGE' | 'INFO' | 'HELP_TAB';
+  // Smart Pre-fill fields (optional)
+  suggestedTitle?: string;
+  suggestedDescription?: string;
+  suggestedSubject?: string;
+  suggestedMessage?: string;
 }
 
 export const askMaintenanceAI = async (question: string): Promise<MaintenanceAIResponse> => {
@@ -93,7 +98,33 @@ OUTPUT FORMAT:
 You MUST respond with valid JSON in this exact format:
 {
   "answer": "Your plain text answer here...",
-  "action": "CLAIM" | "MESSAGE" | "INFO"
+  "action": "CLAIM" | "MESSAGE" | "INFO",
+  "suggestedTitle": "3-5 word summary (ONLY if action is CLAIM)",
+  "suggestedDescription": "Professional summary of the issue (ONLY if action is CLAIM)",
+  "suggestedSubject": "Brief subject line (ONLY if action is MESSAGE)",
+  "suggestedMessage": "Pre-filled message body (ONLY if action is MESSAGE)"
+}
+
+SMART PRE-FILL RULES:
+- If action is "CLAIM": Include suggestedTitle (3-5 words, e.g., "Leaking Kitchen Sink") and suggestedDescription (2-3 sentences describing the issue professionally).
+- If action is "MESSAGE": Include suggestedSubject (brief subject line) and suggestedMessage (pre-written message body requesting assistance).
+- If action is "INFO" or "HELP_TAB": Do NOT include any suggested fields.
+
+EXAMPLES:
+Claim Example:
+{
+  "answer": "This sounds like a plumbing issue that requires immediate attention...",
+  "action": "CLAIM",
+  "suggestedTitle": "Water Leak Under Kitchen Sink",
+  "suggestedDescription": "Homeowner reports active water leak under the kitchen sink. Attempted to tighten the trap but the issue persists. Leak appears to be coming from the drain connection."
+}
+
+Message Example:
+{
+  "answer": "I recommend reaching out to schedule a walkthrough...",
+  "action": "MESSAGE",
+  "suggestedSubject": "Schedule Walkthrough Request",
+  "suggestedMessage": "Hello, I would like to schedule a walkthrough to discuss some questions about my home. Please let me know your available times. Thank you!"
 }
 
 Do NOT include any text outside the JSON object. The response must be parseable JSON.`

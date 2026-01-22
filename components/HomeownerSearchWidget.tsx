@@ -293,7 +293,15 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                         {result.action === 'CLAIM' && (
                           <button
                             onClick={() => {
-                              navigate('/dashboard?view=claims&new=true');
+                              // Build URL with pre-fill data if available
+                              let url = '/dashboard?view=claims&new=true';
+                              if (result.suggestedTitle) {
+                                url += `&title=${encodeURIComponent(result.suggestedTitle)}`;
+                              }
+                              if (result.suggestedDescription) {
+                                url += `&desc=${encodeURIComponent(result.suggestedDescription)}`;
+                              }
+                              navigate(url);
                               setResult(null);
                             }}
                             className="w-auto inline-flex bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 items-center justify-center gap-2 transition-colors text-xs font-medium"
@@ -305,7 +313,15 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                         {result.action === 'MESSAGE' && (
                           <button
                             onClick={() => {
-                              navigate('/dashboard?view=messages');
+                              // Build URL with pre-fill data if available
+                              let url = '/dashboard?view=messages&new=true';
+                              if (result.suggestedSubject) {
+                                url += `&subject=${encodeURIComponent(result.suggestedSubject)}`;
+                              }
+                              if (result.suggestedMessage) {
+                                url += `&body=${encodeURIComponent(result.suggestedMessage)}`;
+                              }
+                              navigate(url);
                               setResult(null);
                             }}
                             className="w-auto inline-flex bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 items-center justify-center gap-2 transition-colors text-xs font-medium"
@@ -453,7 +469,15 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                   {result.action === 'CLAIM' && (
                     <button
                       onClick={() => {
-                        navigate('/dashboard?view=claims&new=true');
+                        // Build URL with pre-fill data if available
+                        let url = '/dashboard?view=claims&new=true';
+                        if (result.suggestedTitle) {
+                          url += `&title=${encodeURIComponent(result.suggestedTitle)}`;
+                        }
+                        if (result.suggestedDescription) {
+                          url += `&desc=${encodeURIComponent(result.suggestedDescription)}`;
+                        }
+                        navigate(url);
                         setResult(null);
                       }}
                       className="w-auto inline-flex bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 items-center justify-center gap-2 transition-colors text-sm font-medium"
@@ -465,7 +489,15 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                   {result.action === 'MESSAGE' && (
                     <button
                       onClick={() => {
-                        navigate('/dashboard?view=messages');
+                        // Build URL with pre-fill data if available
+                        let url = '/dashboard?view=messages&new=true';
+                        if (result.suggestedSubject) {
+                          url += `&subject=${encodeURIComponent(result.suggestedSubject)}`;
+                        }
+                        if (result.suggestedMessage) {
+                          url += `&body=${encodeURIComponent(result.suggestedMessage)}`;
+                        }
+                        navigate(url);
                         setResult(null);
                       }}
                       className="w-auto inline-flex bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 items-center justify-center gap-2 transition-colors text-sm font-medium"
