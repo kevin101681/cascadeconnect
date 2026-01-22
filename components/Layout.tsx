@@ -2,10 +2,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole, Homeowner } from '../types';
-import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2, Phone, Settings, BookOpen, LogOut, User } from 'lucide-react';
+import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2, Phone, Settings, BookOpen, LogOut } from 'lucide-react';
 import { useDarkMode } from './DarkModeProvider';
 import { UserButton, useUser, SignOutButton } from '@clerk/clerk-react';
 import GlobalSearch from './global/GlobalSearch';
+import { HomeownerSearchWidget } from './HomeownerSearchWidget';
 import NetlifyStatusIndicator from './layout/NetlifyStatusIndicator';
 import { SIDEBAR_CONTENT_PADDING_LEFT, CONTENT_MAX_WIDTH, CONTENT_PADDING_X } from '../constants/layout';
 
@@ -224,10 +225,18 @@ const Layout: React.FC<LayoutProps> = ({
                 <img src="/connect.svg" alt="Cascade Connect" className="h-8" />
               </button>
 
-              {/* Global Search Bar (Admin & Builder Only) - Always Visible */}
-              {(isAdmin || isBuilder) && onGlobalSearchNavigate && (
-                <div className="flex-1 max-w-md relative">
-                  <GlobalSearch onNavigate={onGlobalSearchNavigate} />
+              {/* Search Bar - Global Search for Admin/Builder, AI Assistant for Homeowner */}
+              {isAdmin || isBuilder ? (
+                // Admin & Builder: Global Search
+                onGlobalSearchNavigate && (
+                  <div className="flex-1 max-w-md relative">
+                    <GlobalSearch onNavigate={onGlobalSearchNavigate} />
+                  </div>
+                )
+              ) : (
+                // Homeowner: AI Maintenance Assistant
+                <div className="flex-1 max-w-2xl relative">
+                  <HomeownerSearchWidget variant="header" />
                 </div>
               )}
 
@@ -398,20 +407,6 @@ const Layout: React.FC<LayoutProps> = ({
                             
                             {/* Divider before user actions */}
                             <div className="my-2 border-t border-surface-outline-variant dark:border-gray-700"></div>
-                            
-                            {/* Profile */}
-                            <button 
-                              onClick={() => {
-                                // Open Clerk user profile
-                                const userButton = document.querySelector('.cl-userButtonTrigger') as HTMLElement;
-                                if (userButton) userButton.click();
-                                setIsMenuOpen(false);
-                              }}
-                              className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
-                            >
-                              <User className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-                              Profile
-                            </button>
                             
                             {/* Sign Out */}
                             <SignOutButton>

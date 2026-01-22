@@ -27,7 +27,6 @@ import { Homeowner } from '../types';
 import { StaggerContainer, FadeIn } from './motion/MotionWrapper';
 import { SmoothHeightWrapper } from './motion/SmoothHeightWrapper';
 import { Input } from './ui/input';
-import { HomeownerSearchWidget } from './HomeownerSearchWidget';
 
 // Appointment interface for type safety
 interface UpcomingAppointment {
@@ -162,11 +161,6 @@ const HomeownerDashboardView: React.FC<HomeownerDashboardViewProps> = ({
     <div className="min-h-screen bg-background">
       {/* Main container with proper spacing to clear header */}
       <div className="w-full pt-20 md:pt-24 px-0 md:px-6 pb-6">
-        {/* AI Search Widget - First element, prominently placed with high z-index for visibility */}
-        <div className="w-full max-w-4xl mx-auto mb-8 px-4 relative z-50">
-          <HomeownerSearchWidget className="relative z-50" />
-        </div>
-
         {/* Upcoming Appointment (Top) */}
         {upcomingAppointment != null && (
           <FadeIn direction="down" className="w-full">

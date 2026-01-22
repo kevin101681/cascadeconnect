@@ -4829,6 +4829,7 @@ Assigned By: ${assignerName}
               }
               setCurrentView(view);
             }}
+            isHomeownerView={userRole === UserRole.HOMEOWNER}
           />
         </React.Suspense>
       )}

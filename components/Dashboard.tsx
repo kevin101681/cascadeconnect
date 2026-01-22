@@ -567,8 +567,12 @@ const Dashboard: React.FC<DashboardProps> = ({
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
-  // Check if user is actually logged in as admin (has currentUser/activeEmployee)
-  const isAdminAccount = !!currentUser;
+  
+  // Get the authenticated Clerk user's role from metadata
+  // This persists even when viewing as homeowner (impersonation)
+  const { user: clerkUser } = useUser();
+  const clerkUserRole = clerkUser?.publicMetadata?.role as string | undefined;
+  const isAdminAccount = clerkUserRole === 'admin' || clerkUserRole === 'ADMIN' || clerkUserRole === 'Administrator';
   
   // ✅ CRITICAL FIX: Normalize activeHomeowner ID to prevent "placeholder" UUID crash
   // If activeHomeowner.id is "placeholder", undefined, or too short, use undefined instead
@@ -2331,7 +2335,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
-                Open<span className="ml-1 text-xs opacity-70">({openCount})</span>
+                <div className="flex items-center gap-2">
+                  <span>Open</span>
+                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
+                    {openCount}
+                  </span>
+                </div>
               </button>
               <button
                 onClick={(e) => {
@@ -2344,7 +2353,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
-                Closed<span className="ml-1 text-xs opacity-70">({closedCount})</span>
+                <div className="flex items-center gap-2">
+                  <span>Closed</span>
+                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
+                    {closedCount}
+                  </span>
+                </div>
               </button>
               <button
                 onClick={(e) => {
@@ -2357,7 +2371,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
-                All<span className="ml-1 text-xs opacity-70">({totalCount})</span>
+                <div className="flex items-center gap-2">
+                  <span>All</span>
+                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
+                    {totalCount}
+                  </span>
+                </div>
               </button>
             </div>
           )}
@@ -2610,7 +2629,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                     : 'bg-white dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
                 }`}
               >
-                Open<span className="ml-1 text-xs opacity-70">({openCount})</span>
+                <div className="flex items-center gap-2">
+                  <span>Open</span>
+                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
+                    {openCount}
+                  </span>
+                </div>
               </button>
               <button
                 onClick={() => setClaimsFilter('Closed')}
@@ -2620,7 +2644,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                     : 'bg-white dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
                 }`}
               >
-                Closed<span className="ml-1 text-xs opacity-70">({closedCount})</span>
+                <div className="flex items-center gap-2">
+                  <span>Closed</span>
+                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
+                    {closedCount}
+                  </span>
+                </div>
               </button>
               <button
                 onClick={() => setClaimsFilter('All')}
@@ -2630,7 +2659,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                     : 'bg-white dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
                 }`}
               >
-                All<span className="ml-1 text-xs opacity-70">({totalCount})</span>
+                <div className="flex items-center gap-2">
+                  <span>All</span>
+                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
+                    {totalCount}
+                  </span>
+                </div>
               </button>
               {isAdmin && (
                 <button
@@ -3050,7 +3084,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                       : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                   }`}
                 >
-                  Open<span className="ml-1 text-xs opacity-70">({openCount})</span>
+                  <div className="flex items-center gap-2">
+                    <span>Open</span>
+                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
+                      {openCount}
+                    </span>
+                  </div>
                 </button>
                 <button
                   onClick={() => setTasksFilter('closed')}
@@ -3060,7 +3099,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                       : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                   }`}
                 >
-                  Closed<span className="ml-1 text-xs opacity-70">({closedCount})</span>
+                  <div className="flex items-center gap-2">
+                    <span>Closed</span>
+                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
+                      {closedCount}
+                    </span>
+                  </div>
                 </button>
                 <button
                   onClick={() => setTasksFilter('all')}
@@ -3070,7 +3114,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                       : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                   }`}
                 >
-                  All<span className="ml-1 text-xs opacity-70">({totalCount})</span>
+                  <div className="flex items-center gap-2">
+                    <span>All</span>
+                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-gray-200 dark:bg-gray-600 px-1 text-[10px] font-bold text-gray-700 dark:text-gray-200">
+                      {totalCount}
+                    </span>
+                  </div>
                 </button>
               </div>
             </div>
@@ -4298,8 +4347,10 @@ const Dashboard: React.FC<DashboardProps> = ({
         {renderModals()}
         
         {/* ADMIN EXIT BUTTON - Only show when admin is viewing as homeowner */}
-        {/* ✅ FIX: Show when isAdminAccount is true AND isHomeownerView is true */}
-        {/* isAdminAccount persists even when userRole changes to HOMEOWNER during impersonation */}
+        {/* ✅ LOGIC: Show when isHomeownerView is true AND the Clerk user's role is admin */}
+        {/* Real Homeowner: isHomeownerView=true but isAdminAccount=false -> HIDDEN */}
+        {/* Admin Dashboard: isHomeownerView=false -> HIDDEN */}
+        {/* Admin Impersonating: isHomeownerView=true AND isAdminAccount=true -> VISIBLE ✓ */}
         {isHomeownerView && isAdminAccount && (
           <div className="fixed top-20 right-4 z-[9999]">
             <button
@@ -4708,7 +4759,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
               {/* User Footer - Homeowner View Only */}
               {userRole === UserRole.HOMEOWNER && (
-                <div className="mt-auto flex items-center gap-3 p-4 bg-surface-container/20 dark:bg-gray-700/20">
+                <div className="mt-auto flex items-center gap-2 py-2 px-3 border-t border-gray-100 dark:border-gray-700 bg-surface-container/20 dark:bg-gray-700/20">
                   {/* Left: User Avatar */}
                   <div className="flex-shrink-0">
                     <UserButton

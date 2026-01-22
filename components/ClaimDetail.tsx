@@ -33,9 +33,10 @@ interface ClaimDetailProps {
     senderName: string;
   }) => void; // Function to track claim-related messages
   onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'CALLS', config?: { initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS'; initialThreadId?: string | null }) => void; // Navigation function
+  isHomeownerView?: boolean; // Whether viewing as homeowner (hide admin controls)
 }
 
-const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpdateClaim, onBack, contractors, onSendMessage, startInEditMode = false, currentUser, onAddInternalNote, claimMessages = [], onTrackClaimMessage, onNavigate }) => {
+const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpdateClaim, onBack, contractors, onSendMessage, startInEditMode = false, currentUser, onAddInternalNote, claimMessages = [], onTrackClaimMessage, onNavigate, isHomeownerView = false }) => {
   // Ensure claimMessages is always an array
   const safeClaimMessages = claimMessages || [];
   
@@ -360,7 +361,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
              Send Message
            </Button>
 
-           {isAdmin && (
+           {isAdmin && !isHomeownerView && (
               <>
                 {isEditing ? (
                    <>
