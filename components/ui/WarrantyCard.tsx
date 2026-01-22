@@ -40,8 +40,8 @@ export function WarrantyCard({
       className={`group relative rounded-lg border p-3 transition-all flex flex-col touch-manipulation ${
         onClick ? 'cursor-pointer' : ''
       } ${
-        isSelected 
-          ? 'bg-blue-50 border-blue-500 shadow-md' 
+        isChecked 
+          ? 'bg-red-50 border-red-300 ring-1 ring-red-300 shadow-md' 
           : 'bg-white border-gray-200 shadow-sm md:hover:shadow-md md:hover:border-blue-300'
       }`}
       style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
