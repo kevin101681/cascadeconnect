@@ -189,13 +189,13 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
 
       {/* Search Input */}
       <div className="relative mb-4">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <Wrench className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="What do you need help with?"
+          placeholder="Ask about troubleshooting an issue or home maintenance..."
           disabled={isSearching}
           className="w-full pl-12 pr-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-base"
         />
