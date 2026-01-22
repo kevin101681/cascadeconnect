@@ -28,11 +28,12 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
   const [isFocused, setIsFocused] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
-  // Click outside to close results
+  // Click outside to close results and clear search text
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (widgetRef.current && !widgetRef.current.contains(event.target as Node)) {
         setResult(null);
+        setQuery(""); // Clear the input text
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -126,6 +127,16 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
 
   const handleSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
+    
+    // Special case: "How to submit a claim" intercept
+    const lowerQuery = searchQuery.toLowerCase();
+    if ((lowerQuery.includes("submit") || lowerQuery.includes("file")) && (lowerQuery.includes("claim") || lowerQuery.includes("warranty"))) {
+      setResult({
+        answer: "Here's a detailed guide on how to submit a warranty claim.",
+        action: 'HELP_TAB'
+      });
+      return;
+    }
     
     // GUARD CLAUSE: Validate homeownerId before any search operation
     // This prevents 400 errors from invalid database queries
@@ -223,7 +234,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
           onBlur={() => setTimeout(() => setIsFocused(false), 200)}
           placeholder="Ask about troubleshooting an issue or home maintenance..."
           disabled={isSearching}
-          className="w-full pl-10 pr-4 py-2 rounded-full border border-input bg-white dark:bg-gray-800 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm relative z-0"
+          className="w-full pl-10 pr-4 py-2 rounded-full border border-primary/30 shadow-[0_0_10px_rgba(59,130,246,0.1)] bg-white dark:bg-gray-800 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm relative z-0"
         />
         
         {/* Suggested Questions Dropdown - Shows when focused and empty */}
@@ -275,14 +286,14 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                     
                     {/* Action Buttons Based on Intent */}
                     {result.action !== 'INFO' && (
-                      <div className="mt-3 flex flex-col gap-2">
+                      <div className="mt-3 flex flex-wrap gap-2">
                         {result.action === 'CLAIM' && (
                           <button
                             onClick={() => {
-                              navigate('/dashboard?tab=claims&new=true');
+                              navigate('/dashboard?view=claims&new=true');
                               setResult(null);
                             }}
-                            className="w-full bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 flex items-center justify-center gap-2 transition-colors text-xs font-medium"
+                            className="w-auto inline-flex bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 items-center justify-center gap-2 transition-colors text-xs font-medium"
                           >
                             <ClipboardList className="h-3.5 w-3.5" />
                             File Warranty Claim
@@ -294,10 +305,22 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                               navigate('/dashboard?tab=messages');
                               setResult(null);
                             }}
-                            className="w-full bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 flex items-center justify-center gap-2 transition-colors text-xs font-medium"
+                            className="w-auto inline-flex bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 items-center justify-center gap-2 transition-colors text-xs font-medium"
                           >
                             <MessageSquare className="h-3.5 w-3.5" />
                             Send Message to Builder
+                          </button>
+                        )}
+                        {result.action === 'HELP_TAB' && (
+                          <button
+                            onClick={() => {
+                              navigate('/dashboard?view=help');
+                              setResult(null);
+                            }}
+                            className="w-auto inline-flex bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 items-center justify-center gap-2 transition-colors text-xs font-medium"
+                          >
+                            <ClipboardList className="h-3.5 w-3.5" />
+                            Open Warranty Guide
                           </button>
                         )}
                       </div>
@@ -378,7 +401,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
           onBlur={() => setIsFocused(false)}
           placeholder="Ask about troubleshooting an issue or home maintenance..."
           disabled={isSearching}
-          className="w-full pl-12 pr-4 py-3 rounded-xl border border-input bg-white dark:bg-gray-800 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-base relative z-0"
+          className="w-full pl-12 pr-4 py-3 rounded-xl border border-primary/30 shadow-[0_0_10px_rgba(59,130,246,0.1)] bg-white dark:bg-gray-800 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-base relative z-0"
         />
       </div>
 
@@ -423,14 +446,14 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
               
               {/* Action Buttons Based on Intent */}
               {result.action !== 'INFO' && (
-                <div className="mt-3 flex flex-col gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   {result.action === 'CLAIM' && (
                     <button
                       onClick={() => {
-                        navigate('/dashboard?tab=claims&new=true');
+                        navigate('/dashboard?view=claims&new=true');
                         setResult(null);
                       }}
-                      className="w-full bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 flex items-center justify-center gap-2 transition-colors text-sm font-medium"
+                      className="w-auto inline-flex bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 items-center justify-center gap-2 transition-colors text-sm font-medium"
                     >
                       <ClipboardList className="h-4 w-4" />
                       File Warranty Claim
@@ -442,10 +465,22 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                         navigate('/dashboard?tab=messages');
                         setResult(null);
                       }}
-                      className="w-full bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 flex items-center justify-center gap-2 transition-colors text-sm font-medium"
+                      className="w-auto inline-flex bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 items-center justify-center gap-2 transition-colors text-sm font-medium"
                     >
                       <MessageSquare className="h-4 w-4" />
                       Send Message to Builder
+                    </button>
+                  )}
+                  {result.action === 'HELP_TAB' && (
+                    <button
+                      onClick={() => {
+                        navigate('/dashboard?view=help');
+                        setResult(null);
+                      }}
+                      className="w-auto inline-flex bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 items-center justify-center gap-2 transition-colors text-sm font-medium"
+                    >
+                      <ClipboardList className="h-4 w-4" />
+                      Open Warranty Guide
                     </button>
                   )}
                 </div>

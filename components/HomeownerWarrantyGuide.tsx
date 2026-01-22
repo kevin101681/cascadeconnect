@@ -19,7 +19,9 @@ export function HomeownerWarrantyGuide() {
   const loadSteps = async () => {
     try {
       setLoading(true);
+      console.log('🔍 [HomeownerWarrantyGuide] Fetching guide steps...');
       const steps = await getGuideSteps();
+      console.log('✅ [HomeownerWarrantyGuide] Fetched steps:', steps.length, 'steps');
       setGuideSteps(steps);
       
       // Set active step to first step if available
@@ -27,7 +29,7 @@ export function HomeownerWarrantyGuide() {
         setActiveStep(1);
       }
     } catch (error) {
-      console.error('Failed to load guide steps:', error);
+      console.error('❌ [HomeownerWarrantyGuide] Failed to load guide steps:', error);
     } finally {
       setLoading(false);
     }
@@ -69,8 +71,18 @@ export function HomeownerWarrantyGuide() {
             How to Submit a Warranty Request
           </h1>
         </div>
-        <div className="text-center py-20 text-gray-500 dark:text-gray-400">
-          <p>Guide steps are being configured. Please check back soon.</p>
+        <div className="text-center py-20">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-blue-100 dark:bg-blue-900/30 mb-6">
+            <svg className="w-10 h-10 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p className="text-xl font-medium text-gray-700 dark:text-gray-300 mb-2">
+            No Help Guides Available Yet
+          </p>
+          <p className="text-gray-500 dark:text-gray-400">
+            Our team is currently setting up helpful guides for you. Please check back soon!
+          </p>
         </div>
       </div>
     );

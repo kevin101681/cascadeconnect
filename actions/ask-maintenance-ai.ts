@@ -24,7 +24,7 @@ const getOpenAI = () => {
 
 export interface MaintenanceAIResponse {
   answer: string;
-  action: 'CLAIM' | 'MESSAGE' | 'INFO';
+  action: 'CLAIM' | 'MESSAGE' | 'INFO' | 'HELP_TAB';
 }
 
 export const askMaintenanceAI = async (question: string): Promise<MaintenanceAIResponse> => {
@@ -114,7 +114,7 @@ Do NOT include any text outside the JSON object. The response must be parseable 
       }
       
       // Validate action is one of the expected values
-      if (!['CLAIM', 'MESSAGE', 'INFO'].includes(parsed.action)) {
+      if (!['CLAIM', 'MESSAGE', 'INFO', 'HELP_TAB'].includes(parsed.action)) {
         parsed.action = 'INFO';
       }
       

@@ -795,6 +795,24 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   }, []); // Run only once on mount
   
+  // Auto-open "New Claim" modal when URL contains ?new=true
+  useEffect(() => {
+    const newParam = searchParams.get('new');
+    const view = searchParams.get('view');
+    
+    // If navigating to claims tab with new=true, open the new claim form
+    if (view === 'claims' && newParam === 'true' && currentTab === 'CLAIMS') {
+      console.log('🔗 Auto-opening new claim form from URL parameter');
+      setIsCreatingNewClaim(true);
+      
+      // Clean up URL to prevent re-opening on refresh
+      // Use a small delay to ensure the tab has fully rendered
+      setTimeout(() => {
+        updateSearchParams({ new: null });
+      }, 100);
+    }
+  }, [searchParams, currentTab, updateSearchParams]);
+  
   // Helper function to set current tab via URL
   const setCurrentTab = useCallback((tab: TabType) => {
     if (tab === null) {
@@ -5505,6 +5523,21 @@ const Dashboard: React.FC<DashboardProps> = ({
                   <div className="flex flex-col h-full md:h-auto">
                     <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
                       <HomeownerManual homeownerId={activeHomeowner?.id} />
+                    </Suspense>
+                  </div>
+                </div>
+              </div>
+            </AnimatedTabContent>
+          )}
+
+          {/* HELP Tab - Homeowner Only */}
+          {currentTab === 'HELP' && userRole === UserRole.HOMEOWNER && (
+            <AnimatedTabContent tabKey="help">
+              <div className="w-full h-full flex flex-col md:h-auto md:block md:max-w-7xl md:mx-auto">
+                <div className="flex-1 overflow-y-auto md:overflow-visible w-full md:max-w-7xl md:mx-auto md:pb-4">
+                  <div className="flex flex-col h-full md:h-auto bg-gray-50 dark:bg-gray-900">
+                    <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+                      <HomeownerWarrantyGuide />
                     </Suspense>
                   </div>
                 </div>
