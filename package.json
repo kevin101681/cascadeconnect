@@ -58,6 +58,7 @@
     "@fontsource/outfit": "^5.2.8",
     "@fontsource/roboto": "^5.2.9",
     "@google/genai": "^1.33.0",
+    "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^5.2.2",
     "@jaymanyoo/pdf-book-viewer": "^1.4.7",
     "@neondatabase/serverless": "^0.10.1",
