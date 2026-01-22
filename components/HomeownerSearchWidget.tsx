@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, KeyboardEvent, useMemo } from 'react';
-import { Search, Wrench, Loader2, Zap, Droplet, Flame } from 'lucide-react';
+import { Wrench, Loader2, Zap, Droplet, Flame } from 'lucide-react';
 import { askMaintenanceAI } from '../actions/ask-maintenance-ai';
 
 interface HomeownerSearchWidgetProps {
@@ -150,8 +150,29 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
   if (variant === 'header') {
     return (
       <div className={`relative w-full ${className}`}>
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
-        <Wrench className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-primary pointer-events-none z-10" />
+        {/* Smart Icon with Animation and Tooltip */}
+        <div 
+          className="absolute left-3 top-1/2 -translate-y-1/2 z-10"
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+        >
+          <IconComponent 
+            className={`h-4 w-4 ${iconColor} transition-all duration-300 pointer-events-none ${
+              isFocused ? 'animate-pulse' : ''
+            } ${
+              query && questionType !== 'general' ? 'scale-110' : ''
+            }`}
+          />
+          
+          {/* Tooltip */}
+          {showTooltip && (
+            <div className="absolute left-0 top-full mt-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded whitespace-nowrap z-50 shadow-lg">
+              {getTooltipText()}
+              <div className="absolute -top-1 left-3 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45"></div>
+            </div>
+          )}
+        </div>
+        
         <input
           type="text"
           value={query}
@@ -159,9 +180,9 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
           onKeyDown={handleKeyDown}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setTimeout(() => setIsFocused(false), 200)}
-          placeholder="Ask about home maintenance..."
+          placeholder="Ask about troubleshooting an issue or home maintenance..."
           disabled={isSearching}
-          className="w-full pl-10 pr-10 py-2 rounded-full border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-sm relative z-20"
+          className="w-full pl-10 pr-4 py-2 rounded-full border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-sm relative z-20"
         />
         
         {/* Loading indicator for header variant */}
@@ -211,7 +232,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
               <div className="p-4">
                 <div className="flex items-start gap-3">
                   <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Wrench className="h-4 w-4 text-primary" />
+                    <IconComponent className={`h-4 w-4 ${iconColor}`} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
