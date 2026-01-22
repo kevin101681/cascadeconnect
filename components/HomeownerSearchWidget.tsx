@@ -10,17 +10,19 @@ interface HomeownerSearchWidgetProps {
   homeownerId?: string; // Optional: used for future enhancements
 }
 
-const SUGGESTED_QUESTIONS = [
-  "How do I change my furnace filter?",
-  "Where is my water shutoff?",
-  "My pilot light is out",
-  "How often should I clean gutters?",
+const SAMPLE_QUESTIONS = [
+  "How do I replace my furnace filter?",
+  "How do I light the fireplace pilot?",
+  "Why is my garbage disposal humming?",
+  "How do I reset a tripped breaker?",
+  "Water is leaking under my sink"
 ];
 
 export function HomeownerSearchWidget({ className = '', variant = 'default', homeownerId }: HomeownerSearchWidgetProps) {
   const [query, setQuery] = useState('');
   const [answer, setAnswer] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
@@ -87,6 +89,8 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setTimeout(() => setIsFocused(false), 200)}
           placeholder="Ask about home maintenance..."
           disabled={isSearching}
           className="w-full pl-10 pr-10 py-2 rounded-full border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-sm relative z-20"
@@ -96,6 +100,29 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
         {isSearching && (
           <div className="absolute left-3 top-1/2 -translate-y-1/2 z-30">
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          </div>
+        )}
+        
+        {/* Suggested Questions Dropdown - Shows when focused and empty */}
+        {isFocused && !query && !isSearching && !answer && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden">
+            <div className="px-4 py-2 text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider bg-gray-50 dark:bg-gray-900/50">
+              Suggested Questions
+            </div>
+            {SAMPLE_QUESTIONS.map((question, index) => (
+              <button
+                key={index}
+                onClick={() => {
+                  setQuery(question);
+                  handleSearch(question);
+                  setIsFocused(false);
+                }}
+                className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-2"
+              >
+                <span className="text-gray-400 dark:text-gray-500">💡</span>
+                {question}
+              </button>
+            ))}
           </div>
         )}
         
@@ -177,7 +204,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
       {/* Suggested Question Pills */}
       {!answer && !isSearching && (
         <div className="flex flex-wrap gap-2 mb-4">
-          {SUGGESTED_QUESTIONS.map((question, idx) => (
+          {SAMPLE_QUESTIONS.map((question, idx) => (
             <button
               key={idx}
               onClick={() => handlePillClick(question)}
