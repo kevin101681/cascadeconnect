@@ -24,6 +24,21 @@ const HomeownerAppointmentsWidget: React.FC<HomeownerAppointmentsWidgetProps> = 
 
   useEffect(() => {
     const fetchAppointments = async () => {
+      // GUARD CLAUSE: Validate homeownerId before fetching
+      if (!homeownerId || homeownerId === 'placeholder' || homeownerId.length < 10) {
+        console.warn('⚠️ Invalid homeownerId, skipping appointments fetch');
+        setLoading(false);
+        return;
+      }
+
+      // Validate UUID format to prevent 400 errors
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(homeownerId)) {
+        console.warn(`⚠️ Invalid homeownerId UUID format, skipping appointments fetch: ${homeownerId}`);
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
         const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
@@ -53,9 +68,7 @@ const HomeownerAppointmentsWidget: React.FC<HomeownerAppointmentsWidgetProps> = 
       }
     };
 
-    if (homeownerId) {
-      fetchAppointments();
-    }
+    fetchAppointments();
   }, [homeownerId, maxDisplay]);
 
   if (loading) {

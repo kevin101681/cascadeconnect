@@ -236,7 +236,10 @@ const Layout: React.FC<LayoutProps> = ({
               ) : (
                 // Homeowner: AI Maintenance Assistant
                 <div className="flex-1 max-w-2xl relative">
-                  <HomeownerSearchWidget variant="header" />
+                  <HomeownerSearchWidget 
+                    variant="header" 
+                    homeownerId={activeHomeowner?.id}
+                  />
                 </div>
               )}
 

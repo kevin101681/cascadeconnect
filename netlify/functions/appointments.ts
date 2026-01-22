@@ -166,6 +166,17 @@ export const handler: Handler = async (event) => {
         };
       }
 
+      // Validate homeownerId format (should be a valid UUID)
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (homeownerId && !uuidRegex.test(homeownerId)) {
+        console.warn(`⚠️ Invalid homeownerId UUID format in appointments query: ${homeownerId}`);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify([]),
+        };
+      }
+
       // 1. Fetch Appointments
       let query = db.select().from(appointments);
 
