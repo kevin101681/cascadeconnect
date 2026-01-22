@@ -302,7 +302,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                         {result.action === 'MESSAGE' && (
                           <button
                             onClick={() => {
-                              navigate('/dashboard?tab=messages');
+                              navigate('/dashboard?view=messages');
                               setResult(null);
                             }}
                             className="w-auto inline-flex bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 items-center justify-center gap-2 transition-colors text-xs font-medium"
@@ -462,7 +462,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                   {result.action === 'MESSAGE' && (
                     <button
                       onClick={() => {
-                        navigate('/dashboard?tab=messages');
+                        navigate('/dashboard?view=messages');
                         setResult(null);
                       }}
                       className="w-auto inline-flex bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 items-center justify-center gap-2 transition-colors text-sm font-medium"

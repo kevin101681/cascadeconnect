@@ -801,7 +801,8 @@ const Dashboard: React.FC<DashboardProps> = ({
     const view = searchParams.get('view');
     
     // If navigating to claims tab with new=true, open the new claim form
-    if (view === 'claims' && newParam === 'true' && currentTab === 'CLAIMS') {
+    // Remove the currentTab check to avoid race condition - view parameter is sufficient
+    if (view === 'claims' && newParam === 'true') {
       console.log('🔗 Auto-opening new claim form from URL parameter');
       setIsCreatingNewClaim(true);
       
@@ -811,7 +812,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         updateSearchParams({ new: null });
       }, 100);
     }
-  }, [searchParams, currentTab, updateSearchParams]);
+  }, [searchParams, updateSearchParams]);
   
   // Helper function to set current tab via URL
   const setCurrentTab = useCallback((tab: TabType) => {
