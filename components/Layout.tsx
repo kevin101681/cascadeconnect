@@ -2,12 +2,20 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole, Homeowner } from '../types';
-import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2, Phone, Settings, BookOpen } from 'lucide-react';
+import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2, Phone, Settings, BookOpen, LogOut, User } from 'lucide-react';
 import { useDarkMode } from './DarkModeProvider';
-import { UserButton, useUser } from '@clerk/clerk-react';
+import { UserButton, useUser, SignOutButton } from '@clerk/clerk-react';
 import GlobalSearch from './global/GlobalSearch';
 import NetlifyStatusIndicator from './layout/NetlifyStatusIndicator';
 import { SIDEBAR_CONTENT_PADDING_LEFT, CONTENT_MAX_WIDTH, CONTENT_PADDING_X } from '../constants/layout';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -296,40 +304,85 @@ const Layout: React.FC<LayoutProps> = ({
                 );
               })()}
 
-              {/* Clerk UserButton - Wrapped with padding to prevent border clipping */}
-              <div className="p-0.5">
-                {clerkLoaded ? (
-                  <UserButton
-                    appearance={{
-                      elements: {
-                        // Avatar button trigger
-                        userButtonTrigger: "!flex !items-center !justify-center !w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !visible !opacity-100 !relative",
-
-                        // Avatar container - let Clerk handle all styling
-                        userButtonAvatarBox: "!w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !block !visible !opacity-100 !flex !items-center !justify-center !relative",
-
-                        // Avatar image - keep default Clerk styling (they control colors via dashboard)
-                        userButtonAvatarImage: "!w-full !h-full !block !visible !opacity-100 !relative",
-
-                        // Dropdown styling
-                        userButtonPopoverCard: "shadow-elevation-2 rounded-xl border border-gray-200",
-                        userButtonPopoverHeader: "hidden",
-                        userButtonPopoverHeaderTitle: "hidden",
-                        userButtonPopoverHeaderSubtitle: "hidden",
-                        userButtonPopoverAvatarBox: "hidden",
-                        userButtonPopoverActions: "p-2",
-                        userButtonPopoverActionButtonIcon: "hidden",
-                        userButtonPopoverActionButton__manageAccount: "hidden",
-                        userButtonPopoverFooter: "hidden",
-                      }
-                    }}
-                  />
-                ) : (
-                  <div className="w-10 h-10 bg-surface-container rounded-full flex items-center justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              {/* User Profile Section */}
+              {isAdmin ? (
+                <>
+                  {/* Hidden UserButton for Clerk profile access */}
+                  <div className="hidden">
+                    {clerkLoaded && <UserButton />}
                   </div>
-                )}
-              </div>
+                  {/* Admin: Menu Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 transition-colors text-sm font-medium text-surface-on dark:text-gray-100">
+                        Menu
+                        <ChevronDown className="h-4 w-4" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56 bg-surface dark:bg-gray-800 border-surface-outline-variant dark:border-gray-700">
+                      {/* User Info Header */}
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none text-surface-on dark:text-gray-100">
+                            {user?.fullName || user?.firstName || 'User'}
+                          </p>
+                          <p className="text-xs leading-none text-surface-on-variant dark:text-gray-400">
+                            {user?.primaryEmailAddress?.emailAddress || ''}
+                          </p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator className="bg-surface-outline-variant dark:bg-gray-700" />
+                      <DropdownMenuItem 
+                        onClick={() => {
+                          // Open Clerk user profile
+                          const userButton = document.querySelector('.cl-userButtonTrigger') as HTMLElement;
+                          if (userButton) userButton.click();
+                        }}
+                        className="cursor-pointer text-surface-on dark:text-gray-100 focus:bg-surface-container dark:focus:bg-gray-700"
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        Profile
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <SignOutButton>
+                          <button className="w-full flex items-center cursor-pointer text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 px-2 py-1.5 rounded-sm text-sm">
+                            <LogOut className="mr-2 h-4 w-4" />
+                            Sign Out
+                          </button>
+                        </SignOutButton>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </>
+              ) : (
+                /* Homeowner: UserButton (will be moved to sidebar footer in Dashboard) */
+                <div className="p-0.5">
+                  {clerkLoaded ? (
+                    <UserButton
+                      appearance={{
+                        elements: {
+                          userButtonTrigger: "!flex !items-center !justify-center !w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !visible !opacity-100 !relative",
+                          userButtonAvatarBox: "!w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !block !visible !opacity-100 !flex !items-center !justify-center !relative",
+                          userButtonAvatarImage: "!w-full !h-full !block !visible !opacity-100 !relative",
+                          userButtonPopoverCard: "shadow-elevation-2 rounded-xl border border-gray-200",
+                          userButtonPopoverHeader: "hidden",
+                          userButtonPopoverHeaderTitle: "hidden",
+                          userButtonPopoverHeaderSubtitle: "hidden",
+                          userButtonPopoverAvatarBox: "hidden",
+                          userButtonPopoverActions: "p-2",
+                          userButtonPopoverActionButtonIcon: "hidden",
+                          userButtonPopoverActionButton__manageAccount: "hidden",
+                          userButtonPopoverFooter: "hidden",
+                        }
+                      }}
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-surface-container rounded-full flex items-center justify-center">
+                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Main Menu Dropdown - Show for Admin accounts only (not for homeowner, builder, or subcontractor) */}
               {isAdmin && (

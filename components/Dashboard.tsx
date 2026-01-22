@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef, forwardRef, Suspense, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
+import { UserButton, SignOutButton, useUser } from '@clerk/clerk-react';
 // Lazy load heavy libraries - only load when needed
 // import Papa from 'papaparse';
 // import * as XLSX from 'xlsx';
@@ -8,7 +9,7 @@ import { motion, AnimatePresence, type Transition, type Variants } from 'framer-
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, BuilderUser, Task, Contractor, Call } from '../types';
 import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
-import { ArrowLeft, ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle, HelpCircle, CheckCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle, HelpCircle, CheckCheck, LogOut } from 'lucide-react';
 import { useTaskStore } from '../stores/useTaskStore';
 import { useModalStore } from '../hooks/use-modal-store';
 import { calls, claims as claimsSchema } from '../db/schema';
@@ -2270,17 +2271,20 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // --- Render Helpers ---
 
-  const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, filter?: 'All' | 'Open' | 'Closed', setFilter?: (filter: 'All' | 'Open' | 'Closed') => void, onExportExcel?: () => void, allClaims?: Claim[], isAdminView: boolean = false) => (
+  const renderClaimGroup = (title: string, groupClaims: Claim[], emptyMsg: string, isClosed: boolean = false, showNewClaimButton: boolean = false, filter?: 'All' | 'Open' | 'Closed', setFilter?: (filter: 'All' | 'Open' | 'Closed') => void, onExportExcel?: () => void, allClaims?: Claim[], isAdminView: boolean = false) => {
+    // Calculate counts for filter pills
+    const openCount = allClaims ? allClaims.filter(claim => claim.status !== 'CLOSED').length : 0;
+    const closedCount = allClaims ? allClaims.filter(claim => claim.status === 'CLOSED').length : 0;
+    const totalCount = allClaims ? allClaims.length : 0;
+
+    return (
     <div 
       className="bg-surface dark:bg-gray-800 rounded-modal border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col"
     >
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
         <div className="flex items-center justify-between md:justify-center gap-4 w-full md:w-auto">
           <div className="flex items-center gap-3">
-            <h3 className={`text-xl font-normal flex items-center gap-2 ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
-              <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-                {groupClaims.length}
-              </span>
+            <h3 className={`text-xl font-normal ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
               {title}
             </h3>
             {/* New Claim Button - Homeowner View Only, Next to Title */}
@@ -2320,39 +2324,39 @@ const Dashboard: React.FC<DashboardProps> = ({
                   e.stopPropagation();
                   setFilter('Open');
                 }}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-fit ${
                   filter === 'Open'
                     ? 'bg-primary text-primary-on'
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
-                Open
+                Open<span className="ml-1 text-xs opacity-70">({openCount})</span>
               </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setFilter('Closed');
                 }}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-fit ${
                   filter === 'Closed'
                     ? 'bg-primary text-primary-on'
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
-                Closed
+                Closed<span className="ml-1 text-xs opacity-70">({closedCount})</span>
               </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setFilter('All');
                 }}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-fit ${
                   filter === 'All'
                     ? 'bg-primary text-primary-on'
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                 }`}
               >
-                All
+                All<span className="ml-1 text-xs opacity-70">({totalCount})</span>
               </button>
             </div>
           )}
@@ -3013,6 +3017,10 @@ const Dashboard: React.FC<DashboardProps> = ({
     onCreateScheduleTask?: (assigneeId: string) => Promise<void>,
     onCreateEvalTask?: (type: '60 Day' | '11 Month' | 'Other', assigneeId: string) => Promise<void>
   ) => {
+    // Calculate counts for filter pills
+    const openCount = userTasks.filter(task => task.status !== 'COMPLETED').length;
+    const closedCount = userTasks.filter(task => task.status === 'COMPLETED').length;
+    const totalCount = userTasks.length;
 
     return (
       <>
@@ -3023,12 +3031,7 @@ const Dashboard: React.FC<DashboardProps> = ({
           <div className="sticky top-0 z-10 bg-surface dark:bg-gray-800 md:rounded-tl-3xl">
             {/* Title Bar */}
             <div className="px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0">
-              <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                {filteredTasks.length > 0 && (
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-primary text-primary bg-primary/10 text-xs font-medium">
-                    {filteredTasks.length}
-                  </span>
-                )}
+              <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100">
                 <span className="hidden sm:inline">My Tasks</span>
                 <span className="sm:hidden">Tasks</span>
               </h3>
@@ -3039,33 +3042,33 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setTasksFilter('open')}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-fit ${
                     tasksFilter === 'open'
                       ? 'border border-primary text-primary bg-primary/10'
                       : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                   }`}
                 >
-                  Open
+                  Open<span className="ml-1 text-xs opacity-70">({openCount})</span>
                 </button>
                 <button
                   onClick={() => setTasksFilter('closed')}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-fit ${
                     tasksFilter === 'closed'
                       ? 'border border-primary text-primary bg-primary/10'
                       : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                   }`}
                 >
-                  Closed
+                  Closed<span className="ml-1 text-xs opacity-70">({closedCount})</span>
                 </button>
                 <button
                   onClick={() => setTasksFilter('all')}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-fit ${
                     tasksFilter === 'all'
                       ? 'border border-primary text-primary bg-primary/10'
                       : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
                   }`}
                 >
-                  All
+                  All<span className="ml-1 text-xs opacity-70">({totalCount})</span>
                 </button>
               </div>
             </div>
@@ -4698,6 +4701,46 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </>
                 )}
               </div>
+
+              {/* User Footer - Homeowner View Only */}
+              {userRole === UserRole.HOMEOWNER && (
+                <div className="mt-auto flex items-center gap-3 p-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/20 dark:bg-gray-700/20">
+                  {/* Left: User Avatar */}
+                  <div className="flex-shrink-0">
+                    <UserButton
+                      appearance={{
+                        elements: {
+                          userButtonTrigger: "!w-10 !h-10 !min-w-[40px] !min-h-[40px]",
+                          userButtonAvatarBox: "!w-10 !h-10",
+                          userButtonPopoverCard: "shadow-elevation-2 rounded-xl border border-gray-200",
+                        }
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Middle: User Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col">
+                      <span className="font-medium text-sm text-surface-on dark:text-gray-100 truncate">
+                        {(() => {
+                          const { user } = useUser();
+                          return user?.fullName || user?.firstName || displayHomeowner?.name || 'User';
+                        })()}
+                      </span>
+                      <span className="text-xs text-surface-on-variant dark:text-gray-400">
+                        Homeowner
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Right: Sign Out Button */}
+                  <SignOutButton>
+                    <button className="p-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 transition-colors" title="Sign Out">
+                      <LogOut className="w-4 h-4 text-surface-on-variant dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400" />
+                    </button>
+                  </SignOutButton>
+                </div>
+              )}
             </div>
             )}
             {/* End Homeowner Card */}

@@ -113,75 +113,55 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({
       
       const data = await response.json();
       
-      // Filter appointments based on scope
-      let filteredAppointments = data;
+      // The API now returns both appointments AND claim repair dates merged together
+      // Filter based on scope (if needed)
+      let filteredData = data;
       if (!isGlobalView && activeHomeownerId) {
-        filteredAppointments = data.filter((appt: Appointment) => 
-          appt.homeownerId === activeHomeownerId
+        filteredData = data.filter((item: any) => 
+          item.homeownerId === activeHomeownerId
         );
       }
       
-      setAppointments(filteredAppointments);
+      // Separate appointments from claims
+      const appointmentsOnly = filteredData.filter((item: any) => !item.id.startsWith('claim-'));
+      setAppointments(appointmentsOnly);
       
-      // Transform appointments to calendar events
-      const appointmentEvents: AppointmentEvent[] = filteredAppointments.map((appt: Appointment) => {
-        const homeowner = homeowners.find(h => h.id === appt.homeownerId);
+      // Transform all items (appointments + claims) to calendar events
+      const calendarEvents: AppointmentEvent[] = filteredData.map((item: any) => {
+        const homeowner = homeowners.find(h => h.id === item.homeownerId);
+        const isClaimEvent = item.id.startsWith('claim-');
+        
         return {
-          id: appt.id,
-          title: appt.title,
-          start: new Date(appt.startTime),
-          end: new Date(appt.endTime),
-          visibility: appt.visibility,
-          type: appt.type,
-          homeownerId: appt.homeownerId,
+          id: item.id,
+          title: item.title,
+          start: new Date(item.startTime),
+          end: new Date(item.endTime),
+          visibility: item.visibility || 'shared_with_homeowner',
+          type: item.type,
+          homeownerId: item.homeownerId,
           homeownerName: homeowner?.name || homeowner?.address,
-          appointment: appt,
+          claimId: isClaimEvent ? item.claimId : undefined,
+          appointment: {
+            id: item.id,
+            title: item.title,
+            description: item.description || (isClaimEvent ? `Warranty claim repair scheduled` : ''),
+            startTime: new Date(item.startTime),
+            endTime: new Date(item.endTime),
+            homeownerId: item.homeownerId,
+            visibility: item.visibility || 'shared_with_homeowner',
+            type: item.type,
+            guests: item.guests || [],
+          },
         };
       });
       
-      // Add claim repair dates as events
-      const claimEvents: AppointmentEvent[] = [];
-      const filteredClaims = isGlobalView 
-        ? claims 
-        : claims.filter(claim => claim.homeownerId === activeHomeownerId);
-      
-      filteredClaims.forEach((claim) => {
-        if (claim.scheduledAt) {
-          const repairDate = new Date(claim.scheduledAt);
-          const homeowner = homeowners.find(h => h.id === claim.homeownerId);
-          
-          // Create an all-day event for the repair date
-          claimEvents.push({
-            id: `claim-${claim.id}`,
-            title: `Repair: ${claim.title || 'Warranty Claim'}`,
-            start: repairDate,
-            end: repairDate,
-            visibility: 'shared_with_homeowner',
-            type: 'repair',
-            homeownerId: claim.homeownerId,
-            homeownerName: homeowner?.name || homeowner?.address,
-            appointment: {
-              id: `claim-${claim.id}`,
-              title: `Repair: ${claim.title || 'Warranty Claim'}`,
-              description: `Warranty claim repair scheduled`,
-              startTime: repairDate,
-              endTime: repairDate,
-              homeownerId: claim.homeownerId,
-              visibility: 'shared_with_homeowner',
-              type: 'repair',
-            },
-          });
-        }
-      });
-      
-      // Combine appointments and claim events
-      setEvents([...appointmentEvents, ...claimEvents]);
+      setEvents(calendarEvents);
     } catch (error) {
       console.error('Error fetching appointments:', error);
     } finally {
       setLoading(false);
     }
-  }, [isGlobalView, activeHomeownerId, homeowners, claims]);
+  }, [isGlobalView, activeHomeownerId, homeowners]);
 
   useEffect(() => {
     fetchAppointments();

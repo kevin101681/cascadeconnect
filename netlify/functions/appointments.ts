@@ -1,8 +1,8 @@
 import { Handler } from '@netlify/functions';
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { appointments, appointmentGuests } from '../../db/schema';
-import { eq, and, gte, lte } from 'drizzle-orm';
+import { appointments, appointmentGuests, claims, homeowners } from '../../db/schema';
+import { eq, and, gte, lte, isNotNull, sql as drizzleSql } from 'drizzle-orm';
 import { createEvent, EventAttributes } from 'ics';
 import sgMail from '@sendgrid/mail';
 
@@ -166,6 +166,7 @@ export const handler: Handler = async (event) => {
         };
       }
 
+      // 1. Fetch Appointments
       let query = db.select().from(appointments);
 
       // Apply filters
@@ -197,10 +198,80 @@ export const handler: Handler = async (event) => {
         })
       );
 
+      // 2. Fetch Claims with Repair Dates
+      let claimsQuery = db
+        .select({
+          id: claims.id,
+          title: claims.title,
+          description: claims.description,
+          homeownerId: claims.homeownerId,
+          scheduledAt: claims.scheduledAt,
+          status: claims.status,
+          claimNumber: claims.claimNumber,
+        })
+        .from(claims)
+        .where(isNotNull(claims.scheduledAt)); // Only claims with scheduled dates
+
+      // Apply homeownerId filter if provided
+      if (homeownerId) {
+        claimsQuery = claimsQuery.where(eq(claims.homeownerId, homeownerId)) as any;
+      }
+
+      // Apply date range filters if provided
+      if (startDate || endDate) {
+        const dateConditions = [];
+        if (startDate) {
+          dateConditions.push(gte(claims.scheduledAt, new Date(startDate)));
+        }
+        if (endDate) {
+          dateConditions.push(lte(claims.scheduledAt, new Date(endDate)));
+        }
+        if (dateConditions.length > 0) {
+          claimsQuery = claimsQuery.where(and(...dateConditions)) as any;
+        }
+      }
+
+      const claimResults = await claimsQuery;
+
+      // 3. Transform claims to appointment-like structure for calendar
+      const claimEvents = claimResults.map((claim) => {
+        const repairDate = new Date(claim.scheduledAt!);
+        
+        // Set end time to 1 hour after start for timed events
+        const endDate = new Date(repairDate);
+        const hasTimeComponent = repairDate.getHours() !== 0 || repairDate.getMinutes() !== 0;
+        if (hasTimeComponent) {
+          endDate.setHours(repairDate.getHours() + 1); // 1-hour duration
+        }
+
+        return {
+          id: `claim-${claim.id}`,
+          title: `Repair: ${claim.title}`,
+          description: claim.description,
+          startTime: repairDate,
+          endTime: endDate,
+          homeownerId: claim.homeownerId,
+          visibility: 'shared_with_homeowner',
+          type: 'repair',
+          claimId: claim.id, // Include claimId for frontend to handle clicks
+          claimNumber: claim.claimNumber,
+          status: claim.status,
+          guests: [], // Claims don't have guests
+        };
+      });
+
+      // 4. Merge appointments and claim events
+      const allEvents = [...appointmentsWithGuests, ...claimEvents];
+
+      // 5. Sort by date ascending
+      allEvents.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+      console.log(`✅ Returning ${appointmentsWithGuests.length} appointments and ${claimEvents.length} claim repair dates`);
+
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(appointmentsWithGuests),
+        body: JSON.stringify(allEvents),
       };
     }
 
