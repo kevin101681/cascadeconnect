@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, KeyboardEvent } from 'react';
-import { Search, Wrench, Loader2 } from 'lucide-react';
+import React, { useState, KeyboardEvent, useMemo } from 'react';
+import { Search, Wrench, Loader2, Zap, Droplet, Flame } from 'lucide-react';
 import { askMaintenanceAI } from '../actions/ask-maintenance-ai';
 
 interface HomeownerSearchWidgetProps {
@@ -23,6 +23,74 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
   const [answer, setAnswer] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  // Smart icon detection based on query content
+  const detectQuestionType = (text: string): 'electrical' | 'plumbing' | 'hvac' | 'general' => {
+    const lowerText = text.toLowerCase();
+    
+    // Electrical keywords
+    if (lowerText.match(/electric|breaker|outlet|switch|light|wire|power|circuit/)) {
+      return 'electrical';
+    }
+    
+    // Plumbing keywords
+    if (lowerText.match(/water|leak|pipe|faucet|sink|toilet|drain|plumb|shower|bath/)) {
+      return 'plumbing';
+    }
+    
+    // HVAC keywords
+    if (lowerText.match(/heat|cool|hvac|furnace|ac|air condition|thermostat|temperature|vent|filter/)) {
+      return 'hvac';
+    }
+    
+    return 'general';
+  };
+
+  // Memoized icon selection based on query
+  const questionType = useMemo(() => detectQuestionType(query), [query]);
+  
+  const getIconComponent = () => {
+    switch (questionType) {
+      case 'electrical':
+        return Zap;
+      case 'plumbing':
+        return Droplet;
+      case 'hvac':
+        return Flame;
+      default:
+        return Wrench;
+    }
+  };
+  
+  const getIconColor = () => {
+    switch (questionType) {
+      case 'electrical':
+        return 'text-yellow-500'; // Yellow for electrical
+      case 'plumbing':
+        return 'text-blue-500'; // Blue for plumbing
+      case 'hvac':
+        return 'text-orange-500'; // Orange for HVAC
+      default:
+        return 'text-primary'; // Primary blue for general
+    }
+  };
+  
+  const getTooltipText = () => {
+    switch (questionType) {
+      case 'electrical':
+        return 'Electrical Issue Detected';
+      case 'plumbing':
+        return 'Plumbing Issue Detected';
+      case 'hvac':
+        return 'HVAC Issue Detected';
+      default:
+        return 'Maintenance Assistant';
+    }
+  };
+
+  const IconComponent = getIconComponent();
+  const iconColor = getIconColor();
 
   const handleSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
@@ -188,16 +256,40 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
       </div>
 
       {/* Search Input */}
-      <div className="relative mb-4">
-        <Wrench className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary" />
+      <div className="relative mb-4 group">
+        {/* Smart Icon with Animation and Tooltip */}
+        <div 
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-10"
+          onMouseEnter={() => setShowTooltip(true)}
+          onMouseLeave={() => setShowTooltip(false)}
+        >
+          <IconComponent 
+            className={`h-5 w-5 ${iconColor} transition-all duration-300 ${
+              isFocused ? 'animate-pulse' : ''
+            } ${
+              query && questionType !== 'general' ? 'scale-110' : ''
+            }`}
+          />
+          
+          {/* Tooltip */}
+          {showTooltip && (
+            <div className="absolute left-0 top-full mt-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded whitespace-nowrap z-50 shadow-lg">
+              {getTooltipText()}
+              <div className="absolute -top-1 left-3 w-2 h-2 bg-gray-900 dark:bg-gray-700 rotate-45"></div>
+            </div>
+          )}
+        </div>
+        
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
           placeholder="Ask about troubleshooting an issue or home maintenance..."
           disabled={isSearching}
-          className="w-full pl-12 pr-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-base"
+          className="w-full pl-12 pr-4 py-3 rounded-xl border border-input bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed text-base transition-all duration-200"
         />
       </div>
 
@@ -232,7 +324,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
         <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
           <div className="flex items-start gap-3">
             <div className="shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-              <Wrench className="h-4 w-4 text-primary" />
+              <IconComponent className={`h-4 w-4 ${iconColor}`} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
