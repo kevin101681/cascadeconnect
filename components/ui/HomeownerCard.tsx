@@ -19,6 +19,8 @@ interface HomeownerCardProps {
   // Status tracking
   clerkId?: string;
   inviteEmailRead?: boolean;
+  // View mode control
+  isHomeownerView?: boolean;
 }
 
 // Helper to determine status
@@ -81,6 +83,7 @@ export function HomeownerCard({
   onViewSubs,
   clerkId,
   inviteEmailRead,
+  isHomeownerView = false,
 }: HomeownerCardProps) {
   const clientStatus = getClientStatus(clerkId, inviteEmailRead);
   
@@ -107,7 +110,8 @@ export function HomeownerCard({
     // Material 3 Design: Using semantic rounded-card token
     <div className="bg-white dark:bg-gray-800 rounded-card border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group">
       
-      {/* Action Buttons - Top Right */}
+      {/* Action Buttons - Top Right - Hidden in Homeowner View */}
+      {!isHomeownerView && (
       <div className="absolute top-4 right-4 flex items-center gap-1 z-10">
         {/* Subs Button */}
         {onViewSubs && (
@@ -156,6 +160,7 @@ export function HomeownerCard({
           <Pencil className="h-4 w-4" />
         </Button>
       </div>
+      )}
 
       {/* HEADER: Name with Status Icon & Project */}
       <div className="flex flex-col mb-4 pr-20">

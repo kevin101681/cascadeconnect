@@ -97,7 +97,7 @@ const ClaimsListColumn = React.memo<{
   onClaimSelect: (claim: Claim) => void;
   onDeleteClaim: (claimId: string) => void;
   onToggleClaimSelection: (claimId: string) => void; // Toggle checkbox
-}>(({ filteredClaims, emptyMsg, isCreatingNewClaim, claimMessages, selectedClaimId, selectedClaimIds, onClaimSelect, onDeleteClaim, onToggleClaimSelection }) => {
+}>(({ filteredClaims, emptyMsg, isCreatingNewClaim, claimMessages, selectedClaimId, selectedClaimIds, isHomeownerView, onClaimSelect, onDeleteClaim, onToggleClaimSelection }) => {
   return (
     <div 
       className="flex-1 overflow-y-auto px-2 py-4 md:p-4 min-h-0"
@@ -159,6 +159,7 @@ const ClaimsListColumn = React.memo<{
                     isClosed={claim.status === ClaimStatus.CLOSED}
                     isSelected={isSelected}
                     isChecked={isChecked}
+                    isHomeownerView={isHomeownerView}
                     onCheckboxChange={(checked) => onToggleClaimSelection(claim.id)}
                     onDelete={() => {
                       if (confirm('Are you sure you want to delete this claim? This action cannot be undone.')) {
@@ -2547,6 +2548,11 @@ const Dashboard: React.FC<DashboardProps> = ({
       ? 'No closed claims.' 
       : 'No claims found.';
 
+    // Calculate counts for filter pills
+    const openCount = claimsList.filter(c => c.status !== ClaimStatus.COMPLETED).length;
+    const closedCount = claimsList.filter(c => c.status === ClaimStatus.COMPLETED).length;
+    const totalCount = claimsList.length;
+
     return (
       <>
       <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
@@ -2564,11 +2570,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <ChevronLeft className="h-5 w-5" />
               </button>
               <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2 min-w-0">
-                {filteredClaims.length > 0 && (
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-primary text-primary bg-primary/10 text-xs font-medium flex-shrink-0">
-                    {filteredClaims.length}
-                  </span>
-                )}
                 <span className="hidden sm:inline truncate">Warranty Claims</span>
                 <span className="sm:hidden truncate">Claims</span>
               </h3>
@@ -2609,7 +2610,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     : 'bg-white dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
                 }`}
               >
-                Open
+                Open<span className="ml-1 text-xs opacity-70">({openCount})</span>
               </button>
               <button
                 onClick={() => setClaimsFilter('Closed')}
@@ -2619,7 +2620,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     : 'bg-white dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
                 }`}
               >
-                Closed
+                Closed<span className="ml-1 text-xs opacity-70">({closedCount})</span>
               </button>
               <button
                 onClick={() => setClaimsFilter('All')}
@@ -2629,7 +2630,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     : 'bg-white dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
                 }`}
               >
-                All
+                All<span className="ml-1 text-xs opacity-70">({totalCount})</span>
               </button>
               {isAdmin && (
                 <button
@@ -2657,9 +2658,9 @@ const Dashboard: React.FC<DashboardProps> = ({
               onToggleClaimSelection={handleToggleClaimSelection}
             />
             
-            {/* Bulk Delete Button - Floating at bottom when claims are selected */}
+            {/* Bulk Delete Button - Floating at bottom when claims are selected - Hidden in Homeowner View */}
             <AnimatePresence>
-              {selectedClaimIds.length > 0 && (
+              {selectedClaimIds.length > 0 && !isHomeownerView && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -4297,8 +4298,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         {renderModals()}
         
         {/* ADMIN EXIT BUTTON - Only show when admin is viewing as homeowner */}
-        {/* ✅ FIX: Only show for Admins/Builders impersonating, NOT for actual homeowners */}
-        {isHomeownerView && isAdminAccount && userRole !== UserRole.HOMEOWNER && (
+        {/* ✅ FIX: Show when isAdminAccount is true AND isHomeownerView is true */}
+        {/* isAdminAccount persists even when userRole changes to HOMEOWNER during impersonation */}
+        {isHomeownerView && isAdminAccount && (
           <div className="fixed top-20 right-4 z-[9999]">
             <button
               onClick={(e) => {
@@ -4596,6 +4598,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 email={displayHomeowner.email}
                 clerkId={displayHomeowner.clerkId}
                 inviteEmailRead={displayHomeowner.inviteEmailRead}
+                isHomeownerView={isHomeownerView}
                 onEdit={isAdmin ? () => {
                   handleOpenEditHomeowner();
                 } : undefined}
@@ -4705,7 +4708,7 @@ const Dashboard: React.FC<DashboardProps> = ({
 
               {/* User Footer - Homeowner View Only */}
               {userRole === UserRole.HOMEOWNER && (
-                <div className="mt-auto flex items-center gap-3 p-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface-container/20 dark:bg-gray-700/20">
+                <div className="mt-auto flex items-center gap-3 p-4 bg-surface-container/20 dark:bg-gray-700/20">
                   {/* Left: User Avatar */}
                   <div className="flex-shrink-0">
                     <UserButton

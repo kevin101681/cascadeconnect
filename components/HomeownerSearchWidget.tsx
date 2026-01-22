@@ -49,7 +49,7 @@ export function HomeownerSearchWidget({ className = '' }: HomeownerSearchWidgetP
   };
 
   return (
-    <div className={`w-full bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-200/50 dark:border-gray-700/50 p-6 shadow-sm ${className}`}>
+    <div className={`w-full bg-white dark:bg-gray-800 backdrop-blur-sm rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-lg ${className}`}>
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
         <Wrench className="h-5 w-5 text-primary" />

@@ -8,14 +8,6 @@ import { UserButton, useUser, SignOutButton } from '@clerk/clerk-react';
 import GlobalSearch from './global/GlobalSearch';
 import NetlifyStatusIndicator from './layout/NetlifyStatusIndicator';
 import { SIDEBAR_CONTENT_PADDING_LEFT, CONTENT_MAX_WIDTH, CONTENT_PADDING_X } from '../constants/layout';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from './ui/dropdown-menu';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -311,182 +303,142 @@ const Layout: React.FC<LayoutProps> = ({
                   <div className="hidden">
                     {clerkLoaded && <UserButton />}
                   </div>
-                  {/* Admin: Menu Dropdown */}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-surface-container dark:hover:bg-gray-700 transition-colors text-sm font-medium text-surface-on dark:text-gray-100">
-                        Menu
-                        <ChevronDown className="h-4 w-4" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 bg-surface dark:bg-gray-800 border-surface-outline-variant dark:border-gray-700">
+                  {/* Main Menu Dropdown - Consolidated with Profile/Settings/Logout */}
+                  <div className="relative" ref={menuRef}>
+                    <button 
+                      onClick={() => setIsMenuOpen(!isMenuOpen)}
+                      className="flex items-center justify-center h-10 w-10 rounded-full hover:bg-surface-container dark:hover:bg-gray-700 transition-colors text-surface-on dark:text-gray-100"
+                    >
+                      <Menu className="h-6 w-6" />
+                    </button>
+
+                  {isMenuOpen && (
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100 origin-top-right max-h-[calc(100vh-5rem)] flex flex-col">
                       {/* User Info Header */}
-                      <DropdownMenuLabel className="font-normal">
-                        <div className="flex flex-col space-y-1">
-                          <p className="text-sm font-medium leading-none text-surface-on dark:text-gray-100">
-                            {user?.fullName || user?.firstName || 'User'}
-                          </p>
-                          <p className="text-xs leading-none text-surface-on-variant dark:text-gray-400">
-                            {user?.primaryEmailAddress?.emailAddress || ''}
-                          </p>
-                        </div>
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator className="bg-surface-outline-variant dark:bg-gray-700" />
-                      <DropdownMenuItem 
-                        onClick={() => {
-                          // Open Clerk user profile
-                          const userButton = document.querySelector('.cl-userButtonTrigger') as HTMLElement;
-                          if (userButton) userButton.click();
-                        }}
-                        className="cursor-pointer text-surface-on dark:text-gray-100 focus:bg-surface-container dark:focus:bg-gray-700"
-                      >
-                        <User className="mr-2 h-4 w-4" />
-                        Profile
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <SignOutButton>
-                          <button className="w-full flex items-center cursor-pointer text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 px-2 py-1.5 rounded-sm text-sm">
-                            <LogOut className="mr-2 h-4 w-4" />
-                            Sign Out
-                          </button>
-                        </SignOutButton>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </>
-              ) : (
-                /* Homeowner: UserButton (will be moved to sidebar footer in Dashboard) */
-                <div className="p-0.5">
-                  {clerkLoaded ? (
-                    <UserButton
-                      appearance={{
-                        elements: {
-                          userButtonTrigger: "!flex !items-center !justify-center !w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !visible !opacity-100 !relative",
-                          userButtonAvatarBox: "!w-10 !h-10 !min-w-[40px] !min-h-[40px] !max-w-[40px] !max-h-[40px] !block !visible !opacity-100 !flex !items-center !justify-center !relative",
-                          userButtonAvatarImage: "!w-full !h-full !block !visible !opacity-100 !relative",
-                          userButtonPopoverCard: "shadow-elevation-2 rounded-xl border border-gray-200",
-                          userButtonPopoverHeader: "hidden",
-                          userButtonPopoverHeaderTitle: "hidden",
-                          userButtonPopoverHeaderSubtitle: "hidden",
-                          userButtonPopoverAvatarBox: "hidden",
-                          userButtonPopoverActions: "p-2",
-                          userButtonPopoverActionButtonIcon: "hidden",
-                          userButtonPopoverActionButton__manageAccount: "hidden",
-                          userButtonPopoverFooter: "hidden",
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div className="w-10 h-10 bg-surface-container rounded-full flex items-center justify-center">
-                      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                      <div className="px-6 py-4 bg-surface dark:bg-gray-800 border-b border-surface-outline-variant dark:border-gray-700 flex-shrink-0">
+                        <p className="text-sm font-semibold text-surface-on dark:text-gray-100">
+                          {user?.fullName || user?.firstName || 'Administrator'}
+                        </p>
+                        <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-0.5">
+                          {user?.primaryEmailAddress?.emailAddress || 'Internal Portal'}
+                        </p>
+                      </div>
+
+                      <div className="p-3 overflow-y-auto flex-1 min-h-0 space-y-1">
+                        {/* Admin Only Links */}
+                        {isAdmin && (
+                          <>
+                            <button 
+                              onClick={() => handleMenuAction(() => onNavigate('TEAM'))}
+                              className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
+                            >
+                              <Users className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                              Internal Users
+                            </button>
+                            <button 
+                              onClick={() => handleMenuAction(() => onNavigate('HOMEOWNERS'))}
+                              className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
+                            >
+                              <Home className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                              Homeowners
+                            </button>
+                            {isAdministrator && (
+                              <>
+                                <button 
+                                  onClick={() => handleMenuAction(() => onNavigate('DATA'))}
+                                  className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
+                                >
+                                  <Database className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                                  Data Import
+                                </button>
+                                <button 
+                                  onClick={() => handleMenuAction(() => onNavigate('BUILDERS'))}
+                                  className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
+                                >
+                                  <Building2 className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                                  Builders
+                                </button>
+                                <button 
+                                  onClick={() => handleMenuAction(() => {
+                                    navigate('/dashboard/analytics');
+                                    onNavigate('ANALYTICS');
+                                  })}
+                                  className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
+                                >
+                                  <BarChart3 className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                                  Analytics
+                                </button>
+                              </>
+                            )}
+                            {isAdministrator && (
+                              <button 
+                                onClick={() => handleMenuAction(() => onNavigate('BACKEND'))}
+                                className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
+                              >
+                                <Server className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                                Backend
+                              </button>
+                            )}
+                            {isAdministrator && (
+                              <button 
+                                onClick={() => handleMenuAction(() => onNavigate('GUIDE'))}
+                                className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
+                              >
+                                <BookOpen className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                                Guide Editor
+                              </button>
+                            )}
+                            <button 
+                              onClick={() => handleMenuAction(() => onNavigate('SETTINGS'))}
+                              className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
+                            >
+                              <Settings className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                              Settings
+                            </button>
+                            
+                            {/* Divider before user actions */}
+                            <div className="my-2 border-t border-surface-outline-variant dark:border-gray-700"></div>
+                            
+                            {/* Profile */}
+                            <button 
+                              onClick={() => {
+                                // Open Clerk user profile
+                                const userButton = document.querySelector('.cl-userButtonTrigger') as HTMLElement;
+                                if (userButton) userButton.click();
+                                setIsMenuOpen(false);
+                              }}
+                              className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
+                            >
+                              <User className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                              Profile
+                            </button>
+                            
+                            {/* Sign Out */}
+                            <SignOutButton>
+                              <button 
+                                onClick={() => {
+                                  setIsMenuOpen(false);
+                                  onSignOut();
+                                }}
+                                className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
+                              >
+                                <LogOut className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                                Sign Out
+                              </button>
+                            </SignOutButton>
+                          </>
+                        )}
+
+                        {/* Enrollment removed - now per-builder public URLs */}
+                        {/* Role Switch removed - not needed with new workflow */}
+                      </div>
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* Main Menu Dropdown - Show for Admin accounts only (not for homeowner, builder, or subcontractor) */}
-              {isAdmin && (
-                <div className="relative" ref={menuRef}>
-                  <button 
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="flex items-center justify-center h-10 w-10 rounded-full hover:bg-surface-container dark:hover:bg-gray-700 transition-colors text-surface-on dark:text-gray-100"
-                  >
-                    <Menu className="h-6 w-6" />
-                  </button>
-
-                {isMenuOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-64 bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100 origin-top-right max-h-[calc(100vh-5rem)] flex flex-col">
-                    {/* User Info Header */}
-                    <div className="px-6 py-4 bg-surface dark:bg-gray-800 border-b border-surface-outline-variant dark:border-gray-700 flex-shrink-0">
-                      <p className="text-sm font-semibold text-surface-on dark:text-gray-100">
-                        {isAdmin ? 'Administrator' : isBuilder ? 'Builder Account' : activeHomeowner.name}
-                      </p>
-                      <p className="text-xs text-surface-on-variant dark:text-gray-400 mt-0.5">
-                        {isAdmin ? 'Internal Portal' : isBuilder ? 'Access: Read Only' : 'Homeowner Portal'}
-                      </p>
-                    </div>
-
-                    <div className="p-3 overflow-y-auto flex-1 min-h-0 space-y-1">
-                      {/* Admin Only Links */}
-                      {isAdmin && (
-                        <>
-                          <button 
-                            onClick={() => handleMenuAction(() => onNavigate('TEAM'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
-                          >
-                            <Users className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-                            Internal Users
-                          </button>
-                          <button 
-                            onClick={() => handleMenuAction(() => onNavigate('HOMEOWNERS'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
-                          >
-                            <Home className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-                            Homeowners
-                          </button>
-                          {isAdministrator && (
-                            <>
-                              <button 
-                                onClick={() => handleMenuAction(() => onNavigate('DATA'))}
-                                className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
-                              >
-                                <Database className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-                                Data Import
-                              </button>
-                              <button 
-                                onClick={() => handleMenuAction(() => onNavigate('BUILDERS'))}
-                                className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
-                              >
-                                <Building2 className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-                                Builders
-                              </button>
-                              <button 
-                                onClick={() => handleMenuAction(() => {
-                                  navigate('/dashboard/analytics');
-                                  onNavigate('ANALYTICS');
-                                })}
-                                className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
-                              >
-                                <BarChart3 className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-                                Analytics
-                              </button>
-                            </>
-                          )}
-                          {isAdministrator && (
-                            <button 
-                              onClick={() => handleMenuAction(() => onNavigate('BACKEND'))}
-                              className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
-                            >
-                              <Server className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-                              Backend
-                            </button>
-                          )}
-                          {isAdministrator && (
-                            <button 
-                              onClick={() => handleMenuAction(() => onNavigate('GUIDE'))}
-                              className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
-                            >
-                              <BookOpen className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-                              Guide Editor
-                            </button>
-                          )}
-                          <button 
-                            onClick={() => handleMenuAction(() => onNavigate('SETTINGS'))}
-                            className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
-                          >
-                            <Settings className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-                            Settings
-                          </button>
-                          
-                        </>
-                      )}
-
-                      {/* Enrollment removed - now per-builder public URLs */}
-                      {/* Role Switch removed - not needed with new workflow */}
-                    </div>
                   </div>
-                )}
-                </div>
+                </>
+              ) : (
+                /* Homeowner: UserButton has been moved to sidebar footer - hide from header */
+                null
               )}
 
               </div>

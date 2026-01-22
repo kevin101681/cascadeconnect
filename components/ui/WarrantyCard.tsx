@@ -16,6 +16,7 @@ interface WarrantyCardProps {
   onCheckboxChange?: (checked: boolean) => void;
   onDelete?: () => void;
   onClick?: () => void;
+  isHomeownerView?: boolean;
 }
 
 export function WarrantyCard({
@@ -33,6 +34,7 @@ export function WarrantyCard({
   onCheckboxChange,
   onDelete,
   onClick,
+  isHomeownerView = false,
 }: WarrantyCardProps) {
   return (
     <div 
@@ -79,8 +81,8 @@ export function WarrantyCard({
           )}
         </div>
         
-        {/* Delete Icon - Always visible, subtle gray */}
-        {onDelete && (
+        {/* Delete Icon - Always visible, subtle gray - Hidden in Homeowner View */}
+        {onDelete && !isHomeownerView && (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -139,8 +141,8 @@ export function WarrantyCard({
             <span className="text-xs font-medium">{attachmentCount}</span>
           </div>
 
-          {/* Circular Checkbox in Bottom Right */}
-          {onCheckboxChange && (
+          {/* Circular Checkbox in Bottom Right - Hidden in Homeowner View */}
+          {onCheckboxChange && !isHomeownerView && (
             <input
               type="checkbox"
               checked={isChecked}
