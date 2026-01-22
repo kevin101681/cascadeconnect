@@ -4126,13 +4126,13 @@ const Dashboard: React.FC<DashboardProps> = ({
     </>
   );
 
-  // 1. HOMEOWNER CONTEXT VIEW (When Admin selects a homeowner OR when admin switches to homeowner view)
-  // Show admin-style card if: 
-  //   - Admin/builder with selected homeowner, OR
-  //   - Admin account (has currentUser) viewing as homeowner with valid homeowner (targetHomeowner or activeHomeowner)
+  // 1. HOMEOWNER CONTEXT VIEW (When Admin selects a homeowner OR when a homeowner logs in)
+  // Render the dashboard if we have a valid context to show
   const shouldShowAdminStyleCard = 
+    // 1. Admin/Builder viewing a specific homeowner
     ((isAdmin || isBuilder) && targetHomeowner) || 
-    (isAdminAccount && userRole === UserRole.HOMEOWNER && (targetHomeowner || (activeHomeowner && activeHomeowner.id !== 'placeholder')));
+    // 2. ANY user in Homeowner View (Real Homeowner OR Impersonating Admin) with a valid profile
+    (userRole === UserRole.HOMEOWNER && activeHomeowner && activeHomeowner.id !== 'placeholder');
   
   if (shouldShowAdminStyleCard) {
     // Use targetHomeowner if available (preserved from admin view), otherwise use activeHomeowner for homeowner view
