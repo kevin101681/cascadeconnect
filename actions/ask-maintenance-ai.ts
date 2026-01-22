@@ -68,8 +68,9 @@ export const askMaintenanceAI = async (question: string): Promise<string> => {
   
   try {
     console.log("📤 Sending request to Gemini API...");
+    console.log("🎯 Using model: gemini-3.0-flash-preview");
     const response = await ai.models.generateContent({
-      model: 'gemini-3.0-flash',
+      model: 'gemini-3.0-flash-preview',
       contents: `You are a helpful home maintenance expert for Cascade Builder Services.
 
 CRITICAL RULE: NEVER tell the homeowner to "contact the builder" or "call the builder".
