@@ -4412,7 +4412,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 console.log("💥 Forcing page reload...");
                 window.location.reload();
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-full shadow-lg transition-all hover:shadow-xl hover:scale-105 active:scale-95"
+              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on hover:bg-primary/90 font-medium rounded-full shadow-lg transition-all hover:shadow-xl hover:scale-105 active:scale-95"
               title="Return to Admin View (Force Reload)"
             >
               <ArrowLeft className="h-4 w-4" />
