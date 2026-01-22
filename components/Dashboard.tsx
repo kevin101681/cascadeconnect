@@ -101,7 +101,12 @@ const ClaimsListColumn = React.memo<{
   return (
     <div 
       className="flex-1 overflow-y-auto px-2 py-4 md:p-4 min-h-0"
-      style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+      style={{ 
+        WebkitOverflowScrolling: 'touch', 
+        touchAction: 'pan-y',
+        maskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)'
+      } as React.CSSProperties}
     >
       {filteredClaims.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
@@ -189,7 +194,11 @@ const TasksListColumn = React.memo<{
   return (
     <div
       className="flex-1 overflow-y-auto p-4 min-h-0 md:h-auto h-[calc(100vh-220px)]"
-      style={{ WebkitOverflowScrolling: 'touch' }}
+      style={{ 
+        WebkitOverflowScrolling: 'touch',
+        maskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)'
+      }}
     >
       {tasks.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
@@ -3291,7 +3300,11 @@ const Dashboard: React.FC<DashboardProps> = ({
 
           <div 
             className="flex-1 overflow-y-auto p-6 min-h-0 rounded-bl-3xl md:rounded-bl-none"
-            style={{ WebkitOverflowScrolling: 'touch' }}
+            style={{ 
+              WebkitOverflowScrolling: 'touch',
+              maskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)',
+              WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)'
+            }}
           >
              {displayThreads.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-48 text-surface-on-variant dark:text-gray-400 gap-2">
@@ -3543,7 +3556,12 @@ const Dashboard: React.FC<DashboardProps> = ({
                {/* Scrollable Thread Content */}
                <div 
                  className="flex-1 overflow-y-auto overscroll-contain px-6 pt-4"
-                 style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+                 style={{ 
+                   WebkitOverflowScrolling: 'touch', 
+                   touchAction: 'pan-y',
+                   maskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)',
+                   WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)'
+                 } as React.CSSProperties}
                >
                  <div className="px-4 py-6 bg-white dark:bg-white rounded-2xl mx-4 my-4">
                     {/* Subject Line */}

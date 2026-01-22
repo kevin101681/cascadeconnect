@@ -369,7 +369,12 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({
       ) : (
         <div className="flex-1 min-h-0 flex overflow-hidden">
           {/* LEFT COLUMN - Call Cards List */}
-          <div className={`w-full md:w-96 border-r border-surface-outline-variant dark:border-gray-700 overflow-y-auto flex-shrink-0 ${actualSelectedCall ? 'hidden md:block' : 'block'}`}>
+          <div className={`w-full md:w-96 border-r border-surface-outline-variant dark:border-gray-700 overflow-y-auto flex-shrink-0 ${actualSelectedCall ? 'hidden md:block' : 'block'}`}
+            style={{
+              maskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)',
+              WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)'
+            }}
+          >
             {/* Header */}
             <div className="px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700">
               <div className="flex items-center justify-between">
@@ -461,7 +466,12 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({
           </div>
 
           {/* RIGHT COLUMN - Call Details - Desktop Only */}
-          <div ref={callDetailsRef} className={`flex-1 overflow-y-auto p-6 pr-8 ${actualSelectedCall ? 'hidden md:block' : 'hidden md:block'}`}>
+          <div ref={callDetailsRef} className={`flex-1 overflow-y-auto p-6 pr-8 ${actualSelectedCall ? 'hidden md:block' : 'hidden md:block'}`}
+            style={{
+              maskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)',
+              WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)'
+            }}
+          >
             {actualSelectedCall ? (
               <div className="space-y-6">
                 {/* Back Button for Mobile */}
@@ -743,7 +753,12 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({
         {/* Scrollable Content */}
         <div 
           className="flex-1 overflow-y-auto p-6 overscroll-contain"
-          style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+          style={{ 
+            WebkitOverflowScrolling: 'touch', 
+            touchAction: 'pan-y',
+            maskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)',
+            WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)'
+          } as React.CSSProperties}
         >
           <div className="space-y-6">
             {/* Date & Status Header */}

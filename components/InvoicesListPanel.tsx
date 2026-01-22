@@ -332,7 +332,12 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
       {/* ==================== LIST CONTENT ==================== */}
       <div 
         className="flex-1 overflow-y-auto px-2 py-4 md:p-4 min-h-0"
-        style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+        style={{ 
+          WebkitOverflowScrolling: 'touch', 
+          touchAction: 'pan-y',
+          maskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)',
+          WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)'
+        } as React.CSSProperties}
       >
         {/* INVOICES LIST */}
         {activeTab === 'invoices' && showList && (
