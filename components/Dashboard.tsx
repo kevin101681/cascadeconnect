@@ -139,54 +139,32 @@ const ClaimsListColumn = React.memo<{
             const isChecked = selectedClaimIds.includes(claim.id);
             
             return (
-              <div key={claim.id} className="relative flex items-start gap-2">
-                {/* Checkbox for multi-select */}
-                <div className="pt-3 pl-2 shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      onToggleClaimSelection(claim.id);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                  />
-                </div>
-                
-                <div className="flex-1 relative">
-                  <button
-                    type="button"
-                    onClick={() => onClaimSelect(claim)}
-                    className="w-full text-left cursor-pointer [-webkit-tap-highlight-color:transparent]"
-                  >
-                    <WarrantyCard
-                      title={claim.title}
-                      classification={claim.classification}
-                      createdDate={claim.dateSubmitted ? new Date(claim.dateSubmitted).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
-                      scheduledDate={scheduledDate?.date ? new Date(scheduledDate.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
-                      soSentDate={serviceOrderDate ? new Date(serviceOrderDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
-                      subName={claim.contractorName}
-                      attachmentCount={claim.attachments?.length || 0}
-                      isReviewed={isReviewed}
-                      isClosed={claim.status === ClaimStatus.CLOSED}
-                      isSelected={isSelected}
-                    />
-                  </button>
-                  {/* Delete button - always visible, gray color, positioned to not overlap badges */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
+              <div key={claim.id} className="relative">
+                <button
+                  type="button"
+                  onClick={() => onClaimSelect(claim)}
+                  className="w-full text-left cursor-pointer [-webkit-tap-highlight-color:transparent]"
+                >
+                  <WarrantyCard
+                    title={claim.title}
+                    classification={claim.classification}
+                    createdDate={claim.dateSubmitted ? new Date(claim.dateSubmitted).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
+                    scheduledDate={scheduledDate?.date ? new Date(scheduledDate.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
+                    soSentDate={serviceOrderDate ? new Date(serviceOrderDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : undefined}
+                    subName={claim.contractorName}
+                    attachmentCount={claim.attachments?.length || 0}
+                    isReviewed={isReviewed}
+                    isClosed={claim.status === ClaimStatus.CLOSED}
+                    isSelected={isSelected}
+                    isChecked={isChecked}
+                    onCheckboxChange={(checked) => onToggleClaimSelection(claim.id)}
+                    onDelete={() => {
                       if (confirm('Are you sure you want to delete this claim? This action cannot be undone.')) {
                         onDeleteClaim(claim.id);
                       }
                     }}
-                    className="absolute top-2 right-2 p-1 rounded-md bg-white/80 hover:bg-gray-100 text-gray-400 hover:text-gray-600 dark:bg-gray-700/80 dark:hover:bg-gray-600 dark:text-gray-400 dark:hover:text-gray-300 transition-colors z-10 shadow-sm"
-                    title="Delete claim"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+                  />
+                </button>
               </div>
             );
           })}
@@ -2672,7 +2650,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                 >
                   <button
                     onClick={handleBulkDeleteClaims}
-                    className="flex items-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-lg transition-colors font-medium"
+                    className="flex items-center gap-2 px-4 py-3 bg-red-100 hover:bg-red-200 text-red-700 border border-red-200 rounded-full shadow-lg transition-colors font-medium"
                   >
                     <Trash2 className="h-4 w-4" />
                     <span>Delete {selectedClaimIds.length} Claim{selectedClaimIds.length > 1 ? 's' : ''}</span>

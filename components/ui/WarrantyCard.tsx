@@ -1,4 +1,4 @@
-import { Calendar, Paperclip, Send, Hammer, FileText, CheckCircle2 } from "lucide-react";
+import { Calendar, Paperclip, Send, Hammer, FileText, CheckCircle2, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface WarrantyCardProps {
@@ -12,6 +12,9 @@ interface WarrantyCardProps {
   isReviewed?: boolean;
   isClosed?: boolean;
   isSelected?: boolean;
+  isChecked?: boolean;
+  onCheckboxChange?: (checked: boolean) => void;
+  onDelete?: () => void;
   onClick?: () => void;
 }
 
@@ -26,6 +29,9 @@ export function WarrantyCard({
   isReviewed = false,
   isClosed = false,
   isSelected = false,
+  isChecked = false,
+  onCheckboxChange,
+  onDelete,
   onClick,
 }: WarrantyCardProps) {
   return (
@@ -41,13 +47,14 @@ export function WarrantyCard({
       style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
     >
       
-      {/* COMPACT HEADER: Title + Badges on Same Line */}
-      <div className="flex justify-between items-center mb-2 gap-2 min-w-0">
-        <h3 className={`font-semibold text-sm truncate ${title ? "text-gray-900" : "text-gray-400 italic"}`} title={title}>
+      {/* HEADER: Title + Status Pills + Delete Icon */}
+      <div className="flex items-center gap-2 mb-2 min-w-0">
+        {/* Title - Grows to take available space */}
+        <h3 className={`font-semibold text-sm truncate flex-1 min-w-0 ${title ? "text-gray-900" : "text-gray-400 italic"}`} title={title}>
           {title || "Untitled Claim"}
         </h3>
         
-        {/* BADGE STACK: Closed + Reviewed + Classification */}
+        {/* Status Pills */}
         <div className="flex gap-1 shrink-0">
           {isClosed && (
              <Badge className="text-[10px] h-5 px-1.5 font-medium bg-blue-600 text-white hover:bg-blue-600 border-0 rounded-md gap-1 flex items-center">
@@ -69,6 +76,20 @@ export function WarrantyCard({
             <div className="h-5 w-16 bg-gray-100 rounded animate-pulse" /> 
           )}
         </div>
+        
+        {/* Delete Icon - Always visible, subtle gray */}
+        {onDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="p-1 shrink-0 text-gray-400 hover:text-red-500 transition-colors"
+            title="Delete claim"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       {/* COMPACT DATES ROW: Side-by-Side with Icons and Bullets */}
@@ -96,7 +117,7 @@ export function WarrantyCard({
         </div>
       </div>
 
-      {/* COMPACT FOOTER: Assignee + Attachments on Same Line */}
+      {/* FOOTER: Assignee + Attachments + Checkbox */}
       <div className="flex items-center justify-between pt-2 border-t border-gray-100">
         {/* Sub Contractor */}
         <div className="flex items-center min-w-0 flex-1 mr-2">
@@ -108,10 +129,27 @@ export function WarrantyCard({
           </span>
         </div>
 
-        {/* Attachment Count */}
-        <div className={`flex items-center shrink-0 ${attachmentCount > 0 ? "text-gray-500 md:hover:text-gray-800" : "text-gray-300"}`}>
-          <Paperclip className="w-3 h-3 mr-1" />
-          <span className="text-xs font-medium">{attachmentCount}</span>
+        {/* Right side: Attachment Count + Checkbox */}
+        <div className="flex items-center gap-3 shrink-0">
+          {/* Attachment Count */}
+          <div className={`flex items-center ${attachmentCount > 0 ? "text-gray-500 md:hover:text-gray-800" : "text-gray-300"}`}>
+            <Paperclip className="w-3 h-3 mr-1" />
+            <span className="text-xs font-medium">{attachmentCount}</span>
+          </div>
+
+          {/* Circular Checkbox in Bottom Right */}
+          {onCheckboxChange && (
+            <input
+              type="checkbox"
+              checked={isChecked}
+              onChange={(e) => {
+                e.stopPropagation();
+                onCheckboxChange(e.target.checked);
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="h-5 w-5 rounded-full border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+            />
+          )}
         </div>
       </div>
     </div>
