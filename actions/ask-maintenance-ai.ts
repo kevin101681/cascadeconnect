@@ -1,68 +1,73 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import OpenAI from "openai";
 
 // Lazy initialization
-let genAI: GoogleGenerativeAI | null = null;
+let openai: OpenAI | null = null;
 
-const getAI = () => {
-  if (genAI) return genAI;
+const getOpenAI = () => {
+  if (openai) return openai;
   
-  // Support both Client (Vite) and Server (Process) env vars
-  const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || 
-                 (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : undefined);
+  const apiKey = process.env.OPENAI_API_KEY || (import.meta as any).env?.VITE_OPENAI_API_KEY;
   
   if (!apiKey) {
-    console.warn("⚠️ Gemini API key not found.");
+    console.warn("⚠️ OpenAI API key not found.");
     return null;
   }
   
-  try {
-    genAI = new GoogleGenerativeAI(apiKey);
-    return genAI;
-  } catch (error) {
-    console.error("Failed to initialize Gemini:", error);
-    return null;
-  }
+  openai = new OpenAI({
+    apiKey: apiKey,
+    dangerouslyAllowBrowser: true // Only if running client-side, ideally this is server-side
+  });
+  
+  return openai;
 };
 
 export const askMaintenanceAI = async (question: string): Promise<string> => {
-  const ai = getAI();
+  const client = getOpenAI();
   
-  if (!ai) {
+  if (!client) {
     return "I'm currently unavailable. Please contact Cascade Builder Services directly.";
   }
-  
+
   if (!question || question.trim().length === 0) {
     return "Please enter a question about home maintenance.";
   }
-  
+
   try {
-    // Use the Stable Model
-    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini", // Fast, cheap, capable
+      messages: [
+        {
+          role: "system",
+          content: `You are a helpful home maintenance expert for Cascade Builder Services.
 
-    const prompt = `You are a helpful home maintenance expert for Cascade Builder Services.
+CRITICAL RULE: NEVER tell the homeowner to "contact the builder" or "call the builder".
+INSTEAD: Always tell them to "Contact Cascade Builder Services" or "submit a request to Cascade".
 
-CRITICAL RULE: NEVER tell the homeowner to "contact the builder".
-INSTEAD: Always tell them to "Contact Cascade Builder Services".
+EMERGENCY RESPONSE PROTOCOL:
+If the question is about an EMERGENCY (gas leak, water leak, electrical hazard, fire, carbon monoxide, etc.):
+- Instruct: "Shut off the source immediately if safe to do so."
+- Then say: "Call Cascade Builder Services Emergency Line right away."
+- If evacuation is needed: "Evacuate immediately and call 911, then notify Cascade Builder Services."
 
-EMERGENCY RESPONSE:
-If (gas leak, water leak, fire, sparks):
-- "Shut off source immediately if safe."
-- "Call Cascade Builder Services Emergency Line."
-- "If life-threatening, call 911."
+URGENT ISSUES (Leaks, HVAC during extreme weather, electrical problems):
+- Instruct: "Turn off the main supply/breaker if safe."
+- Then say: "Contact Cascade Builder Services immediately for emergency service."
 
-NON-EMERGENCY:
-- Provide clear, actionable steps (2-3 sentences).
-- If professional help needed: "Contact Cascade Builder Services to schedule an appointment."
+NON-EMERGENCY QUESTIONS:
+- Provide clear, actionable steps (2-3 sentences max)
+- Be specific about tools or materials needed
+- If professional help is needed, say: "For this repair, contact Cascade Builder Services to schedule a service appointment."
+- Keep answers practical and concise
+- Do not mention you are an AI`
+        },
+        { role: "user", content: question }
+      ],
+    });
 
-Question: "${question}"
-Answer:`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    return response.text();
+    return completion.choices[0].message.content || "I couldn't generate an answer. Please try rephrasing your question or contact Cascade Builder Services for assistance.";
     
   } catch (error: any) {
-    console.error("🔥 Gemini Error:", error);
-    return "I'm having trouble processing that request. Please try again or contact support.";
+    console.error("🔥 OpenAI Error:", error);
+    return "I'm having trouble connecting to the service. Please try again or contact Cascade Builder Services for assistance.";
   }
 };
