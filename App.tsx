@@ -4393,8 +4393,23 @@ Assigned By: ${assignerName}
   }
   
 
-  // Show homeowner selector if multiple homeowners match the user's email
-  if (matchingHomeowners && matchingHomeowners.length > 1) {
+  // ==================== SIMPLIFIED HOMEOWNER ROUTING LOGIC ====================
+  // Priority-based decision: Determine which homeowner ID should be active
+  
+  // PRIORITY 1: Admin Impersonation (selectedAdminHomeownerId set via search)
+  // PRIORITY 2: Real Homeowner (activeHomeowner set during auth, selectedAdminHomeownerId also set)
+  // PRIORITY 3: Multi-property selector (matchingHomeowners set, waiting for selection)
+  
+  // For homeowners with multiple properties who haven't made a selection yet,
+  // matchingHomeowners is set but selectedAdminHomeownerId is NOT set (line 1033-1036)
+  // This is our signal to show the selector
+  
+  if (matchingHomeowners && matchingHomeowners.length > 1 && !selectedAdminHomeownerId) {
+    // Show selector ONLY if:
+    // 1. Multiple properties exist (matchingHomeowners.length > 1)
+    // 2. User hasn't made a selection yet (!selectedAdminHomeownerId)
+    // Note: If user HAD made a selection, auth logic would have set selectedAdminHomeownerId (line 1027 or 1044)
+    console.log('⏳ Showing HomeownerSelector - multiple properties found, no selection made');
     return (
       <HomeownerSelector
         homeowners={matchingHomeowners}
@@ -4402,10 +4417,8 @@ Assigned By: ${assignerName}
           console.log('✅ User selected property:', homeowner.name || homeowner.address);
           setActiveHomeowner(homeowner);
           setSelectedHomeownerId(homeowner.id);
-          // CRITICAL FIX: Also set selectedAdminHomeownerId so Dashboard can access the homeowner
           setSelectedAdminHomeownerId(homeowner.id);
           setMatchingHomeowners(null);
-          // Ensure they see the dashboard immediately
           setCurrentView('DASHBOARD');
           
           // Store selection for this email
@@ -4417,6 +4430,13 @@ Assigned By: ${assignerName}
       />
     );
   }
+  
+  // If we reach here, one of these is true:
+  // - Admin has selected a homeowner (selectedAdminHomeownerId exists)
+  // - Homeowner with single property logged in (selectedAdminHomeownerId set at line 1044)
+  // - Homeowner with multiple properties made selection (selectedAdminHomeownerId set at line 1027)
+  // Continue to render main app with Dashboard below
+  // ==================== END SIMPLIFIED ROUTING LOGIC ====================
 
   // Determine if user is logged in as admin account (has activeEmployee)
   const isAdminAccount = !!activeEmployee && activeEmployee.id !== 'placeholder';
