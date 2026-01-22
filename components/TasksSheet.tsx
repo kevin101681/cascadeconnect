@@ -275,7 +275,7 @@ const TasksSheet: React.FC<TasksSheetProps> = ({ onNavigateToClaim, claims = [],
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-surface dark:bg-gray-800 shadow-2xl z-[201] flex flex-col rounded-tl-3xl rounded-bl-3xl"
+            className="fixed right-0 top-0 bottom-0 w-full max-w-md bg-surface dark:bg-gray-800 shadow-2xl z-[201] flex flex-col !rounded-tl-[32px] !rounded-bl-[32px] border-l border-surface-outline-variant dark:border-gray-700"
             onClick={(e) => e.stopPropagation()}
           >
             {renderContent()}

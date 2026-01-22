@@ -98,6 +98,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           content: task.content || task.title || '',
           isCompleted: task.isCompleted || false,
           claimId: task.claimId || null,
+          contextLabel: task.contextLabel || null,
           createdAt: task.createdAt || task.dateAssigned || new Date(),
         }));
 
@@ -138,6 +139,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           content: taskData.content || taskData.title || '',
           isCompleted: taskData.isCompleted || false,
           claimId: taskData.claimId || null,
+          contextLabel: taskData.contextLabel || null,
           createdAt: taskData.createdAt || taskData.dateAssigned || new Date(),
         };
 
@@ -152,7 +154,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
     // POST: Create new task
     if (event.httpMethod === 'POST') {
       const data = JSON.parse(event.body || '{}');
-      const { content, claimId } = data;
+      const { content, claimId, contextLabel } = data;
 
       if (!content || !content.trim()) {
         return {
@@ -169,6 +171,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
           content: content.trim(),
           title: content.trim(), // For backward compatibility with existing tasks system
           claimId: claimId || null,
+          contextLabel: contextLabel || null,
           isCompleted: false,
           createdAt: new Date(),
         } as any)
@@ -180,6 +183,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
         content: taskData.content || taskData.title || '',
         isCompleted: taskData.isCompleted || false,
         claimId: taskData.claimId || null,
+        contextLabel: taskData.contextLabel || null,
         createdAt: taskData.createdAt || taskData.dateAssigned || new Date(),
       };
 
@@ -234,6 +238,7 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
         content: taskData.content || taskData.title || '',
         isCompleted: taskData.isCompleted || false,
         claimId: taskData.claimId || null,
+        contextLabel: taskData.contextLabel || null,
         createdAt: taskData.createdAt || taskData.dateAssigned || new Date(),
       };
 
