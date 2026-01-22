@@ -147,7 +147,7 @@ export function WarrantyCard({
                 onCheckboxChange(e.target.checked);
               }}
               onClick={(e) => e.stopPropagation()}
-              className="h-5 w-5 rounded-full border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              className="h-4 w-4 rounded-full border-gray-300 text-primary focus:ring-primary cursor-pointer"
             />
           )}
         </div>
