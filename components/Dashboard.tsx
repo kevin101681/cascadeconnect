@@ -180,8 +180,9 @@ const TasksListColumn = React.memo<{
   tasks: Task[];
   employees: InternalEmployee[];
   claims: Claim[];
+  selectedTaskId: string | null;
   onTaskSelect: (task: Task) => void;
-}>(({ tasks, employees, claims, onTaskSelect }) => {
+}>(({ tasks, employees, claims, selectedTaskId, onTaskSelect }) => {
   return (
     <div
       className="flex-1 overflow-y-auto p-4 min-h-0 md:h-auto h-[calc(100vh-220px)]"
@@ -208,7 +209,7 @@ const TasksListColumn = React.memo<{
                 subsToScheduleCount={taskClaims.length}
                 dateAssigned={task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Not set'}
                 isCompleted={task.isCompleted ?? false}
-                isSelected={selectedTaskForModal?.id === task.id}
+                isSelected={selectedTaskId === task.id}
                 onClick={() => onTaskSelect(task)}
               />
             );
@@ -3082,6 +3083,7 @@ const Dashboard: React.FC<DashboardProps> = ({
             tasks={filteredTasks}
             employees={employees}
             claims={claims}
+            selectedTaskId={selectedTaskForModal?.id || null}
             onTaskSelect={(task) => {
               setSelectedTaskForModal(task);
               setTasksTabStartInEditMode(true);

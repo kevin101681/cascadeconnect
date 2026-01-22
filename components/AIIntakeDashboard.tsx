@@ -172,7 +172,7 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({
     // If activeHomeownerId is invalid (placeholder, undefined, or too short), skip query
     if (!isGlobalView && (!activeHomeownerId || activeHomeownerId === 'placeholder' || activeHomeownerId.length < 30)) {
       console.warn('⚠️ Invalid homeownerId, returning empty calls list:', activeHomeownerId);
-      setCalls([]);
+      setCallsData([]);
       setLoading(false);
       return;
     }
