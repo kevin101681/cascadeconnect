@@ -1004,6 +1004,7 @@ function App() {
               // 3. Check Homeowners - handle multiple homeowners with same email
               const matchingHomeowners = loadedHomeowners.filter(home => home.email.toLowerCase() === email);
               if (matchingHomeowners.length > 0) {
+                 console.log('✅ User logged in as homeowner:', email, 'Properties:', matchingHomeowners.length);
                  setUserRole(UserRole.HOMEOWNER);
                  
                  // If multiple homeowners with same email, show selector
@@ -1019,18 +1020,30 @@ function App() {
                    
                    if (preselected) {
                      // User has a stored selection, use it
+                     console.log('✅ Auto-selecting preselected property:', preselected.name || preselected.address);
                      setActiveHomeowner(preselected);
                      setSelectedHomeownerId(preselected.id);
+                     // CRITICAL FIX: Also set selectedAdminHomeownerId so Dashboard can access the homeowner
+                     setSelectedAdminHomeownerId(preselected.id);
+                     // Ensure they see the dashboard, not stuck in loading
+                     setCurrentView('DASHBOARD');
                    } else {
                      // Show selector to let user choose
+                     console.log('⏳ Multiple properties found - showing selector');
                      setMatchingHomeowners(matchingHomeowners);
                      // Set a temporary placeholder until selection is made
                      setActiveHomeowner(matchingHomeowners[0]);
                    }
                  } else {
                    // Only one homeowner with this email
-                   setActiveHomeowner(matchingHomeowners[0]);
-                   setSelectedHomeownerId(matchingHomeowners[0].id);
+                   const homeowner = matchingHomeowners[0];
+                   console.log('✅ Single property found - auto-loading:', homeowner.name || homeowner.address);
+                   setActiveHomeowner(homeowner);
+                   setSelectedHomeownerId(homeowner.id);
+                   // CRITICAL FIX: Also set selectedAdminHomeownerId so Dashboard can access the homeowner
+                   setSelectedAdminHomeownerId(homeowner.id);
+                   // Ensure they see the dashboard immediately
+                   setCurrentView('DASHBOARD');
                  }
                  
                  // Store user email for later reference
@@ -4386,9 +4399,14 @@ Assigned By: ${assignerName}
       <HomeownerSelector
         homeowners={matchingHomeowners}
         onSelect={(homeowner) => {
+          console.log('✅ User selected property:', homeowner.name || homeowner.address);
           setActiveHomeowner(homeowner);
           setSelectedHomeownerId(homeowner.id);
+          // CRITICAL FIX: Also set selectedAdminHomeownerId so Dashboard can access the homeowner
+          setSelectedAdminHomeownerId(homeowner.id);
           setMatchingHomeowners(null);
+          // Ensure they see the dashboard immediately
+          setCurrentView('DASHBOARD');
           
           // Store selection for this email
           if (typeof window !== 'undefined' && authUser?.primaryEmailAddress?.emailAddress) {
