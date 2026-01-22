@@ -25,12 +25,23 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
   const handleSearch = async (searchQuery: string) => {
     if (!searchQuery.trim()) return;
     
-    // GUARD CLAUSE: Prevent 400 errors by ensuring homeowner ID is valid (if provided)
-    // This prevents the widget from firing before login is complete
-    if (homeownerId !== undefined && (!homeownerId || homeownerId === 'placeholder' || homeownerId.length < 10)) {
-      console.warn("⚠️ Search Widget waiting for valid Homeowner ID");
-      setAnswer("Please wait while we load your account information...");
-      return;
+    // GUARD CLAUSE: Validate homeownerId before any search operation
+    // This prevents 400 errors from invalid database queries
+    if (homeownerId) {
+      // If homeownerId is provided, validate it
+      if (homeownerId === 'placeholder' || homeownerId.length < 10) {
+        console.warn("⚠️ Search Widget: Invalid homeowner ID format");
+        setAnswer("Please wait while we load your account information...");
+        return;
+      }
+      
+      // Validate UUID format to prevent 400 errors
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRegex.test(homeownerId)) {
+        console.warn(`⚠️ Search Widget: Invalid homeowner UUID format: ${homeownerId}`);
+        setAnswer("Please wait while we load your account information...");
+        return;
+      }
     }
     
     setIsSearching(true);
