@@ -1121,43 +1121,6 @@ function App() {
     }
   }, [claims]); // Re-run when claims are loaded
 
-  // URL Hydration - Restore homeownerId from URL parameters
-  // This ensures the app doesn't lose track of the selected homeowner during view transitions
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const searchParams = new URLSearchParams(window.location.search);
-    const urlHomeownerId = searchParams.get('homeownerId');
-    const urlView = searchParams.get('view');
-    
-    // If homeownerId exists in URL and we don't have it in state, hydrate it
-    if (urlHomeownerId && !selectedAdminHomeownerId) {
-      console.log('🔗 URL Hydration: Found homeownerId in URL, restoring state:', urlHomeownerId);
-      
-      // Find the homeowner in the loaded data
-      const homeowner = homeowners.find(h => h.id === urlHomeownerId);
-      
-      if (homeowner) {
-        console.log('✅ Homeowner found, hydrating state:', homeowner.firstName || homeowner.name);
-        setSelectedAdminHomeownerId(urlHomeownerId);
-        setActiveHomeowner(homeowner);
-        
-        // If view=homeowner is in URL, also set the role
-        if (urlView === 'homeowner') {
-          console.log('✅ Setting userRole to HOMEOWNER from URL');
-          setUserRole(UserRole.HOMEOWNER);
-        }
-      } else {
-        console.warn('⚠️ Homeowner ID from URL not found in loaded data:', urlHomeownerId);
-        // Clean up invalid URL params
-        searchParams.delete('homeownerId');
-        searchParams.delete('view');
-        const newSearch = searchParams.toString();
-        navigate(`${location.pathname}${newSearch ? '?' + newSearch : ''}`, { replace: true });
-      }
-    }
-  }, [homeowners, selectedAdminHomeownerId, location.search]); // Re-run when homeowners load or URL changes
-
   // UI State - Persistent (but reset INVOICES on page load to prevent auto-opening)
   // Check URL hash for invoice creation link
   const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'BUILDERS' | 'GUIDE'>(() => {
@@ -1228,6 +1191,44 @@ function App() {
   const [selectedAdminHomeownerId, setSelectedAdminHomeownerId] = useState<string | null>(() => 
     loadState('cascade_ui_homeowner_id', null)
   );
+
+  // URL Hydration - Restore homeownerId from URL parameters
+  // This ensures the app doesn't lose track of the selected homeowner during view transitions
+  // IMPORTANT: Must be placed AFTER selectedAdminHomeownerId declaration to avoid TS2448 error
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlHomeownerId = searchParams.get('homeownerId');
+    const urlView = searchParams.get('view');
+    
+    // If homeownerId exists in URL and we don't have it in state, hydrate it
+    if (urlHomeownerId && !selectedAdminHomeownerId) {
+      console.log('🔗 URL Hydration: Found homeownerId in URL, restoring state:', urlHomeownerId);
+      
+      // Find the homeowner in the loaded data
+      const homeowner = homeowners.find(h => h.id === urlHomeownerId);
+      
+      if (homeowner) {
+        console.log('✅ Homeowner found, hydrating state:', homeowner.firstName || homeowner.name);
+        setSelectedAdminHomeownerId(urlHomeownerId);
+        setActiveHomeowner(homeowner);
+        
+        // If view=homeowner is in URL, also set the role
+        if (urlView === 'homeowner') {
+          console.log('✅ Setting userRole to HOMEOWNER from URL');
+          setUserRole(UserRole.HOMEOWNER);
+        }
+      } else {
+        console.warn('⚠️ Homeowner ID from URL not found in loaded data:', urlHomeownerId);
+        // Clean up invalid URL params
+        searchParams.delete('homeownerId');
+        searchParams.delete('view');
+        const newSearch = searchParams.toString();
+        navigate(`${location.pathname}${newSearch ? '?' + newSearch : ''}`, { replace: true });
+      }
+    }
+  }, [homeowners, selectedAdminHomeownerId, location.search, navigate, setSelectedAdminHomeownerId, setActiveHomeowner, setUserRole]); // Re-run when homeowners load or URL changes
 
   // --- FETCH CLAIMS FOR SELECTED HOMEOWNER ---
   // STRICT POLICY: Only fetch claims when a homeowner is selected
