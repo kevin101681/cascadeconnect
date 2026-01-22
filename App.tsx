@@ -4861,7 +4861,7 @@ Assigned By: ${assignerName}
     </Layout>
 
     {/* Floating Chat Widget - Admin Only - Positioned at root level to escape stacking context */}
-    {isAdminAccount && authUser && (
+    {isAdminAccount && authUser && userRole !== UserRole.HOMEOWNER && (
       <React.Suspense fallback={null}>
         <FloatingChatWidget
           currentUserId={authUser.id}
