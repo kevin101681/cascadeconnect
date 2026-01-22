@@ -13,6 +13,7 @@ import HomeownerSelector from './components/HomeownerSelector';
 import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, InternalEmployee, MessageThread, Message, Contractor, BuilderGroup, BuilderUser } from './types';
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS, MOCK_CLAIM_MESSAGES } from './constants';
 import { sendEmail, generateNotificationBody } from './services/emailService';
+import { analyzeHomeownerClaims } from './actions/analyze-homeowner-claims';
 
 // Lazy-load non-critical provider hosts so they don't bloat the entry bundle.
 const LazyAppProviders = React.lazy(() =>
@@ -1449,7 +1450,8 @@ function App() {
   const [showSubmissionSuccess, setShowSubmissionSuccess] = useState(false);
   const [submissionData, setSubmissionData] = useState<{
     claimCount: number;
-    aiAnalysis?: { status: 'Approved' | 'Denied' | 'Needs Info'; reasoning: string } | null;
+    aiAnalysis?: { status: 'Approved' | 'Denied' | 'Needs Info'; reasoning: string; htmlPreview?: string } | null;
+    isLoadingPreview?: boolean;
   } | null>(null);
 
   const selectedClaim = claims.find(c => c.id === selectedClaimId);
@@ -2308,14 +2310,44 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
         
         console.log(`📧 [EMAIL] Batch claim notification summary: ${emailSuccessCount} sent, ${emailFailureCount} failed`);
 
-        // Show submission success modal with AI analysis (if homeowner)
+        // Show submission success modal (if homeowner)
         if (userRole === UserRole.HOMEOWNER) {
+          // Show modal immediately with loading state
           setSubmissionData({
             claimCount: createdClaims.length,
-            aiAnalysis: result.aiAnalysis || null
+            isLoadingPreview: true,
+            aiAnalysis: null
           });
           setShowSubmissionSuccess(true);
           setCurrentView('DASHBOARD'); // Navigate to dashboard in background
+          
+          // Generate homeowner-friendly warranty coverage preview in background
+          try {
+            const claimDescriptions = batchData.map(claim => ({
+              title: claim.title || '',
+              description: claim.description || ''
+            }));
+            
+            const htmlPreview = await analyzeHomeownerClaims(claimDescriptions);
+            
+            // Update modal with preview
+            setSubmissionData(prev => prev ? {
+              ...prev,
+              isLoadingPreview: false,
+              aiAnalysis: {
+                status: 'Needs Info' as const,
+                reasoning: '', // Not used when htmlPreview is present
+                htmlPreview: htmlPreview
+              }
+            } : null);
+          } catch (error) {
+            console.error('Failed to generate warranty preview:', error);
+            // Update to remove loading state even on error
+            setSubmissionData(prev => prev ? {
+              ...prev,
+              isLoadingPreview: false
+            } : null);
+          }
         } else {
           // For admins, just show the alert
           setAlertType('success');
@@ -4979,6 +5011,7 @@ Assigned By: ${assignerName}
         }}
         claimCount={submissionData?.claimCount || 0}
         aiAnalysis={submissionData?.aiAnalysis || null}
+        isLoadingPreview={submissionData?.isLoadingPreview}
       />
       
       {/* Global Modal Provider - Renders all stacked modals */}

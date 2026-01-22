@@ -1,10 +1,11 @@
 import React from 'react';
-import { CheckCircle, X, ClipboardList } from 'lucide-react';
+import { CheckCircle, X, ClipboardList, Loader2 } from 'lucide-react';
 import Button from './Button';
 
 interface SystemReview {
   status: 'Approved' | 'Denied' | 'Needs Info';
   reasoning: string;
+  htmlPreview?: string; // NEW: HTML-formatted homeowner preview
 }
 
 interface SubmissionSuccessModalProps {
@@ -12,13 +13,15 @@ interface SubmissionSuccessModalProps {
   onClose: () => void;
   claimCount: number;
   aiAnalysis?: SystemReview | null;
+  isLoadingPreview?: boolean; // NEW: Loading state for preview
 }
 
 const SubmissionSuccessModal: React.FC<SubmissionSuccessModalProps> = ({
   isOpen,
   onClose,
   claimCount,
-  aiAnalysis
+  aiAnalysis,
+  isLoadingPreview = false
 }) => {
   if (!isOpen) return null;
 
@@ -61,8 +64,39 @@ const SubmissionSuccessModal: React.FC<SubmissionSuccessModalProps> = ({
             </p>
           </div>
 
-          {/* Preliminary System Review */}
-          {aiAnalysis && (
+          {/* Warranty Coverage Preview */}
+          {isLoadingPreview ? (
+            <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-300 dark:border-gray-700 rounded-lg p-8 space-y-4">
+              <div className="flex flex-col items-center justify-center gap-3">
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Generating preliminary coverage preview...
+                </p>
+              </div>
+            </div>
+          ) : aiAnalysis?.htmlPreview ? (
+            <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-300 dark:border-gray-700 rounded-lg p-5 space-y-4">
+              <div className="flex items-start gap-3">
+                <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                  <ClipboardList className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-surface-on dark:text-white mb-1">
+                    Warranty Coverage Preview
+                  </h3>
+                  <p className="text-xs text-surface-on-variant dark:text-gray-400 leading-relaxed">
+                    Here's a preliminary look at what's typically covered. A warranty specialist will review your claims in detail.
+                  </p>
+                </div>
+              </div>
+
+              {/* Homeowner-Friendly HTML Preview */}
+              <div 
+                className="warranty-preview-content"
+                dangerouslySetInnerHTML={{ __html: aiAnalysis.htmlPreview }}
+              />
+            </div>
+          ) : aiAnalysis && aiAnalysis.reasoning ? (
             <div className="bg-gray-50 dark:bg-gray-900/50 border border-gray-300 dark:border-gray-700 rounded-lg p-5 space-y-4">
               <div className="flex items-start gap-3">
                 <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gray-200 dark:bg-gray-700 flex-shrink-0">
@@ -110,7 +144,7 @@ const SubmissionSuccessModal: React.FC<SubmissionSuccessModalProps> = ({
                 </p>
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Call to Action */}
           <div className="flex justify-end pt-2">
