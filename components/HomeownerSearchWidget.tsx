@@ -327,7 +327,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                             className="w-auto inline-flex bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 items-center justify-center gap-2 transition-colors text-xs font-medium"
                           >
                             <MessageSquare className="h-3.5 w-3.5" />
-                            Send Message to Builder
+                            Send a Message
                           </button>
                         )}
                         {result.action === 'HELP_TAB' && (
@@ -503,7 +503,7 @@ export function HomeownerSearchWidget({ className = '', variant = 'default', hom
                       className="w-auto inline-flex bg-white dark:bg-gray-800 text-primary border border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 shadow-sm rounded-md py-2 px-4 items-center justify-center gap-2 transition-colors text-sm font-medium"
                     >
                       <MessageSquare className="h-4 w-4" />
-                      Send Message to Builder
+                      Send a Message
                     </button>
                   )}
                   {result.action === 'HELP_TAB' && (

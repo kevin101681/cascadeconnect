@@ -107,6 +107,7 @@ You MUST respond with valid JSON in this exact format:
 
 SMART PRE-FILL RULES:
 - If action is "CLAIM": Include suggestedTitle (3-5 words, e.g., "Leaking Kitchen Sink") and suggestedDescription (2-3 sentences describing the issue professionally).
+  * CRITICAL: Write the 'suggestedDescription' in FIRST PERSON from the homeowner's perspective (e.g., "I have a water leak under my kitchen sink. I tried tightening the trap but the issue persists." NOT "Homeowner reports active water leak...").
 - If action is "MESSAGE": Include suggestedSubject (brief subject line) and suggestedMessage (pre-written message body requesting assistance).
 - If action is "INFO" or "HELP_TAB": Do NOT include any suggested fields.
 
@@ -116,7 +117,7 @@ Claim Example:
   "answer": "This sounds like a plumbing issue that requires immediate attention...",
   "action": "CLAIM",
   "suggestedTitle": "Water Leak Under Kitchen Sink",
-  "suggestedDescription": "Homeowner reports active water leak under the kitchen sink. Attempted to tighten the trap but the issue persists. Leak appears to be coming from the drain connection."
+  "suggestedDescription": "I have a water leak under my kitchen sink. I tried tightening the trap but the issue persists. The leak appears to be coming from the drain connection."
 }
 
 Message Example:

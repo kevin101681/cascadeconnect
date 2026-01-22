@@ -850,16 +850,16 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [newMessageContent, setNewMessageContent] = useState('');
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
   
-  // Auto-open "New Message" modal when URL contains ?new=true with smart pre-fill
+  // Auto-open right pane compose view when URL contains ?new=true with smart pre-fill
   useEffect(() => {
     const newParam = searchParams.get('new');
     const view = searchParams.get('view');
     const subject = searchParams.get('subject');
     const body = searchParams.get('body');
     
-    // If navigating to messages tab with new=true, open the new message modal
+    // If navigating to messages tab with new=true, open the compose view in right pane
     if (view === 'messages' && newParam === 'true') {
-      console.log('🔗 Auto-opening new message modal from URL parameter');
+      console.log('🔗 Auto-opening compose view from URL parameter');
       
       // Smart Pre-fill: Only pre-fill if fields are empty
       if (subject && !newMessageSubject.trim()) {
@@ -872,7 +872,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         setNewMessageContent(body);
       }
       
-      setShowNewMessageModal(true);
+      // Open compose view in right pane instead of modal
+      setIsComposingMessage(true);
+      setSelectedThreadId(null); // Clear any selected thread
       
       // Clean up URL to prevent re-opening on refresh
       setTimeout(() => {
