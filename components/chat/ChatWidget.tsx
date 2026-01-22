@@ -59,6 +59,12 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
   // Load unread counts
   const loadUnreadCounts = useCallback(async () => {
+    // ⚡️ GUARD: Validate currentUserId before making API call
+    if (!currentUserId || currentUserId === 'placeholder' || currentUserId.length < 10) {
+      console.warn('⚠️ Badge Sync: Invalid currentUserId, skipping:', currentUserId);
+      return;
+    }
+
     // ⚡️ DEBOUNCE: Prevent spam - only run once every 2 seconds
     const now = Date.now();
     if (now - lastSyncTimeRef.current < SYNC_DEBOUNCE_MS) {
@@ -127,7 +133,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   }, [currentUserId]); // ⚡️ STABLE: Only depends on userId
 
   // ⚡️ Load counts ONCE on mount and set up interval
+  // CRITICAL: Only depends on currentUserId (primitive) to prevent re-subscription loops
   useEffect(() => {
+    // Guard: Skip if no valid user ID
+    if (!currentUserId || currentUserId === 'placeholder' || currentUserId.length < 10) {
+      console.warn('⚠️ ChatWidget: Invalid currentUserId, skipping badge sync:', currentUserId);
+      return;
+    }
+
     // Initial load
     loadUnreadCounts();
     
@@ -140,7 +153,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   // ⚡️ STABLE PUSHER LISTENER: Listen for new messages to update unread count INSTANTLY
   // CRITICAL: Only depends on currentUserId - NEVER re-subscribes when selectedChannel changes
   useEffect(() => {
-    if (!currentUserId) return;
+    // Guard: Skip if no valid user ID
+    if (!currentUserId || currentUserId === 'placeholder' || currentUserId.length < 10) {
+      console.warn('⚠️ ChatWidget: Invalid currentUserId, skipping Pusher subscription:', currentUserId);
+      return;
+    }
 
     // Subscribe to user's PUBLIC channel for targeted notifications
     const channelName = `public-user-${currentUserId}`;

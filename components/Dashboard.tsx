@@ -566,6 +566,16 @@ const Dashboard: React.FC<DashboardProps> = ({
   // Check if user is actually logged in as admin (has currentUser/activeEmployee)
   const isAdminAccount = !!currentUser;
   
+  // ✅ CRITICAL FIX: Normalize activeHomeowner ID to prevent "placeholder" UUID crash
+  // If activeHomeowner.id is "placeholder", undefined, or too short, use undefined instead
+  const safeActiveHomeownerId = useMemo(() => {
+    const id = activeHomeowner?.id;
+    if (!id || id === 'placeholder' || id.length < 30) {
+      return undefined;
+    }
+    return id;
+  }, [activeHomeowner?.id]);
+  
   const currentBuilderGroupName = useMemo(() => {
     if (!isBuilder || !currentBuilderId) return null;
     const groupName = builderGroups.find(bg => bg.id === currentBuilderId)?.name;
@@ -5004,7 +5014,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             onSelectHomeowner(homeowner);
                           }
                         }}
-                        activeHomeownerId={activeHomeowner?.id}
+                        activeHomeownerId={safeActiveHomeownerId}
                         isAdmin={isAdmin}
                         userRole={userRole}
                       />
@@ -5121,7 +5131,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                             onSelectHomeowner(homeowner);
                           }
                         }}
-                        activeHomeownerId={activeHomeowner?.id}
+                        activeHomeownerId={safeActiveHomeownerId}
                         isAdmin={isAdmin}
                         userRole={userRole}
                       />
@@ -5144,7 +5154,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                         currentUserId={currentUser?.id}
                         claims={claims}
                         userRole={userRole}
-                        activeHomeownerId={activeHomeowner?.id}
+                        activeHomeownerId={safeActiveHomeownerId}
                         isAdmin={isAdmin}
                       />
                     </Suspense>
