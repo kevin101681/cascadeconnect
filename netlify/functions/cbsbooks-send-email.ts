@@ -141,7 +141,26 @@ export const handler: Handler = async (event) => {
     }
 
     // Strip data URI prefix from attachment data if present
-    const base64Content = attachment.data.replace(/^data:application\/pdf;base64,/, '');
+    // Handle both 'data:application/pdf;base64,' and 'data:;base64,' prefixes
+    let base64Content = attachment.data;
+    
+    if (typeof base64Content === 'string') {
+      // Remove any data URI prefix (more flexible pattern)
+      if (base64Content.includes(',')) {
+        base64Content = base64Content.split(',')[1];
+      }
+      // Also handle case where data URI prefix might not have comma
+      base64Content = base64Content.replace(/^data:[^;]*;base64,/, '');
+    }
+    
+    // Log the processed base64 for debugging
+    console.log('📎 Attachment processing:', {
+      originalLength: attachment.data?.length,
+      processedLength: base64Content.length,
+      hasDataUriPrefix: attachment.data?.startsWith('data:'),
+      firstChars: base64Content.substring(0, 50),
+    });
+    
     const fromEmail =
       process.env.SENDGRID_REPLY_EMAIL ||
       process.env.SMTP_FROM ||

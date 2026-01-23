@@ -952,8 +952,12 @@ export const Invoices: React.FC<InvoicesProps> = ({
         }
         
         const doc = createInvoicePDF(emailingInvoice);
-        // Get Base64 without data URI prefix (jspdf's datauristring includes it)
+        // Get Base64 (jspdf's datauristring includes the data URI prefix)
         const pdfDataUri = doc.output('datauristring');
+        
+        // Strip the data URI prefix to get pure base64
+        // datauristring format: "data:application/pdf;base64,<base64content>"
+        const pureBase64 = pdfDataUri.split(',')[1] || pdfDataUri;
         
         // Construct HTML with Payment Button (Table based for compatibility)
         const paymentButtonHtml = emailingInvoice.paymentLink 
@@ -997,7 +1001,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
             html: htmlBody,  // HTML version
             attachment: {
               filename: `Invoice_${emailingInvoice.invoiceNumber}.pdf`,
-              data: pdfDataUri // Backend will strip prefix
+              data: pureBase64 // Pure base64 without data URI prefix
             }
           })
         });

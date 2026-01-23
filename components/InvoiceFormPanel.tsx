@@ -484,6 +484,10 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
       // Get PDF as base64 string
       const pdfDataUri = doc.output('datauristring');
       
+      // Strip the data URI prefix to get pure base64
+      // datauristring format: "data:application/pdf;base64,<base64content>"
+      const pureBase64 = pdfDataUri.split(',')[1] || pdfDataUri;
+      
       // Prepare email content
       const subject = `Invoice #${invoiceNumber} from Cascade Builder Services`;
       const text = `Dear ${clientName},\n\nPlease find attached invoice #${invoiceNumber}.\n\nTotal: $${calculateTotal().toFixed(2)}\nDue Date: ${new Date(dueDate).toLocaleDateString()}\n\nThank you for your business!\n\nCascade Builder Services`;
@@ -530,7 +534,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
           html,
           attachment: {
             filename: `Invoice_${invoiceNumber}.pdf`,
-            data: pdfDataUri
+            data: pureBase64 // Pure base64 without data URI prefix
           }
         })
       });

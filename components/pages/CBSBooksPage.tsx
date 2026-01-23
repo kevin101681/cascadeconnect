@@ -354,6 +354,10 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
       const doc = createInvoicePDF(emailingInvoice);
       const pdfDataUri = doc.output('datauristring');
       
+      // Strip the data URI prefix to get pure base64
+      // datauristring format: "data:application/pdf;base64,<base64content>"
+      const pureBase64 = pdfDataUri.split(',')[1] || pdfDataUri;
+      
       // Construct HTML with Payment Button
       const paymentButtonHtml = emailingInvoice.paymentLink 
         ? `
@@ -396,7 +400,7 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
           html: htmlBody,
           attachment: {
             filename: `Invoice_${emailingInvoice.invoiceNumber}.pdf`,
-            data: pdfDataUri
+            data: pureBase64 // Pure base64 without data URI prefix
           }
         })
       });
