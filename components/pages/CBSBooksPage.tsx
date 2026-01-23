@@ -442,7 +442,8 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
   // CLONE WARRANTY CLAIMS LAYOUT EXACTLY (flex-row, no gap, border-r on left)
   // NO OUTER PADDING - Dashboard already provides it!
   return (
-    <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
+    <>
+      <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
         
         {/* ==================== LEFT COLUMN (Master List) ==================== */}
         {/* Clone Warranty: w-full md:w-96, border-r on desktop, flex flex-col */}
