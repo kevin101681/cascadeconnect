@@ -23,7 +23,7 @@ const LazyAppProviders = React.lazy(() =>
 // Code-split non-critical views to reduce initial JS.
 const ClaimDetail = React.lazy(() => import('./components/ClaimDetail'));
 const NewClaimForm = React.lazy(() => import('./components/NewClaimForm'));
-const Settings = React.lazy(() => import('./components/Settings'));
+const TemplatesManagerModal = React.lazy(() => import('./components/modals/TemplatesManagerModal'));
 const InternalUserManagement = React.lazy(() => import('./components/InternalUserManagement'));
 const HomeownersList = React.lazy(() => import('./components/HomeownersList'));
 const EmailHistory = React.lazy(() => import('./components/EmailHistory'));
@@ -1144,7 +1144,7 @@ function App() {
 
   // UI State - Persistent (but reset INVOICES on page load to prevent auto-opening)
   // Check URL hash for invoice creation link
-  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'BUILDERS' | 'GUIDE'>(() => {
+  const [currentView, setCurrentView] = useState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'BUILDERS' | 'GUIDE'>(() => {
     // Check if URL has invoice creation parameters
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
@@ -1179,7 +1179,7 @@ function App() {
         // Note: Invoice navigation handled via dashboardConfig instead of currentView
       }
     }
-    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'CALLS' | 'INVOICES' | 'SETTINGS'>('cascade_ui_view', 'DASHBOARD');
+    const saved = loadState<'DASHBOARD' | 'DETAIL' | 'NEW' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'CALLS' | 'INVOICES'>('cascade_ui_view', 'DASHBOARD');
     // Don't auto-open modals on page load on mobile - always start at DASHBOARD
     // On desktop, allow restoring saved view
     if (typeof window !== 'undefined') {
@@ -1190,6 +1190,17 @@ function App() {
     }
     return saved;
   });
+
+  // Templates modal state
+  const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
+  const [templatesModalTab, setTemplatesModalTab] = useState<'warranty' | 'messages'>('warranty');
+  const [templatesModalPrefill, setTemplatesModalPrefill] = useState<{subject?: string; body?: string} | undefined>();
+
+  const openTemplatesModal = (tab?: 'warranty' | 'messages', prefill?: {subject?: string; body?: string}) => {
+    setTemplatesModalTab(tab || 'warranty');
+    setTemplatesModalPrefill(prefill);
+    setIsTemplatesModalOpen(true);
+  };
 
   // Route-based wiring: allow direct navigation to Analytics.
   useEffect(() => {
@@ -4694,6 +4705,7 @@ Assigned By: ${assignerName}
       isAdminAccount={isAdminAccount}
       currentUser={activeEmployee}
       onGlobalSearchNavigate={handleSearchNavigate}
+      onOpenTemplatesModal={() => setIsTemplatesModalOpen(true)}
     >
       {currentView === 'DASHBOARD' && (
         <Dashboard 
@@ -4757,6 +4769,7 @@ Assigned By: ${assignerName}
           onDeleteBuilderUser={handleDeleteBuilderUser}
           onDeleteHomeowner={handleDeleteHomeowner}
           onDataReset={() => console.log('Data reset - implement in App.tsx')}
+          onOpenTemplatesModal={openTemplatesModal}
         />
       )}
       {currentView === 'TASKS' && (
@@ -4816,6 +4829,7 @@ Assigned By: ${assignerName}
           onDeleteBuilderUser={handleDeleteBuilderUser}
           onDeleteHomeowner={handleDeleteHomeowner}
           onDataReset={() => console.log('Data reset - implement in App.tsx')}
+          onOpenTemplatesModal={openTemplatesModal}
         />
       )}
       {currentView === 'TEAM' && (
@@ -4905,11 +4919,22 @@ Assigned By: ${assignerName}
           />
         </React.Suspense>
       )}
-      {currentView === 'SETTINGS' && (
+      
+      {/* Templates Modal */}
+      {isTemplatesModalOpen && (
         <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
-          <Settings onNavigate={setCurrentView} />
+          <TemplatesManagerModal 
+            isOpen={isTemplatesModalOpen}
+            onClose={() => {
+              setIsTemplatesModalOpen(false);
+              setTemplatesModalPrefill(undefined);
+            }}
+            initialTab={templatesModalTab}
+            prefillData={templatesModalPrefill}
+          />
         </React.Suspense>
       )}
+      
       {currentView === 'BUILDERS' && (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"

@@ -515,6 +515,7 @@ interface DashboardProps {
   onDeleteBuilderUser?: (id: string) => void;
   onDeleteHomeowner?: (id: string) => void;
   onDataReset?: () => void;
+  onOpenTemplatesModal?: (tab?: 'warranty' | 'messages', prefill?: {subject?: string; body?: string}) => void;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ 
@@ -572,7 +573,8 @@ const Dashboard: React.FC<DashboardProps> = ({
   onUpdateBuilderUser,
   onDeleteBuilderUser,
   onDeleteHomeowner,
-  onDataReset
+  onDataReset,
+  onOpenTemplatesModal
 }) => {
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
@@ -1326,13 +1328,8 @@ const Dashboard: React.FC<DashboardProps> = ({
       return [];
     }
   });
-  const [showMessageTemplateModal, setShowMessageTemplateModal] = useState(false);
   const [showClaimSuggestionModal, setShowClaimSuggestionModal] = useState(false);
-  const [editingMessageTemplateId, setEditingMessageTemplateId] = useState<string | null>(null);
-  const [messageTemplateName, setMessageTemplateName] = useState('');
   const [selectedMessageTemplateId, setSelectedMessageTemplateId] = useState<string>('');
-  const [messageTemplateEditSubject, setMessageTemplateEditSubject] = useState('');
-  const [messageTemplateEditBody, setMessageTemplateEditBody] = useState('');
   
   // Load message templates from localStorage
   const loadMessageTemplates = () => {
@@ -1369,60 +1366,23 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
   };
   
-  // Open message template creator
+  // Open message template creator - now uses centralized modal
   const handleOpenMessageTemplateCreator = (template?: MessageEmailTemplate) => {
-    if (template) {
-      setEditingMessageTemplateId(template.id);
-      setMessageTemplateName(template.name);
-      setMessageTemplateEditSubject(template.subject);
-      setMessageTemplateEditBody(template.body);
-    } else {
-      setEditingMessageTemplateId(null);
-      setMessageTemplateName('');
-      setMessageTemplateEditSubject(newMessageSubject);
-      setMessageTemplateEditBody(newMessageContent);
-    }
-    setShowMessageTemplateModal(true);
-  };
-  
-  // Save message template
-  const handleSaveMessageTemplate = () => {
-    const subjectToSave = editingMessageTemplateId ? messageTemplateEditSubject : newMessageSubject;
-    const bodyToSave = editingMessageTemplateId ? messageTemplateEditBody : newMessageContent;
-    
-    if (!messageTemplateName.trim() || !subjectToSave.trim() || !bodyToSave.trim()) {
-      alert('Please fill in template name, subject, and body.');
-      return;
-    }
-    
-    const templates = [...messageEmailTemplates];
-    if (editingMessageTemplateId) {
-      const index = templates.findIndex(t => t.id === editingMessageTemplateId);
-      if (index >= 0) {
-        templates[index] = {
-          id: editingMessageTemplateId,
-          name: messageTemplateName.trim(),
-          subject: subjectToSave,
-          body: bodyToSave
-        };
+    if (onOpenTemplatesModal) {
+      if (template) {
+        // Editing existing template - open modal with Messages tab
+        onOpenTemplatesModal('messages');
+      } else {
+        // Creating new template - open with prefill from current message
+        onOpenTemplatesModal('messages', {
+          subject: newMessageSubject,
+          body: newMessageContent
+        });
       }
-    } else {
-      templates.push({
-        id: Date.now().toString() + Math.random().toString(36).substring(2),
-        name: messageTemplateName.trim(),
-        subject: subjectToSave,
-        body: bodyToSave
-      });
     }
-    saveMessageTemplates(templates);
-    setShowMessageTemplateModal(false);
-    setEditingMessageTemplateId(null);
-    setMessageTemplateName('');
-    setMessageTemplateEditSubject('');
-    setMessageTemplateEditBody('');
   };
   
-  // Delete message template
+  // Delete message template (still used for inline list management)
   const handleDeleteMessageTemplate = (templateId: string) => {
     if (confirm('Are you sure you want to delete this template?')) {
       const templates = messageEmailTemplates.filter(t => t.id !== templateId);
@@ -6540,71 +6500,6 @@ const Dashboard: React.FC<DashboardProps> = ({
                   </Button>
                 </div>
              </div>
-          </div>,
-          document.body
-        )}
-        
-        {/* Message Email Template Creator Modal */}
-        {showMessageTemplateModal && createPortal(
-          <div className="fixed inset-0 z-[1001] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]">
-            <div className="bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-3 w-full max-w-2xl mx-4 max-h-[80vh] overflow-hidden flex flex-col animate-[scale-in_0.2s_ease-out]" onClick={(e) => e.stopPropagation()}>
-              <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
-                <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">
-                  {editingMessageTemplateId ? 'Edit Template' : 'Create Email Template'}
-                </h2>
-                <button onClick={() => {
-                  setShowMessageTemplateModal(false);
-                  setEditingMessageTemplateId(null);
-                  setMessageTemplateName('');
-                  setMessageTemplateEditSubject('');
-                  setMessageTemplateEditBody('');
-                }} className="p-2 rounded-full hover:bg-surface-container dark:hover:bg-gray-600 transition-colors">
-                  <X className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
-                </button>
-              </div>
-              <div className="p-6 flex-1 overflow-y-auto space-y-4 bg-surface dark:bg-gray-800">
-                <div>
-                  <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Template Name</label>
-                  <input
-                    type="text"
-                    className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                    value={messageTemplateName}
-                    onChange={e => setMessageTemplateName(e.target.value)}
-                    placeholder="e.g., Standard Message"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Subject</label>
-                  <input
-                    type="text"
-                    className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                    value={editingMessageTemplateId ? messageTemplateEditSubject : newMessageSubject}
-                    onChange={e => editingMessageTemplateId ? setMessageTemplateEditSubject(e.target.value) : setNewMessageSubject(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-400 mb-1">Message Body</label>
-                  <textarea 
-                    rows={10}
-                    className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
-                    value={editingMessageTemplateId ? messageTemplateEditBody : newMessageContent}
-                    onChange={e => editingMessageTemplateId ? setMessageTemplateEditBody(e.target.value) : setNewMessageContent(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-2 bg-surface-container dark:bg-gray-700">
-                <Button variant="text" onClick={() => {
-                  setShowMessageTemplateModal(false);
-                  setEditingMessageTemplateId(null);
-                  setMessageTemplateName('');
-                  setMessageTemplateEditSubject('');
-                  setMessageTemplateEditBody('');
-                }}>Cancel</Button>
-                <Button variant="filled" onClick={handleSaveMessageTemplate} disabled={!messageTemplateName.trim() || !(editingMessageTemplateId ? messageTemplateEditSubject : newMessageSubject).trim() || !(editingMessageTemplateId ? messageTemplateEditBody : newMessageContent).trim()} icon={<Save className="h-4 w-4" />}>
-                  {editingMessageTemplateId ? 'Update Template' : 'Save Template'}
-                </Button>
-              </div>
-            </div>
           </div>,
           document.body
         )}

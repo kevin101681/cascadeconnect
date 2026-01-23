@@ -2,7 +2,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserRole, Homeowner } from '../types';
-import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2, Phone, Settings, BookOpen, LogOut } from 'lucide-react';
+import { UserCircle, Users, ChevronDown, Search, X, Menu, Database, UserPlus, Building2, HardHat, Moon, Sun, BarChart3, FileText, Home, Mail, Server, MapPin, Loader2, Phone, Settings, BookOpen, LogOut, LayoutTemplate } from 'lucide-react';
 import { useDarkMode } from './DarkModeProvider';
 import { UserButton, useUser, SignOutButton } from '@clerk/clerk-react';
 import GlobalSearch from './global/GlobalSearch';
@@ -31,9 +31,12 @@ interface LayoutProps {
   onGlobalSearchNavigate?: (url: string) => void;
 
   // Navigation & Actions
-  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'BUILDERS' | 'GUIDE') => void;
+  onNavigate: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'BUILDERS' | 'GUIDE') => void;
   onOpenEnrollment: () => void;
-  currentView?: 'DASHBOARD' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'SETTINGS' | 'BUILDERS' | 'DETAIL' | 'NEW' | 'GUIDE';
+  currentView?: 'DASHBOARD' | 'TEAM' | 'DATA' | 'ANALYTICS' | 'TASKS' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS' | 'INVOICES' | 'BUILDERS' | 'DETAIL' | 'NEW' | 'GUIDE';
+
+  // Templates modal
+  onOpenTemplatesModal?: () => void;
 
   // Auth
   onSignOut: () => Promise<void>;
@@ -401,11 +404,11 @@ const Layout: React.FC<LayoutProps> = ({
                               </button>
                             )}
                             <button 
-                              onClick={() => handleMenuAction(() => onNavigate('SETTINGS'))}
+                              onClick={() => handleMenuAction(() => onOpenTemplatesModal?.())}
                               className="w-full text-left px-4 py-2.5 text-sm text-surface-on dark:text-gray-100 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full flex items-center gap-3 transition-colors"
                             >
-                              <Settings className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-                              Settings
+                              <LayoutTemplate className="h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+                              Templates
                             </button>
                             
                             {/* Divider before user actions */}
