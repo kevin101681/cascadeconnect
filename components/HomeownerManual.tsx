@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface HomeownerManualProps {
   homeownerId?: string;
@@ -6,7 +6,52 @@ interface HomeownerManualProps {
 
 const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
   const [activeSection, setActiveSection] = useState(1);
+  const [manualContent, setManualContent] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // Fetch the manual HTML content
+  useEffect(() => {
+    const fetchManual = async () => {
+      try {
+        // Try multiple paths
+        const paths = ['/static/manual.html', '/complete_homeowner_manual.html'];
+        
+        for (const path of paths) {
+          try {
+            const response = await fetch(path, {
+              headers: { 'Accept': 'text/html' },
+              cache: 'no-cache'
+            });
+            
+            if (response.ok && response.headers.get('content-type')?.includes('text/html')) {
+              let html = await response.text();
+              console.log(`✅ Successfully fetched manual from ${path}`);
+              console.log('HTML length:', html.length);
+              
+              // Inject homeownerId into the HTML if provided
+              if (homeownerId) {
+                html = html.replace(
+                  "const homeownerId = urlParams.get('homeownerId') || 'default';",
+                  `const homeownerId = '${homeownerId}';`
+                );
+              }
+              
+              setManualContent(html);
+              return;
+            }
+          } catch (err) {
+            console.log(`Failed to fetch from ${path}:`, err);
+          }
+        }
+        
+        console.error('❌ Could not fetch manual from any path');
+      } catch (error) {
+        console.error('Error fetching manual:', error);
+      }
+    };
+
+    fetchManual();
+  }, [homeownerId]);
 
   // Define sections with anchor IDs for navigation
   const sections = [
@@ -18,7 +63,7 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
     { id: 6, title: 'Contact & Notes', anchor: 'contact-notes' },
   ];
 
-  // Handle navigation - update iframe hash
+  // Handle navigation - scroll to element within iframe
   const handleSectionClick = (sectionId: number) => {
     setActiveSection(sectionId);
     
@@ -26,22 +71,21 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
     if (!section || !iframeRef.current) return;
 
     try {
-      // Navigate the iframe to the specific section using hash
       const iframe = iframeRef.current;
-      if (iframe.contentWindow) {
-        // Try to navigate using hash
-        iframe.contentWindow.location.hash = section.anchor;
-        console.log(`✅ Navigated iframe to section: ${section.title} (#${section.anchor})`);
+      if (iframe.contentWindow && iframe.contentWindow.document) {
+        // Find element by ID in the iframe document
+        const element = iframe.contentWindow.document.getElementById(section.anchor);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          console.log(`✅ Scrolled to section: ${section.title} (#${section.anchor})`);
+        } else {
+          console.log(`❌ Element not found with ID: ${section.anchor}`);
+        }
       }
     } catch (error) {
       console.error('❌ Error navigating iframe:', error);
     }
   };
-
-  // Build iframe src with homeownerId if provided
-  const iframeSrc = homeownerId 
-    ? `/static/manual.html?homeownerId=${encodeURIComponent(homeownerId)}`
-    : '/static/manual.html';
 
   return (
     <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden flex flex-col h-[calc(100vh-theme(spacing.32))]">
@@ -75,12 +119,21 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
 
         {/* Right Pane - Iframe Content */}
         <div className="flex-1 overflow-hidden bg-white dark:bg-gray-900">
-          <iframe
-            ref={iframeRef}
-            src={iframeSrc}
-            className="w-full h-full border-none"
-            title="Homeowner Manual"
-          />
+          {manualContent ? (
+            <iframe
+              ref={iframeRef}
+              srcDoc={manualContent}
+              className="w-full h-full border-none bg-white"
+              title="Homeowner Manual"
+            />
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-surface-on-variant dark:text-gray-400">Loading manual...</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
