@@ -114,7 +114,7 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
       {/* Two-Pane Layout */}
       <div className="flex h-full overflow-hidden">
         {/* Left Pane - Navigation Sidebar */}
-        <div className="flex flex-col gap-2 p-4 bg-muted/20 w-64 border-r border-surface-outline-variant dark:border-gray-700 shrink-0 overflow-y-auto">
+        <div className="flex flex-col gap-2 p-4 bg-white w-64 border-r border-surface-outline-variant dark:border-gray-700 dark:bg-gray-800 shrink-0 overflow-y-auto">
           <nav className="flex flex-col gap-2">
             {SECTIONS.map((section) => (
               <button
@@ -122,8 +122,8 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
                 onClick={() => handleSectionClick(section)}
                 className={`w-full text-left px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 ease-in-out flex items-center gap-2 border ${
                   activeSection === section.id
-                    ? 'bg-white text-primary border-gray-200 shadow-md -translate-y-0.5 dark:border-gray-600 dark:bg-gray-800 dark:text-primary dark:shadow-gray-700/50'
-                    : 'text-muted-foreground border-transparent hover:bg-white hover:text-foreground hover:shadow-sm hover:-translate-y-0.5 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200'
+                    ? 'bg-white text-primary border-primary shadow-md -translate-y-0.5 dark:border-primary dark:bg-gray-800 dark:text-primary dark:shadow-gray-700/50'
+                    : 'text-muted-foreground border-transparent hover:bg-gray-50 hover:text-foreground hover:shadow-sm hover:-translate-y-0.5 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-200'
                 }`}
               >
                 {section.label}
