@@ -1,5 +1,6 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useAuth } from '@clerk/clerk-react';
 import { Invoice, Client, InvoiceItem, ViewState } from '../types';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
@@ -95,6 +96,9 @@ type ActiveFab = 'none' | 'menu' | 'filter' | 'search';
 export const Invoices: React.FC<InvoicesProps> = ({ 
   invoices, clients, onAdd, onUpdate, onDelete, onBulkAdd, onBulkDelete, onNavigate, onBackup, prefillInvoice 
 }) => {
+  // Authentication hook for API calls
+  const { getToken } = useAuth();
+  
   const [isCreating, setIsCreating] = useState(false); // Only for "New Invoice" mode
   const [expandedId, setExpandedId] = useState<string | null>(null); // For Inline Edit
   const [currentInvoice, setCurrentInvoice] = useState<Partial<Invoice>>({});
@@ -941,6 +945,12 @@ export const Invoices: React.FC<InvoicesProps> = ({
 
     setIsSendingEmail(true);
     try {
+        // Get authentication token
+        const token = await getToken();
+        if (!token) {
+          throw new Error('Authentication required. Please sign in again.');
+        }
+        
         const doc = createInvoicePDF(emailingInvoice);
         // Get Base64 without data URI prefix (jspdf's datauristring includes it)
         const pdfDataUri = doc.output('datauristring');
@@ -972,17 +982,33 @@ export const Invoices: React.FC<InvoicesProps> = ({
             </div>
         `;
         
-        // Send to backend
-        const result = await api.invoices.sendEmail(
-            emailTo,
-            emailSubject,
-            emailBody, // Plain text fallback
-            htmlBody,  // HTML version
-            { 
-                filename: `Invoice_${emailingInvoice.invoiceNumber}.pdf`,
-                data: pdfDataUri // Backend will strip prefix
+        // Send email via API with authentication
+        const response = await fetch('/api/cbsbooks/send-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          credentials: 'include', // Include cookies for Clerk authentication
+          body: JSON.stringify({
+            to: emailTo,
+            subject: emailSubject,
+            text: emailBody, // Plain text fallback
+            html: htmlBody,  // HTML version
+            attachment: {
+              filename: `Invoice_${emailingInvoice.invoiceNumber}.pdf`,
+              data: pdfDataUri // Backend will strip prefix
             }
-        );
+          })
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          throw new Error(errorData.error || `Failed to send email: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        console.log('✅ Email sent successfully:', result);
 
         // Update status to sent if draft
         if (emailingInvoice.status === 'draft') {
@@ -991,6 +1017,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
 
         // Close modal (success is implied by modal closure)
         setEmailingInvoice(null);
+        alert('Email sent successfully!');
     } catch (e: any) {
         console.error("Failed to send email", e);
         alert("Failed to send email: " + e.message);
