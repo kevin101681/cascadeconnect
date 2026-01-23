@@ -5,7 +5,7 @@ interface HomeownerManualProps {
 }
 
 const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
-  const [activeSection, setActiveSection] = useState(1);
+  const [activeSection, setActiveSection] = useState<string>('cover');
   const [manualContent, setManualContent] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -53,34 +53,43 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
     fetchManual();
   }, [homeownerId]);
 
-  // Define sections with anchor IDs for navigation
-  const sections = [
-    { id: 1, title: 'Cover & Quick Reference', anchor: 'cover' },
-    { id: 2, title: 'Understanding Your Warranty Team', anchor: 'warranty-team' },
-    { id: 3, title: 'Emergency: No Heat', anchor: 'emergency-heat' },
-    { id: 4, title: 'Emergency: Plumbing Leaks', anchor: 'emergency-plumbing' },
-    { id: 5, title: 'Glossary & Contacts', anchor: 'glossary' },
-    { id: 6, title: 'Contact & Notes', anchor: 'contact-notes' },
+  // Define sections with search text for H1 headers
+  const SECTIONS = [
+    { id: 'cover', label: 'Welcome', searchText: 'Homeowner' }, // Matches "Homeowner's Manual"
+    { id: 'quick', label: 'Quick Reference', searchText: 'Quick Reference' },
+    { id: 'team', label: 'Warranty Team', searchText: 'Understanding Your Warranty Team' },
+    { id: 'heat', label: 'Emergency: No Heat', searchText: 'EMERGENCY: No Heat' },
+    { id: 'plumbing', label: 'Emergency: Leaks', searchText: 'EMERGENCY: Plumbing Leaks' },
+    { id: 'glossary', label: 'Glossary', searchText: 'Homeowner\'s Glossary' },
+    { id: 'contacts', label: 'Important Contacts', searchText: 'Important Contacts' },
+    { id: 'notes', label: 'My Notes', searchText: 'My Home Notes' },
   ];
 
-  // Handle navigation - scroll to element within iframe
-  const handleSectionClick = (sectionId: number) => {
-    setActiveSection(sectionId);
+  // Handle navigation - search for H1 by text content
+  const handleSectionClick = (section: typeof SECTIONS[0]) => {
+    setActiveSection(section.id);
     
-    const section = sections.find(s => s.id === sectionId);
-    if (!section || !iframeRef.current) return;
+    if (!iframeRef.current || !iframeRef.current.contentWindow) return;
 
     try {
-      const iframe = iframeRef.current;
-      if (iframe.contentWindow && iframe.contentWindow.document) {
-        // Find element by ID in the iframe document
-        const element = iframe.contentWindow.document.getElementById(section.anchor);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          console.log(`✅ Scrolled to section: ${section.title} (#${section.anchor})`);
-        } else {
-          console.log(`❌ Element not found with ID: ${section.anchor}`);
-        }
+      const doc = iframeRef.current.contentWindow.document;
+
+      // Special Case: Cover Page - scroll to top
+      if (section.id === 'cover') {
+        doc.body.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        console.log(`✅ Scrolled to top (Cover Page)`);
+        return;
+      }
+
+      // Search for H1 containing the text
+      const headers = Array.from(doc.getElementsByTagName('h1'));
+      const target = headers.find(h => h.textContent?.includes(section.searchText));
+      
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        console.log(`✅ Scrolled to section: ${section.label}`);
+      } else {
+        console.log(`❌ Header not found with text: "${section.searchText}"`);
       }
     } catch (error) {
       console.error('❌ Error navigating iframe:', error);
@@ -99,19 +108,19 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
       {/* Two-Pane Layout */}
       <div className="flex h-full overflow-hidden">
         {/* Left Pane - Navigation Sidebar */}
-        <div className="w-64 shrink-0 border-r border-surface-outline-variant dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 p-4 overflow-y-auto">
-          <nav className="space-y-1">
-            {sections.map((section) => (
+        <div className="flex flex-col gap-1 p-2 bg-muted/20 h-full overflow-y-auto w-64 border-r border-surface-outline-variant dark:border-gray-700 shrink-0">
+          <nav className="flex flex-col gap-1">
+            {SECTIONS.map((section) => (
               <button
                 key={section.id}
-                onClick={() => handleSectionClick(section.id)}
-                className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                onClick={() => handleSectionClick(section)}
+                className={`w-full text-left px-3 py-2 text-sm font-medium rounded-md transition-all ${
                   activeSection === section.id
-                    ? 'text-primary bg-blue-50 dark:bg-blue-900/30 border-l-4 border-primary'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50 border-l-4 border-transparent'
+                    ? 'bg-white text-primary shadow-sm border border-surface-outline-variant dark:border-gray-600 dark:bg-gray-800 dark:text-primary'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200'
                 }`}
               >
-                {section.title}
+                {section.label}
               </button>
             ))}
           </nav>
