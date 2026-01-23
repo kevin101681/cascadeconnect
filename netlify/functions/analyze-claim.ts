@@ -375,11 +375,33 @@ Please analyze this claim and provide your recommendation in JSON format.`
       throw new Error('No response content from AI');
     }
 
+    // Log raw AI response for debugging
+    console.log('📝 Raw AI Response:', content);
+
     // Harden JSON parsing to handle Markdown code blocks
     const cleanJson = content.replace(/```json/g, '').replace(/```/g, '').trim();
-    const result = JSON.parse(cleanJson) as AIReviewResult;
-
-    console.log('✅ AI Analysis complete:', result.status);
+    
+    let result: AIReviewResult;
+    try {
+      result = JSON.parse(cleanJson) as AIReviewResult;
+      console.log('✅ AI Analysis complete:', result.status);
+    } catch (parseError) {
+      console.error('❌ JSON Parse Failed!');
+      console.error('Raw content was:', content);
+      console.error('Cleaned content was:', cleanJson);
+      console.error('Parse error:', parseError);
+      
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          status: 'Needs Info',
+          reasoning: 'Failed to parse AI response.',
+          responseDraft: 'System error: AI returned invalid response format. Please review this claim manually.',
+          error: parseError instanceof Error ? parseError.message : 'Unknown parse error'
+        }),
+      };
+    }
 
     return {
       statusCode: 200,
@@ -390,6 +412,13 @@ Please analyze this claim and provide your recommendation in JSON format.`
   } catch (error) {
     console.error('❌ Error analyzing claim with AI:', error);
     
+    // Log detailed error information
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    
     // Return graceful fallback
     return {
       statusCode: 500,
@@ -398,6 +427,7 @@ Please analyze this claim and provide your recommendation in JSON format.`
         status: 'Needs Info',
         reasoning: 'AI analysis service temporarily unavailable.',
         responseDraft: 'System error: Unable to perform AI analysis. Please review this claim manually.',
+        error: error instanceof Error ? error.message : 'Unknown error'
       }),
     };
   }
