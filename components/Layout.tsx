@@ -68,7 +68,8 @@ const Layout: React.FC<LayoutProps> = ({
   isAdminAccount = false,
   currentUser,
   currentView,
-  onGlobalSearchNavigate
+  onGlobalSearchNavigate,
+  onOpenTemplatesModal
 }) => {
   const navigate = useNavigate();
   // Minimal approach: Just ensure avatar is sized correctly, let CSS handle the rest
