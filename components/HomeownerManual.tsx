@@ -65,32 +65,38 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
     { id: 'notes', label: 'My Notes', searchText: 'My Home Notes' },
   ];
 
-  // Handle navigation - search for H1 by text content
+  // Handle navigation - search for H1 by text content and scroll using scrollTo
   const handleSectionClick = (section: typeof SECTIONS[0]) => {
     setActiveSection(section.id);
     
     if (!iframeRef.current || !iframeRef.current.contentWindow) return;
 
     try {
-      const doc = iframeRef.current.contentWindow.document;
+      const win = iframeRef.current.contentWindow;
+      const doc = win.document;
 
-      // Special Case: Cover Page - scroll to top
-      if (section.id === 'cover') {
-        doc.body.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        console.log(`✅ Scrolled to top (Cover Page)`);
-        return;
-      }
-
-      // Search for H1 containing the text
-      const headers = Array.from(doc.getElementsByTagName('h1'));
-      const target = headers.find(h => h.textContent?.includes(section.searchText));
+      // Calculate target scroll position
+      let targetTop = 0;
       
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        console.log(`✅ Scrolled to section: ${section.label}`);
-      } else {
-        console.log(`❌ Header not found with text: "${section.searchText}"`);
+      if (section.id !== 'cover') {
+        // Search for H1 containing the text
+        const headers = Array.from(doc.getElementsByTagName('h1'));
+        const target = headers.find(h => h.textContent?.includes(section.searchText));
+        
+        if (target) {
+          // Calculate offset relative to the iframe document
+          targetTop = target.getBoundingClientRect().top + win.scrollY - 20; // -20 for padding
+          console.log(`✅ Found section: ${section.label}, scrolling to ${targetTop}`);
+        } else {
+          console.log(`❌ Header not found with text: "${section.searchText}"`);
+        }
       }
+
+      // Scroll ONLY the iframe window (prevents parent window jump)
+      win.scrollTo({
+        top: targetTop,
+        behavior: 'smooth'
+      });
     } catch (error) {
       console.error('❌ Error navigating iframe:', error);
     }
@@ -108,16 +114,16 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
       {/* Two-Pane Layout */}
       <div className="flex h-full overflow-hidden">
         {/* Left Pane - Navigation Sidebar */}
-        <div className="flex flex-col gap-1 p-2 bg-muted/20 h-full overflow-y-auto w-64 border-r border-surface-outline-variant dark:border-gray-700 shrink-0">
-          <nav className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2 p-4 bg-muted/20 w-64 border-r border-surface-outline-variant dark:border-gray-700 shrink-0 overflow-y-auto">
+          <nav className="flex flex-col gap-2">
             {SECTIONS.map((section) => (
               <button
                 key={section.id}
                 onClick={() => handleSectionClick(section)}
-                className={`w-full text-left px-3 py-2 text-sm font-medium rounded-md transition-all ${
+                className={`w-full text-left px-4 py-2 text-sm font-medium rounded-full transition-all flex items-center gap-2 ${
                   activeSection === section.id
-                    ? 'bg-white text-primary shadow-sm border border-surface-outline-variant dark:border-gray-600 dark:bg-gray-800 dark:text-primary'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground dark:text-gray-400 dark:hover:bg-gray-700/50 dark:hover:text-gray-200'
+                    ? 'bg-white text-primary border border-surface-outline-variant shadow-sm dark:border-gray-600 dark:bg-gray-800 dark:text-primary'
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground dark:text-gray-400 dark:hover:bg-gray-700/30 dark:hover:text-gray-200'
                 }`}
               >
                 {section.label}
