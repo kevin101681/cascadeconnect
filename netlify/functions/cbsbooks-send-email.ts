@@ -105,7 +105,24 @@ export const handler: Handler = async (event) => {
     const body = JSON.parse(event.body || '{}');
     const { to, subject, text, html, attachment } = body;
 
+    // Debug logging - log received payload
+    console.log('📥 Received email request:', {
+      to,
+      subject,
+      hasText: !!text,
+      hasHtml: !!html,
+      hasAttachment: !!attachment,
+      attachmentFilename: attachment?.filename,
+      attachmentDataLength: attachment?.data?.length,
+    });
+
     if (!to || !attachment) {
+      console.error('❌ Validation failed:', {
+        missingTo: !to,
+        missingAttachment: !attachment,
+        receivedTo: to,
+        receivedAttachment: attachment ? 'present' : 'missing',
+      });
       return {
         statusCode: 400,
         headers,
@@ -131,6 +148,17 @@ export const handler: Handler = async (event) => {
       process.env.SMTP_USER ||
       'info@cascadebuilderservices.com';
 
+    // Debug logging - log the payload being sent
+    console.log('📧 Preparing email with:', {
+      to,
+      from: fromEmail,
+      subject: subject || 'Invoice from Cascade Builder Services',
+      hasText: !!text,
+      hasHtml: !!html,
+      attachmentSize: base64Content.length,
+      attachmentFilename: attachment.filename,
+    });
+
     const msg = {
       to: to,
       from: {
@@ -150,6 +178,7 @@ export const handler: Handler = async (event) => {
       ],
     };
 
+    console.log('📤 Sending email to SendGrid...');
     const [response] = await sgMail.send(msg);
     console.log('✅ Invoice email sent via SendGrid:', response.statusCode, 'to:', to);
 
@@ -163,15 +192,34 @@ export const handler: Handler = async (event) => {
       }),
     };
   } catch (error: any) {
-    console.error('❌ Email sending error:', error);
+    console.error('❌ Email sending error:', error.message);
+    
+    // Log detailed SendGrid validation errors if available
+    if (error.response) {
+      console.error('🛑 SendGrid Response Status:', error.response.status);
+      console.error('🛑 SendGrid Response Headers:', JSON.stringify(error.response.headers, null, 2));
+      console.error('🛑 SendGrid Validation Errors:', JSON.stringify(error.response.body, null, 2));
+      
+      // Extract specific error messages if available
+      if (error.response.body && error.response.body.errors) {
+        console.error('🚨 Specific Validation Errors:');
+        error.response.body.errors.forEach((err: any, index: number) => {
+          console.error(`   ${index + 1}. ${err.message || err.field || JSON.stringify(err)}`);
+        });
+      }
+    }
+    
+    // Log the full error object for debugging
+    console.error('🔍 Full error object:', JSON.stringify(error, null, 2));
 
-    // Return a proper error response
+    // Return a detailed error response
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
         success: false,
         error: error.message || 'Failed to send email',
+        details: error.response?.body?.errors || error.response?.body || 'No additional details',
       }),
     };
   }
