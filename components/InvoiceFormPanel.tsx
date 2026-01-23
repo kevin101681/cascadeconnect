@@ -8,6 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Calendar as CalendarIcon, DollarSign, X } from 'lucide-react';
 import { z } from 'zod';
+import { useAuth } from '@clerk/clerk-react';
 import Button from './Button';
 import CalendarPicker from './CalendarPicker';
 
@@ -77,6 +78,9 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
   editInvoice,
   isVisible,
 }) => {
+  // ==================== AUTH ====================
+  const { getToken } = useAuth();
+  
   // ==================== STATE ====================
   
   const [invoiceNumber, setInvoiceNumber] = useState('');
@@ -321,56 +325,223 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
     
     setIsSaving(true);
     try {
-      // Backend will automatically set status to 'sent' when email is dispatched
+      // Get Clerk authentication token
+      const token = await getToken();
+      if (!token) {
+        throw new Error('Authentication required. Please sign in again.');
+      }
+      
+      // Save the invoice first (this will trigger onSave which should return the saved invoice)
       await onSave({ ...invoice, status: 'sent' });
       
-      // Then send the email
-      const { api } = await import('../lib/cbsbooks/services/api');
-      const subject = `Invoice ${invoiceNumber} from Cascade Connect`;
-      const text = `Dear ${clientName},\n\nPlease find attached your invoice ${invoiceNumber}.\n\nTotal: $${calculateTotal().toFixed(2)}\nDue Date: ${new Date(dueDate).toLocaleDateString()}\n\nThank you for your business!\n\nCascade Connect`;
+      // Construct the full invoice object for PDF generation
+      const fullInvoice = {
+        id: invoice.id || crypto.randomUUID(),
+        invoiceNumber,
+        clientName,
+        clientEmail,
+        projectDetails,
+        paymentLink,
+        checkNumber,
+        date,
+        dueDate,
+        datePaid: datePaid || undefined,
+        total: calculateTotal(),
+        status: 'sent' as const,
+        items
+      };
+      
+      // Dynamically import jsPDF
+      const jsPDF = (await import('jspdf')).default;
+      
+      // Generate PDF using the same logic as Invoices.tsx
+      const doc = new jsPDF();
+      doc.setFont("helvetica", "normal");
+      
+      // Colors
+      const primaryColor = [79, 120, 130];
+      const surfaceContainerColor = [238, 239, 241];
+      
+      // Helper function to format date
+      const formatDate = (dateString: string) => {
+        if (!dateString) return '';
+        try {
+          const [y, m, d] = dateString.split('-');
+          return `${m}/${d}/${y}`;
+        } catch (e) {
+          return dateString;
+        }
+      };
+      
+      // Add CBS Logo (if available)
+      try {
+        const logoPath = '/images/manual/cbslogo.png';
+        doc.addImage(logoPath, 'PNG', 162, 10, 25, 0);
+      } catch (e) {
+        console.warn('Could not load CBS logo:', e);
+      }
+      
+      // Header
+      doc.setFontSize(24);
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text(`INVOICE`, 14, 20);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`#${invoiceNumber}`, 14, 26);
+      
+      // Dates
+      doc.setTextColor(0);
+      doc.setFontSize(10);
+      doc.text(`Date: ${formatDate(date)}`, 140, 20, { align: 'right' } as any);
+      doc.text(`Due Date: ${formatDate(dueDate)}`, 140, 26, { align: 'right' } as any);
+      
+      // Bill To section
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text("Bill To:", 14, 40);
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(10);
+      doc.text(clientName || '', 14, 46);
+      if (clientEmail) doc.text(clientEmail, 14, 51);
+      
+      // Sent From section
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text("Sent From:", 14, 58);
+      doc.setFont(undefined, 'normal');
+      doc.setFontSize(10);
+      doc.text("Cascade Builder Services", 14, 64);
+      doc.text("3519 Fox Ct.", 14, 69);
+      doc.text("Gig Harbor, WA 98335", 14, 74);
+      
+      // Items Table
+      let y = 88;
+      
+      // Table header
+      doc.setFillColor(surfaceContainerColor[0], surfaceContainerColor[1], surfaceContainerColor[2]);
+      doc.roundedRect(14, y, 182, 8, 5, 5, 'F');
+      
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text("Description", 18, y + 5);
+      doc.text("Qty", 120, y + 5, { align: 'center' } as any);
+      doc.text("Rate", 150, y + 5, { align: 'center' } as any);
+      doc.text("Amount", 180, y + 5, { align: 'center' } as any);
+      
+      y += 14;
+      
+      // Project Details row (if exists)
+      if (projectDetails) {
+        doc.setFont(undefined, 'bold');
+        doc.setTextColor(0);
+        doc.text("Project Address: ", 18, y);
+        doc.setFont(undefined, 'normal');
+        const labelW = 28;
+        doc.text(projectDetails, 18 + labelW, y);
+        y += 8;
+      }
+      
+      // Items
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(0);
+      items.forEach(item => {
+        doc.text(item.description || '', 18, y);
+        doc.text((item.quantity || 0).toString(), 120, y, { align: 'center' } as any);
+        doc.text(`$${(item.rate || 0).toFixed(0)}`, 150, y, { align: 'center' } as any);
+        doc.text(`$${(item.amount || 0).toFixed(0)}`, 180, y, { align: 'center' } as any);
+        y += 8;
+      });
+      
+      y += 5;
+      
+      // Total
+      doc.setDrawColor(surfaceContainerColor[0], surfaceContainerColor[1], surfaceContainerColor[2]);
+      doc.line(14, y, 196, y);
+      y += 10;
+      
+      doc.setFillColor(surfaceContainerColor[0], surfaceContainerColor[1], surfaceContainerColor[2]);
+      doc.roundedRect(135, y, 60, 10, 5, 5, 'F');
+      
+      doc.setFontSize(11);
+      doc.setFont(undefined, 'bold');
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text(`TOTAL  $${calculateTotal().toFixed(0)}`, 165, y + 6, { align: 'center', baseline: 'middle' } as any);
+      
+      // Payment Button (if link exists)
+      if (paymentLink) {
+        y += 22;
+        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.roundedRect(155, y, 40, 10, 5, 5, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.text("PAY ONLINE", 175, y + 6, { align: 'center', baseline: 'middle' } as any);
+        
+        doc.link(155, y, 40, 10, { url: paymentLink });
+      }
+      
+      // Get PDF as base64 string
+      const pdfDataUri = doc.output('datauristring');
+      
+      // Prepare email content
+      const subject = `Invoice #${invoiceNumber} from Cascade Builder Services`;
+      const text = `Dear ${clientName},\n\nPlease find attached invoice #${invoiceNumber}.\n\nTotal: $${calculateTotal().toFixed(2)}\nDue Date: ${new Date(dueDate).toLocaleDateString()}\n\nThank you for your business!\n\nCascade Builder Services`;
+      
+      // HTML email with payment button
+      const paymentButtonHtml = paymentLink 
+        ? `
+        <table width="100%" cellspacing="0" cellpadding="0" style="margin-top: 20px;">
+          <tr>
+            <td>
+              <table cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="border-radius: 50px; background-color: #4f7882;">
+                    <a href="${paymentLink}" target="_blank" style="padding: 12px 24px; border: 1px solid #4f7882; border-radius: 50px; font-family: sans-serif; font-size: 14px; font-weight: bold; color: #ffffff; text-decoration: none; display: inline-block;">
+                      Pay Invoice Online
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>` 
+        : '';
+      
       const html = `
-        <h2>Invoice ${invoiceNumber}</h2>
-        <p>Dear ${clientName},</p>
-        <p>Please find your invoice details below:</p>
-        <table style="border-collapse: collapse; width: 100%; margin: 20px 0;">
-          <tr style="background-color: #f5f5f5;">
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Description</th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Quantity</th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Rate</th>
-            <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">Amount</th>
-          </tr>
-          ${items.map(item => `
-            <tr>
-              <td style="border: 1px solid #ddd; padding: 8px;">${item.description}</td>
-              <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${item.quantity}</td>
-              <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${item.rate.toFixed(2)}</td>
-              <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${item.amount.toFixed(2)}</td>
-            </tr>
-          `).join('')}
-          <tr style="background-color: #f5f5f5; font-weight: bold;">
-            <td colspan="3" style="border: 1px solid #ddd; padding: 8px; text-align: right;">Total:</td>
-            <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">$${calculateTotal().toFixed(2)}</td>
-          </tr>
-        </table>
-        <p><strong>Due Date:</strong> ${new Date(dueDate).toLocaleDateString()}</p>
-        ${paymentLink ? `<p><a href="${paymentLink}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; margin-top: 10px;">Pay Now</a></p>` : ''}
-        <p>Thank you for your business!</p>
-        <p>Cascade Connect</p>
+        <div style="font-family: sans-serif; color: #191c1d; line-height: 1.5;">
+          <p style="white-space: pre-wrap;">${text}</p>
+          ${paymentButtonHtml}
+        </div>
       `;
       
-      // Generate PDF as base64 (stub for now - can be enhanced later)
-      const pdfData = btoa(`Invoice ${invoiceNumber}\n${text}`);
+      // Send email via API with authentication (via cookies)
+      const response = await fetch('/api/cbsbooks/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        credentials: 'include', // Include cookies for Clerk authentication
+        body: JSON.stringify({
+          to: clientEmail,
+          subject,
+          text,
+          html,
+          attachment: {
+            filename: `Invoice_${invoiceNumber}.pdf`,
+            data: pdfDataUri
+          }
+        })
+      });
       
-      await api.invoices.sendEmail(
-        clientEmail,
-        subject,
-        text,
-        html,
-        {
-          filename: `invoice-${invoiceNumber}.pdf`,
-          data: pdfData
-        }
-      );
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `Failed to send email: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      console.log('✅ Email sent successfully:', result);
       
       setIsSaving(false);
       alert('Invoice saved and emailed successfully!');

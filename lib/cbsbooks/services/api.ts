@@ -491,9 +491,14 @@ export const api = {
         }
         
         // ❌ REAL EMAIL: Throw errors on failure (no silent mock fallback)
+        // Note: Authentication is handled via cookies (Clerk's __session cookie)
+        // The backend function will validate the session automatically
         const result = await fetchWithErrors(`${API_BASE}/send-email`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include', // Include cookies for authentication
             body: JSON.stringify({ to, subject, text, html, attachment })
         });
         
