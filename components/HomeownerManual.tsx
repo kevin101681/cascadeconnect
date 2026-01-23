@@ -123,7 +123,7 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
                 className={`w-full flex items-center justify-center text-center px-4 py-2 text-sm font-medium rounded-full transition-all duration-200 ease-in-out border ${
                   activeSection === section.id
                     ? 'bg-white text-primary border-primary shadow-md -translate-y-0.5 dark:border-primary dark:bg-gray-800 dark:text-primary dark:shadow-gray-700/50'
-                    : 'text-muted-foreground border-transparent hover:bg-white hover:text-primary hover:shadow-md hover:-translate-y-0.5 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-primary'
+                    : 'text-muted-foreground border-transparent hover:bg-gray-100 hover:text-primary hover:shadow-md hover:-translate-y-0.5 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-primary'
                 }`}
               >
                 {section.label}
