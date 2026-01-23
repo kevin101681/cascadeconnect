@@ -55,7 +55,7 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
 
   // Define sections with search text for H1 headers
   const SECTIONS = [
-    { id: 'cover', label: 'Welcome', searchText: 'Homeowner' }, // Matches "Homeowner's Manual"
+    { id: 'cover', label: 'Welcome', searchText: 'Homeowner' }, // Matches "Homeowner Manual"
     { id: 'quick', label: 'Quick Reference', searchText: 'Quick Reference' },
     { id: 'team', label: 'Warranty Team', searchText: 'Understanding Your Warranty Team' },
     { id: 'heat', label: 'Emergency: No Heat', searchText: 'EMERGENCY: No Heat' },
