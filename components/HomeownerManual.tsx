@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 
 interface HomeownerManualProps {
   homeownerId?: string;
@@ -6,87 +6,42 @@ interface HomeownerManualProps {
 
 const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
   const [activeSection, setActiveSection] = useState(1);
-  const [manualHtml, setManualHtml] = useState<string | null>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // Fetch the manual HTML content
-  useEffect(() => {
-    const fetchManual = async () => {
-      try {
-        // Try multiple paths
-        const paths = ['/static/manual.html', '/complete_homeowner_manual.html'];
-        
-        for (const path of paths) {
-          try {
-            const response = await fetch(path, {
-              headers: { 'Accept': 'text/html' },
-              cache: 'no-cache'
-            });
-            
-            if (response.ok && response.headers.get('content-type')?.includes('text/html')) {
-              let html = await response.text();
-              console.log(`✅ Successfully fetched manual from ${path}`);
-              console.log('HTML length:', html.length);
-              console.log('Contains .cover:', html.includes('class="cover"'));
-              
-              // Inject homeownerId into the HTML
-              if (homeownerId) {
-                html = html.replace(
-                  "const homeownerId = urlParams.get('homeownerId') || 'default';",
-                  `const homeownerId = '${homeownerId}';`
-                );
-              }
-              
-              // Extract only the body content (remove html/head tags)
-              const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-              if (bodyMatch) {
-                html = bodyMatch[1];
-              }
-              
-              setManualHtml(html);
-              return;
-            }
-          } catch (err) {
-            console.log(`Failed to fetch from ${path}:`, err);
-          }
-        }
-        
-        console.error('❌ Could not fetch manual from any path');
-      } catch (error) {
-        console.error('Error fetching manual:', error);
-      }
-    };
-
-    fetchManual();
-  }, [homeownerId]);
-
-  // Define sections based on actual HTML structure
+  // Define sections with anchor IDs for navigation
   const sections = [
-    { id: 1, title: 'Cover & Quick Reference', selector: '.cover' },
-    { id: 2, title: 'Understanding Your Warranty Team', selector: '.page:nth-of-type(2)' },
-    { id: 3, title: 'Emergency: No Heat', selector: '.page:nth-of-type(3)' },
-    { id: 4, title: 'Emergency: Plumbing Leaks', selector: '.page:nth-of-type(4)' },
-    { id: 5, title: 'Glossary & Contacts', selector: '.page:nth-of-type(5)' },
-    { id: 6, title: 'Contact & Notes', selector: '.page:nth-of-type(6)' },
+    { id: 1, title: 'Cover & Quick Reference', anchor: 'cover' },
+    { id: 2, title: 'Understanding Your Warranty Team', anchor: 'warranty-team' },
+    { id: 3, title: 'Emergency: No Heat', anchor: 'emergency-heat' },
+    { id: 4, title: 'Emergency: Plumbing Leaks', anchor: 'emergency-plumbing' },
+    { id: 5, title: 'Glossary & Contacts', anchor: 'glossary' },
+    { id: 6, title: 'Contact & Notes', anchor: 'contact-notes' },
   ];
 
-  // Handle navigation - scroll to section
+  // Handle navigation - update iframe hash
   const handleSectionClick = (sectionId: number) => {
     setActiveSection(sectionId);
     
     const section = sections.find(s => s.id === sectionId);
-    if (!section || !contentRef.current) return;
+    if (!section || !iframeRef.current) return;
 
-    // Find the element in the content pane
-    const element = contentRef.current.querySelector(section.selector) as HTMLElement;
-    
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      console.log(`✅ Scrolled to section: ${section.title}`);
-    } else {
-      console.log(`❌ Element not found for selector: ${section.selector}`);
+    try {
+      // Navigate the iframe to the specific section using hash
+      const iframe = iframeRef.current;
+      if (iframe.contentWindow) {
+        // Try to navigate using hash
+        iframe.contentWindow.location.hash = section.anchor;
+        console.log(`✅ Navigated iframe to section: ${section.title} (#${section.anchor})`);
+      }
+    } catch (error) {
+      console.error('❌ Error navigating iframe:', error);
     }
   };
+
+  // Build iframe src with homeownerId if provided
+  const iframeSrc = homeownerId 
+    ? `/static/manual.html?homeownerId=${encodeURIComponent(homeownerId)}`
+    : '/static/manual.html';
 
   return (
     <div className="bg-primary/10 dark:bg-gray-800 rounded-3xl border border-surface-outline-variant dark:border-gray-700 shadow-elevation-1 overflow-hidden flex flex-col h-[calc(100vh-theme(spacing.32))]">
@@ -118,22 +73,14 @@ const HomeownerManual: React.FC<HomeownerManualProps> = ({ homeownerId }) => {
           </nav>
         </div>
 
-        {/* Right Pane - Content */}
-        <div className="flex-1 overflow-y-auto bg-white dark:bg-gray-900">
-          {manualHtml ? (
-            <div 
-              ref={contentRef}
-              className="w-full h-full p-8"
-              dangerouslySetInnerHTML={{ __html: manualHtml }}
-            />
-          ) : (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-surface-on-variant dark:text-gray-400">Loading manual...</p>
-              </div>
-            </div>
-          )}
+        {/* Right Pane - Iframe Content */}
+        <div className="flex-1 overflow-hidden bg-white dark:bg-gray-900">
+          <iframe
+            ref={iframeRef}
+            src={iframeSrc}
+            className="w-full h-full border-none"
+            title="Homeowner Manual"
+          />
         </div>
       </div>
     </div>
