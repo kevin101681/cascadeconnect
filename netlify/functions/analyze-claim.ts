@@ -279,7 +279,7 @@ export const handler: Handler = async (event) => {
 
     // Initialize OpenAI with server-side API key
     const openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: process.env.VITE_OPENAI_API_KEY || process.env.OPENAI_API_KEY,
     });
 
     console.log('🤖 Analyzing claim with AI:', claimTitle);
@@ -375,7 +375,9 @@ Please analyze this claim and provide your recommendation in JSON format.`
       throw new Error('No response content from AI');
     }
 
-    const result = JSON.parse(content) as AIReviewResult;
+    // Harden JSON parsing to handle Markdown code blocks
+    const cleanJson = content.replace(/```json/g, '').replace(/```/g, '').trim();
+    const result = JSON.parse(cleanJson) as AIReviewResult;
 
     console.log('✅ AI Analysis complete:', result.status);
 
