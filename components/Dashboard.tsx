@@ -4198,11 +4198,18 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // 1. HOMEOWNER CONTEXT VIEW (When Admin selects a homeowner OR when a homeowner logs in)
   // Render the dashboard if we have a valid context to show
+  console.log('💰 [RENDER ROUTING] isAdmin:', isAdmin, 'isBuilder:', isBuilder);
+  console.log('💰 [RENDER ROUTING] targetHomeowner:', targetHomeowner);
+  console.log('💰 [RENDER ROUTING] activeHomeowner:', activeHomeowner);
+  console.log('💰 [RENDER ROUTING] userRole:', userRole);
+  
   const shouldShowAdminStyleCard = 
     // 1. Admin/Builder viewing a specific homeowner
     ((isAdmin || isBuilder) && targetHomeowner) || 
     // 2. ANY user in Homeowner View (Real Homeowner OR Impersonating Admin) with a valid profile
     (userRole === UserRole.HOMEOWNER && activeHomeowner && activeHomeowner.id !== 'placeholder');
+  
+  console.log('💰 [RENDER ROUTING] shouldShowAdminStyleCard:', shouldShowAdminStyleCard);
   
   if (shouldShowAdminStyleCard) {
     // Use targetHomeowner if available (preserved from admin view), otherwise use activeHomeowner for homeowner view
@@ -6708,6 +6715,32 @@ const Dashboard: React.FC<DashboardProps> = ({
             )}
           </>
         )} */}
+
+        {/* Invoices Full-Screen Overlay - ADMIN PLACEHOLDER PATH */}
+        {console.log('💰 [PATH #2] Rendering InvoicesFullView, isOpen:', showInvoicesFullView)}
+        
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99998, backgroundColor: 'green', color: 'white', display: showInvoicesFullView ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>
+          TEST DIV - GREEN = showInvoicesFullView is TRUE
+        </div>
+        
+        <Suspense fallback={<div style={{ position: 'fixed', inset: 0, zIndex: 99999, backgroundColor: 'blue', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>LOADING INVOICES...</div>}>
+          <InvoicesFullView
+            isOpen={showInvoicesFullView}
+            onClose={() => {
+              console.log('💰 Closing InvoicesFullView');
+              setShowInvoicesFullView(false);
+            }}
+            prefillData={
+              activeHomeowner ? {
+                clientName: activeHomeowner.builder,
+                clientEmail: activeHomeowner.email,
+                projectDetails: activeHomeowner.address,
+                homeownerId: activeHomeowner.id,
+              } : undefined
+            }
+          />
+        </Suspense>
+
       </>
     );
   }
