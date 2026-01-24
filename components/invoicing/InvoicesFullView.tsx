@@ -33,6 +33,15 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
 }) => {
   const { getToken } = useAuth();
   
+  // Debug logging
+  useEffect(() => {
+    console.log('💰 InvoicesFullView mounted, isOpen:', isOpen);
+  }, []);
+  
+  useEffect(() => {
+    console.log('💰 InvoicesFullView isOpen changed to:', isOpen);
+  }, [isOpen]);
+  
   // ==================== DATA STATE ====================
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

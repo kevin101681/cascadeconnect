@@ -1115,7 +1115,12 @@ const Dashboard: React.FC<DashboardProps> = ({
     return tabs;
   };
 
-  const availableTabs = useMemo(() => getAvailableTabs(), [userRole, isAdmin, currentUser?.role]);
+  const availableTabs = useMemo(() => {
+    const tabs = getAvailableTabs();
+    console.log('📊 Available tabs:', tabs);
+    console.log('📊 User role:', userRole, 'isAdmin:', isAdmin, 'currentUser?.role:', currentUser?.role);
+    return tabs;
+  }, [userRole, isAdmin, currentUser?.role]);
   
   // Handle swipe gestures for mobile tab navigation
   const onTouchStart = (e: React.TouchEvent) => {
@@ -1289,6 +1294,11 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // Invoices Full View State
   const [showInvoicesFullView, setShowInvoicesFullView] = useState(false);
+  
+  // Debug: Log when state changes
+  useEffect(() => {
+    console.log('💰 showInvoicesFullView changed to:', showInvoicesFullView);
+  }, [showInvoicesFullView]);
 
   // Handle browser back button for nested modals that are NOT URL-driven.
   // Claims/Tasks use `?claimId` / `?taskId` in the URL, so Back should be handled by normal
@@ -4933,10 +4943,13 @@ const Dashboard: React.FC<DashboardProps> = ({
                         type="button"
                         data-tab={tab}
                         onClick={() => {
+                          console.log('🖱️ Tab clicked:', tab);
                           // Special handling for INVOICES - open full-screen overlay
                           if (tab === 'INVOICES') {
+                            console.log('💰 Opening Invoices Full View');
                             setShowInvoicesFullView(true);
                           } else {
+                            console.log('📑 Setting current tab to:', tab);
                             setCurrentTab(tab);
                           }
                         }}
@@ -6851,10 +6864,14 @@ const Dashboard: React.FC<DashboardProps> = ({
       </div>
 
       {/* Invoices Full-Screen Overlay */}
+      {console.log('💰 Rendering InvoicesFullView, isOpen:', showInvoicesFullView)}
       <Suspense fallback={null}>
         <InvoicesFullView
           isOpen={showInvoicesFullView}
-          onClose={() => setShowInvoicesFullView(false)}
+          onClose={() => {
+            console.log('💰 Closing InvoicesFullView');
+            setShowInvoicesFullView(false);
+          }}
           prefillData={
             activeHomeowner ? {
               clientName: activeHomeowner.builder,
