@@ -432,7 +432,7 @@ interface DashboardProps {
   onNewClaim: (homeownerId?: string) => void;
   onCreateClaim?: (data: Partial<Claim>) => void;
   homeowners: Homeowner[];
-  activeHomeowner: Homeowner;
+  activeHomeowner: Homeowner | null;
   employees: InternalEmployee[];
   currentUser: InternalEmployee;
   
@@ -2272,7 +2272,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     }
     
     // Safe-guard for TS
-    const targetId = effectiveHomeowner ? effectiveHomeowner.id : activeHomeowner.id;
+    const targetId = effectiveHomeowner ? effectiveHomeowner.id : (activeHomeowner?.id || '');
     
     // Determine target email: use selected employee email in homeowner view, otherwise use homeowner email or default
     let targetEmail: string;
@@ -3383,7 +3383,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                     const isUnread = !thread.isRead;
                     const participants = isAdmin 
                       ? thread.participants.filter(p => p !== currentUser.name).join(', ') || 'Me'
-                      : thread.participants.filter(p => p !== activeHomeowner.name).join(', ') || 'Me';
+                      : thread.participants.filter(p => p !== activeHomeowner?.name).join(', ') || 'Me';
                     
                     // Get message preview from the last message
                     const messagePreview = lastMsg?.content || '';
@@ -3729,7 +3729,7 @@ const Dashboard: React.FC<DashboardProps> = ({
                       <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200">
                          <div className="flex items-center gap-2 p-3 border-b border-surface-outline-variant/50 dark:border-gray-700/50 bg-surface-container/20 dark:bg-gray-700/20">
                             <CornerUpLeft className="h-4 w-4 text-surface-outline-variant dark:text-gray-500"/>
-                            <span className="text-xs font-medium text-surface-on-variant dark:text-gray-400">Replying to {selectedThread.participants.filter(p => p !== (isAdmin ? currentUser.name : activeHomeowner.name)).join(', ')}</span>
+                            <span className="text-xs font-medium text-surface-on-variant dark:text-gray-400">Replying to {selectedThread.participants.filter(p => p !== (isAdmin ? currentUser.name : activeHomeowner?.name)).join(', ')}</span>
                          </div>
                          <textarea
                             rows={6}
@@ -3871,7 +3871,7 @@ const Dashboard: React.FC<DashboardProps> = ({
               <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden animate-in slide-in-from-bottom-2 fade-in duration-200">
                 <div className="flex items-center gap-2 p-3 border-b border-surface-outline-variant/50 dark:border-gray-700/50 bg-surface-container/20 dark:bg-gray-700/20">
                   <CornerUpLeft className="h-4 w-4 text-surface-outline-variant dark:text-gray-500"/>
-                  <span className="text-xs font-medium text-surface-on-variant dark:text-gray-400">Replying to {selectedThread.participants.filter(p => p !== (isAdmin ? currentUser.name : activeHomeowner.name)).join(', ')}</span>
+                  <span className="text-xs font-medium text-surface-on-variant dark:text-gray-400">Replying to {selectedThread.participants.filter(p => p !== (isAdmin ? currentUser.name : activeHomeowner?.name)).join(', ')}</span>
                 </div>
                 <textarea
                   rows={6}
@@ -4207,9 +4207,14 @@ const Dashboard: React.FC<DashboardProps> = ({
     // 1. Admin/Builder viewing a specific homeowner
     ((isAdmin || isBuilder) && targetHomeowner) || 
     // 2. ANY user in Homeowner View (Real Homeowner OR Impersonating Admin) with a valid profile
-    (userRole === UserRole.HOMEOWNER && activeHomeowner && activeHomeowner.id !== 'placeholder');
+    (userRole === UserRole.HOMEOWNER && activeHomeowner !== null);
   
   console.log('💰 [RENDER ROUTING] shouldShowAdminStyleCard:', shouldShowAdminStyleCard);
+  
+  // ============================================================================
+  // UNIFIED RENDER LOGIC - Calculate what content to show
+  // ============================================================================
+  let mainContent: JSX.Element | null = null;
   
   if (shouldShowAdminStyleCard) {
     // Use targetHomeowner if available (preserved from admin view), otherwise use activeHomeowner for homeowner view
@@ -6593,10 +6598,7 @@ const Dashboard: React.FC<DashboardProps> = ({
         )}
       </>
     );
-  }
-
-  // 2. ADMIN/BUILDER PLACEHOLDER VIEW (When no homeowner is selected)
-  if ((isAdmin || isBuilder) && !targetHomeowner) {
+  } else if ((isAdmin || isBuilder) && !targetHomeowner) {
     return (
       <>
         {renderModals()}
@@ -6716,38 +6718,9 @@ const Dashboard: React.FC<DashboardProps> = ({
           </>
         )} */}
 
-        {/* Invoices Full-Screen Overlay - ADMIN PLACEHOLDER PATH */}
-        {console.log('💰 [PATH #2] Rendering InvoicesFullView, isOpen:', showInvoicesFullView)}
-        
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99998, backgroundColor: 'green', color: 'white', display: showInvoicesFullView ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>
-          TEST DIV - GREEN = showInvoicesFullView is TRUE
-        </div>
-        
-        <Suspense fallback={<div style={{ position: 'fixed', inset: 0, zIndex: 99999, backgroundColor: 'blue', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>LOADING INVOICES...</div>}>
-          <InvoicesFullView
-            isOpen={showInvoicesFullView}
-            onClose={() => {
-              console.log('💰 Closing InvoicesFullView');
-              setShowInvoicesFullView(false);
-            }}
-            prefillData={
-              activeHomeowner ? {
-                clientName: activeHomeowner.builder,
-                clientEmail: activeHomeowner.email,
-                projectDetails: activeHomeowner.address,
-                homeownerId: activeHomeowner.id,
-              } : undefined
-            }
-          />
-        </Suspense>
-
       </>
     );
-  }
-
-  // 3. HOMEOWNER VIEW WITHOUT SELECTED HOMEOWNER (Admin/Builder switched to homeowner view without selection)
-  // Show prompt to select a homeowner
-  if (userRole === UserRole.HOMEOWNER && isAdminAccount && !targetHomeowner && (!activeHomeowner || activeHomeowner.id === 'placeholder')) {
+  } else if (userRole === UserRole.HOMEOWNER && isAdminAccount && !targetHomeowner && !activeHomeowner) {
     return (
       <>
         {renderModals()}
@@ -6829,42 +6802,14 @@ const Dashboard: React.FC<DashboardProps> = ({
         )}
       </div>
 
-      {/* Invoices Full-Screen Overlay - IN MAIN RETURN */}
-      {console.log('💰 [MAIN PATH] Rendering InvoicesFullView, isOpen:', showInvoicesFullView)}
-      {console.log('💰 [MAIN PATH] activeHomeowner:', activeHomeowner)}
-      
-      {/* TEMPORARY: Always render to test visibility */}
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99998, backgroundColor: 'green', color: 'white', display: showInvoicesFullView ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>
-        TEST DIV - If you see this GREEN screen, showInvoicesFullView is TRUE
-      </div>
-      
-      <Suspense fallback={<div style={{ position: 'fixed', inset: 0, zIndex: 99999, backgroundColor: 'blue', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>LOADING INVOICES...</div>}>
-        <InvoicesFullView
-          isOpen={showInvoicesFullView}
-          onClose={() => {
-            console.log('💰 Closing InvoicesFullView');
-            setShowInvoicesFullView(false);
-          }}
-          prefillData={
-            activeHomeowner ? {
-              clientName: activeHomeowner.builder,
-              clientEmail: activeHomeowner.email,
-              projectDetails: activeHomeowner.address,
-              homeownerId: activeHomeowner.id,
-            } : undefined
-          }
-        />
-      </Suspense>
-
     </>
     );
-  }
-
-  // 4. FALLBACK - Should not reach here if logic is correct
-  // This handles any edge cases where we don't have a homeowner selected
-  console.log('💰 [FALLBACK PATH] About to return fallback, showInvoicesFullView:', showInvoicesFullView);
-  
-  return (
+  } else {
+    // 4. FALLBACK - Should not reach here if logic is correct
+    // This handles any edge cases where we don't have a homeowner selected
+    console.log('💰 [FALLBACK PATH] About to return fallback, showInvoicesFullView:', showInvoicesFullView);
+    
+    mainContent = (
     <>
       {renderModals()}
       
@@ -6947,16 +6892,27 @@ const Dashboard: React.FC<DashboardProps> = ({
         )}
       </div>
 
+    </>
+  );
+  }
+
+  // ============================================================================
+  // UNIFIED RETURN - Single return statement for all paths
+  // ============================================================================
+  return (
+    <>
+      {/* Global Modals - Always accessible */}
+      {renderModals()}
+      
+      {/* Main Content - Dynamic based on user state */}
+      {mainContent}
+
+      {/* Global Overlays - Always accessible regardless of user state */}
       {/* Invoices Full-Screen Overlay */}
-      {console.log('💰 Rendering InvoicesFullView, isOpen:', showInvoicesFullView)}
-      {console.log('💰 activeHomeowner:', activeHomeowner)}
+      {console.log('💰 [UNIFIED RETURN] Rendering InvoicesFullView, isOpen:', showInvoicesFullView)}
+      {console.log('💰 [UNIFIED RETURN] activeHomeowner:', activeHomeowner)}
       
-      {/* TEMPORARY: Always render to test visibility */}
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99998, backgroundColor: 'green', color: 'white', display: showInvoicesFullView ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>
-        TEST DIV - If you see this GREEN screen, showInvoicesFullView is TRUE
-      </div>
-      
-      <Suspense fallback={<div style={{ position: 'fixed', inset: 0, zIndex: 99999, backgroundColor: 'blue', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>LOADING INVOICES...</div>}>
+      <Suspense fallback={<div style={{ position: 'fixed', inset: 0, zIndex: 99999, backgroundColor: 'rgba(0,0,0,0.8)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>Loading Invoices...</div>}>
         <InvoicesFullView
           isOpen={showInvoicesFullView}
           onClose={() => {

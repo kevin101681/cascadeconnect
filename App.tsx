@@ -188,7 +188,7 @@ function App() {
   // to prevent premature rendering before syncDataAndUser completes
   const [userRole, setUserRole] = useState<UserRole>(UserRole.ADMIN);
   const [activeEmployee, setActiveEmployee] = useState<InternalEmployee>(MOCK_INTERNAL_EMPLOYEES[0]);
-  const [activeHomeowner, setActiveHomeowner] = useState<Homeowner>(PLACEHOLDER_HOMEOWNER);
+  const [activeHomeowner, setActiveHomeowner] = useState<Homeowner | null>(null);
   const [currentBuilderId, setCurrentBuilderId] = useState<string | null>(null);
   // CRITICAL: Keep isRoleLoading=true until syncDataAndUser sets role definitively
   const [isRoleLoading, setIsRoleLoading] = useState<boolean>(true);
@@ -1558,8 +1558,8 @@ function App() {
     setUserRole(UserRole.ADMIN);
     
     // 3. Clear the active homeowner
-    console.log("✅ Resetting activeHomeowner to placeholder");
-    setActiveHomeowner(PLACEHOLDER_HOMEOWNER);
+    console.log("✅ Resetting activeHomeowner to null");
+    setActiveHomeowner(null);
     
     // 4. Reset builder ID if applicable
     setCurrentBuilderId(null);
@@ -1624,7 +1624,7 @@ function App() {
     } else {
       // Switching from HOMEOWNER to ADMIN
       // Preserve the current active homeowner as selected in admin view
-      if (activeHomeowner && activeHomeowner.id !== 'placeholder') {
+      if (activeHomeowner) {
         setSelectedAdminHomeownerId(activeHomeowner.id);
       }
       setUserRole(UserRole.ADMIN);
@@ -3469,8 +3469,8 @@ You can view and manage this homeowner in the Cascade Connect dashboard.
     if (selectedAdminHomeownerId === id) {
       setSelectedAdminHomeownerId(null);
     }
-    if (activeHomeowner.id === id) {
-      setActiveHomeowner(PLACEHOLDER_HOMEOWNER);
+    if (activeHomeowner?.id === id) {
+      setActiveHomeowner(null);
     }
     
     // Delete from database (cascade deletes should handle related records)
@@ -4098,8 +4098,8 @@ Assigned By: ${assignerName}
   const handleSendMessage = async (threadId: string, content: string) => {
     const newMessage: Message = {
       id: crypto.randomUUID(),
-      senderId: userRole === UserRole.ADMIN ? activeEmployee.id : activeHomeowner.id,
-      senderName: userRole === UserRole.ADMIN ? activeEmployee.name : activeHomeowner.name,
+      senderId: userRole === UserRole.ADMIN ? activeEmployee.id : (activeHomeowner?.id || ''),
+      senderName: userRole === UserRole.ADMIN ? activeEmployee.name : (activeHomeowner?.name || 'Guest'),
       senderRole: userRole,
       content,
       timestamp: new Date()
@@ -4268,7 +4268,7 @@ Assigned By: ${assignerName}
   const handleContactAboutClaim = async (claim: Claim) => {
     let associatedHomeownerId = '';
     if (userRole === UserRole.HOMEOWNER) {
-        associatedHomeownerId = activeHomeowner.id;
+        associatedHomeownerId = activeHomeowner?.id || '';
     } else {
         const h = homeowners.find(h => h.email === claim.homeownerEmail);
         associatedHomeownerId = h ? h.id : (targetHomeowner?.id || '');
