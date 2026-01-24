@@ -5,7 +5,7 @@ import { Invoice, Client, InvoiceItem, ViewState } from '../types';
 import { Card } from './ui/Card';
 import { Button } from './ui/Button';
 import { TabBar } from './ui/TabBar';
-import { Plus, Trash2, Download, Search, X, Upload, Database, SlidersHorizontal, Camera, ArrowUpDown, Share2, Check, Sparkles, Loader2, ScanText, Link as LinkIcon, Mail, Send, CreditCard, Pencil, Calendar as CalendarIcon, ChevronLeft } from 'lucide-react';
+import { Plus, Trash2, Download, Search, X, Upload, Database, SlidersHorizontal, Camera, ArrowUpDown, Share2, Check, Sparkles, Loader2, ScanText, Link as LinkIcon, Mail, Send, CreditCard, Pencil, Calendar as CalendarIcon, ChevronLeft, XCircle } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { FloatingMenu, ActionItem } from './ui/FloatingMenu';
 import { api } from '../services/api';
@@ -174,6 +174,7 @@ export const Invoices: React.FC<InvoicesProps> = ({
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   // Payment Link State
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
@@ -935,14 +936,17 @@ export const Invoices: React.FC<InvoicesProps> = ({
     setEmailTo(invoice.clientEmail || '');
     setEmailSubject(`Invoice #${invoice.invoiceNumber} from Cascade Builder Services`);
     setEmailBody(`Hello,\n\nPlease find attached invoice #${invoice.invoiceNumber}.\n\nThank you,\nCascade Builder Services`);
+    setEmailStatus('idle'); // Reset status when opening modal
   };
 
   const handleSendEmail = async () => {
     if (!emailingInvoice || !emailTo) {
-        alert("Recipient email is required.");
+        setEmailStatus('error');
+        setTimeout(() => setEmailStatus('idle'), 3000);
         return;
     }
 
+    setEmailStatus('loading');
     setIsSendingEmail(true);
     try {
         // Get authentication token
@@ -1019,12 +1023,19 @@ export const Invoices: React.FC<InvoicesProps> = ({
             onUpdate({ ...emailingInvoice, status: 'sent' });
         }
 
-        // Close modal (success is implied by modal closure)
-        setEmailingInvoice(null);
-        alert('Email sent successfully!');
+        // Show success status
+        setEmailStatus('success');
+        
+        // Wait 1.5s then close modal
+        setTimeout(() => {
+          setEmailingInvoice(null);
+          setEmailStatus('idle');
+        }, 1500);
     } catch (e: any) {
         console.error("Failed to send email", e);
-        alert("Failed to send email: " + e.message);
+        setEmailStatus('error');
+        // Reset to idle after 3 seconds
+        setTimeout(() => setEmailStatus('idle'), 3000);
     } finally {
         setIsSendingEmail(false);
     }
@@ -1924,10 +1935,23 @@ export const Invoices: React.FC<InvoicesProps> = ({
               </Button>
               <Button
                 onClick={handleSendEmail}
-                disabled={isSendingEmail}
-                icon={isSendingEmail ? <Loader2 className="animate-spin" /> : <Send size={16} />}
+                disabled={isSendingEmail || emailStatus !== 'idle'}
+                icon={
+                  emailStatus === 'loading' ? <Loader2 className="animate-spin" /> :
+                  emailStatus === 'success' ? <Check size={16} /> :
+                  emailStatus === 'error' ? <XCircle size={16} /> :
+                  <Send size={16} />
+                }
+                className={
+                  emailStatus === 'success' ? '!bg-green-600 hover:!bg-green-600' :
+                  emailStatus === 'error' ? '!bg-red-600 hover:!bg-red-600' :
+                  ''
+                }
               >
-                {isSendingEmail ? 'Sending...' : 'Send Email'}
+                {emailStatus === 'loading' ? 'Sending...' :
+                 emailStatus === 'success' ? 'Success!' :
+                 emailStatus === 'error' ? 'Failed' :
+                 'Send Email'}
               </Button>
             </div>
           </div>

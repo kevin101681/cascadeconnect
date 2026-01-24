@@ -618,9 +618,9 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                   onClick={() => setShowDatePicker(true)}
                   className="w-full h-9 flex items-center px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white hover:bg-surface-container-highest dark:hover:bg-gray-50 transition-colors text-left"
                 >
-                  <CalendarIcon className="h-4 w-4 text-surface-on-variant dark:text-gray-600 mr-2" />
-                  <span className="text-surface-on dark:text-gray-900">
-                    {date ? new Date(date).toLocaleDateString('en-US', { 
+                  <CalendarIcon className="h-4 w-4 text-surface-on-variant dark:text-gray-600 mr-2 shrink-0" />
+                  <span className="text-surface-on dark:text-gray-900 whitespace-nowrap">
+                    {date ? new Date(date + 'T12:00:00').toLocaleDateString('en-US', { 
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric'
@@ -631,10 +631,12 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                   isOpen={showDatePicker}
                   onClose={() => setShowDatePicker(false)}
                   onSelectDate={(d) => {
+                    // Force time to noon to avoid timezone issues
+                    d.setHours(12, 0, 0, 0);
                     setDate(d.toISOString().split('T')[0]);
                     setShowDatePicker(false);
                   }}
-                  selectedDate={date ? new Date(date) : null}
+                  selectedDate={date ? new Date(date + 'T12:00:00') : null}
                 />
               </div>
               
@@ -648,9 +650,9 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                   onClick={() => setShowDueDatePicker(true)}
                   className="w-full h-9 flex items-center px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white hover:bg-surface-container-highest dark:hover:bg-gray-50 transition-colors text-left"
                 >
-                  <CalendarIcon className="h-4 w-4 text-surface-on-variant dark:text-gray-600 mr-2" />
-                  <span className="text-surface-on dark:text-gray-900">
-                    {dueDate ? new Date(dueDate).toLocaleDateString('en-US', { 
+                  <CalendarIcon className="h-4 w-4 text-surface-on-variant dark:text-gray-600 mr-2 shrink-0" />
+                  <span className="text-surface-on dark:text-gray-900 whitespace-nowrap">
+                    {dueDate ? new Date(dueDate + 'T12:00:00').toLocaleDateString('en-US', { 
                       month: 'short',
                       day: 'numeric',
                       year: 'numeric'
@@ -661,10 +663,12 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                   isOpen={showDueDatePicker}
                   onClose={() => setShowDueDatePicker(false)}
                   onSelectDate={(d) => {
+                    // Force time to noon to avoid timezone issues
+                    d.setHours(12, 0, 0, 0);
                     setDueDate(d.toISOString().split('T')[0]);
                     setShowDueDatePicker(false);
                   }}
-                  selectedDate={dueDate ? new Date(dueDate) : null}
+                  selectedDate={dueDate ? new Date(dueDate + 'T12:00:00') : null}
                 />
               </div>
             </div>
@@ -823,7 +827,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                         step="0.01"
                         value={item.quantity}
                         onChange={(e) => handleItemChange(item.id, 'quantity', parseFloat(e.target.value) || 0)}
-                        className="w-full h-10 px-3 rounded-md border border-surface-outline dark:border-gray-300 bg-white dark:bg-white text-sm text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                        className="w-full h-10 px-3 rounded-md border border-surface-outline dark:border-gray-300 bg-white dark:bg-white text-sm text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </div>
                     
@@ -836,9 +840,10 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                         type="number"
                         min="0"
                         step="0.01"
-                        value={item.rate}
+                        value={item.rate === 0 ? '' : item.rate}
                         onChange={(e) => handleItemChange(item.id, 'rate', parseFloat(e.target.value) || 0)}
-                        className="w-full h-10 px-3 rounded-md border border-surface-outline dark:border-gray-300 bg-white dark:bg-white text-sm text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                        placeholder="0.00"
+                        className="w-full h-10 px-3 rounded-md border border-surface-outline dark:border-gray-300 bg-white dark:bg-white text-sm text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                       />
                     </div>
                     

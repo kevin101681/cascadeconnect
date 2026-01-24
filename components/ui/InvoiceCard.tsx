@@ -68,7 +68,7 @@ export function InvoiceCard({
   return (
     <div 
       onClick={onClick}
-      className={`group relative rounded-card p-3 transition-all flex flex-col touch-manipulation ${
+      className={`group relative rounded-3xl p-3 transition-all flex flex-col touch-manipulation ${
         onClick ? 'cursor-pointer' : ''
       } ${
         isSelected 
