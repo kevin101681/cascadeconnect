@@ -22,7 +22,7 @@ import type { DashboardProps } from './AdminDashboard'; // Re-export from AdminD
  * 4. Cleaner conditionals - no more `if (isAdmin)` checks scattered everywhere
  */
 export const Dashboard: React.FC<DashboardProps> = (props) => {
-  const { userRole } = props;
+  const { userRole, currentUser } = props;
   const { isReady } = useDashboardInitialization();
 
   // Show loading state while initialization hook prepares URL state, responsive detection, etc.
@@ -39,7 +39,7 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
 
   // Route to appropriate dashboard based on user role
   const isAdminRole = userRole === UserRole.ADMIN;
-  const isEmployeeRole = userRole === UserRole.EMPLOYEE;
+  const isEmployeeRole = currentUser?.role === 'Employee'; // Employees use InternalEmployee.role field
   const isBuilderRole = userRole === UserRole.BUILDER;
   const isHomeownerRole = userRole === UserRole.HOMEOWNER;
 

@@ -359,7 +359,11 @@ const ManualImageFlipBook: React.FC<ManualImageFlipBookProps> = ({ images, width
   );
 };
 
+// Tab types for dashboard navigation
+type TabType = 'CLAIMS' | 'TASKS' | 'MESSAGES' | 'CALLS' | 'SCHEDULE' | 'CHAT' | 'INVOICES' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | 'PUNCHLIST' | null;
+
 export interface DashboardProps {
+  // Tab types for dashboard navigation
   claims: Claim[];
   userRole: UserRole;
   onSelectClaim: (claim: Claim, startInEditMode?: boolean) => void;

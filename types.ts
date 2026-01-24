@@ -174,6 +174,48 @@ export interface MessageThread {
   messages: Message[];
 }
 
+// Claim Message Tracking (for linking messages to claims)
+export interface ClaimMessage {
+  id: string;
+  claimId: string;
+  messageId?: string;
+  threadId?: string;
+  type: 'HOMEOWNER' | 'SUBCONTRACTOR';
+  subject: string;
+  recipient: string;
+  recipientEmail: string;
+  content: string;
+  senderName: string;
+  timestamp: Date;
+}
+
+// Task Message Tracking (for linking messages to tasks)
+export interface TaskMessage {
+  id: string;
+  taskId: string;
+  messageId?: string;
+  threadId?: string;
+  type: 'EMPLOYEE';
+  subject: string;
+  recipient: string;
+  recipientEmail: string;
+  content: string;
+  senderName: string;
+  timestamp: Date;
+}
+
+// Message Email Template (for quick replies)
+export interface MessageEmailTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  body: string;
+  category?: 'warranty' | 'general' | 'followup';
+}
+
+// Document type alias (for backward compatibility)
+export type Document = HomeownerDocument;
+
 export interface ProposedDate {
   date: string; // ISO string
   timeSlot: 'AM' | 'PM' | 'All Day';

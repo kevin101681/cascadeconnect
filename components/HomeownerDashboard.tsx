@@ -360,6 +360,9 @@ const ManualImageFlipBook: React.FC<ManualImageFlipBookProps> = ({ images, width
   );
 };
 
+// Tab types for dashboard navigation (Homeowner-specific)
+type TabType = 'CLAIMS' | 'MESSAGES' | 'SCHEDULE' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | null;
+
 interface DashboardProps {
   claims: Claim[];
   userRole: UserRole;
@@ -532,14 +535,71 @@ export const HomeownerDashboard: React.FC<DashboardProps> = ({
     isReady
   } = initialization;
   
-  // Phase 5 Wave 3: Initialize modal management (Homeowner-specific modals only)
+  // Phase 5 Wave 3: Initialize modal management
   const modals = useModalManagement();
   const {
     selectedDocument,
     isPDFViewerOpen,
     openPDFViewer,
     closePDFViewer,
-    // REMOVED: Admin-only modals (invite, edit homeowner, subcontractor list, docs upload)
+    expandedDescription,
+    showInviteModal,
+    inviteName,
+    inviteEmail,
+    invitePhone,
+    inviteAddress,
+    inviteBody,
+    isDrafting,
+    openInviteModal,
+    closeInviteModal,
+    setInviteName,
+    setInviteEmail,
+    setInvitePhone,
+    setInviteAddress,
+    setInviteBody,
+    setIsDrafting,
+    resetInviteForm,
+    showDocsModal,
+    isDocUploading,
+    openDocsModal,
+    closeDocsModal,
+    setIsDocUploading,
+    showEditHomeownerModal,
+    editHomeownerName,
+    editHomeownerEmail,
+    editHomeownerPhone,
+    editHomeownerAddress,
+    editHomeownerStreet2,
+    editHomeownerCity,
+    editHomeownerState,
+    editHomeownerZip,
+    editHomeownerBuilder,
+    editHomeownerBuilderId,
+    editHomeownerJobName,
+    editHomeownerClosingDate,
+    editSubFile,
+    editParsedSubs,
+    isParsingSubs,
+    openEditHomeownerModal,
+    closeEditHomeownerModal,
+    setEditHomeownerName: setEditName,
+    setEditHomeownerEmail: setEditEmail,
+    setEditHomeownerPhone: setEditPhone,
+    setEditHomeownerAddress: setEditStreet,
+    setEditHomeownerStreet2: setEditStreet2,
+    setEditHomeownerCity: setEditCity,
+    setEditHomeownerState: setEditState,
+    setEditHomeownerZip: setEditZip,
+    setEditHomeownerBuilder: setEditBuilder,
+    setEditHomeownerBuilderId: setEditBuilderId,
+    setEditHomeownerJobName: setEditJobName,
+    setEditHomeownerClosingDate: setEditClosingDate,
+    setEditSubFile,
+    setEditParsedSubs,
+    setIsParsingSubs,
+    showSubListModal,
+    openSubListModal,
+    closeSubListModal,
     isAnySecondaryModalOpen
   } = modals;
   
@@ -2370,43 +2430,7 @@ export const HomeownerDashboard: React.FC<DashboardProps> = ({
   // Helper function to render modals using Portal
   const renderModals = () => (
     <>
-      {/* TASK DETAIL MODAL - Only show when not on TASKS tab (tasks tab has inline view) */}
-      {selectedTaskForModal && currentTab !== 'TASKS' && createPortal(
-        <div 
-          className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
-          style={{ overscrollBehavior: 'contain' }}
-        >
-          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] flex flex-col h-[90vh]">
-            <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0">
-              <div className="p-4">
-                <TaskDetail
-                  task={selectedTaskForModal}
-                  employees={employees}
-                  currentUser={currentUser}
-                  claims={claims}
-                  homeowners={homeowners}
-                  preSelectedHomeowner={targetHomeowner}
-                  onUpdateTask={onUpdateTask}
-                  onDeleteTask={onDeleteTask}
-                  onToggleTask={onToggleTask}
-                  onBack={() => setSelectedTaskForModal(null)}
-                  onSelectClaim={(claim) => {
-                    setSelectedTaskForModal(null);
-                    handleClaimSelection(claim);
-                    setCurrentTab('CLAIMS'); // Switch to CLAIMS tab when selecting a claim
-                  }}
-                  startInEditMode={true}
-                  taskMessages={taskMessages.filter(m => m.taskId === selectedTaskForModal.id)}
-                  onSendMessage={onSendTaskMessage}
-                  onTrackTaskMessage={onTrackTaskMessage}
-                  onNavigate={onNavigate}
-                />
-              </div>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
+      {/* REMOVED: TASK DETAIL MODAL - Admin-only, homeowners don't manage internal tasks */}
 
       {/* CLAIM DETAIL MODAL - Only show when not on CLAIMS tab (claims tab has inline view) */}
       {selectedClaimForModal && currentTab !== 'CLAIMS' && onUpdateClaim && createPortal(
