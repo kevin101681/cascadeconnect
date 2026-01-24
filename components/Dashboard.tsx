@@ -38,6 +38,8 @@ const HomeownerWarrantyGuide = React.lazy(() =>
 
 // Import CBS Books Page (new split-view design - no ghost headers)
 const CBSBooksPageWrapper = React.lazy(() => import('./pages/CBSBooksPageWrapper'));
+// Import new Full-Screen Invoices Manager (Master-Detail Overlay)
+const InvoicesFullView = React.lazy(() => import('./invoicing/InvoicesFullView').then(m => ({ default: m.InvoicesFullView })));
 // Lazy load heavy components to improve initial load time
 // Add error handling for failed dynamic imports
 const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err => {
@@ -1284,6 +1286,9 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [showSubListModal, setShowSubListModal] = useState(false);
   const [isComposingMessage, setIsComposingMessage] = useState(false);
   // Removed showCallsModal - now navigates to /calls page with search filter
+
+  // Invoices Full View State
+  const [showInvoicesFullView, setShowInvoicesFullView] = useState(false);
 
   // Handle browser back button for nested modals that are NOT URL-driven.
   // Claims/Tasks use `?claimId` / `?taskId` in the URL, so Back should be handled by normal
@@ -4927,7 +4932,14 @@ const Dashboard: React.FC<DashboardProps> = ({
                         key={tab}
                         type="button"
                         data-tab={tab}
-                        onClick={() => setCurrentTab(tab)}
+                        onClick={() => {
+                          // Special handling for INVOICES - open full-screen overlay
+                          if (tab === 'INVOICES') {
+                            setShowInvoicesFullView(true);
+                          } else {
+                            setCurrentTab(tab);
+                          }
+                        }}
                         className={[
                           'flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm transition-all duration-300',
                           // Base state with transparent border
@@ -6838,6 +6850,21 @@ const Dashboard: React.FC<DashboardProps> = ({
         )}
       </div>
 
+      {/* Invoices Full-Screen Overlay */}
+      <Suspense fallback={null}>
+        <InvoicesFullView
+          isOpen={showInvoicesFullView}
+          onClose={() => setShowInvoicesFullView(false)}
+          prefillData={
+            selectedHomeowner ? {
+              clientName: selectedHomeowner.builder,
+              clientEmail: selectedHomeowner.email,
+              projectDetails: selectedHomeowner.address,
+              homeownerId: selectedHomeowner.id,
+            } : undefined
+          }
+        />
+      </Suspense>
 
     </>
   );
