@@ -4948,6 +4948,11 @@ const Dashboard: React.FC<DashboardProps> = ({
                           if (tab === 'INVOICES') {
                             console.log('💰 Opening Invoices Full View');
                             setShowInvoicesFullView(true);
+                            console.log('💰 State setter called, current value before re-render:', showInvoicesFullView);
+                            // Force immediate check
+                            setTimeout(() => {
+                              console.log('💰 Checking state after timeout...');
+                            }, 100);
                           } else {
                             console.log('📑 Setting current tab to:', tab);
                             setCurrentTab(tab);
@@ -6773,11 +6778,39 @@ const Dashboard: React.FC<DashboardProps> = ({
                 <div className="absolute z-50 w-full mt-2 bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-3 border border-surface-outline-variant dark:border-gray-700 p-6 text-center">
                   <p className="text-surface-on-variant dark:text-gray-400">No homeowners found</p>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
-      </>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Invoices Full-Screen Overlay - IN MAIN RETURN */}
+      {console.log('💰 [MAIN PATH] Rendering InvoicesFullView, isOpen:', showInvoicesFullView)}
+      {console.log('💰 [MAIN PATH] activeHomeowner:', activeHomeowner)}
+      
+      {/* TEMPORARY: Always render to test visibility */}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99998, backgroundColor: 'green', color: 'white', display: showInvoicesFullView ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>
+        TEST DIV - If you see this GREEN screen, showInvoicesFullView is TRUE
+      </div>
+      
+      <Suspense fallback={<div style={{ position: 'fixed', inset: 0, zIndex: 99999, backgroundColor: 'blue', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>LOADING INVOICES...</div>}>
+        <InvoicesFullView
+          isOpen={showInvoicesFullView}
+          onClose={() => {
+            console.log('💰 Closing InvoicesFullView');
+            setShowInvoicesFullView(false);
+          }}
+          prefillData={
+            activeHomeowner ? {
+              clientName: activeHomeowner.builder,
+              clientEmail: activeHomeowner.email,
+              projectDetails: activeHomeowner.address,
+              homeownerId: activeHomeowner.id,
+            } : undefined
+          }
+        />
+      </Suspense>
+
+    </>
     );
   }
 
