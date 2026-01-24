@@ -406,7 +406,23 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
 
   // Render via Portal to ensure it's at the top level of the DOM
   return createPortal(
-    <div className="fixed inset-0 z-[9999] bg-gray-50 flex">
+    <div 
+      className="fixed inset-0 z-[9999] bg-red-500 flex"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 99999,
+        backgroundColor: 'rgba(255, 0, 0, 0.9)',
+        display: 'flex'
+      }}
+    >
+      {/* DEBUG: If you see a RED screen, the overlay is rendering! */}
+      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '48px', color: 'white', fontWeight: 'bold', zIndex: 999999 }}>
+        INVOICES OVERLAY IS HERE!
+      </div>
       {/* ==================== CLOSE BUTTON ==================== */}
       <button
         onClick={onClose}

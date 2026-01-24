@@ -6865,7 +6865,14 @@ const Dashboard: React.FC<DashboardProps> = ({
 
       {/* Invoices Full-Screen Overlay */}
       {console.log('💰 Rendering InvoicesFullView, isOpen:', showInvoicesFullView)}
-      <Suspense fallback={null}>
+      {console.log('💰 activeHomeowner:', activeHomeowner)}
+      
+      {/* TEMPORARY: Always render to test visibility */}
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 99998, backgroundColor: 'green', color: 'white', display: showInvoicesFullView ? 'flex' : 'none', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>
+        TEST DIV - If you see this GREEN screen, showInvoicesFullView is TRUE
+      </div>
+      
+      <Suspense fallback={<div style={{ position: 'fixed', inset: 0, zIndex: 99999, backgroundColor: 'blue', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '48px' }}>LOADING INVOICES...</div>}>
         <InvoicesFullView
           isOpen={showInvoicesFullView}
           onClose={() => {
