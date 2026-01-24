@@ -4412,7 +4412,7 @@ const Dashboard: React.FC<DashboardProps> = ({
     
     // Render new mobile dashboard for both homeowner and admin view on mobile devices (when no tab is active)
     if (isMobileView && displayHomeowner && !currentTab) {
-      return (
+      mainContent = (
         <>
           {renderModals()}
           <HomeownerDashboardMobile
@@ -4458,11 +4458,10 @@ const Dashboard: React.FC<DashboardProps> = ({
           {/* REMOVED: Floating Chat Widget - Now rendered at root level in App.tsx to escape stacking context */}
         </>
       );
-    }
-    
-    return (
-      <>
-        {renderModals()}
+    } else {
+      mainContent = (
+        <>
+          {renderModals()}
         
         {/* ADMIN EXIT BUTTON - Only show when admin is viewing as homeowner */}
         {/* ✅ LOGIC: Show when isHomeownerView is true AND the Clerk user's role is admin */}
@@ -6598,8 +6597,9 @@ const Dashboard: React.FC<DashboardProps> = ({
         )}
       </>
     );
+    }
   } else if ((isAdmin || isBuilder) && !targetHomeowner) {
-    return (
+    mainContent = (
       <>
         {renderModals()}
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 px-4">
@@ -6721,7 +6721,7 @@ const Dashboard: React.FC<DashboardProps> = ({
       </>
     );
   } else if (userRole === UserRole.HOMEOWNER && isAdminAccount && !targetHomeowner && !activeHomeowner) {
-    return (
+    mainContent = (
       <>
         {renderModals()}
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 px-4">
