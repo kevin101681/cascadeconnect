@@ -546,7 +546,7 @@ const InvoiceModalNew: React.FC<InvoiceModalNewProps> = ({
                     value={projectDetails}
                     onChange={(e) => setProjectDetails(e.target.value)}
                     className="w-full h-[56px] px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-800 text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
-                    placeholder="123 Main St, City, State"
+                    placeholder="Enter street address, city, state"
                   />
                 </div>
               </div>

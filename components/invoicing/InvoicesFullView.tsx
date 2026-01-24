@@ -407,7 +407,7 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
   // Render via Portal to ensure it's at the top level of the DOM
   return createPortal(
     <div 
-      className="fixed inset-0 z-[9999] bg-red-500 flex"
+      className="fixed inset-0 z-overlay bg-red-500 flex"
       style={{
         position: 'fixed',
         top: 0,
@@ -426,7 +426,7 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
       {/* ==================== CLOSE BUTTON ==================== */}
       <button
         onClick={onClose}
-        className="absolute right-6 top-6 z-10 p-2 rounded-full bg-white hover:bg-gray-100 shadow-md border border-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
+        className="absolute right-6 top-6 z-base p-2 rounded-full bg-white hover:bg-gray-100 shadow-md border border-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
         title="Close"
         aria-label="Close invoices manager"
       >

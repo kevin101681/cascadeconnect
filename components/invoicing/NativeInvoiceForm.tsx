@@ -337,7 +337,7 @@ export const NativeInvoiceForm: React.FC<NativeInvoiceFormProps> = ({
                 value={projectDetails}
                 onChange={(e) => setProjectDetails(e.target.value)}
                 className="mt-1"
-                placeholder="123 Main St, City, State 12345"
+                placeholder="Enter street address, city, state, zip"
               />
             </div>
           </div>

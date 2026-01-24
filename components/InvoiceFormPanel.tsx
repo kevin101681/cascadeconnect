@@ -775,7 +775,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                 value={projectDetails}
                 onChange={(e) => setProjectDetails(e.target.value)}
                 className="w-full h-9 px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
-                placeholder="123 Main St, City, State"
+                placeholder="Enter street address, city, state"
               />
             </div>
           </div>

@@ -113,4 +113,3 @@ export async function deleteTask(taskId: string): Promise<void> {
     throw error;
   }
 }
-

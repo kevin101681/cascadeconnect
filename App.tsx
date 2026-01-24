@@ -15,6 +15,10 @@ import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK
 import { sendEmail, generateNotificationBody } from './services/emailService';
 import { analyzeHomeownerClaims } from './actions/analyze-homeowner-claims';
 
+// UI Context for global modal management
+import { UIProvider } from './contexts/UIContext';
+import { AppShell } from './components/layout/AppShell';
+
 // Lazy-load non-critical provider hosts so they don't bloat the entry bundle.
 const LazyAppProviders = React.lazy(() =>
   import('./components/providers/LazyAppProviders').then((m) => ({ default: m.LazyAppProviders }))
@@ -31,7 +35,7 @@ const BackendDashboard = React.lazy(() => import('./components/BackendDashboard'
 const UnifiedImportDashboard = React.lazy(() => import('./app/dashboard/admin/import/page'));
 const GuideEditor = React.lazy(() => import('./app/dashboard/admin/guide/page'));
 const WarrantyAnalytics = React.lazy(() => import('./components/WarrantyAnalytics'));
-const FloatingChatWidget = React.lazy(() => import('./components/chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
+// Chat widget now managed by AppShell - no longer imported here
 const BuilderManagement = React.lazy(() => import('./components/BuilderManagement'));
 
 // Edge-to-edge loading skeleton
@@ -251,7 +255,8 @@ function App() {
   });
 
   // Floating chat widget state (admin only)
-  const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(false);
+  // Removed: Chat widget state now managed by UIContext
+  // const [isChatWidgetOpen, setIsChatWidgetOpen] = useState(false);
 
   // --- LOAD MOCK DATA ON FIRST MOUNT IF LOCALSTORAGE IS EMPTY ---
   useEffect(() => {
@@ -3988,7 +3993,16 @@ Assigned By: ${assignerName}
       console.log(`📊 Sub contractor scan complete: ${addedCount} added, ${skippedCount} skipped`);
     }
 
-    setHomeowners(prev => prev.map(h => h.id === updatedHomeowner.id ? updatedHomeowner : h));
+    setHomeowners(prev => {
+      const exists = prev.find(h => h.id === updatedHomeowner.id);
+      if (exists) {
+        // Update existing homeowner
+        return prev.map(h => h.id === updatedHomeowner.id ? updatedHomeowner : h);
+      } else {
+        // Add new homeowner
+        return [...prev, updatedHomeowner];
+      }
+    });
 
     if (isDbConfigured) {
       // Validate homeowner ID is a valid UUID
@@ -4579,9 +4593,10 @@ Assigned By: ${assignerName}
     availableHomeowners.length > 0;
 
   return (
-    <>
-      {/* Development-Only: Floating Homeowner Selector */}
-      {showDevHomeownerSelector && (
+    <UIProvider>
+      <AppShell>
+        {/* Development-Only: Floating Homeowner Selector */}
+        {showDevHomeownerSelector && (
         <div className="fixed bottom-6 right-6 z-[150]">
           <button
             onClick={() => {
@@ -5044,25 +5059,10 @@ Assigned By: ${assignerName}
         <LazyAppProviders />
       </React.Suspense>
     </Layout>
-
-    {/* Floating Chat Widget - Admin Only - Positioned at root level to escape stacking context */}
-    {isAdminAccount && authUser && userRole !== UserRole.HOMEOWNER && (
-      <React.Suspense fallback={null}>
-        <FloatingChatWidget
-          currentUserId={authUser.id}
-          currentUserName={authUser.fullName || activeEmployee?.name || 'Unknown User'}
-          isOpen={isChatWidgetOpen}
-          onOpenChange={setIsChatWidgetOpen}
-          onOpenHomeownerModal={(homeownerId) => {
-            const homeowner = homeowners.find((h) => h.id === homeownerId);
-            if (homeowner) {
-              handleSelectHomeowner(homeowner);
-            }
-          }}
-        />
-      </React.Suspense>
-    )}
-    </>
+    
+    {/* Chat widget and InvoicesFullView now managed by AppShell */}
+      </AppShell>
+    </UIProvider>
   );
 }
 

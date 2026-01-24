@@ -102,7 +102,27 @@ export const MOCK_HOMEOWNERS: Homeowner[] = [
 ];
 
 export const MOCK_INTERNAL_EMPLOYEES: InternalEmployee[] = [
-  { id: 'emp1', name: 'Admin', role: 'System Admin', email: 'admin@cascade.com' }
+  { 
+    id: 'emp1', 
+    name: 'Dev Admin', 
+    role: 'Administrator',  // Changed to 'Administrator' for explicit admin recognition
+    email: 'dev@cascade.com',
+    // Enable all notification preferences for testing
+    emailNotifyClaimSubmitted: true,
+    emailNotifyHomeownerAcceptsAppointment: true,
+    emailNotifySubAcceptsAppointment: true,
+    emailNotifyHomeownerRescheduleRequest: true,
+    emailNotifyTaskAssigned: true,
+    emailNotifyHomeownerMessage: true,
+    emailNotifyHomeownerEnrollment: true,
+    pushNotifyClaimSubmitted: true,
+    pushNotifyHomeownerAcceptsAppointment: true,
+    pushNotifySubAcceptsAppointment: true,
+    pushNotifyHomeownerRescheduleRequest: true,
+    pushNotifyTaskAssigned: true,
+    pushNotifyHomeownerMessage: true,
+    pushNotifyHomeownerEnrollment: true
+  }
 ];
 
 export const MOCK_CONTRACTORS: Contractor[] = [

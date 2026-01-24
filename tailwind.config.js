@@ -60,6 +60,16 @@ export default {
     'backdrop-blur-sm',
     'shadow-xl',
     'shadow-2xl',
+    // Z-index semantic layers (NEW - standardized)
+    'z-base',
+    'z-dropdown',
+    'z-sticky',
+    'z-backdrop',
+    'z-modal',
+    'z-popover',
+    'z-overlay',
+    'z-toast',
+    // Legacy z-index values (DEPRECATED - migrate to semantic layers above)
     'z-[200]',
     'z-[100]',
     // Animation classes
@@ -88,6 +98,20 @@ export default {
       spacing: {
         // Used by split-pane views to subtract the fixed header height
         header: '80px',
+      },
+      zIndex: {
+        // Semantic Z-Index Scale (Source of Truth)
+        // Purpose: Prevent z-index wars and ensure consistent layering
+        '0': '0',
+        'base': '10',           // Base elements (dropdowns, tooltips)
+        'dropdown': '50',       // Dropdown menus, autocomplete
+        'sticky': '100',        // Sticky headers, navigation
+        'backdrop': '200',      // Modal backdrops (dimmed overlays)
+        'modal': '300',         // Standard modals (Claim, Task, Edit forms)
+        'popover': '400',       // Date pickers, color pickers, popovers
+        'overlay': '500',       // Full-screen overlays (Invoices, Team Chat)
+        'toast': '600',         // Toast notifications (must be above all)
+        'max': '9999',          // Emergency use only (avoid if possible)
       },
       fontFamily: {
         sans: ['"Google Sans Flex"', 'Outfit', 'Roboto', 'sans-serif'],
