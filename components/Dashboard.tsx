@@ -3914,6 +3914,11 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // --- Main Render Logic ---
 
+  // DEBUG: Log on every render
+  console.log('🏠 Dashboard RENDERING - showInvoicesFullView:', showInvoicesFullView);
+  console.log('🏠 activeHomeowner:', activeHomeowner ? activeHomeowner.name : 'none');
+  console.log('🏠 currentTab:', currentTab);
+
   // Helper function to render modals using Portal
   const renderModals = () => (
     <>
@@ -4947,8 +4952,16 @@ const Dashboard: React.FC<DashboardProps> = ({
                           // Special handling for INVOICES - open full-screen overlay
                           if (tab === 'INVOICES') {
                             console.log('💰 Opening Invoices Full View');
-                            setShowInvoicesFullView(true);
-                            console.log('💰 State setter called, current value before re-render:', showInvoicesFullView);
+                            console.log('💰 BEFORE setter - showInvoicesFullView is:', showInvoicesFullView);
+                            
+                            // Force toggle logic to guarantee state change
+                            setShowInvoicesFullView(prev => {
+                              console.log('💰 INSIDE setter - prev value:', prev);
+                              console.log('💰 INSIDE setter - setting to:', !prev);
+                              return true; // Always set to true for now
+                            });
+                            
+                            console.log('💰 AFTER setter called');
                             // Force immediate check
                             setTimeout(() => {
                               console.log('💰 Checking state after timeout...');
