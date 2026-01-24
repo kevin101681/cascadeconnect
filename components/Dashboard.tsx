@@ -6829,9 +6829,14 @@ const Dashboard: React.FC<DashboardProps> = ({
 
   // 4. FALLBACK - Should not reach here if logic is correct
   // This handles any edge cases where we don't have a homeowner selected
+  console.log('💰 [FALLBACK PATH] About to return fallback, showInvoicesFullView:', showInvoicesFullView);
+  
   return (
     <>
       {renderModals()}
+      
+      {console.log('💰 [FALLBACK JSX] Rendering fallback return')}
+      
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 animate-in fade-in slide-in-from-bottom-4 px-4">
         <div className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full">
           <Search className="h-12 w-12 text-surface-outline dark:text-gray-400" />
