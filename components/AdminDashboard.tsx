@@ -564,18 +564,18 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
     closeDocsModal,
     setIsDocUploading,
     showEditHomeownerModal,
-    editHomeownerName,
-    editHomeownerEmail,
-    editHomeownerPhone,
-    editHomeownerAddress,
-    editHomeownerStreet2,
-    editHomeownerCity,
-    editHomeownerState,
-    editHomeownerZip,
-    editHomeownerBuilder,
-    editHomeownerBuilderId,
-    editHomeownerJobName,
-    editHomeownerClosingDate,
+    editHomeownerName: editName,
+    editHomeownerEmail: editEmail,
+    editHomeownerPhone: editPhone,
+    editHomeownerAddress: editStreet,
+    editHomeownerStreet2: editStreet2,
+    editHomeownerCity: editCity,
+    editHomeownerState: editState,
+    editHomeownerZip: editZip,
+    editHomeownerBuilder: editBuilder,
+    editHomeownerBuilderId: editBuilderId,
+    editHomeownerJobName: editJobName,
+    editHomeownerClosingDate: editClosingDate,
     editSubFile,
     editParsedSubs,
     isParsingSubs,
@@ -1170,8 +1170,8 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
   // Claims filter state - NOW MANAGED BY useClaimsData HOOK
   // const [claimsFilter, setClaimsFilter] = useState<'All' | 'Open' | 'Closed'>('Open');
   
-  // Multi-select claims state - NOW MANAGED BY useClaimsData HOOK
-  // const [selectedClaimIds, setSelectedClaimIds] = useState<string[]>([]);
+  // Multi-select claims state - Restored for bulk operations
+  const [selectedClaimIds, setSelectedClaimIds] = useState<string[]>([]);
   
   // Tasks filter state - NOW MANAGED BY useTasksData HOOK
   // const [tasksFilter, setTasksFilter] = useState<'all' | 'open' | 'closed'>('open');
@@ -1438,8 +1438,8 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
     }
   }, [selectedThreadId, messages, onUpdateThread]);
 
-  // New Claim Modal State (legacy - now using inline view) - Removed, isCreatingNewClaim managed by hook
-  // const [showNewClaimModal, setShowNewClaimModal] = useState(false);
+  // New Claim Modal State (restored for legacy compatibility)
+  const [showNewClaimModal, setShowNewClaimModal] = useState(false);
   
   // New Claim Inline Creation State - NOW MANAGED BY useClaimsData HOOK
   // const [isCreatingNewClaim, setIsCreatingNewClaim] = useState(false);
@@ -1447,6 +1447,9 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
   // Unsaved changes confirmation dialog state
   const [showUnsavedWarning, setShowUnsavedWarning] = useState(false);
   const [pendingClaimSelection, setPendingClaimSelection] = useState<Claim | null>(null);
+  
+  // Documents modal state (legacy compatibility)
+  const [showDocumentsModal, setShowDocumentsModal] = useState(false);
 
   // Handler for claim selection with unsaved changes warning
   const handleClaimSelection = useCallback((claim: Claim) => {
