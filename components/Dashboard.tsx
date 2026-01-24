@@ -6856,11 +6856,11 @@ const Dashboard: React.FC<DashboardProps> = ({
           isOpen={showInvoicesFullView}
           onClose={() => setShowInvoicesFullView(false)}
           prefillData={
-            selectedHomeowner ? {
-              clientName: selectedHomeowner.builder,
-              clientEmail: selectedHomeowner.email,
-              projectDetails: selectedHomeowner.address,
-              homeownerId: selectedHomeowner.id,
+            activeHomeowner ? {
+              clientName: activeHomeowner.builder,
+              clientEmail: activeHomeowner.email,
+              projectDetails: activeHomeowner.address,
+              homeownerId: activeHomeowner.id,
             } : undefined
           }
         />
