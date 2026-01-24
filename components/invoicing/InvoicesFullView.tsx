@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Plus, Loader2, AlertTriangle } from 'lucide-react';
 import { InvoiceCard } from '../ui/InvoiceCard';
 import { NativeInvoiceForm } from './NativeInvoiceForm';
@@ -403,8 +404,9 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
   // Don't render if not open
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 bg-gray-50 flex">
+  // Render via Portal to ensure it's at the top level of the DOM
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] bg-gray-50 flex">
       {/* ==================== CLOSE BUTTON ==================== */}
       <button
         onClick={onClose}
@@ -541,6 +543,7 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
         </div>
         
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
