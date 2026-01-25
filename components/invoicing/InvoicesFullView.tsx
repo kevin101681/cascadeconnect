@@ -8,9 +8,10 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Plus, Loader2, AlertTriangle } from 'lucide-react';
+import { X, Plus, Loader2, AlertTriangle, Search } from 'lucide-react';
 import { InvoiceCard } from '../ui/InvoiceCard';
 import { NativeInvoiceForm } from './NativeInvoiceForm';
+import Button from '../Button';
 import type { Invoice, Client, Expense } from '../../lib/cbsbooks/types';
 import { api } from '../../lib/cbsbooks/services/api';
 import { useAuth } from '@clerk/clerk-react';
@@ -52,7 +53,8 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
   // ==================== UI STATE ====================
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'draft' | 'sent' | 'paid'>('sent');
+  const [statusFilter, setStatusFilter] = useState<'draft' | 'sent'>('sent');
+  const [searchQuery, setSearchQuery] = useState('');
   
   // Track if initial load has completed
   const hasLoadedRef = React.useRef(false);
@@ -121,9 +123,26 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
 
   // ==================== FILTERED DATA ====================
   const filteredInvoices = useMemo(() => {
-    if (statusFilter === 'all') return invoices;
-    return invoices.filter(inv => inv.status === statusFilter);
-  }, [invoices, statusFilter]);
+    // First filter by status
+    let filtered = invoices.filter(inv => inv.status === statusFilter);
+    
+    // Then filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(inv => 
+        inv.invoiceNumber.toLowerCase().includes(query) ||
+        inv.clientName?.toLowerCase().includes(query) ||
+        inv.projectDetails?.toLowerCase().includes(query)
+      );
+    }
+    
+    return filtered;
+  }, [invoices, statusFilter, searchQuery]);
+
+  // ==================== COMPUTED TOTALS ====================
+  const visibleTotal = useMemo(() => {
+    return filteredInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
+  }, [filteredInvoices]);
 
   // ==================== HANDLERS ====================
   const handleInvoiceClick = (invoice: Invoice) => {
@@ -407,7 +426,7 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
   // Render via Portal to ensure it's at the top level of the DOM
   return createPortal(
     <div 
-      className="fixed inset-0 z-overlay bg-red-500 flex"
+      className="fixed inset-0 z-overlay bg-gray-900/20 backdrop-blur-sm flex"
       style={{
         position: 'fixed',
         top: 0,
@@ -415,23 +434,19 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
         right: 0,
         bottom: 0,
         zIndex: 99999,
-        backgroundColor: 'rgba(255, 0, 0, 0.9)',
-        display: 'flex'
       }}
     >
-      {/* DEBUG: If you see a RED screen, the overlay is rendering! */}
-      <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '48px', color: 'white', fontWeight: 'bold', zIndex: 999999 }}>
-        INVOICES OVERLAY IS HERE!
-      </div>
       {/* ==================== CLOSE BUTTON ==================== */}
-      <button
+      <Button
         onClick={onClose}
-        className="absolute right-6 top-6 z-base p-2 rounded-full bg-white hover:bg-gray-100 shadow-md border border-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
+        variant="ghost"
+        size="icon"
+        className="absolute right-6 top-6 z-50 rounded-full bg-white hover:bg-gray-100 shadow-lg border border-gray-200 text-gray-600 hover:text-gray-900"
         title="Close"
         aria-label="Close invoices manager"
       >
         <X className="h-5 w-5" />
-      </button>
+      </Button>
 
       {/* ==================== SPLIT CONTAINER ==================== */}
       <div className="flex h-full w-full">
@@ -441,35 +456,58 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
           
           {/* HEADER */}
           <div className="flex-shrink-0 px-6 py-5 border-b border-gray-200">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
-              <button
+              <Button
                 onClick={handleCreateNew}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors"
+                variant="filled"
+                size="md"
+                icon={<Plus className="h-4 w-4" />}
               >
-                <Plus className="h-4 w-4" />
                 Create New
-              </button>
+              </Button>
+            </div>
+            
+            {/* SEARCH BAR */}
+            <div className="relative mb-4">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by invoice #, client name, or project address..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              />
             </div>
             
             {/* STATUS FILTER TABS */}
-            <div className="flex gap-2 mt-4">
-              {(['all', 'draft', 'sent', 'paid'] as const).map(status => (
-                <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    statusFilter === status
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
-                  <span className="ml-1.5 text-xs opacity-70">
-                    ({status === 'all' ? invoices.length : invoices.filter(i => i.status === status).length})
-                  </span>
-                </button>
-              ))}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex gap-2">
+                {(['draft', 'sent'] as const).map(status => (
+                  <button
+                    key={status}
+                    onClick={() => setStatusFilter(status)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      statusFilter === status
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                    <span className="ml-1.5 text-xs opacity-70">
+                      ({invoices.filter(i => i.status === status).length})
+                    </span>
+                  </button>
+                ))}
+              </div>
+              
+              {/* TOTAL BADGE */}
+              <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-1.5">
+                <span className="text-xs text-green-600 font-medium">Total: </span>
+                <span className="text-sm font-bold text-green-800">
+                  ${visibleTotal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -490,12 +528,14 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
                     <div>
                       <h3 className="text-lg font-semibold text-red-900 mb-2">Failed to Load</h3>
                       <p className="text-sm text-red-800">{error}</p>
-                      <button
+                      <Button
                         onClick={loadData}
-                        className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium"
+                        variant="danger"
+                        size="sm"
+                        className="mt-4"
                       >
                         Retry
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </div>

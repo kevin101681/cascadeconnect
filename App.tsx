@@ -346,8 +346,9 @@ function App() {
 
   // --- MONITORING INTEGRATION ---
   // Identify user in Sentry and PostHog when they sign in
+  // IMPORTANT: Only depend on userId (string) to prevent re-identification on token refresh
   useEffect(() => {
-    if (isSignedIn && authUser) {
+    if (isSignedIn && authUser?.id) {
       identifyUserInMonitoring({
         id: authUser.id,
         email: authUser.primaryEmailAddress?.emailAddress,
@@ -356,14 +357,23 @@ function App() {
         fullName: authUser.fullName,
       });
     }
-  }, [isSignedIn, authUser]);
+  }, [isSignedIn, authUser?.id]); // Only depend on userId string, not entire user object
 
   // --- AUTO-SYNC CLERK DATA ON LOGIN ---
   // CRITICAL: Sync Clerk ID to database to prevent "Zombie User" issue
   // This ensures that users created manually in the database (with just email)
   // get their clerk_id populated automatically on first login
+  // GUARD: Only sync once per user session to prevent repeated API calls
   useEffect(() => {
-    if (isSignedIn && authUser && isDbConfigured) {
+    if (isSignedIn && authUser?.id && isDbConfigured) {
+      // Guard: Skip if we've already synced this user
+      if (syncedUserIdRef.current === authUser.id) {
+        console.log('⏭️  Skipping user sync - already synced for this session:', authUser.id);
+        return;
+      }
+      
+      console.log('🔄 Syncing user to database:', authUser.id);
+      
       // Run sync in background without blocking the UI
       lazySyncUser({
         id: authUser.id,
@@ -372,12 +382,16 @@ function App() {
         firstName: authUser.firstName,
         lastName: authUser.lastName,
         imageUrl: (authUser as any).imageUrl
+      }).then(() => {
+        // Mark this user as synced
+        syncedUserIdRef.current = authUser.id;
+        console.log('✅ User sync completed:', authUser.id);
       }).catch(err => {
         // Log error but don't block the app
-        console.error('User sync failed:', err);
+        console.error('❌ User sync failed:', err);
       });
     }
-  }, [isSignedIn, authUser?.id]); // Only run when auth state or user ID changes
+  }, [isSignedIn, authUser?.id, isDbConfigured]); // Only run when auth state, user ID, or DB config changes
 
   // --- REFRESH/RELOAD DATA FUNCTION ---
   // Exposed function to reload all data from the database (used by import after reset/import)
@@ -1361,6 +1375,9 @@ function App() {
   const initialLoadRef = useRef(true);
   const mountTimeRef = useRef(Date.now());
   const userInteractionRef = useRef(false);
+  
+  // Track if we've already synced the current user to prevent repeated syncs
+  const syncedUserIdRef = useRef<string | null>(null);
   
   // Track user interactions on mobile
   useEffect(() => {

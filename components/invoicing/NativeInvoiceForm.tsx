@@ -19,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import AppButton from '../Button';
 import type { Invoice, Client, InvoiceItem } from '../../lib/cbsbooks/types';
 
 interface NativeInvoiceFormProps {
@@ -215,49 +216,43 @@ export const NativeInvoiceForm: React.FC<NativeInvoiceFormProps> = ({
           </h2>
           <div className="flex items-center gap-3">
             {/* SAVE BUTTON WITH INLINE STATUS */}
-            <Button
+            <AppButton
               onClick={handleSave}
               disabled={saveStatus === 'saving'}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+              variant="filled"
+              size="md"
+              className={`transition-all ${
                 saveStatus === 'success' 
-                  ? 'bg-green-600 hover:bg-green-600 text-white'
+                  ? '!bg-green-600 hover:!bg-green-600 !text-white'
                   : saveStatus === 'error'
-                  ? 'bg-red-600 hover:bg-red-600 text-white'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  ? '!bg-red-600 hover:!bg-red-600 !text-white'
+                  : '!bg-blue-600 hover:!bg-blue-700 !text-white'
               }`}
-            >
-              {saveStatus === 'saving' && (
-                <>
+              icon={
+                saveStatus === 'saving' ? (
                   <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Saving...
-                </>
-              )}
-              {saveStatus === 'success' && (
-                <>
+                ) : saveStatus === 'success' ? (
                   <Check className="h-4 w-4" />
-                  Saved!
-                </>
-              )}
-              {saveStatus === 'error' && (
-                <>
+                ) : saveStatus === 'error' ? (
                   <XIcon className="h-4 w-4" />
-                  Failed
-                </>
-              )}
-              {saveStatus === 'idle' && (
-                <>
+                ) : (
                   <Save className="h-4 w-4" />
-                  Save
-                </>
-              )}
-            </Button>
+                )
+              }
+            >
+              {saveStatus === 'saving' && 'Saving...'}
+              {saveStatus === 'success' && 'Saved!'}
+              {saveStatus === 'error' && 'Failed'}
+              {saveStatus === 'idle' && 'Save'}
+            </AppButton>
             
-            <button
+            <AppButton
               onClick={onCancel}
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg font-medium transition-colors"
+              variant="ghost"
+              size="md"
             >
               Cancel
-            </button>
+            </AppButton>
           </div>
         </div>
         
@@ -406,13 +401,14 @@ export const NativeInvoiceForm: React.FC<NativeInvoiceFormProps> = ({
           <div>
             <div className="flex items-center justify-between mb-3">
               <Label>Line Items *</Label>
-              <button
+              <AppButton
                 onClick={handleAddItem}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+                variant="ghost"
+                size="sm"
+                icon={<Plus className="h-3.5 w-3.5" />}
               >
-                <Plus className="h-3.5 w-3.5" />
                 Add Item
-              </button>
+              </AppButton>
             </div>
 
             <div className="space-y-3">
@@ -466,13 +462,15 @@ export const NativeInvoiceForm: React.FC<NativeInvoiceFormProps> = ({
                   </div>
                   
                   {/* Delete Button */}
-                  <button
+                  <AppButton
                     onClick={() => handleRemoveItem(item.id)}
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                    variant="ghost"
+                    size="icon"
+                    className="text-gray-400 hover:text-red-600 hover:bg-red-50"
                     title="Remove item"
                   >
                     <Trash2 className="h-4 w-4" />
-                  </button>
+                  </AppButton>
                 </div>
               ))}
             </div>

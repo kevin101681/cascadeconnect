@@ -7,6 +7,9 @@
 import * as Sentry from '@sentry/react';
 import { identifyUser, resetUser, trackEvent } from '../components/providers/PostHogProvider';
 
+// Track the last identified user ID to prevent duplicate identification
+let lastIdentifiedUserId: string | null = null;
+
 /**
  * Identify user in both Sentry and PostHog
  * Call this after successful Clerk authentication
@@ -18,6 +21,12 @@ export function identifyUserInMonitoring(user: {
   lastName?: string | null;
   fullName?: string | null;
 }) {
+  // Guard: Skip if we've already identified this user
+  if (lastIdentifiedUserId === user.id) {
+    console.log('⏭️  Skipping user identification - already identified:', user.id);
+    return;
+  }
+
   // Sentry: Set user context
   Sentry.setUser({
     id: user.id,
@@ -33,6 +42,8 @@ export function identifyUserInMonitoring(user: {
     name: user.fullName,
   });
 
+  // Update tracking
+  lastIdentifiedUserId = user.id;
   console.log('✅ User identified in monitoring:', user.id);
 }
 
@@ -47,6 +58,8 @@ export function clearUserFromMonitoring() {
   // PostHog: Reset user
   resetUser();
 
+  // Clear tracking
+  lastIdentifiedUserId = null;
   console.log('✅ User cleared from monitoring');
 }
 

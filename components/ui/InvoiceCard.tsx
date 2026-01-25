@@ -92,17 +92,17 @@ export function InvoiceCard({
       </div>
 
       {/* COMPACT DATES ROW: Side-by-side */}
-      <div className="flex items-center gap-3 mb-2 text-xs text-gray-600">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2 mb-2 text-xs text-gray-600 flex-wrap">
+        <div className="flex items-center gap-1 flex-shrink-0">
           <FileText className="w-3 h-3 text-gray-400" />
           <span className="text-[10px] text-gray-400 uppercase tracking-wider">Created:</span>
-          <span>{createdDate}</span>
+          <span className="whitespace-nowrap">{createdDate}</span>
         </div>
-        <span className="text-gray-300">•</span>
-        <div className="flex items-center gap-1">
+        <span className="text-gray-300 flex-shrink-0">•</span>
+        <div className="flex items-center gap-1 flex-shrink-0">
           <Calendar className="w-3 h-3 text-gray-400" />
           <span className="text-[10px] text-gray-400 uppercase tracking-wider">Due:</span>
-          <span className="font-medium">{dueDate}</span>
+          <span className="font-medium whitespace-nowrap">{dueDate}</span>
         </div>
       </div>
 

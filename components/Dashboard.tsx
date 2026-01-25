@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { UserRole } from '../types';
 import { useDashboardInitialization } from '../hooks/dashboard/useDashboardInitialization';
+import { DashboardSkeleton } from './skeletons/DashboardSkeleton';
 import type { DashboardProps } from './AdminDashboard'; // Re-export from AdminDashboard
 
 // Lazy load dashboard components for code splitting
@@ -30,14 +31,7 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
 
   // Show loading state while initialization hook prepares URL state, responsive detection, etc.
   if (!isReady) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-surface dark:bg-gray-900">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-main dark:border-primary-light mb-4"></div>
-          <p className="text-surface-on-variant dark:text-gray-400">Loading Dashboard...</p>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   // Route to appropriate dashboard based on user role
@@ -49,14 +43,7 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
   // Admin, Employee, and Builder users get the AdminDashboard (full-featured)
   if (isAdminRole || isEmployeeRole || isBuilderRole) {
     return (
-      <Suspense fallback={
-        <div className="flex items-center justify-center min-h-screen bg-surface dark:bg-gray-900">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-main dark:border-primary-light mb-4"></div>
-            <p className="text-surface-on-variant dark:text-gray-400">Loading Admin Dashboard...</p>
-          </div>
-        </div>
-      }>
+      <Suspense fallback={<DashboardSkeleton />}>
         <AdminDashboard {...props} />
       </Suspense>
     );
@@ -65,14 +52,7 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
   // Homeowner users get the simplified HomeownerDashboard
   if (isHomeownerRole) {
     return (
-      <Suspense fallback={
-        <div className="flex items-center justify-center min-h-screen bg-surface dark:bg-gray-900">
-          <div className="text-center">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-main dark:border-primary-light mb-4"></div>
-            <p className="text-surface-on-variant dark:text-gray-400">Loading Dashboard...</p>
-          </div>
-        </div>
-      }>
+      <Suspense fallback={<DashboardSkeleton />}>
         <HomeownerDashboard {...props} />
       </Suspense>
     );
