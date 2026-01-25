@@ -426,7 +426,7 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
   // Render via Portal to ensure it's at the top level of the DOM
   return createPortal(
     <div 
-      className="fixed inset-0 z-overlay bg-gray-900/20 backdrop-blur-sm flex relative"
+      className="fixed inset-0 z-overlay bg-gray-900/50 flex relative"
       style={{
         position: 'fixed',
         top: 0,
