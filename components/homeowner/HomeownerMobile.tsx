@@ -7,8 +7,8 @@ import { UserButton, SignOutButton, useUser } from '@clerk/clerk-react';
 // import * as XLSX from 'xlsx';
 import { motion, AnimatePresence, type Transition, type Variants } from 'framer-motion';
 import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, BuilderUser, Task, Contractor, Call } from '../../types';
-import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
-import StatusBadge from './StatusBadge';
+import { ClaimMessage, TaskMessage } from '../MessageSummaryModal';
+import StatusBadge from '../StatusBadge';
 import { ArrowLeft, ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle, HelpCircle, CheckCheck, LogOut } from 'lucide-react';
 import { useTaskStore } from '../../stores/useTaskStore';
 import { useModalStore } from '../../hooks/use-modal-store';
@@ -109,12 +109,12 @@ const PunchListApp = React.lazy(() => import('./PunchListApp').catch(err => {
 // REMOVED: Floating Chat Widget - Now in App.tsx at root level
 // const FloatingChatWidget = React.lazy(() => import('./chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
 
-import { HOMEOWNER_MANUAL_IMAGES } from '../lib/bluetag/constants';
-import { WarrantyCard } from './ui/WarrantyCard';
-import { HomeownerCard } from './ui/HomeownerCard';
-import { TaskCard } from './ui/TaskCard';
-import { MessageCard } from './ui/MessageCard';
-import { TaskCreationCard } from './TaskCreationCard';
+import { HOMEOWNER_MANUAL_IMAGES } from '../../lib/bluetag/constants';
+import { WarrantyCard } from '../ui/WarrantyCard';
+import { HomeownerCard } from '../ui/HomeownerCard';
+import { TaskCard } from '../ui/TaskCard';
+import { MessageCard } from '../ui/MessageCard';
+import { TaskCreationCard } from '../TaskCreationCard';
 
 // ============================================================================
 // MEMOIZED LIST COMPONENTS (Defined at top level to avoid hooks issues)
