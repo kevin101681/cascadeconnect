@@ -25,7 +25,8 @@ import { sendEmail, generateNotificationBody } from '../../services/emailService
 // import TaskList from './TaskList';
 // import TaskDetail from './TaskDetail';
 // import TasksSheet from './TasksSheet';
-import HomeownerDashboardMobile from '../HomeownerDashboardMobile';
+// REMOVED: Old mobile dashboard component - now inline with card-based layout
+// import HomeownerDashboardMobile from '../HomeownerDashboardMobile';
 import { StaggerContainer, FadeIn, AnimatedTabContent } from '../motion/MotionWrapper';
 import { SmoothHeightWrapper } from '../motion/SmoothHeightWrapper';
 import { SIDEBAR_CONTENT_PADDING_LEFT } from '../../constants/layout';
@@ -2754,45 +2755,134 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
       mainContent = (
         <>
           {renderModals()}
-          <HomeownerDashboardMobile
-            homeowner={displayHomeowner}
-            searchQuery={(isAdmin || isBuilder) ? searchQuery : undefined}
-            onSearchChange={(isAdmin || isBuilder) ? onSearchChange : undefined}
-            searchResults={(isAdmin || isBuilder) ? searchResults : undefined}
-            onSelectHomeowner={(isAdmin || isBuilder) ? onSelectHomeowner : undefined}
-            upcomingAppointment={upcomingAppointment}
-            onAppointmentClick={(claimId) => {
-              const claim = claims.find(c => c.id === claimId);
-              if (claim) {
-                handleClaimSelection(claim);
-              }
-            }}
-            onNavigateToModule={(module) => {
-              // Map module strings to existing tab state
-              const moduleMap: { [key: string]: typeof currentTab } = {
-                // REMOVED: Admin-only tabs (TASKS, CALLS, INVOICES)
-                'SCHEDULE': 'SCHEDULE',
-                'BLUETAG': null, // Special handling
-                'CLAIMS': 'CLAIMS',
-                'MESSAGES': 'MESSAGES',
-                'DOCUMENTS': 'DOCUMENTS',
-                'MANUAL': 'MANUAL',
-                'HELP': 'HELP',
-              };
+          {/* MOBILE-FIRST HOME SCREEN - Card-Based Layout */}
+          <div className="flex flex-col h-full bg-white dark:bg-gray-900 pb-24">
+            {/* Homeowner Info Header */}
+            <div className="px-4 py-6 bg-gradient-to-b from-primary/10 to-transparent dark:from-primary/20">
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <h1 className="text-2xl font-bold text-surface-on dark:text-gray-100">{displayHomeowner.name}</h1>
+                  {displayHomeowner.address && (
+                    <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">{displayHomeowner.address}</p>
+                  )}
+                </div>
+              </div>
+            </div>
 
-              if (module === 'BLUETAG') {
-                setCurrentTab('PUNCHLIST');
-              } else if (module === 'CHAT') {
-                updateSearchParams({ view: 'chat' });
-              } else {
-                const tab = moduleMap[module];
-                if (tab) {
-                  setCurrentTab(tab);
-                }
-              }
-            }}
-          />
-          {/* REMOVED: Floating Chat Widget - Now rendered at root level in App.tsx to escape stacking context */}
+            {/* Upcoming Appointment Card */}
+            {upcomingAppointment && (
+              <div className="mx-4 mb-4 -mt-2">
+                <button
+                  onClick={() => upcomingAppointment.claimId && (() => {
+                    const claim = claims.find(c => c.id === upcomingAppointment.claimId);
+                    if (claim) handleClaimSelection(claim);
+                  })()}
+                  className="w-full bg-primary/10 dark:bg-primary/20 border-2 border-primary rounded-2xl p-5 text-left shadow-md"
+                >
+                  <div className="flex items-start gap-3">
+                    <Calendar className="h-6 w-6 text-primary flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base font-semibold text-primary mb-1">Next Appointment</h3>
+                      <p className="text-lg font-bold text-surface-on dark:text-gray-100">
+                        {new Date(upcomingAppointment.date).toLocaleDateString('en-US', { 
+                          weekday: 'long', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })}
+                      </p>
+                      {upcomingAppointment.timeSlot && (
+                        <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">{upcomingAppointment.timeSlot}</p>
+                      )}
+                      {upcomingAppointment.count > 1 && (
+                        <p className="text-xs text-primary mt-2 font-medium">+{upcomingAppointment.count - 1} more scheduled</p>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              </div>
+            )}
+
+            {/* Quick Access Module Cards - Full Width, Better Spacing */}
+            <div className="flex-1 overflow-y-auto px-4">
+              <h2 className="text-lg font-semibold text-surface-on dark:text-gray-100 mb-4">Quick Access</h2>
+              <div className="space-y-3 pb-6">
+                <button
+                  onClick={() => setCurrentTab('CLAIMS')}
+                  className="w-full bg-surface-container dark:bg-gray-800 rounded-2xl p-5 border-2 border-surface-outline-variant dark:border-gray-700 hover:border-primary transition-all shadow-sm hover:shadow-md text-left"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20">
+                      <ClipboardList className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-surface-on dark:text-gray-100">Warranty Claims</h3>
+                      <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-0.5">Submit and track warranty requests</p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setCurrentTab('MESSAGES')}
+                  className="w-full bg-surface-container dark:bg-gray-800 rounded-2xl p-5 border-2 border-surface-outline-variant dark:border-gray-700 hover:border-primary transition-all shadow-sm hover:shadow-md text-left"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20">
+                      <Mail className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-surface-on dark:text-gray-100">Messages</h3>
+                      <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-0.5">Communicate with your builder</p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setCurrentTab('SCHEDULE')}
+                  className="w-full bg-surface-container dark:bg-gray-800 rounded-2xl p-5 border-2 border-surface-outline-variant dark:border-gray-700 hover:border-primary transition-all shadow-sm hover:shadow-md text-left"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20">
+                      <Calendar className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-surface-on dark:text-gray-100">Schedule</h3>
+                      <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-0.5">View upcoming appointments</p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setCurrentTab('DOCUMENTS')}
+                  className="w-full bg-surface-container dark:bg-gray-800 rounded-2xl p-5 border-2 border-surface-outline-variant dark:border-gray-700 hover:border-primary transition-all shadow-sm hover:shadow-md text-left"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20">
+                      <FileText className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-surface-on dark:text-gray-100">Documents</h3>
+                      <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-0.5">Access important files</p>
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setCurrentTab('PUNCHLIST')}
+                  className="w-full bg-surface-container dark:bg-gray-800 rounded-2xl p-5 border-2 border-surface-outline-variant dark:border-gray-700 hover:border-primary transition-all shadow-sm hover:shadow-md text-left"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20">
+                      <HardHat className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-base font-semibold text-surface-on dark:text-gray-100">BlueTag</h3>
+                      <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-0.5">Manage your punch list</p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
         </>
       );
     } else {
