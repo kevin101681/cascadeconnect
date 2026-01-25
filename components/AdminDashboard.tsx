@@ -522,8 +522,11 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
   onDataReset,
   onOpenTemplatesModal
 }) => {
+  // Phase 6.3: AdminDashboard is ONLY for Admins/Employees/Builders
+  // Hardcode role flags since homeowners use HomeownerDashboard
   const isAdmin = userRole === UserRole.ADMIN;
   const isBuilder = userRole === UserRole.BUILDER;
+  const isHomeowner = false; // Homeowners use HomeownerDashboard now
   
   // Phase 5 Wave 2: Initialize dashboard (URL, responsive, deep-links)
   const initialization = useDashboardInitialization();
