@@ -21,8 +21,8 @@ import {
 import { getPusherClient } from '../../lib/pusher-client';
 
 interface ChatSidebarProps {
-  userId?: string; // Legacy prop
-  effectiveUserId?: string; // New prop from ChatWidget
+  currentUserId?: string; // Used by TeamChat
+  effectiveUserId?: string; // Used by ChatWidget
   selectedChannelId: string | null;
   onSelectChannel: (channel: Channel) => void;
   isCompact?: boolean;
@@ -30,15 +30,15 @@ interface ChatSidebarProps {
 }
 
 export const ChatSidebar: React.FC<ChatSidebarProps> = ({
-  userId,
+  currentUserId,
   effectiveUserId,
   selectedChannelId,
   onSelectChannel,
   isCompact = false,
   unreadCountsOverride,
 }) => {
-  // Use effectiveUserId if provided, otherwise fall back to userId
-  const userId = effectiveUserId || userId;
+  // Use effectiveUserId if provided, otherwise fall back to currentUserId
+  const userId = effectiveUserId || currentUserId;
   const [channels, setChannels] = useState<Channel[]>([]);
   const [teamMembers, setTeamMembers] = useState<
     Array<{ id: string; name: string; email: string; internalRole?: string }>

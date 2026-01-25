@@ -20,8 +20,8 @@ import { getPusherClient } from '../../lib/pusher-client';
 import PusherJS from 'pusher-js';
 
 interface ChatWidgetProps {
-  effectiveUserId?: string; // Optional - can use homeownerId instead
-  effectiveUserName?: string; // Optional - can use homeownerName instead
+  currentUserId?: string; // Legacy prop
+  currentUserName?: string; // Legacy prop
   homeownerId?: string; // Homeowner-specific ID (used by AppShell)
   homeownerName?: string; // Homeowner-specific name (used by AppShell)
   onOpenHomeownerModal?: (homeownerId: string) => void;

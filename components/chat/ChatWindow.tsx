@@ -52,10 +52,10 @@ interface ChatWindowProps {
   channelId: string;
   channelName: string;
   channelType: 'public' | 'dm';
-  userId?: string; // Legacy prop
-  userName?: string; // Legacy prop
-  effectiveUserId?: string; // New prop from ChatWidget
-  effectiveUserName?: string; // New prop from ChatWidget
+  currentUserId?: string; // Used by TeamChat
+  currentUserName?: string; // Used by TeamChat
+  effectiveUserId?: string; // Used by ChatWidget
+  effectiveUserName?: string; // Used by ChatWidget
   onOpenHomeownerModal?: (homeownerId: string) => void;
   onMarkAsRead?: () => void;  // ✅ Callback to notify parent when channel is marked as read
   isCompact?: boolean; // For popup mode
@@ -65,17 +65,17 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   channelId,
   channelName,
   channelType,
-  userId,
-  userName,
+  currentUserId,
+  currentUserName,
   effectiveUserId,
   effectiveUserName,
   onOpenHomeownerModal,
   onMarkAsRead,
   isCompact = false,
 }) => {
-  // Use effectiveUserId/effectiveUserName if provided, otherwise fall back to userId/userName
-  const userId = effectiveUserId || userId;
-  const userName = effectiveUserName || userName;
+  // Use effectiveUserId/effectiveUserName if provided, otherwise fall back to currentUserId/currentUserName
+  const userId = effectiveUserId || currentUserId;
+  const userName = effectiveUserName || currentUserName;
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(true);

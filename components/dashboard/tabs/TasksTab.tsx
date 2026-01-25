@@ -94,7 +94,7 @@ interface TasksTabProps {
   employees: InternalEmployee[];
   claims: Claim[];
   homeowners: Homeowner[];
-  currentUser: { id: string; name: string; role: string } | null;
+  currentUser: { id: string; name: string; role: string; email?: string } | null;
   taskMessages: TaskMessage[];
   
   // Filter state

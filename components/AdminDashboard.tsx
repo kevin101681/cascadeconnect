@@ -3711,8 +3711,8 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
                       onDeleteTask={onDeleteTask}
                       onUpdateTask={onUpdateTask}
                       onFilterChange={setTasksFilter}
-                      onScheduleTask={handleScheduleTaskWithAssignee}
-                      onEvalTask={handleEvalTaskWithAssignee}
+                      onCreateScheduleTask={handleScheduleTaskWithAssignee}
+                      onCreateEvalTask={handleEvalTaskWithAssignee}
                       startInEditMode={tasksTabStartInEditMode}
                       onEditModeChange={setTasksTabStartInEditMode}
                       onSelectClaim={(claim) => {
