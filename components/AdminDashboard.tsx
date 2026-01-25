@@ -25,6 +25,7 @@ import type { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 
 // Tab types for dashboard navigation (imported from initialization hook for consistency)
 export type { TabType } from '../hooks/dashboard/useDashboardInitialization';
+import type { TabType } from '../hooks/dashboard/useDashboardInitialization';
 
 export interface DashboardProps {
   // Tab types for dashboard navigation
@@ -95,7 +96,7 @@ export interface DashboardProps {
   currentUserEmail?: string; // Current user's email for contractor matching
 
   // Initial State Control (Optional)
-  initialTab?: string | null; // Accept string for flexibility
+  initialTab?: TabType; // Accept TabType for type safety
   initialThreadId?: string | null;
 
   // Tasks Widget Support

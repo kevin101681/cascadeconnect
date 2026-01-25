@@ -15,6 +15,7 @@ import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK
 import { sendEmail, generateNotificationBody } from './services/emailService';
 import { analyzeHomeownerClaims } from './actions/analyze-homeowner-claims';
 import { trackEvent } from './components/providers/PostHogProvider';
+import type { TabType } from './hooks/dashboard/useDashboardInitialization';
 
 // UI Context for global modal management
 import { UIProvider } from './contexts/UIContext';
@@ -1358,14 +1359,14 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [dashboardConfig, setDashboardConfig] = useState<{
-    initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'INVOICES';
+    initialTab?: TabType;
     initialThreadId?: string | null;
   }>(() => {
     // Check if we should open invoices tab from URL hash
     if (typeof window !== 'undefined') {
       const hash = window.location.hash;
       if (hash.includes('#invoices')) {
-        return { initialTab: 'INVOICES' };
+        return { initialTab: 'INVOICES' as TabType };
       }
     }
     return {};
@@ -4832,7 +4833,7 @@ Assigned By: ${assignerName}
             activeHomeowner?.email || 
             undefined
           }
-          initialTab="TASKS"
+          initialTab={"TASKS" as TabType}
           initialThreadId={null}
           tasks={tasks}
           onAddTask={handleAddTask}
