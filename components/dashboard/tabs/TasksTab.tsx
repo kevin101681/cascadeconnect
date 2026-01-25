@@ -94,18 +94,20 @@ interface TasksTabProps {
   employees: InternalEmployee[];
   claims: Claim[];
   homeowners: Homeowner[];
-  currentUser: { id: string; name: string; role: string; email?: string } | null;
+  currentUser: InternalEmployee | null;
   taskMessages: TaskMessage[];
   
   // Filter state
   tasksFilter: 'open' | 'closed' | 'all';
-  tasksTabStartInEditMode: boolean;
+  effectiveStartInEditMode: boolean;
+  startInEditMode?: boolean; // Alias for effectiveStartInEditMode
   
   // Callbacks
   onTaskSelect: (task: Task | null) => void;
   onSetTasksFilter: (filter: 'open' | 'closed' | 'all') => void;
   onFilterChange?: (filter: 'open' | 'closed' | 'all') => void; // Alias for onSetTasksFilter
-  onSetTasksTabStartInEditMode: (value: boolean) => void;
+  effectiveOnEditModeChange: (value: boolean) => void;
+  onEditModeChange?: (value: boolean) => void; // Alias for effectiveOnEditModeChange
   onToggleTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
   onUpdateTask?: (taskId: string, updates: Partial<Task>) => void;
@@ -129,10 +131,12 @@ export const TasksTab: React.FC<TasksTabProps> = ({
   currentUser,
   taskMessages,
   tasksFilter,
-  tasksTabStartInEditMode,
+  effectiveStartInEditMode,
+  startInEditMode, // Alias
   onTaskSelect,
   onSetTasksFilter,
-  onSetTasksTabStartInEditMode,
+  effectiveOnEditModeChange,
+  onEditModeChange, // Alias
   onToggleTask,
   onDeleteTask,
   onUpdateTask,
@@ -142,6 +146,10 @@ export const TasksTab: React.FC<TasksTabProps> = ({
   onCreateEvalTask,
   isAdmin,
 }) => {
+  // Use the provided value or alias
+  const effectiveStartInEditMode = startInEditMode ?? effectiveStartInEditMode;
+  const effectiveOnEditModeChange = onEditModeChange ?? effectiveOnEditModeChange;
+  
   // Calculate counts for filter pills
   const openCount = tasks.filter(task => !task.isCompleted).length;
   const closedCount = tasks.filter(task => task.isCompleted).length;
@@ -236,7 +244,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
           selectedTaskId={selectedTask?.id || null}
           onTaskSelect={(task) => {
             onTaskSelect(task);
-            onSetTasksTabStartInEditMode(true);
+            effectiveOnEditModeChange(true);
           }}
         />
       </div>
@@ -264,17 +272,17 @@ export const TasksTab: React.FC<TasksTabProps> = ({
                   onToggleTask={onToggleTask}
                   onDeleteTask={onDeleteTask}
                   onUpdateTask={onUpdateTask}
-                    startInEditMode={tasksTabStartInEditMode}
+                    startInEditMode={effectiveStartInEditMode}
                   onSelectClaim={(claim) => {
                     onTaskSelect(null);
-                      onSetTasksTabStartInEditMode(false);
+                      effectiveOnEditModeChange(false);
                     if (onSelectClaim) onSelectClaim(claim);
                     if (onSetCurrentTab) onSetCurrentTab('CLAIMS');
                   }}
                   taskMessages={taskMessages.filter(m => m.taskId === selectedTask.id)}
                     onBack={() => {
                       onTaskSelect(null);
-                      onSetTasksTabStartInEditMode(false);
+                      effectiveOnEditModeChange(false);
                     }}
                 />
               </Suspense>
@@ -312,10 +320,10 @@ export const TasksTab: React.FC<TasksTabProps> = ({
               homeowners={homeowners}
               onToggleTask={onToggleTask}
               onDeleteTask={onDeleteTask}
-              startInEditMode={tasksTabStartInEditMode}
+              startInEditMode={effectiveStartInEditMode}
               onBack={() => {
                 onTaskSelect(null);
-                onSetTasksTabStartInEditMode(false);
+                effectiveOnEditModeChange(false);
               }}
             />
           </Suspense>
