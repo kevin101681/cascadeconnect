@@ -1,5 +1,5 @@
 import React from 'react';
-import { Smartphone, Monitor, TrendingDown, AlertTriangle, Chrome, Safari, Firefox, BarChart3, PieChart, Table2, RefreshCw } from 'lucide-react';
+import { Smartphone, Monitor, TrendingDown, AlertTriangle, Chrome, Globe, BarChart3, PieChart, Table2, RefreshCw } from 'lucide-react';
 import { Card } from '../ui/card';
 import Button from '../Button';
 
@@ -90,8 +90,8 @@ const PostHogTab: React.FC<PostHogTabProps> = ({ onRefresh, loading = false }) =
 
   const getBrowserIcon = (browser: string) => {
     if (browser.toLowerCase().includes('chrome')) return <Chrome className="h-4 w-4" />;
-    if (browser.toLowerCase().includes('safari')) return <Safari className="h-4 w-4" />;
-    if (browser.toLowerCase().includes('firefox')) return <Firefox className="h-4 w-4" />;
+    if (browser.toLowerCase().includes('safari')) return <Globe className="h-4 w-4" />;
+    if (browser.toLowerCase().includes('firefox')) return <Globe className="h-4 w-4" />;
     return <Monitor className="h-4 w-4" />;
   };
 

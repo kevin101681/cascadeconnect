@@ -14,6 +14,7 @@ import { Claim, UserRole, ClaimStatus, Homeowner, Task, HomeownerDocument, Inter
 import { MOCK_CLAIMS, MOCK_HOMEOWNERS, MOCK_TASKS, MOCK_INTERNAL_EMPLOYEES, MOCK_CONTRACTORS, MOCK_DOCUMENTS, MOCK_THREADS, MOCK_BUILDER_GROUPS, MOCK_BUILDER_USERS, MOCK_CLAIM_MESSAGES } from './constants';
 import { sendEmail, generateNotificationBody } from './services/emailService';
 import { analyzeHomeownerClaims } from './actions/analyze-homeowner-claims';
+import { trackEvent } from './components/providers/PostHogProvider';
 
 // UI Context for global modal management
 import { UIProvider } from './contexts/UIContext';
@@ -2326,6 +2327,17 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
         
         console.log(`📧 [EMAIL] Batch claim notification summary: ${emailSuccessCount} sent, ${emailFailureCount} failed`);
 
+        // Track successful claim submissions for operational efficiency analytics
+        newClaims.forEach((claim) => {
+          trackEvent('claim_submitted', {
+            claim_id: claim.id,
+            attachment_count: claim.attachments?.length || 0,
+            has_photo: claim.attachments?.some(a => a.type === 'IMAGE') || false,
+            is_batch: true,
+            batch_size: newClaims.length
+          });
+        });
+
         // Show submission success modal (if homeowner)
         if (userRole === UserRole.HOMEOWNER) {
           // Show modal immediately with loading state
@@ -2502,6 +2514,14 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
           newClaim.dateSubmitted = insertedClaim.dateSubmitted ? new Date(insertedClaim.dateSubmitted) : newClaim.dateSubmitted;
           (newClaim as any).homeownerId = insertedClaim.homeownerId;
         }
+
+        // Track successful claim submission for operational efficiency analytics
+        trackEvent('claim_submitted', {
+          claim_id: newClaim.id,
+          attachment_count: newClaim.attachments?.length || 0,
+          has_photo: newClaim.attachments?.some(a => a.type === 'IMAGE') || false,
+          is_batch: false
+        });
         
       } catch (e: any) {
         console.error("🔥 FAILED TO CREATE CLAIM - DATABASE ERROR:", e);
