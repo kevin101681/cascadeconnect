@@ -21,7 +21,8 @@ import {
 import { getPusherClient } from '../../lib/pusher-client';
 
 interface ChatSidebarProps {
-  currentUserId: string;
+  userId?: string; // Legacy prop
+  effectiveUserId?: string; // New prop from ChatWidget
   selectedChannelId: string | null;
   onSelectChannel: (channel: Channel) => void;
   isCompact?: boolean;
@@ -29,12 +30,15 @@ interface ChatSidebarProps {
 }
 
 export const ChatSidebar: React.FC<ChatSidebarProps> = ({
-  currentUserId,
+  userId,
+  effectiveUserId,
   selectedChannelId,
   onSelectChannel,
   isCompact = false,
   unreadCountsOverride,
 }) => {
+  // Use effectiveUserId if provided, otherwise fall back to userId
+  const userId = effectiveUserId || userId;
   const [channels, setChannels] = useState<Channel[]>([]);
   const [teamMembers, setTeamMembers] = useState<
     Array<{ id: string; name: string; email: string; internalRole?: string }>
@@ -56,7 +60,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const loadChannels = async () => {
     try {
       setIsLoadingChannels(true);
-      const userChannels = await getUserChannels(currentUserId);
+      const userChannels = await getUserChannels(userId);
       // Filter to only show DM channels and sort by most recent activity
       const dmChannels = userChannels
         .filter(ch => ch.type === 'dm')
@@ -91,15 +95,15 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   useEffect(() => {
     loadChannels();
     loadTeamMembers();
-  }, [currentUserId]);
+  }, [userId]);
 
   // ⚡️ STABLE PUSHER LISTENER: Listen for new messages via Pusher
-  // CRITICAL: Only depends on currentUserId - NEVER re-subscribes when channels change
+  // CRITICAL: Only depends on userId - NEVER re-subscribes when channels change
   useEffect(() => {
-    if (!currentUserId) return;
+    if (!userId) return;
 
     // Subscribe to user's PUBLIC channel for targeted notifications
-    const channelName = `public-user-${currentUserId}`;
+    const channelName = `public-user-${userId}`;
     console.log('🔌 [ChatSidebar] Setting up STABLE Pusher listener on PUBLIC channel:', channelName);
     
     const pusher = getPusherClient();
@@ -177,7 +181,7 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
       // ❌ NEVER CALL: channel.unbind('new-message'); // This wipes ALL listeners!
       // ❌ NEVER CALL: pusher.unsubscribe(channelName); // This kills the connection!
     };
-  }, [currentUserId]); // ⚡️ CRITICAL: Only depends on userId, NOT channels or selectedChannelId
+  }, [userId]); // ⚡️ CRITICAL: Only depends on userId, NOT channels or selectedChannelId
 
   // Handle DM click: find or create channel
   const handleDmClick = async (userId: string, userName: string) => {
@@ -189,17 +193,17 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
         (ch) =>
           ch.type === 'dm' &&
           ch.dmParticipants?.includes(userId) &&
-          ch.dmParticipants?.includes(currentUserId)
+          ch.dmParticipants?.includes(userId)
       );
 
       if (existingDm) {
         onSelectChannel(existingDm);
       } else {
         // Create new DM channel
-        const dbChannelId = await findOrCreateDmChannel(currentUserId, userId, currentUserId);
+        const dbChannelId = await findOrCreateDmChannel(userId, userId, userId);
         
         // ✅ CRITICAL FIX: Generate deterministic ID (findOrCreateDmChannel returns database UUID)
-        const deterministicId = `dm-${[currentUserId, userId].sort().join('-')}`;
+        const deterministicId = `dm-${[userId, userId].sort().join('-')}`;
         
         // Reload channels
         await loadChannels();
@@ -215,8 +219,8 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
             dbId: dbChannelId,    // ✅ Store database UUID for backend operations
             name: userName,
             type: 'dm',
-            dmParticipants: [currentUserId, userId].sort(),
-            createdBy: currentUserId,
+            dmParticipants: [userId, userId].sort(),
+            createdBy: userId,
             createdAt: new Date(),
             otherUser: {
               id: userId,
@@ -235,20 +239,20 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   };
 
   // Get current user's name for filtering channel names
-  const currentUserName = teamMembers.find((m) => m.id === currentUserId)?.name || '';
+  const currentUserName = teamMembers.find((m) => m.id === userId)?.name || '';
 
   // Get user IDs we already have DMs with
   const existingDmUserIds = new Set(
-    channels.flatMap((ch) => ch.dmParticipants || []).filter((id) => id !== currentUserId)
+    channels.flatMap((ch) => ch.dmParticipants || []).filter((id) => id !== userId)
   );
 
   // Filter team members by search (exclude current user from list)
-  // ✅ CRITICAL FIX: getAllTeamMembers returns clerkId as 'id', so member.id === currentUserId
+  // ✅ CRITICAL FIX: getAllTeamMembers returns clerkId as 'id', so member.id === userId
   const filteredTeamMembers = teamMembers
     .filter((member) => {
       // Normalize IDs to lowercase strings for comparison
       const memberId = String(member.id || '').toLowerCase();
-      const currentId = String(currentUserId || '').toLowerCase();
+      const currentId = String(userId || '').toLowerCase();
       
       // 🚫 BLOCK: Exclude current user from the list
       if (memberId === currentId) {
@@ -267,12 +271,12 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
     if (channel.type !== 'dm') return channel.name || 'Conversation';
 
     // Prefer explicit otherUser name when available.
-    if (channel.otherUser?.name && channel.otherUser.id !== currentUserId) {
+    if (channel.otherUser?.name && channel.otherUser.id !== userId) {
       return channel.otherUser.name;
     }
 
     // Otherwise, derive the other participant from dmParticipants.
-    const otherUserId = channel.dmParticipants?.find((id) => id !== currentUserId);
+    const otherUserId = channel.dmParticipants?.find((id) => id !== userId);
     if (otherUserId) {
       const member = teamMembers.find((m) => m.id === otherUserId);
       if (member?.name) return member.name;

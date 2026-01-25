@@ -111,6 +111,7 @@ interface TasksTabProps {
   onUpdateTask?: (taskId: string, updates: Partial<Task>) => void;
   onSelectClaim?: (claim: Claim) => void;
   onSetCurrentTab?: (tab: string) => void;
+  onScheduleTask?: (task: Task) => void; // Callback for scheduling tasks
   onCreateScheduleTask?: (assigneeId: string) => Promise<void>;
   onCreateEvalTask?: (type: '60 Day' | '11 Month' | 'Other', assigneeId: string) => Promise<void>;
   

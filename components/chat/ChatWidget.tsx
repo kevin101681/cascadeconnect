@@ -31,8 +31,8 @@ interface ChatWidgetProps {
 }
 
 export const ChatWidget: React.FC<ChatWidgetProps> = ({
-  effectiveUserId,
-  effectiveUserName,
+  currentUserId,
+  currentUserName,
   homeownerId,
   homeownerName,
   onOpenHomeownerModal,
@@ -45,9 +45,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
-  // Use homeownerId/homeownerName if provided, otherwise fall back to effectiveUserId/effectiveUserName
-  const effectiveUserId = homeownerId || effectiveUserId;
-  const effectiveUserName = homeownerName || effectiveUserName;
+  // Use homeownerId/homeownerName if provided, otherwise fall back to currentUserId/currentUserName
+  const effectiveUserId = homeownerId || currentUserId;
+  const effectiveUserName = homeownerName || currentUserName;
 
   // ⚡️ CRITICAL FIX: Use ref to access selectedChannel without causing re-subscriptions
   const selectedChannelRef = useRef<Channel | null>(null);

@@ -52,8 +52,10 @@ interface ChatWindowProps {
   channelId: string;
   channelName: string;
   channelType: 'public' | 'dm';
-  currentUserId: string;
-  currentUserName: string;
+  userId?: string; // Legacy prop
+  userName?: string; // Legacy prop
+  effectiveUserId?: string; // New prop from ChatWidget
+  effectiveUserName?: string; // New prop from ChatWidget
   onOpenHomeownerModal?: (homeownerId: string) => void;
   onMarkAsRead?: () => void;  // ✅ Callback to notify parent when channel is marked as read
   isCompact?: boolean; // For popup mode
@@ -63,12 +65,17 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   channelId,
   channelName,
   channelType,
-  currentUserId,
-  currentUserName,
+  userId,
+  userName,
+  effectiveUserId,
+  effectiveUserName,
   onOpenHomeownerModal,
   onMarkAsRead,
   isCompact = false,
 }) => {
+  // Use effectiveUserId/effectiveUserName if provided, otherwise fall back to userId/userName
+  const userId = effectiveUserId || userId;
+  const userName = effectiveUserName || userName;
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -144,14 +151,14 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       const now = new Date();
       const messagesWithReadStatus = msgs.map(msg => ({
         ...msg,
-        readAt: msg.senderId === currentUserId && 
+        readAt: msg.senderId === userId && 
                 (now.getTime() - new Date(msg.createdAt).getTime()) > 5000 
                   ? new Date(msg.createdAt) 
                   : null
       }));
       
       setMessages(messagesWithReadStatus);
-      await markChannelAsRead(currentUserId, channelId);
+      await markChannelAsRead(userId, channelId);
       // ✅ Notify parent to refresh unread counts
       onMarkAsRead?.();
     } catch (error) {
@@ -159,11 +166,11 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [channelId, currentUserId]);
+  }, [channelId, userId]);
 
   // Load messages on mount and channel change
   useEffect(() => {
-    console.log('🎬 ChatWindow MOUNTED/UPDATED. Channel ID:', channelId, 'User ID:', currentUserId);
+    console.log('🎬 ChatWindow MOUNTED/UPDATED. Channel ID:', channelId, 'User ID:', userId);
     loadMessages();
   }, [loadMessages]);
 
@@ -195,7 +202,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   // Pusher: Listen for new messages on PUBLIC user channel
   useEffect(() => {
     const pusher = getPusherClient();
-    const channelName = `public-user-${currentUserId}`;
+    const channelName = `public-user-${userId}`;
     const channel = pusher.subscribe(channelName);
 
     // 1. Define handlers INSIDE the effect
@@ -215,8 +222,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
         });
         
         // Mark as read if message is from someone else
-        if (data.message.senderId !== currentUserId) {
-          markChannelAsRead(currentUserId, channelId);
+        if (data.message.senderId !== userId) {
+          markChannelAsRead(userId, channelId);
         }
       }
     };
@@ -227,7 +234,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       userName: string;
       isTyping: boolean;
     }) => {
-      if (data.channelId === channelId && data.userId !== currentUserId) {
+      if (data.channelId === channelId && data.userId !== userId) {
         // ✅ Google-style: Simple boolean state
         setIsOtherUserTyping(data.isTyping);
         
@@ -253,9 +260,9 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       console.log('⚡️ [ChatWindow] Read Receipt Event Received:', {
         data,
         currentChannelId: channelId,
-        currentUserId,
+        userId,
         matches: data.channelId === channelId,
-        isNotMe: data.readBy !== currentUserId
+        isNotMe: data.readBy !== userId
       });
       
       // ✅ CRITICAL: Update MY messages when someone else reads them
@@ -263,7 +270,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       setMessages((prev) => {
         const updated = prev.map((msg) => {
           // Only update MY messages that are currently unread
-          if (msg.senderId === currentUserId && !msg.readAt) {
+          if (msg.senderId === userId && !msg.readAt) {
             console.log(`📝 [ChatWindow] Marking message ${msg.id} as read`);
             return { ...msg, readAt: new Date(data.readAt) };
           }
@@ -295,7 +302,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       // ❌ NEVER CALL: channel.unbind('new-message'); // This wipes ALL listeners!
       // ❌ NEVER CALL: pusher.unsubscribe(channelName); // This kills the connection!
     };
-  }, [channelId, currentUserId]);
+  }, [channelId, userId]);
 
   // Handle typing with throttling (2 second intervals)
   const handleTyping = useCallback(() => {
@@ -312,8 +319,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     
     sendTypingIndicator({
       channelId,
-      userId: currentUserId,
-      userName: currentUserName,
+      userId: userId,
+      userName: userName,
       isTyping: true,
     });
 
@@ -326,12 +333,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
     typingTimeoutRef.current = setTimeout(() => {
       sendTypingIndicator({
         channelId,
-        userId: currentUserId,
-        userName: currentUserName,
+        userId: userId,
+        userName: userName,
         isTyping: false,
       });
     }, 2000);
-  }, [channelId, currentUserId, currentUserName]);
+  }, [channelId, userId, userName]);
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -361,8 +368,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   const handleInputBlur = () => {
     sendTypingIndicator({
       channelId,
-      userId: currentUserId,
-      userName: currentUserName,
+      userId: userId,
+      userName: userName,
       isTyping: false,
     });
   };
@@ -476,8 +483,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
       // 4. Log current user info before sending
       console.log('👤 Current User Info:', {
-        userId: currentUserId,
-        userName: currentUserName,
+        userId: userId,
+        userName: userName,
         messageContent: messageToSend.substring(0, 50) + '...'
       });
 
@@ -490,7 +497,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       console.log('📤 Sending message to server...');
       const newMessage = await sendMessage({
         channelId,
-        senderId: currentUserId,
+        senderId: userId,
         content: messageToSend,
         attachments: attachmentsToSend,
         mentions: selectedMentions.map((m) => ({
@@ -530,8 +537,8 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
       // Stop typing indicator
       sendTypingIndicator({
         channelId,
-        userId: currentUserId,
-        userName: currentUserName,
+        userId: userId,
+        userName: userName,
         isTyping: false,
       });
 
@@ -637,12 +644,12 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
           {reversedMessages.map((message) => (
             <div
               key={message.id}
-              className={`flex gap-2 group ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
+              className={`flex gap-2 group ${message.senderId === userId ? 'justify-end' : 'justify-start'}`}
             >
               {/* Message content - WhatsApp style without avatars */}
-              <div className={`flex flex-col max-w-[70%] ${message.senderId === currentUserId ? 'items-end' : 'items-start'}`}>
+              <div className={`flex flex-col max-w-[70%] ${message.senderId === userId ? 'items-end' : 'items-start'}`}>
                 {/* Sender name (only show for other users' messages) */}
-                {message.senderId !== currentUserId && (
+                {message.senderId !== userId && (
                   <span className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1 px-1">
                     {message.senderName || 'Unknown User'}
                   </span>
@@ -651,7 +658,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                 {/* Message bubble */}
                 <div
                   className={`px-3 py-2 rounded-lg shadow-sm relative ${
-                    message.senderId === currentUserId
+                    message.senderId === userId
                       ? 'bg-[#769cab] text-white rounded-br-none'
                       : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-none'
                   }`}
@@ -668,7 +675,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                   {/* Quoted message (if replying to another message) */}
                   {message.replyTo && (
                     <div className={`border-l-2 border-blue-400 bg-black/5 dark:bg-black/20 p-2 mb-2 text-xs italic rounded-r ${
-                      message.senderId === currentUserId ? 'text-white/80' : 'text-gray-600 dark:text-gray-400'
+                      message.senderId === userId ? 'text-white/80' : 'text-gray-600 dark:text-gray-400'
                     }`}>
                       <div className="font-semibold not-italic mb-0.5">
                         {message.replyTo.senderName || 'Unknown User'}
@@ -679,7 +686,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                     </div>
                   )}
 
-                  {renderMessageContent(message, message.senderId === currentUserId)}
+                  {renderMessageContent(message, message.senderId === userId)}
 
                   {/* Attachments */}
                   {message.attachments.length > 0 && (
@@ -712,7 +719,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
                   {/* WhatsApp-style status and timestamp */}
                   <div className={`flex items-center gap-1 justify-end mt-1 text-[10px] ${
-                    message.senderId === currentUserId ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'
+                    message.senderId === userId ? 'text-white/70' : 'text-gray-500 dark:text-gray-400'
                   }`}>
                     <span>
                       {new Date(message.createdAt).toLocaleTimeString([], {
@@ -721,7 +728,7 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
                       })}
                     </span>
                     {/* Status ticks (only for own messages) */}
-                    {message.senderId === currentUserId && (
+                    {message.senderId === userId && (
                       message.readAt ? (
                         <CheckCheck className="w-3 h-3 text-blue-300" />  // Double check = Read
                       ) : (
