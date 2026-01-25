@@ -65,7 +65,8 @@ import { useMessagesData } from '../hooks/dashboard/useMessagesData';
 // Phase 5 Wave 1: Import message workflow hook
 import { useMessageWorkflow } from '../hooks/dashboard/useMessageWorkflow';
 // Phase 5 Wave 2: Import initialization hook
-import { useDashboardInitialization } from '../hooks/dashboard/useDashboardInitialization';
+// Import TabType from initialization hook to ensure type consistency
+import { useDashboardInitialization, type TabType } from '../hooks/dashboard/useDashboardInitialization';
 // Phase 5 Wave 3: Import modal management hook
 import { useModalManagement } from '../hooks/dashboard/useModalManagement';
 
@@ -361,7 +362,7 @@ const ManualImageFlipBook: React.FC<ManualImageFlipBookProps> = ({ images, width
 };
 
 // Tab types for dashboard navigation (Homeowner-specific)
-type TabType = 'CLAIMS' | 'MESSAGES' | 'SCHEDULE' | 'DOCUMENTS' | 'MANUAL' | 'HELP' | null;
+// Now imported from useDashboardInitialization for consistency
 
 interface DashboardProps {
   claims: Claim[];
