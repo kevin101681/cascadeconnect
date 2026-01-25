@@ -1539,34 +1539,6 @@ function App() {
     setSearchQuery('');
     setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
     setCurrentView('DASHBOARD');
-    
-    // Note: Does NOT switch view mode - only updates selected homeowner for display
-    // View mode switch is handled ONLY by handleViewAsHomeowner (View As button)
-  };
-
-  const handleViewAsHomeowner = (homeowner: Homeowner) => {
-    // This is the ONLY function that should switch to homeowner view mode
-    console.log("👁️ View As button clicked - Switching to homeowner view:", homeowner.id, homeowner.firstName || homeowner.name);
-    
-    // 1. Set the selected homeowner
-    setSelectedAdminHomeownerId(homeowner.id);
-    setSearchQuery('');
-    setDashboardConfig({ initialTab: 'CLAIMS', initialThreadId: null });
-    setCurrentView('DASHBOARD');
-    
-    // 2. CRITICAL: Switch to homeowner view mode
-    setActiveHomeowner(homeowner);
-    setUserRole(UserRole.HOMEOWNER);
-    
-    // 3. CRITICAL FIX: Add homeownerId to URL as single source of truth
-    // This prevents the app from losing track of the selected homeowner during re-renders
-    const searchParams = new URLSearchParams(window.location.search);
-    searchParams.set('view', 'homeowner');
-    searchParams.set('homeownerId', homeowner.id);
-    navigate(`${location.pathname}?${searchParams.toString()}`, { replace: true });
-    console.log("✅ URL updated with homeownerId:", homeowner.id);
-    
-    // Note: Persistence now handled by State Watcher useEffect
   };
 
   const handleClearHomeownerSelection = () => {
@@ -4742,7 +4714,6 @@ Assigned By: ${assignerName}
       selectedHomeownerId={selectedAdminHomeownerId}
       onClearSelection={handleClearHomeownerSelection}
       onNavigate={setCurrentView}
-      onViewAsHomeowner={handleViewAsHomeowner}
       onOpenEnrollment={() => setIsEnrollmentOpen(true)}
       currentView={currentView}
       onSignOut={async () => {
@@ -4777,7 +4748,6 @@ Assigned By: ${assignerName}
           onSearchChange={setSearchQuery}
           searchResults={searchResults}
           onSelectHomeowner={handleSelectHomeowner}
-          onViewAsHomeowner={handleViewAsHomeowner}
           documents={documents}
           onUploadDocument={handleUploadDocument}
           onDeleteDocument={handleDeleteDocument}

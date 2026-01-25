@@ -390,7 +390,6 @@ export interface DashboardProps {
   onSearchChange?: (query: string) => void;
   searchResults?: Homeowner[];
   onSelectHomeowner?: (homeowner: Homeowner) => void;
-  onViewAsHomeowner?: (homeowner: Homeowner) => void;
   
   // Documents
   documents: HomeownerDocument[];
@@ -481,7 +480,6 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
   onSearchChange,
   searchResults,
   onSelectHomeowner,
-  onViewAsHomeowner,
   documents,
   onUploadDocument,
   onDeleteDocument,
@@ -3094,45 +3092,6 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
         <>
           {renderModals()}
         
-        {/* ADMIN EXIT BUTTON - Only show when admin is viewing as homeowner */}
-        {/* ✅ LOGIC: Show when isHomeownerView is true AND the Clerk user's role is admin */}
-        {/* Real Homeowner: isHomeownerView=true but isAdminAccount=false -> HIDDEN */}
-        {/* Admin Dashboard: isHomeownerView=false -> HIDDEN */}
-        {/* Admin Impersonating: isHomeownerView=true AND isAdminAccount=true -> VISIBLE ✓ */}
-        {isHomeownerView && isAdminAccount && (
-          <div className="fixed top-20 right-4 z-toast">
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                console.log("🛑 NUCLEAR EXIT: Reloading Page...");
-                console.log("Current state - userRole:", userRole, "isHomeownerView:", isHomeownerView);
-                
-                // Clear any persistence
-                if (typeof window !== 'undefined') {
-                  try {
-                    localStorage.removeItem('selectedHomeownerId');
-                    localStorage.removeItem('isHomeownerView');
-                    sessionStorage.removeItem('homeownerView');
-                  } catch (err) {
-                    console.warn("Storage clear failed:", err);
-                  }
-                }
-                
-                // NUCLEAR OPTION: Hard reload to reset all state
-                console.log("💥 Forcing page reload...");
-                window.location.reload();
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-on hover:bg-primary/90 font-medium rounded-full shadow-lg transition-all hover:shadow-xl hover:scale-105 active:scale-95"
-              title="Return to Admin View (Force Reload)"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="text-sm font-semibold">Exit View</span>
-            </button>
-          </div>
-        )}
-        
         <div className={shouldHideDashboardUnderlay ? 'hidden' : 'block'}>
         {/* Main Layout Container - Sidebar + Content with Staggered Cascade Animation */}
         <StaggerContainer className={`flex flex-col lg:flex-row gap-6 w-full ${SIDEBAR_CONTENT_PADDING_LEFT} lg:pl-6 pr-4 lg:pr-6 bg-white dark:bg-gray-900`} staggerDelay={0.08}>
@@ -3397,13 +3356,8 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
                 email={displayHomeowner.email}
                 clerkId={displayHomeowner.clerkId}
                 inviteEmailRead={displayHomeowner.inviteEmailRead}
-                isHomeownerView={isHomeownerView}
                 onEdit={isAdmin ? () => {
                   handleOpenEditHomeowner();
-                } : undefined}
-                onViewAs={isAdmin && onViewAsHomeowner ? () => {
-                  console.log("🚀 Dashboard received View As request");
-                  onViewAsHomeowner(displayHomeowner);
                 } : undefined}
               />
              </div>

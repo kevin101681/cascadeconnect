@@ -1,4 +1,4 @@
-import { MapPin, Home, Calendar, Phone, Mail, Edit2, Check, Eye, Clock, Pencil, HardHat } from "lucide-react";
+import { MapPin, Home, Calendar, Phone, Mail, Check, Clock, Pencil, HardHat } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -14,13 +14,10 @@ interface HomeownerCardProps {
   phone?: string;
   email?: string;
   onEdit?: () => void;
-  onViewAs?: () => void;
   onViewSubs?: () => void;
   // Status tracking
   clerkId?: string;
   inviteEmailRead?: boolean;
-  // View mode control
-  isHomeownerView?: boolean;
 }
 
 // Helper to determine status
@@ -46,7 +43,7 @@ const ClientStatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
     invite_read: {
       bg: 'bg-blue-100 dark:bg-blue-900/30',
       text: 'text-blue-800 dark:text-blue-300',
-      icon: Eye,
+      icon: Check,
       label: 'Viewed',
     },
     pending: {
@@ -79,11 +76,9 @@ export function HomeownerCard({
   phone,
   email,
   onEdit,
-  onViewAs,
   onViewSubs,
   clerkId,
   inviteEmailRead,
-  isHomeownerView = false,
 }: HomeownerCardProps) {
   const clientStatus = getClientStatus(clerkId, inviteEmailRead);
   
@@ -106,12 +101,34 @@ export function HomeownerCard({
   
   const formattedAddress = formatAddress(address);
   
+  // Smart name stacking for couples
+  const parseNameForCouples = (fullName?: string) => {
+    if (!fullName) return { line1: "Unknown Homeowner", line2: null, isSingleLine: true };
+    
+    // Look for " and " or " & " (case-insensitive)
+    const andRegex = /\s+(?:and|&)\s+/i;
+    const match = fullName.match(andRegex);
+    
+    if (match) {
+      // Found a couple indicator
+      const splitIndex = match.index!;
+      const line1 = fullName.substring(0, splitIndex).trim();
+      const line2 = fullName.substring(splitIndex + match[0].length).trim();
+      return { line1, line2: `& ${line2}`, isSingleLine: false };
+    }
+    
+    // Not a couple - check length for safety
+    const isSingleLine = fullName.length <= 30;
+    return { line1: fullName, line2: null, isSingleLine };
+  };
+  
+  const parsedName = parseNameForCouples(name);
+  
   return (
     // Material 3 Design: Using semantic rounded-card token
     <div className="bg-white dark:bg-gray-800 rounded-card border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group">
       
-      {/* Action Buttons - Top Right - Hidden in Homeowner View */}
-      {!isHomeownerView && (
+      {/* Action Buttons - Absolute Position Top Right */}
       <div className="absolute top-4 right-4 flex items-center gap-1 z-10">
         {/* Subs Button */}
         {onViewSubs && (
@@ -130,45 +147,46 @@ export function HomeownerCard({
           </Button>
         )}
 
-        {/* View As Button */}
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-8 w-8 text-gray-500 hover:text-gray-900 hover:bg-transparent dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-transparent"
-          onClick={(e) => {
-            e.stopPropagation(); // CRITICAL: Stop card collapse
-            console.log("👁️ View As Clicked for:", name); // CRITICAL: Log verification
-            if (onViewAs) onViewAs();
-          }}
-          title="View As Homeowner"
-        >
-          <Eye className="h-4 w-4" />
-        </Button>
-
         {/* Edit Button */}
-        <Button
-          size="icon"
-          variant="ghost"
-          className="h-8 w-8 text-gray-500 hover:text-gray-900 hover:bg-transparent dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-transparent"
-          onClick={(e) => {
-            e.stopPropagation();
-            console.log("✏️ Edit Clicked");
-            if (onEdit) onEdit();
-          }}
-          title="Edit Homeowner"
-        >
-          <Pencil className="h-4 w-4" />
-        </Button>
+        {onEdit && (
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 text-gray-500 hover:text-gray-900 hover:bg-transparent dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-transparent"
+            onClick={(e) => {
+              e.stopPropagation();
+              console.log("✏️ Edit Clicked");
+              if (onEdit) onEdit();
+            }}
+            title="Edit Homeowner"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+        )}
       </div>
-      )}
 
       {/* HEADER: Name with Status Icon & Project */}
       <div className="flex flex-col mb-4 pr-20">
         {/* Name + Status Icon Row */}
-        <div className="flex items-center gap-2 mb-3">
-          <h3 className={`font-bold text-lg leading-tight ${name ? "text-primary dark:text-primary" : "text-gray-400 dark:text-gray-500 italic"}`}>
-            {name || "Unknown Homeowner"}
-          </h3>
+        <div className="flex items-start gap-2 mb-3">
+          <div className="flex-1 min-w-0">
+            {parsedName.line2 ? (
+              // Couple name - stacked
+              <div className="space-y-1">
+                <h3 className={`font-bold ${parsedName.isSingleLine ? 'text-lg' : 'text-base'} leading-tight text-primary dark:text-primary`}>
+                  {parsedName.line1}
+                </h3>
+                <h3 className="font-bold text-base leading-tight text-gray-600 dark:text-gray-400">
+                  {parsedName.line2}
+                </h3>
+              </div>
+            ) : (
+              // Single name
+              <h3 className={`font-bold ${parsedName.isSingleLine ? 'text-lg' : 'text-base'} leading-tight ${name ? "text-primary dark:text-primary" : "text-gray-400 dark:text-gray-500 italic"}`}>
+                {parsedName.line1}
+              </h3>
+            )}
+          </div>
           <ClientStatusBadge status={clientStatus} />
         </div>
         {project && (

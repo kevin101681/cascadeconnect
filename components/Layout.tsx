@@ -23,7 +23,6 @@ interface LayoutProps {
   onSearchChange: (query: string) => void;
   searchResults: Homeowner[];
   onSelectHomeowner: (homeowner: Homeowner) => void;
-  onViewAsHomeowner?: (homeowner: Homeowner) => void;
   selectedHomeownerId: string | null;
   onClearSelection: () => void;
   
