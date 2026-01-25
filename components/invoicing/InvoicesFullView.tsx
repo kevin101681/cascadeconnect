@@ -332,9 +332,41 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
         setIsCreatingNew(false);
       }
       
-      // If action is 'send', handle email sending (future enhancement)
+      // If action is 'send', generate PDF and send email
       if (action === 'send') {
-        console.log('TODO: Implement email sending for action=send');
+        console.log('📧 Generating PDF and sending email to:', email);
+        
+        if (!email) {
+          alert('Cannot send email: Builder email is missing');
+          return;
+        }
+        
+        try {
+          // Generate PDF
+          const doc = createInvoicePDF(invoiceToSave);
+          const pdfData = doc.output('datauristring'); // Returns base64 with data URI prefix
+          
+          // Send email with PDF attachment
+          await api.invoices.sendEmail(
+            email,
+            `Invoice ${invoiceToSave.invoiceNumber} from Cascade Builder Services`,
+            `Please find attached invoice ${invoiceToSave.invoiceNumber} for ${builderName}.\n\nTotal: $${invoiceToSave.total.toFixed(2)}\nDue Date: ${invoiceToSave.dueDate}`,
+            `<p>Please find attached invoice ${invoiceToSave.invoiceNumber} for <strong>${builderName}</strong>.</p>
+             <p><strong>Total:</strong> $${invoiceToSave.total.toFixed(2)}<br>
+             <strong>Due Date:</strong> ${invoiceToSave.dueDate}</p>
+             <p>Thank you for your business!</p>`,
+            {
+              filename: `${invoiceToSave.invoiceNumber}.pdf`,
+              data: pdfData
+            }
+          );
+          
+          console.log('✅ Invoice email sent successfully to:', email);
+          alert(`Invoice sent successfully to ${email}`);
+        } catch (emailError: any) {
+          console.error('❌ Failed to send invoice email:', emailError);
+          alert(`Invoice saved but email failed: ${emailError.message || 'Unknown error'}. Please try sending it manually.`);
+        }
       }
     } catch (e: any) {
       console.error('Failed to save invoice', e);
