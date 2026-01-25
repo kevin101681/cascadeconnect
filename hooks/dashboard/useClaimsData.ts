@@ -183,6 +183,7 @@ export function useClaimsData({
     filteredClaims,
     claimCounts,
     selectedClaimIds,
+    setSelectedClaimIds,
     toggleClaimSelection,
     clearSelection,
     isCreatingNewClaim,

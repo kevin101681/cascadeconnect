@@ -762,7 +762,7 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
   });
   
   // Extract values from hooks for use in component (MUST be done immediately after hook calls)
-  const { filter: claimsFilter, setFilter: setClaimsFilter, filteredClaims: filteredClaimsForModal, selectedClaimIds, toggleClaimSelection: handleToggleClaimSelection, isCreatingNewClaim, setIsCreatingNewClaim, exportToExcel: handleExportToExcel, deleteClaim: handleDeleteClaim, bulkDeleteClaims: handleBulkDeleteClaims } = claimsData;
+  const { filter: claimsFilter, setFilter: setClaimsFilter, filteredClaims: filteredClaimsForModal, selectedClaimIds, setSelectedClaimIds, toggleClaimSelection: handleToggleClaimSelection, isCreatingNewClaim, setIsCreatingNewClaim, exportToExcel: handleExportToExcel, deleteClaim: handleDeleteClaim, bulkDeleteClaims: handleBulkDeleteClaims } = claimsData;
   const { filter: tasksFilter, setFilter: setTasksFilter, userTasks, filteredTasks: filteredTasksForModal, showNewTaskModal, setShowNewTaskModal, newTaskTitle, setNewTaskTitle, newTaskAssignee, setNewTaskAssignee, newTaskNotes, setNewTaskNotes } = tasksData;
   const { 
     selectedThreadId, 
