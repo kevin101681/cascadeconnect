@@ -3273,6 +3273,7 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                       HELP: { label: 'Help', icon: <HelpCircle className="h-4 w-4" /> },
                       CALLS: { label: 'Calls', icon: <Phone className="h-4 w-4" /> },
                       SCHEDULE: { label: 'Schedule', icon: <Calendar className="h-4 w-4" /> },
+                      INVOICES: { label: 'Invoices', icon: <Receipt className="h-4 w-4" /> },
                       PUNCHLIST: { label: 'BlueTag', icon: <HardHat className="h-4 w-4" /> },
                       CHAT: { label: 'Chat', icon: <MessageCircle className="h-4 w-4" /> },
                     };

@@ -8,6 +8,7 @@ import { getNetlifyInfo, getNetlifyDeploys, rollbackDeployment as rollbackDeploy
 import { getSentryErrors, getPostHogTrends, type SentryErrorsResponse, type PostHogTrendsResponse } from '../lib/services/adminAnalyticsService';
 import { getAIModelConfig, updateAIModelConfig } from '../actions/app-settings';
 import EmailHistory from './EmailHistory';
+import PostHogTab from './backend/PostHogTab';
 
 interface BackendDashboardProps {
   onClose: () => void;
@@ -1700,101 +1701,11 @@ const BackendDashboard: React.FC<BackendDashboardProps> = ({ onClose }) => {
 
           {/* PostHog Tab - Analytics */}
           {activeTab === 'POSTHOG' && (
-            <div className="mt-6 space-y-6">
-              {posthogLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <RefreshCw className="h-6 w-6 animate-spin text-primary" />
-                  <span className="ml-3 text-surface-on-variant dark:text-gray-400">Loading PostHog data...</span>
-                </div>
-              ) : posthogData?.success ? (
-                <>
-                  {/* Summary Stats */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-6 border border-surface-outline-variant">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-surface-on-variant dark:text-gray-400">Total Pageviews (7 days)</span>
-                        <BarChart3 className="h-4 w-4 text-primary" />
-                      </div>
-                      <div className="text-3xl font-medium text-surface-on dark:text-gray-100">
-                        {formatNumber(posthogData.activeUsers7d || 0)}
-                      </div>
-                      <div className="text-xs text-surface-on-variant dark:text-gray-400 mt-1">
-                        Last 7 days
-                      </div>
-                    </div>
-
-                    <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-6 border border-surface-outline-variant">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-surface-on-variant dark:text-gray-400">Average Daily</span>
-                        <TrendingUp className="h-4 w-4 text-primary" />
-                      </div>
-                      <div className="text-3xl font-medium text-surface-on dark:text-gray-100">
-                        {formatNumber(Math.round((posthogData.activeUsers7d || 0) / 7))}
-                      </div>
-                      <div className="text-xs text-surface-on-variant dark:text-gray-400 mt-1">
-                        Pageviews per day
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 7-Day Trend Chart */}
-                  {posthogData.dailyData && posthogData.dailyData.length > 0 && (
-                    <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-6 border border-surface-outline-variant">
-                      <div className="flex items-center gap-2 mb-6">
-                        <BarChart3 className="h-5 w-5 text-primary" />
-                        <h2 className="text-lg font-medium text-surface-on dark:text-gray-100">7-Day Pageview Trend</h2>
-                      </div>
-                      
-                      {/* Simple Bar Chart using CSS */}
-                      <div className="space-y-3">
-                        {posthogData.dailyData.map((day, idx) => {
-                          const maxCount = Math.max(...posthogData.dailyData!.map(d => d.count));
-                          const percentage = maxCount > 0 ? (day.count / maxCount) * 100 : 0;
-                          
-                          return (
-                            <div key={idx}>
-                              <div className="flex items-center justify-between text-xs text-surface-on-variant dark:text-gray-400 mb-1">
-                                <span>{new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                                <span className="font-medium text-surface-on dark:text-gray-100">{formatNumber(day.count)}</span>
-                              </div>
-                              <div className="w-full bg-surface-container-high dark:bg-gray-600 rounded-full h-8 overflow-hidden">
-                                <div 
-                                  className="bg-primary h-full rounded-full transition-all duration-300 flex items-center justify-end pr-2"
-                                  style={{ width: `${Math.max(percentage, 2)}%` }}
-                                >
-                                  {day.count > 0 && percentage > 15 && (
-                                    <span className="text-xs font-medium text-white">{day.count}</span>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-12 bg-surface-container dark:bg-gray-700 rounded-xl">
-                  <BarChart3 className="h-12 w-12 text-surface-outline-variant dark:text-gray-500 mx-auto mb-4 opacity-50" />
-                  <p className="text-surface-on-variant dark:text-gray-400 mb-4">
-                    {posthogData?.error || 'Failed to load PostHog data'}
-                  </p>
-                  {posthogData?.error?.includes('not configured') && (
-                    <div className="mt-4 max-w-md mx-auto text-left bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                      <p className="text-sm text-yellow-900 dark:text-yellow-100 mb-2 font-medium">Required Environment Variables:</p>
-                      <ul className="text-xs text-yellow-800 dark:text-yellow-200 space-y-1 font-mono">
-                        <li>• VITE_POSTHOG_PROJECT_ID</li>
-                        <li>• VITE_POSTHOG_PERSONAL_API_KEY</li>
-                      </ul>
-                      <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-2">
-                        Note: Use Personal API Key, not the public token.
-                      </p>
-                    </div>
-                  )}
-                  <Button onClick={fetchPostHogData} variant="outlined" className="mt-4">Retry</Button>
-                </div>
-              )}
+            <div className="mt-6">
+              <PostHogTab
+                onRefresh={fetchPostHogData}
+                loading={posthogLoading}
+              />
             </div>
           )}
 

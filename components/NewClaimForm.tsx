@@ -11,6 +11,7 @@ import { ToastContainer, Toast } from './Toast';
 import { uploadMultipleFiles } from '../lib/services/uploadService';
 import { analyzeWarrantyImage } from '../actions/analyze-image';
 import { getTemplates, type ResponseTemplate } from '../actions/templates';
+import { trackEvent } from './providers/PostHogProvider';
 import { X, Upload, Video, FileText, Search, Building2, Loader2, AlertTriangle, CheckCircle, Paperclip, Send, Calendar, Trash2, Plus, Image as ImageIcon, FileSignature, Calendar as CalendarIcon, Clock, Tag } from 'lucide-react';
 
 interface StagedClaim {
@@ -114,6 +115,13 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
       console.log('✨ [NewClaimForm] Pre-filling description from URL:', urlDesc);
       setDescription(urlDesc);
     }
+
+    // Track claim form opened (for operational efficiency analytics)
+    trackEvent('claim_started', {
+      user_role: userRole,
+      screen_width: window.innerWidth,
+      is_prefilled: !!(urlTitle || urlDesc)
+    });
   }, []); // Run only once on mount
 
   // Handle template selection
@@ -543,6 +551,16 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                     if (successes.length > 0) {
                       setAttachments([...attachments, ...successes]);
                       addToast(`✓ Successfully uploaded ${successes.length} file${successes.length > 1 ? 's' : ''}`, 'success');
+                      
+                      // Track photo uploads for operational efficiency analytics
+                      successes.forEach((attachment) => {
+                        if (attachment.type === 'IMAGE') {
+                          trackEvent('claim_photo_uploaded', {
+                            file_type: attachment.name?.split('.').pop() || 'unknown',
+                            success: true
+                          });
+                        }
+                      });
                     }
                     
                     // Handle failures with detailed info
