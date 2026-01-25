@@ -66,9 +66,9 @@ import { useMessagesData } from '../../hooks/dashboard/useMessagesData';
 import { useMessageWorkflow } from '../../hooks/dashboard/useMessageWorkflow';
 // Phase 5 Wave 2: Import initialization hook
 // Import TabType from initialization hook to ensure type consistency
-import { useDashboardInitialization, type TabType } from '../hooks/dashboard/useDashboardInitialization';
+import { useDashboardInitialization, type TabType } from '../../hooks/dashboard/useDashboardInitialization';
 // Phase 5 Wave 3: Import modal management hook
-import { useModalManagement } from '../hooks/dashboard/useModalManagement';
+import { useModalManagement } from '../../hooks/dashboard/useModalManagement';
 
 // Lazy-load heavy dashboard tabs / tools so they don't ship in the initial bundle.
 const HomeownerManual = React.lazy(() => import('./HomeownerManual'));
