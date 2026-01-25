@@ -210,6 +210,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
   // ==================== VALIDATION ====================
   
   const validate = (): boolean => {
+    console.log('🔍 Starting validation...');
     const newErrors: Record<string, string> = {};
     
     if (!invoiceNumber) newErrors.invoiceNumber = 'Invoice number is required';
@@ -228,6 +229,9 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
       if (item.rate < 0) newErrors[`item_${idx}_rate`] = 'Rate cannot be negative';
     });
     
+    console.log('🔍 Validation errors:', newErrors);
+    console.log('🔍 Error count:', Object.keys(newErrors).length);
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -235,10 +239,23 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
   // ==================== SAVE HANDLERS (4 BUTTONS) ====================
   
   const handleSave = async (action: 'draft' | 'sent' | 'send') => {
+    console.log('💾 handleSave called with action:', action);
+    console.log('💾 Current state:', { 
+      invoiceNumber, 
+      builderId, 
+      builderQuery,
+      builderEmail, 
+      date, 
+      dueDate, 
+      itemCount: items.length 
+    });
+    
     if (!validate()) {
+      console.log('❌ Validation failed, errors:', errors);
       return;
     }
     
+    console.log('✅ Validation passed, proceeding to save...');
     setIsLoadingSave(true);
     
     try {
@@ -256,7 +273,9 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
         status: action === 'draft' ? 'draft' : 'sent', // sent or send both mark as sent
       };
       
+      console.log('💾 Calling onSave with invoice:', invoice);
       await onSave(invoice, action);
+      console.log('✅ onSave completed successfully');
       
       // Reset form on success (only for new invoices)
       if (!editInvoice) {
@@ -273,7 +292,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
         setItems([{ id: crypto.randomUUID(), description: '', quantity: 1, rate: 0, amount: 0 }]);
       }
     } catch (error) {
-      console.error('Save error:', error);
+      console.error('❌ Save error:', error);
     } finally {
       setIsLoadingSave(false);
     }
