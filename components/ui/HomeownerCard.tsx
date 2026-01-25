@@ -126,54 +126,17 @@ export function HomeownerCard({
   
   return (
     // Material 3 Design: Using semantic rounded-card token
-    <div className="bg-white dark:bg-gray-800 rounded-card border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col relative group">
+    <div className="bg-white dark:bg-gray-800 rounded-card border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col group">
       
-      {/* Action Buttons - Absolute Position Top Right */}
-      <div className="absolute top-4 right-4 flex items-center gap-1 z-10">
-        {/* Subs Button */}
-        {onViewSubs && (
-          <Button
-            size="icon"
-            variant="outline"
-            className="rounded-full h-8 w-8 bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-700 dark:hover:bg-orange-900/50"
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log("🔨 View Subs Clicked for:", name);
-              if (onViewSubs) onViewSubs();
-            }}
-            title="View Subcontractors"
-          >
-            <HardHat className="h-4 w-4" />
-          </Button>
-        )}
-
-        {/* Edit Button */}
-        {onEdit && (
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-8 w-8 text-gray-500 hover:text-gray-900 hover:bg-transparent dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-transparent"
-            onClick={(e) => {
-              e.stopPropagation();
-              console.log("✏️ Edit Clicked");
-              if (onEdit) onEdit();
-            }}
-            title="Edit Homeowner"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
-
-      {/* HEADER: Name with Status Icon & Project */}
-      <div className="flex flex-col mb-4 pr-20">
-        {/* Name + Status Icon Row */}
+      {/* HEADER: Name with Status Icon & Project - FULL WIDTH */}
+      <div className="flex flex-col mb-4">
+        {/* Name + Status Icon Row - Now uses full width */}
         <div className="flex items-start gap-2 mb-3">
           <div className="flex-1 min-w-0">
             {parsedName.line2 ? (
-              // Couple name - stacked
+              // Couple name - stacked (now has full width)
               <div className="space-y-1">
-                <h3 className={`font-bold ${parsedName.isSingleLine ? 'text-lg' : 'text-base'} leading-tight text-primary dark:text-primary`}>
+                <h3 className="font-bold text-lg leading-tight text-primary dark:text-primary">
                   {parsedName.line1}
                 </h3>
                 <h3 className="font-bold text-base leading-tight text-gray-600 dark:text-gray-400">
@@ -181,8 +144,8 @@ export function HomeownerCard({
                 </h3>
               </div>
             ) : (
-              // Single name
-              <h3 className={`font-bold ${parsedName.isSingleLine ? 'text-lg' : 'text-base'} leading-tight ${name ? "text-primary dark:text-primary" : "text-gray-400 dark:text-gray-500 italic"}`}>
+              // Single name (now has full width)
+              <h3 className={`font-bold text-lg leading-tight ${name ? "text-primary dark:text-primary" : "text-gray-400 dark:text-gray-500 italic"}`}>
                 {parsedName.line1}
               </h3>
             )}
@@ -190,7 +153,7 @@ export function HomeownerCard({
           <ClientStatusBadge status={clientStatus} />
         </div>
         {project && (
-          <Badge variant="secondary" className="text-[10px] h-5 px-2 font-normal text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 w-fit my-3">
+          <Badge variant="secondary" className="text-[10px] h-5 px-2 font-normal text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 w-fit">
             {project}
           </Badge>
         )}
@@ -257,6 +220,56 @@ export function HomeownerCard({
           </div>
         </div>
 
+      </div>
+
+      {/* FOOTER: Action Buttons */}
+      <div className="border-t border-gray-100 dark:border-gray-700 mt-4 pt-4 flex justify-between items-center">
+        {/* Left Side: Status/History Icon */}
+        <div className="flex items-center gap-2">
+          <button
+            className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+            title={`Status: ${clientStatus === 'active' ? 'Active' : clientStatus === 'invite_read' ? 'Viewed Invite' : 'Pending'}`}
+          >
+            <Clock className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Right Side: Action Buttons */}
+        <div className="flex items-center gap-2">
+          {/* View Subs Button */}
+          {onViewSubs && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-700 dark:hover:bg-orange-900/50"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log("🔨 View Subs Clicked for:", name);
+                if (onViewSubs) onViewSubs();
+              }}
+            >
+              <HardHat className="h-3.5 w-3.5 mr-1.5" />
+              Subs
+            </Button>
+          )}
+
+          {/* Edit Button */}
+          {onEdit && (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-8 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log("✏️ Edit Clicked");
+                if (onEdit) onEdit();
+              }}
+            >
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />
+              Edit Info
+            </Button>
+          )}
+        </div>
       </div>
 
     </div>
