@@ -4986,5 +4986,5 @@ export const HomeownerDesktop: React.FC<DashboardProps> = ({
   );
 };
 
-export default HomeownerDashboard;
+export default HomeownerDesktop;
 

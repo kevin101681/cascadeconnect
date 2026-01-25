@@ -5058,5 +5058,5 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
   );
 };
 
-export default HomeownerDashboard;
+export default HomeownerMobile;
 
