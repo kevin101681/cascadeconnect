@@ -99,15 +99,15 @@ interface TasksTabProps {
   
   // Filter state
   tasksFilter: 'open' | 'closed' | 'all';
-  effectiveStartInEditMode: boolean;
-  startInEditMode?: boolean; // Alias for effectiveStartInEditMode
+  tasksTabStartInEditMode?: boolean; // Full prop name
+  startInEditMode?: boolean; // Alias
   
   // Callbacks
   onTaskSelect: (task: Task | null) => void;
   onSetTasksFilter: (filter: 'open' | 'closed' | 'all') => void;
   onFilterChange?: (filter: 'open' | 'closed' | 'all') => void; // Alias for onSetTasksFilter
-  effectiveOnEditModeChange: (value: boolean) => void;
-  onEditModeChange?: (value: boolean) => void; // Alias for effectiveOnEditModeChange
+  onSetTasksTabStartInEditMode?: (value: boolean) => void; // Full callback name
+  onEditModeChange?: (value: boolean) => void; // Alias
   onToggleTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
   onUpdateTask?: (taskId: string, updates: Partial<Task>) => void;
