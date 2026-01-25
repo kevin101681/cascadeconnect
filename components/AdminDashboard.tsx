@@ -79,8 +79,13 @@ const HomeownerWarrantyGuide = React.lazy(() =>
 // Add error handling for failed dynamic imports
 const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err => {
   console.error('Failed to load PdfFlipViewer3D:', err);
-  // Return a fallback component
   return { default: () => <div className="p-4 text-red-500">Failed to load PDF viewer. Please refresh the page.</div> };
+}));
+
+// Lazy load CBSBooksPageWrapper for Invoices tab (admin only)
+const CBSBooksPageWrapper = React.lazy(() => import('./pages/CBSBooksPageWrapper').catch(err => {
+  console.error('Failed to load CBSBooksPageWrapper:', err);
+  return { default: () => <div>Error loading Invoices</div> };
 }));
 
 // Lazy-load react-pageflip (heavy) so it doesn't ship on initial dashboard load.
@@ -543,6 +548,7 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
     closePDFViewer,
     expandedDescription,
     showInviteModal,
+    setShowInviteModal,
     inviteName,
     inviteEmail,
     invitePhone,
@@ -559,11 +565,13 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
     setIsDrafting,
     resetInviteForm,
     showDocsModal,
+    setShowDocsModal,
     isDocUploading,
     openDocsModal,
     closeDocsModal,
     setIsDocUploading,
     showEditHomeownerModal,
+    setShowEditHomeownerModal,
     editHomeownerName: editName,
     editHomeownerEmail: editEmail,
     editHomeownerPhone: editPhone,
@@ -597,6 +605,7 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
     setEditParsedSubs,
     setIsParsingSubs,
     showSubListModal,
+    setShowSubListModal,
     openSubListModal,
     closeSubListModal,
     isAnySecondaryModalOpen
@@ -1170,8 +1179,8 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
   // Claims filter state - NOW MANAGED BY useClaimsData HOOK
   // const [claimsFilter, setClaimsFilter] = useState<'All' | 'Open' | 'Closed'>('Open');
   
-  // Multi-select claims state - Restored for bulk operations
-  const [selectedClaimIds, setSelectedClaimIds] = useState<string[]>([]);
+  // Multi-select claims state - NOW MANAGED BY useClaimsData HOOK (destructured above)
+  // const [selectedClaimIds, setSelectedClaimIds] = useState<string[]>([]);
   
   // Tasks filter state - NOW MANAGED BY useTasksData HOOK
   // const [tasksFilter, setTasksFilter] = useState<'all' | 'open' | 'closed'>('open');

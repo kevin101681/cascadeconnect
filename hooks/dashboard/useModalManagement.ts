@@ -20,6 +20,7 @@ export interface UseModalManagementReturn {
   
   // Invite Homeowner Modal
   showInviteModal: boolean;
+  setShowInviteModal: (show: boolean) => void;
   inviteName: string;
   inviteEmail: string;
   invitePhone: string;
@@ -38,6 +39,7 @@ export interface UseModalManagementReturn {
   
   // Documents Upload Modal
   showDocsModal: boolean;
+  setShowDocsModal: (show: boolean) => void;
   isDocUploading: boolean;
   openDocsModal: () => void;
   closeDocsModal: () => void;
@@ -45,6 +47,7 @@ export interface UseModalManagementReturn {
   
   // Edit Homeowner Modal
   showEditHomeownerModal: boolean;
+  setShowEditHomeownerModal: (show: boolean) => void;
   editHomeownerName: string;
   editHomeownerEmail: string;
   editHomeownerPhone: string;
@@ -93,6 +96,7 @@ export interface UseModalManagementReturn {
   
   // Subcontractor List Modal
   showSubListModal: boolean;
+  setShowSubListModal: (show: boolean) => void;
   openSubListModal: () => void;
   closeSubListModal: () => void;
   
@@ -272,6 +276,7 @@ export function useModalManagement(): UseModalManagementReturn {
     
     // Invite Modal
     showInviteModal,
+    setShowInviteModal,
     inviteName,
     inviteEmail,
     invitePhone,
@@ -290,6 +295,7 @@ export function useModalManagement(): UseModalManagementReturn {
     
     // Documents Modal
     showDocsModal,
+    setShowDocsModal,
     isDocUploading,
     openDocsModal,
     closeDocsModal,
@@ -297,6 +303,7 @@ export function useModalManagement(): UseModalManagementReturn {
     
     // Edit Homeowner Modal
     showEditHomeownerModal,
+    setShowEditHomeownerModal,
     editHomeownerName,
     editHomeownerEmail,
     editHomeownerPhone,
@@ -332,6 +339,7 @@ export function useModalManagement(): UseModalManagementReturn {
     
     // Subcontractor List Modal
     showSubListModal,
+    setShowSubListModal,
     openSubListModal,
     closeSubListModal,
     

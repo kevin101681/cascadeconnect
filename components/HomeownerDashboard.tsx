@@ -432,7 +432,7 @@ interface DashboardProps {
   currentUserEmail?: string; // Current user's email for contractor matching
 
   // Initial State Control (Optional)
-  initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS' | 'CALLS' | 'INVOICES' | 'SCHEDULE';
+  initialTab?: 'CLAIMS' | 'MESSAGES' | 'SCHEDULE';
   initialThreadId?: string | null;
 
   // Tasks Widget Support
@@ -441,7 +441,7 @@ interface DashboardProps {
   onToggleTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;
   onUpdateTask?: (taskId: string, updates: Partial<Task>) => void;
-  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND' | 'CALLS') => void;
+  onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'INVOICES' | 'HOMEOWNERS' | 'EMAIL_HISTORY' | 'BACKEND') => void;
 
   // Internal Users Management (for Settings Tab)
   onAddEmployee?: (emp: InternalEmployee) => void;
@@ -544,6 +544,7 @@ export const HomeownerDashboard: React.FC<DashboardProps> = ({
     closePDFViewer,
     expandedDescription,
     showInviteModal,
+    setShowInviteModal,
     inviteName,
     inviteEmail,
     invitePhone,
@@ -560,11 +561,13 @@ export const HomeownerDashboard: React.FC<DashboardProps> = ({
     setIsDrafting,
     resetInviteForm,
     showDocsModal,
+    setShowDocsModal,
     isDocUploading,
     openDocsModal,
     closeDocsModal,
     setIsDocUploading,
     showEditHomeownerModal,
+    setShowEditHomeownerModal,
     editHomeownerName: editName,
     editHomeownerEmail: editEmail,
     editHomeownerPhone: editPhone,
@@ -598,6 +601,7 @@ export const HomeownerDashboard: React.FC<DashboardProps> = ({
     setEditParsedSubs,
     setIsParsingSubs,
     showSubListModal,
+    setShowSubListModal,
     openSubListModal,
     closeSubListModal,
     isAnySecondaryModalOpen
@@ -863,7 +867,7 @@ export const HomeownerDashboard: React.FC<DashboardProps> = ({
   
   // If a portal-backed modal is open, hide legacy background UI so nothing "ghosts" behind the overlay
   const isPortalModalOpen = Boolean(
-    (selectedTaskForModal && currentTab !== 'TASKS') ||
+    // REMOVED: selectedTaskForModal (admin-only)
     (selectedClaimForModal && currentTab !== 'CLAIMS') ||
     currentTab === 'PUNCHLIST' ||
     currentTab === 'CHAT' ||
@@ -945,15 +949,7 @@ export const HomeownerDashboard: React.FC<DashboardProps> = ({
     ) {
       setSelectedClaimForModal(null);
     }
-    if (
-      isDesktop &&
-      previousTab === 'TASKS' &&
-      currentTab &&
-      currentTab !== 'TASKS' &&
-      selectedTaskForModal
-    ) {
-      setSelectedTaskForModal(null);
-    }
+    // REMOVED: TASKS tab cleanup (admin-only)
     if (
       isDesktop &&
       previousTab === 'MESSAGES' &&
@@ -1015,24 +1011,13 @@ export const HomeownerDashboard: React.FC<DashboardProps> = ({
     const isEmployee = currentUser?.role === 'Employee';
     const tabs: Array<Exclude<TabType, null>> = ['CLAIMS']; // Warranty
     tabs.push('MESSAGES');
-    if (isAdmin && !isHomeownerViewRole) {
-      tabs.push('TASKS');
-    }
-    // Homeowner tabs - only show for homeowners
-    if (isHomeownerViewRole) {
-      tabs.push('DOCUMENTS'); // DOCUMENTS tab for homeowners
-      tabs.push('MANUAL'); // Homeowner Manual tab
-      tabs.push('SCHEDULE'); // SCHEDULE tab for homeowners (their own only)
-      tabs.push('HELP'); // Help/Guide tab for homeowners
-    }
-    if (isAdmin && !isHomeownerViewRole) {
-      tabs.push('CALLS'); // CALLS tab (admin only)
-      tabs.push('SCHEDULE'); // SCHEDULE tab (admin only)
-      // Only show Invoices for Administrator role, not Employee role
-      if (!isEmployee) {
-        tabs.push('INVOICES'); // INVOICES tab (administrator only)
-      }
-    }
+    // REMOVED: Admin-only tabs (TASKS)
+    // Homeowner tabs
+    tabs.push('DOCUMENTS'); // DOCUMENTS tab for homeowners
+    tabs.push('MANUAL'); // Homeowner Manual tab
+    tabs.push('SCHEDULE'); // SCHEDULE tab for homeowners (their own only)
+    tabs.push('HELP'); // Help/Guide tab for homeowners
+    // REMOVED: Admin-only tabs (CALLS, INVOICES)
     // DOCUMENTS tab for homeowners is now in the tabs, but for admin it's still a button in homeowner info card
     return tabs;
   };
@@ -2605,9 +2590,7 @@ export const HomeownerDashboard: React.FC<DashboardProps> = ({
 
       if (options?.openForEdit) {
         setSelectedTaskForModal(taskPreview);
-        if (currentTab === 'TASKS') {
-          setTasksTabStartInEditMode(true);
-        }
+        // REMOVED: TASKS tab (admin-only)
       }
     };
 
@@ -2778,13 +2761,11 @@ export const HomeownerDashboard: React.FC<DashboardProps> = ({
             onNavigateToModule={(module) => {
               // Map module strings to existing tab state
               const moduleMap: { [key: string]: typeof currentTab } = {
-                'TASKS': 'TASKS',
+                // REMOVED: Admin-only tabs (TASKS, CALLS, INVOICES)
                 'SCHEDULE': 'SCHEDULE',
                 'BLUETAG': null, // Special handling
                 'CLAIMS': 'CLAIMS',
                 'MESSAGES': 'MESSAGES',
-                'CALLS': 'CALLS',
-                'INVOICES': 'INVOICES',
                 'DOCUMENTS': 'DOCUMENTS',
                 'MANUAL': 'MANUAL',
                 'HELP': 'HELP',
@@ -3637,70 +3618,9 @@ export const HomeownerDashboard: React.FC<DashboardProps> = ({
               </div>
             )}
 
-            {/* CALLS Tab - Admin Only */}
-            {isAdmin && (
-              <div 
-                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
-              >
-                <div className="w-full min-h-[calc(100vh-300px)]">
-                  <div className="max-w-7xl mx-auto py-4">
-                    <CallsTab
-                      homeowners={homeowners}
-                      onNavigate={onNavigate}
-                      onSelectHomeowner={onSelectHomeowner}
-                      activeHomeownerId={safeActiveHomeownerId}
-                      isAdmin={isAdmin}
-                      userRole={userRole}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* REMOVED: CALLS Tab - Admin Only */}
 
-            {/* INVOICES Tab - Administrator Only (hidden for employees) - NO GHOST HEADERS! */}
-            {isAdmin && currentUser?.role !== 'Employee' && (
-              <div 
-                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]" 
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
-              >
-                <div className="w-full min-h-[calc(100vh-300px)]">
-                  <div className="max-w-7xl mx-auto py-4">
-                    {currentTab === 'INVOICES' ? (
-                      <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
-                        <CBSBooksPageWrapper />
-                      </Suspense>
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-surface-on-variant dark:text-gray-400">
-                        Switch to Invoices tab to view
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* INVOICES Tab - Administrator Only (hidden for employees) - Duplicate for carousel - NO GHOST HEADERS! */}
-            {isAdmin && currentUser?.role !== 'Employee' && (
-              <div
-                className="flex-shrink-0 snap-start min-h-[calc(100vh-300px)]"
-                style={{ scrollSnapAlign: 'start', scrollSnapStop: 'always', width: '100%' }}
-              >
-                <div className="w-full min-h-[calc(100vh-300px)]">
-                  <div className="max-w-7xl mx-auto py-4">
-                    {currentTab === 'INVOICES' ? (
-                      <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" /></div>}>
-                        <CBSBooksPageWrapper />
-                      </Suspense>
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-surface-on-variant dark:text-gray-400">
-                        Switch to Invoices tab to view
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* REMOVED: INVOICES Tab - Admin Only */}
 
             {/* SETTINGS Tab - Mobile Scroll Section - Removed (now only renders in main desktop area) */}
         </AnimatePresence>
