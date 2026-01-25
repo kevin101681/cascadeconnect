@@ -261,7 +261,7 @@ const InvoiceModalNew: React.FC<InvoiceModalNewProps> = ({
         dueDate,
         datePaid: datePaid || undefined,
         total: calculateTotal(),
-        status,
+        status: 'draft', // Save as Draft by default
         items,
       };
       
@@ -332,42 +332,13 @@ const InvoiceModalNew: React.FC<InvoiceModalNewProps> = ({
               
               {/* Invoice Details Section */}
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-surface-on-variant dark:text-gray-300 uppercase tracking-wide">
-                  Invoice Details
-                </h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Invoice Number */}
-                  <div>
-                    <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
-                      Invoice Number *
-                    </label>
-                    <input
-                      type="text"
-                      value={invoiceNumber}
-                      onChange={(e) => setInvoiceNumber(e.target.value)}
-                      className="w-full h-[56px] px-4 rounded-lg border border-surface-outline dark:border-gray-600 bg-surface-container dark:bg-gray-800 text-surface-on dark:text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
-                      placeholder="INV-001"
-                    />
-                    {errors.invoiceNumber && (
-                      <p className="text-xs text-error mt-1">{errors.invoiceNumber}</p>
-                    )}
-                  </div>
-                  
-                  {/* Status */}
-                  <div>
-                    <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
-                      Status
-                    </label>
-                    <MaterialSelect
-                      value={status}
-                      onChange={(value) => setStatus(value as 'draft' | 'sent' | 'paid')}
-                      options={[
-                        { value: 'draft', label: 'Draft' },
-                        { value: 'sent', label: 'Sent' },
-                        { value: 'paid', label: 'Paid' },
-                      ]}
-                    />
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-surface-on-variant dark:text-gray-300 uppercase tracking-wide">
+                    Invoice Details
+                  </h3>
+                  {/* Invoice Number Badge (Read-Only Display) */}
+                  <div className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full">
+                    <span className="text-sm font-semibold text-primary">{invoiceNumber}</span>
                   </div>
                 </div>
                 
@@ -704,22 +675,132 @@ const InvoiceModalNew: React.FC<InvoiceModalNewProps> = ({
             </div>
 
             {/* ==================== FOOTER ==================== */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-50 rounded-b-3xl flex-shrink-0">
+            <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-50 rounded-b-3xl flex-shrink-0">
               <Button
                 type="button"
-                variant="ghost"
+                variant="text"
                 onClick={onClose}
                 disabled={isSaving}
               >
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                variant="filled"
-                disabled={isSaving}
-              >
-                {isSaving ? 'Saving...' : editInvoice ? 'Update Invoice' : 'Create Invoice'}
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="submit"
+                  variant="outlined"
+                  disabled={isSaving}
+                >
+                  {isSaving ? 'Saving...' : 'Save as Draft'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  onClick={async () => {
+                    // Save with status 'sent'
+                    try {
+                      invoiceSchema.parse({
+                        invoiceNumber,
+                        clientName,
+                        clientEmail,
+                        projectDetails,
+                        date,
+                        dueDate,
+                        items,
+                      });
+                      
+                      setIsSaving(true);
+                      
+                      const invoice: Partial<Invoice> = {
+                        ...(editInvoice?.id ? { id: editInvoice.id } : {}),
+                        invoiceNumber,
+                        clientName,
+                        clientEmail,
+                        projectDetails,
+                        paymentLink,
+                        checkNumber,
+                        date,
+                        dueDate,
+                        datePaid: datePaid || undefined,
+                        total: calculateTotal(),
+                        status: 'sent',
+                        items,
+                      };
+                      
+                      await onSave(invoice);
+                      setIsSaving(false);
+                      onClose();
+                    } catch (error) {
+                      setIsSaving(false);
+                      if (error instanceof z.ZodError) {
+                        const fieldErrors: Record<string, string> = {};
+                        error.errors.forEach(err => {
+                          const path = err.path.join('.');
+                          fieldErrors[path] = err.message;
+                        });
+                        setErrors(fieldErrors);
+                      }
+                    }
+                  }}
+                  disabled={isSaving}
+                >
+                  {isSaving ? 'Saving...' : 'Save & Mark Sent'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="filled"
+                  onClick={async () => {
+                    // This would trigger the email modal - for now just save as sent
+                    // In a full implementation, this would open an email modal
+                    alert('Email functionality would be triggered here. For now, saving as "Sent".');
+                    try {
+                      invoiceSchema.parse({
+                        invoiceNumber,
+                        clientName,
+                        clientEmail,
+                        projectDetails,
+                        date,
+                        dueDate,
+                        items,
+                      });
+                      
+                      setIsSaving(true);
+                      
+                      const invoice: Partial<Invoice> = {
+                        ...(editInvoice?.id ? { id: editInvoice.id } : {}),
+                        invoiceNumber,
+                        clientName,
+                        clientEmail,
+                        projectDetails,
+                        paymentLink,
+                        checkNumber,
+                        date,
+                        dueDate,
+                        datePaid: datePaid || undefined,
+                        total: calculateTotal(),
+                        status: 'sent',
+                        items,
+                      };
+                      
+                      await onSave(invoice);
+                      setIsSaving(false);
+                      onClose();
+                    } catch (error) {
+                      setIsSaving(false);
+                      if (error instanceof z.ZodError) {
+                        const fieldErrors: Record<string, string> = {};
+                        error.errors.forEach(err => {
+                          const path = err.path.join('.');
+                          fieldErrors[path] = err.message;
+                        });
+                        setErrors(fieldErrors);
+                      }
+                    }
+                  }}
+                  disabled={isSaving}
+                >
+                  {isSaving ? 'Sending...' : 'Save & Send'}
+                </Button>
+              </div>
             </div>
           </form>
         </div>

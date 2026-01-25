@@ -329,6 +329,49 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
   
   // ==================== EMAIL & DOWNLOAD HANDLERS ====================
   
+  const handleGeneratePaymentLink = async (invoice: CBSInvoice) => {
+    try {
+      // Check if payment link already exists
+      if (invoice.paymentLink) {
+        // Open existing payment link
+        window.open(invoice.paymentLink, '_blank');
+        return;
+      }
+      
+      // Generate new payment link via Square
+      const response = await fetch('/.netlify/functions/create-payment-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: invoice.invoiceNumber,
+          amount: invoice.total,
+          name: `Invoice #${invoice.invoiceNumber}`,
+          description: `Payment for ${invoice.clientName} - ${invoice.projectDetails || 'Services'}`
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `Failed to create payment link: ${response.status}`);
+      }
+      
+      const { url } = await response.json();
+      
+      // Save the payment link to the invoice
+      onUpdateInvoice({ ...invoice, paymentLink: url });
+      
+      // Open the payment link
+      window.open(url, '_blank');
+      
+      alert('Payment link generated! Opening in new tab...');
+    } catch (e: any) {
+      console.error("Failed to generate payment link", e);
+      alert("Failed to generate payment link: " + e.message);
+    }
+  };
+  
   const handlePrepareEmail = (invoice: CBSInvoice) => {
     setEmailingInvoice(invoice);
     setEmailTo(invoice.clientEmail || '');
@@ -478,6 +521,7 @@ const CBSBooksPage: React.FC<CBSBooksPageProps> = ({
               
               // Invoice card actions
               onMarkPaid={(inv, checkNum) => {
+                // Mark as paid with check number
                 onUpdateInvoice({ 
                   ...inv, 
                   status: 'paid' as const, 

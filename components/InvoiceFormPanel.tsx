@@ -108,6 +108,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
   // Validation
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isGeneratingPaymentLink, setIsGeneratingPaymentLink] = useState(false);
 
   // ==================== HELPERS ====================
   
@@ -292,7 +293,8 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
     
     setIsSaving(true);
     try {
-      await onSave(invoice);
+      // Save as Draft (status will be 'draft')
+      await onSave({ ...invoice, status: 'draft' });
       setIsSaving(false);
     } catch (error) {
       setIsSaving(false);
@@ -556,6 +558,38 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
     }
   };
   
+  const handleGeneratePaymentLink = async () => {
+    setIsGeneratingPaymentLink(true);
+    try {
+      const response = await fetch('/.netlify/functions/create-payment-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          orderId: invoiceNumber,
+          amount: calculateTotal(),
+          name: `Invoice #${invoiceNumber}`,
+          description: `Payment for ${clientName} - ${projectDetails || 'Services'}`
+        })
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `Failed to create payment link: ${response.status}`);
+      }
+      
+      const { url } = await response.json();
+      setPaymentLink(url);
+      alert('Square payment link generated successfully!');
+    } catch (e: any) {
+      console.error("Failed to generate payment link", e);
+      alert("Failed to generate payment link: " + e.message);
+    } finally {
+      setIsGeneratingPaymentLink(false);
+    }
+  };
+  
   // ==================== FILTERED BUILDERS ====================
   
   const filteredBuilders = builders.filter(b =>
@@ -586,25 +620,14 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
           
           {/* Invoice Details Section */}
           <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-surface-on-variant dark:text-gray-700 uppercase tracking-wide">
-              Invoice Details
-            </h3>
-            
-            {/* Invoice Number - Full Width (Status field removed) */}
-            <div>
-              <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
-                Invoice Number *
-              </label>
-              <input
-                type="text"
-                value={invoiceNumber}
-                onChange={(e) => setInvoiceNumber(e.target.value)}
-                className="w-full h-9 px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
-                placeholder="INV-001"
-              />
-              {errors.invoiceNumber && (
-                <p className="text-xs text-error mt-1">{errors.invoiceNumber}</p>
-              )}
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-surface-on-variant dark:text-gray-700 uppercase tracking-wide">
+                Invoice Details
+              </h3>
+              {/* Invoice Number Badge (Read-Only Display) */}
+              <div className="px-3 py-1.5 bg-primary/10 border border-primary/20 rounded-full">
+                <span className="text-xs font-semibold text-primary">{invoiceNumber}</span>
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -778,6 +801,35 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
                 placeholder="Enter street address, city, state"
               />
             </div>
+            
+            {/* Payment Link Section */}
+            <div>
+              <label className="text-xs font-medium uppercase text-muted-foreground block mb-1">
+                Square Payment Link (Optional)
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={paymentLink}
+                  onChange={(e) => setPaymentLink(e.target.value)}
+                  className="flex-1 h-9 px-3 text-sm rounded-lg border border-surface-outline dark:border-gray-300 bg-surface-container dark:bg-white text-surface-on dark:text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+                  placeholder="https://square.link/..."
+                  readOnly={isGeneratingPaymentLink}
+                />
+                <Button
+                  type="button"
+                  variant="outlined"
+                  onClick={handleGeneratePaymentLink}
+                  disabled={isGeneratingPaymentLink || !clientName || calculateTotal() === 0}
+                  className="text-xs whitespace-nowrap"
+                >
+                  {isGeneratingPaymentLink ? 'Generating...' : 'Generate Link'}
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Generate a Square payment link to accept online payments
+              </p>
+            </div>
           </div>
           
           {/* Line Items Section */}
@@ -896,18 +948,25 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
           </div>
         </div>
 
-        {/* ==================== FOOTER (Sticky) - 3 Action Buttons ==================== */}
+        {/* ==================== FOOTER (Sticky) - 4 Action Buttons ==================== */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex-shrink-0">
           <Button
             type="button"
-            variant="outline"
+            variant="text"
             onClick={onCancel}
             disabled={isSaving}
           >
             Cancel
           </Button>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Button
+              type="submit"
+              variant="outlined"
+              disabled={isSaving}
+            >
+              {isSaving ? 'Saving...' : 'Save as Draft'}
+            </Button>
             <Button
               type="button"
               variant="outlined"
@@ -922,7 +981,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
               onClick={handleSaveAndEmail}
               disabled={isSaving}
             >
-              {isSaving ? 'Sending...' : 'Save & Email'}
+              {isSaving ? 'Sending...' : 'Save & Send'}
             </Button>
           </div>
         </div>

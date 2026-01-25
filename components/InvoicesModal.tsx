@@ -132,7 +132,7 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
           bg-white dark:bg-white shadow-elevation-3 overflow-hidden flex flex-col
           
           /* Mobile: Full screen takeover */
-          fixed inset-0 w-screen h-screen rounded-none
+          fixed inset-0 w-full h-full rounded-none
           
           /* Desktop: Centered modal with breathing room */
           md:relative md:w-[95vw] md:h-[90vh] md:max-w-7xl md:rounded-3xl
@@ -149,7 +149,7 @@ const InvoicesModal: React.FC<InvoicesModalProps> = ({ isOpen, onClose, prefillD
         <button
           ref={closeButtonRef}
           onClick={onClose}
-          className="absolute right-4 top-4 z-20 p-2 rounded-full bg-white/90 hover:bg-white shadow-sm border border-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
+          className="absolute right-4 top-4 z-50 p-2 rounded-full bg-white/90 hover:bg-white shadow-sm border border-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
           title="Close (Esc)"
           aria-label="Close invoices modal"
         >
