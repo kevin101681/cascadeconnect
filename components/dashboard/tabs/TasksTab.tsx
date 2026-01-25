@@ -131,11 +131,11 @@ export const TasksTab: React.FC<TasksTabProps> = ({
   currentUser,
   taskMessages,
   tasksFilter,
-  effectiveStartInEditMode,
+  tasksTabStartInEditMode,
   startInEditMode, // Alias
   onTaskSelect,
   onSetTasksFilter,
-  effectiveOnEditModeChange,
+  onSetTasksTabStartInEditMode,
   onEditModeChange, // Alias
   onToggleTask,
   onDeleteTask,
@@ -146,9 +146,9 @@ export const TasksTab: React.FC<TasksTabProps> = ({
   onCreateEvalTask,
   isAdmin,
 }) => {
-  // Use the provided value or alias
-  const effectiveStartInEditMode = startInEditMode ?? effectiveStartInEditMode;
-  const effectiveOnEditModeChange = onEditModeChange ?? effectiveOnEditModeChange;
+  // Use the provided value or alias (prefer the longer explicit name)
+  const effectiveStartInEditMode = tasksTabStartInEditMode ?? startInEditMode ?? false;
+  const effectiveOnEditModeChange = onSetTasksTabStartInEditMode ?? onEditModeChange ?? (() => {});
   
   // Calculate counts for filter pills
   const openCount = tasks.filter(task => !task.isCompleted).length;
