@@ -8,6 +8,7 @@ interface PdfFlipViewer3DProps {
     url: string;
     name?: string;
   };
+  pdfUrl?: string; // Alternative to document.url for backward compatibility
   isOpen: boolean;
   onClose: () => void;
 }

@@ -159,7 +159,7 @@ interface ClaimsTabProps {
   onExportToExcel: (claims: Claim[]) => void;
   onCreateClaim?: (data: any) => void;
   onUpdateClaim?: (claim: Claim) => void;
-  onAddInternalNote?: (claimId: string, note: string) => void;
+  onAddInternalNote?: (claimId: string, noteText: string, userName?: string) => Promise<void>;
   onTrackClaimMessage?: (claimId: string, message: any) => void;
   onNavigate?: (tab: string) => void;
   onNewClaim: () => void; // Homeowner-specific

@@ -433,7 +433,7 @@ interface DashboardProps {
   currentUserEmail?: string; // Current user's email for contractor matching
 
   // Initial State Control (Optional)
-  initialTab?: 'CLAIMS' | 'MESSAGES' | 'SCHEDULE';
+  initialTab?: TabType; // Accept any tab type for flexibility
   initialThreadId?: string | null;
 
   // Tasks Widget Support
