@@ -20,7 +20,7 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import AppButton from '../Button';
-import type { Invoice, Client, InvoiceItem } from '../../lib/cbsbooks/types';
+import type { Invoice, Client, InvoiceItem } from '../../lib/financial-tools/types';
 
 interface NativeInvoiceFormProps {
   invoice: Invoice | null; // null = creating new

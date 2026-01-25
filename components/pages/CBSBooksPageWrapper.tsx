@@ -9,8 +9,8 @@
 
 import React, { useState, useEffect } from 'react';
 import CBSBooksPage from './CBSBooksPage';
-import type { Invoice, Client, Expense } from '../../lib/cbsbooks/types';
-import { api } from '../../lib/cbsbooks/services/api';
+import type { Invoice, Client, Expense } from '../../lib/financial-tools/types';
+import { api } from '../../lib/financial-tools/services/api';
 import { AlertTriangle, WifiOff, Loader2 } from 'lucide-react';
 
 interface CBSBooksPageWrapperProps {

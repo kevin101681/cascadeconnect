@@ -12,8 +12,8 @@ import { X, Plus, Loader2, AlertTriangle, Search } from 'lucide-react';
 import { InvoiceCard } from '../ui/InvoiceCard';
 import { NativeInvoiceForm } from './NativeInvoiceForm';
 import Button from '../Button';
-import type { Invoice, Client, Expense } from '../../lib/cbsbooks/types';
-import { api } from '../../lib/cbsbooks/services/api';
+import type { Invoice, Client, Expense } from '../../lib/financial-tools/types';
+import { api } from '../../lib/financial-tools/services/api';
 import { useAuth } from '@clerk/clerk-react';
 import jsPDF from 'jspdf';
 

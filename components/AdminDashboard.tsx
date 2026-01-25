@@ -24,7 +24,7 @@ import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
 import TaskDetail from './TaskDetail';
 import TasksSheet from './TasksSheet';
-import HomeownerDashboardMobile from './HomeownerDashboardMobile';
+import HomeownerDashboardView from './HomeownerDashboardView';
 import { StaggerContainer, FadeIn, AnimatedTabContent } from './motion/MotionWrapper';
 import { SmoothHeightWrapper } from './motion/SmoothHeightWrapper';
 import { SIDEBAR_CONTENT_PADDING_LEFT } from '../constants/layout';
@@ -3044,7 +3044,7 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
       mainContent = (
         <>
           {renderModals()}
-          <HomeownerDashboardMobile
+          <HomeownerDashboardView
             homeowner={displayHomeowner}
             searchQuery={(isAdmin || isBuilder) ? searchQuery : undefined}
             onSearchChange={(isAdmin || isBuilder) ? onSearchChange : undefined}

@@ -13,13 +13,13 @@ import React, { useState, useMemo } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import InvoicesListPanel, { TabType, Invoice, Client } from '../InvoicesListPanel';
 import InvoiceFormPanel from '../InvoiceFormPanel';
-import { BuilderForm } from '../../lib/cbsbooks/components/BuilderForm';
-import { Reports } from '../../lib/cbsbooks/components/Reports';
-import { Expenses } from '../../lib/cbsbooks/components/Expenses';
+import { BuilderForm } from '../../lib/financial-tools/components/BuilderForm';
+import { Reports } from '../../lib/financial-tools/components/Reports';
+import { Expenses } from '../../lib/financial-tools/components/Expenses';
 import { Building2, Mail, X, Download as DownloadIcon, Loader2, Send } from 'lucide-react';
 import Button from '../Button';
 import jsPDF from 'jspdf';
-import type { Invoice as CBSInvoice, Client as CBSClient, Expense, ViewState } from '../../lib/cbsbooks/types';
+import type { Invoice as CBSInvoice, Client as CBSClient, Expense, ViewState } from '../../lib/financial-tools/types';
 
 interface CBSBooksPageProps {
   // Invoices Data

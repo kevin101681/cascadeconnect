@@ -10,10 +10,10 @@
 import React, { useState, useMemo } from 'react';
 import InvoicesListPanel, { TabType, Invoice, Client } from './InvoicesListPanel';
 import InvoiceFormPanel from './InvoiceFormPanel';
-import { Clients } from '../lib/cbsbooks/components/Clients';
-import { Reports } from '../lib/cbsbooks/components/Reports';
-import { Expenses } from '../lib/cbsbooks/components/Expenses';
-import type { Invoice as CBSInvoice, Client as CBSClient, Expense, ViewState } from '../lib/cbsbooks/types';
+import { Clients } from '../lib/financial-tools/components/Clients';
+import { Reports } from '../lib/financial-tools/components/Reports';
+import { Expenses } from '../lib/financial-tools/components/Expenses';
+import type { Invoice as CBSInvoice, Client as CBSClient, Expense, ViewState } from '../lib/financial-tools/types';
 
 interface CBSBooksIntegratedProps {
   // Invoices Data
