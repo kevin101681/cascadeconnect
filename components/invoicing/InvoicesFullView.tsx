@@ -424,28 +424,42 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
   if (!isOpen) return null;
 
   // Render via Portal to ensure it's at the top level of the DOM
-  return createPortal(
-    <div 
-      className="fixed z-overlay flex"
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: '100vw',
-        height: '100vh',
-        zIndex: 99999,
-        backgroundColor: 'rgba(17, 24, 39, 1)', // Solid dark background
-        margin: 0,
-        padding: 0,
-      }}
-    >
-      {/* ==================== SPLIT CONTAINER ==================== */}
-      <div className="flex overflow-hidden" style={{ margin: 0, padding: 0, width: '100vw', height: '100vh' }}>
+  return (
+    <>
+      {/* ==================== CLOSE BUTTON (SEPARATE PORTAL) ==================== */}
+      {createPortal(
+        <button
+          onClick={onClose}
+          className="fixed rounded-full bg-white hover:bg-gray-100 shadow-lg border border-gray-200 text-gray-600 hover:text-gray-900 w-10 h-10 flex items-center justify-center"
+          style={{
+            top: '24px',
+            right: '24px',
+            zIndex: 100000,
+          }}
+          title="Close"
+          aria-label="Close invoices manager"
+        >
+          <X className="h-5 w-5" />
+        </button>,
+        document.body
+      )}
+
+      {/* ==================== MAIN OVERLAY PORTAL ==================== */}
+      {createPortal(
+        <div 
+          className="fixed inset-0 z-overlay"
+          style={{
+            zIndex: 99999,
+            backgroundColor: '#111827',
+            margin: 0,
+            padding: 0,
+          }}
+        >
+          {/* ==================== SPLIT CONTAINER ==================== */}
+          <div className="absolute inset-0 flex">
         
         {/* ==================== LEFT PANEL (THE LIST) ==================== */}
-        <div className="flex flex-col border-r border-gray-200 bg-white" style={{ flexShrink: 0, width: '50vw', height: '100vh' }}>
+        <div className="absolute left-0 top-0 bottom-0 flex flex-col border-r border-gray-200 bg-white overflow-hidden" style={{ width: '50%' }}>
           
           {/* HEADER */}
           <div className="flex-shrink-0 px-6 py-5 border-b border-gray-200">
@@ -572,7 +586,7 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
         </div>
 
         {/* ==================== RIGHT PANEL (THE EDITOR) ==================== */}
-        <div className="flex flex-col bg-white" style={{ flexShrink: 0, minWidth: 0, width: '50vw', height: '100vh' }}>
+        <div className="absolute right-0 top-0 bottom-0 flex flex-col bg-white overflow-hidden" style={{ width: '50%' }}>
           {(selectedInvoice || isCreatingNew) ? (
             <InvoiceFormPanel
               editInvoice={selectedInvoice}
@@ -593,20 +607,9 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
         </div>
         
       </div>
-
-      {/* ==================== CLOSE BUTTON (AFTER SPLIT PANELS) ==================== */}
-      <Button
-        onClick={onClose}
-        variant="ghost"
-        size="icon"
-        className="absolute right-6 top-6 rounded-full bg-white hover:bg-gray-100 shadow-lg border border-gray-200 text-gray-600 hover:text-gray-900"
-        style={{ zIndex: 100000 }}
-        title="Close"
-        aria-label="Close invoices manager"
-      >
-        <X className="h-5 w-5" />
-      </Button>
-    </div>,
-    document.body
+        </div>,
+        document.body
+      )}
+    </>
   );
 };
