@@ -4087,7 +4087,7 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                             {key}
                           </div>
                           <div className="text-sm text-surface-on dark:text-gray-200">
-                            {value || '-'}
+                            {String(value || '-')}
                           </div>
                         </div>
                       ))}
@@ -4435,7 +4435,7 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                                        {key}
                                      </div>
                                      <div className="text-xs text-surface-on dark:text-gray-200 mt-0.5">
-                                       {value || '-'}
+                                       {String(value || '-')}
                                      </div>
                                    </div>
                                  ))}
