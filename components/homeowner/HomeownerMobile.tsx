@@ -5037,19 +5037,6 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
   return (
     <>
       {/* 🔧 DEV ONLY: Seed Test Homeowner Button */}
-      {isAdmin && (
-        <button
-          onClick={handleSeedTestHomeowner}
-          className="fixed bottom-24 right-6 z-[150] group bg-purple-500 hover:bg-purple-600 text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all flex items-center gap-2 animate-pulse hover:animate-none"
-          title="🔧 DEV: Create/Load Test Homeowner"
-        >
-          <User className="h-6 w-6" />
-          <span className="text-sm font-medium whitespace-nowrap">
-            Seed Test User
-          </span>
-        </button>
-      )}
-
       {/* Global Modals - Always accessible */}
       {renderModals()}
       

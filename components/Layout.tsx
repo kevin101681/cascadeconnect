@@ -220,7 +220,7 @@ const Layout: React.FC<LayoutProps> = ({
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col font-sans">
       {/* M3 Small Top App Bar */}
-      <header className="bg-surface dark:bg-gray-800 text-surface-on dark:text-gray-100 sticky top-0 z-50 transition-shadow duration-200 border-b border-surface-container dark:border-gray-700 shadow-elevation-1">
+      <header className="bg-surface dark:bg-gray-800 text-surface-on dark:text-gray-100 sticky top-0 z-header transition-shadow duration-200 border-b border-surface-container dark:border-gray-700 shadow-elevation-1">
         <div className={`${CONTENT_MAX_WIDTH} mx-auto ${CONTENT_PADDING_X} sm:${CONTENT_PADDING_X} lg:${CONTENT_PADDING_X}`}>
           <div className="py-2 md:py-0">
             <div className="flex justify-between items-center h-16 gap-4">
@@ -284,7 +284,7 @@ const Layout: React.FC<LayoutProps> = ({
                     </button>
                     
                     {/* Dropdown Menu */}
-                    <div className="absolute right-0 top-full mt-1 w-64 bg-surface dark:bg-gray-800 rounded-xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden hidden group-hover:block z-50">
+                    <div className="absolute right-0 top-full mt-1 w-64 bg-surface dark:bg-gray-800 rounded-xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden hidden group-hover:block z-header">
                       <div className="px-4 py-2 bg-surface-container-high/50 border-b border-surface-outline-variant">
                         <p className="text-xs font-bold text-surface-outline">SELECT PROPERTY</p>
                       </div>
@@ -329,7 +329,7 @@ const Layout: React.FC<LayoutProps> = ({
                     </button>
 
                   {isMenuOpen && (
-                    <div className="absolute right-0 top-full mt-2 w-64 bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-100 origin-top-right max-h-[calc(100vh-5rem)] flex flex-col">
+                    <div className="absolute right-0 top-full mt-2 w-64 bg-surface dark:bg-gray-800 rounded-3xl shadow-elevation-2 border border-surface-outline-variant dark:border-gray-700 overflow-hidden z-header animate-in fade-in zoom-in-95 duration-100 origin-top-right max-h-[calc(100vh-5rem)] flex flex-col">
                       {/* User Info Header */}
                       <div className="px-6 py-4 bg-surface dark:bg-gray-800 border-b border-surface-outline-variant dark:border-gray-700 flex-shrink-0">
                         <p className="text-sm font-semibold text-surface-on dark:text-gray-100">

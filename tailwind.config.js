@@ -64,6 +64,7 @@ export default {
     'z-base',
     'z-dropdown',
     'z-sticky',
+    'z-header',
     'z-backdrop',
     'z-modal',
     'z-popover',
@@ -106,6 +107,7 @@ export default {
         'base': '10',           // Base elements (dropdowns, tooltips)
         'dropdown': '50',       // Dropdown menus, autocomplete
         'sticky': '100',        // Sticky headers, navigation
+        'header': '110',        // App header (above tabs)
         'backdrop': '200',      // Modal backdrops (dimmed overlays)
         'modal': '300',         // Standard modals (Claim, Task, Edit forms)
         'popover': '400',       // Date pickers, color pickers, popovers
