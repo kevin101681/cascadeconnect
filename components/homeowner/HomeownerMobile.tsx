@@ -190,7 +190,7 @@ const PDFThumbnailDisplay: React.FC<{ doc: HomeownerDocument }> = ({ doc }) => {
     if (!thumbnailUrl && doc.url && !isGenerating && !hasError && !hasTriedGenerate.current) {
       hasTriedGenerate.current = true;
       setIsGenerating(true);
-      import('../lib/pdfThumbnail')
+      import('../../lib/pdfThumbnail')
         .then(({ generatePDFThumbnail }) => generatePDFThumbnail(doc.url))
         .then((url) => {
           setThumbnailUrl(url);
