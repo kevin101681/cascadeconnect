@@ -169,9 +169,9 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({
     }
 
     // ✅ CRITICAL FIX: Validate homeownerId before DB query to prevent UUID crash
-    // If activeHomeownerId is invalid (placeholder, undefined, or too short), skip query
+    // If activeHomeownerId is invalid (placeholder, undefined, or too short), skip query silently
+    // The effect will re-run when valid data arrives during initialization
     if (!isGlobalView && (!activeHomeownerId || activeHomeownerId === 'placeholder' || activeHomeownerId.length < 30)) {
-      console.warn('⚠️ Invalid homeownerId, returning empty calls list:', activeHomeownerId);
       setCallsData([]);
       setLoading(false);
       return;

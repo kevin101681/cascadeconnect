@@ -92,9 +92,9 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({
   // Fetch appointments from API
   const fetchAppointments = useCallback(async () => {
     // ✅ CRITICAL FIX: Guard against invalid homeownerId to prevent 400 errors
-    // If we're in scoped view and homeownerId is placeholder/invalid, skip fetch
+    // If we're in scoped view and homeownerId is placeholder/invalid, skip fetch silently
+    // The effect will re-run when valid data arrives during initialization
     if (!isGlobalView && (!activeHomeownerId || activeHomeownerId === 'placeholder' || activeHomeownerId.length < 10)) {
-      console.warn('⚠️ ScheduleTab: Invalid activeHomeownerId, skipping appointments fetch:', activeHomeownerId);
       setAppointments([]);
       setEvents([]);
       setLoading(false);

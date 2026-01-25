@@ -69,9 +69,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
   // Load unread counts
   const loadUnreadCounts = useCallback(async () => {
-    // ⚡️ GUARD: Validate effectiveUserId before making API call
+    // ⚡️ GUARD: Validate effectiveUserId before making API call (silently wait for initialization)
     if (!effectiveUserId || effectiveUserId === 'placeholder' || effectiveUserId.length < 10) {
-      console.warn('⚠️ Badge Sync: Invalid effectiveUserId, skipping:', effectiveUserId);
       return;
     }
 
@@ -145,9 +144,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   // ⚡️ Load counts ONCE on mount and set up interval
   // CRITICAL: Only depends on effectiveUserId (primitive) to prevent re-subscription loops
   useEffect(() => {
-    // Guard: Skip if no valid user ID
+    // Guard: Skip if no valid user ID (silently wait for initialization)
     if (!effectiveUserId || effectiveUserId === 'placeholder' || effectiveUserId.length < 10) {
-      console.warn('⚠️ ChatWidget: Invalid effectiveUserId, skipping badge sync:', effectiveUserId);
       return;
     }
 
@@ -163,9 +161,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
   // ⚡️ STABLE PUSHER LISTENER: Listen for new messages to update unread count INSTANTLY
   // CRITICAL: Only depends on effectiveUserId - NEVER re-subscribes when selectedChannel changes
   useEffect(() => {
-    // Guard: Skip if no valid user ID
+    // Guard: Skip if no valid user ID (silently wait for initialization)
     if (!effectiveUserId || effectiveUserId === 'placeholder' || effectiveUserId.length < 10) {
-      console.warn('⚠️ ChatWidget: Invalid effectiveUserId, skipping Pusher subscription:', effectiveUserId);
       return;
     }
 
