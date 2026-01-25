@@ -9,7 +9,7 @@
 
 import React, { useState, useMemo } from 'react';
 import InvoicesListPanel, { TabType, Invoice, Client } from './InvoicesListPanel';
-import InvoiceFormPanel from './InvoiceFormPanelRefactored';
+import InvoiceFormPanel from './InvoiceFormPanel';
 import { Clients } from '../lib/financial-tools/components/Clients';
 import { Reports } from '../lib/financial-tools/components/Reports';
 import { Expenses } from '../lib/financial-tools/components/Expenses';

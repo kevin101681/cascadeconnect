@@ -290,11 +290,6 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
 
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-900">
-      {/* 🚨 SCREAM TEST GRAFFITI - VISUAL VERIFICATION 🚨 */}
-      <div className="w-full bg-red-600 text-white font-black text-center p-4 text-xl animate-pulse z-50">
-        ⚠️ IF YOU SEE THIS, THE REFACTOR WORKED ⚠️
-      </div>
-      
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">

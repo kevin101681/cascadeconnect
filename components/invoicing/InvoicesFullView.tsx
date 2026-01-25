@@ -10,7 +10,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Plus, Loader2, AlertTriangle, Search } from 'lucide-react';
 import { InvoiceCard } from '../ui/InvoiceCard';
-import InvoiceFormPanel from '../InvoiceFormPanelRefactored';
+import InvoiceFormPanel from '../InvoiceFormPanel';
 import Button from '../Button';
 import type { Invoice, Client, Expense } from '../../lib/financial-tools/types';
 import { api } from '../../lib/financial-tools/services/api';
