@@ -31,6 +31,7 @@ export interface UseClaimsDataReturn {
   
   // Selection state (for bulk operations)
   selectedClaimIds: string[];
+  setSelectedClaimIds: (ids: string[]) => void;
   toggleClaimSelection: (claimId: string) => void;
   clearSelection: () => void;
   

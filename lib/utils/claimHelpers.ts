@@ -66,7 +66,7 @@ export function findServiceOrderDate(claimId: string, claimMessages: ClaimMessag
     )
     .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   
-  return serviceOrderMessages.length > 0 ? serviceOrderMessages[0].timestamp : null;
+  return serviceOrderMessages.length > 0 ? serviceOrderMessages[0].timestamp.toISOString() : null;
 }
 
 /**

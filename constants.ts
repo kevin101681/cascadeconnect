@@ -113,7 +113,6 @@ export const MOCK_INTERNAL_EMPLOYEES: InternalEmployee[] = [
     emailNotifySubAcceptsAppointment: true,
     emailNotifyHomeownerRescheduleRequest: true,
     emailNotifyTaskAssigned: true,
-    emailNotifyHomeownerMessage: true,
     emailNotifyHomeownerEnrollment: true,
     pushNotifyClaimSubmitted: true,
     pushNotifyHomeownerAcceptsAppointment: true,
