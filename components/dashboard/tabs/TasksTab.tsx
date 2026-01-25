@@ -104,8 +104,8 @@ interface TasksTabProps {
   
   // Callbacks
   onTaskSelect: (task: Task | null) => void;
-  onSetTasksFilter: (filter: 'open' | 'closed' | 'all') => void;
-  onFilterChange?: (filter: 'open' | 'closed' | 'all') => void; // Alias for onSetTasksFilter
+  effectiveSetTasksFilter?: (filter: 'open' | 'closed' | 'all') => void; // Full callback name
+  onFilterChange?: (filter: 'open' | 'closed' | 'all') => void; // Alias for effectiveSetTasksFilter
   onSetTasksTabStartInEditMode?: (value: boolean) => void; // Full callback name
   onEditModeChange?: (value: boolean) => void; // Alias
   onToggleTask: (taskId: string) => void;
@@ -134,7 +134,8 @@ export const TasksTab: React.FC<TasksTabProps> = ({
   tasksTabStartInEditMode,
   startInEditMode, // Alias
   onTaskSelect,
-  onSetTasksFilter,
+  effectiveSetTasksFilter,
+  onFilterChange, // Alias for effectiveSetTasksFilter
   onSetTasksTabStartInEditMode,
   onEditModeChange, // Alias
   onToggleTask,
@@ -149,6 +150,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
   // Use the provided value or alias (prefer the longer explicit name)
   const effectiveStartInEditMode = tasksTabStartInEditMode ?? startInEditMode ?? false;
   const effectiveOnEditModeChange = onSetTasksTabStartInEditMode ?? onEditModeChange ?? (() => {});
+  const effectiveSetTasksFilter = effectiveSetTasksFilter ?? onFilterChange ?? (() => {});
   
   // Calculate counts for filter pills
   const openCount = tasks.filter(task => !task.isCompleted).length;
@@ -174,7 +176,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
           <div className="px-4 py-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
             <div className="flex items-center gap-2">
               <button
-                onClick={() => onSetTasksFilter('open')}
+                onClick={() => effectiveSetTasksFilter('open')}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-fit ${
                   tasksFilter === 'open'
                     ? 'border border-primary text-primary bg-primary/10'
@@ -191,7 +193,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
                 </div>
               </button>
               <button
-                onClick={() => onSetTasksFilter('closed')}
+                onClick={() => effectiveSetTasksFilter('closed')}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-fit ${
                   tasksFilter === 'closed'
                     ? 'border border-primary text-primary bg-primary/10'
@@ -208,7 +210,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
                 </div>
               </button>
               <button
-                onClick={() => onSetTasksFilter('all')}
+                onClick={() => effectiveSetTasksFilter('all')}
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-fit ${
                   tasksFilter === 'all'
                     ? 'border border-primary text-primary bg-primary/10'
