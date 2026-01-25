@@ -104,8 +104,8 @@ interface TasksTabProps {
   
   // Callbacks
   onTaskSelect: (task: Task | null) => void;
-  effectiveSetTasksFilter?: (filter: 'open' | 'closed' | 'all') => void; // Full callback name
-  onFilterChange?: (filter: 'open' | 'closed' | 'all') => void; // Alias for effectiveSetTasksFilter
+  onSetTasksFilter?: (filter: 'open' | 'closed' | 'all') => void; // Full callback name
+  onFilterChange?: (filter: 'open' | 'closed' | 'all') => void; // Alias for onSetTasksFilter
   onSetTasksTabStartInEditMode?: (value: boolean) => void; // Full callback name
   onEditModeChange?: (value: boolean) => void; // Alias
   onToggleTask: (taskId: string) => void;
