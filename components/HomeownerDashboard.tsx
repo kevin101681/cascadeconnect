@@ -1,6 +1,6 @@
 import React from 'react';
 import { HomeownerDesktop } from './homeowner/HomeownerDesktop';
-import { HomeownerMobile } from './homeowner/HomeownerMobile';
+import { HomeownerMobile } from './homeowner/HomeownerMobileRefactored';
 import { useDashboardInitialization } from '../hooks/dashboard/useDashboardInitialization';
 import type { DashboardProps } from './AdminDashboard';
 

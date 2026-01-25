@@ -12,7 +12,7 @@
 import React, { useState, useMemo } from 'react';
 import { useAuth } from '@clerk/clerk-react';
 import InvoicesListPanel, { TabType, Invoice, Client } from '../InvoicesListPanel';
-import InvoiceFormPanel from '../InvoiceFormPanel';
+import InvoiceFormPanel from '../InvoiceFormPanelRefactored';
 import { BuilderForm } from '../../lib/financial-tools/components/BuilderForm';
 import { Reports } from '../../lib/financial-tools/components/Reports';
 import { Expenses } from '../../lib/financial-tools/components/Expenses';
