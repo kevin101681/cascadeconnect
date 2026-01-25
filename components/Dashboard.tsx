@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { UserRole } from '../types';
-import { AdminDashboard } from './AdminDashboard';
-import { HomeownerDashboard } from './HomeownerDashboard';
 import { useDashboardInitialization } from '../hooks/dashboard/useDashboardInitialization';
 import type { DashboardProps } from './AdminDashboard'; // Re-export from AdminDashboard
+
+// Lazy load dashboard components for code splitting
+// This prevents homeowner users from downloading admin-specific code
+const AdminDashboard = lazy(() => import('./AdminDashboard'));
+const HomeownerDashboard = lazy(() => import('./HomeownerDashboard'));
 
 /**
  * Dashboard Router Component
@@ -45,12 +48,34 @@ export const Dashboard: React.FC<DashboardProps> = (props) => {
 
   // Admin, Employee, and Builder users get the AdminDashboard (full-featured)
   if (isAdminRole || isEmployeeRole || isBuilderRole) {
-    return <AdminDashboard {...props} />;
+    return (
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen bg-surface dark:bg-gray-900">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-main dark:border-primary-light mb-4"></div>
+            <p className="text-surface-on-variant dark:text-gray-400">Loading Admin Dashboard...</p>
+          </div>
+        </div>
+      }>
+        <AdminDashboard {...props} />
+      </Suspense>
+    );
   }
 
   // Homeowner users get the simplified HomeownerDashboard
   if (isHomeownerRole) {
-    return <HomeownerDashboard {...props} />;
+    return (
+      <Suspense fallback={
+        <div className="flex items-center justify-center min-h-screen bg-surface dark:bg-gray-900">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-main dark:border-primary-light mb-4"></div>
+            <p className="text-surface-on-variant dark:text-gray-400">Loading Dashboard...</p>
+          </div>
+        </div>
+      }>
+        <HomeownerDashboard {...props} />
+      </Suspense>
+    );
   }
 
   // Fallback for unknown roles (should never happen)
