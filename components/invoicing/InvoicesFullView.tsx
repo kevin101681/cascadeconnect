@@ -426,13 +426,15 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
   // Render via Portal to ensure it's at the top level of the DOM
   return createPortal(
     <div 
-      className="fixed inset-0 z-overlay flex"
+      className="fixed z-overlay flex"
       style={{
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
+        width: '100vw',
+        height: '100vh',
         zIndex: 99999,
         backgroundColor: 'rgba(17, 24, 39, 1)', // Solid dark background
         margin: 0,
@@ -440,10 +442,10 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
       }}
     >
       {/* ==================== SPLIT CONTAINER ==================== */}
-      <div className="flex h-full w-full max-w-none overflow-hidden" style={{ margin: 0, padding: 0 }}>
+      <div className="flex overflow-hidden" style={{ margin: 0, padding: 0, width: '100vw', height: '100vh' }}>
         
         {/* ==================== LEFT PANEL (THE LIST) ==================== */}
-        <div className="w-1/2 max-w-none flex flex-col border-r border-gray-200 bg-white" style={{ flexShrink: 0 }}>
+        <div className="flex flex-col border-r border-gray-200 bg-white" style={{ flexShrink: 0, width: '50vw', height: '100vh' }}>
           
           {/* HEADER */}
           <div className="flex-shrink-0 px-6 py-5 border-b border-gray-200">
@@ -570,7 +572,7 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
         </div>
 
         {/* ==================== RIGHT PANEL (THE EDITOR) ==================== */}
-        <div className="flex-1 max-w-none flex flex-col bg-white" style={{ flexShrink: 0, minWidth: 0 }}>
+        <div className="flex flex-col bg-white" style={{ flexShrink: 0, minWidth: 0, width: '50vw', height: '100vh' }}>
           {(selectedInvoice || isCreatingNew) ? (
             <InvoiceFormPanel
               editInvoice={selectedInvoice}
