@@ -426,7 +426,7 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
   // Render via Portal to ensure it's at the top level of the DOM
   return createPortal(
     <div 
-      className="fixed inset-0 z-overlay bg-gray-900/50 flex relative"
+      className="fixed inset-0 z-overlay flex"
       style={{
         position: 'fixed',
         top: 0,
@@ -434,10 +434,11 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
         right: 0,
         bottom: 0,
         zIndex: 99999,
+        backgroundColor: 'rgba(17, 24, 39, 1)', // Solid dark background
       }}
     >
       {/* ==================== SPLIT CONTAINER ==================== */}
-      <div className="flex h-full w-full">
+      <div className="flex h-full w-full overflow-hidden">
         
         {/* ==================== LEFT PANEL (THE LIST) ==================== */}
         <div className="w-1/2 flex flex-col border-r border-gray-200 bg-white">
