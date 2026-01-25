@@ -135,11 +135,13 @@ export interface Task {
   title: string;
   description?: string; // Used for Notes
   assignedToId: string;
+  assignedTo?: string; // Legacy field name (alias for assignedToId)
   assignedById: string;
   isCompleted: boolean;
   dateAssigned: Date; // New field
   dueDate: Date;
   relatedClaimIds?: string[];
+  claimId?: string; // Single claim association (for backward compatibility)
 }
 
 export interface Comment {
@@ -157,6 +159,7 @@ export interface Message {
   senderRole: UserRole;
   content: string;
   timestamp: Date;
+  sentAt?: Date; // Alias for timestamp (for backward compatibility)
   attachments?: Attachment[];
   // Email tracking
   messageType?: 'email' | 'sms' | 'internal'; // Type of message
@@ -235,6 +238,7 @@ export interface HomeownerDocument {
   name: string;
   uploadedBy: string; // 'Admin' or 'System'
   uploadDate: Date;
+  uploadedAt?: Date; // Alias for uploadDate (for backward compatibility)
   url: string;
   type: string; // 'PDF', 'DOCX', etc.
   thumbnailUrl?: string; // Pre-rendered thumbnail image URL (data URL or URL)
@@ -328,6 +332,8 @@ export interface Task {
 
   assignedToId: string;
 
+  assignedTo?: string; // Legacy field name (alias for assignedToId)
+
   assignedById: string;
 
   isCompleted: boolean;
@@ -337,6 +343,8 @@ export interface Task {
   dueDate: Date;
 
   relatedClaimIds?: string[];
+
+  claimId?: string; // Single claim association (for backward compatibility)
 
 }
 
@@ -371,6 +379,8 @@ export interface Message {
   content: string;
 
   timestamp: Date;
+
+  sentAt?: Date; // Alias for timestamp (for backward compatibility)
 
   attachments?: Attachment[];
   
@@ -440,6 +450,8 @@ export interface HomeownerDocument {
   uploadedBy: string; // 'Admin' or 'System'
 
   uploadDate: Date;
+
+  uploadedAt?: Date; // Alias for uploadDate (for backward compatibility)
 
   url: string;
 
