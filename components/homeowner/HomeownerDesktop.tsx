@@ -4655,7 +4655,6 @@ export const HomeownerDesktop: React.FC<DashboardProps> = ({
         )}
       </>
     );
-    }
   } else if ((isAdmin || isBuilder) && !targetHomeowner) {
     mainContent = (
       <>
