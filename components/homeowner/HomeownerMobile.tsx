@@ -71,15 +71,15 @@ import { useDashboardInitialization, type TabType } from '../../hooks/dashboard/
 import { useModalManagement } from '../../hooks/dashboard/useModalManagement';
 
 // Lazy-load heavy dashboard tabs / tools so they don't ship in the initial bundle.
-const HomeownerManual = React.lazy(() => import('./HomeownerManual'));
+const HomeownerManual = React.lazy(() => import('../HomeownerManual'));
 const HomeownerWarrantyGuide = React.lazy(() =>
-  import('./HomeownerWarrantyGuide').then((m) => ({ default: m.HomeownerWarrantyGuide }))
+  import('../HomeownerWarrantyGuide').then((m) => ({ default: m.HomeownerWarrantyGuide }))
 );
 
 // InvoicesFullView now managed by AppShell - no longer imported here
 // Lazy load heavy components to improve initial load time
 // Add error handling for failed dynamic imports
-const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err => {
+const PdfFlipViewer3D = React.lazy(() => import('../PdfFlipViewer3D').catch(err => {
   console.error('Failed to load PdfFlipViewer3D:', err);
   // Return a fallback component
   return { default: () => <div className="p-4 text-red-500">Failed to load PDF viewer. Please refresh the page.</div> };
@@ -88,26 +88,26 @@ const PdfFlipViewer3D = React.lazy(() => import('./PdfFlipViewer3D').catch(err =
 // Lazy-load react-pageflip (heavy) so it doesn't ship on initial dashboard load.
 const HTMLFlipBook = React.lazy(() => import('react-pageflip'));
 
-const ClaimInlineEditor = React.lazy(() => import('./ClaimInlineEditor').catch(err => {
+const ClaimInlineEditor = React.lazy(() => import('../ClaimInlineEditor').catch(err => {
   console.error('Failed to load ClaimInlineEditor:', err);
   // Return a fallback component
   return { default: () => <div className="p-4 text-red-500">Failed to load claim editor. Please refresh the page.</div> };
 }));
 
-const NewClaimForm = React.lazy(() => import('./NewClaimForm').catch(err => {
+const NewClaimForm = React.lazy(() => import('../NewClaimForm').catch(err => {
   console.error('Failed to load NewClaimForm:', err);
   // Return a fallback component
   return { default: () => <div className="p-4 text-red-500">Failed to load claim form. Please refresh the page.</div> };
 }));
 
-const PunchListApp = React.lazy(() => import('./PunchListApp').catch(err => {
+const PunchListApp = React.lazy(() => import('../PunchListApp').catch(err => {
   console.error('Failed to load PunchListApp:', err);
   // Return a fallback component
   return { default: () => <div className="p-4 text-red-500">Failed to load punch list. Please refresh the page.</div> };
 }));
 
 // REMOVED: Floating Chat Widget - Now in App.tsx at root level
-// const FloatingChatWidget = React.lazy(() => import('./chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
+// const FloatingChatWidget = React.lazy(() => import('../chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
 
 import { HOMEOWNER_MANUAL_IMAGES } from '../../lib/bluetag/constants';
 import { WarrantyCard } from '../ui/WarrantyCard';
