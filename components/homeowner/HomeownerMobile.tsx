@@ -519,9 +519,9 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
   // Phase 7: HomeownerMobile - MOBILE ONLY (isMobileView is always true)
   const isMobile = true; // Hardcoded for Mobile component
   
-  // Homeowner dashboard - isAdmin and isBuilder are always false
-  const isAdmin = false;
-  const isBuilder = false;
+  // Check actual user role - admins/builders can view homeowners on mobile
+  const isAdmin = userRole === UserRole.ADMIN;
+  const isBuilder = userRole === UserRole.BUILDER;
   
   // Phase 5 Wave 2: Initialize dashboard (URL, responsive, deep-links)
   const initialization = useDashboardInitialization();
