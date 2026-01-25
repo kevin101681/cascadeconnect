@@ -436,18 +436,6 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
         zIndex: 99999,
       }}
     >
-      {/* ==================== CLOSE BUTTON ==================== */}
-      <Button
-        onClick={onClose}
-        variant="ghost"
-        size="icon"
-        className="absolute right-6 top-6 z-50 rounded-full bg-white hover:bg-gray-100 shadow-lg border border-gray-200 text-gray-600 hover:text-gray-900"
-        title="Close"
-        aria-label="Close invoices manager"
-      >
-        <X className="h-5 w-5" />
-      </Button>
-
       {/* ==================== SPLIT CONTAINER ==================== */}
       <div className="flex h-full w-full">
         
@@ -600,6 +588,19 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
         </div>
         
       </div>
+
+      {/* ==================== CLOSE BUTTON (AFTER SPLIT PANELS) ==================== */}
+      <Button
+        onClick={onClose}
+        variant="ghost"
+        size="icon"
+        className="absolute right-6 top-6 rounded-full bg-white hover:bg-gray-100 shadow-lg border border-gray-200 text-gray-600 hover:text-gray-900"
+        style={{ zIndex: 100000 }}
+        title="Close"
+        aria-label="Close invoices manager"
+      >
+        <X className="h-5 w-5" />
+      </Button>
     </div>,
     document.body
   );
