@@ -435,13 +435,15 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
         bottom: 0,
         zIndex: 99999,
         backgroundColor: 'rgba(17, 24, 39, 1)', // Solid dark background
+        margin: 0,
+        padding: 0,
       }}
     >
       {/* ==================== SPLIT CONTAINER ==================== */}
-      <div className="flex h-full w-full overflow-hidden">
+      <div className="flex h-full w-full max-w-none overflow-hidden" style={{ margin: 0, padding: 0 }}>
         
         {/* ==================== LEFT PANEL (THE LIST) ==================== */}
-        <div className="w-1/2 flex flex-col border-r border-gray-200 bg-white">
+        <div className="w-1/2 max-w-none flex flex-col border-r border-gray-200 bg-white" style={{ flexShrink: 0 }}>
           
           {/* HEADER */}
           <div className="flex-shrink-0 px-6 py-5 border-b border-gray-200">
@@ -568,7 +570,7 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
         </div>
 
         {/* ==================== RIGHT PANEL (THE EDITOR) ==================== */}
-        <div className="flex-1 flex flex-col bg-white">
+        <div className="flex-1 max-w-none flex flex-col bg-white" style={{ flexShrink: 0, minWidth: 0 }}>
           {(selectedInvoice || isCreatingNew) ? (
             <InvoiceFormPanel
               editInvoice={selectedInvoice}
