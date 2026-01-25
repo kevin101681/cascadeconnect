@@ -10,7 +10,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Plus, Loader2, AlertTriangle, Search } from 'lucide-react';
 import { InvoiceCard } from '../ui/InvoiceCard';
-import { NativeInvoiceForm } from './NativeInvoiceForm';
+import InvoiceFormPanel from '../InvoiceFormPanelRefactored';
 import Button from '../Button';
 import type { Invoice, Client, Expense } from '../../lib/financial-tools/types';
 import { api } from '../../lib/financial-tools/services/api';
@@ -581,12 +581,13 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
         {/* ==================== RIGHT PANEL (THE EDITOR) ==================== */}
         <div className="flex-1 flex flex-col bg-white">
           {(selectedInvoice || isCreatingNew) ? (
-            <NativeInvoiceForm
-              invoice={selectedInvoice}
-              clients={clients}
-              onSave={handleSaveInvoice}
+            <InvoiceFormPanel
+              editInvoice={selectedInvoice}
+              builders={clients.map(c => ({ id: c.id, name: c.companyName, email: c.email }))}
+              onSave={(invoice, action) => handleSaveInvoice(invoice)}
               onCancel={handleCancelEdit}
               prefillData={isCreatingNew ? prefillData : undefined}
+              isVisible={true}
             />
           ) : (
             <div className="flex-1 flex items-center justify-center text-gray-400">

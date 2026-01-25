@@ -24,7 +24,7 @@ import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
 import TaskDetail from './TaskDetail';
 import TasksSheet from './TasksSheet';
-import HomeownerDashboardView from './HomeownerDashboardView';
+import { HomeownerMobile } from './homeowner/HomeownerMobileRefactored';
 import { StaggerContainer, FadeIn, AnimatedTabContent } from './motion/MotionWrapper';
 import { SmoothHeightWrapper } from './motion/SmoothHeightWrapper';
 import { SIDEBAR_CONTENT_PADDING_LEFT } from '../constants/layout';
@@ -3042,50 +3042,63 @@ export const AdminDashboard: React.FC<DashboardProps> = ({
     // Render new mobile dashboard for both homeowner and admin view on mobile devices (when no tab is active)
     if (isMobileView && displayHomeowner && !currentTab) {
       mainContent = (
-        <>
-          {renderModals()}
-          <HomeownerDashboardView
-            homeowner={displayHomeowner}
-            searchQuery={(isAdmin || isBuilder) ? searchQuery : undefined}
-            onSearchChange={(isAdmin || isBuilder) ? onSearchChange : undefined}
-            searchResults={(isAdmin || isBuilder) ? searchResults : undefined}
-            onSelectHomeowner={(isAdmin || isBuilder) ? onSelectHomeowner : undefined}
-            upcomingAppointment={upcomingAppointment}
-            onAppointmentClick={(claimId) => {
-              const claim = claims.find(c => c.id === claimId);
-              if (claim) {
-                handleClaimSelection(claim);
-              }
-            }}
-            onNavigateToModule={(module) => {
-              // Map module strings to existing tab state
-              const moduleMap: { [key: string]: typeof currentTab } = {
-                'TASKS': 'TASKS',
-                'SCHEDULE': 'SCHEDULE',
-                'BLUETAG': null, // Special handling
-                'CLAIMS': 'CLAIMS',
-                'MESSAGES': 'MESSAGES',
-                'CALLS': 'CALLS',
-                'INVOICES': 'INVOICES',
-                'DOCUMENTS': 'DOCUMENTS',
-                'MANUAL': 'MANUAL',
-                'HELP': 'HELP',
-              };
-
-              if (module === 'BLUETAG') {
-                setCurrentTab('PUNCHLIST');
-              } else if (module === 'CHAT') {
-                updateSearchParams({ view: 'chat' });
-              } else {
-                const tab = moduleMap[module];
-                if (tab) {
-                  setCurrentTab(tab);
-                }
-              }
-            }}
-          />
-          {/* REMOVED: Floating Chat Widget - Now rendered at root level in App.tsx to escape stacking context */}
-        </>
+        <HomeownerMobile
+          claims={claims}
+          userRole={userRole}
+          homeowners={homeowners}
+          activeHomeowner={displayHomeowner}
+          employees={employees}
+          currentUser={currentUser}
+          builderUsers={builderUsers}
+          searchQuery={(isAdmin || isBuilder) ? searchQuery : undefined}
+          searchResults={(isAdmin || isBuilder) ? searchResults : undefined}
+          onSearchChange={(isAdmin || isBuilder) ? onSearchChange : undefined}
+          onSelectHomeowner={(isAdmin || isBuilder) ? onSelectHomeowner : undefined}
+          onSelectClaim={onSelectClaim}
+          onNewClaim={onNewClaim}
+          documents={documents}
+          onUploadDocument={onUploadDocument}
+          onDeleteDocument={onDeleteDocument}
+          messages={messages}
+          onSendMessage={onSendMessage}
+          onCreateThread={onCreateThread}
+          onUpdateThread={onUpdateThread}
+          onAddInternalNote={onAddInternalNote}
+          onTrackClaimMessage={onTrackClaimMessage}
+          onUpdateClaim={onUpdateClaim}
+          contractors={contractors}
+          claimMessages={claimMessages}
+          taskMessages={taskMessages}
+          onTrackTaskMessage={onTrackTaskMessage}
+          onSendTaskMessage={onSendTaskMessage}
+          builderGroups={builderGroups}
+          currentBuilderId={currentBuilderId}
+          currentUserEmail={currentUserEmail}
+          tasks={tasks}
+          onAddTask={onAddTask}
+          onToggleTask={onToggleTask}
+          onDeleteTask={onDeleteTask}
+          onUpdateTask={onUpdateTask}
+          onNavigate={onNavigate}
+          targetHomeowner={targetHomeowner}
+          onClearHomeownerSelection={onClearHomeownerSelection}
+          onUpdateHomeowner={onUpdateHomeowner}
+          onCreateClaim={onCreateClaim}
+          initialTab={initialTab}
+          initialThreadId={initialThreadId}
+          onAddEmployee={onAddEmployee}
+          onUpdateEmployee={onUpdateEmployee}
+          onDeleteEmployee={onDeleteEmployee}
+          onAddContractor={onAddContractor}
+          onUpdateContractor={onUpdateContractor}
+          onDeleteContractor={onDeleteContractor}
+          onAddBuilderUser={onAddBuilderUser}
+          onUpdateBuilderUser={onUpdateBuilderUser}
+          onDeleteBuilderUser={onDeleteBuilderUser}
+          onDeleteHomeowner={onDeleteHomeowner}
+          onDataReset={onDataReset}
+          onOpenTemplatesModal={onOpenTemplatesModal}
+        />
       );
     } else {
       mainContent = (
