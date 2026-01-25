@@ -27,46 +27,6 @@ const getClientStatus = (clerkId?: string, inviteEmailRead?: boolean): ClientSta
   return 'pending';
 };
 
-// Status badge component
-interface StatusBadgeProps {
-  status: ClientStatus;
-}
-
-const ClientStatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
-  const configs = {
-    active: {
-      bg: 'bg-green-100 dark:bg-green-900/30',
-      text: 'text-green-800 dark:text-green-300',
-      icon: Check,
-      label: 'Active',
-    },
-    invite_read: {
-      bg: 'bg-blue-100 dark:bg-blue-900/30',
-      text: 'text-blue-800 dark:text-blue-300',
-      icon: Check,
-      label: 'Viewed',
-    },
-    pending: {
-      bg: 'bg-gray-100 dark:bg-gray-700',
-      text: 'text-gray-800 dark:text-gray-300',
-      icon: Clock,
-      label: 'Pending',
-    },
-  };
-
-  const config = configs[status];
-  const Icon = config.icon;
-
-  return (
-    <span
-      className={`inline-flex items-center justify-center rounded-full text-xs font-medium w-5 h-5 ${config.bg} ${config.text}`}
-      title={`Status: ${config.label}`}
-    >
-      <Icon className="h-3 w-3" />
-    </span>
-  );
-};
-
 export function HomeownerCard({
   name,
   address,
@@ -128,34 +88,31 @@ export function HomeownerCard({
     // Material 3 Design: Using semantic rounded-card token
     <div className="bg-white dark:bg-gray-800 rounded-card border border-gray-200 dark:border-gray-700 p-6 shadow-sm hover:shadow-md transition-all h-full flex flex-col group">
       
-      {/* HEADER: Name with Status Icon & Project - FULL WIDTH */}
+      {/* HEADER: Name & Project - FULL WIDTH */}
       <div className="flex flex-col mb-4">
-        {/* Name + Status Icon Row - Now uses full width */}
-        <div className="flex items-start gap-2 mb-3">
-          <div className="flex-1 min-w-0">
-            {parsedName.line2 ? (
-              // Couple name - stacked (now has full width)
-              <div className="space-y-1">
-                <h3 className="font-bold text-lg leading-tight text-primary dark:text-primary">
-                  {parsedName.line1}
-                </h3>
-                <h3 className="font-bold text-base leading-tight text-gray-600 dark:text-gray-400">
-                  {parsedName.line2}
-                </h3>
-              </div>
-            ) : (
-              // Single name (now has full width)
-              <h3 className={`font-bold text-lg leading-tight ${name ? "text-primary dark:text-primary" : "text-gray-400 dark:text-gray-500 italic"}`}>
+        {/* Name Row - Uses full width */}
+        <div className="mb-3">
+          {parsedName.line2 ? (
+            // Couple name - stacked (now has full width)
+            <div className="space-y-1">
+              <h3 className="font-bold text-lg leading-tight text-primary dark:text-primary">
                 {parsedName.line1}
               </h3>
-            )}
-          </div>
-          <ClientStatusBadge status={clientStatus} />
+              <h3 className="font-bold text-base leading-tight text-gray-600 dark:text-gray-400">
+                {parsedName.line2}
+              </h3>
+            </div>
+          ) : (
+            // Single name (now has full width)
+            <h3 className={`font-bold text-lg leading-tight ${name ? "text-primary dark:text-primary" : "text-gray-400 dark:text-gray-500 italic"}`}>
+              {parsedName.line1}
+            </h3>
+          )}
         </div>
         {project && (
-          <Badge variant="secondary" className="text-[10px] h-5 px-2 font-normal text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600 w-fit">
+          <span className="text-[10px] font-normal text-gray-600 dark:text-gray-300 w-fit">
             {project}
-          </Badge>
+          </span>
         )}
       </div>
 
@@ -222,16 +179,38 @@ export function HomeownerCard({
 
       </div>
 
-      {/* FOOTER: Action Buttons */}
+      {/* FOOTER: Status Badge & Action Buttons */}
       <div className="border-t border-gray-100 dark:border-gray-700 mt-4 pt-4 flex justify-between items-center">
-        {/* Left Side: Status/History Icon */}
+        {/* Left Side: Status Badge with Text */}
         <div className="flex items-center gap-2">
-          <button
-            className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
-            title={`Status: ${clientStatus === 'active' ? 'Active' : clientStatus === 'invite_read' ? 'Viewed Invite' : 'Pending'}`}
-          >
-            <Clock className="h-4 w-4" />
-          </button>
+          {(() => {
+            const statusConfigs = {
+              active: {
+                text: 'text-green-600 dark:text-green-400',
+                icon: Check,
+                label: 'Active',
+              },
+              invite_read: {
+                text: 'text-blue-600 dark:text-blue-400',
+                icon: Check,
+                label: 'Viewed',
+              },
+              pending: {
+                text: 'text-gray-500 dark:text-gray-400',
+                icon: Clock,
+                label: 'Pending',
+              },
+            };
+            const config = statusConfigs[clientStatus];
+            const Icon = config.icon;
+            
+            return (
+              <div className={`inline-flex items-center gap-1.5 text-xs font-medium ${config.text}`}>
+                <Icon className="h-3.5 w-3.5" />
+                <span>{config.label}</span>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Right Side: Action Buttons */}
