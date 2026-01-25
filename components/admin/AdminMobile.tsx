@@ -1,17 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDashboardInitialization } from '../../hooks/dashboard/useDashboardInitialization';
 import type { DashboardProps } from '../AdminDashboard';
 import { HomeownerMobile } from '../homeowner/HomeownerMobile';
+import type { Homeowner } from '../../types';
 
 /**
  * Admin Mobile View (Phase 8)
  * 
- * Currently, when admins view homeowners on mobile, they see the HomeownerMobile interface.
+ * When admins view homeowners on mobile, they see the HomeownerMobile interface.
  * This component serves as the entry point for admin mobile experience.
  * 
- * Future: Could add admin-specific mobile controls/views here.
+ * Features:
+ * - Homeowner search and selection
+ * - Loading state during selection
+ * - Seamless handoff to HomeownerMobile
  */
 export const AdminMobile: React.FC<DashboardProps> = (props) => {
+  const [isSelecting, setIsSelecting] = useState(false);
   const {
     claims,
     userRole,
@@ -70,6 +75,26 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
 
   // Determine which homeowner to display
   const displayHomeowner = targetHomeowner || activeHomeowner;
+
+  // Handler for homeowner selection with loading state
+  const handleHomeownerSelect = (homeowner: Homeowner) => {
+    console.log('📱 AdminMobile: Homeowner selected:', homeowner.name);
+    setIsSelecting(true);
+    
+    // Call parent's onSelectHomeowner
+    if (onSelectHomeowner) {
+      onSelectHomeowner(homeowner);
+    }
+    
+    // Clear search query
+    if (onSearchChange) {
+      onSearchChange('');
+    }
+    
+    // Reset loading state after a brief delay
+    // (The parent state update should trigger a re-render with displayHomeowner set)
+    setTimeout(() => setIsSelecting(false), 500);
+  };
 
   // If there's a homeowner context, show the homeowner mobile interface
   if (displayHomeowner) {
@@ -135,6 +160,15 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
   // If no homeowner selected, show search/selection screen
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6 px-4 py-8">
+      {isSelecting && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-elevation-5 flex flex-col items-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+            <p className="text-surface-on dark:text-gray-100 font-medium">Loading homeowner...</p>
+          </div>
+        </div>
+      )}
+      
       <div className="bg-surface-container-high dark:bg-gray-700 p-6 rounded-full">
         <svg className="h-12 w-12 text-surface-outline dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -180,11 +214,9 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
               {searchResults.map((homeowner) => (
                 <button
                   key={homeowner.id}
-                  onClick={() => {
-                    onSelectHomeowner(homeowner);
-                    onSearchChange('');
-                  }}
-                  className="w-full text-left px-6 py-4 hover:bg-surface-container dark:hover:bg-gray-700 border-b border-surface-outline-variant dark:border-gray-700 last:border-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
+                  onClick={() => handleHomeownerSelect(homeowner)}
+                  disabled={isSelecting}
+                  className="w-full text-left px-6 py-4 hover:bg-surface-container dark:hover:bg-gray-700 border-b border-surface-outline-variant dark:border-gray-700 last:border-0 transition-colors first:rounded-t-2xl last:rounded-b-2xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <div className="flex items-start gap-3">
                     <div className="flex-1 min-w-0">
