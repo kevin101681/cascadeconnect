@@ -6,29 +6,29 @@ import { UserButton, SignOutButton, useUser } from '@clerk/clerk-react';
 // import Papa from 'papaparse';
 // import * as XLSX from 'xlsx';
 import { motion, AnimatePresence, type Transition, type Variants } from 'framer-motion';
-import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, BuilderUser, Task, Contractor, Call } from '../types';
+import { Claim, ClaimStatus, UserRole, Homeowner, InternalEmployee, HomeownerDocument, MessageThread, Message, BuilderGroup, BuilderUser, Task, Contractor, Call } from '../../types';
 import { ClaimMessage, TaskMessage } from './MessageSummaryModal';
 import StatusBadge from './StatusBadge';
 import { ArrowLeft, ArrowRight, Calendar, Plus, ClipboardList, Mail, X, Send, Building2, MapPin, Phone, Clock, FileText, Download, Upload, Search, Home, MoreVertical, Paperclip, Edit2, Archive, CheckSquare, Reply, Trash2, ChevronLeft, ChevronRight, CornerUpLeft, Lock as LockIcon, Loader2, Eye, ChevronDown, ChevronUp, HardHat, Info, Printer, Share2, Filter, FileSpreadsheet, FileEdit, Save, CheckCircle, Play, StickyNote, BookOpen, DollarSign, Check, User, Receipt, MessageCircle, HelpCircle, CheckCheck, LogOut } from 'lucide-react';
-import { useTaskStore } from '../stores/useTaskStore';
-import { useModalStore } from '../hooks/use-modal-store';
-import { useUI } from '../contexts/UIContext';
-import { calls, claims as claimsSchema, homeowners as homeownersTable } from '../db/schema';
+import { useTaskStore } from '../../stores/useTaskStore';
+import { useModalStore } from '../../hooks/use-modal-store';
+import { useUI } from '../../contexts/UIContext';
+import { calls, claims as claimsSchema, homeowners as homeownersTable } from '../../db/schema';
 import { eq, desc } from 'drizzle-orm';
-import { db, isDbConfigured } from '../db';
-import Button from './Button';
-import MaterialSelect from './MaterialSelect';
-import { DropdownButton } from './ui/dropdown-button';
-import { draftInviteEmail, detectClaimIntent } from '../services/geminiService';
-import { sendEmail, generateNotificationBody } from '../services/emailService';
+import { db, isDbConfigured } from '../../db';
+import Button from '../Button';
+import MaterialSelect from '../MaterialSelect';
+import { DropdownButton } from '../ui/dropdown-button';
+import { draftInviteEmail, detectClaimIntent } from '../../services/geminiService';
+import { sendEmail, generateNotificationBody } from '../../services/emailService';
 // REMOVED: Internal task management components (admin-only)
 // import TaskList from './TaskList';
 // import TaskDetail from './TaskDetail';
 // import TasksSheet from './TasksSheet';
 // Phase 7.2: Desktop only - removed HomeownerDashboardMobile import
-import { StaggerContainer, FadeIn, AnimatedTabContent } from './motion/MotionWrapper';
-import { SmoothHeightWrapper } from './motion/SmoothHeightWrapper';
-import { SIDEBAR_CONTENT_PADDING_LEFT } from '../constants/layout';
+import { StaggerContainer, FadeIn, AnimatedTabContent } from '../motion/MotionWrapper';
+import { SmoothHeightWrapper } from '../motion/SmoothHeightWrapper';
+import { SIDEBAR_CONTENT_PADDING_LEFT } from '../../constants/layout';
 
 // Phase 3: Extract Tab Components
 // Import extracted tab wrappers (Homeowner-specific only)
@@ -43,7 +43,7 @@ import { MessagesTab } from './dashboard/tabs/MessagesTab';
 import { ClaimsTab } from './dashboard/tabs/ClaimsTab';
 
 // Phase 4: Import utility functions
-import { formatDate, formatDateForExcel, formatTaskDateAssigned, getISODateString } from '../lib/utils/dateHelpers';
+import { formatDate, formatDateForExcel, formatTaskDateAssigned, getISODateString } from '../../lib/utils/dateHelpers';
 import { 
   formatClaimNumber, 
   isClaimCompleted, 
@@ -55,20 +55,20 @@ import {
   filterClaimsByStatus,
   generateClaimsExcelFileName,
   prepareClaimsForExport
-} from '../lib/utils/claimHelpers';
-import { isPDFDocument } from '../lib/utils/documentHelpers';
+} from '../../lib/utils/claimHelpers';
+import { isPDFDocument } from '../../lib/utils/documentHelpers';
 
 // Phase 4 Wave 2: Import dashboard hooks for state management (Homeowner-specific)
-import { useClaimsData } from '../hooks/dashboard/useClaimsData';
+import { useClaimsData } from '../../hooks/dashboard/useClaimsData';
 // REMOVED: useTasksData - Internal task management
-import { useMessagesData } from '../hooks/dashboard/useMessagesData';
+import { useMessagesData } from '../../hooks/dashboard/useMessagesData';
 // Phase 5 Wave 1: Import message workflow hook
-import { useMessageWorkflow } from '../hooks/dashboard/useMessageWorkflow';
+import { useMessageWorkflow } from '../../hooks/dashboard/useMessageWorkflow';
 // Phase 5 Wave 2: Import initialization hook
 // Import TabType from initialization hook to ensure type consistency
-import { useDashboardInitialization, type TabType } from '../hooks/dashboard/useDashboardInitialization';
+import { useDashboardInitialization, type TabType } from '../../hooks/dashboard/useDashboardInitialization';
 // Phase 5 Wave 3: Import modal management hook
-import { useModalManagement } from '../hooks/dashboard/useModalManagement';
+import { useModalManagement } from '../../hooks/dashboard/useModalManagement';
 
 // Lazy-load heavy dashboard tabs / tools so they don't ship in the initial bundle.
 const HomeownerManual = React.lazy(() => import('./HomeownerManual'));
