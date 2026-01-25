@@ -25,7 +25,7 @@ import { sendEmail, generateNotificationBody } from '../services/emailService';
 // import TaskList from './TaskList';
 // import TaskDetail from './TaskDetail';
 // import TasksSheet from './TasksSheet';
-import HomeownerDashboardMobile from './HomeownerDashboardMobile';
+// Phase 7.2: Desktop only - removed HomeownerDashboardMobile import
 import { StaggerContainer, FadeIn, AnimatedTabContent } from './motion/MotionWrapper';
 import { SmoothHeightWrapper } from './motion/SmoothHeightWrapper';
 import { SIDEBAR_CONTENT_PADDING_LEFT } from '../constants/layout';
@@ -903,7 +903,7 @@ export const HomeownerDesktop: React.FC<DashboardProps> = ({
   // NOTE: This useEffect is for debugging ONLY. It does NOT interfere with browser history.
   // The modal state is STRICTLY controlled by the URL search params.
   useEffect(() => {
-    const isMobile = window.innerWidth < 768;
+    const isMobile = false; // Phase 7.2: Desktop only
     if (selectedClaimForModal) {
       console.log('📋 selectedClaimForModal state changed (Dashboard)', {
         claimId: selectedClaimForModal.id,
@@ -922,30 +922,18 @@ export const HomeownerDesktop: React.FC<DashboardProps> = ({
   
   // Header scroll sync refs
   
-  // Prevent body scroll when modal is open (mobile only - desktop uses split-screen)
-  useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    if ((selectedClaimForModal || selectedTaskForModal) && isMobile) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [selectedClaimForModal, selectedTaskForModal]);
+  // Phase 7.2: Desktop only - body scroll lock not needed (desktop uses split-screen)
+  // REMOVED: Mobile body scroll prevention useEffect
   
   // Desktop: clear selections when leaving their split views to avoid fallback modals.
   // Mobile back-navigation is handled purely via URL params (`view`, `claimId`, `taskId`) and the
   // global popstate listener above.
   useEffect(() => {
     const previousTab = previousTabRef.current;
-    const isMobile = window.innerWidth < 768;
-    const isDesktop = !isMobile;
+    // Phase 7.2: Desktop only - isDesktop always true
     
     // Desktop: clear selections when leaving their split views to avoid fallback modals.
     if (
-      isDesktop &&
       previousTab === 'CLAIMS' &&
       currentTab &&
       currentTab !== 'CLAIMS' &&
@@ -955,7 +943,6 @@ export const HomeownerDesktop: React.FC<DashboardProps> = ({
     }
     // REMOVED: TASKS tab cleanup (admin-only)
     if (
-      isDesktop &&
       previousTab === 'MESSAGES' &&
       currentTab &&
       currentTab !== 'MESSAGES' &&
@@ -968,27 +955,8 @@ export const HomeownerDesktop: React.FC<DashboardProps> = ({
     previousTabRef.current = currentTab;
   }, [currentTab, selectedClaimForModal, setSelectedClaimForModal]);
   
-  // Prevent body scroll when mobile tab modal is open
-  useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    if (currentTab && isMobile) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.top = '0';
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.top = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.top = '';
-    };
-  }, [currentTab]);
+  // Phase 7.2: Desktop only - mobile tab modal scroll lock not needed
+  // REMOVED: Mobile tab modal body scroll prevention useEffect
   
   // Invoices Modal State - use prop from parent if provided, otherwise use local state
   
@@ -1316,29 +1284,9 @@ export const HomeownerDesktop: React.FC<DashboardProps> = ({
   };
 
   // Handle browser back button for nested modals that are NOT URL-driven.
-  // Claims/Tasks use `?claimId` / `?taskId` in the URL, so Back should be handled by normal
-  // popstate + searchParams syncing. Messages threads are local-state only, so we push a nested
-  // history entry to allow: thread -> back -> list -> back -> dashboard.
-  useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    const hasNestedModal = Boolean(selectedThreadId);
-    
-    if (hasNestedModal && isMobile) {
-      // Push a history state when modal opens
-      window.history.pushState({ nestedModal: true }, '');
-
-      const handlePopState = (e: PopStateEvent) => {
-        // Close the appropriate modal when back button is pressed
-        if (selectedThreadId) setSelectedThreadId(null);
-      };
-
-      window.addEventListener('popstate', handlePopState);
-
-      return () => {
-        window.removeEventListener('popstate', handlePopState);
-      };
-    }
-  }, [selectedThreadId]);
+  // Phase 7.2: Desktop only - nested modal history management not needed
+  // REMOVED: Mobile message thread history useEffect (desktop uses split-view)
+  
   // Message composition state and template management - NOW MANAGED BY useMessagesData HOOK
   // const [newMessageRecipientId, setNewMessageRecipientId] = useState<string>('');
   // const [isSendingMessage, setIsSendingMessage] = useState(false);
@@ -2744,59 +2692,14 @@ export const HomeownerDesktop: React.FC<DashboardProps> = ({
       };
     })();
     
-    // Render new mobile dashboard for both homeowner and admin view on mobile devices (when no tab is active)
-    if (isMobileView && displayHomeowner && !currentTab) {
-      mainContent = (
-        <>
-          {renderModals()}
-          <HomeownerDashboardMobile
-            homeowner={displayHomeowner}
-            searchQuery={(isAdmin || isBuilder) ? searchQuery : undefined}
-            onSearchChange={(isAdmin || isBuilder) ? onSearchChange : undefined}
-            searchResults={(isAdmin || isBuilder) ? searchResults : undefined}
-            onSelectHomeowner={(isAdmin || isBuilder) ? onSelectHomeowner : undefined}
-            upcomingAppointment={upcomingAppointment}
-            onAppointmentClick={(claimId) => {
-              const claim = claims.find(c => c.id === claimId);
-              if (claim) {
-                handleClaimSelection(claim);
-              }
-            }}
-            onNavigateToModule={(module) => {
-              // Map module strings to existing tab state
-              const moduleMap: { [key: string]: typeof currentTab } = {
-                // REMOVED: Admin-only tabs (TASKS, CALLS, INVOICES)
-                'SCHEDULE': 'SCHEDULE',
-                'BLUETAG': null, // Special handling
-                'CLAIMS': 'CLAIMS',
-                'MESSAGES': 'MESSAGES',
-                'DOCUMENTS': 'DOCUMENTS',
-                'MANUAL': 'MANUAL',
-                'HELP': 'HELP',
-              };
-
-              if (module === 'BLUETAG') {
-                setCurrentTab('PUNCHLIST');
-              } else if (module === 'CHAT') {
-                updateSearchParams({ view: 'chat' });
-              } else {
-                const tab = moduleMap[module];
-                if (tab) {
-                  setCurrentTab(tab);
-                }
-              }
-            }}
-          />
-          {/* REMOVED: Floating Chat Widget - Now rendered at root level in App.tsx to escape stacking context */}
-        </>
-      );
-    } else {
-      mainContent = (
-        <>
-          {renderModals()}
-        
-        {/* ADMIN EXIT BUTTON - Only show when admin is viewing as homeowner */}
-        {/* ✅ LOGIC: Show when isHomeownerView is true AND the Clerk user's role is admin */}
+    // Phase 7.2: Desktop ONLY - removed mobile dashboard conditional
+    // Desktop always shows the tab-based layout
+    mainContent = (
+      <>
+        {renderModals()}
+      
+      {/* ADMIN EXIT BUTTON - Only show when admin is viewing as homeowner */}
+      {/* ✅ LOGIC: Show when isHomeownerView is true AND the Clerk user's role is admin */}
         {/* Real Homeowner: isHomeownerView=true but isAdminAccount=false -> HIDDEN */}
         {/* Admin Dashboard: isHomeownerView=false -> HIDDEN */}
         {/* Admin Impersonating: isHomeownerView=true AND isAdminAccount=true -> VISIBLE ✓ */}
