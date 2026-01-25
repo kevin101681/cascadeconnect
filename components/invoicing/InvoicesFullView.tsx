@@ -288,18 +288,25 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
     URL.revokeObjectURL(url);
   };
 
-  const handleSaveInvoice = async (invoiceData: Partial<Invoice>) => {
+  const handleSaveInvoice = async (invoiceData: Partial<Invoice>, action?: 'draft' | 'sent' | 'send') => {
     try {
       const itemsToSave = invoiceData.items || [];
       const total = itemsToSave.reduce((acc, item) => acc + item.amount, 0);
       
-      const client = clients.find(c => c.companyName === invoiceData.clientName);
-      const email = invoiceData.clientEmail || client?.email || '';
+      // Map InvoiceFormPanel fields (builderId/builderName/builderEmail) to Invoice type (clientName/clientEmail)
+      const builderName = (invoiceData as any).builderName || invoiceData.clientName || '';
+      const builderEmail = (invoiceData as any).builderEmail || invoiceData.clientEmail || '';
+      
+      // If we have a builderId, look up the client to get email if not provided
+      const builderId = (invoiceData as any).builderId;
+      const client = builderId ? clients.find(c => c.id === builderId) : 
+                      clients.find(c => c.companyName === builderName);
+      const email = builderEmail || client?.email || '';
 
       const invoiceToSave: Invoice = {
         id: invoiceData.id || crypto.randomUUID(),
         invoiceNumber: invoiceData.invoiceNumber || `INV-${Date.now().toString().slice(-6)}`,
-        clientName: invoiceData.clientName || '',
+        clientName: builderName,
         clientEmail: email,
         projectDetails: invoiceData.projectDetails || '',
         paymentLink: invoiceData.paymentLink,
@@ -325,11 +332,14 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
         setIsCreatingNew(false);
       }
       
-      return true; // Success
+      // If action is 'send', handle email sending (future enhancement)
+      if (action === 'send') {
+        console.log('TODO: Implement email sending for action=send');
+      }
     } catch (e: any) {
       console.error('Failed to save invoice', e);
       alert(`Failed to save invoice: ${e.message || 'Unknown error'}`);
-      return false; // Failure
+      throw e; // Re-throw so InvoiceFormPanel can handle the error
     }
   };
 
@@ -838,7 +848,7 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
               <InvoiceFormPanel
                 editInvoice={selectedInvoice}
                 builders={clients.map(c => ({ id: c.id, name: c.companyName, email: c.email }))}
-                onSave={(invoice, action) => handleSaveInvoice(invoice)}
+                onSave={async (invoice, action) => await handleSaveInvoice(invoice, action)}
                 onCancel={handleCancelEdit}
                 prefillData={isCreatingNew ? prefillData : undefined}
                 isVisible={true}
