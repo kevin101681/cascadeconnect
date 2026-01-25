@@ -24,7 +24,7 @@ import { sendEmail, generateNotificationBody } from '../services/emailService';
 import TaskList from './TaskList';
 import TaskDetail from './TaskDetail';
 import TasksSheet from './TasksSheet';
-import { HomeownerMobile } from './homeowner/HomeownerMobileRefactored';
+import { HomeownerMobile } from './homeowner/HomeownerMobile';
 import { StaggerContainer, FadeIn, AnimatedTabContent } from './motion/MotionWrapper';
 import { SmoothHeightWrapper } from './motion/SmoothHeightWrapper';
 import { SIDEBAR_CONTENT_PADDING_LEFT } from '../constants/layout';

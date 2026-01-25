@@ -5109,11 +5109,6 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
   
   return (
     <>
-      {/* 🚨 SCREAM TEST GRAFFITI - VISUAL VERIFICATION 🚨 */}
-      <div className="fixed top-0 left-0 right-0 w-full bg-red-600 text-white font-black text-center p-4 text-xl animate-pulse z-[9999]">
-        ⚠️ IF YOU SEE THIS, THE MOBILE REFACTOR WORKED ⚠️
-      </div>
-      
       {/* 🔧 DEV ONLY: Seed Test Homeowner Button */}
       {/* Global Modals - Always accessible */}
       {renderModals()}
