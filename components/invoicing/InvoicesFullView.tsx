@@ -8,14 +8,17 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Plus, Loader2, AlertTriangle, Search } from 'lucide-react';
+import { X, Plus, Loader2, AlertTriangle, Search, Building2 } from 'lucide-react';
 import { InvoiceCard } from '../ui/InvoiceCard';
 import InvoiceFormPanel from '../InvoiceFormPanel';
 import Button from '../Button';
-import type { Invoice, Client, Expense } from '../../lib/financial-tools/types';
+import type { Invoice, Client, Expense, ViewState } from '../../lib/financial-tools/types';
 import { api } from '../../lib/financial-tools/services/api';
 import { useAuth } from '@clerk/clerk-react';
 import jsPDF from 'jspdf';
+import { BuilderForm } from '../../lib/financial-tools/components/BuilderForm';
+import { Reports } from '../../lib/financial-tools/components/Reports';
+import { Expenses } from '../../lib/financial-tools/components/Expenses';
 
 interface InvoicesFullViewProps {
   isOpen: boolean;
@@ -49,12 +52,20 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [clients, setClients] = useState<Client[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   
   // ==================== UI STATE ====================
+  // Tab navigation state
+  const [activeTab, setActiveTab] = useState<'INVOICES' | 'BUILDERS' | 'EXPENSES' | 'REPORTS'>('INVOICES');
+  
+  // Invoice state
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'draft' | 'sent'>('sent');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Builder state
+  const [activeBuilderId, setActiveBuilderId] = useState<string | "new" | null>(null);
   
   // Track if initial load has completed
   const hasLoadedRef = React.useRef(false);
@@ -75,16 +86,18 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
       
       // Try cache first for instant display
       try {
-        const [cachedInvoices, cachedClients] = await Promise.all([
+        const [cachedInvoices, cachedClients, cachedExpenses] = await Promise.all([
           api.invoices.list(false), // Use cache
-          api.clients.list(false) // Use cache
+          api.clients.list(false), // Use cache
+          api.expenses.list(false) // Use cache
         ]);
         
         // Show cached data immediately if available
-        if (cachedInvoices.length > 0 || cachedClients.length > 0) {
+        if (cachedInvoices.length > 0 || cachedClients.length > 0 || cachedExpenses.length > 0) {
           console.log(`✅ Loaded from cache`);
           setInvoices(cachedInvoices);
           setClients(cachedClients);
+          setExpenses(cachedExpenses);
           setIsLoading(false);
           
           // Refresh from API in background
@@ -108,13 +121,15 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
 
   const refreshDataFromAPI = async () => {
     try {
-      const [freshInvoices, freshClients] = await Promise.all([
+      const [freshInvoices, freshClients, freshExpenses] = await Promise.all([
         api.invoices.list(true), // Force refresh
-        api.clients.list(true) // Force refresh
+        api.clients.list(true), // Force refresh
+        api.expenses.list(true) // Force refresh
       ]);
       
       setInvoices(freshInvoices);
       setClients(freshClients);
+      setExpenses(freshExpenses);
       setIsLoading(false);
     } catch (err: any) {
       throw new Error(err.message || "Failed to refresh data");
@@ -151,8 +166,126 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
   };
 
   const handleCreateNew = () => {
+    if (activeTab === 'INVOICES') {
+      setSelectedInvoice(null);
+      setIsCreatingNew(true);
+    } else if (activeTab === 'BUILDERS') {
+      setActiveBuilderId("new");
+    }
+  };
+  
+  // Tab change handler
+  const handleTabChange = (tab: 'INVOICES' | 'BUILDERS' | 'EXPENSES' | 'REPORTS') => {
+    setActiveTab(tab);
+    // Reset selections when switching tabs
     setSelectedInvoice(null);
-    setIsCreatingNew(true);
+    setIsCreatingNew(false);
+    setActiveBuilderId(null);
+  };
+  
+  // Builder handlers
+  const handleBuilderSelect = (builder: Client) => {
+    setActiveBuilderId(builder.id);
+  };
+  
+  // Navigation handler (for legacy components)
+  const handleNavigate = (view: ViewState) => {
+    // Map ViewState to Tab
+    const tabMap: Record<ViewState, 'INVOICES' | 'BUILDERS' | 'EXPENSES' | 'REPORTS'> = {
+      'invoices': 'INVOICES',
+      'clients': 'BUILDERS',
+      'reports': 'REPORTS',
+      'expenses': 'EXPENSES',
+    };
+    setActiveTab(tabMap[view]);
+  };
+  
+  // Expense handlers
+  const handleAddExpense = async (expense: Expense) => {
+    try {
+      const saved = await api.expenses.add(expense);
+      setExpenses(prev => [saved, ...prev]);
+    } catch (e: any) {
+      console.error('Failed to save expense', e);
+      alert(`Failed to save expense: ${e.message}`);
+    }
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    try {
+      await api.expenses.delete(id);
+      setExpenses(prev => prev.filter(e => e.id !== id));
+    } catch (e: any) {
+      console.error('Failed to delete expense', e);
+      alert(`Failed to delete expense: ${e.message}`);
+    }
+  };
+
+  const handleBulkAddExpenses = async (newExpenses: Expense[]) => {
+    setExpenses(prev => [...newExpenses, ...prev]);
+    for (const expense of newExpenses) {
+      await api.expenses.add(expense).catch(console.error);
+    }
+  };
+
+  const handleBulkDeleteExpenses = async (ids: string[]) => {
+    setExpenses(prev => prev.filter(e => !ids.includes(e.id)));
+    for (const id of ids) {
+      await api.expenses.delete(id).catch(console.error);
+    }
+  };
+  
+  // Client/Builder handlers
+  const handleAddClient = async (client: Client) => {
+    try {
+      const saved = await api.clients.add(client);
+      setClients(prev => [saved, ...prev]);
+      setActiveBuilderId(saved.id); // Switch to edit mode after creation
+    } catch (e: any) {
+      console.error('Failed to save builder', e);
+      alert(`Failed to save builder: ${e.message}`);
+    }
+  };
+
+  const handleUpdateClient = async (client: Client) => {
+    try {
+      const updated = await api.clients.update(client);
+      setClients(prev => prev.map(c => c.id === updated.id ? updated : c));
+    } catch (e: any) {
+      console.error('Failed to update builder', e);
+      alert(`Failed to update builder: ${e.message}`);
+    }
+  };
+
+  const handleDeleteClient = async (id: string) => {
+    try {
+      await api.clients.delete(id);
+      setClients(prev => prev.filter(c => c.id !== id));
+      setActiveBuilderId(null);
+    } catch (e: any) {
+      console.error('Failed to delete builder', e);
+      alert(`Failed to delete builder: ${e.message}`);
+    }
+  };
+  
+  // Backup handler
+  const handleFullBackup = () => {
+    const data = {
+      invoices,
+      expenses,
+      clients,
+      timestamp: new Date().toISOString()
+    };
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `cbsbooks-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleSaveInvoice = async (invoiceData: Partial<Invoice>) => {
@@ -463,59 +596,102 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
           
           {/* HEADER */}
           <div className="flex-shrink-0 px-6 py-5 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
-              <Button
-                onClick={handleCreateNew}
-                variant="filled"
-                size="md"
-                icon={<Plus className="h-4 w-4" />}
-              >
-                Create New
-              </Button>
+            {/* TAB NAVIGATION */}
+            <div className="flex items-center gap-2 mb-4">
+              {(['INVOICES', 'BUILDERS', 'EXPENSES', 'REPORTS'] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => handleTabChange(tab)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === tab
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {tab.charAt(0) + tab.slice(1).toLowerCase()}
+                </button>
+              ))}
             </div>
             
-            {/* SEARCH BAR */}
-            <div className="relative mb-4">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by invoice #, client name, or project address..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-              />
-            </div>
-            
-            {/* STATUS FILTER TABS */}
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex gap-2">
-                {(['draft', 'sent'] as const).map(status => (
-                  <button
-                    key={status}
-                    onClick={() => setStatusFilter(status)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                      statusFilter === status
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
+            {activeTab === 'INVOICES' && (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
+                  <Button
+                    onClick={handleCreateNew}
+                    variant="filled"
+                    size="md"
+                    icon={<Plus className="h-4 w-4" />}
                   >
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                    <span className="ml-1.5 text-xs opacity-70">
-                      ({invoices.filter(i => i.status === status).length})
+                    Create New
+                  </Button>
+                </div>
+                
+                {/* SEARCH BAR */}
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by invoice #, client name, or project address..."
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+                
+                {/* STATUS FILTER TABS */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex gap-2">
+                    {(['draft', 'sent'] as const).map(status => (
+                      <button
+                        key={status}
+                        onClick={() => setStatusFilter(status)}
+                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                          statusFilter === status
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                        <span className="ml-1.5 text-xs opacity-70">
+                          ({invoices.filter(i => i.status === status).length})
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  
+                  {/* TOTAL BADGE */}
+                  <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-1.5">
+                    <span className="text-xs text-green-600 font-medium">Total: </span>
+                    <span className="text-sm font-bold text-green-800">
+                      ${visibleTotal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                     </span>
-                  </button>
-                ))}
+                  </div>
+                </div>
+              </>
+            )}
+            
+            {activeTab === 'BUILDERS' && (
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-gray-900">Builders</h1>
+                <Button
+                  onClick={handleCreateNew}
+                  variant="filled"
+                  size="md"
+                  icon={<Plus className="h-4 w-4" />}
+                >
+                  New Builder
+                </Button>
               </div>
-              
-              {/* TOTAL BADGE */}
-              <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-1.5">
-                <span className="text-xs text-green-600 font-medium">Total: </span>
-                <span className="text-sm font-bold text-green-800">
-                  ${visibleTotal.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                </span>
-              </div>
-            </div>
+            )}
+            
+            {activeTab === 'EXPENSES' && (
+              <h1 className="text-2xl font-bold text-gray-900">Expenses</h1>
+            )}
+            
+            {activeTab === 'REPORTS' && (
+              <h1 className="text-2xl font-bold text-gray-900">Reports (P&L)</h1>
+            )}
           </div>
 
           {/* BODY - SCROLLABLE GRID */}
@@ -524,7 +700,7 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <Loader2 className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500">Loading invoices...</p>
+                  <p className="text-sm text-gray-500">Loading data...</p>
                 </div>
               </div>
             ) : error ? (
@@ -547,60 +723,194 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
                   </div>
                 </div>
               </div>
-            ) : filteredInvoices.length === 0 ? (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-gray-400 text-sm">No invoices found</p>
-              </div>
             ) : (
-              <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 p-6">
-                {filteredInvoices.map(invoice => {
-                  // Map status for display
-                  const displayStatus: "Draft" | "Sent" | "Overdue" | "Paid" = 
-                    invoice.status === 'draft' ? 'Draft' :
-                    invoice.status === 'paid' ? 'Paid' : 'Sent';
-                  
-                  return (
-                    <InvoiceCard
-                      key={invoice.id}
-                      invoiceNumber={invoice.invoiceNumber}
-                      status={displayStatus}
-                      amount={formatAmount(invoice.total)}
-                      createdDate={formatDate(invoice.date)}
-                      dueDate={formatDate(invoice.dueDate)}
-                      builder={invoice.clientName}
-                      address={invoice.projectDetails}
-                      checkNumber={invoice.checkNumber}
-                      isSelected={selectedInvoice?.id === invoice.id}
-                      onClick={() => handleInvoiceClick(invoice)}
-                      onMarkPaid={(checkNum) => handleMarkPaid(invoice, checkNum)}
-                      onCheckNumberUpdate={(checkNum) => handleCheckNumberUpdate(invoice, checkNum)}
-                      onEmail={() => handleEmail(invoice)}
-                      onDownload={() => handleDownload(invoice)}
-                      onDelete={() => handleDelete(invoice.id)}
+              <>
+                {/* INVOICES TAB - Invoice Cards Grid */}
+                {activeTab === 'INVOICES' && (
+                  filteredInvoices.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-gray-400 text-sm">No invoices found</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 p-6">
+                      {filteredInvoices.map(invoice => {
+                        // Map status for display
+                        const displayStatus: "Draft" | "Sent" | "Overdue" | "Paid" = 
+                          invoice.status === 'draft' ? 'Draft' :
+                          invoice.status === 'paid' ? 'Paid' : 'Sent';
+                        
+                        return (
+                          <InvoiceCard
+                            key={invoice.id}
+                            invoiceNumber={invoice.invoiceNumber}
+                            status={displayStatus}
+                            amount={formatAmount(invoice.total)}
+                            createdDate={formatDate(invoice.date)}
+                            dueDate={formatDate(invoice.dueDate)}
+                            builder={invoice.clientName}
+                            address={invoice.projectDetails}
+                            checkNumber={invoice.checkNumber}
+                            isSelected={selectedInvoice?.id === invoice.id}
+                            onClick={() => handleInvoiceClick(invoice)}
+                            onMarkPaid={(checkNum) => handleMarkPaid(invoice, checkNum)}
+                            onCheckNumberUpdate={(checkNum) => handleCheckNumberUpdate(invoice, checkNum)}
+                            onEmail={() => handleEmail(invoice)}
+                            onDownload={() => handleDownload(invoice)}
+                            onDelete={() => handleDelete(invoice.id)}
+                          />
+                        );
+                      })}
+                    </div>
+                  )
+                )}
+                
+                {/* BUILDERS TAB - Builders List */}
+                {activeTab === 'BUILDERS' && (
+                  clients.length === 0 ? (
+                    <div className="flex items-center justify-center h-full">
+                      <p className="text-gray-400 text-sm">No builders found</p>
+                    </div>
+                  ) : (
+                    <div className="p-6 space-y-3">
+                      {clients.map(builder => (
+                        <button
+                          key={builder.id}
+                          onClick={() => handleBuilderSelect(builder)}
+                          className={`w-full text-left p-4 rounded-lg border transition-all ${
+                            activeBuilderId === builder.id
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <Building2 className={`h-5 w-5 mt-0.5 ${
+                              activeBuilderId === builder.id ? 'text-blue-600' : 'text-gray-400'
+                            }`} />
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-900">{builder.companyName}</h3>
+                              {builder.email && (
+                                <p className="text-sm text-gray-500 mt-0.5">{builder.email}</p>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )
+                )}
+                
+                {/* EXPENSES TAB - Full-width component */}
+                {activeTab === 'EXPENSES' && (
+                  <div className="h-full bg-white p-6">
+                    <Expenses
+                      expenses={expenses}
+                      onAdd={handleAddExpense}
+                      onDelete={handleDeleteExpense}
+                      onBulkAdd={handleBulkAddExpenses}
+                      onBulkDelete={handleBulkDeleteExpenses}
+                      onNavigate={handleNavigate}
+                      onBackup={handleFullBackup}
                     />
-                  );
-                })}
-              </div>
+                  </div>
+                )}
+                
+                {/* REPORTS TAB - Full-width component */}
+                {activeTab === 'REPORTS' && (
+                  <div className="h-full bg-white p-6">
+                    <Reports
+                      invoices={invoices}
+                      expenses={expenses}
+                      onNavigate={handleNavigate}
+                      onBackup={handleFullBackup}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
 
         {/* ==================== RIGHT PANEL (THE EDITOR) ==================== */}
         <div className="absolute right-0 top-0 bottom-0 flex flex-col bg-white overflow-hidden" style={{ width: '50%' }}>
-          {(selectedInvoice || isCreatingNew) ? (
-            <InvoiceFormPanel
-              editInvoice={selectedInvoice}
-              builders={clients.map(c => ({ id: c.id, name: c.companyName, email: c.email }))}
-              onSave={(invoice, action) => handleSaveInvoice(invoice)}
-              onCancel={handleCancelEdit}
-              prefillData={isCreatingNew ? prefillData : undefined}
-              isVisible={true}
-            />
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-gray-400">
-              <div className="text-center">
-                <p className="text-sm font-medium">Select an invoice to edit</p>
-                <p className="text-xs mt-1">or click "Create New" to start</p>
+          {/* INVOICES TAB - Invoice Form */}
+          {activeTab === 'INVOICES' && (
+            (selectedInvoice || isCreatingNew) ? (
+              <InvoiceFormPanel
+                editInvoice={selectedInvoice}
+                builders={clients.map(c => ({ id: c.id, name: c.companyName, email: c.email }))}
+                onSave={(invoice, action) => handleSaveInvoice(invoice)}
+                onCancel={handleCancelEdit}
+                prefillData={isCreatingNew ? prefillData : undefined}
+                isVisible={true}
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-gray-400">
+                <div className="text-center">
+                  <p className="text-sm font-medium">Select an invoice to edit</p>
+                  <p className="text-xs mt-1">or click "Create New" to start</p>
+                </div>
+              </div>
+            )
+          )}
+          
+          {/* BUILDERS TAB - Builder Form */}
+          {activeTab === 'BUILDERS' && (
+            <>
+              {activeBuilderId === null ? (
+                // STATE 1: Empty - Show placeholder
+                <div className="flex-1 flex items-center justify-center bg-gray-50/50">
+                  <div className="text-center text-gray-400">
+                    <Building2 className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm font-medium">Select a builder to view details</p>
+                    <p className="text-xs mt-1">or click "New Builder" to create one</p>
+                  </div>
+                </div>
+              ) : activeBuilderId === "new" ? (
+                // STATE 2: Create Mode - Show empty form
+                <div className="h-full overflow-auto bg-white">
+                  <div className="p-6">
+                    <BuilderForm
+                      mode="create"
+                      initialData={null}
+                      clients={clients}
+                      onSave={handleAddClient}
+                      onCancel={() => setActiveBuilderId(null)}
+                    />
+                  </div>
+                </div>
+              ) : (
+                // STATE 3: Edit Mode - Show form with selected builder data
+                (() => {
+                  const selectedBuilder = clients.find(c => c.id === activeBuilderId);
+                  if (!selectedBuilder) {
+                    // Builder not found - reset to empty
+                    setActiveBuilderId(null);
+                    return null;
+                  }
+                  return (
+                    <div className="h-full overflow-auto bg-white">
+                      <div className="p-6">
+                        <BuilderForm
+                          mode="edit"
+                          initialData={selectedBuilder}
+                          clients={clients}
+                          onSave={handleUpdateClient}
+                          onDelete={handleDeleteClient}
+                          onCancel={() => setActiveBuilderId(null)}
+                        />
+                      </div>
+                    </div>
+                  );
+                })()
+              )}
+            </>
+          )}
+          
+          {/* EXPENSES & REPORTS TABS - No right panel needed (full width on left) */}
+          {(activeTab === 'EXPENSES' || activeTab === 'REPORTS') && (
+            <div className="flex-1 flex items-center justify-center bg-gray-50/50">
+              <div className="text-center text-gray-400">
+                <p className="text-sm">Content displayed on the left panel</p>
               </div>
             </div>
           )}
