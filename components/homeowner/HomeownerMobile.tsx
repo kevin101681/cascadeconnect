@@ -2023,9 +2023,9 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
       className="bg-surface dark:bg-gray-800 rounded-modal border border-surface-outline-variant dark:border-gray-700 mb-6 last:mb-0 flex flex-col"
     >
       <div className="px-6 py-6 border-b border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4 bg-surface-container/30 dark:bg-gray-700/30 flex-shrink-0">
-        <div className="flex items-center justify-between md:justify-center gap-4 w-full md:w-auto">
+        <div className="flex items-center justify-between md:justify-center gap-4 w-full md:w-auto mb-6">
           <div className="flex items-center gap-3">
-            <h3 className={`text-xl font-normal ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
+            <h3 className={`text-2xl font-bold ${isClosed ? 'text-surface-on-variant dark:text-gray-400' : 'text-surface-on dark:text-gray-100'}`}>
               {title}
             </h3>
             {/* New Claim Button - Homeowner View Only, Next to Title */}
@@ -2035,9 +2035,9 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                   e.stopPropagation();
                   onNewClaim();
                 }}
-                className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-primary text-primary-on text-sm font-medium transition-all hover:bg-primary/90 dark:hover:bg-primary/80"
+                className="inline-flex items-center justify-center gap-2 min-h-[44px] px-6 rounded-full bg-primary text-primary-on text-base font-semibold transition-all hover:bg-primary/90 dark:hover:bg-primary/80"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-5 w-5" />
                 Add a Claim
               </button>
             )}
@@ -2049,15 +2049,15 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                 e.stopPropagation();
                 setShowNewClaimModal(true);
               }}
-              className="md:hidden inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-primary text-primary-on text-sm font-medium transition-all hover:bg-primary/90 dark:hover:bg-primary/80"
+              className="md:hidden inline-flex items-center justify-center gap-2 min-h-[44px] px-6 rounded-full bg-primary text-primary-on text-base font-semibold transition-all hover:bg-primary/90 dark:hover:bg-primary/80"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-5 w-5" />
               New Claim
             </button>
           )}
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Filter Buttons - Matching TaskList style */}
+          {/* Filter Buttons - Matching Mobile-First Style with Proper Touch Targets */}
           {setFilter && allClaims && (
             <div className="flex items-center gap-2">
               <button
@@ -2065,7 +2065,7 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                   e.stopPropagation();
                   setFilter('Open');
                 }}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-fit ${
+                className={`px-5 py-2.5 min-h-[44px] rounded-full text-sm font-semibold transition-all min-w-fit ${
                   filter === 'Open'
                     ? 'bg-primary text-primary-on'
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
@@ -2085,7 +2085,7 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                   e.stopPropagation();
                   setFilter('Closed');
                 }}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-fit ${
+                className={`px-5 py-2.5 min-h-[44px] rounded-full text-sm font-semibold transition-all min-w-fit ${
                   filter === 'Closed'
                     ? 'bg-primary text-primary-on'
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
@@ -2105,7 +2105,7 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                   e.stopPropagation();
                   setFilter('All');
                 }}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-fit ${
+                className={`px-5 py-2.5 min-h-[44px] rounded-full text-sm font-semibold transition-all min-w-fit ${
                   filter === 'All'
                     ? 'bg-primary text-primary-on'
                     : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
@@ -2129,9 +2129,9 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                 e.stopPropagation();
                 onExportExcel();
               }}
-              className="hidden md:inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 text-sm font-medium transition-all hover:bg-surface-container-high dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600"
+              className="hidden md:inline-flex items-center justify-center gap-2 min-h-[44px] px-5 rounded-full bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 text-sm font-semibold transition-all hover:bg-surface-container-high dark:hover:bg-gray-600 border border-surface-outline-variant dark:border-gray-600"
             >
-              <FileSpreadsheet className="h-4 w-4" />
+              <FileSpreadsheet className="h-5 w-5" />
             </button>
           )}
         </div>
@@ -2156,87 +2156,87 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                   <button
                     key={claim.id}
                     type="button"
-                    className={`w-full text-left group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer [-webkit-tap-highlight-color:transparent] ${
+                    className={`w-full text-left group flex flex-col rounded-2xl border-2 transition-all overflow-hidden cursor-pointer [-webkit-tap-highlight-color:transparent] ${
                       isCompleted 
                         ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75' 
                         : isReviewed
-                        ? 'bg-green-50 dark:bg-green-950/20 border-surface-outline-variant dark:border-gray-600 shadow-sm md:hover:shadow-elevation-1'
-                        : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm md:hover:shadow-elevation-1'
+                        ? 'bg-green-50 dark:bg-green-950/20 border-surface-outline-variant dark:border-gray-600 shadow-md md:hover:shadow-elevation-2'
+                        : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-md md:hover:shadow-elevation-2'
                     }`}
                     onClick={() => {
                       handleClaimSelection(claim);
                     }}
                   >
-                      <div className="px-4 py-4">
-                        <div className="flex flex-wrap gap-2">
-                            {/* Claim # */}
-                          <span className="inline-flex items-center h-6 text-xs font-medium tracking-wide border border-primary text-primary bg-primary/10 px-3 rounded-full whitespace-nowrap w-fit">
+                      <div className="px-5 py-5">
+                        <div className="flex flex-wrap gap-2.5">
+                            {/* Claim # - Larger & More Prominent */}
+                          <span className="inline-flex items-center h-7 text-sm font-semibold tracking-wide border-2 border-primary text-primary bg-primary/10 px-4 rounded-full whitespace-nowrap w-fit">
                             #{formatClaimNumber(claim)}
                           </span>
                           {/* Status */}
-                          <div className="w-fit h-6 flex items-center"><StatusBadge status={claim.status} /></div>
-                          {/* Title */}
+                          <div className="w-fit h-7 flex items-center"><StatusBadge status={claim.status} /></div>
+                          {/* Title - Improved Typography */}
                           {claim.title && (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
+                            <span className="inline-flex items-center h-7 text-sm font-medium text-surface-on dark:text-gray-200 bg-surface-container-high dark:bg-gray-700 px-4 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
                               {claim.title}
                             </span>
                           )}
-                          {/* Classification */}
-                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
+                          {/* Classification - Lighter Secondary Text */}
+                          <span className="inline-flex items-center h-7 text-sm font-medium text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700/50 px-4 rounded-full border border-surface-outline-variant/50 dark:border-gray-600/50 whitespace-nowrap w-fit">
                             {claim.classification}
                           </span>
                           {/* Homeowner Name */}
                           {(isAdmin || isBuilder) && !effectiveHomeowner && (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
-                              <Building2 className="h-3 w-3 flex-shrink-0" />
+                            <span className="inline-flex items-center h-7 text-sm font-medium text-surface-on-variant dark:text-gray-400 gap-1.5 bg-surface-container dark:bg-gray-700/50 px-4 rounded-full border border-surface-outline-variant/50 dark:border-gray-600/50 whitespace-nowrap w-fit">
+                              <Building2 className="h-4 w-4 flex-shrink-0" />
                               <span>{claim.homeownerName}</span>
                             </span>
                           )}
                           {/* Contractor */}
                           {claim.contractorName ? (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
-                              <HardHat className="h-3 w-3 flex-shrink-0" />
+                            <span className="inline-flex items-center h-7 text-sm font-medium text-surface-on-variant dark:text-gray-400 gap-1.5 bg-surface-container dark:bg-gray-700/50 px-4 rounded-full border border-surface-outline-variant/50 dark:border-gray-600/50 whitespace-nowrap w-fit">
+                              <HardHat className="h-4 w-4 flex-shrink-0" />
                               <span>{claim.contractorName}</span>
                             </span>
                           ) : (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant/60 dark:text-gray-400 gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600 w-fit">
-                              <HardHat className="h-3 w-3 flex-shrink-0 opacity-50" />
+                            <span className="inline-flex items-center h-7 text-sm font-medium text-surface-on-variant/50 dark:text-gray-500 gap-1.5 bg-surface-container/30 dark:bg-gray-700/30 px-4 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant/50 dark:border-gray-600/50 w-fit">
+                              <HardHat className="h-4 w-4 flex-shrink-0 opacity-40" />
                               <span>No Sub Assigned</span>
                             </span>
                           )}
-                          {/* Date Submitted (Created) */}
-                          <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
+                          {/* Date Submitted (Created) - Better Spacing */}
+                          <span className="inline-flex items-center h-7 text-sm font-medium text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700/50 px-4 rounded-full border border-surface-outline-variant/50 dark:border-gray-600/50 whitespace-nowrap w-fit">
                             Created: {formatDate(claim.dateSubmitted)}
                           </span>
                           {/* Scheduled Date */}
                           {scheduledDate && (
-                            <span className="inline-flex items-center h-6 text-xs font-medium gap-1 bg-primary/20 dark:bg-primary/20 text-primary dark:text-primary px-3 rounded-full whitespace-nowrap w-fit">
-                              <Calendar className="h-3 w-3 flex-shrink-0" />
+                            <span className="inline-flex items-center h-7 text-sm font-semibold gap-1.5 bg-primary/20 dark:bg-primary/20 text-primary dark:text-primary px-4 rounded-full whitespace-nowrap w-fit border border-primary/30">
+                              <Calendar className="h-4 w-4 flex-shrink-0" />
                               <span>Scheduled: {formatDate(scheduledDate.date)}</span>
                             </span>
                           )}
                           {/* Service Order Date */}
                           {serviceOrderDate ? (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
-                              <Mail className="h-3 w-3 flex-shrink-0" />
+                            <span className="inline-flex items-center h-7 text-sm font-medium text-surface-on-variant dark:text-gray-400 gap-1.5 bg-surface-container dark:bg-gray-700/50 px-4 rounded-full border border-surface-outline-variant/50 dark:border-gray-600/50 whitespace-nowrap w-fit">
+                              <Mail className="h-4 w-4 flex-shrink-0" />
                               <span>S.O. Sent: {formatDate(serviceOrderDate)}</span>
                             </span>
                           ) : (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant/60 dark:text-gray-400 gap-1 bg-surface-container/50 dark:bg-gray-700/50 px-3 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant dark:border-gray-600 w-fit">
-                              <Mail className="h-3 w-3 flex-shrink-0 opacity-50" />
+                            <span className="inline-flex items-center h-7 text-sm font-medium text-surface-on-variant/50 dark:text-gray-500 gap-1.5 bg-surface-container/30 dark:bg-gray-700/30 px-4 rounded-full whitespace-nowrap border border-dashed border-surface-outline-variant/50 dark:border-gray-600/50 w-fit">
+                              <Mail className="h-4 w-4 flex-shrink-0 opacity-40" />
                               <span>No SO Sent</span>
                             </span>
                           )}
                           {/* Date Evaluated */}
                           {claim.dateEvaluated && (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
+                            <span className="inline-flex items-center h-7 text-sm font-medium text-surface-on-variant dark:text-gray-400 bg-surface-container dark:bg-gray-700/50 px-4 rounded-full border border-surface-outline-variant/50 dark:border-gray-600/50 whitespace-nowrap w-fit">
                               Eval: {formatDate(claim.dateEvaluated)}
                             </span>
                           )}
                           {/* Attachments count */}
                           {claim.attachments && claim.attachments.length > 0 && (
-                            <span className="inline-flex items-center h-6 text-xs font-medium text-surface-on-variant dark:text-gray-300 gap-1 bg-surface-container dark:bg-gray-700 px-3 rounded-full border border-surface-outline-variant dark:border-gray-600 whitespace-nowrap w-fit">
-                              <Paperclip className="h-3 w-3 flex-shrink-0" />
+                            <span className="inline-flex items-center h-7 text-sm font-medium text-surface-on-variant dark:text-gray-400 gap-1.5 bg-surface-container dark:bg-gray-700/50 px-4 rounded-full border border-surface-outline-variant/50 dark:border-gray-600/50 whitespace-nowrap w-fit">
+                              <Paperclip className="h-4 w-4 flex-shrink-0" />
                               {claim.attachments.length}
                             </span>
                           )}
@@ -2420,42 +2420,58 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
       {/* CLAIM DETAIL MODAL - Only show when not on CLAIMS tab (claims tab has inline view) */}
       {selectedClaimForModal && currentTab !== 'CLAIMS' && onUpdateClaim && createPortal(
         <div 
-          className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
+          className="fixed inset-0 z-modal bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
           style={{ overscrollBehavior: 'contain' }}
         >
-          <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[fade-in_0.2s_ease-out] flex flex-col h-[90vh] p-0">
-            <Suspense fallback={
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            }>
-              <ClaimInlineEditor
-                  claim={selectedClaimForModal}
-                  onUpdateClaim={(updatedClaim) => {
-                    if (onUpdateClaim) {
-                      onUpdateClaim(updatedClaim);
-                    }
-                    setSelectedClaimForModal(updatedClaim);
-                  }}
-                  contractors={contractors}
-                  currentUser={currentUser}
-                  userRole={userRole}
-                  onAddInternalNote={onAddInternalNote}
-                  claimMessages={claimMessages.filter(m => m.claimId === selectedClaimForModal.id)}
-                  onTrackClaimMessage={onTrackClaimMessage}
-                  onSendMessage={() => {
-                    // Pre-fill message subject with claim title and open new message modal
-                    if (selectedClaimForModal) {
-                      setNewMessageSubject(selectedClaimForModal.title);
-                    }
-                    setSelectedClaimForModal(null); // Close edit claim modal
-                    setShowNewMessageModal(true);
-                    setCurrentTab('MESSAGES');
-                  }}
-                  onCancel={() => setSelectedClaimForModal(null)}
-                  onNavigate={onNavigate}
-                />
-            </Suspense>
+          {/* Full-Screen Slide-Over (Mobile-First Pattern) */}
+          <div className="fixed inset-0 bg-surface dark:bg-gray-900 animate-[slide-in-right_0.3s_ease-out] flex flex-col">
+            {/* Sticky Header with Large Close Button */}
+            <div className="sticky top-0 z-10 bg-surface dark:bg-gray-900 border-b border-surface-outline-variant dark:border-gray-700 px-4 py-4 flex items-center gap-4">
+              <button
+                onClick={() => setSelectedClaimForModal(null)}
+                className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full hover:bg-surface-container dark:hover:bg-gray-800 transition-colors"
+                aria-label="Close"
+              >
+                <ChevronLeft className="h-6 w-6 text-surface-on dark:text-gray-100" />
+              </button>
+              <h2 className="text-lg font-semibold text-surface-on dark:text-gray-100 flex-1">Edit Claim</h2>
+            </div>
+            
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto">
+              <Suspense fallback={
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+              }>
+                <ClaimInlineEditor
+                    claim={selectedClaimForModal}
+                    onUpdateClaim={(updatedClaim) => {
+                      if (onUpdateClaim) {
+                        onUpdateClaim(updatedClaim);
+                      }
+                      setSelectedClaimForModal(updatedClaim);
+                    }}
+                    contractors={contractors}
+                    currentUser={currentUser}
+                    userRole={userRole}
+                    onAddInternalNote={onAddInternalNote}
+                    claimMessages={claimMessages.filter(m => m.claimId === selectedClaimForModal.id)}
+                    onTrackClaimMessage={onTrackClaimMessage}
+                    onSendMessage={() => {
+                      // Pre-fill message subject with claim title and open new message modal
+                      if (selectedClaimForModal) {
+                        setNewMessageSubject(selectedClaimForModal.title);
+                      }
+                      setSelectedClaimForModal(null); // Close edit claim modal
+                      setShowNewMessageModal(true);
+                      setCurrentTab('MESSAGES');
+                    }}
+                    onCancel={() => setSelectedClaimForModal(null)}
+                    onNavigate={onNavigate}
+                  />
+              </Suspense>
+            </div>
           </div>
         </div>,
         document.body
@@ -2492,32 +2508,28 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
 
       {/* REMOVED: NEW TASK MODAL - Admin-only internal task management */}
 
-      {/* HOMEOWNER MANUAL MODAL */}
+      {/* HOMEOWNER MANUAL MODAL - Full Screen Mobile View */}
       {showManualModal && createPortal(
         <div 
-          className="fixed inset-0 z-backdrop bg-black/60 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
-          onClick={() => {
-            setShowManualModal(false);
-          }}
+          className="fixed inset-0 z-backdrop bg-surface dark:bg-gray-900 flex flex-col animate-fade-in"
         >
-          <div 
-            className="w-full max-w-7xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="relative">
-              {/* Close Button */}
-              <button
-                onClick={() => setShowManualModal(false)}
-                className="absolute -top-12 right-0 p-2 bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors shadow-lg z-base"
-              >
-                <X className="h-5 w-5 text-gray-800 dark:text-gray-100" />
-              </button>
-              
-              {/* Homeowner Manual Component */}
-              <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
-                <HomeownerManual homeownerId={activeHomeowner?.id} />
-              </Suspense>
-            </div>
+          {/* Sticky Header with Large Close Button */}
+          <div className="sticky top-0 z-10 bg-surface dark:bg-gray-900 border-b border-surface-outline-variant dark:border-gray-700 px-4 py-4 flex items-center gap-4">
+            <button
+              onClick={() => setShowManualModal(false)}
+              className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full hover:bg-surface-container dark:hover:bg-gray-800 transition-colors"
+              aria-label="Close"
+            >
+              <ChevronLeft className="h-6 w-6 text-surface-on dark:text-gray-100" />
+            </button>
+            <h2 className="text-lg font-semibold text-surface-on dark:text-gray-100 flex-1">Homeowner Manual</h2>
+          </div>
+          
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto">
+            <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+              <HomeownerManual homeownerId={activeHomeowner?.id} />
+            </Suspense>
           </div>
         </div>,
         document.body
@@ -2789,8 +2801,8 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
           {renderModals()}
         
         <div className={shouldHideDashboardUnderlay ? 'hidden' : 'block'}>
-        {/* Main Layout Container - Sidebar + Content with Staggered Cascade Animation */}
-        <StaggerContainer className={`flex flex-col lg:flex-row gap-6 w-full ${SIDEBAR_CONTENT_PADDING_LEFT} lg:pl-6 pr-4 lg:pr-6 bg-white dark:bg-gray-900`} staggerDelay={0.08}>
+        {/* Main Layout Container - Sidebar + Content with Staggered Cascade Animation - Mobile Padding for Bottom Nav */}
+        <StaggerContainer className={`flex flex-col lg:flex-row gap-6 w-full ${SIDEBAR_CONTENT_PADDING_LEFT} lg:pl-6 pr-4 lg:pr-6 pb-24 lg:pb-6 bg-white dark:bg-gray-900`} staggerDelay={0.08}>
           {/* LEFT SIDEBAR - Homeowner Info Card with Search - HIDDEN ON MOBILE when tab is active */}
           <FadeIn direction="right" className={`transition-all duration-300 ease-in-out lg:flex-shrink-0 rounded-3xl ${currentTab ? 'hidden lg:block' : ''} ${isHomeownerCardCollapsed ? 'w-full lg:w-16' : 'w-full lg:w-72'}`}>
             {/* Search Bar - Admin & Builder Only - Always visible on mobile, top of card on desktop */}
@@ -3219,17 +3231,17 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                       Exclude<TabType, null>,
                       { label: string; icon: React.ReactNode }
                     > = {
-                      CLAIMS: { label: 'Warranty', icon: <ClipboardList className="h-4 w-4" /> },
-                      TASKS: { label: 'Tasks', icon: <CheckSquare className="h-4 w-4" /> },
-                      MESSAGES: { label: 'Messages', icon: <Mail className="h-4 w-4" /> },
-                      DOCUMENTS: { label: 'Docs', icon: <FileText className="h-4 w-4" /> },
-                      MANUAL: { label: 'Manual', icon: <BookOpen className="h-4 w-4" /> },
-                      HELP: { label: 'Help', icon: <HelpCircle className="h-4 w-4" /> },
-                      CALLS: { label: 'Calls', icon: <Phone className="h-4 w-4" /> },
-                      SCHEDULE: { label: 'Schedule', icon: <Calendar className="h-4 w-4" /> },
-                      INVOICES: { label: 'Invoices', icon: <Receipt className="h-4 w-4" /> },
-                      PUNCHLIST: { label: 'BlueTag', icon: <HardHat className="h-4 w-4" /> },
-                      CHAT: { label: 'Chat', icon: <MessageCircle className="h-4 w-4" /> },
+                      CLAIMS: { label: 'Warranty', icon: <ClipboardList className="h-5 w-5" /> },
+                      TASKS: { label: 'Tasks', icon: <CheckSquare className="h-5 w-5" /> },
+                      MESSAGES: { label: 'Messages', icon: <Mail className="h-5 w-5" /> },
+                      DOCUMENTS: { label: 'Docs', icon: <FileText className="h-5 w-5" /> },
+                      MANUAL: { label: 'Manual', icon: <BookOpen className="h-5 w-5" /> },
+                      HELP: { label: 'Help', icon: <HelpCircle className="h-5 w-5" /> },
+                      CALLS: { label: 'Calls', icon: <Phone className="h-5 w-5" /> },
+                      SCHEDULE: { label: 'Schedule', icon: <Calendar className="h-5 w-5" /> },
+                      INVOICES: { label: 'Invoices', icon: <Receipt className="h-5 w-5" /> },
+                      PUNCHLIST: { label: 'BlueTag', icon: <HardHat className="h-5 w-5" /> },
+                      CHAT: { label: 'Chat', icon: <MessageCircle className="h-5 w-5" /> },
                     };
 
                     const { label, icon } = meta[tab] || { label: tab, icon: null };
@@ -3245,15 +3257,15 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                           setCurrentTab(tab);
                         }}
                         className={[
-                          'flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm transition-all duration-300',
+                          'flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 min-h-[48px] text-base transition-all duration-300',
                           // Base state with transparent border
                           'border border-transparent',
                           // Hover state: gray background, raised, shadow
                           'hover:bg-gray-100/50 dark:hover:bg-gray-700/50 hover:-translate-y-0.5 hover:shadow-md',
                           // Active state: white background, blue text & border, RAISED with shadow (LOCKED)
                           isActive
-                            ? '!bg-white dark:!bg-gray-800 !text-primary !border-primary -translate-y-0.5 shadow-md'
-                            : 'bg-transparent text-surface-on dark:text-gray-100 hover:text-primary',
+                            ? '!bg-white dark:!bg-gray-800 !text-primary !border-primary -translate-y-0.5 shadow-md font-semibold'
+                            : 'bg-transparent text-surface-on dark:text-gray-100 hover:text-primary font-medium',
                         ].join(' ')}
                         aria-current={isActive ? 'page' : undefined}
                       >
@@ -3727,6 +3739,56 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
         </FadeIn>
         </StaggerContainer>
         {/* END MAIN LAYOUT CONTAINER */}
+        
+        {/* FIXED BOTTOM NAVIGATION BAR (Mobile-First Pattern) */}
+        <nav className="fixed bottom-0 left-0 right-0 z-sticky bg-surface/95 dark:bg-gray-900/95 backdrop-blur-lg border-t border-surface-outline-variant dark:border-gray-700 safe-area-inset-bottom">
+          <div className="flex items-center justify-around px-2 py-2">
+            {availableTabs.slice(0, 5).map((tab) => {
+              const isActive = currentTab === tab;
+              const meta: Record<
+                Exclude<TabType, null>,
+                { label: string; icon: React.ReactNode }
+              > = {
+                CLAIMS: { label: 'Warranty', icon: <ClipboardList className="h-6 w-6" /> },
+                TASKS: { label: 'Tasks', icon: <CheckSquare className="h-6 w-6" /> },
+                MESSAGES: { label: 'Messages', icon: <Mail className="h-6 w-6" /> },
+                DOCUMENTS: { label: 'Docs', icon: <FileText className="h-6 w-6" /> },
+                MANUAL: { label: 'Manual', icon: <BookOpen className="h-6 w-6" /> },
+                HELP: { label: 'Help', icon: <HelpCircle className="h-6 w-6" /> },
+                CALLS: { label: 'Calls', icon: <Phone className="h-6 w-6" /> },
+                SCHEDULE: { label: 'Schedule', icon: <Calendar className="h-6 w-6" /> },
+                INVOICES: { label: 'Invoices', icon: <Receipt className="h-6 w-6" /> },
+                PUNCHLIST: { label: 'BlueTag', icon: <HardHat className="h-6 w-6" /> },
+                CHAT: { label: 'Chat', icon: <MessageCircle className="h-6 w-6" /> },
+              };
+
+              const { label, icon } = meta[tab] || { label: tab, icon: null };
+
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setCurrentTab(tab)}
+                  className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 px-1 min-h-[56px] rounded-xl transition-all ${
+                    isActive
+                      ? 'text-primary'
+                      : 'text-surface-on-variant dark:text-gray-400 hover:text-primary'
+                  }`}
+                  aria-label={label}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  <div className={`transition-transform ${isActive ? 'scale-110' : ''}`}>
+                    {icon}
+                  </div>
+                  <span className={`text-[10px] font-medium ${isActive ? 'font-semibold' : ''}`}>
+                    {label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+        
         </div>
 
         {/* REMOVED: Floating Team Chat (Admin) - redundant with Communication section button */}
@@ -3763,33 +3825,33 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
           </>
         )} */}
 
-        {/* DOCUMENTS MODAL - Now opened via button in homeowner card */}
+        {/* DOCUMENTS MODAL - Full Screen Mobile View */}
         {showDocsModal && userRole !== UserRole.HOMEOWNER && createPortal(
-          <div 
-            className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setShowDocsModal(false);
-            }}
-          >
-            <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] max-h-[90vh] flex flex-col">
-               <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center shrink-0">
-                  <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-primary" />
-                    Account Documents
-                  </h2>
-                  <button onClick={() => setShowDocsModal(false)} className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
-                    <X className="h-5 w-5" />
-                  </button>
-               </div>
-               
-               <div className="p-6 bg-surface dark:bg-gray-800 flex-1 overflow-y-auto">
-                 {/* Thumbnail Grid */}
-                 {displayDocuments.length === 0 ? (
-                   <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-12 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
-                     No documents uploaded for this account.
-                   </div>
-                 ) : (
-                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="fixed inset-0 z-modal bg-surface dark:bg-gray-900 flex flex-col animate-fade-in">
+            {/* Sticky Header with Large Close Button */}
+            <div className="sticky top-0 z-10 bg-surface dark:bg-gray-900 border-b border-surface-outline-variant dark:border-gray-700 px-4 py-4 flex items-center gap-4">
+              <button
+                onClick={() => setShowDocsModal(false)}
+                className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full hover:bg-surface-container dark:hover:bg-gray-800 transition-colors"
+                aria-label="Close"
+              >
+                <ChevronLeft className="h-6 w-6 text-surface-on dark:text-gray-100" />
+              </button>
+              <div className="flex items-center gap-2 flex-1">
+                <FileText className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold text-surface-on dark:text-gray-100">Account Documents</h2>
+              </div>
+            </div>
+            
+            {/* Scrollable Content with Mobile Spacing */}
+            <div className="flex-1 overflow-y-auto px-4 py-6">
+              {/* Thumbnail Grid - Full Width Cards */}
+              {displayDocuments.length === 0 ? (
+                <div className="text-center text-sm text-surface-on-variant dark:text-gray-400 py-12 border border-dashed border-surface-outline-variant dark:border-gray-600 rounded-xl bg-surface-container/30 dark:bg-gray-700/30">
+                  No documents uploaded for this account.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                      {displayDocuments.map(doc => {
                        const isPDF = doc.type === 'PDF' || doc.name.toLowerCase().endsWith('.pdf') || 
                                     doc.url.startsWith('data:application/pdf') || 
@@ -3967,101 +4029,82 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                      })}
                    </div>
                  )}
-                 
-                 {/* Upload Action */}
-                 <div className="pt-6 mt-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-center shrink-0">
-                   <label className={`cursor-pointer inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full transition-colors ${isDocUploading ? 'bg-primary/50 border-primary/30 cursor-wait' : 'bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80'} text-sm font-medium`}>
-                     {isDocUploading ? (
-                       <Loader2 className="h-4 w-4 animate-spin" />
-                     ) : (
-                       <Upload className="h-4 w-4" />
-                     )}
-                     {isDocUploading ? 'Uploading...' : 'Upload New Document'}
-                     <input type="file" className="hidden" onChange={handleFileUpload} disabled={isDocUploading} />
-                   </label>
-                 </div>
                </div>
-            </div>
-          </div>,
-          document.body
-        )}
+               
+               {/* Sticky Bottom Footer for Upload (Mobile-First Pattern) */}
+               <div className="sticky bottom-0 z-10 bg-surface dark:bg-gray-900 border-t border-surface-outline-variant dark:border-gray-700 p-4">
+                 <label className={`w-full flex items-center justify-center gap-2 min-h-[48px] px-6 py-3 rounded-full transition-colors ${isDocUploading ? 'bg-primary/50 border-primary/30 cursor-wait' : 'bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80 cursor-pointer'} text-base font-semibold`}>
+                   {isDocUploading ? (
+                     <Loader2 className="h-5 w-5 animate-spin" />
+                   ) : (
+                     <Upload className="h-5 w-5" />
+                   )}
+                   {isDocUploading ? 'Uploading...' : 'Upload New Document'}
+                   <input type="file" className="hidden" onChange={handleFileUpload} disabled={isDocUploading} />
+                 </label>
+               </div>
+            </div>,
+            document.body
+          )}
 
         {/* INVITE MODAL */}
-        {/* Sub List Modal */}
+        {/* Sub List Modal - Full Screen with Card Layout (No Tables) */}
         {showSubListModal && targetHomeowner.subcontractorList && targetHomeowner.subcontractorList.length > 0 && createPortal(
-          <div 
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) {
-                setShowSubListModal(false);
-              }
-            }}
-          >
-            <div className="bg-surface dark:bg-gray-800 w-full max-w-6xl max-h-[85vh] rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 flex flex-col">
-              {/* Header */}
-              <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 flex justify-between items-center sticky top-0 z-sticky flex-shrink-0">
-                <div>
-                  <h2 className="text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                    <HardHat className="h-6 w-6 text-primary" />
-                    Subcontractor List - {targetHomeowner.name}
-                  </h2>
-                  <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
-                    {targetHomeowner.subcontractorList.length} subcontractor{targetHomeowner.subcontractorList.length !== 1 ? 's' : ''} found
-                  </p>
+          <div className="fixed inset-0 z-[100] bg-surface dark:bg-gray-900 flex flex-col animate-fade-in">
+            {/* Sticky Header with Large Close Button */}
+            <div className="sticky top-0 z-10 bg-surface dark:bg-gray-900 border-b border-surface-outline-variant dark:border-gray-700 px-4 py-4 flex items-center gap-4">
+              <button
+                onClick={() => setShowSubListModal(false)}
+                className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full hover:bg-surface-container dark:hover:bg-gray-800 transition-colors"
+                aria-label="Close"
+              >
+                <ChevronLeft className="h-6 w-6 text-surface-on dark:text-gray-100" />
+              </button>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <HardHat className="h-5 w-5 text-primary" />
+                  <h2 className="text-lg font-semibold text-surface-on dark:text-gray-100">Subcontractor List</h2>
                 </div>
-                <button 
-                  onClick={() => setShowSubListModal(false)} 
-                  className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100 p-2 rounded-full hover:bg-white/10 dark:hover:bg-gray-600/50"
-                >
-                  <X className="h-6 w-6" />
-                </button>
+                <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-0.5">
+                  {targetHomeowner.name} • {targetHomeowner.subcontractorList.length} subcontractor{targetHomeowner.subcontractorList.length !== 1 ? 's' : ''}
+                </p>
               </div>
-              
-              {/* Content */}
-              <div className="p-6 overflow-y-auto flex-1 min-h-0">
-                <div className="bg-surface-container dark:bg-gray-700 rounded-xl border border-surface-outline-variant dark:border-gray-600 overflow-hidden">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="bg-surface-container-high dark:bg-gray-800 sticky top-0">
-                        <tr>
-                          {Object.keys(targetHomeowner.subcontractorList[0] || {}).map((header, idx) => (
-                            <th 
-                              key={idx}
-                              className="px-4 py-3 text-left text-xs font-semibold text-surface-on-variant dark:text-gray-400 uppercase tracking-wider border-b border-surface-outline-variant dark:border-gray-600"
-                            >
-                              {header}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-surface-outline-variant dark:divide-gray-700">
-                        {targetHomeowner.subcontractorList.map((row, rowIdx) => (
-                          <tr 
-                            key={rowIdx}
-                            className="hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors"
-                          >
-                            {Object.values(row).map((cell: any, cellIdx) => (
-                              <td 
-                                key={cellIdx}
-                                className="px-4 py-3 text-surface-on dark:text-gray-200 text-xs"
-                              >
-                                {cell || '-'}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+            </div>
+            
+            {/* Scrollable Content - Card Stack Layout */}
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              <div className="space-y-3">
+                {targetHomeowner.subcontractorList.map((row, rowIdx) => {
+                  const entries = Object.entries(row);
+                  return (
+                    <div 
+                      key={rowIdx}
+                      className="bg-surface-container dark:bg-gray-800 rounded-2xl border border-surface-outline-variant dark:border-gray-600 shadow-sm p-4"
+                    >
+                      {entries.map(([key, value], idx) => (
+                        <div key={idx} className={idx > 0 ? 'mt-3 pt-3 border-t border-surface-outline-variant/30 dark:border-gray-700/50' : ''}>
+                          <div className="text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider mb-1">
+                            {key}
+                          </div>
+                          <div className="text-sm text-surface-on dark:text-gray-200">
+                            {value || '-'}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
               </div>
-              
-              {/* Footer */}
-              <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end flex-shrink-0">
-                <Button onClick={() => setShowSubListModal(false)} variant="filled">
-                  Close
-                </Button>
-              </div>
+            </div>
+            
+            {/* Sticky Bottom Footer */}
+            <div className="sticky bottom-0 z-10 bg-surface dark:bg-gray-900 border-t border-surface-outline-variant dark:border-gray-700 p-4">
+              <button
+                onClick={() => setShowSubListModal(false)}
+                className="w-full min-h-[48px] px-6 py-3 rounded-full bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80 text-base font-semibold transition-colors"
+              >
+                Close
+              </button>
             </div>
           </div>,
           document.body
@@ -4150,202 +4193,205 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
           document.body
         )}
 
+        {/* INVITE MODAL - Full Screen Mobile View */}
         {showInviteModal && createPortal(
-          <div
-            className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setShowInviteModal(false);
-            }}
-          >
-             <div className="bg-surface dark:bg-gray-800 w-full max-w-lg rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out] max-h-[85vh] flex flex-col">
-                <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700 flex-shrink-0">
-                  <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                    <Mail className="h-5 w-5 text-primary" />
-                    Invite Homeowner
-                  </h2>
-                  <button onClick={() => setShowInviteModal(false)} className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
+          <div className="fixed inset-0 z-modal bg-surface dark:bg-gray-900 flex flex-col animate-fade-in">
+            {/* Sticky Header with Large Close Button */}
+            <div className="sticky top-0 z-10 bg-surface dark:bg-gray-900 border-b border-surface-outline-variant dark:border-gray-700 px-4 py-4 flex items-center gap-4">
+              <button
+                onClick={() => setShowInviteModal(false)}
+                className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full hover:bg-surface-container dark:hover:bg-gray-800 transition-colors"
+                aria-label="Close"
+              >
+                <ChevronLeft className="h-6 w-6 text-surface-on dark:text-gray-100" />
+              </button>
+              <div className="flex items-center gap-2 flex-1">
+                <Mail className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold text-surface-on dark:text-gray-100">Invite Homeowner</h2>
+              </div>
+            </div>
 
-                <div className="p-6 space-y-4 bg-surface dark:bg-gray-800 overflow-y-auto flex-1 min-h-0">
-                  <div>
-                    <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-300 mb-1">Full Name</label>
-                    <input 
-                      type="text" 
-                      className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                      value={inviteName}
-                      onChange={(e) => setInviteName(e.target.value)}
-                    />
+            {/* Scrollable Content with Proper Mobile Spacing */}
+            <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+              <div>
+                <label className="block text-sm font-semibold text-surface-on dark:text-gray-200 mb-2">Full Name</label>
+                <input 
+                  type="text" 
+                  className="w-full bg-surface-container dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-surface-on dark:text-gray-200 mb-2">Email Address</label>
+                <input 
+                  type="email" 
+                  className="w-full bg-surface-container dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-surface-on dark:text-gray-200 mb-2">Invitation Message</label>
+                {isDrafting ? (
+                  <div className="w-full bg-surface-container dark:bg-gray-800 rounded-xl px-4 py-3 flex items-center justify-center min-h-[200px] border border-surface-outline-variant dark:border-gray-600">
+                    <div className="flex items-center gap-2 text-surface-on-variant dark:text-gray-400">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      <span className="text-sm">Drafting email...</span>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-300 mb-1">Email Address</label>
-                    <input 
-                      type="email" 
-                      className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-surface-on-variant dark:text-gray-300 mb-1">Invitation Message</label>
-                    {isDrafting ? (
-                      <div className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 flex items-center justify-center min-h-[200px]">
-                        <div className="flex items-center gap-2 text-surface-on-variant dark:text-gray-400">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          <span className="text-sm">Drafting email...</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <textarea
-                        rows={12}
-                        className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none text-xs leading-relaxed"
-                        value={inviteBody}
-                        onChange={(e) => setInviteBody(e.target.value)}
-                      />
-                    )}
-                  </div>
-                </div>
+                ) : (
+                  <textarea
+                    rows={12}
+                    className="w-full bg-surface-container dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none resize-none leading-relaxed"
+                    value={inviteBody}
+                    onChange={(e) => setInviteBody(e.target.value)}
+                  />
+                )}
+              </div>
+            </div>
 
-                <div className="p-4 flex justify-end gap-3 flex-shrink-0">
-                  <Button variant="text" onClick={() => setShowInviteModal(false)}>Cancel</Button>
-                  <Button variant="filled" onClick={handleSendInvite} disabled={!inviteEmail || !inviteBody || isDrafting} icon={<Send className="h-4 w-4" />}>
-                    Send Invitation
-                  </Button>
-                </div>
-             </div>
+            {/* Sticky Bottom Footer with Full-Width Button */}
+            <div className="sticky bottom-0 z-10 bg-surface dark:bg-gray-900 border-t border-surface-outline-variant dark:border-gray-700 p-4">
+              <button
+                onClick={handleSendInvite}
+                disabled={!inviteEmail || !inviteBody || isDrafting}
+                className="w-full min-h-[48px] px-6 py-3 rounded-full bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80 disabled:bg-surface-container disabled:text-surface-on-variant disabled:cursor-not-allowed text-base font-semibold transition-colors flex items-center justify-center gap-2"
+              >
+                <Send className="h-5 w-5" />
+                Send Invitation
+              </button>
+            </div>
           </div>,
           document.body
         )}
 
-        {/* EDIT HOMEOWNER MODAL */}
+        {/* EDIT HOMEOWNER MODAL - Full Screen Mobile View */}
         {showEditHomeownerModal && createPortal(
-          <div
-            className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-[backdrop-fade-in_0.2s_ease-out]"
-            onClick={(e) => {
-              if (e.target === e.currentTarget) setShowEditHomeownerModal(false);
-            }}
-          >
-             <div className="bg-surface dark:bg-gray-800 w-full max-w-2xl rounded-3xl shadow-elevation-3 overflow-hidden animate-[scale-in_0.2s_ease-out]">
-                <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700">
-                  <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-                    <Edit2 className="h-5 w-5 text-primary" />
-                    Edit Homeowner Information
-                  </h2>
-                  <button onClick={() => setShowEditHomeownerModal(false)} className="text-surface-on-variant dark:text-gray-400 hover:text-surface-on dark:hover:text-gray-100">
-                    <X className="h-5 w-5" />
-                  </button>
+          <div className="fixed inset-0 z-modal bg-surface dark:bg-gray-900 flex flex-col animate-fade-in">
+            {/* Sticky Header with Large Close Button */}
+            <div className="sticky top-0 z-10 bg-surface dark:bg-gray-900 border-b border-surface-outline-variant dark:border-gray-700 px-4 py-4 flex items-center gap-4">
+              <button
+                onClick={() => setShowEditHomeownerModal(false)}
+                className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full hover:bg-surface-container dark:hover:bg-gray-800 transition-colors"
+                aria-label="Close"
+              >
+                <ChevronLeft className="h-6 w-6 text-surface-on dark:text-gray-100" />
+              </button>
+              <div className="flex items-center gap-2 flex-1">
+                <Edit2 className="h-5 w-5 text-primary" />
+                <h2 className="text-lg font-semibold text-surface-on dark:text-gray-100">Edit Homeowner</h2>
+              </div>
+            </div>
+            
+            {/* Scrollable Form with Mobile Spacing */}
+            <form onSubmit={handleSaveHomeowner} className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-surface-on dark:text-gray-200 mb-2">Full Name</label>
+                  <input 
+                    type="text" 
+                    required
+                    className="w-full bg-surface-container dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-surface-on dark:text-gray-200 mb-2">Email</label>
+                  <input 
+                    type="email" 
+                    required
+                    className="w-full bg-surface-container dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-surface-on dark:text-gray-200 mb-2">Phone</label>
+                  <input 
+                    type="tel" 
+                    required
+                    className="w-full bg-surface-container dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                  />
                 </div>
                 
-                <form onSubmit={handleSaveHomeowner} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto bg-surface dark:bg-gray-800">
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="col-span-1 md:col-span-2">
-                        <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Full Name</label>
-                        <input 
-                          type="text" 
-                          required
-                          className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                          value={editName}
-                          onChange={(e) => setEditName(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Email</label>
-                        <input 
-                          type="email" 
-                          required
-                          className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                          value={editEmail}
-                          onChange={(e) => setEditEmail(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Phone</label>
-                        <input 
-                          type="tel" 
-                          required
-                          className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                          value={editPhone}
-                          onChange={(e) => setEditPhone(e.target.value)}
-                        />
-                      </div>
-                      
-                      {/* Split Address Fields */}
-                      <div className="col-span-1 md:col-span-2">
-                        <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Street Address</label>
-                        <input 
-                          type="text" 
-                          required
-                          className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                          value={editStreet}
-                          onChange={(e) => setEditStreet(e.target.value)}
-                        />
-                      </div>
-                      <div className="col-span-1 md:col-span-2 grid grid-cols-6 gap-2">
-                         <div className="col-span-3">
-                           <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">City</label>
-                           <input type="text" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={editCity} onChange={(e) => setEditCity(e.target.value)} />
-                         </div>
-                         <div className="col-span-1">
-                           <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">State</label>
-                           <input type="text" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={editState} onChange={(e) => setEditState(e.target.value)} />
-                         </div>
-                         <div className="col-span-2">
-                           <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Zip</label>
-                           <input type="text" required className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none" value={editZip} onChange={(e) => setEditZip(e.target.value)} />
-                         </div>
-                      </div>
+                {/* Address Fields with More Spacing */}
+                <div>
+                  <label className="block text-sm font-semibold text-surface-on dark:text-gray-200 mb-2">Street Address</label>
+                  <input 
+                    type="text" 
+                    required
+                    className="w-full bg-surface-container dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                    value={editStreet}
+                    onChange={(e) => setEditStreet(e.target.value)}
+                  />
+                </div>
+                <div className="grid grid-cols-6 gap-3">
+                  <div className="col-span-3">
+                    <label className="block text-sm font-semibold text-surface-on dark:text-gray-200 mb-2">City</label>
+                    <input type="text" required className="w-full bg-surface-container dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" value={editCity} onChange={(e) => setEditCity(e.target.value)} />
+                  </div>
+                  <div className="col-span-1">
+                    <label className="block text-sm font-semibold text-surface-on dark:text-gray-200 mb-2">State</label>
+                    <input type="text" required className="w-full bg-surface-container dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" value={editState} onChange={(e) => setEditState(e.target.value)} />
+                  </div>
+                  <div className="col-span-2">
+                    <label className="block text-sm font-semibold text-surface-on dark:text-gray-200 mb-2">Zip</label>
+                    <input type="text" required className="w-full bg-surface-container dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none" value={editZip} onChange={(e) => setEditZip(e.target.value)} />
+                  </div>
+                </div>
 
-                      <div>
-                        <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Builder</label>
-                        <div className="relative">
-                          <select 
-                            required
-                            className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 pr-10 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none appearance-none"
-                            value={editBuilderId}
-                            onChange={(e) => setEditBuilderId(e.target.value)}
-                          >
-                            <option value="">Select Builder...</option>
-                            {builderUsers.map(bu => (
-                              <option key={bu.id} value={bu.id}>{bu.name}</option>
-                            ))}
-                          </select>
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-                            <div className="w-6 h-6 rounded-full bg-surface-container dark:bg-gray-600 flex items-center justify-center">
-                              <ChevronDown className="h-3.5 w-3.5 text-surface-on-variant dark:text-gray-400" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                       <div>
-                        <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Closing Date</label>
-                        <input 
-                          type="date" 
-                          required
-                          className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                          value={editClosingDate}
-                          onChange={(e) => setEditClosingDate(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Job Name</label>
-                        <input 
-                          type="text" 
-                          className="w-full bg-surface-container-high dark:bg-gray-700 rounded-lg px-3 py-2 text-surface-on dark:text-gray-100 border-transparent focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                          value={editJobName}
-                          onChange={(e) => setEditJobName(e.target.value)}
-                        />
-                      </div>
-                   </div>
+                <div>
+                  <label className="block text-sm font-semibold text-surface-on dark:text-gray-200 mb-2">Builder</label>
+                  <div className="relative">
+                    <select 
+                      required
+                      className="w-full bg-surface-container dark:bg-gray-800 rounded-xl px-4 py-3 pr-10 text-base text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none appearance-none"
+                      value={editBuilderId}
+                      onChange={(e) => setEditBuilderId(e.target.value)}
+                    >
+                      <option value="">Select Builder...</option>
+                      {builderUsers.map(bu => (
+                        <option key={bu.id} value={bu.id}>{bu.name}</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <ChevronDown className="h-5 w-5 text-surface-on-variant dark:text-gray-400" />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-surface-on dark:text-gray-200 mb-2">Closing Date</label>
+                  <input 
+                    type="date" 
+                    required
+                    className="w-full bg-surface-container dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                    value={editClosingDate}
+                    onChange={(e) => setEditClosingDate(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-surface-on dark:text-gray-200 mb-2">Job Name</label>
+                  <input 
+                    type="text" 
+                    className="w-full bg-surface-container dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-surface-on dark:text-gray-100 border border-surface-outline-variant dark:border-gray-600 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                    value={editJobName}
+                    onChange={(e) => setEditJobName(e.target.value)}
+                  />
+                </div>
+              </div>
 
-                   {/* Sub Sheet Uploader */}
-                   <div className="col-span-1 md:col-span-2 mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-700">
-                     <label className="block text-xs font-medium text-surface-on-variant dark:text-gray-400 mb-1">Subcontractor List (Upload)</label>
-                     <div className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-xl hover:bg-surface-container dark:hover:bg-gray-700 transition-colors ${!editSubFile ? 'border-primary/50 dark:border-primary/30 bg-primary/5 dark:bg-primary/10' : 'border-surface-outline-variant dark:border-gray-600'}`}>
-                       <div className="space-y-1 text-center">
-                         <Upload className="mx-auto h-8 w-8 text-surface-outline-variant dark:text-gray-500" />
+                   {/* Sub Sheet Uploader with Better Mobile Spacing */}
+                   <div className="pt-6 mt-6 border-t border-surface-outline-variant dark:border-gray-700">
+                     <label className="block text-sm font-semibold text-surface-on dark:text-gray-200 mb-2">Subcontractor List (Upload)</label>
+                     <div className={`mt-2 flex justify-center px-6 pt-6 pb-6 border-2 border-dashed rounded-2xl hover:bg-surface-container/50 dark:hover:bg-gray-800/50 transition-colors ${!editSubFile ? 'border-primary/50 dark:border-primary/30 bg-primary/5 dark:bg-primary/10' : 'border-surface-outline-variant dark:border-gray-600'}`}>
+                       <div className="space-y-2 text-center">
+                         <Upload className="mx-auto h-10 w-10 text-surface-outline-variant dark:text-gray-500" />
                          <div className="flex text-sm text-surface-on-variant dark:text-gray-400 justify-center">
-                           <label className="relative cursor-pointer rounded-md font-medium text-primary hover:text-primary/80 focus-within:outline-none">
+                           <label className="relative cursor-pointer rounded-md font-semibold text-primary hover:text-primary/80 focus-within:outline-none">
                              <span>{editSubFile ? 'Change file' : 'Upload a file'}</span>
                              <input 
                                type="file" 
@@ -4356,15 +4402,15 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                            </label>
                            {!editSubFile && <p className="pl-1">or drag and drop</p>}
                          </div>
-                         <p className="text-xs text-surface-outline-variant dark:text-gray-500">
+                         <p className="text-sm text-surface-outline-variant dark:text-gray-500">
                             {editSubFile ? editSubFile.name : 'CSV, XLS, XLSX up to 10MB'}
                          </p>
                        </div>
                      </div>
                      
-                     {/* Parsed Subcontractors Table */}
+                     {/* Parsed Subcontractors - Card Layout */}
                      {isParsingSubs && (
-                       <div className="mt-4 p-4 bg-surface-container dark:bg-gray-700 rounded-lg text-center">
+                       <div className="mt-4 p-4 bg-surface-container dark:bg-gray-700 rounded-xl text-center">
                          <p className="text-sm text-surface-on-variant dark:text-gray-400">Parsing spreadsheet...</p>
                        </div>
                      )}
@@ -4377,69 +4423,52 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                              Subcontractors ({editParsedSubs.length})
                            </h4>
                          </div>
-                         <div className="overflow-x-auto max-h-64 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                           <table className="w-full text-sm">
-                             <thead className="bg-surface-container-high dark:bg-gray-800 sticky top-0">
-                               <tr>
-                                 {Object.keys(editParsedSubs[0] || {}).map((header, idx) => (
-                                   <th 
-                                     key={idx}
-                                     className="px-3 py-2 text-left text-xs font-semibold text-surface-on-variant dark:text-gray-400 uppercase tracking-wider border-b border-surface-outline-variant dark:border-gray-600"
-                                   >
-                                     {header}
-                                   </th>
+                         {/* Card Stack Instead of Table */}
+                         <div className="overflow-y-auto max-h-64 p-3 space-y-2">
+                           {editParsedSubs.map((row, rowIdx) => {
+                             const entries = Object.entries(row);
+                             return (
+                               <div key={rowIdx} className="bg-surface-container-high dark:bg-gray-800 rounded-lg p-3 border border-surface-outline-variant/30 dark:border-gray-700/50">
+                                 {entries.map(([key, value], idx) => (
+                                   <div key={idx} className={idx > 0 ? 'mt-2 pt-2 border-t border-surface-outline-variant/20 dark:border-gray-700/30' : ''}>
+                                     <div className="text-xs font-medium text-surface-on-variant dark:text-gray-400 uppercase tracking-wider">
+                                       {key}
+                                     </div>
+                                     <div className="text-xs text-surface-on dark:text-gray-200 mt-0.5">
+                                       {value || '-'}
+                                     </div>
+                                   </div>
                                  ))}
-                               </tr>
-                             </thead>
-                             <tbody className="divide-y divide-surface-outline-variant dark:divide-gray-700">
-                               {editParsedSubs.map((row, rowIdx) => (
-                                 <tr 
-                                   key={rowIdx}
-                                   className="hover:bg-surface-container-high dark:hover:bg-gray-800 transition-colors"
-                                 >
-                                   {Object.values(row).map((cell: any, cellIdx) => (
-                                     <td 
-                                       key={cellIdx}
-                                       className="px-3 py-2 text-surface-on dark:text-gray-200 text-xs"
-                                     >
-                                       {cell || '-'}
-                                     </td>
-                                   ))}
-                                 </tr>
-                               ))}
-                             </tbody>
-                           </table>
+                               </div>
+                             );
+                           })}
                          </div>
                        </div>
                      )}
                    </div>
-
-                   <div className="p-4 flex justify-end gap-3 -mx-6 -mb-6 mt-6">
-                      <Button 
-                        variant="filled" 
-                        onClick={() => setShowEditHomeownerModal(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button 
-                        variant="filled" 
-                        type="submit"
-                        icon={<Edit2 className="h-4 w-4" />}
-                      >
-                        Save Changes
-                      </Button>
-                      <Button 
-                        variant="filled" 
-                        onClick={handleSaveAndInvite}
-                        disabled={isDrafting}
-                        icon={isDrafting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                      >
-                        Save + Invite
-                      </Button>
-                   </div>
                 </form>
-             </div>
-          </div>,
+                
+                {/* Sticky Bottom Footer with Action Buttons */}
+                <div className="sticky bottom-0 z-10 bg-surface dark:bg-gray-900 border-t border-surface-outline-variant dark:border-gray-700 p-4 space-y-3">
+                  <button
+                    type="submit"
+                    onClick={handleSaveHomeowner}
+                    className="w-full min-h-[48px] px-6 py-3 rounded-full bg-primary text-primary-on hover:bg-primary/90 dark:hover:bg-primary/80 text-base font-semibold transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Edit2 className="h-5 w-5" />
+                    Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveAndInvite}
+                    disabled={isDrafting}
+                    className="w-full min-h-[48px] px-6 py-3 rounded-full bg-surface-container dark:bg-gray-800 text-surface-on dark:text-gray-100 hover:bg-surface-container-high dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-base font-semibold transition-colors flex items-center justify-center gap-2 border border-surface-outline-variant dark:border-gray-600"
+                  >
+                    {isDrafting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                    Save + Invite
+                  </button>
+                </div>
+             </div>,
           document.body
         )}
 
