@@ -1,7 +1,14 @@
-import React from 'react';
-import { Smartphone, Monitor, TrendingDown, AlertTriangle, Chrome, Globe, BarChart3, PieChart, Table2, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Smartphone, Monitor, TrendingDown, AlertTriangle, Chrome, Globe, BarChart3, PieChart, Table2, RefreshCw, Loader2 } from 'lucide-react';
 import { Card } from '../ui/card';
 import Button from '../Button';
+import {
+  fetchAllPostHogAnalytics,
+  isPostHogConfigured,
+  type DeviceVolumeData,
+  type FunnelStepData,
+  type BrowserData,
+} from '../../services/posthogAnalyticsService';
 
 /**
  * PostHog Operational Efficiency Tab
@@ -20,73 +27,64 @@ import Button from '../Button';
  * 3. "claim_submitted" - When claim is successfully saved to database
  *    Properties: { device_type, browser, browser_version, claim_id }
  * 
- * IMPLEMENTATION NOTES:
- * --------------------
- * Add trackEvent() calls to:
- * - components/NewClaimForm.tsx (componentDidMount → "claim_started")
- * - lib/services/uploadService.ts (after success → "claim_photo_uploaded")
- * - App.tsx or NewClaimForm.tsx (after DB write → "claim_submitted")
- * 
  * PostHog automatically captures $device_type, $browser, $browser_version
  */
-
-interface DeviceVolumeData {
-  mobile: number;
-  desktop: number;
-}
-
-interface FunnelStepData {
-  step: string;
-  mobile: number;
-  desktop: number;
-  mobileDropoff?: number;
-  desktopDropoff?: number;
-}
-
-interface BrowserData {
-  browser: string;
-  version: string;
-  uniqueUsers: number;
-  completionRate: number;
-  avgTimeToComplete: string;
-}
 
 interface PostHogTabProps {
   onRefresh?: () => void;
   loading?: boolean;
 }
 
-/**
- * MOCK DATA
- * Replace with actual PostHog API calls
- */
-const mockDeviceVolume: DeviceVolumeData = {
-  mobile: 127,
-  desktop: 89
-};
+const PostHogTab: React.FC<PostHogTabProps> = ({ onRefresh, loading: externalLoading = false }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deviceVolume, setDeviceVolume] = useState<DeviceVolumeData>({ mobile: 0, desktop: 0, totalSubmissions: 0 });
+  const [funnelData, setFunnelData] = useState<FunnelStepData[]>([]);
+  const [browserData, setBrowserData] = useState<BrowserData[]>([]);
 
-const mockFunnelData: FunnelStepData[] = [
-  { step: 'Started Claim', mobile: 150, desktop: 95 },
-  { step: 'Uploaded Photo', mobile: 98, desktop: 91, mobileDropoff: 34.7, desktopDropoff: 4.2 },
-  { step: 'Submitted Claim', mobile: 127, desktop: 89, mobileDropoff: 15.3, desktopDropoff: 6.3 }
-];
+  const loadData = async () => {
+    setIsLoading(true);
+    setError(null);
 
-const mockBrowserData: BrowserData[] = [
-  { browser: 'Chrome', version: '131.x', uniqueUsers: 89, completionRate: 94.2, avgTimeToComplete: '3m 12s' },
-  { browser: 'Safari', version: '18.x', uniqueUsers: 67, completionRate: 91.0, avgTimeToComplete: '3m 45s' },
-  { browser: 'Safari', version: '17.x (iOS)', uniqueUsers: 43, completionRate: 68.4, avgTimeToComplete: '6m 22s' },
-  { browser: 'Edge', version: '131.x', uniqueUsers: 18, completionRate: 88.9, avgTimeToComplete: '3m 30s' },
-  { browser: 'Firefox', version: '133.x', uniqueUsers: 12, completionRate: 83.3, avgTimeToComplete: '4m 05s' },
-  { browser: 'Safari', version: '16.x (iOS)', uniqueUsers: 8, completionRate: 50.0, avgTimeToComplete: '8m 41s' }
-];
+    try {
+      if (!isPostHogConfigured()) {
+        throw new Error(
+          'PostHog not configured. Please set VITE_POSTHOG_PROJECT_ID and VITE_POSTHOG_PERSONAL_API_KEY in your .env.local file.'
+        );
+      }
 
-const PostHogTab: React.FC<PostHogTabProps> = ({ onRefresh, loading = false }) => {
-  const totalSubmissions = mockDeviceVolume.mobile + mockDeviceVolume.desktop;
-  const mobilePercentage = ((mockDeviceVolume.mobile / totalSubmissions) * 100).toFixed(1);
-  const desktopPercentage = ((mockDeviceVolume.desktop / totalSubmissions) * 100).toFixed(1);
+      const data = await fetchAllPostHogAnalytics();
+      setDeviceVolume(data.deviceVolume);
+      setFunnelData(data.funnelData);
+      setBrowserData(data.browserData);
+    } catch (err) {
+      console.error('Failed to load PostHog data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load analytics data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleRefresh = () => {
+    loadData();
+    if (onRefresh) {
+      onRefresh();
+    }
+  };
+
+  const loading = isLoading || externalLoading;
+  const totalSubmissions = deviceVolume.totalSubmissions || deviceVolume.mobile + deviceVolume.desktop;
+  const mobilePercentage = totalSubmissions > 0 ? ((deviceVolume.mobile / totalSubmissions) * 100).toFixed(1) : '0';
+  const desktopPercentage = totalSubmissions > 0 ? ((deviceVolume.desktop / totalSubmissions) * 100).toFixed(1) : '0';
 
   // Calculate max values for funnel visualization
-  const maxFunnelValue = Math.max(...mockFunnelData.map(d => Math.max(d.mobile, d.desktop)));
+  const maxFunnelValue = funnelData.length > 0 
+    ? Math.max(...funnelData.map(d => Math.max(d.mobile, d.desktop)))
+    : 1;
 
   const getBrowserIcon = (browser: string) => {
     if (browser.toLowerCase().includes('chrome')) return <Chrome className="h-4 w-4" />;
@@ -94,6 +92,46 @@ const PostHogTab: React.FC<PostHogTabProps> = ({ onRefresh, loading = false }) =
     if (browser.toLowerCase().includes('firefox')) return <Globe className="h-4 w-4" />;
     return <Monitor className="h-4 w-4" />;
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-sm text-surface-on-variant dark:text-gray-400">Loading PostHog analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-medium text-surface-on dark:text-gray-100">Operational Efficiency</h2>
+            <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1">
+              Identify UX friction: Mobile vs. Desktop claim completion rates
+            </p>
+          </div>
+          <Button
+            onClick={handleRefresh}
+            variant="outlined"
+            icon={<RefreshCw className="h-4 w-4" />}
+          >
+            Retry
+          </Button>
+        </div>
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
+          <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400 mx-auto mb-3" />
+          <p className="text-sm font-medium text-red-900 dark:text-red-100 mb-2">Failed to load PostHog data</p>
+          <p className="text-xs text-red-800 dark:text-red-200">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -106,23 +144,13 @@ const PostHogTab: React.FC<PostHogTabProps> = ({ onRefresh, loading = false }) =
           </p>
         </div>
         <Button
-          onClick={onRefresh}
+          onClick={handleRefresh}
           variant="outlined"
           disabled={loading}
           icon={<RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />}
         >
           Refresh Data
         </Button>
-      </div>
-
-      {/* PostHog Query Instructions (Dev Note) */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
-        <p className="text-xs text-blue-900 dark:text-blue-100 font-medium mb-2">
-          📊 PostHog API Integration Required
-        </p>
-        <p className="text-xs text-blue-800 dark:text-blue-200">
-          Replace mock data with PostHog Insights API. See component comments for event names and query structure.
-        </p>
       </div>
 
       {/* Widget Grid */}
@@ -134,14 +162,6 @@ const PostHogTab: React.FC<PostHogTabProps> = ({ onRefresh, loading = false }) =
             <h3 className="text-lg font-medium text-surface-on dark:text-gray-100">
               Device Volume Distribution
             </h3>
-          </div>
-
-          {/* PostHog Query Comment */}
-          <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono text-gray-700 dark:text-gray-300">
-            <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-1">PostHog Query:</div>
-            POST /api/projects/:project_id/insights/trend
-            <br />
-            {`{ event: "claim_submitted", breakdown: "$device_type" }`}
           </div>
 
           {/* Donut Chart Visualization */}
@@ -193,7 +213,7 @@ const PostHogTab: React.FC<PostHogTabProps> = ({ onRefresh, loading = false }) =
                   <span className="text-sm font-medium text-surface-on dark:text-gray-100">Mobile</span>
                 </div>
                 <div className="text-xl font-bold text-surface-on dark:text-gray-100">
-                  {mockDeviceVolume.mobile}
+                  {deviceVolume.mobile}
                   <span className="text-sm text-surface-on-variant dark:text-gray-400 ml-1">
                     ({mobilePercentage}%)
                   </span>
@@ -209,7 +229,7 @@ const PostHogTab: React.FC<PostHogTabProps> = ({ onRefresh, loading = false }) =
                   <span className="text-sm font-medium text-surface-on dark:text-gray-100">Desktop</span>
                 </div>
                 <div className="text-xl font-bold text-surface-on dark:text-gray-100">
-                  {mockDeviceVolume.desktop}
+                  {deviceVolume.desktop}
                   <span className="text-sm text-surface-on-variant dark:text-gray-400 ml-1">
                     ({desktopPercentage}%)
                   </span>
@@ -228,17 +248,9 @@ const PostHogTab: React.FC<PostHogTabProps> = ({ onRefresh, loading = false }) =
             </h3>
           </div>
 
-          {/* PostHog Query Comment */}
-          <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono text-gray-700 dark:text-gray-300">
-            <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-1">PostHog Query:</div>
-            POST /api/projects/:project_id/insights/funnel
-            <br />
-            {`{ events: ["claim_started", "claim_photo_uploaded", "claim_submitted"], breakdown: "$device_type" }`}
-          </div>
-
           {/* Funnel Steps */}
           <div className="space-y-6">
-            {mockFunnelData.map((step, idx) => {
+            {funnelData.map((step, idx) => {
               const mobileWidth = (step.mobile / maxFunnelValue) * 100;
               const desktopWidth = (step.desktop / maxFunnelValue) * 100;
 
@@ -300,19 +312,21 @@ const PostHogTab: React.FC<PostHogTabProps> = ({ onRefresh, loading = false }) =
           </div>
 
           {/* Friction Alert */}
-          <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-yellow-900 dark:text-yellow-100">
-                  High mobile drop-off at photo upload
-                </p>
-                <p className="text-xs text-yellow-800 dark:text-yellow-200 mt-1">
-                  34.7% of mobile users abandon after starting a claim. Consider file size limits or connection timeouts.
-                </p>
+          {funnelData.length > 0 && funnelData[1]?.mobileDropoff && funnelData[1].mobileDropoff > 20 && (
+            <div className="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium text-yellow-900 dark:text-yellow-100">
+                    High mobile drop-off at photo upload
+                  </p>
+                  <p className="text-xs text-yellow-800 dark:text-yellow-200 mt-1">
+                    {funnelData[1].mobileDropoff}% of mobile users abandon after starting a claim. Consider file size limits or connection timeouts.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </Card>
       </div>
 
@@ -323,14 +337,6 @@ const PostHogTab: React.FC<PostHogTabProps> = ({ onRefresh, loading = false }) =
           <h3 className="text-lg font-medium text-surface-on dark:text-gray-100">
             Browser Compatibility Analysis
           </h3>
-        </div>
-
-        {/* PostHog Query Comment */}
-        <div className="mb-4 p-3 bg-gray-100 dark:bg-gray-700 rounded text-xs font-mono text-gray-700 dark:text-gray-300">
-          <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-1">PostHog Query:</div>
-          POST /api/projects/:project_id/insights/trend
-          <br />
-          {`{ event: "claim_submitted", breakdown: ["$browser", "$browser_version"], aggregation: "unique_users" }`}
         </div>
 
         {/* Table */}
@@ -356,7 +362,7 @@ const PostHogTab: React.FC<PostHogTabProps> = ({ onRefresh, loading = false }) =
               </tr>
             </thead>
             <tbody>
-              {mockBrowserData.map((row, idx) => {
+              {browserData.map((row, idx) => {
                 const isLowPerformance = row.completionRate < 70;
                 
                 return (
@@ -428,64 +434,59 @@ const PostHogTab: React.FC<PostHogTabProps> = ({ onRefresh, loading = false }) =
 
         {/* Browser Insights */}
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-red-900 dark:text-red-100">
-                  Outdated Safari (iOS 16.x)
-                </p>
-                <p className="text-xs text-red-800 dark:text-red-200 mt-1">
-                  8 users on iOS 16 have only 50% success rate. Consider showing browser update prompt.
-                </p>
+          {/* Show warning if there's a browser with low completion rate */}
+          {browserData.some(b => b.completionRate < 70) && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  {(() => {
+                    const worstBrowser = browserData.reduce((worst, current) => 
+                      current.completionRate < worst.completionRate ? current : worst
+                    , browserData[0]);
+                    return (
+                      <>
+                        <p className="text-xs font-medium text-red-900 dark:text-red-100">
+                          Low Performance: {worstBrowser.browser} {worstBrowser.version}
+                        </p>
+                        <p className="text-xs text-red-800 dark:text-red-200 mt-1">
+                          {worstBrowser.uniqueUsers} users on {worstBrowser.browser} have only {worstBrowser.completionRate}% success rate. Consider showing browser update prompt.
+                        </p>
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-            <div className="flex items-start gap-2">
-              <Chrome className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-green-900 dark:text-green-100">
-                  Best Performance: Chrome
-                </p>
-                <p className="text-xs text-green-800 dark:text-green-200 mt-1">
-                  Chrome users have 94.2% success rate and fastest completion times.
-                </p>
+          {/* Show best performing browser */}
+          {browserData.length > 0 && (
+            <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              <div className="flex items-start gap-2">
+                <Chrome className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  {(() => {
+                    const bestBrowser = browserData.reduce((best, current) => 
+                      current.completionRate > best.completionRate ? current : best
+                    , browserData[0]);
+                    return (
+                      <>
+                        <p className="text-xs font-medium text-green-900 dark:text-green-100">
+                          Best Performance: {bestBrowser.browser}
+                        </p>
+                        <p className="text-xs text-green-800 dark:text-green-200 mt-1">
+                          {bestBrowser.browser} users have {bestBrowser.completionRate}% success rate and average completion time of {bestBrowser.avgTimeToComplete}.
+                        </p>
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </Card>
-
-      {/* Implementation Checklist */}
-      <div className="bg-gray-50 dark:bg-gray-700/30 border border-gray-200 dark:border-gray-600 rounded-xl p-6">
-        <h3 className="text-sm font-medium text-surface-on dark:text-gray-100 mb-3">
-          📝 Implementation Checklist
-        </h3>
-        <div className="space-y-2 text-sm text-surface-on-variant dark:text-gray-400">
-          <div className="flex items-start gap-2">
-            <input type="checkbox" className="mt-0.5" disabled />
-            <span>Add <code className="text-xs bg-gray-200 dark:bg-gray-600 px-1 rounded">trackEvent("claim_started")</code> to NewClaimForm mount</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <input type="checkbox" className="mt-0.5" disabled />
-            <span>Add <code className="text-xs bg-gray-200 dark:bg-gray-600 px-1 rounded">trackEvent("claim_photo_uploaded")</code> to upload success handler</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <input type="checkbox" className="mt-0.5" disabled />
-            <span>Add <code className="text-xs bg-gray-200 dark:bg-gray-600 px-1 rounded">trackEvent("claim_submitted")</code> to claim DB write success</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <input type="checkbox" className="mt-0.5" disabled />
-            <span>Create PostHog API service in <code className="text-xs bg-gray-200 dark:bg-gray-600 px-1 rounded">lib/services/posthogService.ts</code></span>
-          </div>
-          <div className="flex items-start gap-2">
-            <input type="checkbox" className="mt-0.5" disabled />
-            <span>Wire up PostHog Insights API to replace mock data</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
