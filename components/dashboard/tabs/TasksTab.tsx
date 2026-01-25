@@ -11,7 +11,7 @@
 
 import React, { Suspense } from 'react';
 import { CheckSquare, Loader2 } from 'lucide-react';
-import type { Task, InternalEmployee, Claim, Homeowner } from '../../../types';
+import type { Task, InternalEmployee, Claim, Homeowner, TaskMessage } from '../../../types';
 import { TaskCreationCard } from '../../TaskCreationCard';
 import TaskDetail from '../../TaskDetail';
 
@@ -95,7 +95,7 @@ interface TasksTabProps {
   claims: Claim[];
   homeowners: Homeowner[];
   currentUser: { id: string; name: string; role: string } | null;
-  taskMessages: Array<{ taskId: string; content: string; [key: string]: any }>;
+  taskMessages: TaskMessage[];
   
   // Filter state
   tasksFilter: 'open' | 'closed' | 'all';
@@ -104,6 +104,7 @@ interface TasksTabProps {
   // Callbacks
   onTaskSelect: (task: Task | null) => void;
   onSetTasksFilter: (filter: 'open' | 'closed' | 'all') => void;
+  onFilterChange?: (filter: 'open' | 'closed' | 'all') => void; // Alias for onSetTasksFilter
   onSetTasksTabStartInEditMode: (value: boolean) => void;
   onToggleTask: (taskId: string) => void;
   onDeleteTask: (taskId: string) => void;

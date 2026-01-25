@@ -235,7 +235,11 @@ export const DocumentsTab: React.FC<DocumentsTabProps> = ({
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             }>
-              <PdfFlipViewer3D pdfUrl={selectedDocument.url} />
+              <PdfFlipViewer3D 
+                document={{ url: selectedDocument.url, name: selectedDocument.name }} 
+                isOpen={isPDFViewerOpen}
+                onClose={() => setIsPDFViewerOpen(false)}
+              />
             </Suspense>
           </div>
         </div>

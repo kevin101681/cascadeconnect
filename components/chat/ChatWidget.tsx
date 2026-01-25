@@ -20,24 +20,34 @@ import { getPusherClient } from '../../lib/pusher-client';
 import PusherJS from 'pusher-js';
 
 interface ChatWidgetProps {
-  currentUserId: string;
-  currentUserName: string;
+  effectiveUserId?: string; // Optional - can use homeownerId instead
+  effectiveUserName?: string; // Optional - can use homeownerName instead
+  homeownerId?: string; // Homeowner-specific ID (used by AppShell)
+  homeownerName?: string; // Homeowner-specific name (used by AppShell)
   onOpenHomeownerModal?: (homeownerId: string) => void;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  onClose?: () => void; // Alternative to onOpenChange
 }
 
 export const ChatWidget: React.FC<ChatWidgetProps> = ({
-  currentUserId,
-  currentUserName,
+  effectiveUserId,
+  effectiveUserName,
+  homeownerId,
+  homeownerName,
   onOpenHomeownerModal,
   isOpen: isOpenProp,
   onOpenChange,
+  onClose,
 }) => {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
   const [totalUnreadCount, setTotalUnreadCount] = useState(0);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+
+  // Use homeownerId/homeownerName if provided, otherwise fall back to effectiveUserId/effectiveUserName
+  const effectiveUserId = homeownerId || effectiveUserId;
+  const effectiveUserName = homeownerName || effectiveUserName;
 
   // ⚡️ CRITICAL FIX: Use ref to access selectedChannel without causing re-subscriptions
   const selectedChannelRef = useRef<Channel | null>(null);
@@ -59,9 +69,9 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
   // Load unread counts
   const loadUnreadCounts = useCallback(async () => {
-    // ⚡️ GUARD: Validate currentUserId before making API call
-    if (!currentUserId || currentUserId === 'placeholder' || currentUserId.length < 10) {
-      console.warn('⚠️ Badge Sync: Invalid currentUserId, skipping:', currentUserId);
+    // ⚡️ GUARD: Validate effectiveUserId before making API call
+    if (!effectiveUserId || effectiveUserId === 'placeholder' || effectiveUserId.length < 10) {
+      console.warn('⚠️ Badge Sync: Invalid effectiveUserId, skipping:', effectiveUserId);
       return;
     }
 
@@ -74,7 +84,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     lastSyncTimeRef.current = now;
     
     try {
-      const channels = await getUserChannels(currentUserId);
+      const channels = await getUserChannels(effectiveUserId);
       
       console.log('📊 Badge Sync: Loading unread counts', {
         channelCount: channels.length,
@@ -130,14 +140,14 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     } catch (error) {
       console.error('Error loading unread counts:', error);
     }
-  }, [currentUserId]); // ⚡️ STABLE: Only depends on userId
+  }, [effectiveUserId]); // ⚡️ STABLE: Only depends on userId
 
   // ⚡️ Load counts ONCE on mount and set up interval
-  // CRITICAL: Only depends on currentUserId (primitive) to prevent re-subscription loops
+  // CRITICAL: Only depends on effectiveUserId (primitive) to prevent re-subscription loops
   useEffect(() => {
     // Guard: Skip if no valid user ID
-    if (!currentUserId || currentUserId === 'placeholder' || currentUserId.length < 10) {
-      console.warn('⚠️ ChatWidget: Invalid currentUserId, skipping badge sync:', currentUserId);
+    if (!effectiveUserId || effectiveUserId === 'placeholder' || effectiveUserId.length < 10) {
+      console.warn('⚠️ ChatWidget: Invalid effectiveUserId, skipping badge sync:', effectiveUserId);
       return;
     }
 
@@ -148,19 +158,19 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     const interval = setInterval(loadUnreadCounts, 30000);
     
     return () => clearInterval(interval);
-  }, [currentUserId]); // ⚡️ STABLE: Only re-run when userId changes
+  }, [effectiveUserId]); // ⚡️ STABLE: Only re-run when userId changes
 
   // ⚡️ STABLE PUSHER LISTENER: Listen for new messages to update unread count INSTANTLY
-  // CRITICAL: Only depends on currentUserId - NEVER re-subscribes when selectedChannel changes
+  // CRITICAL: Only depends on effectiveUserId - NEVER re-subscribes when selectedChannel changes
   useEffect(() => {
     // Guard: Skip if no valid user ID
-    if (!currentUserId || currentUserId === 'placeholder' || currentUserId.length < 10) {
-      console.warn('⚠️ ChatWidget: Invalid currentUserId, skipping Pusher subscription:', currentUserId);
+    if (!effectiveUserId || effectiveUserId === 'placeholder' || effectiveUserId.length < 10) {
+      console.warn('⚠️ ChatWidget: Invalid effectiveUserId, skipping Pusher subscription:', effectiveUserId);
       return;
     }
 
     // Subscribe to user's PUBLIC channel for targeted notifications
-    const channelName = `public-user-${currentUserId}`;
+    const channelName = `public-user-${effectiveUserId}`;
     console.log('🔌 [ChatWidget] Setting up STABLE Pusher listener on PUBLIC channel:', channelName);
     
     const pusher = getPusherClient();
@@ -181,11 +191,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         channelId: data.channelId,
         senderId: data.message.senderId,
         content: data.message.content.substring(0, 50),
-        isCurrentUser: data.message.senderId === currentUserId
+        isCurrentUser: data.message.senderId === effectiveUserId
       });
 
       // If the message is from the current user, don't increment badge
-      if (data.message.senderId === currentUserId) {
+      if (data.message.senderId === effectiveUserId) {
         console.log('⚡️ [ChatWidget] Message is from current user, skipping badge increment');
         return;
       }
@@ -234,7 +244,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
       // ❌ NEVER CALL: channel.unbind('new-message'); // This wipes ALL listeners!
       // ❌ NEVER CALL: pusher.unsubscribe(channelName); // This kills the connection!
     };
-  }, [currentUserId]); // ⚡️ CRITICAL: Only depends on userId, NOT selectedChannel or loadUnreadCounts
+  }, [effectiveUserId]); // ⚡️ CRITICAL: Only depends on userId, NOT selectedChannel or loadUnreadCounts
 
   const handleToggle = () => {
     setIsOpen(!isOpen);
@@ -294,7 +304,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
       // ✅ CRITICAL: Use dbId (database UUID) for backend, not deterministic ID
       const backendChannelId = channel.dbId || channel.id;
       
-      markChannelAsRead(currentUserId, backendChannelId).then(() => {
+      markChannelAsRead(effectiveUserId, backendChannelId).then(() => {
         console.log('✅ Badge Clear: Server confirmed read');
       }).catch(err => {
         console.error('❌ Badge Clear: Server error:', err);
@@ -319,7 +329,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
     const raw = channel.name || '';
     const normalize = (s: string) => s.trim().toLowerCase();
-    const me = normalize(currentUserName || '');
+    const me = normalize(effectiveUserName || '');
 
     // Common naming pattern: "Me & Recipient"
     const byAmp = raw.split('&').map((p) => p.trim()).filter(Boolean);
@@ -392,7 +402,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
               // User List View
               <div className="w-full">
                 <ChatSidebar
-                  currentUserId={currentUserId}
+                  effectiveUserId={effectiveUserId}
                   selectedChannelId={null}
                   onSelectChannel={handleSelectChannel}
                   unreadCountsOverride={unreadCounts}
@@ -406,8 +416,8 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                   channelId={selectedChannel.id}
                   channelName={getRecipientLabel(selectedChannel)}
                   channelType={selectedChannel.type}
-                  currentUserId={currentUserId}
-                  currentUserName={currentUserName}
+                  effectiveUserId={effectiveUserId}
+                  effectiveUserName={effectiveUserName}
                   onOpenHomeownerModal={onOpenHomeownerModal}
                   onMarkAsRead={loadUnreadCounts}
                   isCompact

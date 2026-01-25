@@ -31,7 +31,7 @@ export interface UseClaimsDataReturn {
   
   // Selection state (for bulk operations)
   selectedClaimIds: string[];
-  setSelectedClaimIds: (ids: string[]) => void;
+  setSelectedClaimIds: React.Dispatch<React.SetStateAction<string[]>>;
   toggleClaimSelection: (claimId: string) => void;
   clearSelection: () => void;
   
