@@ -990,10 +990,6 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
     };
   }, [currentTab]);
   
-  // Invoices Modal State - use prop from parent if provided, otherwise use local state
-  
-  // Handler to open invoices modal
-  
   // Note: Removed initialTab effect - tabs only open when user clicks them
   
   // Ref for tabs container  
@@ -1196,7 +1192,7 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
   // const [showSubListModal, setShowSubListModal] = useState(false);
 
   // UI Context for global modals (replaces local state)
-  const { showInvoicesFullView, setShowInvoicesFullView, setInvoicesPrefillData, setActiveHomeowner } = useUI();
+  const { setActiveHomeowner } = useUI();
   
   // Sync active homeowner to UI context for chat
   useEffect(() => {
@@ -2415,7 +2411,6 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
   // --- Main Render Logic ---
 
   // DEBUG: Log on every render
-  console.log('🏠 Dashboard RENDERING - showInvoicesFullView:', showInvoicesFullView);
   console.log('🏠 activeHomeowner:', activeHomeowner ? activeHomeowner.name : 'none');
   console.log('🏠 currentTab:', currentTab);
 
@@ -3278,7 +3273,6 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                       HELP: { label: 'Help', icon: <HelpCircle className="h-4 w-4" /> },
                       CALLS: { label: 'Calls', icon: <Phone className="h-4 w-4" /> },
                       SCHEDULE: { label: 'Schedule', icon: <Calendar className="h-4 w-4" /> },
-                      INVOICES: { label: 'Invoices', icon: <Receipt className="h-4 w-4" /> },
                       PUNCHLIST: { label: 'BlueTag', icon: <HardHat className="h-4 w-4" /> },
                       CHAT: { label: 'Chat', icon: <MessageCircle className="h-4 w-4" /> },
                     };
@@ -3292,28 +3286,8 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
                         data-tab={tab}
                         onClick={() => {
                           console.log('🖱️ Tab clicked:', tab);
-                          // Special handling for INVOICES - open full-screen overlay
-                          if (tab === 'INVOICES') {
-                            console.log('💰 Opening Invoices Full View');
-                            
-                            // Set prefill data for invoices modal
-                            setInvoicesPrefillData(
-                              effectiveHomeowner
-                                ? {
-                                    clientName: effectiveHomeowner.name || '',
-                                    clientEmail: effectiveHomeowner.email || '',
-                                    projectDetails: effectiveHomeowner.address || effectiveHomeowner.jobName || '',
-                                    homeownerId: effectiveHomeowner.id,
-                                  }
-                                : undefined
-                            );
-                            
-                            // Open invoices modal via UIContext
-                            setShowInvoicesFullView(true);
-                          } else {
-                            console.log('📑 Setting current tab to:', tab);
-                            setCurrentTab(tab);
-                          }
+                          console.log('📑 Setting current tab to:', tab);
+                          setCurrentTab(tab);
                         }}
                         className={[
                           'flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm transition-all duration-300',
@@ -4962,7 +4936,7 @@ export const HomeownerMobile: React.FC<DashboardProps> = ({
   } else {
     // 4. FALLBACK - Should not reach here if logic is correct
     // This handles any edge cases where we don't have a homeowner selected
-    console.log('💰 [FALLBACK PATH] About to return fallback, showInvoicesFullView:', showInvoicesFullView);
+    console.log('💰 [FALLBACK PATH] About to return fallback');
     
     mainContent = (
     <>
