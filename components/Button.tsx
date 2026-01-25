@@ -28,11 +28,11 @@ const Button: React.FC<ButtonProps> = ({
   const baseStyles = `inline-flex items-center justify-center font-medium rounded-full transition-all duration-200 disabled:opacity-38 disabled:cursor-not-allowed gap-2 relative overflow-hidden ${sizeStyles[size]}`;
   
   const variants = {
-    // Primary / Filled Button - Now matches outlined style for consistency
-    filled: "border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10 focus:bg-primary/10",
+    // Primary / Filled Button - Vibrant primary color
+    filled: "bg-primary text-white border-none hover:bg-primary/90 hover:shadow-elevation-1 active:bg-primary/80",
     // Secondary / Tonal Button
     tonal: "bg-secondary-container text-secondary-on-container hover:bg-opacity-92 hover:shadow-elevation-1",
-    // Outlined Button - Same as filled for consistency
+    // Outlined Button - Same as before
     outlined: "border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10 focus:bg-primary/10",
     outline: "border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:bg-gray-50",
     // Text Button

@@ -188,7 +188,7 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
             <button
               type="button"
               onClick={onBack}
-              className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
+              className="md:hidden p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
               aria-label="Back to dashboard"
             >
               <ChevronLeft className="h-5 w-5" />
