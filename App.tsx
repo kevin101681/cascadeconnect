@@ -4550,6 +4550,25 @@ Assigned By: ${assignerName}
   // Determine effective homeowner ID using priority order
   const effectiveHomeownerId = urlHomeownerId || selectedAdminHomeownerId;
   
+  // Detect mobile view
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 768;
+  });
+  
+  // Set up responsive listener for mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      const nextIsMobile = window.innerWidth < 768;
+      setIsMobile((prev) => (prev === nextIsMobile ? prev : nextIsMobile));
+    };
+    
+    checkMobile(); // Initial check
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
   // For homeowners with multiple properties who haven't made a selection yet,
   // matchingHomeowners is set but neither urlHomeownerId nor selectedAdminHomeownerId exists
   // This is our signal to show the selector
@@ -4730,6 +4749,7 @@ Assigned By: ${assignerName}
       currentUser={activeEmployee}
       onGlobalSearchNavigate={handleSearchNavigate}
       onOpenTemplatesModal={() => setIsTemplatesModalOpen(true)}
+      hideHeader={isMobile}
     >
       {currentView === 'DASHBOARD' && (
         <Dashboard 

@@ -45,6 +45,9 @@ interface LayoutProps {
   
   // Current user to check permissions
   currentUser?: { role: string };
+  
+  // Mobile view flag - when true, hides desktop header completely
+  hideHeader?: boolean;
 }
 
 
@@ -68,7 +71,8 @@ const Layout: React.FC<LayoutProps> = ({
   currentUser,
   currentView,
   onGlobalSearchNavigate,
-  onOpenTemplatesModal
+  onOpenTemplatesModal,
+  hideHeader = false
 }) => {
   const navigate = useNavigate();
   // Minimal approach: Just ensure avatar is sized correctly, let CSS handle the rest
@@ -218,7 +222,8 @@ const Layout: React.FC<LayoutProps> = ({
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col font-sans">
-      {/* M3 Small Top App Bar */}
+      {/* M3 Small Top App Bar - Hidden on mobile when hideHeader=true */}
+      {!hideHeader && (
       <header className="bg-surface dark:bg-gray-800 text-surface-on dark:text-gray-100 sticky top-0 z-header transition-shadow duration-200 border-b border-surface-container dark:border-gray-700 shadow-elevation-1">
         <div className={`${CONTENT_MAX_WIDTH} mx-auto ${CONTENT_PADDING_X} sm:${CONTENT_PADDING_X} lg:${CONTENT_PADDING_X}`}>
           <div className="py-2 md:py-0">
@@ -448,8 +453,9 @@ const Layout: React.FC<LayoutProps> = ({
           </div>
         </div>
       </header>
+      )}
 
-      <main className={`flex-1 ${CONTENT_MAX_WIDTH} w-full mx-auto ${CONTENT_PADDING_X} py-8`}>
+      <main className={`flex-1 ${CONTENT_MAX_WIDTH} w-full mx-auto ${hideHeader ? 'px-0' : CONTENT_PADDING_X} ${hideHeader ? 'py-0' : 'py-8'}`}>
         {children}
       </main>
     </div>
