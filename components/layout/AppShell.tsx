@@ -89,16 +89,19 @@ export const AppShell: React.FC<AppShellProps> = ({
         </Suspense>
       )}
       
-      {/* Chat Widget (z-overlay = 500) */}
+      {/* Chat Widget (z-overlay = 500) - HIDDEN ON MOBILE */}
+      {/* Mobile users access chat via the "Team Chat" button in AdminMobileDashboard */}
       {showChatWidget && (
-        <Suspense fallback={null}>
-          <FloatingChatWidget
-            homeownerId={activeHomeowner?.id}
-            homeownerName={activeHomeowner?.name}
-            isOpen={isChatWidgetOpen}
-            onOpenChange={setIsChatWidgetOpen}
-          />
-        </Suspense>
+        <div className="hidden md:block">
+          <Suspense fallback={null}>
+            <FloatingChatWidget
+              homeownerId={activeHomeowner?.id}
+              homeownerName={activeHomeowner?.name}
+              isOpen={isChatWidgetOpen}
+              onOpenChange={setIsChatWidgetOpen}
+            />
+          </Suspense>
+        </div>
       )}
     </>
   );
