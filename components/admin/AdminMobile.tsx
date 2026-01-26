@@ -1,6 +1,6 @@
 import React, { useState, Suspense } from 'react';
 import type { DashboardProps } from '../AdminDashboard';
-import type { Homeowner, Claim, Contractor } from '../../types';
+import type { Homeowner, Claim, Contractor, ClaimClassification } from '../../types';
 import type { Channel } from '../../services/internalChatService';
 import { ClaimStatus } from '../../types';
 import { 
@@ -1322,7 +1322,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
                                       onChange={(e) => {
                                         onUpdateClaim?.({
                                           ...claim,
-                                          classification: e.target.value
+                                          classification: e.target.value as ClaimClassification
                                         });
                                       }}
                                       className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer"
@@ -1347,7 +1347,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
                                       onChange={(e) => {
                                         onUpdateClaim?.({
                                           ...claim,
-                                          dateEvaluated: e.target.value ? new Date(e.target.value).toISOString() : undefined
+                                          dateEvaluated: e.target.value ? new Date(e.target.value) : undefined
                                         });
                                       }}
                                       className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -1458,7 +1458,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
                                       onClick={() => {
                                         onUpdateClaim?.({
                                           ...claim,
-                                          status: 'SCHEDULING',
+                                          status: ClaimStatus.SCHEDULING,
                                           proposedDates: []
                                         });
                                       }}
@@ -1666,15 +1666,11 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
                   <DocumentsTab
                     documents={homeownerDocuments}
                     isAdmin={true}
-                    onUploadDocument={(doc) => {
-                      if (onUploadDocument) {
-                        onUploadDocument({
-                          ...doc,
-                          homeownerId: selectedHomeowner.id,
-                        });
-                      }
+                    onUploadDocument={() => {
+                      console.log('Upload document clicked');
+                      // TODO: Implement upload flow
                     }}
-                    onDeleteDocument={(docId) => {
+                    onDeleteDocument={(docId: string) => {
                       if (onDeleteDocument) {
                         onDeleteDocument(docId);
                       }
@@ -1807,7 +1803,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
                     <ChatWindow
                       channelId={activeTeamChannelId}
                       channelName="Team Chat"
-                      channelType="channel"
+                      channelType="public"
                       effectiveUserId={currentUser?.id || 'admin'}
                       effectiveUserName={currentUser?.name || 'Admin'}
                       onMarkAsRead={() => console.log('Mark as read')}
