@@ -169,9 +169,10 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
               className="h-8"
             />
             <button
+              type="button"
               onClick={() => {
-                // Future: Trigger global search via keyboard shortcut or modal
-                console.log('🔍 Global search - Future feature');
+                console.log('🔍 AdminMobile: Dispatching global search event');
+                window.dispatchEvent(new Event('cascade:global-search-open'));
               }}
               className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
@@ -563,9 +564,10 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
             className="h-8"
           />
           <button
+            type="button"
             onClick={() => {
-              // Future: Trigger global search via keyboard shortcut or modal
-              console.log('🔍 Global search - Future feature');
+              console.log('🔍 AdminMobile: Dispatching global search event');
+              window.dispatchEvent(new Event('cascade:global-search-open'));
             }}
             className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
           >
