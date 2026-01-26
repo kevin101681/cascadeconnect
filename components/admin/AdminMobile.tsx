@@ -1,26 +1,31 @@
 import React, { useState } from 'react';
-import type { DashboardProps } from '../AdminDashboard';
+import type { DashboardProps, TabType } from '../AdminDashboard';
 import type { Homeowner } from '../../types';
 import { 
-  X, Search, Loader2, ChevronRight, ChevronDown,
-  ClipboardList, Calendar, HardHat, Shield,
-  Phone, MessageCircle, MapPin, Mail,
-  FileText, Home, Settings, Users, DollarSign,
-  Bell, Archive, BarChart
+  X, Search, Loader2, ChevronRight, ChevronDown, Command,
+  ClipboardList, Calendar, HardHat, Shield, FileText, Mail,
+  Phone, MessageCircle, MapPin,
+  Users, DollarSign, BarChart, UserCog, Building2, Database, FileEdit, LogOut
 } from 'lucide-react';
 import StatusBadge from '../StatusBadge';
 import { formatDate } from '../../lib/utils/dateHelpers';
 import { ClaimStatus } from '../../types';
+import { SignOutButton } from '@clerk/clerk-react';
+import { useUI } from '../../contexts/UIContext';
 
 /**
- * Admin Mobile View - Dashboard Layout
+ * Admin Mobile View - Refactored Dashboard with Modal Navigation
  * 
- * A button-based mobile dashboard that provides quick access to all admin features.
- * After selecting a homeowner, shows:
- * 1. Collapsible homeowner info header
- * 2. PROJECT section (Warranty, Tasks, Schedule, BlueTag)
- * 3. QUICK ACTIONS section (Call, Text, Maps, Message)
- * 4. BACKEND section (All admin tools from desktop header)
+ * This component provides a mobile-optimized admin interface with:
+ * 1. Fixed header (no horizontal scroll)
+ * 2. Homeowner search integration
+ * 3. Button grid organized by function
+ * 4. Direct navigation to modals/overlays via currentTab
+ * 
+ * Architecture:
+ * - Buttons call setCurrentTab to trigger modal overlays
+ * - AdminDesktop handles all modal rendering
+ * - No local modal state needed here
  */
 export const AdminMobile: React.FC<DashboardProps> = (props) => {
   const [isSelecting, setIsSelecting] = useState(false);
@@ -37,12 +42,11 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
     onSearchChange,
     searchResults,
     onSelectHomeowner,
-    documents,
-    messages,
-    onSelectClaim,
-    onNewClaim,
     onNavigate,
   } = props;
+
+  // Get UI context for global actions
+  const { setShowInvoicesFullView } = useUI();
 
   // Determine which homeowner to display
   const displayHomeowner = targetHomeowner || activeHomeowner;
@@ -83,12 +87,22 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
     }
   };
 
+  // Navigation helper - simulates tab click by updating URL hash
+  // AdminDesktop watches for hash changes and updates currentTab accordingly
+  const navigateToTab = (tab: TabType) => {
+    console.log('📱 AdminMobile: Navigating to tab:', tab);
+    if (tab) {
+      // Update URL hash which AdminDesktop watches
+      window.location.hash = tab.toLowerCase();
+    }
+  };
+
   // Action button component
   const ActionButton: React.FC<{
     icon: React.ElementType;
     label: string;
     onClick: () => void;
-    variant?: 'primary' | 'secondary';
+    variant?: 'primary' | 'secondary' | 'danger';
   }> = ({ icon: Icon, label, onClick, variant = 'secondary' }) => (
     <button
       onClick={onClick}
@@ -96,13 +110,27 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
         flex flex-col items-center justify-center gap-3 rounded-2xl p-6 transition-all active:scale-95
         ${variant === 'primary' 
           ? 'bg-primary/10 text-primary border-2 border-primary/20' 
+          : variant === 'danger'
+          ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border-2 border-red-200 dark:border-red-800'
           : 'bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700'
         }
       `}
       style={{ minHeight: '110px' }}
     >
-      <Icon className={`h-8 w-8 ${variant === 'primary' ? 'text-primary' : 'text-gray-700 dark:text-gray-300'}`} />
-      <span className={`text-sm font-medium text-center ${variant === 'primary' ? 'text-primary' : 'text-gray-900 dark:text-gray-100'}`}>
+      <Icon className={`h-8 w-8 ${
+        variant === 'primary' 
+          ? 'text-primary' 
+          : variant === 'danger'
+          ? 'text-red-600 dark:text-red-400'
+          : 'text-gray-700 dark:text-gray-300'
+      }`} />
+      <span className={`text-sm font-medium text-center ${
+        variant === 'primary' 
+          ? 'text-primary' 
+          : variant === 'danger'
+          ? 'text-red-600 dark:text-red-400'
+          : 'text-gray-900 dark:text-gray-100'
+      }`}>
         {label}
       </span>
     </button>
@@ -117,24 +145,85 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
     );
 
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-8">
-        {/* Top Bar */}
-        <div className="bg-white dark:bg-gray-800 px-4 py-4 shadow-sm sticky top-0 z-10 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between mb-3">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-              CASCADE CONNECT
-            </h1>
+      <div className="w-full overflow-x-hidden min-h-screen bg-gray-50 dark:bg-gray-900 pb-8">
+        {/* Mobile Header - Fixed */}
+        <div className="sticky top-0 z-20 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+          {/* Top Row: Logo + Global Search */}
+          <div className="flex items-center justify-between px-4 py-3">
+            <img 
+              src="/images/manual/cbslogo.png" 
+              alt="Cascade Connect" 
+              className="h-8"
+            />
             <button
-              onClick={handleClearSelection}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              onClick={() => {
+                // Future: Trigger global search via keyboard shortcut or modal
+                console.log('🔍 Global search - Future feature');
+              }}
+              className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
             >
-              <Search className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+              <Command className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+              <span className="text-sm text-gray-600 dark:text-gray-400">Search</span>
             </button>
           </div>
+
+          {/* Bottom Row: Homeowner Search */}
+          {searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
+            <div className="px-4 pb-3">
+              <div className="relative">
+                <Search 
+                  className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" 
+                />
+                <input
+                  type="text"
+                  placeholder="Search homeowners..."
+                  className="w-full bg-gray-50 dark:bg-gray-900 rounded-xl pl-10 pr-10 py-3 text-base border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none text-gray-900 dark:text-gray-100 transition-all"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => onSearchChange('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-900 dark:hover:text-gray-300 transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Search Results Dropdown */}
+              {searchQuery && searchResults.length > 0 && (
+                <div className="absolute left-4 right-4 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden max-h-[40vh] overflow-y-auto z-30">
+                  {searchResults.map((homeowner) => (
+                    <button
+                      key={homeowner.id}
+                      onClick={() => handleHomeownerSelect(homeowner)}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700 last:border-0 transition-all flex items-center gap-3"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
+                        <span className="text-primary font-semibold">
+                          {homeowner.name?.charAt(0).toUpperCase() || '?'}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                          {homeowner.name}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                          {homeowner.builder} • {homeowner.jobName}
+                        </p>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Collapsible Homeowner Info Card */}
-        <div className="mx-4 mt-4 mb-6">
+        <div className="px-4 pt-4 pb-6">
           <button
             onClick={() => setIsHomeownerExpanded(!isHomeownerExpanded)}
             className="w-full bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 text-left"
@@ -199,34 +288,33 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
             <ActionButton
               icon={ClipboardList}
               label="Tasks"
-              onClick={() => {
-                console.log('📋 Tasks clicked');
-                // Future: Open tasks modal
-              }}
+              onClick={() => navigateToTab('TASKS')}
             />
             <ActionButton
               icon={Calendar}
               label="Schedule"
-              onClick={() => {
-                console.log('📅 Schedule clicked');
-                // Future: Open schedule modal
-              }}
+              onClick={() => navigateToTab('SCHEDULE')}
             />
             <ActionButton
               icon={HardHat}
-              label="BlueTag"
-              onClick={() => {
-                console.log('🏗️ BlueTag clicked');
-                // Future: Open punch list modal
-              }}
+              label="Blue Tag"
+              onClick={() => navigateToTab('PUNCHLIST')}
             />
             <ActionButton
               icon={Shield}
               label="Warranty"
-              onClick={() => {
-                console.log('🛡️ Warranty clicked');
-                // Future: Open warranty modal
-              }}
+              onClick={() => navigateToTab('CLAIMS')}
+              variant="primary"
+            />
+            <ActionButton
+              icon={FileText}
+              label="Documents"
+              onClick={() => navigateToTab('DOCUMENTS')}
+            />
+            <ActionButton
+              icon={Mail}
+              label="Message"
+              onClick={() => navigateToTab('MESSAGES')}
             />
           </div>
         </div>
@@ -236,7 +324,7 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
           <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
             QUICK ACTIONS
           </h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <ActionButton
               icon={MessageCircle}
               label="Text"
@@ -252,7 +340,7 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
               onClick={() => {
                 if (displayHomeowner.address) {
                   const encodedAddress = encodeURIComponent(displayHomeowner.address);
-                  window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}`, '_blank');
+                  window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
                 }
               }}
             />
@@ -265,91 +353,55 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
                 }
               }}
             />
-            <ActionButton
-              icon={Mail}
-              label="Message"
-              onClick={() => {
-                console.log('💬 Message clicked');
-                // Future: Open messages modal
-              }}
-            />
           </div>
         </div>
 
-        {/* BACKEND Section */}
+        {/* ADMIN Section */}
         <div className="px-4 mb-6">
           <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-            BACKEND
+            ADMIN
           </h3>
           <div className="grid grid-cols-2 gap-3">
             <ActionButton
-              icon={Home}
-              label="Claims"
-              onClick={() => {
-                console.log('🏠 Claims clicked - showing first claim or new claim form');
-                if (homeownerClaims.length > 0) {
-                  onSelectClaim(homeownerClaims[0]);
-                } else {
-                  onNewClaim(displayHomeowner.id);
-                }
-              }}
-              variant="primary"
-            />
-            <ActionButton
-              icon={Mail}
-              label="Messages"
-              onClick={() => {
-                console.log('📧 Messages (backend) clicked');
-                // Future: Navigate to messages tab
-              }}
-            />
-            <ActionButton
-              icon={FileText}
-              label="Documents"
-              onClick={() => {
-                console.log('📄 Documents clicked');
-                // Future: Navigate to documents tab
-              }}
-            />
-            <ActionButton
               icon={Users}
               label="Homeowners"
-              onClick={() => {
-                console.log('👥 Homeowners clicked');
-                // Future: Navigate to homeowners list
-              }}
+              onClick={() => onNavigate?.('HOMEOWNERS')}
             />
             <ActionButton
               icon={DollarSign}
               label="Invoices"
-              onClick={() => {
-                console.log('💰 Invoices clicked');
-                // Future: Navigate to invoices
-              }}
+              onClick={() => setShowInvoicesFullView?.(true)}
             />
             <ActionButton
               icon={BarChart}
               label="Analytics"
-              onClick={() => {
-                console.log('📊 Analytics clicked');
-                // Future: Navigate to analytics
-              }}
+              onClick={() => console.log('📊 Analytics - Future feature')}
             />
             <ActionButton
-              icon={Bell}
-              label="Notifications"
-              onClick={() => {
-                console.log('🔔 Notifications clicked');
-                // Future: Open notifications
-              }}
+              icon={UserCog}
+              label="Internal Users"
+              onClick={() => console.log('👥 Internal Users - Future feature')}
             />
             <ActionButton
-              icon={Settings}
-              label="Settings"
-              onClick={() => {
-                console.log('⚙️ Settings clicked');
-                // Future: Navigate to settings
-              }}
+              icon={Building2}
+              label="Builders"
+              onClick={() => console.log('🏗️ Builders - Future feature')}
+            />
+            <ActionButton
+              icon={Database}
+              label="Backend"
+              onClick={() => onNavigate?.('BACKEND')}
+            />
+            <ActionButton
+              icon={FileEdit}
+              label="Templates"
+              onClick={() => console.log('📝 Templates - Future feature')}
+            />
+            <ActionButton
+              icon={LogOut}
+              label="Sign Out"
+              onClick={() => {}}
+              variant="danger"
             />
           </div>
         </div>
@@ -361,7 +413,7 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
   console.log('📱 AdminMobile: Rendering search screen');
   
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="w-full overflow-x-hidden flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Loading Overlay */}
       {isSelecting && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
@@ -374,9 +426,23 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
       
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 px-4 py-4 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 text-center">
-          CASCADE CONNECT
-        </h1>
+        <div className="flex items-center justify-between">
+          <img 
+            src="/images/manual/cbslogo.png" 
+            alt="Cascade Connect" 
+            className="h-8"
+          />
+          <button
+            onClick={() => {
+              // Future: Trigger global search via keyboard shortcut or modal
+              console.log('🔍 Global search - Future feature');
+            }}
+            className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+          >
+            <Command className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">Search</span>
+          </button>
+        </div>
       </div>
 
       {/* Mobile-First Search Content */}
