@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import type { DashboardProps, TabType } from '../AdminDashboard';
 import type { Homeowner } from '../../types';
 import { 
@@ -10,26 +10,37 @@ import {
 import StatusBadge from '../StatusBadge';
 import { formatDate } from '../../lib/utils/dateHelpers';
 import { ClaimStatus } from '../../types';
-import { SignOutButton } from '@clerk/clerk-react';
+import { useClerk } from '@clerk/clerk-react';
 import { useUI } from '../../contexts/UIContext';
+import { useTaskStore } from '../../stores/useTaskStore';
+
+// Lazy load heavy modal components
+const TasksSheet = React.lazy(() => import('../TasksSheet'));
+const PunchListApp = React.lazy(() => import('../PunchListApp'));
+const ScheduleTabWrapper = React.lazy(() => 
+  import('../dashboard/tabs/ScheduleTabWrapper').then(m => ({ default: m.ScheduleTabWrapper }))
+);
 
 /**
- * Admin Mobile View - Refactored Dashboard with Modal Navigation
+ * Admin Mobile View - Self-Sufficient Modal System
  * 
- * This component provides a mobile-optimized admin interface with:
- * 1. Fixed header (no horizontal scroll)
- * 2. Homeowner search integration
- * 3. Button grid organized by function
- * 4. Direct navigation to modals/overlays via currentTab
+ * CRITICAL FIX: This component now renders its own modals instead of relying
+ * on hash routing to AdminDesktop (which isn't mounted on mobile).
  * 
  * Architecture:
- * - Buttons call setCurrentTab to trigger modal overlays
- * - AdminDesktop handles all modal rendering
- * - No local modal state needed here
+ * - Local state for each modal (showSchedule, showPunchList, etc.)
+ * - Direct imports of modal components
+ * - useTaskStore for global Tasks state
+ * - Full Clerk integration for Sign Out
+ * - Native phone integrations (tel:, sms:, maps)
  */
 export const AdminMobile: React.FC<DashboardProps> = (props) => {
   const [isSelecting, setIsSelecting] = useState(false);
   const [isHomeownerExpanded, setIsHomeownerExpanded] = useState(false);
+  
+  // Modal state
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [showPunchList, setShowPunchList] = useState(false);
   
   const {
     claims,
@@ -38,15 +49,27 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
     activeHomeowner,
     targetHomeowner,
     onClearHomeownerSelection,
+    onUpdateHomeowner,
     searchQuery,
     onSearchChange,
     searchResults,
     onSelectHomeowner,
+    documents,
+    onUploadDocument,
+    onDeleteDocument,
+    messages,
     onNavigate,
+    onCreateClaim,
+    onUpdateClaim,
+    onSendMessage,
+    onCreateThread,
+    contractors,
   } = props;
 
-  // Get UI context for global actions
+  // Get UI context and Clerk auth
   const { setShowInvoicesFullView } = useUI();
+  const { signOut } = useClerk();
+  const { openTasks } = useTaskStore();
 
   // Determine which homeowner to display
   const displayHomeowner = targetHomeowner || activeHomeowner;
@@ -84,16 +107,6 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
     setIsHomeownerExpanded(false);
     if (onClearHomeownerSelection) {
       onClearHomeownerSelection();
-    }
-  };
-
-  // Navigation helper - simulates tab click by updating URL hash
-  // AdminDesktop watches for hash changes and updates currentTab accordingly
-  const navigateToTab = (tab: TabType) => {
-    console.log('📱 AdminMobile: Navigating to tab:', tab);
-    if (tab) {
-      // Update URL hash which AdminDesktop watches
-      window.location.hash = tab.toLowerCase();
     }
   };
 
@@ -288,33 +301,55 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
             <ActionButton
               icon={ClipboardList}
               label="Tasks"
-              onClick={() => navigateToTab('TASKS')}
+              onClick={() => {
+                console.log('📋 Opening Tasks via useTaskStore');
+                openTasks(undefined, `Admin: ${displayHomeowner.name}`, 'claim');
+              }}
             />
             <ActionButton
               icon={Calendar}
               label="Schedule"
-              onClick={() => navigateToTab('SCHEDULE')}
+              onClick={() => {
+                console.log('📅 Opening Schedule modal');
+                setShowSchedule(true);
+              }}
             />
             <ActionButton
               icon={HardHat}
               label="Blue Tag"
-              onClick={() => navigateToTab('PUNCHLIST')}
+              onClick={() => {
+                console.log('🏗️ Opening PunchList modal');
+                setShowPunchList(true);
+              }}
             />
             <ActionButton
               icon={Shield}
               label="Warranty"
-              onClick={() => navigateToTab('CLAIMS')}
+              onClick={() => {
+                console.log('🛡️ Opening Warranty (Claims) - Navigate to claims tab');
+                // Since we can't navigate to tabs, create a new claim
+                if (onCreateClaim) {
+                  // Future: Open claims modal
+                  console.log('Future: Open claims modal for homeowner');
+                }
+              }}
               variant="primary"
             />
             <ActionButton
               icon={FileText}
               label="Documents"
-              onClick={() => navigateToTab('DOCUMENTS')}
+              onClick={() => {
+                console.log('📄 Documents - Future feature');
+                // Future: Open documents modal
+              }}
             />
             <ActionButton
               icon={Mail}
               label="Message"
-              onClick={() => navigateToTab('MESSAGES')}
+              onClick={() => {
+                console.log('💬 Message - Future feature');
+                // Future: Open messages modal
+              }}
             />
           </div>
         </div>
@@ -365,12 +400,18 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
             <ActionButton
               icon={Users}
               label="Homeowners"
-              onClick={() => onNavigate?.('HOMEOWNERS')}
+              onClick={() => {
+                console.log('👥 Homeowners list');
+                onNavigate?.('HOMEOWNERS');
+              }}
             />
             <ActionButton
               icon={DollarSign}
               label="Invoices"
-              onClick={() => setShowInvoicesFullView?.(true)}
+              onClick={() => {
+                console.log('💰 Opening Invoices overlay');
+                setShowInvoicesFullView?.(true);
+              }}
             />
             <ActionButton
               icon={BarChart}
@@ -380,7 +421,10 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
             <ActionButton
               icon={UserCog}
               label="Internal Users"
-              onClick={() => console.log('👥 Internal Users - Future feature')}
+              onClick={() => {
+                console.log('👥 Internal Users');
+                onNavigate?.('TEAM');
+              }}
             />
             <ActionButton
               icon={Building2}
@@ -390,7 +434,10 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
             <ActionButton
               icon={Database}
               label="Backend"
-              onClick={() => onNavigate?.('BACKEND')}
+              onClick={() => {
+                console.log('🗄️ Backend dashboard');
+                onNavigate?.('DATA');
+              }}
             />
             <ActionButton
               icon={FileEdit}
@@ -400,11 +447,94 @@ export const AdminMobile: React.FC<DashboardProps> = (props) => {
             <ActionButton
               icon={LogOut}
               label="Sign Out"
-              onClick={() => {}}
+              onClick={() => {
+                console.log('🚪 Signing out');
+                signOut();
+              }}
               variant="danger"
             />
           </div>
         </div>
+
+        {/* ========== MODALS ========== */}
+        
+        {/* Tasks Sheet (Global via useTaskStore) */}
+        <Suspense fallback={null}>
+          <TasksSheet
+            onNavigateToClaim={(claimId) => {
+              console.log('Navigating to claim:', claimId);
+              // Future: Navigate to claim detail
+            }}
+            claims={claims}
+          />
+        </Suspense>
+
+        {/* Schedule Modal */}
+        {showSchedule && (
+          <Suspense fallback={
+            <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-white" />
+            </div>
+          }>
+            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" onClick={() => setShowSchedule(false)}>
+              <div className="fixed inset-0 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="min-h-full p-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-6xl mx-auto">
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                      <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                        Schedule - {displayHomeowner.name}
+                      </h2>
+                      <button
+                        onClick={() => setShowSchedule(false)}
+                        className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                    </div>
+                    {/* Content */}
+                    <div className="p-4">
+                      <ScheduleTabWrapper
+                        homeowners={[displayHomeowner]}
+                        claims={homeownerClaims}
+                        userRole={userRole}
+                        activeHomeownerId={displayHomeowner.id}
+                        isAdmin={true}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Suspense>
+        )}
+
+        {/* PunchList Modal */}
+        {showPunchList && (
+          <Suspense fallback={
+            <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-white" />
+            </div>
+          }>
+            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
+              <div className="fixed inset-0 overflow-y-auto">
+                <PunchListApp
+                  homeowner={displayHomeowner}
+                  onClose={() => setShowPunchList(false)}
+                  onSavePDF={(blob, filename) => {
+                    console.log('Saving PDF:', filename);
+                    // Future: Save to documents
+                  }}
+                  onCreateMessage={async (homeownerId, subject, content, attachments) => {
+                    console.log('Creating message:', subject);
+                    // Future: Create message thread
+                  }}
+                  onUpdateHomeowner={onUpdateHomeowner}
+                />
+              </div>
+            </div>
+          </Suspense>
+        )}
       </div>
     );
   }
