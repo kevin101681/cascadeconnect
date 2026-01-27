@@ -385,7 +385,30 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
     messages = [],
     onUploadDocument,
     onDeleteDocument,
+    onSendMessage,
+    onCreateThread,
+    onUpdateThread,
   } = props;
+
+  // Message email templates (localStorage-based)
+  const [messageEmailTemplates, setMessageEmailTemplates] = React.useState<Array<{
+    id: string;
+    name: string;
+    subject: string;
+    body: string;
+  }>>([]);
+  
+  // Load templates from localStorage on mount
+  React.useEffect(() => {
+    try {
+      const stored = localStorage.getItem('cascade_message_templates');
+      if (stored) {
+        setMessageEmailTemplates(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Failed to load message templates:', error);
+    }
+  }, []);
 
   // Determine which homeowner to display
   const selectedHomeowner = targetHomeowner || activeHomeowner;
@@ -1879,20 +1902,14 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
                       console.log('Open message template creator');
                       // TODO: Implement template creator modal
                     }}
-                    onEditTemplate={() => {
-                      console.log('Edit template');
+                    onDeleteMessageTemplate={(templateId) => {
+                      console.log('Delete template:', templateId);
+                      // Remove template from state
+                      const updated = messageEmailTemplates.filter(t => t.id !== templateId);
+                      setMessageEmailTemplates(updated);
+                      localStorage.setItem('cascade_message_templates', JSON.stringify(updated));
                     }}
-                    onDeleteTemplate={() => {
-                      console.log('Delete template');
-                    }}
-                    onMarkAsRead={() => {
-                      if (onUpdateThread && activeThreadId) {
-                        onUpdateThread(activeThreadId, { isRead: true });
-                      }
-                    }}
-                    onToggleImportant={() => {
-                      console.log('Toggle important');
-                    }}
+                    isAdmin={true}
                   />
                 </Suspense>
               </div>
