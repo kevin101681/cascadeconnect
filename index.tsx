@@ -102,7 +102,7 @@ function Root() {
               <Route path="/enroll/:slug" element={<PublicEnrollmentPage />} />
 
               {/* Standalone mobile chat (PWA) */}
-              <Route path="/mobile-chat" element={<StandaloneChatPage />} />
+              <Route path="/chat" element={<StandaloneChatPage />} />
 
               {/* Protected / main app */}
               <Route path="/*" element={<App />} />
