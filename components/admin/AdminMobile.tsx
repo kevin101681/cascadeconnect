@@ -61,6 +61,9 @@ const TasksTab = React.lazy(() =>
 const DocumentsTab = React.lazy(() =>
   import('../dashboard/tabs/DocumentsTab').then(m => ({ default: m.DocumentsTab }))
 );
+const MessagesTab = React.lazy(() =>
+  import('../dashboard/tabs/MessagesTab').then(m => ({ default: m.MessagesTab }))
+);
 const ChatSidebar = React.lazy(() =>
   import('../chat/ChatSidebar').then(m => ({ default: m.ChatSidebar }))
 );
@@ -333,6 +336,15 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
   // Stack navigation state for Messages (Thread List -> Chat Window)
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   
+  // Messages Tab state (for homeowner-specific messaging)
+  const [isComposingMessage, setIsComposingMessage] = useState(false);
+  const [newMessageSubject, setNewMessageSubject] = useState('');
+  const [newMessageContent, setNewMessageContent] = useState('');
+  const [newMessageRecipientId, setNewMessageRecipientId] = useState('');
+  const [selectedMessageTemplateId, setSelectedMessageTemplateId] = useState('');
+  const [replyContent, setReplyContent] = useState('');
+  const [replyExpanded, setReplyExpanded] = useState(false);
+  
   // Stack navigation state for Team Chat (Channel List -> Chat Window)
   const [activeTeamChannelId, setActiveTeamChannelId] = useState<string | null>(null);
   
@@ -433,6 +445,89 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
 
     return () => clearTimeout(timeoutId);
   }, [globalQuery]);
+
+  // ========== BROWSER HISTORY API FOR BACK BUTTON NAVIGATION ==========
+  // Manage browser history for modal navigation (Back button support)
+  React.useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      console.log('🔙 Browser back button pressed', event.state);
+      
+      // Priority order: Detail View -> List View -> Close Modal
+      
+      // 1. Handle Claim Detail -> Claim List
+      if (selectedClaimId) {
+        setSelectedClaimId(null);
+        return;
+      }
+      
+      // 2. Handle Task Detail -> Task List
+      if (selectedTask) {
+        setSelectedTask(null);
+        return;
+      }
+      
+      // 3. Handle Message Thread -> Message List
+      if (activeThreadId) {
+        setActiveThreadId(null);
+        return;
+      }
+      
+      // 4. Handle Team Chat Window -> Team Chat List
+      if (activeTeamChannelId) {
+        setActiveTeamChannelId(null);
+        return;
+      }
+      
+      // 5. Close any open modal (List View -> Dashboard)
+      if (showClaims) {
+        setShowClaims(false);
+        return;
+      }
+      if (showTasks) {
+        setShowTasks(false);
+        return;
+      }
+      if (showMessages) {
+        setShowMessages(false);
+        return;
+      }
+      if (showDocuments) {
+        setShowDocuments(false);
+        return;
+      }
+      if (showSchedule) {
+        setShowSchedule(false);
+        return;
+      }
+      if (showPunchList) {
+        setShowPunchList(false);
+        return;
+      }
+      if (showTeamChat) {
+        setShowTeamChat(false);
+        return;
+      }
+      if (isEditingHomeowner) {
+        setIsEditingHomeowner(false);
+        return;
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [selectedClaimId, selectedTask, activeThreadId, activeTeamChannelId, showClaims, showTasks, showMessages, showDocuments, showSchedule, showPunchList, showTeamChat, isEditingHomeowner]);
+
+  // Push history state when opening modals or navigating to detail views
+  React.useEffect(() => {
+    const hasModal = showClaims || showTasks || showMessages || showDocuments || showSchedule || showPunchList || showTeamChat || isEditingHomeowner;
+    const hasDetailView = selectedClaimId || selectedTask || activeThreadId || activeTeamChannelId;
+    
+    if (hasModal || hasDetailView) {
+      const stateKey = hasDetailView ? 'detail' : 'list';
+      window.history.pushState({ modal: stateKey }, '');
+      console.log('📍 Pushed history state:', stateKey);
+    }
+  }, [showClaims, showTasks, showMessages, showDocuments, showSchedule, showPunchList, showTeamChat, isEditingHomeowner, selectedClaimId, selectedTask, activeThreadId, activeTeamChannelId]);
 
   console.log('📱 AdminMobileDashboard render:', {
     homeowner: selectedHomeowner?.name || 'NONE',
@@ -894,15 +989,24 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
 
       {/* ========== MODALS ========== */}
       
-      {/* Tasks Modal */}
+      {/* Tasks Modal - Full Desktop Parity with Stack Navigation */}
       {showTasks && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
           <div className="fixed inset-0 overflow-hidden">
             <div className="h-full bg-white dark:bg-gray-800 flex flex-col">
               {/* Header */}
               <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                  Tasks
+                {selectedTask && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTask(null)}
+                    className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <ArrowLeft className="h-5 w-5" />
+                  </button>
+                )}
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex-1">
+                  {selectedTask ? 'Task Detail' : 'Tasks'}
                 </h2>
                 <button
                   type="button"
@@ -942,6 +1046,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
                         currentUser={currentUser}
                         taskMessages={taskMessages || []}
                         tasksFilter={tasksFilter}
+                        tasksTabStartInEditMode={!!selectedTask} // Start in edit mode when task selected
                         onTaskSelect={setSelectedTask}
                         onSetTasksFilter={setTasksFilter}
                         onToggleTask={(taskId) => {
@@ -1683,7 +1788,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
         </div>
       )}
 
-      {/* Messages Modal - STACK NAVIGATION */}
+      {/* Messages Modal - Homeowner-Specific Messages with Stack Navigation */}
       {showMessages && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
           <div className="fixed inset-0 overflow-hidden">
@@ -1700,13 +1805,14 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
                   </button>
                 )}
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex-1">
-                  {activeThreadId ? 'Chat' : `Messages - ${selectedHomeowner.name}`}
+                  {activeThreadId ? 'Thread' : 'Messages'}
                 </h2>
                 <button
                   type="button"
                   onClick={() => {
                     setShowMessages(false);
                     setActiveThreadId(null);
+                    setIsComposingMessage(false);
                   }}
                   className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
@@ -1714,33 +1820,80 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
                 </button>
               </div>
 
-              {/* Content - Stack Navigation */}
+              {/* Content - MessagesTab with Full Desktop Parity */}
               <div className="flex-1 overflow-hidden">
                 <Suspense fallback={
                   <div className="flex items-center justify-center h-full">
                     <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
                   </div>
                 }>
-                  {!activeThreadId ? (
-                    /* LIST VIEW: Show thread list */
-                    <ChatSidebar
-                      effectiveUserId={selectedHomeowner.id}
-                      selectedChannelId={null}
-                      onSelectChannel={(channel: Channel) => setActiveThreadId(channel.id)}
-                      isCompact={false}
-                    />
-                  ) : (
-                    /* DETAIL VIEW: Show chat window */
-                    <ChatWindow
-                      channelId={activeThreadId}
-                      channelName="Chat"
-                      channelType="dm"
-                      effectiveUserId={selectedHomeowner.id}
-                      effectiveUserName={selectedHomeowner.name}
-                      onMarkAsRead={() => console.log('Mark as read')}
-                      isCompact={false}
-                    />
-                  )}
+                  <MessagesTab
+                    threads={homeownerMessages}
+                    selectedThreadId={activeThreadId}
+                    isComposingMessage={isComposingMessage}
+                    currentUser={{
+                      id: currentUser?.id || 'admin',
+                      name: currentUser?.name || 'Admin',
+                      role: currentUser?.role || 'admin'
+                    }}
+                    effectiveHomeowner={selectedHomeowner}
+                    employees={employees}
+                    messageEmailTemplates={messageEmailTemplates || []}
+                    newMessageSubject={newMessageSubject}
+                    newMessageContent={newMessageContent}
+                    newMessageRecipientId={newMessageRecipientId}
+                    selectedMessageTemplateId={selectedMessageTemplateId}
+                    replyContent={replyContent}
+                    replyExpanded={replyExpanded}
+                    onSelectThread={setActiveThreadId}
+                    onSetIsComposingMessage={setIsComposingMessage}
+                    onSetNewMessageSubject={setNewMessageSubject}
+                    onSetNewMessageContent={setNewMessageContent}
+                    onSetNewMessageRecipientId={setNewMessageRecipientId}
+                    onSetSelectedMessageTemplateId={setSelectedMessageTemplateId}
+                    onSetReplyContent={setReplyContent}
+                    onSetReplyExpanded={setReplyExpanded}
+                    onSendNewMessage={() => {
+                      if (onCreateThread && selectedHomeowner) {
+                        onCreateThread(selectedHomeowner.id, newMessageSubject, newMessageContent);
+                        setNewMessageSubject('');
+                        setNewMessageContent('');
+                        setIsComposingMessage(false);
+                      }
+                    }}
+                    onSendReply={() => {
+                      if (onSendMessage && activeThreadId) {
+                        onSendMessage(activeThreadId, replyContent);
+                        setReplyContent('');
+                        setReplyExpanded(false);
+                      }
+                    }}
+                    onMessageTemplateSelect={(templateId) => {
+                      const template = messageEmailTemplates?.find(t => t.id === templateId);
+                      if (template) {
+                        setNewMessageSubject(template.subject);
+                        setNewMessageContent(template.body);
+                      }
+                    }}
+                    onOpenMessageTemplateCreator={() => {
+                      console.log('Open message template creator');
+                      // TODO: Implement template creator modal
+                    }}
+                    onEditTemplate={() => {
+                      console.log('Edit template');
+                    }}
+                    onDeleteTemplate={() => {
+                      console.log('Delete template');
+                    }}
+                    onMarkAsRead={() => {
+                      if (onUpdateThread && activeThreadId) {
+                        onUpdateThread(activeThreadId, { isRead: true });
+                      }
+                    }}
+                    onToggleImportant={() => {
+                      console.log('Toggle important');
+                    }}
+                  />
                 </Suspense>
               </div>
             </div>
