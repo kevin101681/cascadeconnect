@@ -93,7 +93,7 @@ function Root() {
         <BrowserRouter>
           <PostHogProvider>
             <Routes>
-              {/* Standalone routes (MUST be first) */}
+              {/* Standalone routes - MUST be first to avoid being caught by wildcards */}
               <Route path="/chat" element={<StandaloneChatPage />} />
 
               {/* Public routes */}
