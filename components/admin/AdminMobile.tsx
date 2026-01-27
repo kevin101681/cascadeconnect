@@ -2814,7 +2814,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                 <button
                                   type="button"
                                   onClick={() => setSelectedClaimId(null)}
-                                  className="px-5 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl whitespace-nowrap"
+                                  className="px-4 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl whitespace-nowrap"
                                 >
                                   Cancel
                                 </button>
@@ -2827,7 +2827,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                     }
                                     setTimeout(() => setSelectedClaimId(null), 100);
                                   }}
-                                  className="px-5 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl whitespace-nowrap"
+                                  className="px-6 py-2 text-sm font-medium bg-gray-900 text-white shadow-md hover:bg-black hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 rounded-xl whitespace-nowrap"
                                 >
                                   Save
                                 </button>
