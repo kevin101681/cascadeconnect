@@ -1333,7 +1333,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   
                   <Button 
                     type="button"
-                    variant="primary" 
+                    variant="secondary" 
                     onClick={handlePrepareServiceOrder} 
                     icon={<FileText className="h-4 w-4" />}
                     className="!h-9 whitespace-nowrap flex-shrink-0 !text-sm !rounded-xl"
@@ -1420,7 +1420,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
             {isAdmin && isEditing && !isReadOnly && (proposeDate || scheduledDate) && (
               <Button
                 type="button"
-                variant="primary"
+                variant="secondary"
                 onClick={handleConfirmSchedule}
                 disabled={!proposeDate && !scheduledDate}
                 className="!rounded-xl"
@@ -1466,7 +1466,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     {claim.status !== ClaimStatus.CLOSED ? (
                       <Button
                         type="button"
-                        variant="primary"
+                        variant="secondary"
                         onClick={() => {
                           onUpdateClaim({
                             ...claim,
@@ -1830,7 +1830,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 setShowSOModal(false);
                 setAttachmentThumbnails([]);
               }} className="!rounded-xl">Cancel</Button>
-              <Button variant="primary" onClick={handleSendServiceOrder} disabled={isSendingSO || !soSubject || !soBody} icon={<Send className="h-4 w-4" />} className="!rounded-xl">
+              <Button variant="secondary" onClick={handleSendServiceOrder} disabled={isSendingSO || !soSubject || !soBody} icon={<Send className="h-4 w-4" />} className="!rounded-xl">
                 {isSendingSO ? 'Sending...' : 'Send'}
               </Button>
             </div>
@@ -1897,7 +1897,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 setTemplateEditSubject('');
                 setTemplateEditBody('');
               }} className="!rounded-xl">Cancel</Button>
-              <Button variant="primary" onClick={handleSaveTemplate} disabled={!templateName.trim() || !(editingTemplateId ? templateEditSubject : soSubject).trim() || !(editingTemplateId ? templateEditBody : soBody).trim()} icon={<Save className="h-4 w-4" />} className="!rounded-xl">
+              <Button variant="secondary" onClick={handleSaveTemplate} disabled={!templateName.trim() || !(editingTemplateId ? templateEditSubject : soSubject).trim() || !(editingTemplateId ? templateEditBody : soBody).trim()} icon={<Save className="h-4 w-4" />} className="!rounded-xl">
                 {editingTemplateId ? 'Update Template' : 'Save Template'}
               </Button>
             </div>

@@ -374,7 +374,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                      </button>
                      <button
                        onClick={handleSaveDetails}
-                       className="px-6 py-2.5 bg-gray-900 text-white hover:bg-black hover:shadow-lg hover:-translate-y-0.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-2"
+                       className="px-6 py-2.5 bg-white text-gray-700 border border-gray-200 hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-2"
                      >
                        <Save className="h-4 w-4" />
                        Save
@@ -950,7 +950,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 <button
                   onClick={handleSendServiceOrder}
                   disabled={isSendingSO}
-                  className="px-6 py-2.5 bg-gray-900 text-white hover:bg-black hover:shadow-lg hover:-translate-y-0.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2.5 bg-white text-gray-700 border border-gray-200 hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSendingSO ? (
                     <>
