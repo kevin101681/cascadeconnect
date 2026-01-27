@@ -54,26 +54,26 @@ export function WarrantyCard({
       {/* HEADER: Title + Status Pills + Delete Icon */}
       <div className="flex items-center gap-2 mb-2 min-w-0">
         {/* Title - Grows to take available space */}
-        <h3 className={`font-semibold text-sm truncate flex-1 min-w-0 ${title ? "text-gray-900" : "text-gray-400 italic"}`} title={title}>
+        <h3 className={`font-semibold text-sm truncate flex-1 min-w-0 select-none ${title ? "text-primary dark:text-primary" : "text-gray-400 italic"}`} title={title}>
           {title || "Untitled Claim"}
         </h3>
         
         {/* Status Pills */}
         <div className="flex gap-1 shrink-0">
           {isClosed && (
-             <Badge className="text-[10px] h-5 px-1.5 font-medium bg-blue-600 text-white hover:bg-blue-600 border-0 rounded-md gap-1 flex items-center">
+             <Badge className="text-[10px] h-5 px-1.5 font-medium bg-blue-600 text-white border-0 rounded-md gap-1 flex items-center pointer-events-none">
                <CheckCircle2 className="w-3 h-3" /> Closed
              </Badge>
           )}
           
           {isReviewed && !isClosed && (
-             <Badge className="text-[10px] h-5 px-1.5 font-medium bg-green-100 text-green-800 hover:bg-green-100 border-0 rounded-md gap-1 flex items-center">
+             <Badge className="text-[10px] h-5 px-1.5 font-medium bg-green-100 text-green-800 border-0 rounded-md gap-1 flex items-center pointer-events-none">
                <CheckCircle2 className="w-3 h-3" /> Reviewed
              </Badge>
           )}
           
           {classification ? (
-            <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-normal rounded-md">
+            <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-normal rounded-md text-primary dark:text-primary pointer-events-none">
               {classification}
             </Badge>
           ) : (
@@ -97,7 +97,7 @@ export function WarrantyCard({
       </div>
 
       {/* COMPACT DATES ROW: Side-by-Side with Icons and Bullets */}
-      <div className="flex items-center gap-2 mb-2 text-xs text-gray-600 overflow-x-auto">
+      <div className="flex items-center gap-2 mb-2 text-xs text-gray-600 overflow-x-auto select-none">
         {/* Created */}
         <div className="flex items-center gap-1 shrink-0">
           <FileText className="w-3 h-3 text-gray-400" />
@@ -122,7 +122,7 @@ export function WarrantyCard({
       </div>
 
       {/* FOOTER: Assignee + Attachments + Checkbox */}
-      <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+      <div className="flex items-center justify-between pt-2 border-t border-gray-100 select-none">
         {/* Sub Contractor */}
         <div className="flex items-center min-w-0 flex-1 mr-2">
           <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 mr-1.5 ${subName ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300" : "bg-gray-100 text-gray-400"}`}>
@@ -136,7 +136,7 @@ export function WarrantyCard({
         {/* Right side: Attachment Count + Checkbox */}
         <div className="flex items-center gap-3 shrink-0">
           {/* Attachment Count */}
-          <div className={`flex items-center ${attachmentCount > 0 ? "text-gray-500 md:hover:text-gray-800" : "text-gray-300"}`}>
+          <div className={`flex items-center ${attachmentCount > 0 ? "text-gray-500" : "text-gray-300"}`}>
             <Paperclip className="w-3 h-3 mr-1" />
             <span className="text-xs font-medium">{attachmentCount}</span>
           </div>

@@ -110,7 +110,7 @@ export function HomeownerCard({
           )}
         </div>
         {project && (
-          <span className="text-[10px] font-normal text-gray-600 dark:text-gray-300 w-fit">
+          <span className="text-base font-medium text-gray-900 dark:text-gray-100 w-fit">
             {project}
           </span>
         )}
