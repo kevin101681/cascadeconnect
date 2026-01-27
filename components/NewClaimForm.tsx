@@ -899,34 +899,34 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
         <div className="flex-none px-6 py-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end gap-3 flex-wrap">
           <Button 
             type="button" 
-            variant="filled" 
+            variant="secondary" 
             onClick={onCancel}
-            className="whitespace-nowrap"
+            className="whitespace-nowrap !rounded-xl"
           >
             Cancel
           </Button>
           {isAdmin ? (
-            <Button type="submit" variant="filled" className="whitespace-nowrap">
+            <Button type="submit" variant="primary" className="whitespace-nowrap !rounded-xl">
               Save
             </Button>
           ) : (
             <>
               <Button 
                 type="submit" 
-                variant="filled"
+                variant="primary"
                 icon={<Plus className="h-4 w-4 flex-shrink-0" />}
-                className="whitespace-nowrap"
+                className="whitespace-nowrap !rounded-xl"
               >
                 Add Item to Request
               </Button>
               {stagedClaims.length > 0 && (
                 <Button 
                   type="button"
-                  variant="filled"
+                  variant="primary"
                   onClick={handleSubmitAll}
                   disabled={isSubmitting}
                   icon={isSubmitting ? <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" /> : <Send className="h-4 w-4 flex-shrink-0" />}
-                  className="whitespace-nowrap"
+                  className="whitespace-nowrap !rounded-xl"
                 >
                   Submit All ({stagedClaims.length})
                 </Button>

@@ -246,7 +246,7 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
               className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium ${
                 claimsFilter === 'Open'
                   ? 'text-primary bg-white dark:bg-gray-700 shadow-md -translate-y-0.5'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent hover:bg-white dark:hover:bg-gray-700 hover:-translate-y-0.5 hover:shadow-md'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 hover:-translate-y-0.5 hover:shadow-md'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -263,7 +263,7 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
               className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium ${
                 claimsFilter === 'Closed'
                   ? 'text-primary bg-white dark:bg-gray-700 shadow-md -translate-y-0.5'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent hover:bg-white dark:hover:bg-gray-700 hover:-translate-y-0.5 hover:shadow-md'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 hover:-translate-y-0.5 hover:shadow-md'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -280,7 +280,7 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
               className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium ${
                 claimsFilter === 'All'
                   ? 'text-primary bg-white dark:bg-gray-700 shadow-md -translate-y-0.5'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent hover:bg-white dark:hover:bg-gray-700 hover:-translate-y-0.5 hover:shadow-md'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 hover:-translate-y-0.5 hover:shadow-md'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -295,7 +295,7 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
             {isAdmin && (
               <button
                 onClick={() => onExportToExcel(claims)}
-                className="p-2 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent rounded-full transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5"
+                className="p-2 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5"
               >
                 <FileSpreadsheet className="h-4 w-4" />
               </button>

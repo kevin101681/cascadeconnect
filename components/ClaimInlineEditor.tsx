@@ -1333,10 +1333,10 @@ If this repair work is billable, please let me know prior to scheduling.`);
                   
                   <Button 
                     type="button"
-                    variant="filled" 
+                    variant="primary" 
                     onClick={handlePrepareServiceOrder} 
                     icon={<FileText className="h-4 w-4" />}
-                    className="!h-9 whitespace-nowrap flex-shrink-0 !text-sm"
+                    className="!h-9 whitespace-nowrap flex-shrink-0 !text-sm !rounded-xl"
                   >
                     Email SO
                   </Button>
@@ -1420,9 +1420,10 @@ If this repair work is billable, please let me know prior to scheduling.`);
             {isAdmin && isEditing && !isReadOnly && (proposeDate || scheduledDate) && (
               <Button
                 type="button"
-                variant="filled"
+                variant="primary"
                 onClick={handleConfirmSchedule}
                 disabled={!proposeDate && !scheduledDate}
+                className="!rounded-xl"
               >
                 {scheduledDate ? 'Update' : 'Confirm'}
               </Button>
@@ -1465,7 +1466,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     {claim.status !== ClaimStatus.CLOSED ? (
                       <Button
                         type="button"
-                        variant="filled"
+                        variant="primary"
                         onClick={() => {
                           onUpdateClaim({
                             ...claim,
@@ -1474,7 +1475,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                             scheduledAt: scheduledDate ? new Date(scheduledDate.date) : undefined
                           });
                         }}
-                        className="w-full"
+                        className="w-full !rounded-xl"
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Mark as Completed
@@ -1482,7 +1483,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     ) : (
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="secondary"
                         onClick={() => {
                           onUpdateClaim({
                             ...claim,
@@ -1490,7 +1491,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                             completedAt: undefined
                           });
                         }}
-                        className="w-full"
+                        className="w-full !rounded-xl"
                       >
                         Reopen Claim
                       </Button>
@@ -1825,11 +1826,11 @@ If this repair work is billable, please let me know prior to scheduling.`);
               </div>
             </div>
             <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-2">
-              <Button variant="filled" onClick={() => {
+              <Button variant="secondary" onClick={() => {
                 setShowSOModal(false);
                 setAttachmentThumbnails([]);
-              }}>Cancel</Button>
-              <Button variant="filled" onClick={handleSendServiceOrder} disabled={isSendingSO || !soSubject || !soBody} icon={<Send className="h-4 w-4" />}>
+              }} className="!rounded-xl">Cancel</Button>
+              <Button variant="primary" onClick={handleSendServiceOrder} disabled={isSendingSO || !soSubject || !soBody} icon={<Send className="h-4 w-4" />} className="!rounded-xl">
                 {isSendingSO ? 'Sending...' : 'Send'}
               </Button>
             </div>
@@ -1889,14 +1890,14 @@ If this repair work is billable, please let me know prior to scheduling.`);
               </div>
             </div>
             <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-2 bg-surface-container dark:bg-gray-700">
-              <Button variant="text" onClick={() => {
+              <Button variant="secondary" onClick={() => {
                 setShowTemplateModal(false);
                 setEditingTemplateId(null);
                 setTemplateName('');
                 setTemplateEditSubject('');
                 setTemplateEditBody('');
-              }}>Cancel</Button>
-              <Button variant="filled" onClick={handleSaveTemplate} disabled={!templateName.trim() || !(editingTemplateId ? templateEditSubject : soSubject).trim() || !(editingTemplateId ? templateEditBody : soBody).trim()} icon={<Save className="h-4 w-4" />}>
+              }} className="!rounded-xl">Cancel</Button>
+              <Button variant="primary" onClick={handleSaveTemplate} disabled={!templateName.trim() || !(editingTemplateId ? templateEditSubject : soSubject).trim() || !(editingTemplateId ? templateEditBody : soBody).trim()} icon={<Save className="h-4 w-4" />} className="!rounded-xl">
                 {editingTemplateId ? 'Update Template' : 'Save Template'}
               </Button>
             </div>

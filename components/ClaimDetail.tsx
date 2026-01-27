@@ -361,13 +361,6 @@ If this repair work is billable, please let me know prior to scheduling.`);
           >
              +Note
            </Button>
-           <Button 
-             variant="tonal" 
-             onClick={() => onSendMessage(claim)} 
-             icon={<MessageSquare className="h-4 w-4" />}
-           >
-             Send Message
-           </Button>
 
            {isAdmin && !isHomeownerView && (
               <>

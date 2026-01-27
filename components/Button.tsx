@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'filled' | 'tonal' | 'outlined' | 'text' | 'danger' | 'ghost' | 'outline';
+  variant?: 'filled' | 'tonal' | 'outlined' | 'text' | 'danger' | 'ghost' | 'outline' | 'primary' | 'secondary';
   size?: 'sm' | 'md' | 'lg' | 'icon';
   icon?: React.ReactNode;
   isLoading?: boolean;
@@ -30,10 +30,14 @@ const Button: React.FC<ButtonProps> = ({
   const variants = {
     // Primary / Filled Button - Vibrant primary color
     filled: "bg-primary text-white border-none hover:bg-primary/90 hover:shadow-lg active:bg-primary/80",
+    // Primary Black Button - Solid Black for primary actions
+    primary: "bg-gray-900 text-white border-none hover:bg-black hover:shadow-lg active:bg-gray-800",
+    // Secondary White Button - Clean White for secondary actions
+    secondary: "bg-white text-gray-700 border border-gray-200 hover:text-primary hover:border-gray-300 hover:bg-gray-50 hover:shadow-md active:bg-gray-100",
     // Secondary / Tonal Button
     tonal: "bg-secondary-container text-secondary-on-container hover:bg-opacity-92 hover:shadow-lg",
-    // Outlined Button - Borderless with subtle hover background
-    outlined: "text-primary bg-surface dark:bg-gray-800 hover:bg-black/5 dark:hover:bg-white/10 hover:shadow-md focus:bg-black/5 dark:focus:bg-white/10",
+    // Outlined Button - Match "New Claim" button style
+    outlined: "text-gray-700 bg-white dark:bg-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-600 hover:text-primary dark:hover:text-primary hover:bg-gray-50 dark:hover:bg-gray-600 hover:shadow-md focus:text-primary focus:bg-gray-50 dark:focus:bg-gray-600",
     outline: "border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 hover:shadow-md focus:bg-gray-50",
     // Text Button
     text: "text-primary hover:bg-primary/10 px-3",
