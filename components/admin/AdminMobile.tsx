@@ -271,12 +271,12 @@ const AdminMobileSearch: React.FC<DashboardProps> = ({
                         <div className="flex flex-col gap-0.5 mt-1">
                           {homeowner.builder && (
                             <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                              🏗️ {homeowner.builder}
+                              {homeowner.builder}
                             </p>
                           )}
                           {homeowner.jobName && (
                             <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                              📋 {homeowner.jobName}
+                              {homeowner.jobName}
                             </p>
                           )}
                         </div>
@@ -469,88 +469,92 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
     return () => clearTimeout(timeoutId);
   }, [globalQuery]);
 
-  // ========== BROWSER HISTORY API FOR BACK BUTTON NAVIGATION ==========
+  // ========== ROBUST BROWSER HISTORY API FOR BACK BUTTON NAVIGATION ==========
   // Manage browser history for modal navigation (Back button support)
+  
+  // Handle browser back button with proper state-based navigation
   React.useEffect(() => {
     const handlePopState = (event: PopStateEvent) => {
-      console.log('🔙 Browser back button pressed', event.state);
+      const state = event.state;
+      console.log('🔙 Browser back button pressed', state);
       
-      // Priority order: Detail View -> List View -> Close Modal
-      
-      // 1. Handle Claim Detail -> Claim List
-      if (selectedClaimId) {
+      // If state has a detail ID, we're going from Detail -> List
+      if (state?.id) {
+        console.log('🔙 Returning from Detail to List');
         setSelectedClaimId(null);
-        return;
-      }
-      
-      // 2. Handle Task Detail -> Task List
-      if (selectedTask) {
         setSelectedTask(null);
-        return;
-      }
-      
-      // 3. Handle Message Thread -> Message List
-      if (activeThreadId) {
         setActiveThreadId(null);
-        return;
-      }
-      
-      // 4. Handle Team Chat Window -> Team Chat List
-      if (activeTeamChannelId) {
         setActiveTeamChannelId(null);
         return;
       }
       
-      // 5. Close any open modal (List View -> Dashboard)
-      if (showClaims) {
+      // If state has a view but no ID, we're going from List -> Dashboard
+      if (state?.view) {
+        console.log('🔙 Returning from List to Dashboard');
         setShowClaims(false);
-        return;
-      }
-      if (showTasks) {
         setShowTasks(false);
-        return;
-      }
-      if (showMessages) {
         setShowMessages(false);
-        return;
-      }
-      if (showDocuments) {
         setShowDocuments(false);
-        return;
-      }
-      if (showSchedule) {
         setShowSchedule(false);
-        return;
-      }
-      if (showPunchList) {
         setShowPunchList(false);
-        return;
-      }
-      if (showTeamChat) {
         setShowTeamChat(false);
-        return;
-      }
-      if (isEditingHomeowner) {
         setIsEditingHomeowner(false);
         return;
+      }
+      
+      // If state is null, ensure we're on Dashboard (close everything)
+      if (!state) {
+        console.log('🔙 Returning to Dashboard (state is null)');
+        setShowClaims(false);
+        setShowTasks(false);
+        setShowMessages(false);
+        setShowDocuments(false);
+        setShowSchedule(false);
+        setShowPunchList(false);
+        setShowTeamChat(false);
+        setIsEditingHomeowner(false);
+        setSelectedClaimId(null);
+        setSelectedTask(null);
+        setActiveThreadId(null);
+        setActiveTeamChannelId(null);
       }
     };
     
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [selectedClaimId, selectedTask, activeThreadId, activeTeamChannelId, showClaims, showTasks, showMessages, showDocuments, showSchedule, showPunchList, showTeamChat, isEditingHomeowner]);
+  }, []); // Empty deps - event handler uses state from event.state
 
-  // Push history state when opening modals or navigating to detail views
+  // Push history when opening a modal (Dashboard -> List)
   React.useEffect(() => {
-    const hasModal = showClaims || showTasks || showMessages || showDocuments || showSchedule || showPunchList || showTeamChat || isEditingHomeowner;
-    const hasDetailView = selectedClaimId || selectedTask || activeThreadId || activeTeamChannelId;
+    const activeModal = showClaims ? 'CLAIMS' 
+      : showTasks ? 'TASKS'
+      : showMessages ? 'MESSAGES'
+      : showDocuments ? 'DOCUMENTS'
+      : showSchedule ? 'SCHEDULE'
+      : showPunchList ? 'PUNCHLIST'
+      : showTeamChat ? 'TEAMCHAT'
+      : isEditingHomeowner ? 'EDIT_HOMEOWNER'
+      : null;
     
-    if (hasModal || hasDetailView) {
-      const stateKey = hasDetailView ? 'detail' : 'list';
-      window.history.pushState({ modal: stateKey }, '');
-      console.log('📍 Pushed history state:', stateKey);
+    if (activeModal) {
+      window.history.pushState({ view: activeModal }, '');
+      console.log('📍 Pushed List View:', activeModal);
     }
-  }, [showClaims, showTasks, showMessages, showDocuments, showSchedule, showPunchList, showTeamChat, isEditingHomeowner, selectedClaimId, selectedTask, activeThreadId, activeTeamChannelId]);
+  }, [showClaims, showTasks, showMessages, showDocuments, showSchedule, showPunchList, showTeamChat, isEditingHomeowner]);
+
+  // Push history when opening a detail view (List -> Detail)
+  React.useEffect(() => {
+    const activeDetail = selectedClaimId ? { view: 'CLAIMS', id: selectedClaimId }
+      : selectedTask ? { view: 'TASKS', id: selectedTask.id }
+      : activeThreadId ? { view: 'MESSAGES', id: activeThreadId }
+      : activeTeamChannelId ? { view: 'TEAMCHAT', id: activeTeamChannelId }
+      : null;
+    
+    if (activeDetail) {
+      window.history.pushState(activeDetail, '');
+      console.log('📍 Pushed Detail View:', activeDetail);
+    }
+  }, [selectedClaimId, selectedTask, activeThreadId, activeTeamChannelId]);
 
   console.log('📱 AdminMobileDashboard render:', {
     homeowner: selectedHomeowner?.name || 'NONE',
@@ -1177,17 +1181,8 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
             <div className="h-full bg-white dark:bg-gray-800 flex flex-col">
               {/* Header */}
               <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                {selectedClaimId && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedClaimId(null)}
-                    className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </button>
-                )}
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex-1">
-                  {selectedClaimId ? 'Claim Detail' : 'Warranty Claims'}
+                  {selectedClaimId ? 'Edit Claim' : 'Warranty Claims'}
                 </h2>
                 <button
                   type="button"
