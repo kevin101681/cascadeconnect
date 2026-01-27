@@ -93,6 +93,9 @@ function Root() {
         <BrowserRouter>
           <PostHogProvider>
             <Routes>
+              {/* Standalone routes (MUST be first) */}
+              <Route path="/chat" element={<StandaloneChatPage />} />
+
               {/* Public routes */}
               <Route
                 path="/sign-in/*"
@@ -100,9 +103,6 @@ function Root() {
               />
               <Route path="/sign-up/*" element={<HomeownerSignUpPage />} />
               <Route path="/enroll/:slug" element={<PublicEnrollmentPage />} />
-
-              {/* Standalone mobile chat (PWA) */}
-              <Route path="/chat" element={<StandaloneChatPage />} />
 
               {/* Protected / main app */}
               <Route path="/*" element={<App />} />
