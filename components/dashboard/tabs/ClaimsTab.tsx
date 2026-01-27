@@ -226,22 +226,84 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
     <>
       <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
         
-        {/* Single Full-Width Header - Spans entire modal */}
-        <div className="w-full p-4 border-b border-gray-100 dark:border-gray-700 bg-surface dark:bg-gray-800 flex items-center justify-between shrink-0 md:rounded-t-modal">
-          {/* Left: Mobile back button only (for mobile navigation) */}
-          <div className="md:hidden">
+        {/* Single Full-Width Header with Filters - Spans entire modal */}
+        <div className="w-full px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between shrink-0 md:rounded-t-modal">
+          {/* Left: Filter Tabs */}
+          <div className="flex items-center gap-2">
+            {/* Mobile back button */}
             <button
               type="button"
               onClick={() => onSetCurrentTab(null)}
-              className="p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
+              className="md:hidden p-2 -ml-2 mr-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
               aria-label="Back to dashboard"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
+            
+            {/* Filter Pills */}
+            <button
+              onClick={() => onSetClaimsFilter('Open')}
+              className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium hover:-translate-y-0.5 hover:shadow-sm ${
+                claimsFilter === 'Open'
+                  ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span>Open</span>
+                {claimsFilter === 'Open' && (
+                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    {openCount}
+                  </span>
+                )}
+              </div>
+            </button>
+            <button
+              onClick={() => onSetClaimsFilter('Closed')}
+              className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium hover:-translate-y-0.5 hover:shadow-sm ${
+                claimsFilter === 'Closed'
+                  ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span>Closed</span>
+                {claimsFilter === 'Closed' && (
+                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    {closedCount}
+                  </span>
+                )}
+              </div>
+            </button>
+            <button
+              onClick={() => onSetClaimsFilter('All')}
+              className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium hover:-translate-y-0.5 hover:shadow-sm ${
+                claimsFilter === 'All'
+                  ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span>All</span>
+                {claimsFilter === 'All' && (
+                  <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    {totalCount}
+                  </span>
+                )}
+              </div>
+            </button>
+            {isAdmin && (
+              <button
+                onClick={() => onExportToExcel(claims)}
+                className="p-2 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent rounded-full transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5"
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+              </button>
+            )}
           </div>
           
           {/* Right: Action buttons */}
-          <div className="flex items-center gap-4 ml-auto">
+          <div className="flex items-center gap-4">
             {/* New Claim button */}
             {isHomeownerView ? (
               <button
@@ -264,7 +326,7 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
               </button>
             )}
             
-            {/* Close button - Desktop only */}
+            {/* Close button */}
             <button
               type="button"
               onClick={() => onSetCurrentTab(null)}
@@ -280,71 +342,6 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
           {/* Left Column: Claims List - 30% width (350px) */}
           <div className={`w-full md:w-[350px] md:min-w-[350px] md:max-w-[350px] border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800 ${selectedClaim ? 'hidden md:flex' : 'flex'}`}>
-          
-          {/* Filter Pills */}
-          <div className="px-4 py-2 border-b border-surface-outline-variant dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onSetClaimsFilter('Open')}
-                className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium hover:-translate-y-0.5 hover:shadow-sm ${
-                  claimsFilter === 'Open'
-                    ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span>Open</span>
-                  {claimsFilter === 'Open' && (
-                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                      {openCount}
-                    </span>
-                  )}
-                </div>
-              </button>
-              <button
-                onClick={() => onSetClaimsFilter('Closed')}
-                className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium hover:-translate-y-0.5 hover:shadow-sm ${
-                  claimsFilter === 'Closed'
-                    ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span>Closed</span>
-                  {claimsFilter === 'Closed' && (
-                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                      {closedCount}
-                    </span>
-                  )}
-                </div>
-              </button>
-              <button
-                onClick={() => onSetClaimsFilter('All')}
-                className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium hover:-translate-y-0.5 hover:shadow-sm ${
-                  claimsFilter === 'All'
-                    ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span>All</span>
-                  {claimsFilter === 'All' && (
-                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                      {totalCount}
-                    </span>
-                  )}
-                </div>
-              </button>
-              {isAdmin && (
-                <button
-                  onClick={() => onExportToExcel(claims)}
-                  className="ml-auto p-2 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent rounded-full transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5"
-                >
-                  <FileSpreadsheet className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-          </div>
 
           <div className="relative flex-1 min-h-0 flex flex-col">
             <ClaimsListColumn
