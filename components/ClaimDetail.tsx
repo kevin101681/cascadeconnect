@@ -762,10 +762,10 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     </div>
                     
                     <Button 
-                        variant="outlined" 
+                        variant="secondary" 
                         onClick={handlePrepareServiceOrder} 
                         icon={<FileText className="h-4 w-4" />}
-                        className="!h-12 w-full sm:w-auto whitespace-nowrap"
+                        className="!h-12 w-full sm:w-auto whitespace-nowrap !rounded-xl"
                     >
                         Service Order
                     </Button>
@@ -809,7 +809,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 </div>
                 
                 {isAdmin && (
-                  <Button variant="outlined" onClick={handleReschedule} className="!border-green-300 text-green-800 hover:bg-green-100">
+                  <Button variant="secondary" onClick={handleReschedule} className="!rounded-xl">
                     Reschedule / Edit
                   </Button>
                 )}

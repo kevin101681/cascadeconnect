@@ -404,7 +404,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                       className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                         isAnalyzing
                           ? 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 cursor-wait'
-                          : 'bg-gray-200 hover:bg-gray-300 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200'
+                          : 'bg-white text-gray-700 border border-gray-200 hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5'
                       }`}
                     >
                       {isAnalyzing ? (
@@ -739,10 +739,10 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                   
                   <Button 
                     type="button"
-                    variant="filled" 
+                    variant="secondary" 
                     disabled={true}
                     icon={<FileText className="h-4 w-4" />}
-                    className="!h-12 whitespace-nowrap flex-shrink-0"
+                    className="!h-12 whitespace-nowrap flex-shrink-0 !rounded-xl"
                     title="Save the claim first to send a service order"
                   >
                     Email S.O.
@@ -906,14 +906,14 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
             Cancel
           </Button>
           {isAdmin ? (
-            <Button type="submit" variant="primary" className="whitespace-nowrap !rounded-xl">
+            <Button type="submit" variant="secondary" className="whitespace-nowrap !rounded-xl">
               Save
             </Button>
           ) : (
             <>
               <Button 
                 type="submit" 
-                variant="primary"
+                variant="secondary"
                 icon={<Plus className="h-4 w-4 flex-shrink-0" />}
                 className="whitespace-nowrap !rounded-xl"
               >
@@ -922,7 +922,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
               {stagedClaims.length > 0 && (
                 <Button 
                   type="button"
-                  variant="primary"
+                  variant="secondary"
                   onClick={handleSubmitAll}
                   disabled={isSubmitting}
                   icon={isSubmitting ? <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" /> : <Send className="h-4 w-4 flex-shrink-0" />}
