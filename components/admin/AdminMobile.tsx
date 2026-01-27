@@ -81,6 +81,9 @@ const ChatSidebar = React.lazy(() =>
 const ChatWindow = React.lazy(() =>
   import('../chat/ChatWindow').then(m => ({ default: m.ChatWindow }))
 );
+const MobileChatView = React.lazy(() =>
+  import('../mobile/MobileChatView').then(m => ({ default: m.MobileChatView }))
+);
 
 // ============================================================================
 // COMPONENT 1: ADMIN MOBILE SEARCH (No Homeowner Selected)
@@ -2997,71 +3000,20 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
 
       {/* Team Chat Modal - Global Internal Chat with Stack Navigation */}
       {showTeamChat && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
-          <div className="fixed inset-0 overflow-hidden">
-            <div className="h-full bg-white dark:bg-gray-800 flex flex-col">
-              {/* Header */}
-              <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-                {activeTeamChannelId && (
-                  <button
-                    type="button"
-                    onClick={() => setActiveTeamChannelId(null)}
-                    className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <ArrowLeft className="h-5 w-5" />
-                  </button>
-                )}
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex-1">
-                  {activeTeamChannelId ? 'Chat' : 'Team Chat'}
-                </h2>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowTeamChat(false);
-                    setActiveTeamChannelId(null);
-                  }}
-                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              {/* Content - Stack Navigation */}
-              <div className="flex-1 overflow-hidden">
-                <Suspense fallback={
-                  <div className="flex items-center justify-center h-full">
-                    <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                  </div>
-                }>
-                  {!activeTeamChannelId ? (
-                    /* LIST VIEW: Channel List */
-                    <ChatSidebar
-                      effectiveUserId={currentUser?.id || 'admin'}
-                      selectedChannelId={null}
-                      onSelectChannel={(channel: Channel) => {
-                        // Set state to show chat window - prevents URL navigation
-                        console.log('Team channel selected:', channel.id);
-                        setActiveTeamChannelId(channel.id);
-                      }}
-                      isCompact={false}
-                    />
-                  ) : (
-                    /* DETAIL VIEW: Chat Window */
-                    <ChatWindow
-                      channelId={activeTeamChannelId}
-                      channelName="Team Chat"
-                      channelType="public"
-                      effectiveUserId={currentUser?.id || 'admin'}
-                      effectiveUserName={currentUser?.name || 'Admin'}
-                      onMarkAsRead={() => console.log('Mark as read')}
-                      isCompact={false}
-                    />
-                  )}
-                </Suspense>
-              </div>
-            </div>
+        <Suspense fallback={
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
           </div>
-        </div>
+        }>
+          <MobileChatView
+            onBack={() => {
+              setShowTeamChat(false);
+              setActiveTeamChannelId(null);
+            }}
+            currentUserId={currentUser?.id || 'admin'}
+            currentUserName={currentUser?.name || 'Admin'}
+          />
+        </Suspense>
       )}
 
       {/* INVITE HOMEOWNER MODAL */}

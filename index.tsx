@@ -10,6 +10,7 @@ import { SignIn } from '@clerk/clerk-react';
 import HomeownerSignUpPage from './components/pages/homeowner-sign-up';
 import MaintenancePage from './src/pages/MaintenancePage';
 import PublicEnrollmentPage from './components/pages/PublicEnrollmentPage';
+import StandaloneChatPage from './pages/StandaloneChatPage';
 
 // Initialize Sentry before any other code runs
 import { initializeSentry } from './sentry.config';
@@ -99,6 +100,9 @@ function Root() {
               />
               <Route path="/sign-up/*" element={<HomeownerSignUpPage />} />
               <Route path="/enroll/:slug" element={<PublicEnrollmentPage />} />
+
+              {/* Standalone mobile chat (PWA) */}
+              <Route path="/mobile-chat" element={<StandaloneChatPage />} />
 
               {/* Protected / main app */}
               <Route path="/*" element={<App />} />
