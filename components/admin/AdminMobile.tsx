@@ -496,7 +496,9 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
         address: selectedHomeowner.address || '',
         builder: selectedHomeowner.builder || '',
         jobName: selectedHomeowner.jobName || '',
-        closingDate: selectedHomeowner.closingDate || '',
+        closingDate: selectedHomeowner.closingDate instanceof Date 
+          ? selectedHomeowner.closingDate.toISOString().split('T')[0] 
+          : selectedHomeowner.closingDate || '',
       });
       setIsEditingHomeowner(false); // Reset edit mode when switching homeowners
     }
@@ -713,10 +715,14 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
     try {
       // Call the update handler from parent
       if (onUpdateHomeowner) {
-        await onUpdateHomeowner({
+        // Convert closingDate string back to Date before updating
+        const updatedData = {
           ...selectedHomeowner,
           ...editFormData,
-        });
+          closingDate: editFormData.closingDate ? new Date(editFormData.closingDate) : selectedHomeowner.closingDate,
+        };
+        
+        await onUpdateHomeowner(updatedData);
       }
       
       // Exit edit mode
