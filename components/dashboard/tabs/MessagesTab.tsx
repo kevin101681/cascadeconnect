@@ -85,34 +85,80 @@ export const MessagesTab: React.FC<MessagesTabProps> = ({
 }) => {
   const selectedThread = threads.find(t => t.id === selectedThreadId);
   const unreadCount = threads.filter(t => !t.isRead).length;
+  
+  // Message filter state (Inbox/Sent/Draft)
+  const [messageFilter, setMessageFilter] = React.useState<'inbox' | 'sent' | 'draft'>('inbox');
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   return (
     <>
     <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
        
-       {/* Single Full-Width Header - Spans entire modal */}
-       <div className="w-full px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 flex items-center justify-between shrink-0 md:rounded-t-modal">
-         {/* Left: Inbox title with unread count */}
+       {/* Single Full-Width Header with Filters & Search */}
+       <div className="w-full px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 flex items-center justify-between shrink-0 md:rounded-t-modal gap-4">
+         {/* Left: Filter Tabs */}
          <div className="flex items-center gap-2">
-           <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-             {unreadCount > 0 && (
-               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-                 {unreadCount}
-               </span>
-             )}
-             Inbox
-           </h3>
+           <button
+             onClick={() => setMessageFilter('inbox')}
+             className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium ${
+               messageFilter === 'inbox'
+                 ? 'bg-white dark:bg-gray-700 text-primary shadow-md -translate-y-0.5'
+                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200 hover:-translate-y-0.5 hover:shadow-sm'
+             }`}
+           >
+             <div className="flex items-center gap-2">
+               <span>Inbox</span>
+               {messageFilter === 'inbox' && unreadCount > 0 && (
+                 <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-primary text-white">
+                   {unreadCount}
+                 </span>
+               )}
+             </div>
+           </button>
+           <button
+             onClick={() => setMessageFilter('sent')}
+             className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium ${
+               messageFilter === 'sent'
+                 ? 'bg-white dark:bg-gray-700 text-primary shadow-md -translate-y-0.5'
+                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200 hover:-translate-y-0.5 hover:shadow-sm'
+             }`}
+           >
+             Sent
+           </button>
+           <button
+             onClick={() => setMessageFilter('draft')}
+             className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium ${
+               messageFilter === 'draft'
+                 ? 'bg-white dark:bg-gray-700 text-primary shadow-md -translate-y-0.5'
+                 : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-200 hover:-translate-y-0.5 hover:shadow-sm'
+             }`}
+           >
+             Draft
+           </button>
          </div>
          
-         {/* Right: Compose button */}
-         <div className="flex items-center gap-4">
+         {/* Center/Right: Search Bar & Actions */}
+         <div className="flex items-center gap-3 ml-auto">
+           {/* Search Bar */}
+           <div className="relative w-64">
+             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400 dark:text-gray-500" />
+             <input
+               type="text"
+               placeholder="Search messages..."
+               value={searchQuery}
+               onChange={(e) => setSearchQuery(e.target.value)}
+               className="pl-9 pr-4 py-2 w-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm text-surface-on dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+             />
+           </div>
+           
+           {/* Compose Button */}
            <Button
-             variant="filled"
+             variant="primary"
              onClick={() => {
                onSetIsComposingMessage(true);
                onSelectThread(null);
              }}
-             className="!h-9 !px-4 !text-sm shrink-0"
+             className="!h-9 !px-4 !text-sm shrink-0 !rounded-xl"
            >
              <span className="hidden sm:inline">Compose</span>
              <span className="sm:hidden">New</span>
@@ -125,18 +171,6 @@ export const MessagesTab: React.FC<MessagesTabProps> = ({
        {/* Left Column: Inbox List (Gmail Style) */}
        <div className={`w-full md:w-[350px] md:min-w-[350px] md:max-w-[350px] border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
           
-          {/* Search box on desktop only */}
-          <div className="hidden md:block p-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
-             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-outline-variant dark:text-gray-500" />
-                <input 
-                  type="text" 
-                  placeholder="" 
-                  className="w-full bg-white dark:bg-gray-700 rounded-full pl-9 pr-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary placeholder-surface-outline-variant dark:placeholder-gray-500 border border-gray-200 dark:border-gray-600"
-                />
-             </div>
-          </div>
-
           <div 
             className="flex-1 overflow-y-auto p-6 min-h-0 rounded-bl-3xl md:rounded-bl-none"
             style={{ 
