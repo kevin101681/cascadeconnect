@@ -243,10 +243,10 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
             {/* Filter Pills */}
             <button
               onClick={() => onSetClaimsFilter('Open')}
-              className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium hover:-translate-y-0.5 hover:shadow-sm ${
+              className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium ${
                 claimsFilter === 'Open'
-                  ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
+                  ? 'text-primary bg-white dark:bg-gray-700 shadow-md -translate-y-0.5'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent hover:bg-white dark:hover:bg-gray-700 hover:-translate-y-0.5 hover:shadow-md'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -260,10 +260,10 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
             </button>
             <button
               onClick={() => onSetClaimsFilter('Closed')}
-              className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium hover:-translate-y-0.5 hover:shadow-sm ${
+              className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium ${
                 claimsFilter === 'Closed'
-                  ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
+                  ? 'text-primary bg-white dark:bg-gray-700 shadow-md -translate-y-0.5'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent hover:bg-white dark:hover:bg-gray-700 hover:-translate-y-0.5 hover:shadow-md'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -277,10 +277,10 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
             </button>
             <button
               onClick={() => onSetClaimsFilter('All')}
-              className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium hover:-translate-y-0.5 hover:shadow-sm ${
+              className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium ${
                 claimsFilter === 'All'
-                  ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
-                  : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
+                  ? 'text-primary bg-white dark:bg-gray-700 shadow-md -translate-y-0.5'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent hover:bg-white dark:hover:bg-gray-700 hover:-translate-y-0.5 hover:shadow-md'
               }`}
             >
               <div className="flex items-center gap-2">
@@ -308,7 +308,11 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
             {isHomeownerView ? (
               <button
                 onClick={() => onNewClaim()}
-                className="h-9 px-4 text-sm font-medium shrink-0 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary border border-gray-200 dark:border-gray-600 rounded-lg transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2"
+                className={`h-9 px-4 text-sm font-medium shrink-0 rounded-lg transition-all duration-200 flex items-center gap-2 ${
+                  isCreatingNewClaim
+                    ? 'bg-white dark:bg-gray-700 text-primary shadow-md -translate-y-0.5'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary border border-gray-200 dark:border-gray-600 hover:shadow-md hover:-translate-y-0.5'
+                }`}
               >
                 <span className="hidden sm:inline">Add Claim</span>
                 <span className="sm:hidden">Add</span>
@@ -319,7 +323,11 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
                   onSetIsCreatingNewClaim(true);
                   onSelectClaim(null);
                 }}
-                className="h-9 px-4 text-sm font-medium shrink-0 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary border border-gray-200 dark:border-gray-600 rounded-lg transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 flex items-center gap-2"
+                className={`h-9 px-4 text-sm font-medium shrink-0 rounded-lg transition-all duration-200 flex items-center gap-2 ${
+                  isCreatingNewClaim
+                    ? 'bg-white dark:bg-gray-700 text-primary shadow-md -translate-y-0.5'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary border border-gray-200 dark:border-gray-600 hover:shadow-md hover:-translate-y-0.5'
+                }`}
               >
                 <span className="hidden sm:inline">New Claim</span>
                 <span className="sm:hidden">New</span>
