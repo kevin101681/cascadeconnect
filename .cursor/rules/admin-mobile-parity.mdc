@@ -1,0 +1,38 @@
+---
+description: Standards for refactoring AdminMobile.tsx to match Desktop parity
+globs: components/admin/AdminMobile.tsx, components/admin/**/*.tsx
+---
+
+# Admin Mobile Parity Standards
+
+When working on `AdminMobile.tsx` or converting Desktop features to Mobile:
+
+## 1. Architecture: The "Self-Sufficient" Rule
+- **No Remote Control:** Never rely on `AdminDesktop.tsx` being mounted. Do not use URL/Hash routing.
+- **Direct Imports:** Import the *real* functional components directly (e.g., `DocumentsView`, `MessageCenter`).
+- **No Placeholders:** Never create "Coming Soon" views. We require full read/write parity.
+
+## 2. Navigation: The "Stack" Pattern
+- Desktop uses Split View (List Left / Detail Right).
+- Mobile must use **Stack Navigation** via local state:
+  ```tsx
+  const [view, setView] = useState<'LIST' | 'DETAIL'>('LIST');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  ```
+- **List View:** Full width. Clicking an item sets `selectedId` + `setView('DETAIL')`.
+- **Detail View:** Full width. Must include a standard "← Back" button in the header to clear state.
+
+## 3. Layout: The "Sticky Footer" Rule
+- **Action Buttons:** Never place primary actions (Save, Process, Send) at the top.
+- **Implementation:** Use a Fixed Bottom Bar (z-50) with white background and top border:
+  ```tsx
+  <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t z-50 flex gap-2">
+    {/* Buttons here */}
+  </div>
+  ```
+- **Safe Area:** Always add `pb-24` to the scrollable content container so the footer doesn't cover the last item.
+- **Ref Pattern:** If the child component controls the form state (like `ClaimDetail`), expose a `ref` (e.g., `onSaveRef`) to trigger the save action from this external footer.
+
+## 4. UI Constraints
+- **Container:** Use `h-[85vh]` with `overflow-y-auto` for the main scrollable area.
+- **Inputs:** Ensure forms render in "Edit Mode" by default.

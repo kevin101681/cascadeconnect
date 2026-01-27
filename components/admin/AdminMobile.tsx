@@ -2293,7 +2293,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setClaimsFilter('Open')}
-                            className={`transition-all duration-200 px-4 py-2 rounded-lg font-medium hover:-translate-y-0.5 hover:shadow-sm ${
+                            className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium hover:-translate-y-0.5 hover:shadow-sm ${
                               claimsFilter === 'Open'
                                 ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
                                 : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
@@ -2310,7 +2310,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                           </button>
                           <button
                             onClick={() => setClaimsFilter('Closed')}
-                            className={`transition-all duration-200 px-4 py-2 rounded-lg font-medium hover:-translate-y-0.5 hover:shadow-sm ${
+                            className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium hover:-translate-y-0.5 hover:shadow-sm ${
                               claimsFilter === 'Closed'
                                 ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
                                 : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
@@ -2327,7 +2327,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                           </button>
                           <button
                             onClick={() => setClaimsFilter('All')}
-                            className={`transition-all duration-200 px-4 py-2 rounded-lg font-medium hover:-translate-y-0.5 hover:shadow-sm ${
+                            className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium hover:-translate-y-0.5 hover:shadow-sm ${
                               claimsFilter === 'All'
                                 ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
                                 : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
