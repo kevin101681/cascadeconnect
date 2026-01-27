@@ -25,22 +25,22 @@ const Button: React.FC<ButtonProps> = ({
   };
   
   // M3 Button Specs: Height 40px, rounded-full (but allow height override for compact buttons)
-  const baseStyles = `inline-flex items-center justify-center font-medium rounded-full transition-all duration-200 disabled:opacity-38 disabled:cursor-not-allowed gap-2 relative overflow-hidden ${sizeStyles[size]}`;
+  const baseStyles = `inline-flex items-center justify-center font-medium rounded-full transition-all duration-200 disabled:opacity-38 disabled:cursor-not-allowed gap-2 relative overflow-hidden hover:-translate-y-0.5 ${sizeStyles[size]}`;
   
   const variants = {
     // Primary / Filled Button - Vibrant primary color
-    filled: "bg-primary text-white border-none hover:bg-primary/90 hover:shadow-elevation-1 active:bg-primary/80",
+    filled: "bg-primary text-white border-none hover:bg-primary/90 hover:shadow-lg active:bg-primary/80",
     // Secondary / Tonal Button
-    tonal: "bg-secondary-container text-secondary-on-container hover:bg-opacity-92 hover:shadow-elevation-1",
+    tonal: "bg-secondary-container text-secondary-on-container hover:bg-opacity-92 hover:shadow-lg",
     // Outlined Button - Same as before
-    outlined: "border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10 focus:bg-primary/10",
-    outline: "border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:bg-gray-50",
+    outlined: "border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10 hover:shadow-md focus:bg-primary/10",
+    outline: "border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 hover:shadow-md focus:bg-gray-50",
     // Text Button
     text: "text-primary hover:bg-primary/10 px-3",
     // Ghost Button - transparent with hover effect
-    ghost: "text-gray-600 hover:bg-gray-100 focus:bg-gray-100",
+    ghost: "text-gray-600 hover:bg-gray-100 hover:shadow-sm focus:bg-gray-100",
     // Danger / Error Button
-    danger: "bg-error text-error-on hover:bg-error/90 hover:shadow-elevation-1"
+    danger: "bg-error text-error-on hover:bg-error/90 hover:shadow-lg"
   };
 
   return (
