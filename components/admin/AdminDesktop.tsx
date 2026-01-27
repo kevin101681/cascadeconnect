@@ -3128,7 +3128,7 @@ export const AdminDesktop: React.FC<DashboardProps> = ({
               <div 
                 ref={homeownerCardContainerRef}
                 key={`homeowner-${homeownerCardKey}-${displayHomeowner?.id}`}
-                className="bg-surface-container/30 dark:bg-gray-700/30 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 overflow-hidden relative"
+                className="bg-slate-50 dark:bg-gray-700/30 rounded-3xl border border-surface-outline-variant dark:border-gray-700 lg:sticky lg:top-4 overflow-hidden relative"
               >
                 {/* Search Bar - Admin & Builder Only - Visible on all screen sizes */}
                 {(isAdmin || isBuilder) && searchQuery !== undefined && onSearchChange && searchResults && onSelectHomeowner && (
@@ -3463,7 +3463,7 @@ export const AdminDesktop: React.FC<DashboardProps> = ({
 
             {/* Primary Tab Bar (Warranty/Tasks/Messages/etc.) */}
             <div className="sticky top-0 z-sticky">
-              <div className="bg-background/95 dark:bg-gray-900/95 backdrop-blur border border-surface-outline-variant/40 dark:border-gray-700/50 rounded-2xl overflow-hidden">
+              <div className="bg-slate-50 dark:bg-gray-900/95 backdrop-blur border border-surface-outline-variant/40 dark:border-gray-700/50 rounded-2xl overflow-hidden">
                 <div
                   ref={tabsContainerRef}
                   className="flex items-center gap-2 px-2 py-2 overflow-x-auto [-webkit-overflow-scrolling:touch]"

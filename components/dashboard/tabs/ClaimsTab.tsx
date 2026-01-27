@@ -227,7 +227,7 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
       <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
         
         {/* Single Full-Width Header with Filters - Spans entire modal */}
-        <div className="w-full px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 flex items-center justify-between shrink-0 md:rounded-t-modal">
+        <div className="w-full px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 flex items-center justify-between shrink-0 md:rounded-t-modal">
           {/* Left: Filter Tabs */}
           <div className="flex items-center gap-2">
             {/* Mobile back button */}
