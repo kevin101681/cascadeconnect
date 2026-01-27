@@ -32,8 +32,8 @@ const Button: React.FC<ButtonProps> = ({
     filled: "bg-primary text-white border-none hover:bg-primary/90 hover:shadow-lg active:bg-primary/80",
     // Secondary / Tonal Button
     tonal: "bg-secondary-container text-secondary-on-container hover:bg-opacity-92 hover:shadow-lg",
-    // Outlined Button - Same as before
-    outlined: "border border-surface-outline text-primary bg-surface dark:bg-gray-800 hover:bg-primary/10 hover:shadow-md focus:bg-primary/10",
+    // Outlined Button - Borderless with subtle hover background
+    outlined: "text-primary bg-surface dark:bg-gray-800 hover:bg-black/5 dark:hover:bg-white/10 hover:shadow-md focus:bg-black/5 dark:focus:bg-white/10",
     outline: "border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 hover:shadow-md focus:bg-gray-50",
     // Text Button
     text: "text-primary hover:bg-primary/10 px-3",

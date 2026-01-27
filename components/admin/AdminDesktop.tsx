@@ -3522,13 +3522,11 @@ export const AdminDesktop: React.FC<DashboardProps> = ({
                         }}
                         className={[
                           'flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-sm transition-all duration-300',
-                          // Base state with transparent border
-                          'border border-transparent',
                           // Hover state: gray background, raised, shadow
                           'hover:bg-gray-100/50 dark:hover:bg-gray-700/50 hover:-translate-y-0.5 hover:shadow-md',
-                          // Active state: white background, blue text & border, RAISED with shadow (LOCKED)
+                          // Active state: white background, blue text, RAISED with shadow (LOCKED) - NO BORDER
                           isActive
-                            ? '!bg-white dark:!bg-gray-800 !text-primary !border-primary -translate-y-0.5 shadow-md'
+                            ? '!bg-white dark:!bg-gray-800 !text-primary -translate-y-0.5 shadow-md'
                             : 'bg-transparent text-surface-on dark:text-gray-100 hover:text-primary',
                         ].join(' ')}
                         aria-current={isActive ? 'page' : undefined}
