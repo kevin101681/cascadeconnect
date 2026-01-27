@@ -88,31 +88,42 @@ export const MessagesTab: React.FC<MessagesTabProps> = ({
 
   return (
     <>
-    <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
+    <div className="bg-surface dark:bg-gray-800 md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
+       
+       {/* Single Full-Width Header - Spans entire modal */}
+       <div className="w-full px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 flex items-center justify-between shrink-0 md:rounded-t-modal">
+         {/* Left: Inbox title with unread count */}
+         <div className="flex items-center gap-2">
+           <h3 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
+             {unreadCount > 0 && (
+               <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
+                 {unreadCount}
+               </span>
+             )}
+             Inbox
+           </h3>
+         </div>
+         
+         {/* Right: Compose button */}
+         <div className="flex items-center gap-4">
+           <Button
+             variant="filled"
+             onClick={() => {
+               onSetIsComposingMessage(true);
+               onSelectThread(null);
+             }}
+             className="!h-9 !px-4 !text-sm shrink-0"
+           >
+             <span className="hidden sm:inline">Compose</span>
+             <span className="sm:hidden">New</span>
+           </Button>
+         </div>
+       </div>
+
+       {/* Content Area: Two-column layout */}
+       <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
        {/* Left Column: Inbox List (Gmail Style) */}
        <div className={`w-full md:w-[350px] md:min-w-[350px] md:max-w-[350px] border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedThreadId ? 'hidden md:flex' : 'flex'}`}>
-          <div className="sticky top-0 z-sticky px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-3xl md:rounded-tr-none">
-            <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
-              {unreadCount > 0 && (
-                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-                  {unreadCount}
-                </span>
-              )}
-              Inbox
-            </h3>
-            {/* Compose button */}
-            <Button
-              variant="filled"
-              onClick={() => {
-                onSetIsComposingMessage(true);
-                onSelectThread(null);
-              }}
-              className="!h-9 !px-3 md:!h-8 md:!px-4 !text-sm md:text-xs shrink-0"
-            >
-              <span className="hidden sm:inline">Compose</span>
-              <span className="sm:hidden">New</span>
-            </Button>
-          </div>
           
           {/* Search box on desktop only */}
           <div className="hidden md:block p-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
@@ -431,6 +442,7 @@ export const MessagesTab: React.FC<MessagesTabProps> = ({
                <p className="text-sm font-medium">Select a conversation to read</p>
             </div>
           )}
+       </div>
        </div>
     </div>
     

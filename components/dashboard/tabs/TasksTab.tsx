@@ -159,77 +159,67 @@ export const TasksTab: React.FC<TasksTabProps> = ({
 
   return (
     <>
-    <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
-      {/* Left Column: Tasks List */}
-      <div className={`w-full md:w-[350px] md:min-w-[350px] md:max-w-[350px] border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedTask ? 'hidden md:flex' : 'flex'}`}>
-        {/* Sticky Header */}
-        <div className="sticky top-0 z-sticky bg-surface dark:bg-gray-800 md:rounded-tl-3xl">
-          {/* Title Bar - Hidden on mobile since modal header shows it */}
-          <div className="hidden md:flex px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex-row justify-between items-center gap-2 md:gap-4 shrink-0">
-            <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100">
-              <span className="hidden sm:inline">My Tasks</span>
-              <span className="sm:hidden">Tasks</span>
-            </h3>
-          </div>
-          
-          {/* Filter Pills */}
-          <div className="px-4 py-2 border-b border-surface-outline-variant/50 dark:border-gray-700/50">
+    <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
+      
+      {/* Single Full-Width Header with Filters - Spans entire modal */}
+      <div className="w-full px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 flex items-center justify-between shrink-0 md:rounded-t-modal">
+        {/* Left: Filter Tabs */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => effectiveSetTasksFilter('open')}
+            className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium hover:-translate-y-0.5 hover:shadow-sm ${
+              tasksFilter === 'open'
+                ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
+                : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
+            }`}
+          >
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => effectiveSetTasksFilter('open')}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-fit ${
-                  tasksFilter === 'open'
-                    ? 'border border-primary text-primary bg-primary/10'
-                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span>Open</span>
-                  {tasksFilter === 'open' && (
-                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                      {openCount}
-                    </span>
-                  )}
-                </div>
-              </button>
-              <button
-                onClick={() => effectiveSetTasksFilter('closed')}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-fit ${
-                  tasksFilter === 'closed'
-                    ? 'border border-primary text-primary bg-primary/10'
-                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span>Closed</span>
-                  {tasksFilter === 'closed' && (
-                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                      {closedCount}
-                    </span>
-                  )}
-                </div>
-              </button>
-              <button
-                onClick={() => effectiveSetTasksFilter('all')}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all min-w-fit ${
-                  tasksFilter === 'all'
-                    ? 'border border-primary text-primary bg-primary/10'
-                    : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <span>All</span>
-                  {tasksFilter === 'all' && (
-                    <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                      {totalCount}
-                    </span>
-                  )}
-                </div>
-              </button>
+              <span>Open</span>
+              {tasksFilter === 'open' && (
+                <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                  {openCount}
+                </span>
+              )}
             </div>
-          </div>
-
-          {/* Task Creation Card */}
+          </button>
+          <button
+            onClick={() => effectiveSetTasksFilter('closed')}
+            className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium hover:-translate-y-0.5 hover:shadow-sm ${
+              tasksFilter === 'closed'
+                ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
+                : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span>Closed</span>
+              {tasksFilter === 'closed' && (
+                <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                  {closedCount}
+                </span>
+              )}
+            </div>
+          </button>
+          <button
+            onClick={() => effectiveSetTasksFilter('all')}
+            className={`transition-all duration-200 px-4 py-2 rounded-lg text-sm font-medium hover:-translate-y-0.5 hover:shadow-sm ${
+              tasksFilter === 'all'
+                ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
+                : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span>All</span>
+              {tasksFilter === 'all' && (
+                <span className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none transition-colors bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                  {totalCount}
+                </span>
+              )}
+            </div>
+          </button>
+        </div>
+        
+        {/* Right: Task Creation Card (if provided) */}
+        <div className="flex items-center gap-4">
           {onCreateScheduleTask && onCreateEvalTask && (
             <TaskCreationCard
               employees={employees}
@@ -238,6 +228,12 @@ export const TasksTab: React.FC<TasksTabProps> = ({
             />
           )}
         </div>
+      </div>
+
+      {/* Content Area: Two-column layout */}
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
+      {/* Left Column: Tasks List */}
+      <div className={`w-full md:w-[350px] md:min-w-[350px] md:max-w-[350px] border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedTask ? 'hidden md:flex' : 'flex'}`}>
 
         <TasksListColumn
           tasks={filteredTasks}
@@ -298,6 +294,7 @@ export const TasksTab: React.FC<TasksTabProps> = ({
             <p className="text-sm font-medium">Select a task to view details</p>
           </div>
         )}
+      </div>
       </div>
     </div>
     

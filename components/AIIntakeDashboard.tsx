@@ -356,7 +356,43 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({
   return (
     <>
     <div className="bg-white dark:bg-white md:rounded-3xl md:border border-surface-outline-variant dark:border-gray-700 flex flex-col max-h-[calc(100vh-8rem)] overflow-hidden">
-      {/* Two Column Layout */}
+      
+      {/* Single Full-Width Header - Spans entire modal */}
+      <div className="w-full px-6 py-4 border-b border-gray-100 dark:border-gray-700 bg-slate-50 dark:bg-gray-800 flex items-center justify-between shrink-0 md:rounded-t-modal">
+        {/* Left: Calls title (no filter tabs for Calls) */}
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-normal text-surface-on dark:text-gray-100">Calls</h2>
+        </div>
+        
+        {/* Right: Global/Scoped Toggle (Admin Only) */}
+        <div className="flex items-center gap-4">
+          {isAdmin && (
+            <button
+              onClick={() => setIsGlobalView(!isGlobalView)}
+              className={`h-9 px-4 text-sm font-medium shrink-0 border rounded-lg transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md flex items-center gap-2 ${
+                isGlobalView
+                  ? 'bg-white dark:bg-gray-700 text-primary border-primary shadow-md'
+                  : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary border-gray-200 dark:border-gray-600'
+              }`}
+              title={isGlobalView ? "Show All Calls" : "Show Current Homeowner Only"}
+            >
+              {isGlobalView ? (
+                <>
+                  <Globe className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">All Calls</span>
+                </>
+              ) : (
+                <>
+                  <User className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">Homeowner Calls</span>
+                </>
+              )}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Content Area: Two Column Layout */}
       {filteredCalls.length === 0 ? (
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="bg-surface-container dark:bg-gray-700 rounded-xl p-12 text-center border border-surface-outline-variant dark:border-gray-600">
@@ -375,37 +411,6 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({
               WebkitMaskImage: 'linear-gradient(to bottom, transparent, black 15px, black calc(100% - 15px), transparent)'
             }}
           >
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-normal text-surface-on dark:text-gray-100">Calls</h2>
-                
-                {/* Global/Scoped Toggle (Admin Only) */}
-                {isAdmin && (
-                  <button
-                    onClick={() => setIsGlobalView(!isGlobalView)}
-                    className={`px-3 h-8 border rounded-full transition-colors font-medium flex items-center gap-2 text-sm ${
-                      isGlobalView
-                        ? 'bg-primary/10 border-primary text-primary'
-                        : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300'
-                    }`}
-                    title={isGlobalView ? "Show All Calls" : "Show Current Homeowner Only"}
-                  >
-                    {isGlobalView ? (
-                      <>
-                        <Globe className="h-3.5 w-3.5" />
-                        <span className="hidden sm:inline">All Calls</span>
-                      </>
-                    ) : (
-                      <>
-                        <User className="h-3.5 w-3.5" />
-                        <span className="hidden sm:inline">Current</span>
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-            </div>
             
             {/* Search Bar - Pill shaped */}
             <div className="p-4 pb-2">
