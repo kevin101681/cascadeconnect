@@ -58,7 +58,7 @@ const AuthScreen: React.FC<AuthScreenProps> = () => {
       
       {/* Brand Header */}
       <div className="flex flex-col items-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <img src="/connect.svg" alt="Cascade Connect" className="h-16 mb-4" />
+        <img src="/connect.png" alt="Cascade Connect" className="h-16 mb-4" />
         <p className="text-surface-on-variant dark:text-gray-400 text-center max-w-sm">
           The premier warranty management platform for builders and homeowners.
         </p>

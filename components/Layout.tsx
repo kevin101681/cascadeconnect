@@ -230,7 +230,7 @@ const Layout: React.FC<LayoutProps> = ({
             <div className="flex justify-between items-center h-16 gap-4">
               {/* Logo - Aligned with sidebar content using layout constant */}
               <button onClick={() => onNavigate('DASHBOARD')} className={`flex items-center gap-3 flex-shrink-0 focus:outline-none ${SIDEBAR_CONTENT_PADDING_LEFT}`}>
-                <img src="/connect.svg" alt="Cascade Connect" className="h-8" />
+                <img src="/connect.png" alt="Cascade Connect" className="h-8" />
               </button>
 
               {/* Search Bar - Global Search for Admin/Builder, AI Assistant for Homeowner */}

@@ -45,7 +45,7 @@ export const AdminMobileHeader: React.FC<AdminMobileHeaderProps> = ({
       {/* Logo - Centered */}
       <div className="flex justify-center mb-4">
         <img 
-          src="/connect.svg" 
+          src="/connect.png" 
           alt="Cascade Connect" 
           className="h-12"
         />
