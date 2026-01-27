@@ -2752,7 +2752,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                     console.log('Send message to homeowner');
                                     // TODO: Open message composer modal
                                   }}
-                                  className="w-full py-2.5 px-4 text-sm font-medium text-white bg-gray-900 dark:bg-primary hover:bg-primary dark:hover:bg-primary/90 rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2"
+                                  className="w-full py-2.5 px-4 text-sm font-medium bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl flex items-center justify-center gap-2"
                                 >
                                   <MessageCircle className="h-4 w-4" />
                                   Send Message
@@ -2787,7 +2787,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                       'claim'
                                     );
                                   }}
-                                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
+                                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl whitespace-nowrap"
                                 >
                                   <StickyNote className="h-4 w-4" />
                                   <span>Note</span>
@@ -2798,7 +2798,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                   onClick={() => {
                                     console.log('Process claim workflow');
                                   }}
-                                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
+                                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl whitespace-nowrap"
                                 >
                                   <HardHat className="h-4 w-4" />
                                   <span>Process</span>
@@ -2811,7 +2811,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                 <button
                                   type="button"
                                   onClick={() => setSelectedClaimId(null)}
-                                  className="px-5 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
+                                  className="px-5 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl whitespace-nowrap"
                                 >
                                   Cancel
                                 </button>
@@ -2824,7 +2824,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                     }
                                     setTimeout(() => setSelectedClaimId(null), 100);
                                   }}
-                                  className="px-5 py-2 text-sm font-medium text-white bg-gray-900 dark:bg-primary hover:bg-primary dark:hover:bg-primary/90 rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 shadow-sm whitespace-nowrap"
+                                  className="px-5 py-2 text-sm font-medium bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl whitespace-nowrap"
                                 >
                                   Save
                                 </button>

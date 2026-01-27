@@ -45,7 +45,7 @@ export function WarrantyCard({
         isChecked 
           ? 'bg-red-50 border-red-300 ring-1 ring-red-300 shadow-md' 
           : isSelected
-            ? 'bg-slate-50 dark:bg-slate-900/50 border-slate-500 dark:border-slate-500 shadow-md'
+            ? 'bg-slate-50 dark:bg-slate-900/50 border-primary dark:border-primary shadow-md'
             : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm md:hover:shadow-md md:hover:border-slate-300 dark:md:hover:border-slate-600'
       }`}
       style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}

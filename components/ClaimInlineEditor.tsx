@@ -1275,9 +1275,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-600">
                   <Button 
                     type="button" 
-                    variant="filled"
+                    variant="secondary"
                     onClick={() => onSendMessage(claim)}
-                    className="w-full"
+                    className="w-full !rounded-xl"
                   >
                     Send Message
                   </Button>
