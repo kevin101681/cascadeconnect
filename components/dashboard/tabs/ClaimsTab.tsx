@@ -333,16 +333,6 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
                 <span className="sm:hidden">New</span>
               </button>
             )}
-            
-            {/* Close button */}
-            <button
-              type="button"
-              onClick={() => onSetCurrentTab(null)}
-              className="hidden md:block p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
           </div>
         </div>
 
