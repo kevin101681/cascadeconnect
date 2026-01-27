@@ -224,25 +224,24 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
 
   return (
     <>
-      <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col md:flex-row overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
-        {/* Left Column: Claims List - 30% width (350px) */}
-        <div className={`w-full md:w-[350px] md:min-w-[350px] md:max-w-[350px] border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800 md:rounded-tl-modal md:rounded-tr-none md:rounded-bl-modal ${selectedClaim ? 'hidden md:flex' : 'flex'}`}>
-          <div className="sticky top-0 z-sticky px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0 md:rounded-tl-modal md:rounded-tr-none">
-            <div className="flex items-center gap-2 min-w-0">
-              {/* Mobile back: Claims list → Dashboard */}
-              <button
-                type="button"
-                onClick={() => onSetCurrentTab(null)}
-                className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
-                aria-label="Back to dashboard"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100 flex items-center gap-2 min-w-0">
-                <span className="hidden sm:inline truncate">Warranty Claims</span>
-                <span className="sm:hidden truncate">Claims</span>
-              </h3>
-            </div>
+      <div className="bg-surface dark:bg-gray-800 md:rounded-modal md:border border-surface-outline-variant dark:border-gray-700 flex flex-col overflow-hidden h-full min-h-0 md:max-h-[calc(100vh-8rem)]">
+        
+        {/* Single Full-Width Header - Spans entire modal */}
+        <div className="w-full p-4 border-b border-gray-100 dark:border-gray-700 bg-surface dark:bg-gray-800 flex items-center justify-between shrink-0 md:rounded-t-modal">
+          {/* Left: Mobile back button only (for mobile navigation) */}
+          <div className="md:hidden">
+            <button
+              type="button"
+              onClick={() => onSetCurrentTab(null)}
+              className="p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
+              aria-label="Back to dashboard"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
+          </div>
+          
+          {/* Right: Action buttons */}
+          <div className="flex items-center gap-4 ml-auto">
             {/* New Claim button */}
             {isHomeownerView ? (
               <button
@@ -264,7 +263,23 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
                 <span className="sm:hidden">New</span>
               </button>
             )}
+            
+            {/* Close button - Desktop only */}
+            <button
+              type="button"
+              onClick={() => onSetCurrentTab(null)}
+              className="hidden md:block p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
+        </div>
+
+        {/* Content Area: Two-column layout */}
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
+          {/* Left Column: Claims List - 30% width (350px) */}
+          <div className={`w-full md:w-[350px] md:min-w-[350px] md:max-w-[350px] border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800 ${selectedClaim ? 'hidden md:flex' : 'flex'}`}>
           
           {/* Filter Pills */}
           <div className="px-4 py-2 border-b border-surface-outline-variant dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
@@ -369,28 +384,10 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
         </div>
 
         {/* Right Column: Claim Detail View - Desktop Only */}
-        <div className={`flex-1 min-w-0 flex flex-col bg-surface dark:bg-gray-800 ${!selectedClaim && !isCreatingNewClaim ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-modal rounded-br-modal md:rounded-r-modal md:rounded-l-none`}>
+        <div className={`flex-1 min-w-0 flex flex-col bg-surface dark:bg-gray-800 ${!selectedClaim && !isCreatingNewClaim ? 'hidden md:flex' : 'hidden md:flex'}`}>
           {isCreatingNewClaim ? (
             <>
-              {/* New Claim Header Toolbar */}
-              <div className="h-16 shrink-0 px-6 border-b border-surface-outline-variant dark:border-gray-700 flex items-center justify-between bg-surface-container/30 dark:bg-gray-700/30 sticky top-0 z-sticky rounded-tr-3xl">
-                <div className="flex items-center gap-4">
-                  <button 
-                    onClick={() => onSetIsCreatingNewClaim(false)} 
-                    className="md:hidden p-2 -ml-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </button>
-                </div>
-                <button 
-                  onClick={() => onSetIsCreatingNewClaim(false)}
-                  className="hidden md:block p-2 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container dark:hover:bg-gray-700 rounded-full"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              {/* Scrollable New Claim Form Content */}
+              {/* New Claim Form Content */}
               <div 
                 className="flex-1 overflow-y-auto p-6 overscroll-contain relative"
                 style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
@@ -501,6 +498,7 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
               <p className="text-sm font-medium">Select a claim to view details</p>
             </div>
           )}
+        </div>
         </div>
       </div>
       
