@@ -164,8 +164,8 @@ export const TasksTab: React.FC<TasksTabProps> = ({
       <div className={`w-full md:w-[350px] md:min-w-[350px] md:max-w-[350px] border-b md:border-b-0 md:border-r border-surface-outline-variant dark:border-gray-700 flex flex-col min-h-0 bg-surface dark:bg-gray-800 md:rounded-tl-3xl md:rounded-tr-none md:rounded-bl-3xl ${selectedTask ? 'hidden md:flex' : 'flex'}`}>
         {/* Sticky Header */}
         <div className="sticky top-0 z-sticky bg-surface dark:bg-gray-800 md:rounded-tl-3xl">
-          {/* Title Bar */}
-          <div className="px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex flex-row justify-between items-center gap-2 md:gap-4 shrink-0">
+          {/* Title Bar - Hidden on mobile since modal header shows it */}
+          <div className="hidden md:flex px-4 py-3 md:p-4 border-b border-surface-outline-variant dark:border-gray-700 bg-surface md:bg-surface-container dark:bg-gray-700 flex-row justify-between items-center gap-2 md:gap-4 shrink-0">
             <h3 className="text-lg md:text-xl font-normal text-surface-on dark:text-gray-100">
               <span className="hidden sm:inline">My Tasks</span>
               <span className="sm:hidden">Tasks</span>

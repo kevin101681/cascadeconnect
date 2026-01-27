@@ -188,6 +188,11 @@ function App() {
     }, 3000);
     return () => clearTimeout(timer);
   }, [isLoaded]);
+
+  // CRITICAL: Calculate effectiveIsLoaded EARLY (before useEffects that depend on it)
+  // This allows data loading to proceed even if Clerk fails to initialize
+  const effectiveIsLoaded = isLoaded || authTimeout;
+  const effectiveIsSignedIn = isSignedIn && !authTimeout;
   
   // State for mapped user roles
   // IMPORTANT: Initialize userRole to ADMIN (default) but rely on isRoleLoading=true 
@@ -530,7 +535,9 @@ function App() {
   // --- DATABASE & USER SYNC ---
   useEffect(() => {
     const syncDataAndUser = async () => {
-      if (!isLoaded) return;
+      // Use effectiveIsLoaded (includes auth timeout) instead of isLoaded
+      // This allows data to load even if Clerk fails (e.g., localhost domain mismatch)
+      if (!effectiveIsLoaded) return;
       
       try {
         console.log("🚀 Syncing Data & User Identity...");
@@ -1145,7 +1152,7 @@ function App() {
     };
 
     syncDataAndUser();
-  }, [isLoaded, isSignedIn, authUser?.id]); // Re-run when auth state changes
+  }, [effectiveIsLoaded, isSignedIn, authUser?.id]); // Use effectiveIsLoaded to allow data loading even when Clerk fails
 
   // Handle deep linking to specific claim from email
   useEffect(() => {
@@ -1325,14 +1332,30 @@ function App() {
 
       try {
         console.log(`🔄 Homeowner changed to: ${targetHomeownerId} - Fetching claims now.`);
+        console.log(`📡 Calling: /api/claims?homeownerId=${targetHomeownerId}`);
         
-        const response = await fetch(`/.netlify/functions/get-claims?homeownerId=${targetHomeownerId}`);
+        const response = await fetch(`/api/claims?homeownerId=${targetHomeownerId}`);
+        
+        console.log(`📊 Response status: ${response.status} ${response.statusText}`);
+        console.log(`📊 Response headers:`, Object.fromEntries(response.headers.entries()));
         
         if (!response.ok) {
-          throw new Error(`Failed to fetch claims: ${response.statusText}`);
+          // Try to get the response text for debugging
+          const responseText = await response.text();
+          console.error(`❌ Non-OK response (${response.status}):`, responseText.substring(0, 500));
+          throw new Error(`Failed to fetch claims: ${response.status} ${response.statusText}`);
+        }
+
+        // Check content type before parsing
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const responseText = await response.text();
+          console.error(`❌ Expected JSON but got ${contentType}:`, responseText.substring(0, 500));
+          throw new Error(`Invalid response type: ${contentType}. Expected JSON but got HTML or other content.`);
         }
 
         const data = await response.json();
+        console.log(`📋 Parsed claims data:`, { success: data.success, count: data.claims?.length || 0 });
         
         if (data.success && data.claims) {
           // Map database claims to frontend Claim type
@@ -1369,6 +1392,11 @@ function App() {
         }
       } catch (error: any) {
         console.error('❌ Failed to fetch claims for homeowner:', error);
+        console.error('❌ Error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
         setClaims([]); // Clear claims on error
       }
     };
@@ -4498,11 +4526,6 @@ Assigned By: ${assignerName}
     }
   }, [currentView]);
 
-  // If auth timed out, treat as not signed in and allow app to proceed
-  // This prevents the app from being stuck on a loading screen
-  const effectiveIsLoaded = isLoaded || authTimeout;
-  const effectiveIsSignedIn = isSignedIn && !authTimeout;
-
   // Use Clerk's session to determine if we show AuthScreen
   // Log authentication state for debugging
   if (typeof window !== 'undefined') {
@@ -4876,7 +4899,9 @@ Assigned By: ${assignerName}
           onOpenTemplatesModal={openTemplatesModal}
         />
       )}
-      {currentView === 'TEAM' && (
+      
+      {/* Desktop-Only Modals - Strict JavaScript Gate (Prevents Portal Rendering) */}
+      {currentView === 'TEAM' && !isMobile && (
         <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
           <InternalUserManagement 
             employees={employees}
@@ -4899,14 +4924,14 @@ Assigned By: ${assignerName}
           />
         </React.Suspense>
       )}
-      {currentView === 'DATA' && (
+      {currentView === 'DATA' && !isMobile && (
         <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
           <UnifiedImportDashboard 
             onClose={() => setCurrentView('DASHBOARD')}
           />
         </React.Suspense>
       )}
-      {currentView === 'HOMEOWNERS' && (
+      {currentView === 'HOMEOWNERS' && !isMobile && (
         <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
           <HomeownersList 
             homeowners={availableHomeowners}
@@ -4918,34 +4943,17 @@ Assigned By: ${assignerName}
           />
         </React.Suspense>
       )}
-      {currentView === 'EMAIL_HISTORY' && (
+      {currentView === 'EMAIL_HISTORY' && !isMobile && (
         <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
           <EmailHistory onClose={() => setCurrentView('DASHBOARD')} />
         </React.Suspense>
       )}
-      {currentView === 'BACKEND' && (
+      {currentView === 'BACKEND' && !isMobile && (
         <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
           <BackendDashboard onClose={() => setCurrentView('DASHBOARD')} />
         </React.Suspense>
       )}
-      {currentView === 'GUIDE' && (
-        <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
-          <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto">
-            <div className="max-w-6xl mx-auto">
-              <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
-                <button
-                  onClick={() => setCurrentView('DASHBOARD')}
-                  className="text-blue-500 hover:text-blue-600 flex items-center gap-2"
-                >
-                  ← Back to Dashboard
-                </button>
-              </div>
-              <GuideEditor />
-            </div>
-          </div>
-        </React.Suspense>
-      )}
-      {currentView === 'ANALYTICS' && (
+      {currentView === 'ANALYTICS' && !isMobile && (
         <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
           <WarrantyAnalytics
             claims={claims}
@@ -4963,8 +4971,57 @@ Assigned By: ${assignerName}
           />
         </React.Suspense>
       )}
+      {currentView === 'BUILDERS' && !isMobile && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setCurrentView('DASHBOARD');
+          }
+        }}
+      >
+        <div 
+          className="bg-surface dark:bg-gray-800 w-full max-w-7xl rounded-xl shadow-2xl overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 h-[90vh] flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <React.Suspense fallback={
+            <div className="flex items-center justify-center h-full">
+              <div className="p-6 text-surface-on-variant">Loading…</div>
+            </div>
+          }>
+            <BuilderManagement
+              builderGroups={builderGroups}
+              onAddBuilderGroup={handleAddBuilderGroup}
+              onUpdateBuilderGroup={handleUpdateBuilderGroup}
+              onDeleteBuilderGroup={handleDeleteBuilderGroup}
+              onClose={() => setCurrentView('DASHBOARD')}
+            />
+          </React.Suspense>
+        </div>
+      </div>
+    )}
+      {/* End Desktop-Only Modals */}
       
-      {/* Templates Modal */}
+      {/* GUIDE Modal - Available on all platforms */}
+      {currentView === 'GUIDE' && (
+        <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
+          <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto">
+            <div className="max-w-6xl mx-auto">
+              <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+                <button
+                  onClick={() => setCurrentView('DASHBOARD')}
+                  className="text-blue-500 hover:text-blue-600 flex items-center gap-2"
+                >
+                  ← Back to Dashboard
+                </button>
+              </div>
+              <GuideEditor />
+            </div>
+          </div>
+        </React.Suspense>
+      )}
+      
+      {/* Templates Modal - Available on all platforms */}
       {isTemplatesModalOpen && (
         <React.Suspense fallback={<div className="p-6 text-surface-on-variant">Loading…</div>}>
           <TemplatesManagerModal 
@@ -4979,35 +5036,6 @@ Assigned By: ${assignerName}
         </React.Suspense>
       )}
       
-      {currentView === 'BUILDERS' && (
-        <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm overflow-y-auto animate-[backdrop-fade-in_0.2s_ease-out]"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) {
-              setCurrentView('DASHBOARD');
-            }
-          }}
-        >
-          <div 
-            className="bg-surface dark:bg-gray-800 w-full max-w-7xl rounded-xl shadow-2xl overflow-hidden animate-[scale-in_0.2s_ease-out] my-8 h-[90vh] flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <React.Suspense fallback={
-              <div className="flex items-center justify-center h-full">
-                <div className="p-6 text-surface-on-variant">Loading…</div>
-              </div>
-            }>
-              <BuilderManagement
-                builderGroups={builderGroups}
-                onAddBuilderGroup={handleAddBuilderGroup}
-                onUpdateBuilderGroup={handleUpdateBuilderGroup}
-                onDeleteBuilderGroup={handleDeleteBuilderGroup}
-                onClose={() => setCurrentView('DASHBOARD')}
-              />
-            </React.Suspense>
-          </div>
-        </div>
-      )}
       {currentView === 'NEW' && (
         <div className="flex flex-col h-screen overflow-hidden">
           {/* Fixed Header */}

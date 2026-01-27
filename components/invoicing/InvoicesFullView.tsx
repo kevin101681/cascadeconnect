@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Plus, Loader2, AlertTriangle, Search, Building2 } from 'lucide-react';
+import { X, Plus, Loader2, AlertTriangle, Search, Building2, ArrowLeft } from 'lucide-react';
 import { InvoiceCard } from '../ui/InvoiceCard';
 import InvoiceFormPanel from '../InvoiceFormPanel';
 import Button from '../Button';
@@ -630,11 +630,15 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
             padding: 0,
           }}
         >
-          {/* ==================== SPLIT CONTAINER ==================== */}
-          <div className="absolute inset-0 flex">
+          {/* ==================== SPLIT CONTAINER (Responsive) ==================== */}
+          <div className="absolute inset-0 flex flex-col md:flex-row">
         
         {/* ==================== LEFT PANEL (THE LIST) ==================== */}
-        <div className="absolute left-0 top-0 bottom-0 flex flex-col border-r border-gray-200 bg-white overflow-hidden" style={{ width: '50%' }}>
+        {/* Mobile: Full width when no selection, hidden when editing */}
+        {/* Desktop: Always visible at 50% width */}
+        <div className={`absolute md:relative left-0 top-0 bottom-0 flex flex-col border-r border-gray-200 bg-white overflow-hidden w-full md:w-1/2 ${
+          (selectedInvoice || isCreatingNew) ? 'hidden md:flex' : 'flex'
+        }`}>
           
           {/* HEADER */}
           <div className="flex-shrink-0 px-6 py-5 border-b border-gray-200">
@@ -774,7 +778,7 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
                       <p className="text-gray-400 text-sm">No invoices found</p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-2 xl:grid-cols-3 gap-4 p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 p-6">
                       {filteredInvoices.map(invoice => {
                         // Map status for display
                         const displayStatus: "Draft" | "Sent" | "Overdue" | "Paid" = 
@@ -873,7 +877,11 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
         </div>
 
         {/* ==================== RIGHT PANEL (THE EDITOR) ==================== */}
-        <div className="absolute right-0 top-0 bottom-0 flex flex-col bg-white overflow-hidden" style={{ width: '50%' }}>
+        {/* Mobile: Full width when selected/creating, hidden otherwise */}
+        {/* Desktop: Always visible at 50% width */}
+        <div className={`absolute md:relative right-0 top-0 bottom-0 flex flex-col bg-white overflow-hidden w-full md:w-1/2 ${
+          (selectedInvoice || isCreatingNew || activeBuilderId) ? 'flex' : 'hidden md:flex'
+        }`}>
           {/* INVOICES TAB - Invoice Form */}
           {activeTab === 'INVOICES' && (
             (selectedInvoice || isCreatingNew) ? (
@@ -909,8 +917,20 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
                 </div>
               ) : activeBuilderId === "new" ? (
                 // STATE 2: Create Mode - Show empty form
-                <div className="h-full overflow-auto bg-white">
-                  <div className="p-6">
+                <div className="h-full overflow-auto bg-white flex flex-col">
+                  {/* Mobile Back Button Header */}
+                  <div className="md:hidden flex items-center gap-3 px-6 py-4 border-b border-gray-200">
+                    <button
+                      onClick={() => setActiveBuilderId(null)}
+                      className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
+                      aria-label="Back to list"
+                    >
+                      <ArrowLeft className="h-5 w-5" />
+                    </button>
+                    <h2 className="text-xl font-bold text-gray-900 flex-1">New Builder</h2>
+                  </div>
+                  
+                  <div className="flex-1 overflow-auto p-6">
                     <BuilderForm
                       mode="create"
                       initialData={null}
@@ -930,8 +950,20 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
                     return null;
                   }
                   return (
-                    <div className="h-full overflow-auto bg-white">
-                      <div className="p-6">
+                    <div className="h-full overflow-auto bg-white flex flex-col">
+                      {/* Mobile Back Button Header */}
+                      <div className="md:hidden flex items-center gap-3 px-6 py-4 border-b border-gray-200">
+                        <button
+                          onClick={() => setActiveBuilderId(null)}
+                          className="p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
+                          aria-label="Back to list"
+                        >
+                          <ArrowLeft className="h-5 w-5" />
+                        </button>
+                        <h2 className="text-xl font-bold text-gray-900 flex-1">Edit Builder</h2>
+                      </div>
+                      
+                      <div className="flex-1 overflow-auto p-6">
                         <BuilderForm
                           mode="edit"
                           initialData={selectedBuilder}

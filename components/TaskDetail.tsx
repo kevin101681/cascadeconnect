@@ -99,10 +99,14 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
   };
 
   const handleCancelEdit = () => {
+    // Reset form fields to original values
     setEditTaskTitle(task.title);
     setEditTaskAssignee(task.assignedToId);
     setEditSelectedClaimIds(task.relatedClaimIds || []);
     setIsEditing(false);
+    
+    // Return to task list (not read-only detail view)
+    onBack();
   };
 
   const toggleClaimSelection = (claimId: string) => {

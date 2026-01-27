@@ -34,9 +34,10 @@ interface ClaimDetailProps {
   }) => void; // Function to track claim-related messages
   onNavigate?: (view: 'DASHBOARD' | 'TEAM' | 'DATA' | 'TASKS' | 'CALLS', config?: { initialTab?: 'CLAIMS' | 'MESSAGES' | 'TASKS'; initialThreadId?: string | null }) => void; // Navigation function
   isHomeownerView?: boolean; // Whether viewing as homeowner (hide admin controls)
+  onSaveRef?: React.MutableRefObject<(() => void) | null>; // Expose save function for external triggers (e.g., mobile footer)
 }
 
-const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpdateClaim, onBack, contractors, onSendMessage, startInEditMode = false, currentUser, onAddInternalNote, claimMessages = [], onTrackClaimMessage, onNavigate, isHomeownerView = false }) => {
+const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpdateClaim, onBack, contractors, onSendMessage, startInEditMode = false, currentUser, onAddInternalNote, claimMessages = [], onTrackClaimMessage, onNavigate, isHomeownerView = false, onSaveRef }) => {
   // Ensure claimMessages is always an array
   const safeClaimMessages = claimMessages || [];
   
@@ -62,6 +63,13 @@ const ClaimDetail: React.FC<ClaimDetailProps> = ({ claim, currentUserRole, onUpd
     setEditInternalNotes(claim.internalNotes || '');
     setNewNote('');
   }, [claim.id, startInEditMode]);
+
+  // Expose save function to parent via ref (for mobile footer)
+  useEffect(() => {
+    if (onSaveRef) {
+      onSaveRef.current = handleSaveDetails;
+    }
+  }, [onSaveRef, editTitle, editDescription, editInternalNotes]);
 
   // Service Order Email Modal State
   const [showSOModal, setShowSOModal] = useState(false);
@@ -333,7 +341,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 claim-detail-header-actions">
           <Button 
             variant="outlined" 
             onClick={() => {

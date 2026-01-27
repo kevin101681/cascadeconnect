@@ -75,6 +75,9 @@
 # Handle Batch Claims API
 /api/claims/batch /.netlify/functions/claims-batch    200!
 
+# Handle Get Claims API (single homeowner)
+/api/claims /.netlify/functions/get-claims    200!
+
 # All other routes go to index.html for SPA routing
 /*    /index.html   200
 

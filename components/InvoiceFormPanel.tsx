@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, Trash2, Calendar as CalendarIcon, DollarSign, X, Search, Check, ChevronsUpDown } from 'lucide-react';
+import { Plus, Trash2, Calendar as CalendarIcon, DollarSign, X, Search, Check, ChevronsUpDown, ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
 import { useAuth } from '@clerk/clerk-react';
 import Button from './Button';
@@ -310,8 +310,17 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
   return (
     <div className="h-full flex flex-col bg-white dark:bg-gray-900">
       {/* Header */}
-      <div className="flex items-center px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        {/* Mobile Back Button */}
+        <button
+          onClick={handleCancel}
+          className="md:hidden p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+          aria-label="Back to list"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex-1">
           {editInvoice ? 'Edit Invoice' : 'New Invoice'}
         </h2>
       </div>

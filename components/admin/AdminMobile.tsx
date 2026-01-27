@@ -1,6 +1,6 @@
 import React, { useState, Suspense } from 'react';
 import type { DashboardProps } from '../AdminDashboard';
-import type { Homeowner, Claim, Contractor, ClaimClassification } from '../../types';
+import type { Homeowner, Claim, Contractor, ClaimClassification, Call } from '../../types';
 import type { Channel } from '../../services/internalChatService';
 import { ClaimStatus } from '../../types';
 import { 
@@ -36,7 +36,13 @@ import {
   CheckCircle,
   ChevronUp,
   Clipboard,
-  CheckSquare
+  CheckSquare,
+  Send,
+  Link as LinkIcon,
+  Copy,
+  Clock,
+  AlertCircle,
+  User
 } from 'lucide-react';
 import StatusBadge from '../StatusBadge';
 import { formatDate } from '../../lib/utils/dateHelpers';
@@ -45,10 +51,15 @@ import { useUI } from '../../contexts/UIContext';
 import { useTaskStore } from '../../stores/useTaskStore';
 import { WarrantyCard } from '../ui/WarrantyCard';
 import { AdminMobileHeader } from './AdminMobileHeader';
+import { Input } from '../ui/input';
 
 // Lazy load heavy modal components
 const TasksSheet = React.lazy(() => import('../TasksSheet'));
 const PunchListApp = React.lazy(() => import('../PunchListApp'));
+const BackendDashboard = React.lazy(() => import('../BackendDashboard'));
+const HomeownersList = React.lazy(() => import('../HomeownersList'));
+const InternalUserManagement = React.lazy(() => import('../InternalUserManagement'));
+const WarrantyAnalytics = React.lazy(() => import('../WarrantyAnalytics'));
 const ScheduleTabWrapper = React.lazy(() => 
   import('../dashboard/tabs/ScheduleTabWrapper').then(m => ({ default: m.ScheduleTabWrapper }))
 );
@@ -316,14 +327,43 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
   const [showMessages, setShowMessages] = useState(false);
   const [showTasks, setShowTasks] = useState(false);
   const [showTeamChat, setShowTeamChat] = useState(false);
+  const [showBackend, setShowBackend] = useState(false);
+  const [showHomeowners, setShowHomeowners] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showTeam, setShowTeam] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const [showBuilderGroups, setShowBuilderGroups] = useState(false);
+  const [selectedBuilderGroupId, setSelectedBuilderGroupId] = useState<string | null>(null);
+  const [showCalls, setShowCalls] = useState(false);
+  const [selectedCallId, setSelectedCallId] = useState<string | null>(null);
+  
+  // Scroll position preservation
+  const dashboardScrollRef = React.useRef(0);
   
   // Global search state for dashboard
   const [globalQuery, setGlobalQuery] = useState('');
   const [globalResults, setGlobalResults] = useState<any[]>([]);
   const [isGlobalSearching, setIsGlobalSearching] = useState(false);
   
-  // Edit homeowner modal state
+  // Edit homeowner modal state & inline form data
   const [isEditingHomeowner, setIsEditingHomeowner] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    builder: '',
+    jobName: '',
+    closingDate: '',
+  });
+  
+  // Invite homeowner modal state
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteName, setInviteName] = useState('');
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteBody, setInviteBody] = useState('');
+  const [isDrafting, setIsDrafting] = useState(false);
+  const [inviteStatus, setInviteStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
   
   // Stack navigation state for Claims (List -> Detail)
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
@@ -388,6 +428,18 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
     onSendMessage,
     onCreateThread,
     onUpdateThread,
+    builderUsers = [],
+    builderGroups = [],
+    onAddEmployee,
+    onUpdateEmployee,
+    onDeleteEmployee,
+    onAddContractor,
+    onUpdateContractor,
+    onDeleteContractor,
+    onAddBuilderUser,
+    onUpdateBuilderUser,
+    onDeleteBuilderUser,
+    onDeleteHomeowner,
   } = props;
 
   // Message email templates (localStorage-based)
@@ -410,8 +462,48 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
     }
   }, []);
 
+  // ========== MOCK CALL DATA ==========
+  const MOCK_CALL: Call = {
+    id: 'mock-call-1',
+    vapiCallId: 'vapi-123-mock',
+    homeownerId: targetHomeowner?.id || null,
+    homeownerName: 'John Smith',
+    phoneNumber: '+15551234567',
+    propertyAddress: '123 Oak Street, Springfield, IL 62701',
+    issueDescription: 'Calling about roof warranty - shingles appear to be lifting after recent storm. Noticed some water damage in the attic.',
+    isUrgent: true,
+    transcript: `Assistant: Thank you for calling Cascade Warranty Services. How can I help you today?
+
+Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I think it might be covered under warranty.`,
+    recordingUrl: 'https://example.com/recordings/mock-call-1.mp3',
+    isVerified: false,
+    addressMatchSimilarity: 0.85,
+    createdAt: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
+    verifiedBuilderName: null,
+    verifiedClosingDate: null,
+  };
+
   // Determine which homeowner to display
   const selectedHomeowner = targetHomeowner || activeHomeowner;
+
+  // Synchronize edit form data when homeowner changes
+  React.useEffect(() => {
+    if (selectedHomeowner) {
+      setEditFormData({
+        name: selectedHomeowner.name || '',
+        email: selectedHomeowner.email || '',
+        phone: selectedHomeowner.phone || '',
+        address: selectedHomeowner.address || '',
+        builder: selectedHomeowner.builder || '',
+        jobName: selectedHomeowner.jobName || '',
+        closingDate: selectedHomeowner.closingDate || '',
+      });
+      setIsEditingHomeowner(false); // Reset edit mode when switching homeowners
+    }
+  }, [selectedHomeowner?.id]);
+
+  // Default invite message
+  const DEFAULT_INVITE_MESSAGE = "Welcome to Cascade Connect! You have been invited to join your new Homeowner Portal. Please click the link below to activate your account and view your warranty details.";
 
   // Filter claims for this homeowner
   const homeownerClaims = claims.filter(
@@ -485,6 +577,8 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
         setSelectedTask(null);
         setActiveThreadId(null);
         setActiveTeamChannelId(null);
+        setSelectedBuilderGroupId(null);
+        setSelectedCallId(null);
         return;
       }
       
@@ -498,6 +592,13 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
         setShowSchedule(false);
         setShowPunchList(false);
         setShowTeamChat(false);
+        setShowBackend(false);
+        setShowHomeowners(false);
+        setShowAnalytics(false);
+        setShowTeam(false);
+        setShowNotes(false);
+        setShowBuilderGroups(false);
+        setShowCalls(false);
         setIsEditingHomeowner(false);
         return;
       }
@@ -512,11 +613,19 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
         setShowSchedule(false);
         setShowPunchList(false);
         setShowTeamChat(false);
+        setShowBackend(false);
+        setShowHomeowners(false);
+        setShowAnalytics(false);
+        setShowTeam(false);
+        setShowNotes(false);
+        setShowBuilderGroups(false);
+        setShowCalls(false);
         setIsEditingHomeowner(false);
         setSelectedClaimId(null);
         setSelectedTask(null);
         setActiveThreadId(null);
         setActiveTeamChannelId(null);
+        setSelectedBuilderGroupId(null);
       }
     };
     
@@ -526,13 +635,20 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
 
   // Push history when opening a modal (Dashboard -> List)
   React.useEffect(() => {
-    const activeModal = showClaims ? 'CLAIMS' 
+    const activeModal = showClaims ? 'CLAIMS'
       : showTasks ? 'TASKS'
       : showMessages ? 'MESSAGES'
       : showDocuments ? 'DOCUMENTS'
       : showSchedule ? 'SCHEDULE'
       : showPunchList ? 'PUNCHLIST'
       : showTeamChat ? 'TEAMCHAT'
+      : showBackend ? 'BACKEND'
+      : showHomeowners ? 'HOMEOWNERS'
+      : showAnalytics ? 'ANALYTICS'
+      : showTeam ? 'TEAM'
+      : showNotes ? 'NOTES'
+      : showBuilderGroups ? 'BUILDER_GROUPS'
+      : showCalls ? 'CALLS'
       : isEditingHomeowner ? 'EDIT_HOMEOWNER'
       : null;
     
@@ -540,7 +656,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
       window.history.pushState({ view: activeModal }, '');
       console.log('📍 Pushed List View:', activeModal);
     }
-  }, [showClaims, showTasks, showMessages, showDocuments, showSchedule, showPunchList, showTeamChat, isEditingHomeowner]);
+  }, [showClaims, showTasks, showMessages, showDocuments, showSchedule, showPunchList, showTeamChat, showBackend, showHomeowners, showAnalytics, showTeam, showNotes, showBuilderGroups, showCalls, isEditingHomeowner]);
 
   // Push history when opening a detail view (List -> Detail)
   React.useEffect(() => {
@@ -548,13 +664,15 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
       : selectedTask ? { view: 'TASKS', id: selectedTask.id }
       : activeThreadId ? { view: 'MESSAGES', id: activeThreadId }
       : activeTeamChannelId ? { view: 'TEAMCHAT', id: activeTeamChannelId }
+      : selectedBuilderGroupId ? { view: 'BUILDER_GROUPS', id: selectedBuilderGroupId }
+      : selectedCallId ? { view: 'CALLS', id: selectedCallId }
       : null;
     
     if (activeDetail) {
       window.history.pushState(activeDetail, '');
       console.log('📍 Pushed Detail View:', activeDetail);
     }
-  }, [selectedClaimId, selectedTask, activeThreadId, activeTeamChannelId]);
+  }, [selectedClaimId, selectedTask, activeThreadId, activeTeamChannelId, selectedBuilderGroupId, selectedCallId]);
 
   console.log('📱 AdminMobileDashboard render:', {
     homeowner: selectedHomeowner?.name || 'NONE',
@@ -586,21 +704,131 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
     }
   };
 
+  // Handler for saving homeowner edits
+  const handleSaveHomeownerEdit = async () => {
+    if (!selectedHomeowner) return;
+    
+    console.log('💾 Saving homeowner edits:', editFormData);
+    
+    try {
+      // Call the update handler from parent
+      if (onUpdateHomeowner) {
+        await onUpdateHomeowner({
+          ...selectedHomeowner,
+          ...editFormData,
+        });
+      }
+      
+      // Exit edit mode
+      setIsEditingHomeowner(false);
+      console.log('✅ Homeowner updated successfully');
+    } catch (error) {
+      console.error('❌ Failed to save homeowner:', error);
+      // TODO: Show error toast/notification
+    }
+  };
+
+  // Handler for inviting homeowner
+  const handleInviteHomeowner = () => {
+    if (!selectedHomeowner) return;
+    
+    console.log('📧 Opening invite modal for:', selectedHomeowner.email);
+    
+    // Pre-fill the invite form with homeowner data and default message
+    setInviteName(selectedHomeowner.name || '');
+    setInviteEmail(selectedHomeowner.email || '');
+    setInviteBody(DEFAULT_INVITE_MESSAGE); // Pre-fill with standard message
+    setIsDrafting(false);
+    setInviteStatus('idle'); // Reset status
+    
+    // Open the modal
+    setShowInviteModal(true);
+  };
+
+  // Handler for sending the invitation (with button feedback)
+  const handleSendInvite = async () => {
+    if (!inviteEmail || !inviteBody) return;
+    
+    console.log('📧 Sending invitation to:', inviteEmail);
+    
+    try {
+      // Set sending state
+      setInviteStatus('sending');
+      
+      // TODO: Replace with actual API call
+      // Example: await sendInvitationAPI({ name: inviteName, email: inviteEmail, body: inviteBody });
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Mock API delay
+      
+      // Set success state
+      setInviteStatus('success');
+      console.log('✅ Invitation sent successfully to:', inviteEmail);
+      
+      // Wait for user to see success state
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Close modal and reset
+      setShowInviteModal(false);
+      setInviteName('');
+      setInviteEmail('');
+      setInviteBody('');
+      setInviteStatus('idle');
+      
+    } catch (error) {
+      console.error('❌ Failed to send invitation:', error);
+      setInviteStatus('error');
+      
+      // Reset to idle after showing error
+      setTimeout(() => setInviteStatus('idle'), 3000);
+    }
+  };
+
+  // ========== SCROLL POSITION PRESERVATION ==========
+  // Helper to save scroll position before opening a modal
+  const handleOpenModal = (setter: React.Dispatch<React.SetStateAction<boolean>>) => {
+    dashboardScrollRef.current = window.scrollY;
+    console.log('💾 Saved scroll position:', dashboardScrollRef.current);
+    setter(true);
+  };
+
+  // Restore scroll position when all modals are closed
+  React.useLayoutEffect(() => {
+    const allModalsClosed = !showClaims && !showTasks && !showMessages && 
+      !showDocuments && !showSchedule && !showPunchList && !showTeamChat &&
+      !showBackend && !showHomeowners && !showAnalytics && !showTeam && 
+      !showNotes && !showBuilderGroups && !showCalls && !isEditingHomeowner;
+    
+    if (allModalsClosed) {
+      console.log('📜 Restoring scroll position:', dashboardScrollRef.current);
+      window.scrollTo(0, dashboardScrollRef.current);
+    }
+  }, [showClaims, showTasks, showMessages, showDocuments, showSchedule, 
+      showPunchList, showTeamChat, showBackend, showHomeowners, showAnalytics, 
+      showTeam, showNotes, showBuilderGroups, showCalls, isEditingHomeowner]);
+
   // ========== ACTION BUTTON COMPONENT ==========
   const ActionButton: React.FC<{
     icon: React.ElementType;
     label: string;
     onClick: () => void;
     variant?: 'primary' | 'secondary' | 'danger';
-  }> = ({ icon: Icon, label, onClick, variant = 'secondary' }) => (
+    fullWidth?: boolean;
+  }> = ({ icon: Icon, label, onClick, variant = 'secondary', fullWidth = false }) => (
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center justify-center gap-3 rounded-2xl p-6 transition-all active:scale-95 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 hover:border-primary/30 hover:bg-gray-50 dark:hover:bg-gray-700"
-      style={{ minHeight: '110px' }}
+      className={`
+        flex items-center justify-center gap-3 rounded-2xl transition-all active:scale-95 
+        bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 
+        hover:border-primary/30 hover:bg-gray-50 dark:hover:bg-gray-700
+        ${fullWidth 
+          ? 'col-span-2 h-14 flex-row' 
+          : 'flex-col p-6'
+        }
+      `}
+      style={fullWidth ? undefined : { minHeight: '110px' }}
     >
-      <Icon className="h-8 w-8 text-primary" />
-      <span className="text-sm font-medium text-center text-primary">
+      <Icon className={`text-primary ${fullWidth ? 'h-5 w-5' : 'h-8 w-8'}`} />
+      <span className={`font-medium text-center text-primary ${fullWidth ? 'text-base' : 'text-sm'}`}>
         {label}
       </span>
     </button>
@@ -727,138 +955,269 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
         </div>
       )}
 
-      {/* Collapsible Homeowner Info Card */}
+      {/* Collapsible Homeowner Info Card - Inline Editing */}
       <div className={`px-4 pt-4 pb-6 ${globalQuery.trim().length > 0 ? 'opacity-30 pointer-events-none' : ''}`}>
-        <button
-          type="button"
-          onClick={() => setIsHomeownerExpanded(!isHomeownerExpanded)}
-          className="w-full bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-gray-700 text-left"
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
-                {selectedHomeowner.name}
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {selectedHomeowner.jobName || 'No project'} • {formatDate(selectedHomeowner.closingDate)}
-              </p>
-            </div>
-            {isHomeownerExpanded ? (
-              <ChevronDown className="h-5 w-5 text-gray-400 flex-shrink-0 mt-1" />
-            ) : (
-              <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0 mt-1" />
-            )}
-          </div>
-
-          {/* Expanded Details */}
-          {isHomeownerExpanded && (
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-gray-500 dark:text-gray-400 mb-1">Email</p>
-                  <p className="text-gray-900 dark:text-gray-100 font-medium truncate">{selectedHomeowner.email}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 dark:text-gray-400 mb-1">Phone</p>
-                  <p className="text-gray-900 dark:text-gray-100 font-medium">{selectedHomeowner.phone || 'N/A'}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-gray-500 dark:text-gray-400 mb-1">Address</p>
-                  <p className="text-gray-900 dark:text-gray-100 font-medium">{selectedHomeowner.address || 'N/A'}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-gray-500 dark:text-gray-400 mb-1">Builder</p>
-                  <p className="text-gray-900 dark:text-gray-100 font-medium">{selectedHomeowner.builder || 'N/A'}</p>
-                </div>
-              </div>
-
-              {/* Quick Actions Footer */}
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-                  Quick Actions
-                </p>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (selectedHomeowner.phone) {
-                        window.open(`sms:${selectedHomeowner.phone}`, '_blank');
-                      }
-                    }}
-                    className="flex flex-col items-center justify-center gap-2 rounded-xl p-3 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <MessageCircle className="h-5 w-5 text-gray-700 dark:text-gray-300" />
-                    <span className="text-xs font-medium text-gray-900 dark:text-gray-100">Text</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (selectedHomeowner.address) {
-                        const encoded = encodeURIComponent(selectedHomeowner.address);
-                        window.open(`https://www.google.com/maps/search/?api=1&query=${encoded}`, '_blank');
-                      }
-                    }}
-                    className="flex flex-col items-center justify-center gap-2 rounded-xl p-3 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <MapPin className="h-5 w-5 text-gray-700 dark:text-gray-300" />
-                    <span className="text-xs font-medium text-gray-900 dark:text-gray-100">Maps</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (selectedHomeowner.phone) {
-                        window.open(`tel:${selectedHomeowner.phone}`, '_blank');
-                      }
-                    }}
-                    className="flex flex-col items-center justify-center gap-2 rounded-xl p-3 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <Phone className="h-5 w-5 text-gray-700 dark:text-gray-300" />
-                    <span className="text-xs font-medium text-gray-900 dark:text-gray-100">Call</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Footer: Status & Edit Button - Desktop Parity */}
-              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                {/* Status Badge - Real Logic */}
-                <div className="flex items-center gap-2">
-                  {(() => {
+        <div className="w-full bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+          
+          {/* Header Row (Always Visible) */}
+          <button
+            type="button"
+            onClick={() => setIsHomeownerExpanded(!isHomeownerExpanded)}
+            className="w-full text-left"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                {/* Row 1: Name + Status Badge (inline) */}
+                <div className="flex items-center gap-3 mb-1">
+                  {isEditingHomeowner ? (
+                    <Input
+                      type="text"
+                      value={editFormData.name}
+                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      className="text-lg font-semibold h-8 -ml-2 flex-1"
+                      placeholder="Homeowner Name"
+                    />
+                  ) : (
+                    <h2 className="text-lg font-semibold text-primary dark:text-primary">
+                      {selectedHomeowner.name}
+                    </h2>
+                  )}
+                  
+                  {/* Status Badge - Sits immediately next to name */}
+                  {!isEditingHomeowner && (() => {
                     // Determine status based on claims or default to "Active"
                     if (homeownerClaims.length > 0) {
-                      // Use the most recent claim's status
                       const status = homeownerClaims[0].status;
                       return <StatusBadge status={status} />;
                     } else {
-                      // Default: Active homeowner with no claims
                       return (
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800">
+                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
                           Active
                         </span>
                       );
                     }
                   })()}
                 </div>
+                
+                {/* Row 2: Project - Builder - Closing Date */}
+                {isEditingHomeowner ? (
+                  <div className="space-y-1 mt-2">
+                    <Input
+                      type="text"
+                      value={editFormData.jobName}
+                      onChange={(e) => setEditFormData({ ...editFormData, jobName: e.target.value })}
+                      className="h-8 text-xs w-full"
+                      placeholder="Project Name"
+                    />
+                    <Input
+                      type="text"
+                      value={editFormData.builder}
+                      onChange={(e) => setEditFormData({ ...editFormData, builder: e.target.value })}
+                      className="h-8 text-xs w-full"
+                      placeholder="Builder Name"
+                    />
+                    <Input
+                      type="date"
+                      value={editFormData.closingDate}
+                      onChange={(e) => setEditFormData({ ...editFormData, closingDate: e.target.value })}
+                      className="h-8 text-xs w-full"
+                      placeholder="Closing Date"
+                    />
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {selectedHomeowner.jobName || 'No project'} • {selectedHomeowner.builder || 'No builder'} • {formatDate(selectedHomeowner.closingDate)}
+                  </p>
+                )}
+              </div>
+              
+              {/* Expand/Collapse Icon */}
+              {isHomeownerExpanded ? (
+                <ChevronDown className="h-5 w-5 text-gray-400 flex-shrink-0 mt-1" />
+              ) : (
+                <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0 mt-1" />
+              )}
+            </div>
+          </button>
 
-                {/* Edit Homeowner Button */}
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log('✏️ Edit homeowner:', selectedHomeowner.id);
-                    setIsEditingHomeowner(true);
-                  }}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-primary bg-white dark:bg-gray-800 border border-primary/30 rounded-lg hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors"
-                >
-                  <FileEdit className="h-4 w-4" />
-                  <span>Edit</span>
-                </button>
+          {/* Expanded Body - Contact Info & Inline Editing */}
+          {isHomeownerExpanded && (
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-3">
+              
+              {/* Email Row */}
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Email</p>
+                {isEditingHomeowner ? (
+                  <Input
+                    type="email"
+                    value={editFormData.email}
+                    onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                    className="w-full h-10 bg-white dark:bg-gray-800"
+                    placeholder="email@example.com"
+                  />
+                ) : (
+                  <div className="flex items-center gap-0">
+                    {/* Action Button: Internal Message */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('✉️ Opening internal message modal');
+                        handleOpenModal(setShowMessages);
+                      }}
+                      className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center mr-3 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors flex-shrink-0"
+                      title="Send Internal Message"
+                    >
+                      <Mail className="h-4 w-4" />
+                    </button>
+                    
+                    {/* Email Value */}
+                    <p className="text-sm text-primary dark:text-primary font-medium truncate flex-1">
+                      {selectedHomeowner.email}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Phone Row */}
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Phone</p>
+                {isEditingHomeowner ? (
+                  <Input
+                    type="tel"
+                    value={editFormData.phone}
+                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                    className="w-full h-10 bg-white dark:bg-gray-800"
+                    placeholder="(555) 555-5555"
+                  />
+                ) : (
+                  <div className="flex items-center gap-0">
+                    {/* Action Button: Text */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedHomeowner.phone) {
+                          window.open(`sms:${selectedHomeowner.phone}`, '_blank');
+                        }
+                      }}
+                      className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center mr-3 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors flex-shrink-0"
+                      title="Send Text Message"
+                      disabled={!selectedHomeowner.phone}
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                    </button>
+                    
+                    {/* Action Button: Call */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedHomeowner.phone) {
+                          window.open(`tel:${selectedHomeowner.phone}`, '_blank');
+                        }
+                      }}
+                      className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center mr-3 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors flex-shrink-0"
+                      title="Call"
+                      disabled={!selectedHomeowner.phone}
+                    >
+                      <Phone className="h-4 w-4" />
+                    </button>
+                    
+                    {/* Phone Value */}
+                    <p className="text-sm text-primary dark:text-primary font-medium flex-1">
+                      {selectedHomeowner.phone || 'N/A'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Address Row */}
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Address</p>
+                {isEditingHomeowner ? (
+                  <Input
+                    type="text"
+                    value={editFormData.address}
+                    onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                    className="w-full h-10 bg-white dark:bg-gray-800"
+                    placeholder="123 Main St, City, ST 12345"
+                  />
+                ) : (
+                  <div className="flex items-center gap-0">
+                    {/* Action Button: Maps */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (selectedHomeowner.address) {
+                          const encoded = encodeURIComponent(selectedHomeowner.address);
+                          window.open(`https://www.google.com/maps/search/?api=1&query=${encoded}`, '_blank');
+                        }
+                      }}
+                      className="w-10 h-10 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center mr-3 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors flex-shrink-0"
+                      title="Open in Maps"
+                      disabled={!selectedHomeowner.address}
+                    >
+                      <MapPin className="h-4 w-4" />
+                    </button>
+                    
+                    {/* Address Value */}
+                    <p className="text-sm text-primary dark:text-primary font-medium flex-1">
+                      {selectedHomeowner.address || 'N/A'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer: Edit & Invite Buttons */}
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                {isEditingHomeowner ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSaveHomeownerEdit();
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Save Changes</span>
+                  </button>
+                ) : (
+                  <div className="flex gap-3">
+                    {/* Edit Information Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log('✏️ Edit homeowner:', selectedHomeowner.id);
+                        setIsEditingHomeowner(true);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary bg-white dark:bg-gray-800 border border-primary/30 rounded-lg hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors"
+                    >
+                      <FileEdit className="h-4 w-4" />
+                      <span>Edit</span>
+                    </button>
+                    
+                    {/* Invite Homeowner Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleInviteHomeowner();
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary bg-white dark:bg-gray-800 border border-primary/30 rounded-lg hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors"
+                    >
+                      <Send className="h-4 w-4" />
+                      <span>Invite</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}
-        </button>
+        </div>
       </div>
 
       {/* PROJECT Section (No Title) */}
@@ -870,7 +1229,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
             label="Warranty"
             onClick={() => {
               console.log('🛡️ Opening Warranty (Claims tab)');
-              setShowClaims(true);
+              handleOpenModal(setShowClaims);
             }}
           />
           
@@ -880,7 +1239,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
             label="Messages"
             onClick={() => {
               console.log('💬 Opening Homeowner Messages');
-              setShowMessages(true);
+              handleOpenModal(setShowMessages);
             }}
           />
           
@@ -890,7 +1249,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
             label="Tasks"
             onClick={() => {
               console.log('✅ Opening Tasks');
-              setShowTasks(true);
+              handleOpenModal(setShowTasks);
             }}
           />
           
@@ -900,7 +1259,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
             label="Documents"
             onClick={() => {
               console.log('📄 Opening Documents tab');
-              setShowDocuments(true);
+              handleOpenModal(setShowDocuments);
             }}
           />
           
@@ -910,7 +1269,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
             label="Schedule"
             onClick={() => {
               console.log('📅 Opening Schedule');
-              setShowSchedule(true);
+              handleOpenModal(setShowSchedule);
             }}
           />
           
@@ -920,7 +1279,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
             label="Notes"
             onClick={() => {
               console.log('📝 Opening Notes');
-              openTasks();
+              handleOpenModal(setShowNotes);
             }}
           />
           
@@ -930,17 +1289,17 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
             label="Blue Tag"
             onClick={() => {
               console.log('📋 Opening PunchList');
-              setShowPunchList(true);
+              handleOpenModal(setShowPunchList);
             }}
           />
           
-          {/* 8. Team Chat (Global) */}
+          {/* 8. Calls */}
           <ActionButton
-            icon={MessageCircle}
-            label="Team Chat"
+            icon={Phone}
+            label="Calls"
             onClick={() => {
-              console.log('💭 Opening Team Chat');
-              setShowTeamChat(true);
+              console.log('📞 Opening Calls');
+              handleOpenModal(setShowCalls);
             }}
           />
         </div>
@@ -961,45 +1320,57 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
           <ActionButton
             icon={Users}
             label="Homeowners"
-            onClick={() => onNavigate?.('HOMEOWNERS')}
+            onClick={() => {
+              console.log('👥 Opening Homeowners');
+              handleOpenModal(setShowHomeowners);
+            }}
           />
           <ActionButton
             icon={DollarSign}
             label="Invoices"
-            onClick={() => setShowInvoicesFullView?.(true)}
+            onClick={() => {
+              dashboardScrollRef.current = window.scrollY;
+              setShowInvoicesFullView?.(true);
+            }}
           />
           <ActionButton
             icon={BarChart}
             label="Analytics"
             onClick={() => {
               console.log('📊 Opening Analytics');
-              onNavigate?.('ANALYTICS' as any);
+              handleOpenModal(setShowAnalytics);
+            }}
+          />
+          <ActionButton
+            icon={MessageCircle}
+            label="Team Chat"
+            onClick={() => {
+              console.log('💭 Opening Team Chat');
+              handleOpenModal(setShowTeamChat);
             }}
           />
           <ActionButton
             icon={UserCog}
             label="Internal Users"
-            onClick={() => onNavigate?.('TEAM')}
+            onClick={() => {
+              console.log('👥 Opening Internal Users');
+              handleOpenModal(setShowTeam);
+            }}
           />
           <ActionButton
             icon={Building2}
             label="Builders"
             onClick={() => {
-              console.log('🏗️ Opening Builders');
-              onNavigate?.('BUILDERS' as any);
+              console.log('🏗️ Opening Builder Groups');
+              handleOpenModal(setShowBuilderGroups);
             }}
           />
           <ActionButton
             icon={Database}
             label="Backend"
-            onClick={() => onNavigate?.('DATA')}
-          />
-          <ActionButton
-            icon={FileEdit}
-            label="Templates"
             onClick={() => {
-              console.log('📝 Opening Templates');
-              onOpenTemplatesModal?.();
+              console.log('🔧 Opening Backend Tools');
+              handleOpenModal(setShowBackend);
             }}
           />
           <ActionButton
@@ -1104,13 +1475,487 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
         </div>
       )}
       
-      {/* Tasks Sheet (Global via useTaskStore) */}
-      <Suspense fallback={null}>
-        <TasksSheet
-          onNavigateToClaim={(claimId) => console.log('Navigate to claim:', claimId)}
-          claims={claims}
-        />
-      </Suspense>
+      {/* Notes Modal - Full Screen */}
+      {showNotes && (
+        <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 flex flex-col h-full animate-in slide-in-from-bottom-4 duration-200">
+          {/* Sticky Header */}
+          <div className="flex-none px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900 sticky top-0 z-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Internal Notes
+            </h2>
+            <button
+              onClick={() => setShowNotes(false)}
+              className="p-2 -mr-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-900/50">
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            }>
+              {/* Wrapper to hide TasksSheet's internal header since we have our own */}
+              <div className="notes-mobile-wrapper">
+                <style>{`
+                  /* Hide TasksSheet's internal header (we have our own above) */
+                  .notes-mobile-wrapper > div > div:first-child {
+                    display: none !important;
+                  }
+                  /* Remove top padding/margin from the content area */
+                  .notes-mobile-wrapper > div {
+                    padding-top: 0 !important;
+                  }
+                  /* Ensure input form is at the top */
+                  .notes-mobile-wrapper > div > div:nth-child(2) {
+                    border-top: none !important;
+                  }
+                `}</style>
+                <TasksSheet
+                  isInline={true}
+                  onNavigateToClaim={(claimId) => console.log('Navigate to claim:', claimId)}
+                  claims={claims}
+                />
+              </div>
+            </Suspense>
+          </div>
+        </div>
+      )}
+
+      {/* Builder Groups Modal - Full Screen with List -> Detail Flow */}
+      {showBuilderGroups && (
+        <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 flex flex-col h-full animate-in slide-in-from-bottom-4 duration-200">
+          {/* Sticky Header */}
+          <div className="flex-none px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900 sticky top-0 z-10">
+            {selectedBuilderGroupId && (
+              <button
+                onClick={() => setSelectedBuilderGroupId(null)}
+                className="p-2 -ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mr-2"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            )}
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex-1">
+              {selectedBuilderGroupId ? 'Edit Group' : 'Builder Groups'}
+            </h2>
+            {!selectedBuilderGroupId && (
+              <button
+                onClick={() => {
+                  console.log('TODO: Create new builder group');
+                  // TODO: Implement create new group flow
+                }}
+                className="p-2 -mr-2 text-primary hover:text-primary/80 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+              >
+                <Plus className="h-5 w-5" />
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setShowBuilderGroups(false);
+                setSelectedBuilderGroupId(null);
+              }}
+              className="p-2 -mr-2 ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-900/50">
+            {!selectedBuilderGroupId ? (
+              /* LIST VIEW */
+              <div className="p-4 space-y-3">
+                {builderGroups.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <Building2 className="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" />
+                    <p className="text-gray-500 dark:text-gray-400 mb-2">No builder groups yet</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">
+                      Tap the + button above to create one
+                    </p>
+                  </div>
+                ) : (
+                  builderGroups.map((group) => {
+                    const memberCount = (builderUsers || []).filter(u => u.builderGroupId === group.id).length;
+                    return (
+                      <button
+                        key={group.id}
+                        onClick={() => setSelectedBuilderGroupId(group.id)}
+                        className="w-full bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-primary dark:hover:border-primary transition-colors text-left"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-gray-900 dark:text-gray-100">
+                            {group.name}
+                          </h3>
+                          <ChevronRight className="h-5 w-5 text-gray-400" />
+                        </div>
+                        {group.email && (
+                          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                            {group.email}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                          <div className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            {memberCount} {memberCount === 1 ? 'member' : 'members'}
+                          </div>
+                          {group.enrollmentSlug && (
+                            <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                              <CheckCircle className="h-3 w-3" />
+                              Link active
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            ) : (
+              /* DETAIL VIEW */
+              (() => {
+                const selectedGroup = builderGroups.find(g => g.id === selectedBuilderGroupId);
+                if (!selectedGroup) {
+                  return (
+                    <div className="p-4 text-center text-gray-500">
+                      Group not found
+                    </div>
+                  );
+                }
+                
+                const members = (builderUsers || []).filter(u => u.builderGroupId === selectedGroup.id);
+                const enrollmentUrl = selectedGroup.enrollmentSlug 
+                  ? `${window.location.origin}/enroll/${selectedGroup.enrollmentSlug}`
+                  : '';
+
+                return (
+                  <div className="p-4 space-y-6">
+                    {/* Group Information */}
+                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                        <Info className="h-5 w-5 text-primary" />
+                        Group Information
+                      </h3>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                            Group Name
+                          </label>
+                          <input
+                            type="text"
+                            value={selectedGroup.name}
+                            readOnly
+                            className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                          />
+                        </div>
+                        {selectedGroup.email && (
+                          <div>
+                            <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                              Email
+                            </label>
+                            <input
+                              type="email"
+                              value={selectedGroup.email}
+                              readOnly
+                              className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Enrollment Link */}
+                    {enrollmentUrl && (
+                      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                          <LinkIcon className="h-5 w-5 text-primary" />
+                          Enrollment Link
+                        </h3>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={enrollmentUrl}
+                            readOnly
+                            className="flex-1 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100"
+                          />
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(enrollmentUrl);
+                              // TODO: Show toast notification
+                              console.log('Link copied!');
+                            }}
+                            className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg flex items-center gap-2 transition-colors"
+                          >
+                            <Copy className="h-4 w-4" />
+                            Copy
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Members */}
+                    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                          <Users className="h-5 w-5 text-primary" />
+                          Members ({members.length})
+                        </h3>
+                        <button
+                          onClick={() => {
+                            console.log('TODO: Add member');
+                            // TODO: Implement add member flow
+                          }}
+                          className="text-sm text-primary hover:text-primary/80 font-medium flex items-center gap-1"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add
+                        </button>
+                      </div>
+                      {members.length === 0 ? (
+                        <p className="text-sm text-gray-500 dark:text-gray-400 text-center py-4">
+                          No members yet
+                        </p>
+                      ) : (
+                        <div className="space-y-2">
+                          {members.map((member) => (
+                            <div
+                              key={member.id}
+                              className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                                  {member.name}
+                                </p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                  {member.email}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  console.log('TODO: Remove member', member.id);
+                                  // TODO: Implement remove member
+                                }}
+                                className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-colors ml-2"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Calls Modal - Full Screen with List -> Detail Flow */}
+      {showCalls && (
+        <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 flex flex-col h-full animate-in slide-in-from-bottom-4 duration-200">
+          {/* Sticky Header */}
+          <div className="flex-none px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900 sticky top-0 z-10">
+            {selectedCallId && (
+              <button
+                onClick={() => setSelectedCallId(null)}
+                className="p-2 -ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            )}
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              {selectedCallId ? 'Call Details' : 'Phone Calls'}
+            </h2>
+            <button
+              onClick={() => {
+                setShowCalls(false);
+                setSelectedCallId(null);
+              }}
+              className="p-2 -mr-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-900/50 p-4">
+            {/* View A: Call List */}
+            {!selectedCallId && (
+              <div className="space-y-3">
+                {/* Mock Call Card */}
+                <button
+                  onClick={() => setSelectedCallId(MOCK_CALL.id)}
+                  className="w-full bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 hover:border-primary/50 transition-all text-left"
+                >
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Phone className="h-4 w-4 text-primary" />
+                        <span className="font-semibold text-gray-900 dark:text-gray-100">
+                          {MOCK_CALL.homeownerName || 'Unknown Caller'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {MOCK_CALL.phoneNumber}
+                      </p>
+                    </div>
+                    {MOCK_CALL.isUrgent && (
+                      <span className="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs font-medium rounded">
+                        Urgent
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 mb-2 line-clamp-2">
+                    {MOCK_CALL.issueDescription}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                    <Clock className="h-3 w-3" />
+                    <span>{formatDate(MOCK_CALL.createdAt)}</span>
+                  </div>
+                </button>
+
+                {/* Empty State (when no real calls) */}
+                <div className="text-center py-12">
+                  <Phone className="h-12 w-12 mx-auto text-gray-400 mb-3" />
+                  <p className="text-gray-600 dark:text-gray-400">No other calls at this time</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                    Showing 1 mock call for testing
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* View B: Call Detail */}
+            {selectedCallId && selectedCallId === MOCK_CALL.id && (
+              <div className="space-y-4">
+                {/* Caller Info Card */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                        {MOCK_CALL.homeownerName || 'Unknown Caller'}
+                      </h3>
+                      <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center gap-2">
+                          <Phone className="h-4 w-4" />
+                          <span>{MOCK_CALL.phoneNumber}</span>
+                        </div>
+                        {MOCK_CALL.propertyAddress && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            <span>{MOCK_CALL.propertyAddress}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <span>{formatDate(MOCK_CALL.createdAt)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    {MOCK_CALL.isUrgent && (
+                      <span className="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-sm font-medium rounded-full">
+                        Urgent
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Issue Summary */}
+                  <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Issue Summary
+                    </h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {MOCK_CALL.issueDescription}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Transcript Card */}
+                {MOCK_CALL.transcript && (
+                  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                      Call Transcript
+                    </h4>
+                    <div className="space-y-3">
+                      {MOCK_CALL.transcript.split('\n\n').map((block, idx) => {
+                        const isAssistant = block.startsWith('Assistant:');
+                        const text = block.replace(/^(Assistant|Caller):\s*/,'');
+                        return (
+                          <div
+                            key={idx}
+                            className={`p-3 rounded-lg ${
+                              isAssistant
+                                ? 'bg-blue-50 dark:bg-blue-900/20 ml-8'
+                                : 'bg-gray-50 dark:bg-gray-900/50 mr-8'
+                            }`}
+                          >
+                            <div className="flex items-start gap-2">
+                              {isAssistant ? (
+                                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                                  <span className="text-white text-xs font-semibold">AI</span>
+                                </div>
+                              ) : (
+                                <div className="w-6 h-6 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center flex-shrink-0">
+                                  <User className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+                                </div>
+                              )}
+                              <p className="text-sm text-gray-700 dark:text-gray-300 flex-1">
+                                {text}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Recording (if available) */}
+                {MOCK_CALL.recordingUrl && (
+                  <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                      Call Recording
+                    </h4>
+                    <audio controls className="w-full">
+                      <source src={MOCK_CALL.recordingUrl} type="audio/mpeg" />
+                      Your browser does not support the audio element.
+                    </audio>
+                  </div>
+                )}
+
+                {/* Verification Status */}
+                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Verification Status
+                  </h4>
+                  <div className="flex items-center gap-2">
+                    {MOCK_CALL.isVerified ? (
+                      <>
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <span className="text-sm text-green-600 dark:text-green-400">Verified</span>
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="h-5 w-5 text-yellow-600" />
+                        <span className="text-sm text-yellow-600 dark:text-yellow-400">Pending Verification</span>
+                      </>
+                    )}
+                  </div>
+                  {MOCK_CALL.addressMatchSimilarity !== null && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Address match: {Math.round((MOCK_CALL.addressMatchSimilarity || 0) * 100)}%
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Schedule Modal */}
       {showSchedule && (
@@ -1172,6 +2017,237 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
             </div>
           </div>
         </Suspense>
+      )}
+
+      {/* Backend Tools Modal - Full Screen */}
+      {showBackend && (
+        <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 flex flex-col h-full animate-in slide-in-from-bottom-4 duration-200">
+          {/* Sticky Header */}
+          <div className="flex-none border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 sticky top-0 z-10">
+            {/* Title Row */}
+            <div className="px-4 py-3 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Backend Systems
+              </h2>
+              <button
+                onClick={() => setShowBackend(false)}
+                className="p-2 -mr-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            {/* Tab Selector Dropdown - Mobile Only */}
+            <div className="px-4 pb-3">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Select System:</p>
+              <select
+                id="backend-tab-selector"
+                className="w-full h-11 px-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-base shadow-sm appearance-none focus:ring-2 focus:ring-primary/50 focus:border-primary outline-none transition-all"
+                onChange={(e) => {
+                  // Simulate clicking the corresponding tab button
+                  const tabValue = e.target.value;
+                  const tabButtons = document.querySelectorAll('.backend-dashboard-mobile-wrapper button');
+                  const tabLabels = ['NETLIFY', 'OPENAI', 'SENTRY', 'POSTHOG', 'EMAILS', 'OVERVIEW', 'NEON'];
+                  const index = tabLabels.indexOf(tabValue);
+                  if (index >= 0 && tabButtons[index]) {
+                    (tabButtons[index] as HTMLButtonElement).click();
+                  }
+                }}
+              >
+                <option value="NETLIFY">Netlify (Deployments)</option>
+                <option value="OPENAI">OpenAI (AI Model)</option>
+                <option value="SENTRY">Sentry (Error Tracking)</option>
+                <option value="POSTHOG">PostHog (Analytics)</option>
+                <option value="EMAILS">Emails (SendGrid)</option>
+                <option value="OVERVIEW">Overview (Database Stats)</option>
+                <option value="NEON">Neon (Database Config)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-900/50">
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            }>
+              {/* Wrapper to override BackendDashboard's modal styling */}
+              <div style={{
+                position: 'relative',
+                width: '100%',
+                height: '100%',
+                // Override BackendDashboard's fixed positioning and backdrop
+              }}>
+                <style>{`
+                  .backend-dashboard-mobile-wrapper > div:first-child {
+                    position: static !important;
+                    z-index: auto !important;
+                    background: transparent !important;
+                    backdrop-filter: none !important;
+                    padding: 0 !important;
+                    display: block !important;
+                    overflow: visible !important;
+                    animation: none !important;
+                  }
+                  .backend-dashboard-mobile-wrapper > div:first-child > div:first-child {
+                    position: static !important;
+                    max-width: 100% !important;
+                    width: 100% !important;
+                    height: auto !important;
+                    min-height: 100% !important;
+                    margin: 0 !important;
+                    border-radius: 0 !important;
+                    box-shadow: none !important;
+                    animation: none !important;
+                    background: white !important;
+                  }
+                  .dark .backend-dashboard-mobile-wrapper > div:first-child > div:first-child {
+                    background: rgb(17, 24, 39) !important;
+                  }
+                  /* Hide the BackendDashboard's own header since we have our own */
+                  .backend-dashboard-mobile-wrapper > div:first-child > div:first-child > div:first-child {
+                    display: none !important;
+                  }
+                  /* Hide the horizontal tab bar on mobile */
+                  .backend-dashboard-mobile-wrapper .overflow-x-auto {
+                    display: none !important;
+                  }
+                `}</style>
+                <div className="backend-dashboard-mobile-wrapper">
+                  <BackendDashboard
+                    onClose={() => setShowBackend(false)}
+                  />
+                </div>
+              </div>
+            </Suspense>
+          </div>
+        </div>
+      )}
+
+      {/* Homeowners Modal - Full Screen */}
+      {showHomeowners && (
+        <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 flex flex-col h-full animate-in slide-in-from-bottom-4 duration-200">
+          {/* Sticky Header */}
+          <div className="flex-none px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900 sticky top-0 z-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Homeowners
+            </h2>
+            <button
+              onClick={() => setShowHomeowners(false)}
+              className="p-2 -mr-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-900/50">
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            }>
+              <HomeownersList
+                homeowners={homeowners}
+                builderGroups={builderGroups}
+                builderUsers={builderUsers}
+                onUpdateHomeowner={onUpdateHomeowner}
+                onDeleteHomeowner={onDeleteHomeowner}
+                onClose={() => setShowHomeowners(false)}
+              />
+            </Suspense>
+          </div>
+        </div>
+      )}
+
+      {/* Analytics Modal - Full Screen */}
+      {showAnalytics && (
+        <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 flex flex-col h-full animate-in slide-in-from-bottom-4 duration-200">
+          {/* Sticky Header */}
+          <div className="flex-none px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900 sticky top-0 z-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Analytics
+            </h2>
+            <button
+              onClick={() => setShowAnalytics(false)}
+              className="p-2 -mr-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-900/50">
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            }>
+              <WarrantyAnalytics
+                claims={claims}
+                homeowners={homeowners}
+                builderGroups={builderGroups}
+                builderUsers={builderUsers}
+                claimMessages={claimMessages as any}
+                onSelectClaim={(claim) => {
+                  setShowAnalytics(false);
+                  if (onSelectClaim) {
+                    onSelectClaim(claim, false);
+                  }
+                }}
+                onClose={() => setShowAnalytics(false)}
+              />
+            </Suspense>
+          </div>
+        </div>
+      )}
+
+      {/* Internal Users / Team Modal - Full Screen */}
+      {showTeam && (
+        <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 flex flex-col h-full animate-in slide-in-from-bottom-4 duration-200">
+          {/* Sticky Header */}
+          <div className="flex-none px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between bg-white dark:bg-gray-900 sticky top-0 z-10">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Internal Users
+            </h2>
+            <button
+              onClick={() => setShowTeam(false)}
+              className="p-2 -mr-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto overflow-x-hidden bg-gray-50 dark:bg-gray-900/50">
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            }>
+              <InternalUserManagement
+                employees={employees}
+                onAddEmployee={onAddEmployee}
+                onUpdateEmployee={onUpdateEmployee}
+                onDeleteEmployee={onDeleteEmployee}
+                contractors={contractors}
+                onAddContractor={onAddContractor}
+                onUpdateContractor={onUpdateContractor}
+                onDeleteContractor={onDeleteContractor}
+                builderUsers={builderUsers}
+                builderGroups={builderGroups}
+                homeowners={homeowners}
+                onAddBuilderUser={onAddBuilderUser}
+                onUpdateBuilderUser={onUpdateBuilderUser}
+                onDeleteBuilderUser={onDeleteBuilderUser}
+                onClose={() => setShowTeam(false)}
+                initialTab="EMPLOYEES"
+                currentUser={currentUser}
+              />
+            </Suspense>
+          </div>
+        </div>
       )}
 
       {/* Claims/Warranty Modal - STACK NAVIGATION */}
@@ -1982,117 +3058,126 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
         </div>
       )}
 
-      {/* Edit Homeowner Modal */}
-      {isEditingHomeowner && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      {/* INVITE HOMEOWNER MODAL */}
+      {showInviteModal && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowInviteModal(false);
+          }}
+        >
+          <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                Edit Homeowner
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center flex-shrink-0">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                <Mail className="h-5 w-5 text-primary" />
+                Invite Homeowner
               </h2>
-              <button
-                onClick={() => setIsEditingHomeowner(false)}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              <button 
+                onClick={() => setShowInviteModal(false)} 
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
-                <X className="h-5 w-5 text-gray-500" />
+                <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="space-y-4">
-                {/* Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue={selectedHomeowner.name}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent"
+            {/* Body */}
+            <div className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Full Name
+                </label>
+                <Input
+                  type="text" 
+                  className="w-full"
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                  placeholder="John Doe"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Email Address
+                </label>
+                <Input
+                  type="email" 
+                  className="w-full"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="john@example.com"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
+                  Invitation Message
+                </label>
+                {isDrafting ? (
+                  <div className="w-full bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2 flex items-center justify-center min-h-[200px]">
+                    <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span className="text-sm">Drafting email...</span>
+                    </div>
+                  </div>
+                ) : (
+                  <textarea
+                    rows={8}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent outline-none resize-none text-sm leading-relaxed"
+                    value={inviteBody}
+                    onChange={(e) => setInviteBody(e.target.value)}
+                    placeholder="Welcome to Cascade Connect..."
                   />
-                </div>
-
-                {/* Email */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    defaultValue={selectedHomeowner.email}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-
-                {/* Phone */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Phone
-                  </label>
-                  <input
-                    type="tel"
-                    defaultValue={selectedHomeowner.phone}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-
-                {/* Address */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Address
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue={selectedHomeowner.address}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-
-                {/* Builder */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Builder
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue={selectedHomeowner.builder}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-
-                {/* Job Name */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Project Name
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue={selectedHomeowner.jobName}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
+                )}
               </div>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="p-4 flex justify-end gap-3 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
               <button
-                onClick={() => setIsEditingHomeowner(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                onClick={() => {
+                  setShowInviteModal(false);
+                  setInviteStatus('idle');
+                }}
+                disabled={inviteStatus === 'sending'}
+                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  console.log('💾 Saving homeowner changes');
-                  // TODO: Implement actual save logic with onUpdateHomeowner
-                  setIsEditingHomeowner(false);
-                }}
-                className="px-4 py-2 text-sm font-medium text-white bg-primary hover:bg-primary/90 rounded-lg transition-colors"
+                onClick={handleSendInvite}
+                disabled={!inviteEmail || !inviteBody || isDrafting || inviteStatus === 'sending' || inviteStatus === 'success'}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium text-white rounded-lg transition-all disabled:cursor-not-allowed ${
+                  inviteStatus === 'success'
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : inviteStatus === 'error'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : inviteStatus === 'sending'
+                    ? 'bg-primary/70'
+                    : 'bg-primary hover:bg-primary/90'
+                } ${inviteStatus === 'sending' ? 'opacity-70' : ''}`}
               >
-                Save Changes
+                {inviteStatus === 'sending' ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sending...
+                  </>
+                ) : inviteStatus === 'success' ? (
+                  <>
+                    <CheckCircle className="h-4 w-4" />
+                    Sent!
+                  </>
+                ) : inviteStatus === 'error' ? (
+                  <>
+                    <X className="h-4 w-4" />
+                    Failed
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Send Invitation
+                  </>
+                )}
               </button>
             </div>
           </div>
