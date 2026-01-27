@@ -2289,14 +2289,14 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                     /* LIST VIEW: Desktop-Style Claims List with Tabs */
                     <>
                       {/* Filter Tabs */}
-                      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
+                      <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex-shrink-0">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => setClaimsFilter('Open')}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                            className={`transition-all duration-200 px-4 py-2 rounded-lg font-medium hover:-translate-y-0.5 hover:shadow-sm ${
                               claimsFilter === 'Open'
-                                ? 'border border-primary text-primary bg-primary/10'
-                                : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
+                                ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
+                                : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -2310,10 +2310,10 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                           </button>
                           <button
                             onClick={() => setClaimsFilter('Closed')}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                            className={`transition-all duration-200 px-4 py-2 rounded-lg font-medium hover:-translate-y-0.5 hover:shadow-sm ${
                               claimsFilter === 'Closed'
-                                ? 'border border-primary text-primary bg-primary/10'
-                                : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
+                                ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
+                                : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -2327,10 +2327,10 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                           </button>
                           <button
                             onClick={() => setClaimsFilter('All')}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                            className={`transition-all duration-200 px-4 py-2 rounded-lg font-medium hover:-translate-y-0.5 hover:shadow-sm ${
                               claimsFilter === 'All'
-                                ? 'border border-primary text-primary bg-primary/10'
-                                : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'
+                                ? 'text-primary bg-white dark:bg-gray-700 shadow-md'
+                                : 'text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-transparent'
                             }`}
                           >
                             <div className="flex items-center gap-2">
@@ -2699,7 +2699,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                     </div>
                                     <button
                                       type="button"
-                                      className="w-full py-2.5 px-4 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center justify-center gap-2"
+                                      className="w-full py-2.5 px-4 text-sm font-medium text-white bg-gray-900 dark:bg-primary hover:bg-primary dark:hover:bg-primary/90 rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2"
                                     >
                                       <CheckCircle className="h-4 w-4" />
                                       Confirm Appointment
@@ -2752,7 +2752,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                     console.log('Send message to homeowner');
                                     // TODO: Open message composer modal
                                   }}
-                                  className="w-full py-2.5 px-4 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm"
+                                  className="w-full py-2.5 px-4 text-sm font-medium text-white bg-gray-900 dark:bg-primary hover:bg-primary dark:hover:bg-primary/90 rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2"
                                 >
                                   <MessageCircle className="h-4 w-4" />
                                   Send Message
@@ -2769,7 +2769,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                         if (!claim) return null;
                         
                         return (
-                          <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg z-50">
+                          <div className="absolute bottom-0 left-0 right-0 backdrop-blur-sm bg-white/80 dark:bg-gray-800/80 border-t border-gray-100 dark:border-gray-700 shadow-lg z-50">
                             {/* Scrollable Button Container */}
                             <div className="overflow-x-auto">
                               <div className="flex items-center gap-2 px-3 py-3 min-w-max">
@@ -2787,7 +2787,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                       'claim'
                                     );
                                   }}
-                                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
+                                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
                                 >
                                   <StickyNote className="h-4 w-4" />
                                   <span>Note</span>
@@ -2798,7 +2798,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                   onClick={() => {
                                     console.log('Process claim workflow');
                                   }}
-                                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
+                                  className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
                                 >
                                   <HardHat className="h-4 w-4" />
                                   <span>Process</span>
@@ -2811,7 +2811,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                 <button
                                   type="button"
                                   onClick={() => setSelectedClaimId(null)}
-                                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors whitespace-nowrap"
+                                  className="px-5 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
                                 >
                                   Cancel
                                 </button>
@@ -2824,7 +2824,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                     }
                                     setTimeout(() => setSelectedClaimId(null), 100);
                                   }}
-                                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 rounded-lg transition-colors shadow-sm whitespace-nowrap"
+                                  className="px-5 py-2 text-sm font-medium text-white bg-gray-900 dark:bg-primary hover:bg-primary dark:hover:bg-primary/90 rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 shadow-sm whitespace-nowrap"
                                 >
                                   Save
                                 </button>

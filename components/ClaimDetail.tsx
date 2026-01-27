@@ -372,10 +372,21 @@ If this repair work is billable, please let me know prior to scheduling.`);
            {isAdmin && !isHomeownerView && (
               <>
                 {isEditing ? (
-                   <>
-                     <Button variant="text" onClick={handleCancelEdit} className="!text-error">Cancel</Button>
-                     <Button variant="filled" onClick={handleSaveDetails} icon={<Save className="h-4 w-4" />}>Save</Button>
-                   </>
+                   <div className="flex items-center gap-3">
+                     <button
+                       onClick={handleCancelEdit}
+                       className="px-6 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-md hover:-translate-y-0.5 border border-gray-200 dark:border-gray-600 rounded-xl font-medium transition-all duration-200"
+                     >
+                       Cancel
+                     </button>
+                     <button
+                       onClick={handleSaveDetails}
+                       className="px-6 py-2.5 bg-gray-900 dark:bg-primary text-white hover:bg-primary dark:hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-2"
+                     >
+                       <Save className="h-4 w-4" />
+                       Save
+                     </button>
+                   </div>
                 ) : (
                    <Button variant="outlined" onClick={() => setIsEditing(true)} icon={<Edit2 className="h-4 w-4" />}>Edit Claim</Button>
                 )}
@@ -936,16 +947,30 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 )}
               </div>
 
-              <div className="p-4 bg-surface-container flex justify-end gap-3">
-                <Button variant="text" onClick={() => { setShowSOModal(false); setSoPdfUrl(null); }}>Cancel</Button>
-                <Button 
-                  variant="filled" 
-                  onClick={handleSendServiceOrder} 
-                  disabled={isSendingSO} 
-                  icon={isSendingSO ? <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"/> : <Send className="h-4 w-4" />}
+              <div className="p-4 bg-surface-container backdrop-blur-sm bg-white/80 dark:bg-gray-800/80 border-t border-gray-100 dark:border-gray-700 flex justify-end gap-3">
+                <button
+                  onClick={() => { setShowSOModal(false); setSoPdfUrl(null); }}
+                  className="px-6 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary hover:shadow-md hover:-translate-y-0.5 border border-gray-200 dark:border-gray-600 rounded-xl font-medium transition-all duration-200"
                 >
-                  Send Order
-                </Button>
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendServiceOrder}
+                  disabled={isSendingSO}
+                  className="px-6 py-2.5 bg-gray-900 dark:bg-primary text-white hover:bg-primary dark:hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSendingSO ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="h-4 w-4" />
+                      Send Order
+                    </>
+                  )}
+                </button>
               </div>
            </div>
         </div>
