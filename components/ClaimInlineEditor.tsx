@@ -753,7 +753,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
         {/* Content Wrapper */}
         <div className="w-full px-6 py-6 space-y-6">
           {/* Title and Description Card */}
-          <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
+          <div className="bg-slate-50 dark:bg-gray-700/30 p-4 rounded-lg">
             <div className="space-y-4">
               <div>
                 {isEditing && !isReadOnly ? (
@@ -885,7 +885,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           )}
 
           {/* Attachments Section */}
-          <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
+          <div className="bg-slate-50 dark:bg-gray-700/30 p-4 rounded-lg">
             <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">
               Attachments
             </h4>
@@ -1134,7 +1134,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
 
           {/* Non-Warranty Explanation - Admin Only - Default Collapsed */}
           {isAdmin && (
-            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
+            <div className="bg-slate-50 dark:bg-gray-700/30 p-4 rounded-lg">
               <button
                 onClick={() => setIsNonWarrantyExpanded(!isNonWarrantyExpanded)}
                 className="w-full flex items-center justify-between mb-3 text-left"
@@ -1170,7 +1170,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           )}
           
           {/* Messages - Visible to All Users */}
-          <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
+          <div className="bg-slate-50 dark:bg-gray-700/30 p-4 rounded-lg">
             <button
               onClick={() => setIsMessageSummaryExpanded(!isMessageSummaryExpanded)}
               className="w-full flex items-center justify-between mb-3 text-left"
@@ -1287,7 +1287,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
           </div>
           {/* Sub Assignment (Admin Only) */}
           {isAdmin && (
-            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
+            <div className="bg-slate-50 dark:bg-gray-700/30 p-4 rounded-lg">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Sub Assignment</h4>
               
               <div className="relative">
@@ -1503,7 +1503,7 @@ If this repair work is billable, please let me know prior to scheduling.`);
 
           {/* Internal Notes - Admin Only */}
           {isAdmin && (
-            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
+            <div className="bg-slate-50 dark:bg-gray-700/30 p-4 rounded-lg">
                   {isEditing && !isReadOnly ? (
                     <AutoSaveTextarea
                       value={editInternalNotes}

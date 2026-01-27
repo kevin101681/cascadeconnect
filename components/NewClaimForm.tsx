@@ -358,7 +358,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
         {/* Scrollable Body - Takes full space */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
           {/* Title and Description Card */}
-          <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
+          <div className="bg-slate-50 dark:bg-gray-700/30 p-4 rounded-lg">
             <div className="space-y-4">
               <div>
                 <label htmlFor="title" className="block text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Claim Title</label>
@@ -386,7 +386,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
             </div>
           </div>
             {/* Attachments Section */}
-            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
+            <div className="bg-slate-50 dark:bg-gray-700/30 p-4 rounded-lg">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-sm font-bold text-surface-on dark:text-gray-100">
                   Attachments
@@ -696,7 +696,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
           
           {/* Sub Assignment (Admin Only) */}
           {isAdmin && (
-            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
+            <div className="bg-slate-50 dark:bg-gray-700/30 p-4 rounded-lg">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Sub Assignment</h4>
               
               <div className="relative">
@@ -811,7 +811,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
 
           {/* Internal Notes (Admin Only) */}
           {isAdmin && (
-            <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-lg border border-surface-outline-variant dark:border-gray-600">
+            <div className="bg-slate-50 dark:bg-gray-700/30 p-4 rounded-lg">
               <h4 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-3">Internal Notes (Admin Only)</h4>
               <textarea
                 id="internalNotes"
@@ -825,7 +825,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
 
         {/* Staging Area (Homeowners only) */}
         {!isAdmin && stagedClaims.length > 0 && (
-        <div className="bg-surface-container dark:bg-gray-700/30 p-4 rounded-xl border border-surface-outline-variant dark:border-gray-600">
+        <div className="bg-slate-50 dark:bg-gray-700/30 p-4 rounded-xl">
           <h3 className="text-sm font-bold text-surface-on dark:text-gray-100 mb-4">Pending Items ({stagedClaims.length})</h3>
           <div className="space-y-3 max-h-64 overflow-y-auto">
             {stagedClaims.map((staged, index) => (
