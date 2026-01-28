@@ -356,7 +356,8 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
       <ToastContainer toasts={toasts} onDismiss={removeToast} />
       <form onSubmit={isAdmin ? handleSubmit : handleAddItem} className="flex flex-col h-full min-h-0">
         {/* Scrollable Body - Takes full space */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0">
+        <div className="flex-1 overflow-y-auto p-6 min-h-0">
+          <div className="w-full max-w-5xl mx-auto space-y-6">
           {/* Title and Description Card */}
           <div className="bg-slate-50 dark:bg-gray-700/30 p-4 rounded-lg">
             <div className="space-y-4">
@@ -737,16 +738,15 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
                     </div>
                   </div>
                   
-                  <Button 
+                  <button
                     type="button"
-                    variant="secondary" 
                     disabled={true}
-                    icon={<FileText className="h-4 w-4" />}
-                    className="!h-12 whitespace-nowrap flex-shrink-0 !rounded-xl"
                     title="Save the claim first to send a service order"
+                    className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 opacity-50 cursor-not-allowed h-12 whitespace-nowrap flex-shrink-0"
                   >
+                    <FileText className="h-4 w-4" />
                     Email S.O.
-                  </Button>
+                  </button>
                 </div>
               )}
             </div>
@@ -873,6 +873,7 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
           </div>
         </div>
         )}
+          </div>
         </div>
 
         {/* Image Viewer Modal */}
@@ -896,40 +897,40 @@ const NewClaimForm: React.FC<NewClaimFormProps> = ({ onSubmit, onCancel, onSendM
         />
       
         {/* Fixed Footer with buttons */}
-        <div className="flex-none px-6 py-4 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end gap-3 flex-wrap">
-          <Button 
-            type="button" 
-            variant="secondary" 
+        <div className="flex-none px-6 py-6 border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800 flex justify-end gap-3 flex-wrap">
+          <button
+            type="button"
             onClick={onCancel}
-            className="whitespace-nowrap !rounded-xl"
+            className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 whitespace-nowrap"
           >
             Cancel
-          </Button>
+          </button>
           {isAdmin ? (
-            <Button type="submit" variant="secondary" className="whitespace-nowrap !rounded-xl">
+            <button
+              type="submit"
+              className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 whitespace-nowrap"
+            >
               Save
-            </Button>
+            </button>
           ) : (
             <>
-              <Button 
-                type="submit" 
-                variant="secondary"
-                icon={<Plus className="h-4 w-4 flex-shrink-0" />}
-                className="whitespace-nowrap !rounded-xl"
+              <button
+                type="submit"
+                className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 whitespace-nowrap"
               >
+                <Plus className="h-4 w-4 flex-shrink-0" />
                 Add Item to Request
-              </Button>
+              </button>
               {stagedClaims.length > 0 && (
-                <Button 
+                <button
                   type="button"
-                  variant="secondary"
                   onClick={handleSubmitAll}
                   disabled={isSubmitting}
-                  icon={isSubmitting ? <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" /> : <Send className="h-4 w-4 flex-shrink-0" />}
-                  className="whitespace-nowrap !rounded-xl"
+                  className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
                 >
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" /> : <Send className="h-4 w-4 flex-shrink-0" />}
                   Submit All ({stagedClaims.length})
-                </Button>
+                </button>
               )}
             </>
           )}

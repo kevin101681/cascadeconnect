@@ -606,15 +606,15 @@ If this repair work is billable, please let me know prior to scheduling.`);
                       }}
                       className="flex-1 bg-surface dark:bg-gray-700 border border-secondary-container-high dark:border-gray-600 rounded-lg px-3 py-2 text-sm text-surface-on dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                     />
-                    <Button
-                      variant="filled"
+                    <button
+                      type="button"
                       onClick={handleAddNote}
                       disabled={!newNote.trim()}
-                      icon={<Plus className="h-4 w-4" />}
-                      className="!h-9 !px-4"
+                      className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-9 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
+                      <Plus className="h-4 w-4" />
                       Add
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -761,14 +761,14 @@ If this repair work is billable, please let me know prior to scheduling.`);
                       </div>
                     </div>
                     
-                    <Button 
-                        variant="secondary" 
-                        onClick={handlePrepareServiceOrder} 
-                        icon={<FileText className="h-4 w-4" />}
-                        className="!h-12 w-full sm:w-auto whitespace-nowrap !rounded-xl"
+                    <button
+                        type="button"
+                        onClick={handlePrepareServiceOrder}
+                        className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-12 w-full sm:w-auto whitespace-nowrap"
                     >
+                        <FileText className="h-4 w-4" />
                         Service Order
-                    </Button>
+                    </button>
                   </div>
                 )}
               </div>
@@ -809,9 +809,13 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 </div>
                 
                 {isAdmin && (
-                  <Button variant="secondary" onClick={handleReschedule} className="!rounded-xl">
+                  <button
+                    type="button"
+                    onClick={handleReschedule}
+                    className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
+                  >
                     Reschedule / Edit
-                  </Button>
+                  </button>
                 )}
             </div>
           ) : (
@@ -863,15 +867,15 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     />
                   </div>
 
-                  <Button 
-                    variant="filled" 
-                    onClick={handleConfirmSchedule} 
-                    disabled={!proposeDate} 
-                    className="w-full md:w-auto h-[46px]"
-                    icon={<CheckCircle className="h-4 w-4" />}
+                  <button
+                    type="button"
+                    onClick={handleConfirmSchedule}
+                    disabled={!proposeDate}
+                    className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 w-full md:w-auto h-[46px] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
+                    <CheckCircle className="h-4 w-4" />
                     Confirm
-                  </Button>
+                  </button>
                 </div>
               </div>
             ) : (
