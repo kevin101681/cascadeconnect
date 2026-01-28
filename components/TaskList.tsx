@@ -4,6 +4,7 @@ import Button from './Button';
 import { Check, Plus, User, Calendar, Trash2, Home, CheckCircle, Square, CheckSquare, HardHat, FileText, Edit2, X } from 'lucide-react';
 import StatusBadge from './StatusBadge';
 import TaskTemplateManager, { TaskTemplate } from './TaskTemplateManager';
+import { TaskCard } from './ui/TaskCard';
 
 type TaskFilter = 'all' | 'open' | 'closed';
 
@@ -363,64 +364,16 @@ const TaskList: React.FC<TaskListProps> = ({
                 : [];
 
             return (
-              <div 
+              <TaskCard
                 key={task.id}
-                className={`group flex flex-col rounded-2xl border transition-all overflow-hidden cursor-pointer ${
-                  task.isCompleted 
-                    ? 'bg-surface-container/30 dark:bg-gray-800/50 border-surface-container-high dark:border-gray-600 opacity-75' 
-                    : 'bg-surface-container dark:bg-gray-800 border-surface-outline-variant dark:border-gray-600 shadow-sm hover:shadow-elevation-1'
-                }`}
+                title={task.title}
+                assignedTo={assignee?.name || 'Unassigned'}
+                subsToScheduleCount={taskClaims.length}
+                dateAssigned={task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString() : 'N/A'}
+                isCompleted={task.isCompleted}
+                isSelected={false}
                 onClick={() => onSelectTask?.(task)}
-              >
-                {/* Card Header */}
-                <div 
-                  className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 p-4 transition-colors rounded-2xl hover:bg-surface-container-high dark:hover:bg-gray-700/50"
-                >
-                  <div className="flex items-center gap-3 flex-1 flex-wrap">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleToggleTask(task.id);
-                      }}
-                      className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                        task.isCompleted 
-                          ? 'bg-primary border-primary text-white' 
-                          : 'border-surface-outline dark:border-gray-600 hover:border-primary'
-                      }`}
-                    >
-                      {task.isCompleted && <Check className="h-3.5 w-3.5" />}
-                    </button>
-
-                    {/* Title Pill */}
-                    <span className={`inline-block px-3 py-1 rounded-full font-bold text-sm ${
-                      task.isCompleted 
-                        ? 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 line-through' 
-                        : 'bg-primary text-primary-on'
-                    }`}>
-                      {task.title}
-                    </span>
-
-                    {/* Subs to Schedule Count */}
-                    {taskClaims.length > 0 && (
-                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-on text-xs font-medium">
-                        {taskClaims.length}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Assigned To and Date - Desktop only */}
-                  <div className="hidden md:flex items-center gap-x-4 gap-y-0 text-xs text-surface-on-variant dark:text-gray-400 flex-shrink-0">
-                    <span className="flex items-center gap-1.5 whitespace-nowrap">
-                      <User className="h-3 w-3" />
-                      {assignee?.name || 'Unknown'}
-                    </span>
-                    <span className="flex items-center gap-1.5 whitespace-nowrap">
-                      <Calendar className="h-3 w-3" />
-                      {task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString() : 'N/A'}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              />
             );
           })
           )}

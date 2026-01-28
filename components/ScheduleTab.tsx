@@ -310,40 +310,40 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({
         <div className="hidden md:flex items-center gap-2 flex-shrink-0">
           <button
             onClick={() => toolbar.onView('month')}
-            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors flex-shrink-0 ${
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex-shrink-0 ${
               toolbar.view === 'month'
-                ? 'border border-primary text-primary bg-primary/10'
-                : 'border border-surface-outline dark:border-gray-600 text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-700'
+                ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
             }`}
           >
             Month
           </button>
           <button
             onClick={() => toolbar.onView('week')}
-            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors flex-shrink-0 ${
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex-shrink-0 ${
               toolbar.view === 'week'
-                ? 'border border-primary text-primary bg-primary/10'
-                : 'border border-surface-outline dark:border-gray-600 text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-700'
+                ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
             }`}
           >
             Week
           </button>
           <button
             onClick={() => toolbar.onView('day')}
-            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors flex-shrink-0 ${
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex-shrink-0 ${
               toolbar.view === 'day'
-                ? 'border border-primary text-primary bg-primary/10'
-                : 'border border-surface-outline dark:border-gray-600 text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-700'
+                ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
             }`}
           >
             Day
           </button>
           <button
             onClick={() => toolbar.onView('agenda')}
-            className={`px-4 py-2 text-sm font-medium rounded-full transition-colors flex-shrink-0 ${
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex-shrink-0 ${
               toolbar.view === 'agenda'
-                ? 'border border-primary text-primary bg-primary/10'
-                : 'border border-surface-outline dark:border-gray-600 text-surface-on dark:text-gray-200 hover:bg-surface-container-high dark:hover:bg-gray-700'
+                ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
             }`}
           >
             Agenda
@@ -403,10 +403,10 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({
           {isAdmin && (
             <button
               onClick={() => setIsGlobalView(!isGlobalView)}
-              className={`px-4 h-9 border rounded-full transition-colors font-medium flex items-center gap-2 ${
+              className={`px-4 py-2 rounded-xl font-medium flex items-center justify-center gap-2 transition-all duration-200 ${
                 isGlobalView
-                  ? 'bg-primary/10 border-primary text-primary'
-                  : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-300'
+                  ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                  : 'bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5'
               }`}
               title={isGlobalView ? "Show All Projects" : "Show Current Homeowner Only"}
             >
@@ -426,7 +426,7 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({
           
           <button
             onClick={openCreateModal}
-            className="px-4 h-9 bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 rounded-full transition-colors font-medium flex items-center gap-2"
+            className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
             title="New Appointment"
           >
             <Plus className="h-4 w-4" />
@@ -691,14 +691,14 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({
                   <div className="flex justify-end gap-3 pt-4">
                     <button
                       onClick={() => setIsModalOpen(false)}
-                      className="px-6 py-3 border border-surface-outline dark:border-gray-600 text-surface-on dark:text-gray-200 rounded-full hover:bg-surface-container-high dark:hover:bg-gray-700 transition-colors"
+                      className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleCreate}
                       disabled={!formData.title || !formData.startTime || !formData.endTime}
-                      className="px-6 py-3 border border-primary text-primary rounded-full hover:bg-primary/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                      className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-sm"
                     >
                       Create Appointment
                     </button>
@@ -771,13 +771,13 @@ const ScheduleTab: React.FC<ScheduleTabProps> = ({
                     <div className="flex justify-end gap-3 pt-4 border-t border-surface-outline-variant dark:border-gray-700">
                       <button
                         onClick={() => handleDelete(selectedAppointment.id)}
-                        className="flex items-center gap-2 px-6 py-3 text-red-600 dark:text-red-400 border border-red-600 dark:border-red-400 rounded-full hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        className="px-4 py-2 bg-white text-red-600 border border-red-300 shadow-sm hover:text-red-700 hover:border-red-400 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
                       >
                         Delete
                       </button>
                       <button
                         onClick={() => setIsModalOpen(false)}
-                        className="px-6 py-3 bg-surface-container-high dark:bg-gray-700 text-surface-on dark:text-gray-200 rounded-full hover:bg-surface-container-highest dark:hover:bg-gray-600 transition-colors"
+                        className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
                       >
                         Close
                       </button>

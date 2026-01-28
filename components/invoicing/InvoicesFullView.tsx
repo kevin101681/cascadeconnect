@@ -648,10 +648,10 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
                 <button
                   key={tab}
                   onClick={() => handleTabChange(tab)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     activeTab === tab
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                      : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
                   }`}
                 >
                   {tab.charAt(0) + tab.slice(1).toLowerCase()}
@@ -663,14 +663,13 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
               <>
                 <div className="flex items-center justify-between mb-4">
                   <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
-                  <Button
+                  <button
                     onClick={handleCreateNew}
-                    variant="filled"
-                    size="md"
-                    icon={<Plus className="h-4 w-4" />}
+                    className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
                   >
+                    <Plus className="h-4 w-4" />
                     Create New
-                  </Button>
+                  </button>
                 </div>
                 
                 {/* SEARCH BAR */}
@@ -692,10 +691,10 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
                       <button
                         key={status}
                         onClick={() => setStatusFilter(status)}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                           statusFilter === status
-                            ? 'bg-blue-100 text-blue-800'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                            : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
                         }`}
                       >
                         {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -720,14 +719,13 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
             {activeTab === 'BUILDERS' && (
               <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold text-gray-900">Builders</h1>
-                <Button
+                <button
                   onClick={handleCreateNew}
-                  variant="filled"
-                  size="md"
-                  icon={<Plus className="h-4 w-4" />}
+                  className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
                 >
+                  <Plus className="h-4 w-4" />
                   New Builder
-                </Button>
+                </button>
               </div>
             )}
             

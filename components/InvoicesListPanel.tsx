@@ -224,40 +224,40 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
         <div className="flex items-center gap-2 overflow-x-auto">
           <button
             onClick={() => onTabChange('invoices')}
-            className={`px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'invoices'
-                ? 'bg-white dark:bg-gray-600 border border-primary text-primary shadow-sm'
-                : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
+                ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
             }`}
           >
             Invoices
           </button>
           <button
             onClick={() => onTabChange('builders')}
-            className={`px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'builders'
-                ? 'bg-white dark:bg-gray-600 border border-primary text-primary shadow-sm'
-                : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
+                ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
             }`}
           >
             Builders
           </button>
           <button
             onClick={() => onTabChange('p&l')}
-            className={`px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'p&l'
-                ? 'bg-white dark:bg-gray-600 border border-primary text-primary shadow-sm'
-                : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
+                ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
             }`}
           >
             P&L
           </button>
           <button
             onClick={() => onTabChange('expenses')}
-            className={`px-3 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'expenses'
-                ? 'bg-white dark:bg-gray-600 border border-primary text-primary shadow-sm'
-                : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 border border-transparent'
+                ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
             }`}
           >
             Expenses
@@ -271,40 +271,40 @@ const InvoicesListPanel: React.FC<InvoicesListPanelProps> = ({
           <div className="flex items-center gap-2">
             <button
               onClick={() => onStatusFilterChange('sent')}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 statusFilter === 'sent'
-                  ? 'border border-primary text-primary bg-primary/10'
-                  : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                  ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                  : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
               }`}
             >
               Sent
             </button>
             <button
               onClick={() => onStatusFilterChange('paid')}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 statusFilter === 'paid'
-                  ? 'border border-primary text-primary bg-primary/10'
-                  : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                  ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                  : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
               }`}
             >
               Paid
             </button>
             <button
               onClick={() => onStatusFilterChange('draft')}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 statusFilter === 'draft'
-                  ? 'border border-primary text-primary bg-primary/10'
-                  : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                  ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                  : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
               }`}
             >
               Draft
             </button>
             <button
               onClick={() => onStatusFilterChange('all')}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 statusFilter === 'all'
-                  ? 'border border-primary text-primary bg-primary/10'
-                  : 'bg-surface-container dark:bg-gray-700 text-surface-on-variant dark:text-gray-400 hover:bg-surface-container-high dark:hover:bg-gray-600'
+                  ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                  : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
               }`}
             >
               All

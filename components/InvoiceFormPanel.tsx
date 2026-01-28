@@ -497,7 +497,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
             <button
               type="button"
               onClick={handleAddItem}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+              className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
             >
               <Plus className="h-4 w-4" />
               Add Item
@@ -599,7 +599,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
           <button
             onClick={handleCancel}
             disabled={isLoadingSave}
-            className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-sm"
           >
             Cancel
           </button>
@@ -608,7 +608,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
           <button
             onClick={() => handleSave('draft')}
             disabled={isLoadingSave}
-            className="px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-sm"
           >
             {isLoadingSave ? 'Saving...' : 'Save Draft'}
           </button>
@@ -617,7 +617,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
           <button
             onClick={() => handleSave('sent')}
             disabled={isLoadingSave}
-            className="px-4 py-3 text-sm font-medium text-white bg-blue-600 dark:bg-blue-500 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-sm"
           >
             {isLoadingSave ? 'Saving...' : 'Mark Sent'}
           </button>
@@ -626,7 +626,7 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
           <button
             onClick={() => handleSave('send')}
             disabled={isLoadingSave}
-            className="px-4 py-3 text-sm font-medium text-white bg-green-600 dark:bg-green-500 rounded-lg hover:bg-green-700 dark:hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0 disabled:hover:shadow-sm"
           >
             {isLoadingSave ? 'Sending...' : 'Save & Send'}
           </button>

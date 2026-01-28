@@ -1,0 +1,34 @@
+fix: Calendar hooks error (render more hooks than previous)
+
+Problem:
+React error when clicking closing date: 'Rendered more hooks than during the previous render'
+
+Root Cause:
+Calendar component was calling useState inside conditional render - this violates React's Rules of Hooks (hooks must be called at the top level and cannot be called inside conditionals).
+
+Solution:
+Move calendar state to component top level.
+
+Changes:
+
+HomeownerCard.tsx:
+- Add viewYear/viewMonth state at top level
+- Initialize from editClosingDate or current date
+- Remove useState calls from inside calendar dropdown
+- Add useEffect to sync calendar view when picker opens
+
+AdminMobile.tsx:
+- Add calendarViewYear/calendarViewMonth state at top level
+- Remove React.useState calls from inside calendar dropdown
+- Add useEffect to sync calendar view when picker opens
+
+Benefits:
+- No more hooks violation error
+- Calendar view remembers position between toggles
+- Opens to correct month when date already selected
+- Follows React best practices
+
+Verification:
+- npm run build successful
+- No TypeScript errors
+- Calendar opens without error
