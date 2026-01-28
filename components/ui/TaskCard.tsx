@@ -1,5 +1,4 @@
-import { Calendar, User, Users, CheckSquare, ArrowRight } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { User, Users, CheckSquare, ArrowRight } from "lucide-react";
 
 interface TaskCardProps {
   title: string;
@@ -23,13 +22,13 @@ export function TaskCard({
   return (
     <div 
       onClick={onClick}
-      className={`group relative rounded-xl border p-4 shadow-sm transition-all h-full flex flex-col justify-between
+      className={`group relative rounded-lg border p-3 transition-all flex flex-col h-full justify-between touch-manipulation
         ${onClick ? 'cursor-pointer' : ''}
         ${isSelected
           ? 'bg-slate-50 dark:bg-slate-900/50 border-primary dark:border-primary shadow-md'
           : isCompleted 
-            ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 opacity-75 hover:opacity-100 hover:shadow-md' 
-            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600'
+            ? 'bg-white dark:bg-gray-800 border-transparent opacity-75 hover:opacity-100' 
+            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm md:hover:shadow-md md:hover:border-slate-300 dark:md:hover:border-slate-600'
         }
       `}
     >
@@ -40,6 +39,7 @@ export function TaskCard({
           <div className={`mt-0.5 shrink-0 ${isCompleted ? "text-green-500" : "text-slate-600 dark:text-slate-400"}`}>
             <CheckSquare className="w-4 h-4" />
           </div>
+          {/* Parity Fix: Use text-primary for active tasks, just like Warranty Title */}
           <h3 className={`font-semibold text-sm line-clamp-2 flex-1 ${isCompleted ? "text-gray-500 line-through" : "text-primary dark:text-primary"}`} title={title}>
             {title}
           </h3>
@@ -68,7 +68,7 @@ export function TaskCard({
         </div>
 
         {/* Subtle Arrow to indicate "Go to Task" */}
-        <div className="text-gray-300 group-hover:text-slate-500 dark:group-hover:text-slate-400 transition-colors shrink-0">
+        <div className="text-gray-300 group-hover:text-primary dark:group-hover:text-primary transition-colors shrink-0">
             <ArrowRight className="w-4 h-4" />
         </div>
 
@@ -76,4 +76,3 @@ export function TaskCard({
     </div>
   );
 }
-

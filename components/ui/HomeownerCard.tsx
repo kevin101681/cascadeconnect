@@ -17,6 +17,7 @@ interface HomeownerCardProps {
   onEdit?: () => void;
   onViewSubs?: () => void;
   onSave?: (updates: { name?: string; project?: string; email?: string; phone?: string; address?: string }) => void;
+  onEditStateChange?: (isEditing: boolean) => void; // NEW: Notify parent of edit state changes
   // Status tracking
   clerkId?: string;
   inviteEmailRead?: boolean;
@@ -41,6 +42,7 @@ export function HomeownerCard({
   onEdit,
   onViewSubs,
   onSave,
+  onEditStateChange,
   clerkId,
   inviteEmailRead,
   enableInlineEdit = false,
@@ -66,6 +68,7 @@ export function HomeownerCard({
   const handleStartEdit = () => {
     if (enableInlineEdit) {
       setIsEditing(true);
+      if (onEditStateChange) onEditStateChange(true);
     } else if (onEdit) {
       onEdit();
     }
@@ -73,6 +76,7 @@ export function HomeownerCard({
   
   const handleCancelEdit = () => {
     setIsEditing(false);
+    if (onEditStateChange) onEditStateChange(false);
     // Reset to original values
     setEditName(name || '');
     setEditProject(project || '');
@@ -92,6 +96,7 @@ export function HomeownerCard({
       });
     }
     setIsEditing(false);
+    if (onEditStateChange) onEditStateChange(false);
   };
   
   // Format address: Split at first comma for better display

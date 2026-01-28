@@ -2021,6 +2021,9 @@ export const AdminDesktop: React.FC<DashboardProps> = ({
   
   // Homeowner card collapse state
   const [isHomeownerCardCollapsed, setIsHomeownerCardCollapsed] = useState(false);
+  
+  // Homeowner card editing state (prevents collapse during editing)
+  const [isHomeownerCardEditing, setIsHomeownerCardEditing] = useState(false);
 
   // Homeowner Info Card - quick task creation controls
   const [tasksTabStartInEditMode, setTasksTabStartInEditMode] = useState(false);
@@ -3283,11 +3286,11 @@ export const AdminDesktop: React.FC<DashboardProps> = ({
                   </div>
                 )}
 
-            {/* Card Content - Clickable to collapse */}
+            {/* Card Content - Clickable to collapse (unless editing) */}
             <div 
-              className="flex flex-col p-4 cursor-pointer relative"
-              onClick={() => setIsHomeownerCardCollapsed(true)}
-              title="Click to collapse"
+              className={`flex flex-col p-4 relative ${!isHomeownerCardEditing ? 'cursor-pointer' : ''}`}
+              onClick={!isHomeownerCardEditing ? () => setIsHomeownerCardCollapsed(true) : undefined}
+              title={!isHomeownerCardEditing ? "Click to collapse" : undefined}
             >
               {/* Homeowner Card Component */}
               <HomeownerCard
@@ -3317,6 +3320,7 @@ export const AdminDesktop: React.FC<DashboardProps> = ({
                     });
                   }
                 }}
+                onEditStateChange={setIsHomeownerCardEditing}
                 onEdit={undefined}
               />
              </div>
