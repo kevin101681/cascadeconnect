@@ -66,6 +66,7 @@ const ScheduleTabWrapper = React.lazy(() =>
 
 // Lazy load real tab components for stack navigation
 const ClaimDetail = React.lazy(() => import('../ClaimDetail'));
+const NewClaimForm = React.lazy(() => import('../NewClaimForm'));
 const TasksTab = React.lazy(() =>
   import('../dashboard/tabs/TasksTab').then(m => ({ default: m.TasksTab }))
 );
@@ -389,10 +390,16 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
   // Stack navigation state for Claims (List -> Detail)
   const [selectedClaimId, setSelectedClaimId] = useState<string | null>(null);
   const [claimsFilter, setClaimsFilter] = useState<'Open' | 'Closed' | 'All'>('Open');
+  const [isCreatingNewClaim, setIsCreatingNewClaim] = useState(false);
   
   // Stack navigation state for Tasks (List -> Detail)
   const [selectedTask, setSelectedTask] = useState<any | null>(null);
   const [tasksFilter, setTasksFilter] = useState<'open' | 'closed' | 'all'>('open');
+  const [showNewTaskModal, setShowNewTaskModal] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskAssignee, setNewTaskAssignee] = useState<string>('');
+  const [newTaskNotes, setNewTaskNotes] = useState('');
+  const [selectedClaimIds, setSelectedClaimIds] = useState<string[]>([]);
   
   // Stack navigation state for Messages (Thread List -> Chat Window)
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
@@ -438,6 +445,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
     employees = [],
     homeowners = [],
     taskMessages = [],
+    onAddTask,
     onToggleTask,
     onDeleteTask,
     onUpdateTask,
@@ -449,6 +457,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
     onSendMessage,
     onCreateThread,
     onUpdateThread,
+    onCreateClaim,
     builderUsers = [],
     builderGroups = [],
     onAddEmployee,
@@ -462,6 +471,12 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
     onDeleteBuilderUser,
     onDeleteHomeowner,
   } = props;
+
+  React.useEffect(() => {
+    if (!newTaskAssignee && currentUser?.id) {
+      setNewTaskAssignee(currentUser.id);
+    }
+  }, [newTaskAssignee, currentUser?.id]);
 
   // Message email templates (localStorage-based)
   const [messageEmailTemplates, setMessageEmailTemplates] = React.useState<Array<{
@@ -834,7 +849,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
     const allModalsClosed = !showClaims && !showTasks && !showMessages && 
       !showDocuments && !showSchedule && !showPunchList && !showTeamChat &&
       !showBackend && !showHomeowners && !showAnalytics && !showTeam && 
-      !showNotes && !showBuilderGroups && !showCalls && !isEditingHomeowner;
+      !showNotes && !showBuilderGroups && !showCalls && !isEditingHomeowner && !showNewTaskModal;
     
     if (allModalsClosed) {
       console.log('📜 Restoring scroll position:', dashboardScrollRef.current);
@@ -842,7 +857,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
     }
   }, [showClaims, showTasks, showMessages, showDocuments, showSchedule, 
       showPunchList, showTeamChat, showBackend, showHomeowners, showAnalytics, 
-      showTeam, showNotes, showBuilderGroups, showCalls, isEditingHomeowner]);
+      showTeam, showNotes, showBuilderGroups, showCalls, isEditingHomeowner, showNewTaskModal]);
 
   // ========== ACTION BUTTON COMPONENT ==========
   const ActionButton: React.FC<{
@@ -884,10 +899,22 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
         globalQuery={globalQuery}
         onGlobalSearch={setGlobalQuery}
         homeownerPlaceholder="Switch homeowner..."
-        onCreateClaim={() => handleOpenModal(setShowClaims)}
-        onCreateTask={() => handleOpenModal(setShowTasks)}
-        onCreateMessage={() => handleOpenModal(setShowMessages)}
-        onCreateNote={() => handleOpenModal(setShowNotes)}
+        onCreateClaim={() => {
+          handleOpenModal(setShowClaims);
+          setSelectedClaimId(null);
+          setIsCreatingNewClaim(true);
+        }}
+        onCreateTask={() => {
+          setShowNewTaskModal(true);
+        }}
+        onCreateMessage={() => {
+          handleOpenModal(setShowMessages);
+          setActiveThreadId(null);
+          setIsComposingMessage(true);
+        }}
+        onCreateNote={() => {
+          handleOpenModal(setShowNotes);
+        }}
       />
 
       {/* Homeowner Search Results Dropdown - Only when searching homeowners */}
@@ -921,8 +948,8 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
 
       {/* GLOBAL SEARCH RESULTS OVERLAY - Shows when global query active */}
       {globalQuery.trim().length > 0 && (
-        <div className="px-4 pt-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="fixed left-4 right-4 bottom-[calc(env(safe-area-inset-bottom)+84px)] z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)] border border-gray-200 dark:border-gray-700 overflow-hidden">
             {/* Close Button (Top Right) */}
             <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex justify-end">
               <button
@@ -943,7 +970,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
 
             {/* Results */}
             {!isGlobalSearching && globalResults.length > 0 && (
-              <div className="max-h-[60vh] overflow-y-auto">
+              <div className="max-h-[50vh] overflow-y-auto">
                 {globalResults.map((result: any) => (
                   <a
                     key={result.id}
@@ -1614,6 +1641,167 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
       </div>
 
       {/* ========== MODALS ========== */}
+
+      {/* NEW TASK MODAL - Create immediately (not list) */}
+      {showNewTaskModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowNewTaskModal(false);
+          }}
+        >
+          <div className="bg-white dark:bg-gray-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">New Task</h2>
+              <button
+                type="button"
+                onClick={() => setShowNewTaskModal(false)}
+                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  const id = crypto.randomUUID();
+                  const now = new Date();
+                  await Promise.resolve(
+                    onAddTask({
+                      id,
+                      title: newTaskTitle,
+                      description: newTaskNotes,
+                      assignedToId: newTaskAssignee || currentUser.id,
+                      assignedById: currentUser.id,
+                      isCompleted: false,
+                      dateAssigned: now,
+                      dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                      relatedClaimIds: selectedClaimIds,
+                    })
+                  );
+
+                  setNewTaskTitle('');
+                  setNewTaskNotes('');
+                  setNewTaskAssignee(currentUser.id);
+                  setSelectedClaimIds([]);
+                  setShowNewTaskModal(false);
+                } catch (error) {
+                  console.error('Failed to create task:', error);
+                  alert('Failed to create task. Please try again.');
+                }
+              }}
+              className="p-4 space-y-4 overflow-y-auto"
+            >
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Task Title
+                </label>
+                <input
+                  type="text"
+                  required
+                  className="w-full bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  placeholder="e.g. Follow up on warranty claim"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Assign To
+                </label>
+                <select
+                  className="w-full bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                  value={newTaskAssignee}
+                  onChange={(e) => setNewTaskAssignee(e.target.value)}
+                >
+                  {employees.map((emp) => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Notes
+                </label>
+                <textarea
+                  rows={4}
+                  className="w-full bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-600 focus:border-primary focus:ring-1 focus:ring-primary outline-none resize-none"
+                  value={newTaskNotes}
+                  onChange={(e) => setNewTaskNotes(e.target.value)}
+                />
+              </div>
+
+              {selectedHomeowner && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Link to Claims (Optional)
+                  </label>
+                  <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-2 bg-white dark:bg-gray-800">
+                    {claims
+                      .filter((c) => {
+                        const cAny = c as any;
+                        if (cAny.homeownerId && selectedHomeowner.id) return cAny.homeownerId === selectedHomeowner.id;
+                        const claimEmail = c.homeownerEmail?.toLowerCase().trim() || '';
+                        const homeownerEmail = selectedHomeowner.email?.toLowerCase().trim() || '';
+                        return claimEmail === homeownerEmail;
+                      })
+                      .map((c) => (
+                        <label
+                          key={c.id}
+                          className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedClaimIds.includes(c.id)}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setSelectedClaimIds((prev) => (checked ? [...prev, c.id] : prev.filter((id) => id !== c.id)));
+                            }}
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-200 truncate">
+                            {c.title || 'Untitled Claim'}
+                          </span>
+                        </label>
+                      ))}
+                    {claims.filter((c) => {
+                      const cAny = c as any;
+                      if (cAny.homeownerId && selectedHomeowner.id) return cAny.homeownerId === selectedHomeowner.id;
+                      const claimEmail = c.homeownerEmail?.toLowerCase().trim() || '';
+                      const homeownerEmail = selectedHomeowner.email?.toLowerCase().trim() || '';
+                      return claimEmail === homeownerEmail;
+                    }).length === 0 && (
+                      <div className="p-2 text-sm text-gray-500 dark:text-gray-400">No claims found for this homeowner.</div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowNewTaskModal(false)}
+                  className="flex-1 px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 rounded-xl bg-primary text-white hover:bg-primary/90 transition-colors"
+                >
+                  Create
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
       
       {/* Tasks Modal - Full Desktop Parity with Stack Navigation */}
       {showTasks && (
@@ -2486,13 +2674,14 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
               {/* Header */}
               <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex-1">
-                  {selectedClaimId ? 'Edit Claim' : 'Warranty Claims'}
+                  {isCreatingNewClaim ? 'New Claim' : selectedClaimId ? 'Edit Claim' : 'Warranty Claims'}
                 </h2>
                 <button
                   type="button"
                   onClick={() => {
                     setShowClaims(false);
                     setSelectedClaimId(null);
+                    setIsCreatingNewClaim(false);
                   }}
                   className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
@@ -2507,7 +2696,35 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                     <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
                   </div>
                 }>
-                  {!selectedClaimId ? (
+                  {isCreatingNewClaim ? (
+                    <div className="flex-1 overflow-y-auto p-4">
+                      {!selectedHomeowner ? (
+                        <div className="p-4 text-sm text-gray-600 dark:text-gray-400">
+                          Select a homeowner first to create a claim.
+                        </div>
+                      ) : (
+                        <Suspense fallback={<div className="flex items-center justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-gray-400" /></div>}>
+                          <NewClaimForm
+                            onSubmit={(data) => {
+                              if (onCreateClaim) onCreateClaim(data);
+                              setIsCreatingNewClaim(false);
+                            }}
+                            onCancel={() => setIsCreatingNewClaim(false)}
+                            onSendMessage={() => {
+                              setIsCreatingNewClaim(false);
+                              setShowClaims(false);
+                              setShowMessages(true);
+                              setActiveThreadId(null);
+                              setIsComposingMessage(true);
+                            }}
+                            contractors={contractors}
+                            activeHomeowner={selectedHomeowner}
+                            userRole={userRole}
+                          />
+                        </Suspense>
+                      )}
+                    </div>
+                  ) : !selectedClaimId ? (
                     /* LIST VIEW: Desktop-Style Claims List with Tabs */
                     <>
                       {/* Filter Tabs */}
