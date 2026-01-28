@@ -175,7 +175,7 @@ const AdminMobileSearch: React.FC<DashboardProps> = ({
       />
 
       {/* Search Content */}
-      <div className="flex-1 flex flex-col p-4 space-y-4">
+      <div className="flex-1 flex flex-col p-4 pb-32 space-y-4">
         {/* GLOBAL SEARCH RESULTS - Priority when global query exists */}
         {isShowingGlobalResults && (
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -872,46 +872,44 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
 
   // ========== RENDER ==========
   return (
-    <div className="w-full overflow-x-hidden bg-gray-50 dark:bg-gray-900 min-h-screen pb-8">
-      {/* Unified Mobile Header with Search */}
-      <div className="sticky top-0 z-20">
-        <AdminMobileHeader
-          homeownerQuery={searchQuery || ''}
-          onHomeownerSearch={onSearchChange}
-          globalQuery={globalQuery}
-          onGlobalSearch={setGlobalQuery}
-          homeownerPlaceholder="Switch homeowner..."
-        />
-        
-        {/* Homeowner Search Results Dropdown - Only when searching homeowners */}
-        {searchQuery && !globalQuery && searchResults && searchResults.length > 0 && (
-          <div className="absolute left-4 right-4 mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden max-h-[40vh] overflow-y-auto z-30">
-            {searchResults.map((homeowner) => (
-              <button
-                key={homeowner.id}
-                type="button"
-                onClick={() => handleHomeownerSwitch(homeowner)}
-                className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700 last:border-0 transition-all flex items-center gap-3"
-              >
-                <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-primary font-semibold">
-                    {homeowner.name?.charAt(0).toUpperCase() || '?'}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
-                    {homeowner.name}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                    {homeowner.builder} • {homeowner.jobName}
-                  </p>
-                </div>
-                <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
+    <div className="w-full overflow-x-hidden bg-gray-50 dark:bg-gray-900 min-h-screen pb-32">
+      {/* Bottom Search Dock */}
+      <AdminMobileHeader
+        homeownerQuery={searchQuery || ''}
+        onHomeownerSearch={onSearchChange}
+        globalQuery={globalQuery}
+        onGlobalSearch={setGlobalQuery}
+        homeownerPlaceholder="Switch homeowner..."
+      />
+
+      {/* Homeowner Search Results Dropdown - Only when searching homeowners */}
+      {searchQuery && !globalQuery && searchResults && searchResults.length > 0 && (
+        <div className="fixed left-4 right-4 bottom-[calc(env(safe-area-inset-bottom)+84px)] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden max-h-[40vh] overflow-y-auto z-50">
+          {searchResults.map((homeowner) => (
+            <button
+              key={homeowner.id}
+              type="button"
+              onClick={() => handleHomeownerSwitch(homeowner)}
+              className="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700 last:border-0 transition-all flex items-center gap-3"
+            >
+              <div className="w-10 h-10 rounded-full bg-primary/10 dark:bg-primary/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-primary font-semibold">
+                  {homeowner.name?.charAt(0).toUpperCase() || '?'}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                  {homeowner.name}
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                  {homeowner.builder} • {homeowner.jobName}
+                </p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-gray-400 flex-shrink-0" />
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* GLOBAL SEARCH RESULTS OVERLAY - Shows when global query active */}
       {globalQuery.trim().length > 0 && (
