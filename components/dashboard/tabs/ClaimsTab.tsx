@@ -384,8 +384,7 @@ export const ClaimsTab: React.FC<ClaimsTabProps> = ({
             <>
               {/* New Claim Form Content */}
               <div 
-                className="flex-1 overflow-y-auto p-6 overscroll-contain relative"
-                style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
+                className="flex-1 flex flex-col overflow-hidden relative"
               >
                 {/* Backdrop overlay when warning is shown */}
                 {showUnsavedWarning && (
