@@ -356,6 +356,7 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
     phone: '',
     address: '',
     builder: '',
+    builderUserId: '', // NEW
     jobName: '',
     closingDate: '',
   });
@@ -498,6 +499,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
         phone: selectedHomeowner.phone || '',
         address: selectedHomeowner.address || '',
         builder: selectedHomeowner.builder || '',
+        builderUserId: selectedHomeowner.builderUserId || '',
         jobName: selectedHomeowner.jobName || '',
         closingDate: selectedHomeowner.closingDate instanceof Date 
           ? selectedHomeowner.closingDate.toISOString().split('T')[0] 
@@ -1018,13 +1020,30 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                       className="h-8 text-xs w-full"
                       placeholder="Project Name"
                     />
-                    <Input
-                      type="text"
-                      value={editFormData.builder}
-                      onChange={(e) => setEditFormData({ ...editFormData, builder: e.target.value })}
-                      className="h-8 text-xs w-full"
-                      placeholder="Builder Name"
-                    />
+                    {/* Builder Dropdown */}
+                    <div className="relative">
+                      <select
+                        value={editFormData.builderUserId || ''}
+                        onChange={(e) => {
+                          const selectedBuilder = builderUsers.find(bu => bu.id === e.target.value);
+                          setEditFormData({ 
+                            ...editFormData, 
+                            builderUserId: e.target.value,
+                            builder: selectedBuilder ? selectedBuilder.name : ''
+                          });
+                        }}
+                        className="h-8 text-xs w-full px-2 pr-8 rounded-md border border-input bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none appearance-none"
+                      >
+                        <option value="">Select Builder...</option>
+                        {builderUsers.map(bu => (
+                          <option key={bu.id} value={bu.id}>{bu.name}</option>
+                        ))}
+                      </select>
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                      </div>
+                    </div>
+                    {/* Date Picker */}
                     <Input
                       type="date"
                       value={editFormData.closingDate}
@@ -1201,6 +1220,19 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                       onClick={(e) => {
                         e.stopPropagation();
                         console.log('✏️ Edit homeowner:', selectedHomeowner.id);
+                        // Pre-populate form with current values
+                        setEditFormData({
+                          name: selectedHomeowner.name || '',
+                          email: selectedHomeowner.email || '',
+                          phone: selectedHomeowner.phone || '',
+                          address: selectedHomeowner.address || '',
+                          builder: selectedHomeowner.builder || '',
+                          builderUserId: selectedHomeowner.builderUserId || '',
+                          jobName: selectedHomeowner.jobName || '',
+                          closingDate: selectedHomeowner.closingDate 
+                            ? new Date(selectedHomeowner.closingDate).toISOString().split('T')[0]
+                            : '',
+                        });
                         setIsEditingHomeowner(true);
                       }}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-primary bg-white dark:bg-gray-800 border border-primary/30 rounded-lg hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors"

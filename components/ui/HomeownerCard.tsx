@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { MapPin, Home, Calendar, Phone, Mail, Check, Clock, Pencil, HardHat, Save, X } from "lucide-react";
+import { MapPin, Home, Calendar, Phone, Mail, Check, Clock, Pencil, HardHat, Save, X, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -10,18 +10,29 @@ interface HomeownerCardProps {
   name?: string;
   address?: string;
   builder?: string;
+  builderUserId?: string; // NEW: For dropdown selection
   project?: string;
   closingDate?: string;
   phone?: string;
   email?: string;
   onEdit?: () => void;
   onViewSubs?: () => void;
-  onSave?: (updates: { name?: string; project?: string; email?: string; phone?: string; address?: string }) => void;
-  onEditStateChange?: (isEditing: boolean) => void; // NEW: Notify parent of edit state changes
+  onSave?: (updates: { 
+    name?: string; 
+    project?: string; 
+    email?: string; 
+    phone?: string; 
+    address?: string; 
+    builderUserId?: string; // NEW: Save builder ID, not name
+    closingDate?: string;
+  }) => void;
+  onEditStateChange?: (isEditing: boolean) => void;
+  // Builder list for dropdown
+  builderUsers?: Array<{ id: string; name: string }>; // NEW
   // Status tracking
   clerkId?: string;
   inviteEmailRead?: boolean;
-  enableInlineEdit?: boolean; // NEW: Enable inline editing instead of modal
+  enableInlineEdit?: boolean;
 }
 
 // Helper to determine status
@@ -35,6 +46,7 @@ export function HomeownerCard({
   name,
   address,
   builder,
+  builderUserId,
   project,
   closingDate,
   phone,
@@ -43,6 +55,7 @@ export function HomeownerCard({
   onViewSubs,
   onSave,
   onEditStateChange,
+  builderUsers = [],
   clerkId,
   inviteEmailRead,
   enableInlineEdit = false,
@@ -53,6 +66,18 @@ export function HomeownerCard({
   const [editEmail, setEditEmail] = useState(email || '');
   const [editPhone, setEditPhone] = useState(phone || '');
   const [editAddress, setEditAddress] = useState(address || '');
+  const [editBuilderUserId, setEditBuilderUserId] = useState(builderUserId || '');
+  const [editClosingDate, setEditClosingDate] = useState(() => {
+    // Convert display date (MM/DD/YYYY) to input date format (YYYY-MM-DD)
+    if (!closingDate) return '';
+    try {
+      const date = new Date(closingDate);
+      if (isNaN(date.getTime())) return '';
+      return date.toISOString().split('T')[0];
+    } catch {
+      return '';
+    }
+  });
   
   const clientStatus = getClientStatus(clerkId, inviteEmailRead);
   
@@ -63,7 +88,23 @@ export function HomeownerCard({
     setEditEmail(email || '');
     setEditPhone(phone || '');
     setEditAddress(address || '');
-  }, [name, project, email, phone, address]);
+    setEditBuilderUserId(builderUserId || '');
+    // Convert closingDate to input format
+    if (closingDate) {
+      try {
+        const date = new Date(closingDate);
+        if (!isNaN(date.getTime())) {
+          setEditClosingDate(date.toISOString().split('T')[0]);
+        } else {
+          setEditClosingDate('');
+        }
+      } catch {
+        setEditClosingDate('');
+      }
+    } else {
+      setEditClosingDate('');
+    }
+  }, [name, project, email, phone, address, builderUserId, closingDate]);
   
   const handleStartEdit = () => {
     if (enableInlineEdit) {
@@ -83,6 +124,21 @@ export function HomeownerCard({
     setEditEmail(email || '');
     setEditPhone(phone || '');
     setEditAddress(address || '');
+    setEditBuilderUserId(builderUserId || '');
+    if (closingDate) {
+      try {
+        const date = new Date(closingDate);
+        if (!isNaN(date.getTime())) {
+          setEditClosingDate(date.toISOString().split('T')[0]);
+        } else {
+          setEditClosingDate('');
+        }
+      } catch {
+        setEditClosingDate('');
+      }
+    } else {
+      setEditClosingDate('');
+    }
   };
   
   const handleSaveEdit = () => {
@@ -93,6 +149,8 @@ export function HomeownerCard({
         email: editEmail,
         phone: editPhone,
         address: editAddress,
+        builderUserId: editBuilderUserId,
+        closingDate: editClosingDate, // Already in YYYY-MM-DD format
       });
     }
     setIsEditing(false);
@@ -261,22 +319,49 @@ export function HomeownerCard({
         {/* Builder */}
         <div className="flex items-start group/item">
           <Home className="w-4 h-4 mr-3 text-gray-400 dark:text-gray-500 shrink-0" />
-          <div className="flex flex-col">
+          <div className="flex flex-col flex-1">
             <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Builder</span>
-            <span className={`text-sm ${builder ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
-              {builder || "--"}
-            </span>
+            {isEditing ? (
+              <div className="relative w-full">
+                <select
+                  value={editBuilderUserId}
+                  onChange={(e) => setEditBuilderUserId(e.target.value)}
+                  className="w-full h-8 px-2 pr-8 text-sm rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none appearance-none"
+                >
+                  <option value="">Select Builder...</option>
+                  {builderUsers.map(bu => (
+                    <option key={bu.id} value={bu.id}>{bu.name}</option>
+                  ))}
+                </select>
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <ChevronDown className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
+                </div>
+              </div>
+            ) : (
+              <span className={`text-sm ${builder ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
+                {builder || "--"}
+              </span>
+            )}
           </div>
         </div>
 
         {/* Closing Date */}
         <div className="flex items-start group/item mt-4">
           <Calendar className="w-4 h-4 mr-3 text-gray-400 dark:text-gray-500 shrink-0" />
-          <div className="flex flex-col">
+          <div className="flex flex-col flex-1">
             <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Closing Date</span>
-            <span className={`text-sm ${closingDate ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
-              {closingDate || "--"}
-            </span>
+            {isEditing ? (
+              <input
+                type="date"
+                value={editClosingDate}
+                onChange={(e) => setEditClosingDate(e.target.value)}
+                className="w-full h-8 px-2 text-sm rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+              />
+            ) : (
+              <span className={`text-sm ${closingDate ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
+                {closingDate || "--"}
+              </span>
+            )}
           </div>
         </div>
 

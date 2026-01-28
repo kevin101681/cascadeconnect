@@ -3305,6 +3305,8 @@ export const AdminDesktop: React.FC<DashboardProps> = ({
                   // Fallback to text field for unlinked homeowners
                   return displayHomeowner.builder || undefined;
                 })()}
+                builderUserId={displayHomeowner.builderUserId}
+                builderUsers={builderUsers}
                 project={displayHomeowner.jobName}
                 closingDate={displayHomeowner.closingDate ? new Date(displayHomeowner.closingDate).toLocaleDateString() : undefined}
                 phone={displayHomeowner.phone}
@@ -3314,9 +3316,25 @@ export const AdminDesktop: React.FC<DashboardProps> = ({
                 enableInlineEdit={isAdmin}
                 onSave={(updates) => {
                   if (onUpdateHomeowner) {
+                    // Find builder name from ID if builderUserId was updated
+                    let builderName = displayHomeowner.builder;
+                    if (updates.builderUserId) {
+                      const selectedBuilder = builderUsers.find(bu => bu.id === updates.builderUserId);
+                      if (selectedBuilder) {
+                        builderName = selectedBuilder.name;
+                      }
+                    }
+                    
                     onUpdateHomeowner({
                       ...displayHomeowner,
-                      ...updates,
+                      name: updates.name || displayHomeowner.name,
+                      email: updates.email || displayHomeowner.email,
+                      phone: updates.phone || displayHomeowner.phone,
+                      address: updates.address || displayHomeowner.address,
+                      jobName: updates.project || displayHomeowner.jobName,
+                      builderUserId: updates.builderUserId || displayHomeowner.builderUserId,
+                      builder: builderName, // Update display name
+                      closingDate: updates.closingDate ? new Date(updates.closingDate) : displayHomeowner.closingDate,
                     });
                   }
                 }}
