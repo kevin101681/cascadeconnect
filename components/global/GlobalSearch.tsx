@@ -204,8 +204,8 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
             // Keep focus on the input when interacting with results (prevents blur-close flicker)
             onMouseDown={(e) => e.preventDefault()}
           >
-            <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-xl border border-surface-outline-variant dark:border-gray-700 w-full overflow-hidden">
-              <Command.List className="max-h-[60vh] overflow-y-auto p-2">
+            <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] border border-surface-outline-variant dark:border-gray-700 w-full overflow-hidden">
+              <Command.List className="max-h-[50vh] overflow-y-auto p-2">
                 {isLoading && (
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />

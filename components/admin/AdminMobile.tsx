@@ -172,6 +172,10 @@ const AdminMobileSearch: React.FC<DashboardProps> = ({
         onGlobalSearch={setGlobalQuery}
         autoFocusHomeowner
         disabledHomeowner={isSelecting}
+        onCreateClaim={() => console.log('Quick Action: Warranty')}
+        onCreateTask={() => console.log('Quick Action: Task')}
+        onCreateMessage={() => console.log('Quick Action: Message')}
+        onCreateNote={() => console.log('Quick Action: Note')}
       />
 
       {/* Search Content */}
@@ -880,6 +884,10 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
         globalQuery={globalQuery}
         onGlobalSearch={setGlobalQuery}
         homeownerPlaceholder="Switch homeowner..."
+        onCreateClaim={() => handleOpenModal(setShowClaims)}
+        onCreateTask={() => handleOpenModal(setShowTasks)}
+        onCreateMessage={() => handleOpenModal(setShowMessages)}
+        onCreateNote={() => handleOpenModal(setShowNotes)}
       />
 
       {/* Homeowner Search Results Dropdown - Only when searching homeowners */}
