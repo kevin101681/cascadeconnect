@@ -69,6 +69,7 @@ export function HomeownerCard({
   const [editBuilderUserId, setEditBuilderUserId] = useState(builderUserId || '');
   const [builderSearchQuery, setBuilderSearchQuery] = useState('');
   const [showBuilderDropdown, setShowBuilderDropdown] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [editClosingDate, setEditClosingDate] = useState(() => {
     // Convert display date (MM/DD/YYYY) to input date format (YYYY-MM-DD)
     if (!closingDate) return '';
@@ -90,12 +91,12 @@ export function HomeownerCard({
     return builder ? builder.name : '';
   }, [editBuilderUserId, builderUsers]);
   
-  // Filter builders based on search query
+  // Filter builders based on search query (starts with)
   const filteredBuilders = React.useMemo(() => {
     if (!builderSearchQuery.trim()) return builderUsers;
     const query = builderSearchQuery.toLowerCase();
     return builderUsers.filter(bu => 
-      bu.name.toLowerCase().includes(query)
+      bu.name.toLowerCase().startsWith(query)
     );
   }, [builderUsers, builderSearchQuery]);
   
@@ -405,12 +406,151 @@ export function HomeownerCard({
           <div className="flex flex-col flex-1">
             <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Closing Date</span>
             {isEditing ? (
-              <input
-                type="date"
-                value={editClosingDate}
-                onChange={(e) => setEditClosingDate(e.target.value)}
-                className="w-full h-10 px-4 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm hover:shadow-md cursor-pointer"
-              />
+              <div className="relative w-full">
+                {/* Date Input Field */}
+                <button
+                  type="button"
+                  onClick={() => setShowDatePicker(!showDatePicker)}
+                  className="w-full h-10 px-4 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm hover:shadow-md text-left flex items-center justify-between"
+                >
+                  <span className={editClosingDate ? '' : 'text-gray-400'}>
+                    {editClosingDate ? new Date(editClosingDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Select date...'}
+                  </span>
+                  <Calendar className="h-4 w-4 text-gray-400" />
+                </button>
+                
+                {/* Material 3 Calendar Dropdown */}
+                {showDatePicker && (
+                  <div className="absolute z-50 mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 w-80">
+                    {(() => {
+                      const today = new Date();
+                      const currentDate = editClosingDate ? new Date(editClosingDate + 'T00:00:00') : today;
+                      const [viewYear, setViewYear] = useState(currentDate.getFullYear());
+                      const [viewMonth, setViewMonth] = useState(currentDate.getMonth());
+                      
+                      const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+                      const firstDayOfMonth = new Date(viewYear, viewMonth, 1).getDay();
+                      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                      
+                      const handleDateSelect = (day: number) => {
+                        const selectedDate = new Date(viewYear, viewMonth, day);
+                        setEditClosingDate(selectedDate.toISOString().split('T')[0]);
+                        setShowDatePicker(false);
+                      };
+                      
+                      const handlePrevMonth = () => {
+                        if (viewMonth === 0) {
+                          setViewMonth(11);
+                          setViewYear(viewYear - 1);
+                        } else {
+                          setViewMonth(viewMonth - 1);
+                        }
+                      };
+                      
+                      const handleNextMonth = () => {
+                        if (viewMonth === 11) {
+                          setViewMonth(0);
+                          setViewYear(viewYear + 1);
+                        } else {
+                          setViewMonth(viewMonth + 1);
+                        }
+                      };
+                      
+                      return (
+                        <div className="select-none">
+                          {/* Header */}
+                          <div className="flex items-center justify-between mb-4">
+                            <button
+                              type="button"
+                              onClick={handlePrevMonth}
+                              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                            >
+                              <ChevronDown className="h-4 w-4 rotate-90" />
+                            </button>
+                            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                              {monthNames[viewMonth]} {viewYear}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleNextMonth}
+                              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                            >
+                              <ChevronDown className="h-4 w-4 -rotate-90" />
+                            </button>
+                          </div>
+                          
+                          {/* Day Labels */}
+                          <div className="grid grid-cols-7 gap-1 mb-2">
+                            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                              <div key={i} className="text-center text-xs font-medium text-gray-500 dark:text-gray-400 py-2">
+                                {day}
+                              </div>
+                            ))}
+                          </div>
+                          
+                          {/* Calendar Grid */}
+                          <div className="grid grid-cols-7 gap-1">
+                            {/* Empty cells for days before month starts */}
+                            {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+                              <div key={`empty-${i}`} className="aspect-square" />
+                            ))}
+                            
+                            {/* Days of month */}
+                            {Array.from({ length: daysInMonth }).map((_, i) => {
+                              const day = i + 1;
+                              const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                              const isSelected = editClosingDate === dateStr;
+                              const isToday = today.getDate() === day && today.getMonth() === viewMonth && today.getFullYear() === viewYear;
+                              
+                              return (
+                                <button
+                                  key={day}
+                                  type="button"
+                                  onClick={() => handleDateSelect(day)}
+                                  className={`aspect-square flex items-center justify-center text-sm rounded-full transition-all ${
+                                    isSelected
+                                      ? 'bg-primary text-white font-semibold shadow-md'
+                                      : isToday
+                                      ? 'border-2 border-primary text-primary font-semibold'
+                                      : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                  }`}
+                                >
+                                  {day}
+                                </button>
+                              );
+                            })}
+                          </div>
+                          
+                          {/* Footer Actions */}
+                          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditClosingDate('');
+                                setShowDatePicker(false);
+                              }}
+                              className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              Clear
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const todayStr = today.toISOString().split('T')[0];
+                                setEditClosingDate(todayStr);
+                                setShowDatePicker(false);
+                              }}
+                              className="text-sm text-primary font-medium px-3 py-1.5 rounded-lg hover:bg-primary/10 transition-colors"
+                            >
+                              Today
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
             ) : (
               <span className={`text-sm ${closingDate ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
                 {closingDate || "--"}
