@@ -200,12 +200,12 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
         {showDropdown && (
           <div
-            className="absolute left-0 right-0 top-full mt-2 z-[60]"
+            className="absolute left-0 right-0 bottom-full mb-2 z-[60] origin-bottom"
             // Keep focus on the input when interacting with results (prevents blur-close flicker)
             onMouseDown={(e) => e.preventDefault()}
           >
-            <div className="bg-surface dark:bg-gray-800 rounded-2xl shadow-elevation-5 border border-surface-outline-variant dark:border-gray-700 w-full overflow-hidden">
-              <Command.List className="max-h-[400px] overflow-y-auto p-2">
+            <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-xl border border-surface-outline-variant dark:border-gray-700 w-full overflow-hidden">
+              <Command.List className="max-h-[60vh] overflow-y-auto p-2">
                 {isLoading && (
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
