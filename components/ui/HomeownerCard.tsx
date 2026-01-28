@@ -1,4 +1,5 @@
-import { MapPin, Home, Calendar, Phone, Mail, Check, Clock, Pencil, HardHat } from "lucide-react";
+import React, { useState } from "react";
+import { MapPin, Home, Calendar, Phone, Mail, Check, Clock, Pencil, HardHat, Save, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -15,9 +16,11 @@ interface HomeownerCardProps {
   email?: string;
   onEdit?: () => void;
   onViewSubs?: () => void;
+  onSave?: (updates: { name?: string; project?: string; email?: string; phone?: string; address?: string }) => void;
   // Status tracking
   clerkId?: string;
   inviteEmailRead?: boolean;
+  enableInlineEdit?: boolean; // NEW: Enable inline editing instead of modal
 }
 
 // Helper to determine status
@@ -37,10 +40,59 @@ export function HomeownerCard({
   email,
   onEdit,
   onViewSubs,
+  onSave,
   clerkId,
   inviteEmailRead,
+  enableInlineEdit = false,
 }: HomeownerCardProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(name || '');
+  const [editProject, setEditProject] = useState(project || '');
+  const [editEmail, setEditEmail] = useState(email || '');
+  const [editPhone, setEditPhone] = useState(phone || '');
+  const [editAddress, setEditAddress] = useState(address || '');
+  
   const clientStatus = getClientStatus(clerkId, inviteEmailRead);
+  
+  // Sync local state when props change
+  React.useEffect(() => {
+    setEditName(name || '');
+    setEditProject(project || '');
+    setEditEmail(email || '');
+    setEditPhone(phone || '');
+    setEditAddress(address || '');
+  }, [name, project, email, phone, address]);
+  
+  const handleStartEdit = () => {
+    if (enableInlineEdit) {
+      setIsEditing(true);
+    } else if (onEdit) {
+      onEdit();
+    }
+  };
+  
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    // Reset to original values
+    setEditName(name || '');
+    setEditProject(project || '');
+    setEditEmail(email || '');
+    setEditPhone(phone || '');
+    setEditAddress(address || '');
+  };
+  
+  const handleSaveEdit = () => {
+    if (onSave) {
+      onSave({
+        name: editName,
+        project: editProject,
+        email: editEmail,
+        phone: editPhone,
+        address: editAddress,
+      });
+    }
+    setIsEditing(false);
+  };
   
   // Format address: Split at first comma for better display
   const formatAddress = (addr?: string) => {
@@ -92,7 +144,15 @@ export function HomeownerCard({
       <div className="flex flex-col mb-4">
         {/* Name Row - Uses full width */}
         <div className="mb-3">
-          {parsedName.line2 ? (
+          {isEditing ? (
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className="w-full h-9 px-3 text-lg font-bold rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-primary dark:text-primary focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+              placeholder="Homeowner Name"
+            />
+          ) : parsedName.line2 ? (
             // Couple name - stacked (now has full width)
             <div className="space-y-1">
               <h3 className="font-bold text-lg leading-tight text-primary dark:text-primary">
@@ -109,49 +169,87 @@ export function HomeownerCard({
             </h3>
           )}
         </div>
-        {project && (
+        {isEditing ? (
+          <input
+            type="text"
+            value={editProject}
+            onChange={(e) => setEditProject(e.target.value)}
+            className="w-full h-8 px-3 text-base font-medium rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+            placeholder="Project Name"
+          />
+        ) : project ? (
           <span className="text-base font-medium text-gray-900 dark:text-gray-100 w-fit">
             {project}
           </span>
-        )}
+        ) : null}
       </div>
 
       {/* UNIFIED INFO LIST */}
       <div className="space-y-4">
         
-        {/* Address */}
+        {/* Email */}
         <div className="flex items-start group/item">
-          <MapPin className="w-4 h-4 mr-3 text-gray-400 dark:text-gray-500 group-hover/item:text-blue-500 dark:group-hover/item:text-blue-400 transition-colors shrink-0" />
-          <div className="flex flex-col">
-            <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Address</span>
-            <div className={`text-sm leading-snug ${address ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
-              <div>{formattedAddress.line1}</div>
-              {formattedAddress.line2 && (
-                <div>{formattedAddress.line2}</div>
-              )}
-            </div>
+          <Mail className="w-4 h-4 mr-3 text-gray-400 dark:text-gray-500 group-hover/item:text-blue-500 dark:group-hover/item:text-blue-400 transition-colors shrink-0" />
+          <div className="flex flex-col min-w-0 flex-1">
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Email</span>
+            {isEditing ? (
+              <input
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+                className="w-full h-8 px-2 text-sm rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                placeholder="email@example.com"
+              />
+            ) : (
+              <span className={`text-sm truncate block ${email ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`} title={email}>
+                {email || "--"}
+              </span>
+            )}
           </div>
         </div>
 
         {/* Phone */}
         <div className="flex items-start group/item">
           <Phone className="w-4 h-4 mr-3 text-gray-400 dark:text-gray-500 group-hover/item:text-blue-500 dark:group-hover/item:text-blue-400 transition-colors shrink-0" />
-          <div className="flex flex-col">
+          <div className="flex flex-col flex-1">
             <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Phone</span>
-            <span className={`text-sm ${phone ? "text-gray-700 dark:text-gray-300 font-medium" : "text-gray-300 dark:text-gray-600 italic"}`}>
-              {phone || "--"}
-            </span>
+            {isEditing ? (
+              <input
+                type="tel"
+                value={editPhone}
+                onChange={(e) => setEditPhone(e.target.value)}
+                className="w-full h-8 px-2 text-sm rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                placeholder="(555) 123-4567"
+              />
+            ) : (
+              <span className={`text-sm ${phone ? "text-gray-700 dark:text-gray-300 font-medium" : "text-gray-300 dark:text-gray-600 italic"}`}>
+                {phone || "--"}
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Email */}
+        {/* Address */}
         <div className="flex items-start group/item">
-          <Mail className="w-4 h-4 mr-3 text-gray-400 dark:text-gray-500 group-hover/item:text-blue-500 dark:group-hover/item:text-blue-400 transition-colors shrink-0" />
-          <div className="flex flex-col min-w-0">
-            <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Email</span>
-            <span className={`text-sm truncate block ${email ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`} title={email}>
-              {email || "--"}
-            </span>
+          <MapPin className="w-4 h-4 mr-3 text-gray-400 dark:text-gray-500 group-hover/item:text-blue-500 dark:group-hover/item:text-blue-400 transition-colors shrink-0" />
+          <div className="flex flex-col flex-1">
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Address</span>
+            {isEditing ? (
+              <input
+                type="text"
+                value={editAddress}
+                onChange={(e) => setEditAddress(e.target.value)}
+                className="w-full h-8 px-2 text-sm rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                placeholder="123 Main St, City, ST 12345"
+              />
+            ) : (
+              <div className={`text-sm leading-snug ${address ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
+                <div>{formattedAddress.line1}</div>
+                {formattedAddress.line2 && (
+                  <div>{formattedAddress.line2}</div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -182,71 +280,100 @@ export function HomeownerCard({
       {/* FOOTER: Status Badge & Action Buttons */}
       <div className="border-t border-gray-100 dark:border-gray-700 mt-4 pt-4 flex justify-between items-center">
         {/* Left Side: Status Badge with Text */}
-        <div className="flex items-center gap-2">
-          {(() => {
-            const statusConfigs = {
-              active: {
-                text: 'text-green-600 dark:text-green-400',
-                icon: Check,
-                label: 'Active',
-              },
-              invite_read: {
-                text: 'text-blue-600 dark:text-blue-400',
-                icon: Check,
-                label: 'Viewed',
-              },
-              pending: {
-                text: 'text-gray-500 dark:text-gray-400',
-                icon: Clock,
-                label: 'Pending',
-              },
-            };
-            const config = statusConfigs[clientStatus];
-            const Icon = config.icon;
-            
-            return (
-              <div className={`inline-flex items-center gap-1.5 text-xs font-medium ${config.text}`}>
-                <Icon className="h-3.5 w-3.5" />
-                <span>{config.label}</span>
-              </div>
-            );
-          })()}
-        </div>
+        {!isEditing && (
+          <div className="flex items-center gap-2">
+            {(() => {
+              const statusConfigs = {
+                active: {
+                  text: 'text-green-600 dark:text-green-400',
+                  icon: Check,
+                  label: 'Active',
+                },
+                invite_read: {
+                  text: 'text-blue-600 dark:text-blue-400',
+                  icon: Check,
+                  label: 'Viewed',
+                },
+                pending: {
+                  text: 'text-gray-500 dark:text-gray-400',
+                  icon: Clock,
+                  label: 'Pending',
+                },
+              };
+              const config = statusConfigs[clientStatus];
+              const Icon = config.icon;
+              
+              return (
+                <div className={`inline-flex items-center gap-1.5 text-xs font-medium ${config.text}`}>
+                  <Icon className="h-3.5 w-3.5" />
+                  <span>{config.label}</span>
+                </div>
+              );
+            })()}
+          </div>
+        )}
 
         {/* Right Side: Action Buttons */}
-        <div className="flex items-center gap-2">
-          {/* View Subs Button */}
-          {onViewSubs && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-xs bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-700 dark:hover:bg-orange-900/50"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log("🔨 View Subs Clicked for:", name);
-                if (onViewSubs) onViewSubs();
-              }}
-            >
-              <HardHat className="h-3.5 w-3.5 mr-1.5" />
-              Subs
-            </Button>
-          )}
+        <div className={`flex items-center gap-2 ${isEditing ? 'w-full justify-end' : ''}`}>
+          {isEditing ? (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCancelEdit();
+                }}
+                className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-8 text-xs"
+              >
+                <X className="h-3.5 w-3.5" />
+                Cancel
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSaveEdit();
+                }}
+                className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-8 text-xs"
+              >
+                <Save className="h-3.5 w-3.5" />
+                Save
+              </button>
+            </>
+          ) : (
+            <>
+              {/* View Subs Button */}
+              {onViewSubs && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 text-xs bg-orange-50 text-orange-600 border-orange-200 hover:bg-orange-100 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-700 dark:hover:bg-orange-900/50"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log("🔨 View Subs Clicked for:", name);
+                    if (onViewSubs) onViewSubs();
+                  }}
+                >
+                  <HardHat className="h-3.5 w-3.5 mr-1.5" />
+                  Subs
+                </Button>
+              )}
 
-          {/* Edit Button */}
-          {onEdit && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="h-8 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log("✏️ Edit Clicked");
-                if (onEdit) onEdit();
-              }}
-            >
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />
-              Edit Info
-            </Button>
+              {/* Edit Button */}
+              {(onEdit || enableInlineEdit) && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log("✏️ Edit Clicked");
+                    handleStartEdit();
+                  }}
+                >
+                  <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                  Edit Info
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>

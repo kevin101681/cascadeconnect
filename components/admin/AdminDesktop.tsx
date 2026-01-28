@@ -3308,9 +3308,16 @@ export const AdminDesktop: React.FC<DashboardProps> = ({
                 email={displayHomeowner.email}
                 clerkId={displayHomeowner.clerkId}
                 inviteEmailRead={displayHomeowner.inviteEmailRead}
-                onEdit={isAdmin ? () => {
-                  handleOpenEditHomeowner();
-                } : undefined}
+                enableInlineEdit={isAdmin}
+                onSave={(updates) => {
+                  if (onUpdateHomeowner) {
+                    onUpdateHomeowner({
+                      ...displayHomeowner,
+                      ...updates,
+                    });
+                  }
+                }}
+                onEdit={undefined}
               />
              </div>
 
