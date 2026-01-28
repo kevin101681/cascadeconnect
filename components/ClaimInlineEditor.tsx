@@ -1273,14 +1273,13 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 
                 {/* Send Message Button */}
                 <div className="mt-4 pt-4 border-t border-surface-outline-variant dark:border-gray-600">
-                  <Button 
-                    type="button" 
-                    variant="secondary"
+                  <button
+                    type="button"
                     onClick={() => onSendMessage(claim)}
-                    className="w-full !rounded-xl"
+                    className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 w-full"
                   >
                     Send Message
-                  </Button>
+                  </button>
                 </div>
               </>
             )}
@@ -1331,15 +1330,14 @@ If this repair work is billable, please let me know prior to scheduling.`);
                     </div>
                   </div>
                   
-                  <Button 
+                  <button
                     type="button"
-                    variant="secondary" 
-                    onClick={handlePrepareServiceOrder} 
-                    icon={<FileText className="h-4 w-4" />}
-                    className="!h-9 whitespace-nowrap flex-shrink-0 !text-sm !rounded-xl"
+                    onClick={handlePrepareServiceOrder}
+                    className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-9 whitespace-nowrap flex-shrink-0 text-sm"
                   >
+                    <FileText className="h-4 w-4" />
                     Email SO
-                  </Button>
+                  </button>
                 </div>
               )}
             </div>
@@ -1464,9 +1462,8 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 {isAdmin && (
                   <div className="mt-4 pt-4 border-t border-green-200 dark:border-green-800">
                     {claim.status !== ClaimStatus.CLOSED ? (
-                      <Button
+                      <button
                         type="button"
-                        variant="secondary"
                         onClick={() => {
                           onUpdateClaim({
                             ...claim,
@@ -1475,15 +1472,14 @@ If this repair work is billable, please let me know prior to scheduling.`);
                             scheduledAt: scheduledDate ? new Date(scheduledDate.date) : undefined
                           });
                         }}
-                        className="w-full !rounded-xl"
+                        className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 w-full"
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Mark as Completed
-                      </Button>
+                      </button>
                     ) : (
-                      <Button
+                      <button
                         type="button"
-                        variant="secondary"
                         onClick={() => {
                           onUpdateClaim({
                             ...claim,
@@ -1491,10 +1487,10 @@ If this repair work is billable, please let me know prior to scheduling.`);
                             completedAt: undefined
                           });
                         }}
-                        className="w-full !rounded-xl"
+                        className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 w-full"
                       >
                         Reopen Claim
-                      </Button>
+                      </button>
                     )}
                   </div>
                 )}
@@ -1535,18 +1531,9 @@ If this repair work is billable, please let me know prior to scheduling.`);
       {/* Footer - Fixed at bottom */}
       <div className="flex-none border-t border-surface-outline-variant dark:border-gray-700 bg-surface dark:bg-gray-800">
         <div className="w-full px-6 py-4 flex justify-end space-x-3">
-          <Button
-            type="button"
-            variant="filled"
-            onClick={() => onSendMessage(claim)}
-            className="!h-9"
-          >
-            Message
-          </Button>
           {!isHomeowner && (
-            <Button
+            <button
               type="button"
-              variant="filled"
               onClick={() => {
                 const contextLabel = `${claim.title || 'Untitled'} • Claim #${claim.claimNumber || claim.id.substring(0, 8)} • ${claim.jobName || claim.address}`;
                 
@@ -1557,39 +1544,36 @@ If this repair work is billable, please let me know prior to scheduling.`);
                 );
               }}
               title={`Add a note for ${claim.claimNumber || 'this claim'}`}
-              className="!h-9"
+              className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-9"
             >
               Note
-            </Button>
+            </button>
           )}
           {!isHomeowner && (
-            <Button 
-              type="button" 
-              variant="filled"
+            <button
+              type="button"
               onClick={handleToggleReviewed}
-              className="!h-9"
+              className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-9"
             >
               {isReviewed ? 'Reviewed' : 'Process'}
-            </Button>
+            </button>
           )}
           {onCancel && (
-            <Button 
-              type="button" 
-              variant="filled" 
+            <button
+              type="button"
               onClick={onCancel}
-              className="!h-9"
+              className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-9"
             >
               Cancel
-            </Button>
+            </button>
           )}
-          <Button 
-            type="button" 
-            variant="filled" 
+          <button
+            type="button"
             onClick={handleSaveDetails}
-            className="!h-9"
+            className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-9"
           >
             Save
-          </Button>
+          </button>
         </div>
       </div>
     </div>
