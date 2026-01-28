@@ -60,8 +60,8 @@ const BackendDashboard = React.lazy(() => import('../BackendDashboard'));
 const HomeownersList = React.lazy(() => import('../HomeownersList'));
 const InternalUserManagement = React.lazy(() => import('../InternalUserManagement'));
 const WarrantyAnalytics = React.lazy(() => import('../WarrantyAnalytics'));
-const ScheduleTabWrapper = React.lazy(() => 
-  import('../dashboard/tabs/ScheduleTabWrapper').then(m => ({ default: m.ScheduleTabWrapper }))
+const MobileScheduleView = React.lazy(() =>
+  import('../mobile/MobileScheduleView').then(m => ({ default: m.MobileScheduleView }))
 );
 
 // Lazy load real tab components for stack navigation
@@ -2384,25 +2384,17 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
             <div className="fixed inset-0 overflow-y-auto" onClick={(e) => e.stopPropagation()}>
               <div className="min-h-full p-4">
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-6xl mx-auto">
-                  <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                      Schedule - {selectedHomeowner.name}
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => setShowSchedule(false)}
-                      className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-                  <div className="p-4">
-                    <ScheduleTabWrapper
+                  <div className="h-[85vh] overflow-hidden">
+                    <MobileScheduleView
                       homeowners={[selectedHomeowner]}
                       claims={homeownerClaims}
                       userRole={userRole}
                       activeHomeownerId={selectedHomeowner.id}
+                      currentUserId={currentUser?.id}
                       isAdmin={true}
+                      onClose={() => setShowSchedule(false)}
+                      onNewEvent={() => console.log('New schedule event')}
+                      onEventClick={(event) => console.log('Open schedule event:', event.id)}
                     />
                   </div>
                 </div>
