@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { MapPin, Home, Calendar, Phone, Mail, Check, Clock, Pencil, HardHat, Save, X, ChevronDown } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { MapPin, Home, Calendar, Phone, Mail, Check, Clock, Pencil, HardHat, Save, X, ChevronDown, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -67,6 +67,8 @@ export function HomeownerCard({
   const [editPhone, setEditPhone] = useState(phone || '');
   const [editAddress, setEditAddress] = useState(address || '');
   const [editBuilderUserId, setEditBuilderUserId] = useState(builderUserId || '');
+  const [builderSearchQuery, setBuilderSearchQuery] = useState('');
+  const [showBuilderDropdown, setShowBuilderDropdown] = useState(false);
   const [editClosingDate, setEditClosingDate] = useState(() => {
     // Convert display date (MM/DD/YYYY) to input date format (YYYY-MM-DD)
     if (!closingDate) return '';
@@ -80,6 +82,22 @@ export function HomeownerCard({
   });
   
   const clientStatus = getClientStatus(clerkId, inviteEmailRead);
+  
+  // Get selected builder name for display
+  const selectedBuilderName = React.useMemo(() => {
+    if (!editBuilderUserId) return '';
+    const builder = builderUsers.find(bu => bu.id === editBuilderUserId);
+    return builder ? builder.name : '';
+  }, [editBuilderUserId, builderUsers]);
+  
+  // Filter builders based on search query
+  const filteredBuilders = React.useMemo(() => {
+    if (!builderSearchQuery.trim()) return builderUsers;
+    const query = builderSearchQuery.toLowerCase();
+    return builderUsers.filter(bu => 
+      bu.name.toLowerCase().includes(query)
+    );
+  }, [builderUsers, builderSearchQuery]);
   
   // Sync local state when props change
   React.useEffect(() => {
@@ -212,7 +230,7 @@ export function HomeownerCard({
               type="text"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
-              className="w-full h-9 px-3 text-lg font-bold rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-primary dark:text-primary focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+              className="w-full h-10 px-4 text-lg font-bold rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-primary dark:text-primary focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm hover:shadow-md"
               placeholder="Homeowner Name"
             />
           ) : parsedName.line2 ? (
@@ -237,7 +255,7 @@ export function HomeownerCard({
             type="text"
             value={editProject}
             onChange={(e) => setEditProject(e.target.value)}
-            className="w-full h-8 px-3 text-base font-medium rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+            className="w-full h-10 px-4 text-base font-medium rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm hover:shadow-md"
             placeholder="Project Name"
           />
         ) : project ? (
@@ -260,7 +278,7 @@ export function HomeownerCard({
                 type="email"
                 value={editEmail}
                 onChange={(e) => setEditEmail(e.target.value)}
-                className="w-full h-8 px-2 text-sm rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                className="w-full h-10 px-4 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm hover:shadow-md"
                 placeholder="email@example.com"
               />
             ) : (
@@ -281,7 +299,7 @@ export function HomeownerCard({
                 type="tel"
                 value={editPhone}
                 onChange={(e) => setEditPhone(e.target.value)}
-                className="w-full h-8 px-2 text-sm rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                className="w-full h-10 px-4 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm hover:shadow-md"
                 placeholder="(555) 123-4567"
               />
             ) : (
@@ -302,7 +320,7 @@ export function HomeownerCard({
                 type="text"
                 value={editAddress}
                 onChange={(e) => setEditAddress(e.target.value)}
-                className="w-full h-8 px-2 text-sm rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                className="w-full h-10 px-4 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm hover:shadow-md"
                 placeholder="123 Main St, City, ST 12345"
               />
             ) : (
@@ -323,19 +341,55 @@ export function HomeownerCard({
             <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider leading-none mb-1">Builder</span>
             {isEditing ? (
               <div className="relative w-full">
-                <select
-                  value={editBuilderUserId}
-                  onChange={(e) => setEditBuilderUserId(e.target.value)}
-                  className="w-full h-8 px-2 pr-8 text-sm rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none appearance-none"
-                >
-                  <option value="">Select Builder...</option>
-                  {builderUsers.map(bu => (
-                    <option key={bu.id} value={bu.id}>{bu.name}</option>
-                  ))}
-                </select>
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <ChevronDown className="h-3.5 w-3.5 text-gray-400 dark:text-gray-500" />
+                {/* Search Input */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={showBuilderDropdown ? builderSearchQuery : selectedBuilderName}
+                    onChange={(e) => {
+                      setBuilderSearchQuery(e.target.value);
+                      setShowBuilderDropdown(true);
+                    }}
+                    onFocus={() => {
+                      setBuilderSearchQuery('');
+                      setShowBuilderDropdown(true);
+                    }}
+                    onBlur={() => {
+                      // Delay to allow click on dropdown item
+                      setTimeout(() => setShowBuilderDropdown(false), 200);
+                    }}
+                    className="w-full h-10 pl-10 pr-4 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm hover:shadow-md"
+                    placeholder="Search builders..."
+                  />
                 </div>
+                
+                {/* Dropdown Results */}
+                {showBuilderDropdown && filteredBuilders.length > 0 && (
+                  <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 max-h-48 overflow-y-auto">
+                    {filteredBuilders.map(bu => (
+                      <button
+                        key={bu.id}
+                        type="button"
+                        onClick={() => {
+                          setEditBuilderUserId(bu.id);
+                          setBuilderSearchQuery('');
+                          setShowBuilderDropdown(false);
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm text-gray-900 dark:text-gray-100 hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors first:rounded-t-xl last:rounded-b-xl border-b border-gray-100 dark:border-gray-700 last:border-0"
+                      >
+                        {bu.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                
+                {/* No Results */}
+                {showBuilderDropdown && builderSearchQuery && filteredBuilders.length === 0 && (
+                  <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                    No builders found
+                  </div>
+                )}
               </div>
             ) : (
               <span className={`text-sm ${builder ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>
@@ -355,7 +409,7 @@ export function HomeownerCard({
                 type="date"
                 value={editClosingDate}
                 onChange={(e) => setEditClosingDate(e.target.value)}
-                className="w-full h-8 px-2 text-sm rounded border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                className="w-full h-10 px-4 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm hover:shadow-md cursor-pointer"
               />
             ) : (
               <span className={`text-sm ${closingDate ? "text-gray-700 dark:text-gray-300" : "text-gray-300 dark:text-gray-600 italic"}`}>

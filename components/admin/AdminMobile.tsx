@@ -350,6 +350,8 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
   
   // Edit homeowner modal state & inline form data
   const [isEditingHomeowner, setIsEditingHomeowner] = useState(false);
+  const [builderSearchQuery, setBuilderSearchQuery] = useState('');
+  const [showBuilderDropdown, setShowBuilderDropdown] = useState(false);
   const [editFormData, setEditFormData] = useState({
     name: '',
     email: '',
@@ -1012,44 +1014,78 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                 
                 {/* Row 2: Project - Builder - Closing Date */}
                 {isEditingHomeowner ? (
-                  <div className="space-y-1 mt-2">
+                  <div className="space-y-2 mt-2">
+                    {/* Project Input */}
                     <Input
                       type="text"
                       value={editFormData.jobName}
                       onChange={(e) => setEditFormData({ ...editFormData, jobName: e.target.value })}
-                      className="h-8 text-xs w-full"
+                      className="h-10 text-sm w-full rounded-xl"
                       placeholder="Project Name"
                     />
-                    {/* Builder Dropdown */}
+                    
+                    {/* Builder Search Input */}
                     <div className="relative">
-                      <select
-                        value={editFormData.builderUserId || ''}
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none z-10" />
+                      <input
+                        type="text"
+                        value={showBuilderDropdown ? builderSearchQuery : (editFormData.builder || '')}
                         onChange={(e) => {
-                          const selectedBuilder = builderUsers.find(bu => bu.id === e.target.value);
-                          setEditFormData({ 
-                            ...editFormData, 
-                            builderUserId: e.target.value,
-                            builder: selectedBuilder ? selectedBuilder.name : ''
-                          });
+                          setBuilderSearchQuery(e.target.value);
+                          setShowBuilderDropdown(true);
                         }}
-                        className="h-8 text-xs w-full px-2 pr-8 rounded-md border border-input bg-background text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none appearance-none"
-                      >
-                        <option value="">Select Builder...</option>
-                        {builderUsers.map(bu => (
-                          <option key={bu.id} value={bu.id}>{bu.name}</option>
-                        ))}
-                      </select>
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
-                      </div>
+                        onFocus={() => {
+                          setBuilderSearchQuery('');
+                          setShowBuilderDropdown(true);
+                        }}
+                        onBlur={() => {
+                          setTimeout(() => setShowBuilderDropdown(false), 200);
+                        }}
+                        className="w-full h-10 pl-10 pr-4 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        placeholder="Search builders..."
+                      />
+                      
+                      {/* Dropdown Results */}
+                      {showBuilderDropdown && (() => {
+                        const filtered = builderSearchQuery.trim()
+                          ? builderUsers.filter(bu => bu.name.toLowerCase().includes(builderSearchQuery.toLowerCase()))
+                          : builderUsers;
+                        
+                        return filtered.length > 0 ? (
+                          <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 max-h-48 overflow-y-auto">
+                            {filtered.map(bu => (
+                              <button
+                                key={bu.id}
+                                type="button"
+                                onClick={() => {
+                                  setEditFormData({ 
+                                    ...editFormData, 
+                                    builderUserId: bu.id,
+                                    builder: bu.name
+                                  });
+                                  setBuilderSearchQuery('');
+                                  setShowBuilderDropdown(false);
+                                }}
+                                className="w-full text-left px-4 py-3 text-sm text-gray-900 dark:text-gray-100 hover:bg-primary/10 dark:hover:bg-primary/20 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-0"
+                              >
+                                {bu.name}
+                              </button>
+                            ))}
+                          </div>
+                        ) : builderSearchQuery ? (
+                          <div className="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-4 text-center text-sm text-gray-500">
+                            No builders found
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
+                    
                     {/* Date Picker */}
-                    <Input
+                    <input
                       type="date"
                       value={editFormData.closingDate}
                       onChange={(e) => setEditFormData({ ...editFormData, closingDate: e.target.value })}
-                      className="h-8 text-xs w-full"
-                      placeholder="Closing Date"
+                      className="w-full h-10 px-4 text-sm rounded-xl border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all cursor-pointer"
                     />
                   </div>
                 ) : (
