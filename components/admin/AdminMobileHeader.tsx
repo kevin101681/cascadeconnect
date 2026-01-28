@@ -26,6 +26,12 @@ interface AdminMobileHeaderProps {
   autoFocusHomeowner?: boolean;
   /** Whether the homeowner search input is disabled */
   disabledHomeowner?: boolean;
+
+  /** Quick actions (trigger parent create flows) */
+  onCreateClaim?: () => void;
+  onCreateTask?: () => void;
+  onCreateMessage?: () => void;
+  onCreateNote?: () => void;
 }
 
 export const AdminMobileHeader: React.FC<AdminMobileHeaderProps> = ({
@@ -38,6 +44,10 @@ export const AdminMobileHeader: React.FC<AdminMobileHeaderProps> = ({
   globalPlaceholder = 'Global',
   autoFocusHomeowner = false,
   disabledHomeowner = false,
+  onCreateClaim,
+  onCreateTask,
+  onCreateMessage,
+  onCreateNote,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
   const menuRootRef = useRef<HTMLDivElement | null>(null);
@@ -53,9 +63,10 @@ export const AdminMobileHeader: React.FC<AdminMobileHeaderProps> = ({
     return () => document.removeEventListener('mousedown', onMouseDown);
   }, [showMenu]);
 
-  const handleAction = (action: string) => {
-    console.log(`[AdminMobile Quick Action] ${action}`);
+  const handleAction = (action: string, handler?: () => void) => {
     setShowMenu(false);
+    handler?.();
+    console.log(`[AdminMobile Quick Action] ${action}`);
   };
 
   return (
@@ -101,7 +112,7 @@ export const AdminMobileHeader: React.FC<AdminMobileHeaderProps> = ({
           <button
             type="button"
             onClick={() => setShowMenu((v) => !v)}
-            className="w-12 h-12 rounded-xl bg-primary text-white shadow-md flex items-center justify-center active:scale-95 transition-transform"
+            className="bg-white dark:bg-gray-800 text-primary border border-gray-200 dark:border-gray-700 shadow-md w-12 h-12 flex items-center justify-center rounded-xl active:scale-95 transition-transform"
             aria-label="Quick actions"
             aria-expanded={showMenu}
             aria-haspopup="menu"
@@ -121,40 +132,40 @@ export const AdminMobileHeader: React.FC<AdminMobileHeaderProps> = ({
             >
               <button
                 type="button"
-                onClick={() => handleAction('Add Warranty Claim')}
+                onClick={() => handleAction('Warranty', onCreateClaim)}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 text-left transition-colors"
                 role="menuitem"
               >
                 <ShieldAlert className="h-5 w-5 text-primary" />
-                Add Warranty Claim
+                Warranty
               </button>
               <button
                 type="button"
-                onClick={() => handleAction('Add Task')}
+                onClick={() => handleAction('Task', onCreateTask)}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 text-left transition-colors"
                 role="menuitem"
               >
                 <CheckSquare className="h-5 w-5 text-primary" />
-                Add Task
+                Task
               </button>
               <button
                 type="button"
-                onClick={() => handleAction('Add Message (Not Chat)')}
+                onClick={() => handleAction('Message (Not Chat)', onCreateMessage)}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 text-left transition-colors"
                 role="menuitem"
                 title="Not Chat"
               >
                 <Mail className="h-5 w-5 text-primary" />
-                Add Message
+                Message
               </button>
               <button
                 type="button"
-                onClick={() => handleAction('Add Note')}
+                onClick={() => handleAction('Note', onCreateNote)}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-200 text-left transition-colors"
                 role="menuitem"
               >
                 <StickyNote className="h-5 w-5 text-primary" />
-                Add Note
+                Note
               </button>
             </div>
           )}
