@@ -54,7 +54,7 @@ const TasksListColumn = React.memo<{
                 title={task.title}
                 assignedTo={assignee?.name || 'Unassigned'}
                 subsToScheduleCount={subsToScheduleCount}
-                dateAssigned={task.dueDate ? new Date(task.dueDate).toLocaleDateString() : task.createdAt ? new Date(task.createdAt).toLocaleDateString() : 'N/A'}
+                dateAssigned={task.dueDate ? new Date(task.dueDate).toLocaleDateString() : task.dateAssigned ? new Date(task.dateAssigned).toLocaleDateString() : 'N/A'}
                 isCompleted={task.isCompleted}
                 isSelected={isSelected}
                 onClick={() => onTaskSelect(task)}
