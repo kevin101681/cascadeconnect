@@ -26,7 +26,7 @@ export function TaskCard({
       className={`group relative rounded-xl border p-4 shadow-sm transition-all h-full flex flex-col justify-between
         ${onClick ? 'cursor-pointer' : ''}
         ${isSelected
-          ? 'bg-slate-50 dark:bg-slate-900/50 ring-2 ring-primary border-transparent shadow-md'
+          ? 'bg-slate-50 dark:bg-slate-900/50 border-primary dark:border-primary shadow-md'
           : isCompleted 
             ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 opacity-75 hover:opacity-100 hover:shadow-md' 
             : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600'
@@ -40,7 +40,7 @@ export function TaskCard({
           <div className={`mt-0.5 shrink-0 ${isCompleted ? "text-green-500" : "text-slate-600 dark:text-slate-400"}`}>
             <CheckSquare className="w-4 h-4" />
           </div>
-          <h3 className={`font-semibold text-sm line-clamp-2 flex-1 ${isCompleted ? "text-gray-500 line-through" : "text-gray-900"}`} title={title}>
+          <h3 className={`font-semibold text-sm line-clamp-2 flex-1 ${isCompleted ? "text-gray-500 line-through" : "text-primary dark:text-primary"}`} title={title}>
             {title}
           </h3>
         </div>
@@ -55,7 +55,7 @@ export function TaskCard({
       </div>
 
       {/* 3. FOOTER: Assignment */}
-      <div className="flex items-center justify-between pt-2 border-t border-gray-50 mt-auto">
+      <div className="flex items-center justify-between pt-2 border-t border-gray-100 mt-auto">
         
         {/* User Assigned */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
