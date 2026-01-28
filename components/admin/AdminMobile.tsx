@@ -364,6 +364,16 @@ const AdminMobileDashboard: React.FC<DashboardProps> = (props) => {
     closingDate: '',
   });
   
+  // Calendar state for date picker (must be at top level)
+  const [calendarViewYear, setCalendarViewYear] = useState(() => {
+    const today = new Date();
+    return today.getFullYear();
+  });
+  const [calendarViewMonth, setCalendarViewMonth] = useState(() => {
+    const today = new Date();
+    return today.getMonth();
+  });
+  
   // Invite homeowner modal state
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteName, setInviteName] = useState('');
@@ -511,6 +521,17 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
       setIsEditingHomeowner(false); // Reset edit mode when switching homeowners
     }
   }, [selectedHomeowner?.id]);
+
+  // Sync calendar view with selected date when opening picker
+  React.useEffect(() => {
+    if (showDatePicker && editFormData.closingDate) {
+      const date = new Date(editFormData.closingDate + 'T00:00:00');
+      if (!isNaN(date.getTime())) {
+        setCalendarViewYear(date.getFullYear());
+        setCalendarViewMonth(date.getMonth());
+      }
+    }
+  }, [showDatePicker, editFormData.closingDate]);
 
   // Default invite message
   const DEFAULT_INVITE_MESSAGE = "Welcome to Cascade Connect! You have been invited to join your new Homeowner Portal. Please click the link below to activate your account and view your warranty details.";
@@ -1097,12 +1118,8 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                       {/* Material 3 Calendar */}
                       {showDatePicker && (() => {
                         const today = new Date();
-                        const currentDate = editFormData.closingDate ? new Date(editFormData.closingDate + 'T00:00:00') : today;
-                        const [viewYear, setViewYear] = React.useState(currentDate.getFullYear());
-                        const [viewMonth, setViewMonth] = React.useState(currentDate.getMonth());
-                        
-                        const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
-                        const firstDayOfMonth = new Date(viewYear, viewMonth, 1).getDay();
+                        const daysInMonth = new Date(calendarViewYear, calendarViewMonth + 1, 0).getDate();
+                        const firstDayOfMonth = new Date(calendarViewYear, calendarViewMonth, 1).getDay();
                         const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
                         
                         return (
@@ -1113,11 +1130,11 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    if (viewMonth === 0) {
-                                      setViewMonth(11);
-                                      setViewYear(viewYear - 1);
+                                    if (calendarViewMonth === 0) {
+                                      setCalendarViewMonth(11);
+                                      setCalendarViewYear(calendarViewYear - 1);
                                     } else {
-                                      setViewMonth(viewMonth - 1);
+                                      setCalendarViewMonth(calendarViewMonth - 1);
                                     }
                                   }}
                                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
@@ -1125,16 +1142,16 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                   <ChevronDown className="h-4 w-4 rotate-90" />
                                 </button>
                                 <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                  {monthNames[viewMonth]} {viewYear}
+                                  {monthNames[calendarViewMonth]} {calendarViewYear}
                                 </div>
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    if (viewMonth === 11) {
-                                      setViewMonth(0);
-                                      setViewYear(viewYear + 1);
+                                    if (calendarViewMonth === 11) {
+                                      setCalendarViewMonth(0);
+                                      setCalendarViewYear(calendarViewYear + 1);
                                     } else {
-                                      setViewMonth(viewMonth + 1);
+                                      setCalendarViewMonth(calendarViewMonth + 1);
                                     }
                                   }}
                                   className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
@@ -1160,9 +1177,9 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
                                 
                                 {Array.from({ length: daysInMonth }).map((_, i) => {
                                   const day = i + 1;
-                                  const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                  const dateStr = `${calendarViewYear}-${String(calendarViewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                                   const isSelected = editFormData.closingDate === dateStr;
-                                  const isToday = today.getDate() === day && today.getMonth() === viewMonth && today.getFullYear() === viewYear;
+                                  const isToday = today.getDate() === day && today.getMonth() === calendarViewMonth && today.getFullYear() === calendarViewYear;
                                   
                                   return (
                                     <button

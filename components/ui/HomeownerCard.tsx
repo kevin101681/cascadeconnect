@@ -82,6 +82,20 @@ export function HomeownerCard({
     }
   });
   
+  // Calendar state (must be at top level, not inside conditional render)
+  const [viewYear, setViewYear] = useState(() => {
+    if (editClosingDate) {
+      return new Date(editClosingDate + 'T00:00:00').getFullYear();
+    }
+    return new Date().getFullYear();
+  });
+  const [viewMonth, setViewMonth] = useState(() => {
+    if (editClosingDate) {
+      return new Date(editClosingDate + 'T00:00:00').getMonth();
+    }
+    return new Date().getMonth();
+  });
+  
   const clientStatus = getClientStatus(clerkId, inviteEmailRead);
   
   // Get selected builder name for display
@@ -124,6 +138,17 @@ export function HomeownerCard({
       setEditClosingDate('');
     }
   }, [name, project, email, phone, address, builderUserId, closingDate]);
+  
+  // Sync calendar view with selected date when opening picker
+  React.useEffect(() => {
+    if (showDatePicker && editClosingDate) {
+      const date = new Date(editClosingDate + 'T00:00:00');
+      if (!isNaN(date.getTime())) {
+        setViewYear(date.getFullYear());
+        setViewMonth(date.getMonth());
+      }
+    }
+  }, [showDatePicker, editClosingDate]);
   
   const handleStartEdit = () => {
     if (enableInlineEdit) {
@@ -424,10 +449,6 @@ export function HomeownerCard({
                   <div className="absolute z-50 mt-2 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-4 w-80">
                     {(() => {
                       const today = new Date();
-                      const currentDate = editClosingDate ? new Date(editClosingDate + 'T00:00:00') : today;
-                      const [viewYear, setViewYear] = useState(currentDate.getFullYear());
-                      const [viewMonth, setViewMonth] = useState(currentDate.getMonth());
-                      
                       const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
                       const firstDayOfMonth = new Date(viewYear, viewMonth, 1).getDay();
                       const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
