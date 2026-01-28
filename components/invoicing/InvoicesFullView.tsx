@@ -641,39 +641,43 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
         }`}>
           
           {/* HEADER */}
-          <div className="flex-shrink-0 px-6 py-5 border-b border-gray-200">
-            {/* TAB NAVIGATION */}
-            <div className="flex items-center gap-2 mb-4">
-              {(['INVOICES', 'BUILDERS', 'EXPENSES', 'REPORTS'] as const).map(tab => (
+          <div className="flex-shrink-0 px-6 py-5 border-b border-gray-200 bg-gray-50 dark:bg-gray-900">
+            {/* ROW 1: TAB NAVIGATION + ACTION BUTTONS */}
+            <div className="flex items-center justify-between gap-4">
+              {/* LEFT: Tab Navigation */}
+              <div className="flex items-center gap-2">
+                {(['INVOICES', 'BUILDERS', 'EXPENSES', 'REPORTS'] as const).map(tab => (
+                  <button
+                    key={tab}
+                    onClick={() => handleTabChange(tab)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      activeTab === tab
+                        ? 'bg-white text-primary shadow-md -translate-y-0.5'
+                        : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
+                    }`}
+                  >
+                    {tab.charAt(0) + tab.slice(1).toLowerCase()}
+                  </button>
+                ))}
+              </div>
+              
+              {/* RIGHT: Action Buttons */}
+              {(activeTab === 'INVOICES' || activeTab === 'BUILDERS') && (
                 <button
-                  key={tab}
-                  onClick={() => handleTabChange(tab)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === tab
-                      ? 'bg-white text-primary shadow-md -translate-y-0.5'
-                      : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
-                  }`}
+                  onClick={handleCreateNew}
+                  className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
                 >
-                  {tab.charAt(0) + tab.slice(1).toLowerCase()}
+                  <Plus className="h-4 w-4" />
+                  {activeTab === 'INVOICES' ? 'Create New' : 'New Builder'}
                 </button>
-              ))}
+              )}
             </div>
             
+            {/* INVOICES-SPECIFIC CONTENT */}
             {activeTab === 'INVOICES' && (
               <>
-                <div className="flex items-center justify-between mb-4">
-                  <h1 className="text-2xl font-bold text-gray-900">Invoices</h1>
-                  <button
-                    onClick={handleCreateNew}
-                    className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Create New
-                  </button>
-                </div>
-                
                 {/* SEARCH BAR */}
-                <div className="relative mb-4">
+                <div className="relative mt-4">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <input
                     type="text"
@@ -685,9 +689,9 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
                 </div>
                 
                 {/* STATUS FILTER TABS */}
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 mt-4">
                   <div className="flex gap-2">
-                    {(['draft', 'sent'] as const).map(status => (
+                    {(['sent', 'draft'] as const).map(status => (
                       <button
                         key={status}
                         onClick={() => setStatusFilter(status)}
@@ -714,27 +718,6 @@ export const InvoicesFullView: React.FC<InvoicesFullViewProps> = ({
                   </div>
                 </div>
               </>
-            )}
-            
-            {activeTab === 'BUILDERS' && (
-              <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900">Builders</h1>
-                <button
-                  onClick={handleCreateNew}
-                  className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  New Builder
-                </button>
-              </div>
-            )}
-            
-            {activeTab === 'EXPENSES' && (
-              <h1 className="text-2xl font-bold text-gray-900">Expenses</h1>
-            )}
-            
-            {activeTab === 'REPORTS' && (
-              <h1 className="text-2xl font-bold text-gray-900">Reports (P&L)</h1>
             )}
           </div>
 

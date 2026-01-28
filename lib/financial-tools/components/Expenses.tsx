@@ -138,36 +138,38 @@ export const Expenses: React.FC<ExpensesProps> = ({ expenses, onAdd, onDelete, o
       { label: 'Backup Data', icon: <Database size={20} />, onClick: onBackup },
   ];
 
-  const renderFilters = () => (
-      <div className="flex gap-2 w-full md:w-auto overflow-x-auto no-scrollbar">
-        {(['all', 'month', 'year'] as const).map((time) => (
-          <button key={time} onClick={() => setFilterTime(time)} className={`px-4 h-10 rounded-full text-sm font-medium transition-all capitalize whitespace-nowrap flex items-center justify-center border ${filterTime === time ? 'border-primary text-primary bg-primary/10' : 'border-surface-outline-variant bg-surface-container-high dark:bg-gray-600 text-gray-900 dark:text-gray-100 hover:bg-opacity-80'}`}>
-            {time === 'all' ? 'All Time' : time === 'month' ? 'This Month' : 'This Year'}
-          </button>
-        ))}
-      </div>
-  );
 
   return (
     <div className="flex flex-col gap-6 relative min-h-[calc(100vh-100px)]">
-      {/* Navigation Bar */}
-      <div className="flex flex-wrap gap-2 mb-4 items-center justify-between">
-        {/* Left-aligned navigation buttons */}
-        <TabBar activeView="expenses" onNavigate={onNavigate} />
-        {/* Right-aligned Import CSV Button */}
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-primary text-primary rounded-lg hover:bg-primary/10 transition-colors"
-        >
-          <Upload size={18} />
-          <span className="text-sm font-medium">Import CSV</span>
-        </button>
-      </div>
-
       <input type="file" accept=".csv" ref={fileInputRef} className="hidden" onChange={handleFileUpload}/>
       
-      <div className="block">
-        {renderFilters()}
+      {/* Time Filters + Import CSV Button */}
+      <div className="flex flex-wrap gap-2 items-center justify-between">
+        {/* Left: Time Filters */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          {(['all', 'month', 'year'] as const).map((time) => (
+            <button 
+              key={time} 
+              onClick={() => setFilterTime(time)} 
+              className={`px-4 py-2 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 ${
+                filterTime === time 
+                  ? 'bg-white text-primary shadow-md -translate-y-0.5 border-none' 
+                  : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
+              }`}
+            >
+              {time === 'all' ? 'All Time' : time === 'month' ? 'This Month' : 'This Year'}
+            </button>
+          ))}
+        </div>
+        
+        {/* Right: Import CSV Button */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
+        >
+          <Upload size={18} />
+          <span className="text-sm">Import CSV</span>
+        </button>
       </div>
 
       {isAdding && (

@@ -14,6 +14,7 @@ import { CheckSquare, Loader2 } from 'lucide-react';
 import type { Task, InternalEmployee, Claim, Homeowner, TaskMessage } from '../../../types';
 import { TaskCreationCard } from '../../TaskCreationCard';
 import TaskDetail from '../../TaskDetail';
+import { TaskCard } from '../../ui/TaskCard';
 
 // TasksListColumn component (inline component from Dashboard)
 const TasksListColumn = React.memo<{
@@ -44,33 +45,20 @@ const TasksListColumn = React.memo<{
             const claim = claims.find(c => c.id === task.claimId);
             const isSelected = task.id === selectedTaskId;
             
+            // Calculate subsToScheduleCount from related claims or default to 0
+            const subsToScheduleCount = task.relatedClaimIds?.length || 0;
+            
             return (
-              <div
+              <TaskCard
                 key={task.id}
+                title={task.title}
+                assignedTo={assignee?.name || 'Unassigned'}
+                subsToScheduleCount={subsToScheduleCount}
+                dateAssigned={task.dueDate ? new Date(task.dueDate).toLocaleDateString() : task.createdAt ? new Date(task.createdAt).toLocaleDateString() : 'N/A'}
+                isCompleted={task.isCompleted}
+                isSelected={isSelected}
                 onClick={() => onTaskSelect(task)}
-                className={`p-4 rounded-xl cursor-pointer transition-all ${
-                  isSelected
-                    ? 'bg-primary/10 border-2 border-primary'
-                    : 'bg-surface-container dark:bg-gray-700 hover:bg-surface-container-high dark:hover:bg-gray-600 border-2 border-transparent'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-medium text-surface-on dark:text-gray-100 truncate">
-                      {task.title}
-                    </h4>
-                    {task.description && (
-                      <p className="text-sm text-surface-on-variant dark:text-gray-400 mt-1 line-clamp-2">
-                        {task.description}
-                      </p>
-                    )}
-                    <div className="flex items-center gap-2 mt-2 text-xs text-surface-on-variant dark:text-gray-400">
-                      {assignee && <span>{assignee.name}</span>}
-                      {claim && <span>• {claim.title}</span>}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              />
             );
           })}
         </div>

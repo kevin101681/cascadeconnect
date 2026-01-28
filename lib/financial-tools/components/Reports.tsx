@@ -3,7 +3,6 @@ import React, { useMemo, useState } from 'react';
 import { Invoice, Expense, ViewState } from '../types';
 import { Card } from './ui/Card';
 import { Dropdown } from './ui/Dropdown';
-import { TabBar } from './ui/TabBar';
 import { Download, Database, SlidersHorizontal, X } from 'lucide-react';
 import jsPDF from 'jspdf';
 import { FloatingMenu, ActionItem } from './ui/FloatingMenu';
@@ -121,45 +120,86 @@ export const Reports: React.FC<ReportsProps> = ({ invoices, expenses, onNavigate
     { label: 'Backup Data', icon: <Database size={20} />, onClick: onBackup }
   ];
 
-  const renderFilters = () => (
-    <>
-        <div className="flex gap-2 overflow-x-auto no-scrollbar w-full md:w-auto">
-            {(['Monthly', 'Quarterly', 'YTD', 'Yearly'] as FilterType[]).map((t) => (
-            <button key={t} onClick={() => setFilterType(t)} className={`px-4 h-10 rounded-full text-sm font-medium transition-all capitalize whitespace-nowrap flex items-center justify-center border ${filterType === t ? 'border-primary text-primary bg-primary/10' : 'border-surface-outline-variant bg-surface-container-high dark:bg-gray-600 text-gray-900 dark:text-gray-100 hover:bg-opacity-80'}`}>{t}</button>
-            ))}
-        </div>
-        <div className="flex gap-2">
-            {(filterType === 'Monthly' || filterType === 'Quarterly' || filterType === 'Yearly') && <div className="w-32"><Dropdown value={selectedYear} onChange={setSelectedYear} options={years} placeholder="Year" align="right"/></div>}
-            {filterType === 'Monthly' && <div className="w-40"><Dropdown value={selectedMonth} onChange={setSelectedMonth} options={months} placeholder="Month" align="right"/></div>}
-            {filterType === 'Quarterly' && <div className="w-40"><Dropdown value={selectedQuarter} onChange={setSelectedQuarter} options={quarters} placeholder="Quarter" align="right"/></div>}
-        </div>
-    </>
-  );
 
   return (
     <div className="space-y-6 relative min-h-[calc(100vh-100px)]">
-      {/* Navigation Bar */}
-      <div className="flex flex-wrap gap-2 mb-4 items-center justify-between">
-        {/* Left-aligned navigation buttons */}
-        <TabBar activeView="reports" onNavigate={onNavigate} />
-        {/* Right-aligned Download PDF Button */}
-        <button
-          onClick={handleDownloadPDF}
-          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-primary text-primary rounded-lg hover:bg-primary/10 transition-colors"
-        >
-          <Download size={18} />
-          <span className="text-sm font-medium">Download PDF</span>
-        </button>
-      </div>
-
       <div className="max-w-4xl mx-auto pt-6">
-        <div className="hidden md:flex flex-col md:flex-row gap-4 mb-6 items-start md:items-center justify-between">
-           {renderFilters()}
+        {/* Report Type Filters + Download PDF Button */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6 items-start md:items-center justify-between">
+          {/* Left: Report Type Filters */}
+          <div className="flex gap-2 overflow-x-auto no-scrollbar w-full md:w-auto">
+            {(['Monthly', 'Quarterly', 'YTD', 'Yearly'] as FilterType[]).map((t) => (
+              <button 
+                key={t} 
+                onClick={() => setFilterType(t)} 
+                className={`px-4 py-2 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 ${
+                  filterType === t 
+                    ? 'bg-white text-primary shadow-md -translate-y-0.5 border-none' 
+                    : 'bg-transparent text-gray-600 hover:text-primary hover:bg-gray-50 hover:shadow-sm hover:-translate-y-0.5'
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+          
+          {/* Middle: Dropdowns */}
+          <div className="flex gap-2">
+            {(filterType === 'Monthly' || filterType === 'Quarterly' || filterType === 'Yearly') && (
+              <div className="w-32">
+                <Dropdown 
+                  value={selectedYear} 
+                  onChange={setSelectedYear} 
+                  options={years} 
+                  placeholder="Year" 
+                  align="right"
+                />
+              </div>
+            )}
+            {filterType === 'Monthly' && (
+              <div className="w-40">
+                <Dropdown 
+                  value={selectedMonth} 
+                  onChange={setSelectedMonth} 
+                  options={months} 
+                  placeholder="Month" 
+                  align="right"
+                />
+              </div>
+            )}
+            {filterType === 'Quarterly' && (
+              <div className="w-40">
+                <Dropdown 
+                  value={selectedQuarter} 
+                  onChange={setSelectedQuarter} 
+                  options={quarters} 
+                  placeholder="Quarter" 
+                  align="right"
+                />
+              </div>
+            )}
+          </div>
+          
+          {/* Right: Download PDF Button (Icon Only) */}
+          <button
+            onClick={handleDownloadPDF}
+            className="w-10 h-10 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center"
+            title="Download PDF"
+            aria-label="Download PDF"
+          >
+            <Download size={18} />
+          </button>
         </div>
 
-        <Card title="Profit & Loss Statement" className="min-h-[500px]">
+        <Card className="min-h-[500px]">
           <div className="mt-4 space-y-8">
-            <div className="text-center border-b border-surfaceContainerHigh pb-6"><p className="text-sm font-medium text-primary px-3 py-1 bg-primary/10 inline-block rounded-full">{filteredData.dateLabel}</p></div>
+            {/* Title Section */}
+            <div className="text-center border-b border-surfaceContainerHigh pb-6">
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Profit & Loss Statement</h3>
+              <span className="bg-blue-50 text-primary border border-blue-100 px-4 py-1.5 rounded-full text-sm font-medium inline-block shadow-sm">
+                {filteredData.dateLabel}
+              </span>
+            </div>
             <div>
               <h4 className="text-lg font-medium text-primary mb-4">Income</h4>
               <div className="flex justify-between items-center py-3 bg-white border-2 border-primary text-primary px-4 rounded-lg"><span className="font-bold">Total Income</span><span className="font-bold">${filteredData.totalIncome.toFixed(0)}</span></div>

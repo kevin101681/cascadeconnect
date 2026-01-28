@@ -15,7 +15,7 @@ import { Plus, Trash2, Calendar as CalendarIcon, DollarSign, X, Search, Check, C
 import { z } from 'zod';
 import { useAuth } from '@clerk/clerk-react';
 import Button from './Button';
-import CalendarPicker from './CalendarPicker';
+import CalendarPickerSimple from './CalendarPickerSimple';
 
 // ==================== TYPES & SCHEMA ====================
 
@@ -107,6 +107,10 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
   const [builderQuery, setBuilderQuery] = useState('');
   const [showBuilderDropdown, setShowBuilderDropdown] = useState(false);
   const [isLoadingSave, setIsLoadingSave] = useState(false);
+  
+  // Date picker state
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showDueDatePicker, setShowDueDatePicker] = useState(false);
   
   // Validation errors
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -327,17 +331,14 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-        {/* Invoice Number - READ-ONLY BADGE */}
+        {/* Invoice Number - Simple Text Display */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Invoice Number
           </label>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-lg">
-            <DollarSign className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            <span className="font-mono font-semibold text-blue-900 dark:text-blue-100">
-              {invoiceNumber || 'Generating...'}
-            </span>
-          </div>
+          <span className="text-sm text-gray-500 font-mono">
+            #{invoiceNumber ? (invoiceNumber.length > 8 ? invoiceNumber.slice(0, 8) : invoiceNumber) : 'Generating...'}
+          </span>
           {errors.invoiceNumber && (
             <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.invoiceNumber}</p>
           )}
@@ -448,17 +449,33 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
               Invoice Date *
             </label>
             <div className="relative">
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => {
-                  setDate(e.target.value);
-                  setErrors(prev => ({ ...prev, date: '' }));
-                }}
-                className={`w-full px-4 py-3 border ${
+              <button
+                type="button"
+                onClick={() => setShowDatePicker(true)}
+                className={`w-full px-4 py-3 pr-10 border ${
                   errors.date ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-              />
+                } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-left`}
+              >
+                {date ? new Date(date + 'T00:00:00').toLocaleDateString('en-US', { 
+                  weekday: 'short', 
+                  year: 'numeric', 
+                  month: 'short', 
+                  day: 'numeric' 
+                }) : 'Select date'}
+              </button>
+              <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+              
+              {showDatePicker && (
+                <CalendarPickerSimple
+                  selectedDate={date}
+                  onDateSelect={(newDate) => {
+                    setDate(newDate);
+                    setShowDatePicker(false);
+                    setErrors(prev => ({ ...prev, date: '' }));
+                  }}
+                  onClose={() => setShowDatePicker(false)}
+                />
+              )}
             </div>
             {errors.date && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.date}</p>
@@ -470,17 +487,33 @@ const InvoiceFormPanel: React.FC<InvoiceFormPanelProps> = ({
               Due Date *
             </label>
             <div className="relative">
-              <input
-                type="date"
-                value={dueDate}
-                onChange={(e) => {
-                  setDueDate(e.target.value);
-                  setErrors(prev => ({ ...prev, dueDate: '' }));
-                }}
-                className={`w-full px-4 py-3 border ${
+              <button
+                type="button"
+                onClick={() => setShowDueDatePicker(true)}
+                className={`w-full px-4 py-3 pr-10 border ${
                   errors.dueDate ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-              />
+                } rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-left`}
+              >
+                {dueDate ? new Date(dueDate + 'T00:00:00').toLocaleDateString('en-US', { 
+                  weekday: 'short', 
+                  year: 'numeric', 
+                  month: 'short', 
+                  day: 'numeric' 
+                }) : 'Select date'}
+              </button>
+              <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+              
+              {showDueDatePicker && (
+                <CalendarPickerSimple
+                  selectedDate={dueDate}
+                  onDateSelect={(newDate) => {
+                    setDueDate(newDate);
+                    setShowDueDatePicker(false);
+                    setErrors(prev => ({ ...prev, dueDate: '' }));
+                  }}
+                  onClose={() => setShowDueDatePicker(false)}
+                />
+              )}
             </div>
             {errors.dueDate && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.dueDate}</p>

@@ -72,8 +72,8 @@ export function InvoiceCard({
         onClick ? 'cursor-pointer' : ''
       } ${
         isSelected 
-          ? 'bg-blue-50 border-blue-500 shadow-md border-2' 
-          : 'bg-white border border-gray-200 shadow-sm md:hover:shadow-md md:hover:border-blue-300'
+          ? 'bg-slate-50 dark:bg-slate-900/50 border-primary dark:border-primary shadow-md ring-0' 
+          : 'bg-white border border-gray-200 shadow-sm hover:border-slate-300 dark:hover:border-slate-600'
       }`}
       style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
     >

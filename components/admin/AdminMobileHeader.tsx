@@ -41,42 +41,48 @@ export const AdminMobileHeader: React.FC<AdminMobileHeaderProps> = ({
 }) => {
   
   return (
-    <div className={`bg-white dark:bg-gray-800 px-4 py-6 shadow-sm border-b border-gray-200 dark:border-gray-700 ${className}`}>
-      {/* Logo - Centered */}
-      <div className="flex justify-center mb-4">
-        <img 
-          src="/connect.png" 
-          alt="Cascade Connect" 
-          className="h-12"
-        />
+    <div className={`flex flex-col bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 ${className}`}>
+      {/* Logo Section - Full Width with Background */}
+      <div className="w-full bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 py-6 flex justify-center">
+        {/* Logo Frame - Mimics Dashboard Buttons */}
+        <div className="bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 rounded-2xl p-3 shadow-sm">
+          <img 
+            src="/connect.png" 
+            alt="Cascade Connect" 
+            className="h-12"
+          />
+        </div>
       </div>
 
-      {/* Side-by-Side Search Layout */}
-      <div className="flex gap-3">
-        {/* Left: Homeowner Search Input */}
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+      {/* Search Section - Padded */}
+      <div className="px-4 py-6">
+        {/* Side-by-Side Search Layout */}
+        <div className="flex gap-3">
+          {/* Left: Homeowner Search Input */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
           <input
             type="text"
             placeholder={homeownerPlaceholder}
-            className="w-full h-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-10 pr-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full h-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-10 pr-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 shadow-[0_2px_12px_rgba(59,130,246,0.08)] dark:shadow-[0_2px_12px_rgba(59,130,246,0.15)] focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             value={homeownerQuery}
             onChange={(e) => onHomeownerSearch?.(e.target.value)}
             autoFocus={autoFocusHomeowner}
             disabled={disabledHomeowner}
           />
-        </div>
+          </div>
 
-        {/* Right: Global Search Input */}
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
+          {/* Right: Global Search Input */}
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none" />
           <input
             type="text"
             placeholder={globalPlaceholder}
-            className="w-full h-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-10 pr-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
+            className="w-full h-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg pl-10 pr-3 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 shadow-[0_2px_12px_rgba(59,130,246,0.08)] dark:shadow-[0_2px_12px_rgba(59,130,246,0.15)] focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
             value={globalQuery}
             onChange={(e) => onGlobalSearch?.(e.target.value)}
           />
+          </div>
         </div>
       </div>
     </div>

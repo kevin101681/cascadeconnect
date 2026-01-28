@@ -126,22 +126,22 @@ export const Dropdown: React.FC<DropdownProps> = ({
       ) : (
         <button
             onClick={toggleOpen}
-            className={`w-full h-10 px-4 rounded-full bg-surface-container-high dark:bg-gray-600 hover:bg-opacity-80 transition-all flex items-center justify-between gap-3 outline-none focus:ring-2 focus:ring-primary ${isOpen ? 'ring-2 ring-primary' : ''}`}
+            className={`w-full h-10 px-4 rounded-xl bg-white text-gray-700 border border-gray-200 shadow-sm hover:border-gray-300 hover:-translate-y-0.5 transition-all flex items-center justify-between gap-3 outline-none focus:ring-2 focus:ring-primary ${isOpen ? 'ring-2 ring-primary' : ''}`}
             type="button"
         >
-            <span className={`text-sm font-medium truncate ${selectedOption ? 'text-surface-on dark:text-gray-200' : 'text-outline'}`}>
+            <span className={`text-sm font-medium truncate ${selectedOption ? 'text-gray-700' : 'text-gray-400'}`}>
             {selectedOption ? selectedOption.label : placeholder}
             </span>
             <ChevronDown 
             size={16} 
-            className={`text-surface-on dark:text-gray-200 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+            className={`text-gray-700 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
             />
         </button>
       )}
 
       {showOptions && (
             <div 
-                className={`absolute top-full mt-2 w-full min-w-[200px] max-h-60 overflow-y-auto bg-surface-container-high dark:bg-gray-600 rounded-2xl shadow-xl z-50 p-2 border border-surfaceContainerHigh/50 animate-slide-up no-scrollbar ${align === 'right' ? 'right-0' : 'left-0'}`}
+                className={`absolute top-full mt-2 w-full min-w-[200px] max-h-60 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-xl z-[100005] p-2 animate-slide-up no-scrollbar ${align === 'right' ? 'right-0' : 'left-0'}`}
             >
             {filteredOptions.map((option) => (
                 <button
@@ -149,8 +149,8 @@ export const Dropdown: React.FC<DropdownProps> = ({
                 onClick={() => handleSelect(option.value)}
                 className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-colors flex items-center justify-between group
                     ${option.value === value 
-                    ? 'bg-primary text-onPrimary' 
-                    : 'text-surface-on dark:text-gray-200 hover:bg-surface-container dark:bg-gray-700'
+                    ? 'bg-primary text-white' 
+                    : 'text-gray-700 hover:bg-gray-50'
                     }`}
                 >
                 <span className="truncate">{option.label}</span>
@@ -158,7 +158,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
                 </button>
             ))}
             {filteredOptions.length === 0 && (
-                <div className="px-4 py-3 text-sm text-outline text-center">No matches found</div>
+                <div className="px-4 py-3 text-sm text-gray-400 text-center">No matches found</div>
             )}
             </div>
       )}

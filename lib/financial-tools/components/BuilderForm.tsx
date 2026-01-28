@@ -93,16 +93,6 @@ export const BuilderForm: React.FC<BuilderFormProps> = ({
         <h2 className="text-2xl font-semibold text-surface-on dark:text-gray-100">
           {mode === 'create' ? 'New Builder' : 'Edit Builder'}
         </h2>
-        {mode === 'edit' && onDelete && (
-          <Button
-            variant="outline"
-            onClick={handleDelete}
-            className="!text-red-600 !border-red-300 hover:!bg-red-50"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            Delete Builder
-          </Button>
-        )}
       </div>
 
       {/* Form */}
@@ -224,12 +214,18 @@ export const BuilderForm: React.FC<BuilderFormProps> = ({
 
         {/* Footer Actions */}
         <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
-          <Button variant="outline" onClick={onCancel}>
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
+          >
             Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSave}>
+          </button>
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
+          >
             {mode === 'create' ? 'Save Builder' : 'Update Builder'}
-          </Button>
+          </button>
         </div>
       </Card>
     </div>

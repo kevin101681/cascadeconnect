@@ -854,6 +854,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
       className={`
         flex items-center justify-center gap-3 rounded-2xl transition-all active:scale-95 
         bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 
+        shadow-[0_2px_12px_rgba(59,130,246,0.08)] dark:shadow-[0_2px_12px_rgba(59,130,246,0.15)]
         hover:border-primary/30 hover:bg-gray-50 dark:hover:bg-gray-700
         ${fullWidth 
           ? 'col-span-2 h-14 flex-row' 
@@ -992,7 +993,7 @@ Caller: Hi, this is John Smith. I'm calling about some issues with my roof. I th
 
       {/* Collapsible Homeowner Info Card - Inline Editing */}
       <div className={`px-4 pt-4 pb-6 ${globalQuery.trim().length > 0 ? 'opacity-30 pointer-events-none' : ''}`}>
-        <div className="w-full bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
+        <div className="w-full bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm shadow-[0_2px_12px_rgba(59,130,246,0.08)] dark:shadow-[0_2px_12px_rgba(59,130,246,0.15)] border border-gray-200 dark:border-gray-700">
           
           {/* Header Row (Always Visible) */}
           <button
