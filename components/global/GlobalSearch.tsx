@@ -200,12 +200,11 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
 
         {showDropdown && (
           <div
-            className="absolute left-0 right-0 bottom-full mb-2 z-[60] origin-bottom"
+            className="absolute bottom-full left-0 right-0 mb-3 z-50 origin-bottom max-h-[50vh] overflow-y-auto bg-white dark:bg-gray-800 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)] rounded-t-2xl border-t border-l border-r border-gray-200"
             // Keep focus on the input when interacting with results (prevents blur-close flicker)
             onMouseDown={(e) => e.preventDefault()}
           >
-            <div className="bg-surface dark:bg-gray-800 rounded-xl shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] border border-surface-outline-variant dark:border-gray-700 w-full overflow-hidden">
-              <Command.List className="max-h-[50vh] overflow-y-auto p-2">
+            <Command.List className="p-2">
                 {isLoading && (
                   <div className="flex items-center justify-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -287,11 +286,10 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({
               </Command.List>
 
               {results.length > 0 && (
-                <div className="border-t border-surface-outline-variant dark:border-gray-700 px-4 py-2 text-xs text-surface-on-variant dark:text-gray-400">
+                <div className="border-t border-surface-outline-variant dark:border-gray-700 px-4 py-2 text-xs text-surface-on-variant dark:text-gray-400 bg-white dark:bg-gray-800">
                   {results.length} result{results.length !== 1 ? 's' : ''} • Use ↑↓ to navigate • Enter to select • Esc to close
                 </div>
               )}
-            </div>
           </div>
         )}
       </Command>
