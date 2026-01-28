@@ -69,13 +69,6 @@ const TasksListColumn = React.memo<{
                       {claim && <span>• {claim.title}</span>}
                     </div>
                   </div>
-                  <div className={`shrink-0 w-3 h-3 rounded-full ${
-                    task.isCompleted 
-                      ? 'bg-green-500' 
-                      : task.dueDate && new Date(task.dueDate) < new Date()
-                      ? 'bg-red-500'
-                      : 'bg-yellow-500'
-                  }`} />
                 </div>
               </div>
             );
@@ -248,44 +241,36 @@ export const TasksTab: React.FC<TasksTabProps> = ({
       </div>
 
       {/* Right Column: Task Detail View - Desktop Only */}
-      <div className={`flex-1 flex flex-col bg-surface dark:bg-gray-800 ${!selectedTask ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none overflow-hidden`}>
+      <div className={`flex-1 flex flex-col overflow-hidden bg-surface dark:bg-gray-800 ${!selectedTask ? 'hidden md:flex' : 'hidden md:flex'} rounded-tr-3xl rounded-br-3xl md:rounded-r-3xl md:rounded-l-none`}>
         {selectedTask ? (
-          <div className="flex flex-col h-full">
-            {/* Scrollable Task Detail Content */}
-            <div 
-              className="flex-1 overflow-y-auto px-6 pt-4 pb-6 overscroll-contain"
-              style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' } as React.CSSProperties}
-            >
-              <Suspense fallback={
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
-              }>
-                  <TaskDetail
-                  task={selectedTask}
-                  employees={employees}
-                  currentUser={currentUser}
-                  claims={claims}
-                  homeowners={homeowners}
-                  onToggleTask={onToggleTask}
-                  onDeleteTask={onDeleteTask}
-                  onUpdateTask={onUpdateTask}
-                    startInEditMode={effectiveStartInEditMode}
-                  onSelectClaim={(claim) => {
-                    onTaskSelect(null);
-                      effectiveOnEditModeChange(false);
-                    if (onSelectClaim) onSelectClaim(claim);
-                    if (onSetCurrentTab) onSetCurrentTab('CLAIMS');
-                  }}
-                  taskMessages={taskMessages.filter(m => m.taskId === selectedTask.id)}
-                    onBack={() => {
-                      onTaskSelect(null);
-                      effectiveOnEditModeChange(false);
-                    }}
-                />
-              </Suspense>
+          <Suspense fallback={
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          </div>
+          }>
+            <TaskDetail
+              task={selectedTask}
+              employees={employees}
+              currentUser={currentUser}
+              claims={claims}
+              homeowners={homeowners}
+              onToggleTask={onToggleTask}
+              onDeleteTask={onDeleteTask}
+              onUpdateTask={onUpdateTask}
+              startInEditMode={effectiveStartInEditMode}
+              onSelectClaim={(claim) => {
+                onTaskSelect(null);
+                effectiveOnEditModeChange(false);
+                if (onSelectClaim) onSelectClaim(claim);
+                if (onSetCurrentTab) onSetCurrentTab('CLAIMS');
+              }}
+              taskMessages={taskMessages.filter(m => m.taskId === selectedTask.id)}
+              onBack={() => {
+                onTaskSelect(null);
+                effectiveOnEditModeChange(false);
+              }}
+            />
+          </Suspense>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-surface-on-variant dark:text-gray-400 gap-4 bg-surface-container/10 dark:bg-gray-700/10">
             <div className="w-20 h-20 bg-surface-container dark:bg-gray-700 rounded-full flex items-center justify-center">

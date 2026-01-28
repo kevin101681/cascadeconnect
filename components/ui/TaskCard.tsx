@@ -23,13 +23,13 @@ export function TaskCard({
   return (
     <div 
       onClick={onClick}
-      className={`group relative rounded-lg border p-3 shadow-sm transition-all h-full flex flex-col justify-between
+      className={`group relative rounded-xl border p-4 shadow-sm transition-all h-full flex flex-col justify-between
         ${onClick ? 'cursor-pointer' : ''}
         ${isSelected
-          ? 'bg-slate-50 dark:bg-slate-900/50 border-slate-500 dark:border-slate-500 shadow-md'
+          ? 'bg-slate-50 dark:bg-slate-900/50 ring-2 ring-primary border-transparent shadow-md'
           : isCompleted 
-            ? 'bg-white dark:bg-gray-800 border-transparent opacity-75 hover:opacity-100' 
-            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600'
+            ? 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 opacity-75 hover:opacity-100 hover:shadow-md' 
+            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600'
         }
       `}
     >

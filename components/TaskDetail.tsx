@@ -120,7 +120,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
   return (
     <div className="flex flex-col h-full overflow-hidden relative max-w-5xl mx-auto">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between gap-4 flex-shrink-0">
+      <div className="mb-6 flex items-center justify-between gap-4 flex-shrink-0 px-6 pt-4">
         <div className="flex-1">
           {isEditing ? (
             <div>
@@ -161,7 +161,7 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto space-y-6 pb-4">
+      <div className="flex-1 overflow-y-auto space-y-6 px-6 pb-4">
         {/* Assignee Editor (Edit Mode Only) */}
         {isEditing && (
           <div className="bg-surface-container dark:bg-gray-800 p-6 rounded-2xl border border-surface-outline-variant dark:border-gray-700">
@@ -373,8 +373,18 @@ const TaskDetail: React.FC<TaskDetailProps> = ({
       {/* Edit Actions Footer - Sticky */}
       {isEditing && (
         <div className="mt-auto border-t border-surface-outline-variant dark:border-gray-700 bg-white dark:bg-gray-800 p-4 flex justify-end gap-2 flex-shrink-0">
-          <Button variant="outline" onClick={handleCancelEdit}>Cancel</Button>
-          <Button onClick={handleSaveEdit}>Save</Button>
+          <button
+            onClick={handleCancelEdit}
+            className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSaveEdit}
+            className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2"
+          >
+            Save
+          </button>
         </div>
       )}
     </div>
