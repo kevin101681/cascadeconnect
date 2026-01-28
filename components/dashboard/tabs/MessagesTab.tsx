@@ -151,18 +151,17 @@ export const MessagesTab: React.FC<MessagesTabProps> = ({
              />
            </div>
            
-           {/* Compose Button */}
-           <Button
-             variant="primary"
-             onClick={() => {
-               onSetIsComposingMessage(true);
-               onSelectThread(null);
-             }}
-             className="!h-9 !px-4 !text-sm shrink-0 !rounded-xl"
-           >
-             <span className="hidden sm:inline">Compose</span>
-             <span className="sm:hidden">New</span>
-           </Button>
+          {/* Compose Button */}
+          <button
+            onClick={() => {
+              onSetIsComposingMessage(true);
+              onSelectThread(null);
+            }}
+            className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-9 text-sm shrink-0"
+          >
+            <span className="hidden sm:inline">Compose</span>
+            <span className="sm:hidden">New</span>
+          </button>
          </div>
        </div>
 
@@ -226,7 +225,7 @@ export const MessagesTab: React.FC<MessagesTabProps> = ({
           {isComposingMessage ? (
             // Compose New Message Form
             <div className="flex flex-col h-full">
-              <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center bg-surface-container dark:bg-gray-700 shrink-0">
+              <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 flex justify-between items-center shrink-0">
                 <h2 className="text-lg font-normal text-surface-on dark:text-gray-100 flex items-center gap-2">
                   <Mail className="h-5 w-5 text-primary" />
                   New Message
@@ -357,7 +356,7 @@ export const MessagesTab: React.FC<MessagesTabProps> = ({
               </div>
               
               <div className="p-6 border-t border-surface-outline-variant dark:border-gray-700 flex justify-end gap-2 bg-surface-container/30 dark:bg-gray-700/30">
-                <Button 
+                <button
                   onClick={() => {
                     onSetIsComposingMessage(false);
                     onSetNewMessageSubject('');
@@ -365,26 +364,23 @@ export const MessagesTab: React.FC<MessagesTabProps> = ({
                     onSetNewMessageRecipientId('');
                     onSetSelectedMessageTemplateId('');
                   }}
-                  variant="outlined"
-                  className="!h-10 !px-6"
+                  className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-10"
                 >
                   Discard
-                </Button>
-                <Button 
+                </button>
+                <button
                   onClick={onSendNewMessage}
                   disabled={!newMessageSubject.trim() || !newMessageContent.trim() || (!isAdmin && !newMessageRecipientId)}
-                  variant="filled"
-                  className="!h-10 !px-6"
-                  icon={<Send className="h-4 w-4" />}
+                  className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-10 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Send
-                </Button>
+                </button>
               </div>
             </div>
           ) : selectedThread ? (
             // Thread View
             <div className="flex flex-col h-full">
-              <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 shrink-0">
+              <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 shrink-0">
                 <div className="flex justify-between items-start">
                   <div>
                     <h2 className="text-lg font-semibold text-surface-on dark:text-gray-100">{selectedThread.subject}</h2>
@@ -438,22 +434,19 @@ export const MessagesTab: React.FC<MessagesTabProps> = ({
                            </button>
                         </div>
                         <div className="flex items-center gap-2">
-                           <Button 
+                           <button
                              onClick={() => onSetReplyExpanded(false)}
-                             variant="outlined"
-                             className="!h-9 !px-6"
+                             className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-9"
                            >
                              Discard
-                           </Button>
-                           <Button 
-                             onClick={onSendReply} 
-                             disabled={!replyContent.trim()} 
-                             variant="filled" 
-                             className="!h-9 !px-6"
-                             icon={<Send className="h-3 w-3" />}
+                           </button>
+                           <button
+                             onClick={onSendReply}
+                             disabled={!replyContent.trim()}
+                             className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-9 disabled:opacity-50 disabled:cursor-not-allowed"
                            >
                              Send
-                           </Button>
+                           </button>
                         </div>
                      </div>
                   </div>
@@ -483,7 +476,7 @@ export const MessagesTab: React.FC<MessagesTabProps> = ({
     {/* Mobile Full-Screen Overlay for Message Thread */}
     {selectedThread && (
       <div className="md:hidden fixed inset-0 z-50 bg-surface dark:bg-gray-900 flex flex-col overflow-hidden">
-        <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 bg-surface-container dark:bg-gray-700 shrink-0">
+        <div className="p-6 border-b border-surface-outline-variant dark:border-gray-700 shrink-0">
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-lg font-semibold text-surface-on dark:text-gray-100">{selectedThread.subject}</h2>
@@ -537,22 +530,19 @@ export const MessagesTab: React.FC<MessagesTabProps> = ({
                      </button>
                   </div>
                   <div className="flex items-center gap-2">
-                     <Button 
+                     <button
                        onClick={() => onSetReplyExpanded(false)}
-                       variant="outlined"
-                       className="!h-9 !px-4"
+                       className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-9"
                      >
                        Discard
-                     </Button>
-                     <Button 
-                       onClick={onSendReply} 
-                       disabled={!replyContent.trim()} 
-                       variant="filled" 
-                       className="!h-9 !px-4"
-                       icon={<Send className="h-3 w-3" />}
+                     </button>
+                     <button
+                       onClick={onSendReply}
+                       disabled={!replyContent.trim()}
+                       className="px-4 py-2 bg-white text-gray-700 border border-gray-200 shadow-sm hover:text-primary hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 rounded-xl font-medium flex items-center justify-center gap-2 h-9 disabled:opacity-50 disabled:cursor-not-allowed"
                      >
                        Send
-                     </Button>
+                     </button>
                   </div>
                </div>
             </div>
