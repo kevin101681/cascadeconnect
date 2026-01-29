@@ -39,7 +39,9 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
   const [isTranscriptExpanded, setIsTranscriptExpanded] = useState(false);
-  const [isGlobalView, setIsGlobalView] = useState(false); // Global/Scoped toggle
+  // ✅ FIX: Default to global view for admins, scoped view for homeowners
+  // This ensures admins see all calls by default instead of an empty list
+  const [isGlobalView, setIsGlobalView] = useState(isAdmin); 
   const ITEMS_PER_PAGE = 9;
   const callDetailsRef = useRef<HTMLDivElement>(null);
 
@@ -172,12 +174,22 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({
     // If activeHomeownerId is invalid (placeholder, undefined, or too short), skip query silently
     // The effect will re-run when valid data arrives during initialization
     if (!isGlobalView && (!activeHomeownerId || activeHomeownerId === 'placeholder' || activeHomeownerId.length < 30)) {
+      console.log('📞 [CALLS] Skipping query - invalid homeownerId in scoped mode:', {
+        isGlobalView,
+        activeHomeownerId: activeHomeownerId?.substring(0, 10) + '...',
+        length: activeHomeownerId?.length
+      });
       setCallsData([]);
       setLoading(false);
       return;
     }
 
     try {
+      console.log('📞 [CALLS] Loading calls...', { 
+        isGlobalView, 
+        activeHomeownerId: activeHomeownerId ? activeHomeownerId.substring(0, 10) + '...' : 'none' 
+      });
+      
       // Fetch calls with joined homeowner data
       let query = db
         .select({
@@ -202,12 +214,17 @@ const AIIntakeDashboard: React.FC<AIIntakeDashboardProps> = ({
       
       // Apply scoped filter if not in global mode and activeHomeownerId exists
       if (!isGlobalView && activeHomeownerId) {
+        console.log('📞 [CALLS] Applying homeowner filter:', activeHomeownerId.substring(0, 10) + '...');
         query = query.where(eq(calls.homeownerId, activeHomeownerId)) as any;
+      } else {
+        console.log('📞 [CALLS] Loading all calls (global view)');
       }
       
       const callsList = await query
         .orderBy(desc(calls.createdAt))
         .limit(100);
+
+      console.log('📞 [CALLS] Loaded', callsList.length, 'calls from database');
 
       const mappedCalls: Call[] = callsList.map((c: any) => ({
         id: c.id,

@@ -293,10 +293,10 @@ async function getAdminEmails(db: any): Promise<string[]> {
  * Build email content for universal notification
  * Uses modern React Email templates with unified design system
  */
-function buildUniversalNotificationContent(
+async function buildUniversalNotificationContent(
   scenario: NotificationScenario,
   data: UniversalNotificationData
-): { subject: string; html: string; text: string } {
+): Promise<{ subject: string; html: string; text: string }> {
   const appUrl = getAppUrl();
   const callsLink = `${appUrl}#ai-intake`;
   const homeownerLink = data.matchedHomeownerId ? `${appUrl}#dashboard?homeownerId=${data.matchedHomeownerId}` : undefined;
@@ -332,7 +332,8 @@ function buildUniversalNotificationContent(
     claimLink,
   });
   
-  const html = render(emailElement);
+  // ✅ FIX: Await the render() function to prevent [object Promise] in email body
+  const html = await render(emailElement);
   
   // Ensure html is a string
   const htmlString = typeof html === 'string' ? html : String(html);
@@ -414,8 +415,8 @@ export async function sendUniversalNotification(
     
     console.log(`📧 Sending to: ${recipientEmail}`);
 
-    // Build email content
-    const { subject, html, text } = buildUniversalNotificationContent(scenario, data);
+    // Build email content (await because buildUniversalNotificationContent is now async)
+    const { subject, html, text } = await buildUniversalNotificationContent(scenario, data);
 
     // Send to primary recipient
     const result = await sendEmail({
