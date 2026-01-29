@@ -11,7 +11,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Users, Loader2, MessageSquare, Search } from 'lucide-react';
+import { Users, Loader2, Search } from 'lucide-react';
 import {
   getUserChannels,
   getAllTeamMembers,
@@ -335,19 +335,49 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
     return nameMatch || messageMatch;
   });
 
+  const formatChannelTimestamp = (dt: Date | string | undefined | null): string => {
+    if (!dt) return '';
+    const date = typeof dt === 'string' ? new Date(dt) : dt;
+    if (Number.isNaN(date.getTime())) return '';
+
+    const now = new Date();
+    const isToday =
+      date.getFullYear() === now.getFullYear() &&
+      date.getMonth() === now.getMonth() &&
+      date.getDate() === now.getDate();
+
+    return isToday
+      ? date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+      : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+  };
+
+  const getInitials = (name: string): string => {
+    const cleaned = (name || '').trim();
+    if (!cleaned) return '?';
+    const parts = cleaned.split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] ?? '';
+    const second = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? '' : '';
+    return (first + second).toUpperCase();
+  };
+
   return (
     <div className={`flex flex-col h-full bg-surface dark:bg-gray-800 ${isCompact ? '' : 'border-r border-surface-outline-variant dark:border-gray-700'}`}>
-      {/* Search Bar */}
-      <div className="flex-shrink-0 px-3 py-3 border-b border-surface-outline-variant dark:border-gray-700">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-          <input
-            type="text"
-            placeholder="Search messages..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 text-sm bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 rounded-full outline-none focus:ring-2 focus:ring-primary placeholder:text-surface-on-variant dark:placeholder:text-gray-400"
-          />
+      {/* Header (title + search) */}
+      <div className="flex-shrink-0 px-3 py-3 border-b border-gray-200/60 dark:border-gray-700">
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:block font-semibold text-gray-900 dark:text-gray-100">
+            Chats
+          </div>
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search messages..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 text-sm bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 rounded-full outline-none focus:ring-2 focus:ring-primary placeholder:text-surface-on-variant dark:placeholder:text-gray-400"
+            />
+          </div>
         </div>
       </div>
 
@@ -367,34 +397,48 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
                   <button
                     key={channel.id}
                     onClick={() => onSelectChannel(channel)}
-                    className={`w-full px-4 py-3 flex items-center gap-3 transition-all touch-manipulation ${
+                    className={`w-full relative p-3 mb-2 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all cursor-pointer touch-manipulation ${
                       selectedChannelId === channel.id
-                        ? 'bg-primary-container dark:bg-primary/20 text-primary-on-container dark:text-primary border-l-4 border-primary'
-                        : 'text-surface-on dark:text-gray-300 md:hover:bg-surface-container md:dark:hover:bg-gray-700/50'
+                        ? 'ring-2 ring-primary border-transparent'
+                        : ''
                     }`}
                     style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' } as React.CSSProperties}
                   >
-                    {/* Content */}
-                    <div className="flex-1 min-w-0 text-left">
-                      <div className="font-medium truncate">
-                        {getRecipientName(channel)}
+                    <div className="flex items-start gap-3">
+                      {/* Avatar */}
+                      <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-sm font-semibold text-gray-700 dark:text-gray-200">
+                        {getInitials(getRecipientName(channel))}
                       </div>
-                      {channel.lastMessage && (
-                        <div className="text-xs text-surface-on-variant dark:text-gray-400 truncate">
-                          {channel.lastMessage.content}
+
+                      {/* Middle text */}
+                      <div className="flex-1 min-w-0 text-left">
+                        <div className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                          {getRecipientName(channel)}
                         </div>
-                      )}
+                        <div className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                          {channel.lastMessage?.content || 'No messages yet'}
+                        </div>
+                      </div>
+
+                      {/* Right meta */}
+                      <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                        <div className="text-xs text-gray-400">
+                          {formatChannelTimestamp(channel.lastMessage?.createdAt)}
+                        </div>
+
+                        {/* Unread badge - Material 3 with optimistic updates */}
+                        {(() => {
+                          const displayCount = getDisplayUnreadCount(channel);
+                          return displayCount > 0 ? (
+                            <div className="h-5 min-w-[20px] px-1.5 bg-primary text-white rounded-full flex items-center justify-center text-xs font-medium">
+                              {displayCount > 9 ? '9+' : displayCount}
+                            </div>
+                          ) : (
+                            <div className="h-5" />
+                          );
+                        })()}
+                      </div>
                     </div>
-                    
-                    {/* Unread badge - Material 3 with optimistic updates */}
-                    {(() => {
-                      const displayCount = getDisplayUnreadCount(channel);
-                      return displayCount > 0 ? (
-                        <div className="flex-shrink-0 h-5 min-w-[20px] px-1.5 bg-primary text-white rounded-full flex items-center justify-center text-xs font-medium">
-                          {displayCount > 9 ? '9+' : displayCount}
-                        </div>
-                      ) : null;
-                    })()}
                   </button>
                 ))}
               </div>

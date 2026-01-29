@@ -609,6 +609,36 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
   // Memoized reversed messages for flex-col-reverse rendering
   const reversedMessages = useMemo(() => [...messages].reverse(), [messages]);
 
+  const headerTitle = useMemo(() => {
+    const fallback = (channelName || '').trim();
+
+    if (channelType !== 'dm') {
+      return fallback || 'Chat';
+    }
+
+    if (!fallback) return 'Chat';
+
+    // Hide obviously "raw" identifiers.
+    if (fallback.includes('dm-') || /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(fallback)) {
+      return 'Chat';
+    }
+
+    // If channelName already looks like a single name, use it.
+    const parts = fallback.split(/\s*[&]\s*|\s+and\s+/i).map((p) => p.trim()).filter(Boolean);
+    if (parts.length !== 2) return fallback || 'Chat';
+
+    // If channelName includes both names, extract the other person's name.
+    const me = (userName || '').trim().toLowerCase();
+    if (!me) return fallback || 'Chat';
+
+    const [first, second] = parts;
+    if (first.toLowerCase() === me) return second || 'Chat';
+    if (second.toLowerCase() === me) return first || 'Chat';
+
+    // If we can't confidently match, prefer the second (common "Me & Them" ordering).
+    return second || fallback || 'Chat';
+  }, [channelName, channelType, userName]);
+
   // Chat Skeleton Loader - mimics actual layout
   const ChatSkeleton = () => (
     <div className="flex-1 flex flex-col-reverse p-4 pb-20 gap-4 overflow-y-hidden">
@@ -628,6 +658,13 @@ export const ChatWindow: React.FC<ChatWindowProps> = ({
 
   return (
     <div className={`flex flex-col h-full bg-white dark:bg-gray-900 relative ${isCompact ? '' : 'border border-gray-200 dark:border-gray-700 rounded-lg'}`}>
+      {/* Header */}
+      <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-700 p-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate min-w-0">
+          {headerTitle || 'Chat'}
+        </h3>
+      </div>
+
       {/* Messages Area - Instant loading with flex-col-reverse */}
       {isLoading ? (
         <ChatSkeleton />
