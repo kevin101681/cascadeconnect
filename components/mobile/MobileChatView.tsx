@@ -8,7 +8,7 @@
  */
 
 import React, { Suspense, useState } from 'react';
-import { ArrowLeft, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Search } from 'lucide-react';
 import type { Channel } from '@/services/internalChatService';
 
 // Lazy load chat components
@@ -34,6 +34,7 @@ export const MobileChatView: React.FC<MobileChatViewProps> = ({
   currentUserName = 'Admin',
 }) => {
   const [activeTeamChannelId, setActiveTeamChannelId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleClose = () => {
     if (onBack) {
@@ -54,47 +55,54 @@ export const MobileChatView: React.FC<MobileChatViewProps> = ({
       <div className="fixed inset-0 overflow-hidden">
         <div className="h-full bg-white dark:bg-gray-800 flex flex-col">
           {/* Header */}
-          <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-            {/* Left: Back to channels (when in chat) OR Back to dashboard (when provided) */}
-            {activeTeamChannelId ? (
-              <button
-                type="button"
-                onClick={handleChannelBack}
-                className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                aria-label="Back to channels"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-            ) : onBack ? (
-              <button
-                type="button"
-                onClick={onBack}
-                className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                aria-label="Back to dashboard"
-              >
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-            ) : (
-              <div className="w-9" /> /* Spacer for alignment */
-            )}
+          <div className="flex-shrink-0 p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div className="flex items-center justify-between">
+              {/* Left: Back to channels (when in chat) OR Back to dashboard (when provided) */}
+              {activeTeamChannelId ? (
+                <button
+                  type="button"
+                  onClick={handleChannelBack}
+                  className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  aria-label="Back to channels"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              ) : onBack ? (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  className="p-2 -ml-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  aria-label="Back to dashboard"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+              ) : (
+                <div className="w-9" /> /* Spacer for alignment */
+              )}
 
-            {/* Center: Title */}
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex-1 text-center">
-              {activeTeamChannelId ? 'Chat' : 'Team Chat'}
-            </h2>
+              {/* Center: Title */}
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex-1 text-center">
+                {activeTeamChannelId ? 'Chat' : 'Team Chat'}
+              </h2>
 
-            {/* Right: Close button (only in dashboard mode) */}
-            {onBack ? (
-              <button
-                type="button"
-                onClick={handleClose}
-                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                aria-label="Close"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            ) : (
-              <div className="w-9" /> /* Spacer for alignment */
+              {/* Right: Spacer (remove X close button) */}
+              <div className="w-9" />
+            </div>
+
+            {/* Search (list view only) - inside header, no extra divider lines */}
+            {!activeTeamChannelId && (
+              <div className="mt-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search messages..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-full outline-none focus:ring-2 focus:ring-primary placeholder:text-gray-400 dark:placeholder:text-gray-400"
+                  />
+                </div>
+              </div>
             )}
           </div>
 
@@ -115,6 +123,9 @@ export const MobileChatView: React.FC<MobileChatViewProps> = ({
                     setActiveTeamChannelId(channel.id);
                   }}
                   isCompact={false}
+                  hideHeader
+                  searchQueryOverride={searchQuery}
+                  onSearchQueryChange={setSearchQuery}
                 />
               ) : (
                 /* DETAIL VIEW: Chat Window */
