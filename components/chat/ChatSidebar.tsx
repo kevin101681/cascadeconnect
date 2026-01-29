@@ -27,6 +27,12 @@ interface ChatSidebarProps {
   onSelectChannel: (channel: Channel) => void;
   isCompact?: boolean;
   unreadCountsOverride?: Record<string, number>; // ✅ For optimistic updates from parent
+  /** Optional: hide built-in header/search (for mobile shells that provide their own). */
+  hideHeader?: boolean;
+  /** Optional: controlled search value (when providing your own search input). */
+  searchQueryOverride?: string;
+  /** Optional: controlled search change handler. */
+  onSearchQueryChange?: (query: string) => void;
 }
 
 export const ChatSidebar: React.FC<ChatSidebarProps> = ({
@@ -36,6 +42,9 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   onSelectChannel,
   isCompact = false,
   unreadCountsOverride,
+  hideHeader = false,
+  searchQueryOverride,
+  onSearchQueryChange,
 }) => {
   // Use effectiveUserId if provided, otherwise fall back to currentUserId
   const userId = effectiveUserId || currentUserId;
@@ -46,7 +55,8 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   const [isLoadingChannels, setIsLoadingChannels] = useState(true);
   const [isLoadingTeam, setIsLoadingTeam] = useState(true);
   const [isCreatingDm, setIsCreatingDm] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [internalSearchQuery, setInternalSearchQuery] = useState('');
+  const searchQuery = searchQueryOverride ?? internalSearchQuery;
 
   // ⚡️ CRITICAL FIX: Use ref to access selectedChannelId without causing re-subscriptions
   const selectedChannelIdRef = useRef<string | null>(null);
@@ -363,23 +373,31 @@ export const ChatSidebar: React.FC<ChatSidebarProps> = ({
   return (
     <div className={`flex flex-col h-full bg-surface dark:bg-gray-800 ${isCompact ? '' : 'border-r border-surface-outline-variant dark:border-gray-700'}`}>
       {/* Header (title + search) */}
-      <div className="flex-shrink-0 px-3 py-3 border-b border-gray-200/60 dark:border-gray-700">
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:block font-semibold text-gray-900 dark:text-gray-100">
-            Chats
-          </div>
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant dark:text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search messages..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 rounded-full outline-none focus:ring-2 focus:ring-primary placeholder:text-surface-on-variant dark:placeholder:text-gray-400"
-            />
+      {!hideHeader && (
+        <div className="flex-shrink-0 px-3 py-3 border-b border-gray-200/60 dark:border-gray-700">
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:block font-semibold text-gray-900 dark:text-gray-100">
+              Chats
+            </div>
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-on-variant dark:text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search messages..."
+                value={searchQuery}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  onSearchQueryChange?.(next);
+                  if (!onSearchQueryChange && searchQueryOverride === undefined) {
+                    setInternalSearchQuery(next);
+                  }
+                }}
+                className="w-full pl-9 pr-3 py-2 text-sm bg-surface-container dark:bg-gray-700 text-surface-on dark:text-gray-100 rounded-full outline-none focus:ring-2 focus:ring-primary placeholder:text-surface-on-variant dark:placeholder:text-gray-400"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* DM Lists */}
       <div className="flex-1 overflow-y-auto pt-2">
