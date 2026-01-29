@@ -2934,15 +2934,9 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
           
           if (retryCount >= maxRetries) {
             console.error("❌ CRITICAL: Failed to save homeowner to database after retries");
-            // Check if we can access the connection string from the environment
-            const envCheck = typeof window !== 'undefined' 
-              ? (import.meta as any).env?.VITE_DATABASE_URL 
-              : undefined;
             
             console.error("Database configuration check:", {
               isDbConfigured,
-              hasViteEnvVar: !!envCheck,
-              envVarLength: envCheck?.length || 0,
               environment: typeof window !== 'undefined' ? 'browser' : 'server',
               errorType: e instanceof Error ? e.constructor.name : typeof e
             });
@@ -2952,9 +2946,9 @@ Previous Scheduled Date: ${previousAcceptedDate ? `${new Date(previousAcceptedDa
               `Error: ${errorMessage}\n\n` +
               `Data is safe in browser storage.\n\n` +
               `Please check:\n` +
-              `1. VITE_DATABASE_URL is set in Netlify environment variables\n` +
-              `2. Database connection string is correct\n` +
-              `3. Browser console for detailed error logs`;
+              `1. Database connection is configured correctly\n` +
+              `2. Check browser console for detailed error logs\n` +
+              `3. Contact support if issue persists`;
             alert(userMessage);
             // Don't return - allow app to continue with localStorage data
           } else {

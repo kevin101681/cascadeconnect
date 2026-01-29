@@ -3,26 +3,22 @@ import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import * as schema from './schema';
 
-// Support both Vite (browser) and Node (migration) environments
-// NOTE: Database URL should be server-side only. For browser usage, consider proxying through API.
-// If the variable is missing (e.g. local dev without .env), use a placeholder.
-const envUrl = (import.meta as any).env?.VITE_DATABASE_URL;
-const processUrl = typeof process !== 'undefined' ? process.env?.DATABASE_URL : undefined;
+// SECURITY FIX: Database connection is now SERVER-SIDE ONLY
+// This file should ONLY be used by Netlify Functions and Node.js scripts
+// Client-side code should call Netlify Functions to access data
+// 
+// If you're getting errors importing this in client code, that's intentional!
+// Use Netlify Functions (e.g., /.netlify/functions/*) for database access instead.
 
-// SECURITY: Database connection strings should NOT be exposed to the client
-// In production, consider moving database operations to server-side API endpoints
-
-// Use a clearly fake, non-secret-like placeholder that won't trigger security scanners
-const connectionString = envUrl || processUrl || null;
+const connectionString = typeof process !== 'undefined' ? process.env?.DATABASE_URL : null;
 
 export const isDbConfigured = !!(connectionString && connectionString.length > 0);
 
 // Log configuration status (without exposing the actual connection string)
-if (typeof window !== 'undefined') {
+// Only log in server/Node environment, not in browser
+if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
   console.log("Database configuration:", {
     isDbConfigured,
-    hasEnvUrl: !!envUrl,
-    hasProcessUrl: !!processUrl,
     connectionStringLength: connectionString?.length || 0,
     connectionStringPrefix: connectionString ? connectionString.substring(0, 20) + '...' : 'none'
   });
@@ -40,8 +36,8 @@ if (isDbConfigured) {
     console.log("✅ Database connection initialized");
     
     // Test the connection with a simple query (async, don't block initialization)
-    if (typeof window !== 'undefined') {
-      // Test connection in browser environment
+    // Only in server/Node environment
+    if (typeof process !== 'undefined') {
       (async () => {
         try {
           // Try a simple query to verify connection works
@@ -49,7 +45,7 @@ if (isDbConfigured) {
           console.log("✅ Database connection verified");
         } catch (testError) {
           console.error("⚠️ Database connection test failed:", testError);
-          console.error("This may indicate a connection issue. Check your VITE_DATABASE_URL.");
+          console.error("This may indicate a connection issue. Check your DATABASE_URL.");
         }
       })();
     }
@@ -61,8 +57,8 @@ if (isDbConfigured) {
     dbInstance = null;
   }
 } else {
-  console.warn("⚠️ No valid VITE_DATABASE_URL found. App will default to Local Storage/Mock mode.");
-  console.warn("To enable database features, set VITE_DATABASE_URL in your environment variables.");
+  console.warn("⚠️ No valid DATABASE_URL found. Database features disabled.");
+  console.warn("To enable database features, set DATABASE_URL in your server environment.");
 }
 
 // Export database instance - will be null if not configured or failed to initialize
@@ -71,15 +67,15 @@ if (isDbConfigured) {
 // This prevents data loss from silent failures
 export const db = dbInstance || {
   select: () => {
-    throw new Error('❌ Database not initialized. Cannot perform SELECT operation. Check VITE_DATABASE_URL.');
+    throw new Error('❌ Database not initialized. Cannot perform SELECT operation. Set DATABASE_URL on server.');
   },
   insert: () => {
-    throw new Error('❌ Database not initialized. Cannot perform INSERT operation. Check VITE_DATABASE_URL.');
+    throw new Error('❌ Database not initialized. Cannot perform INSERT operation. Set DATABASE_URL on server.');
   },
   update: () => {
-    throw new Error('❌ Database not initialized. Cannot perform UPDATE operation. Check VITE_DATABASE_URL.');
+    throw new Error('❌ Database not initialized. Cannot perform UPDATE operation. Set DATABASE_URL on server.');
   },
   delete: () => {
-    throw new Error('❌ Database not initialized. Cannot perform DELETE operation. Check VITE_DATABASE_URL.');
+    throw new Error('❌ Database not initialized. Cannot perform DELETE operation. Set DATABASE_URL on server.');
   },
 };

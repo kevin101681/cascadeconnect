@@ -119,46 +119,103 @@ export interface BackendDashboardStats {
 // ENVIRONMENT VALIDATION
 // ==========================================
 
+// Configuration state cache
+let configCache: {
+  sentry: { configured: boolean; org?: string; project?: string } | null;
+  posthog: { configured: boolean; projectId?: string; host?: string } | null;
+  lastFetch: number;
+} = {
+  sentry: null,
+  posthog: null,
+  lastFetch: 0,
+};
+
+const CONFIG_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Fetch analytics configuration from server
+ * SECURITY: This fetches config from the server without exposing tokens to client
+ */
+async function fetchAnalyticsConfig() {
+  const now = Date.now();
+  
+  // Return cached config if still valid
+  if (configCache.lastFetch && (now - configCache.lastFetch) < CONFIG_CACHE_TTL) {
+    return configCache;
+  }
+
+  try {
+    const response = await fetch('/.netlify/functions/admin-analytics-config');
+    
+    if (!response.ok) {
+      console.error('Failed to fetch analytics config:', response.status);
+      return configCache; // Return stale cache on error
+    }
+
+    const data = await response.json();
+    
+    configCache = {
+      sentry: data.sentry,
+      posthog: data.posthog,
+      lastFetch: now,
+    };
+    
+    return configCache;
+  } catch (error) {
+    console.error('Error fetching analytics config:', error);
+    return configCache; // Return stale cache on error
+  }
+}
+
 /**
  * Check if Sentry API is configured
+ * SECURITY: Now fetches from server instead of reading client env vars
  */
-export function isSentryApiConfigured(): boolean {
-  const authToken = import.meta.env.VITE_SENTRY_AUTH_TOKEN;
-  const org = import.meta.env.VITE_SENTRY_ORG;
-  const project = import.meta.env.VITE_SENTRY_PROJECT;
-  
-  return !!(authToken && org && project);
+export async function isSentryApiConfigured(): Promise<boolean> {
+  const config = await fetchAnalyticsConfig();
+  return config.sentry?.configured || false;
 }
 
 /**
  * Check if PostHog API is configured
+ * SECURITY: Now fetches from server instead of reading client env vars
  */
-export function isPostHogApiConfigured(): boolean {
-  const projectId = import.meta.env.VITE_POSTHOG_PROJECT_ID;
-  const apiKey = import.meta.env.VITE_POSTHOG_PERSONAL_API_KEY;
-  
-  return !!(projectId && apiKey);
+export async function isPostHogApiConfigured(): Promise<boolean> {
+  const config = await fetchAnalyticsConfig();
+  return config.posthog?.configured || false;
 }
 
 /**
  * Get Sentry configuration
+ * SECURITY: Returns config without auth token
  */
-function getSentryConfig() {
+async function getSentryConfig() {
+  const config = await fetchAnalyticsConfig();
+  
+  if (!config.sentry?.configured) {
+    throw new Error('Sentry is not configured');
+  }
+  
   return {
-    authToken: import.meta.env.VITE_SENTRY_AUTH_TOKEN as string,
-    org: import.meta.env.VITE_SENTRY_ORG as string,
-    project: import.meta.env.VITE_SENTRY_PROJECT as string,
+    org: config.sentry.org!,
+    project: config.sentry.project!,
   };
 }
 
 /**
  * Get PostHog configuration
+ * SECURITY: Returns config without API key
  */
-function getPostHogConfig() {
+async function getPostHogConfig() {
+  const config = await fetchAnalyticsConfig();
+  
+  if (!config.posthog?.configured) {
+    throw new Error('PostHog is not configured');
+  }
+  
   return {
-    projectId: import.meta.env.VITE_POSTHOG_PROJECT_ID as string,
-    apiKey: import.meta.env.VITE_POSTHOG_PERSONAL_API_KEY as string,
-    host: import.meta.env.VITE_POSTHOG_HOST || 'https://us.posthog.com',
+    projectId: config.posthog.projectId!,
+    host: config.posthog.host || 'https://us.posthog.com',
   };
 }
 
@@ -169,20 +226,23 @@ function getPostHogConfig() {
 /**
  * Fetch 24-hour error count from Sentry (via Netlify function)
  * Returns error count and recent issues
+ * SECURITY: Auth token is passed via server-side Netlify function, not exposed to client
  */
 export async function getSentryErrors(): Promise<SentryErrorsResponse> {
-  if (!isSentryApiConfigured()) {
+  const isConfigured = await isSentryApiConfigured();
+  
+  if (!isConfigured) {
     return {
       success: false,
-      error: 'Sentry API not configured. Set VITE_SENTRY_AUTH_TOKEN, VITE_SENTRY_ORG, and VITE_SENTRY_PROJECT.',
+      error: 'Sentry API not configured. Set SENTRY_AUTH_TOKEN, SENTRY_ORG, and SENTRY_PROJECT in server environment.',
     };
   }
 
-  const { authToken, org, project } = getSentryConfig();
-  
-  console.log('🌐 Calling Netlify function for Sentry data (server-side)...');
-  
   try {
+    const { org, project } = await getSentryConfig();
+    
+    console.log('🌐 Calling Netlify function for Sentry data (server-side)...');
+    
     const response = await fetch('/.netlify/functions/analytics', {
       method: 'POST',
       headers: {
@@ -190,7 +250,6 @@ export async function getSentryErrors(): Promise<SentryErrorsResponse> {
       },
       body: JSON.stringify({
         service: 'sentry',
-        authToken,
         org,
         project,
       }),
@@ -220,20 +279,23 @@ export async function getSentryErrors(): Promise<SentryErrorsResponse> {
 /**
  * Fetch PostHog trends (via Netlify function)
  * Returns 7-day pageview trends
+ * SECURITY: API key is passed via server-side Netlify function, not exposed to client
  */
 export async function getPostHogTrends(): Promise<PostHogTrendsResponse> {
-  if (!isPostHogApiConfigured()) {
+  const isConfigured = await isPostHogApiConfigured();
+  
+  if (!isConfigured) {
     return {
       success: false,
-      error: 'PostHog API not configured. Set VITE_POSTHOG_PROJECT_ID and VITE_POSTHOG_PERSONAL_API_KEY.',
+      error: 'PostHog API not configured. Set POSTHOG_PROJECT_ID and POSTHOG_PERSONAL_API_KEY in server environment.',
     };
   }
 
-  const { projectId, apiKey, host } = getPostHogConfig();
-  
-  console.log('🌐 Calling Netlify function for PostHog data (server-side)...');
-  
   try {
+    const { projectId, host } = await getPostHogConfig();
+    
+    console.log('🌐 Calling Netlify function for PostHog data (server-side)...');
+    
     const response = await fetch('/.netlify/functions/analytics', {
       method: 'POST',
       headers: {
@@ -242,7 +304,6 @@ export async function getPostHogTrends(): Promise<PostHogTrendsResponse> {
       body: JSON.stringify({
         service: 'posthog',
         projectId,
-        apiKey,
         host,
       }),
     });

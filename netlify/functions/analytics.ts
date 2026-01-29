@@ -295,20 +295,29 @@ export const handler: Handler = async (event) => {
     const { service } = body;
 
     if (service === 'sentry') {
-      const { authToken, org, project } = body;
+      const { org, project } = body;
 
-      if (!authToken || !org || !project) {
+      // SECURITY FIX: Read auth token from server environment, not from client
+      const authToken = process.env.SENTRY_AUTH_TOKEN || process.env.VITE_SENTRY_AUTH_TOKEN;
+      const serverOrg = process.env.SENTRY_ORG || process.env.VITE_SENTRY_ORG;
+      const serverProject = process.env.SENTRY_PROJECT || process.env.VITE_SENTRY_PROJECT;
+
+      // Use server env vars if client didn't provide them (preferred) or use client values as fallback
+      const finalOrg = serverOrg || org;
+      const finalProject = serverProject || project;
+
+      if (!authToken || !finalOrg || !finalProject) {
         return {
           statusCode: 400,
           headers,
           body: JSON.stringify({
             success: false,
-            error: 'Missing required Sentry parameters',
+            error: 'Sentry not configured. Set SENTRY_AUTH_TOKEN, SENTRY_ORG, and SENTRY_PROJECT in server environment.',
           }),
         };
       }
 
-      const data = await getSentryData(authToken, org, project);
+      const data = await getSentryData(authToken, finalOrg, finalProject);
       return {
         statusCode: 200,
         headers,
@@ -317,20 +326,29 @@ export const handler: Handler = async (event) => {
     }
 
     if (service === 'posthog') {
-      const { projectId, apiKey, host } = body;
+      const { projectId, host } = body;
 
-      if (!projectId || !apiKey) {
+      // SECURITY FIX: Read API key from server environment, not from client
+      const apiKey = process.env.POSTHOG_PERSONAL_API_KEY || process.env.VITE_POSTHOG_PERSONAL_API_KEY;
+      const serverProjectId = process.env.POSTHOG_PROJECT_ID || process.env.VITE_POSTHOG_PROJECT_ID;
+      const serverHost = process.env.POSTHOG_HOST || process.env.VITE_POSTHOG_HOST || 'https://us.posthog.com';
+
+      // Use server env vars if client didn't provide them (preferred) or use client values as fallback
+      const finalProjectId = serverProjectId || projectId;
+      const finalHost = host || serverHost;
+
+      if (!apiKey || !finalProjectId) {
         return {
           statusCode: 400,
           headers,
           body: JSON.stringify({
             success: false,
-            error: 'Missing required PostHog parameters',
+            error: 'PostHog not configured. Set POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID in server environment.',
           }),
         };
       }
 
-      const data = await getPostHogData(projectId, apiKey, host);
+      const data = await getPostHogData(finalProjectId, apiKey, finalHost);
       return {
         statusCode: 200,
         headers,
