@@ -1061,9 +1061,86 @@ function App() {
            }
 
            // PRIORITY 2: CHECK IF EMPLOYEE (Real Admin)
+           // 🔐 SECURITY FIX: Check if user exists in users table (admins/builders)
+           // This was previously done with direct DB access, now uses API
+           if (authUser?.id) {
+             try {
+               console.log('🔍 Checking if user is admin/builder via API...');
+               const response = await fetch(`/.netlify/functions/user-profile?clerkId=${encodeURIComponent(authUser.id)}`);
+               
+               if (response.ok) {
+                 const data = await response.json();
+                 
+                 if (data.success && data.user) {
+                   const dbUser = data.user;
+                   console.log('✅ Found user in database:', {
+                     name: dbUser.name,
+                     role: dbUser.role,
+                     internalRole: dbUser.internalRole
+                   });
+                   
+                   // If user has ADMIN role, they are an employee
+                   if (dbUser.role === 'ADMIN') {
+                     console.log('✅ User is Admin/Employee:', dbUser.name);
+                     const empData: InternalEmployee = {
+                       id: dbUser.id,
+                       name: dbUser.name,
+                       email: dbUser.email,
+                       role: dbUser.internalRole || 'Administrator',
+                       emailNotifyClaimSubmitted: true,
+                       emailNotifyHomeownerAcceptsAppointment: true,
+                       emailNotifySubAcceptsAppointment: true,
+                       emailNotifyHomeownerRescheduleRequest: true,
+                       emailNotifyTaskAssigned: true,
+                       emailNotifyHomeownerEnrollment: true,
+                       pushNotifyClaimSubmitted: false,
+                       pushNotifyHomeownerAcceptsAppointment: false,
+                       pushNotifySubAcceptsAppointment: false,
+                       pushNotifyHomeownerRescheduleRequest: false,
+                       pushNotifyTaskAssigned: false,
+                       pushNotifyHomeownerMessage: false,
+                       pushNotifyHomeownerEnrollment: false,
+                       pushNotifyNewMessage: false
+                     };
+                     
+                     setUserRole(UserRole.ADMIN);
+                     setActiveEmployee(empData);
+                     
+                     // Restore previous selection if it exists
+                     const savedId = localStorage.getItem("cascade_active_homeowner_id");
+                     if (savedId) {
+                       const found = loadedHomeowners.find(h => h.id === savedId);
+                       if (found) setSelectedAdminHomeownerId(found.id);
+                     }
+                     
+                     setIsRoleLoading(false);
+                     return; // STOP HERE
+                   }
+                   
+                   // If user has BUILDER role, they are a builder
+                   if (dbUser.role === 'BUILDER') {
+                     console.log('✅ User is Builder:', dbUser.name);
+                     setUserRole(UserRole.BUILDER);
+                     setCurrentBuilderId(dbUser.builderGroupId || null);
+                     setIsRoleLoading(false);
+                     return; // STOP HERE
+                   }
+                 } else {
+                   console.log('ℹ️ User not found in database, checking as homeowner...');
+                 }
+               } else {
+                 console.warn('⚠️ Failed to fetch user profile:', response.status);
+               }
+             } catch (apiError) {
+               console.error('❌ Error fetching user profile:', apiError);
+               // Continue to homeowner check on error
+             }
+           }
+           
+           // FALLBACK: Check loadedEmployees from DB (for backwards compatibility)
            const emp = loadedEmployees.find(e => e.email.toLowerCase() === email);
            if (emp) {
-              console.log('✅ User is Employee:', emp.name);
+              console.log('✅ User is Employee (from loaded data):', emp.name);
               setUserRole(UserRole.ADMIN);
               setActiveEmployee(emp);
               
@@ -1078,7 +1155,7 @@ function App() {
               return; // STOP HERE
            }
 
-           // PRIORITY 3: CHECK IF BUILDER
+           // PRIORITY 3: CHECK IF BUILDER (from loaded data)
            const builder = loadedBuilders.find(b => b.email.toLowerCase() === email);
            if (builder) {
               setUserRole(UserRole.BUILDER);
