@@ -83,10 +83,34 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     lastSyncTimeRef.current = now;
     
     try {
+      // 🔐 SECURITY FIX: Call server API instead of direct DB access
+      const response = await fetch(`/.netlify/functions/chat-stats?userId=${encodeURIComponent(effectiveUserId)}`);
+      
+      if (!response.ok) {
+        console.error('Failed to fetch chat stats:', response.status);
+        return;
+      }
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        console.error('Chat stats error:', data.error);
+        return;
+      }
+      
+      const totalUnread = data.unreadCount || 0;
+      console.log('📊 Badge Sync: Received total unread count from server:', totalUnread);
+      
+      // Since we only get total count from the API, we can't update individual channel counts
+      // Just update the total
+      setTotalUnreadCount(totalUnread);
+      
+      // If we need individual channel counts, fetch channels separately
       const channels = await getUserChannels(effectiveUserId);
       
       console.log('📊 Badge Sync: Loading unread counts', {
         channelCount: channels.length,
+        totalUnread,
         sampleChannels: channels.slice(0, 3).map(ch => ({
           id: ch.id,
           type: ch.type,
@@ -97,17 +121,15 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
       
       // Build individual channel counts map
       const countsMap: Record<string, number> = {};
-      let total = 0;
       
       channels.forEach(ch => {
         const count = ch.unreadCount || 0;
         countsMap[ch.id] = count;
-        total += count;
       });
       
       console.log('📊 Badge Sync: Counts map built', {
         totalChannels: Object.keys(countsMap).length,
-        totalUnread: total,
+        totalUnread: totalUnread,
         sampleKeys: Object.keys(countsMap).slice(0, 5)
       });
       
@@ -133,9 +155,6 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         
         return merged;
       });
-      
-      // Recalculate total from the merged state
-      setTotalUnreadCount(Object.values(countsMap).reduce((sum, count) => sum + count, 0));
     } catch (error) {
       console.error('Error loading unread counts:', error);
     }

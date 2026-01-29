@@ -1,6 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { claims } from '../../db/schema';
+import { claims, users } from '../../db/schema';
 import { eq, desc } from 'drizzle-orm';
 
 interface HandlerResponse {
@@ -101,13 +101,68 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       });
     }
 
-    // Validate UUID format
+    // Determine if this is a Clerk ID (starts with user_) or UUID
+    const isClerkId = homeownerId.startsWith('user_');
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(homeownerId)) {
-      console.warn(`⚠️ Invalid UUID format: ${homeownerId}`);
+    
+    let resolvedHomeownerId = homeownerId;
+    
+    // If it's a Clerk ID, we need to resolve it to the internal UUID
+    if (isClerkId) {
+      console.log('🔍 Detected Clerk ID, resolving to internal UUID...');
+      
+      try {
+        // Get database URL
+        const databaseUrl = process.env.DATABASE_URL || process.env.VITE_DATABASE_URL;
+        if (!databaseUrl) {
+          console.error('❌ DATABASE_URL not configured');
+          return createJsonResponse(500, { 
+            error: 'Database not configured',
+            message: 'DATABASE_URL environment variable is missing',
+            success: false,
+            claims: []
+          });
+        }
+
+        // Initialize database client
+        const sqlClient = neon(databaseUrl);
+        const db = drizzle(sqlClient, { schema: { users, claims } });
+        
+        // Look up user by clerkId
+        const userResult = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.clerkId, homeownerId))
+          .limit(1);
+        
+        if (userResult.length === 0) {
+          console.warn(`⚠️ No user found with Clerk ID: ${homeownerId}`);
+          return createJsonResponse(404, { 
+            error: 'User not found',
+            message: `No user found with ID: ${homeownerId}`,
+            success: false,
+            claims: []
+          });
+        }
+        
+        resolvedHomeownerId = userResult[0].id;
+        console.log(`✅ Resolved Clerk ID ${homeownerId} to UUID ${resolvedHomeownerId}`);
+        
+      } catch (resolveError: any) {
+        console.error('❌ Error resolving Clerk ID:', resolveError);
+        return createJsonResponse(500, { 
+          error: 'Failed to resolve user ID',
+          message: resolveError.message || 'Unknown error',
+          success: false,
+          claims: []
+        });
+      }
+    } else if (!uuidRegex.test(homeownerId)) {
+      // Not a Clerk ID and not a valid UUID format
+      console.warn(`⚠️ Invalid ID format: ${homeownerId}`);
       return createJsonResponse(400, { 
         error: 'Invalid homeownerId format',
-        message: 'homeownerId must be a valid UUID',
+        message: 'homeownerId must be either a Clerk ID (user_...) or a valid UUID',
         success: false,
         claims: []
       });
@@ -135,21 +190,22 @@ export const handler = async (event: any): Promise<HandlerResponse> => {
       
       console.log('✅ Database connected, querying claims...');
 
-      // Fetch claims for this homeowner
+      // Fetch claims for this homeowner (using resolved UUID)
       const dbClaims = await db
         .select()
         .from(claims)
-        .where(eq(claims.homeownerId, homeownerId))
+        .where(eq(claims.homeownerId, resolvedHomeownerId))
         .orderBy(desc(claims.dateSubmitted))
         .execute();
 
-      console.log(`✅ Successfully fetched ${dbClaims.length} claims for homeowner ${homeownerId}`);
+      console.log(`✅ Successfully fetched ${dbClaims.length} claims for homeowner ${resolvedHomeownerId}`);
 
       return createJsonResponse(200, {
         success: true,
         claims: dbClaims,
         count: dbClaims.length,
-        homeownerId: homeownerId,
+        homeownerId: resolvedHomeownerId,
+        originalId: homeownerId, // Return original ID for debugging
       });
 
     } catch (dbError: any) {

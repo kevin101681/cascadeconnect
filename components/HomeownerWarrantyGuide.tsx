@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { CheckCircle2, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
-import { getGuideSteps } from '@/actions/guide-editor';
 import type { GuideStep } from '@/db/schema';
 
 export function HomeownerWarrantyGuide() {
@@ -19,8 +18,26 @@ export function HomeownerWarrantyGuide() {
   const loadSteps = async () => {
     try {
       setLoading(true);
-      console.log('🔍 [HomeownerWarrantyGuide] Fetching guide steps...');
-      const steps = await getGuideSteps();
+      console.log('🔍 [HomeownerWarrantyGuide] Fetching guide steps from API...');
+      
+      // 🔐 SECURITY FIX: Call server API instead of direct DB access
+      const response = await fetch('/.netlify/functions/guide-steps');
+      
+      if (!response.ok) {
+        console.error('Failed to fetch guide steps:', response.status);
+        setGuideSteps([]);
+        return;
+      }
+      
+      const data = await response.json();
+      
+      if (!data.success) {
+        console.error('Guide steps error:', data.error);
+        setGuideSteps([]);
+        return;
+      }
+      
+      const steps = data.steps || [];
       console.log('✅ [HomeownerWarrantyGuide] Fetched steps:', steps.length, 'steps');
       setGuideSteps(steps);
       
@@ -30,6 +47,7 @@ export function HomeownerWarrantyGuide() {
       }
     } catch (error) {
       console.error('❌ [HomeownerWarrantyGuide] Failed to load guide steps:', error);
+      setGuideSteps([]);
     } finally {
       setLoading(false);
     }
